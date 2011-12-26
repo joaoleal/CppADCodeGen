@@ -19,7 +19,6 @@ fi
 echo "Differences between include file names and ifndef at top directives."
 echo "Also make sure same ifndef not used by two different files."
 echo "-------------------------------------------------------------------"
-# note CPPAD_CPPAD_INCLUDED is a special case, see cppad/error_handler.hpp
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \
@@ -40,7 +39,7 @@ ls \
 	cppad/speed/*.hpp \
 	example/*.hpp \
 	multi_thread/*.hpp \
-	| sed -e 's|.*/||' -e 's|^cppad_||' \
+	| sed -e 's|.*/||' \
 	| sort -u \
 	> bin/check_include_def.2.$$
 if diff bin/check_include_def.1.$$ bin/check_include_def.2.$$

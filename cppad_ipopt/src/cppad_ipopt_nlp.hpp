@@ -1,6 +1,6 @@
-/* $Id: cppad_ipopt_nlp.hpp 1917 2011-05-12 02:55:37Z bradbell $ */
-# ifndef CPPAD_IPOPT_NLP_INCLUDED
-# define CPPAD_IPOPT_NLP_INCLUDED
+/* $Id: cppad_ipopt_nlp.hpp 2235 2011-12-21 14:50:24Z bradbell $ */
+# ifndef CPPAD_CPPAD_IPOPT_NLP_INCLUDED
+# define CPPAD_CPPAD_IPOPT_NLP_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -15,6 +15,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 $begin cppad_ipopt_nlp$$
 $dollar @$$
 $spell
+	namespace
 	dir
 	cppad
 	bool
@@ -67,7 +68,7 @@ $latex \[
 \] $$
 This is done using 
 $href%
-	https://www.coin-or.org/projects/Ipopt%
+	http://www.coin-or.org/projects/Ipopt.xml%
 	Ipopt
 %$$
 optimizer and 
@@ -76,6 +77,13 @@ $href%
 	CppAD
 %$$
 Algorithmic Differentiation package.
+
+$head cppad_ipopt namespace$$
+All of the declarations for these routines
+are in the $code cppad_ipopt$$ namespace 
+(not the $code CppAD$$ namespace).
+For example; $cref/SizeVector/cppad_ipopt_nlp/SizeVector/$$ below
+actually denotes the type $code cppad_ipopt::SizeVector$$.
 
 $head ipopt_library_paths$$
 If you are linking to a shared version of the Ipopt library,
@@ -605,6 +613,9 @@ $end
 \brief CppAD interface to Ipopt
 */
 
+// ---------------------------------------------------------------------------
+namespace cppad_ipopt {
+// ---------------------------------------------------------------------------
 
 /// A scalar value used to record operation sequence.
 typedef CppAD::AD<Ipopt::Number>       ADNumber;
@@ -1064,5 +1075,8 @@ public:
 };
 
 
+// ---------------------------------------------------------------------------
+} // end namespace cppad_ipopt
+// ---------------------------------------------------------------------------
 
 # endif
