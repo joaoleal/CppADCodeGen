@@ -18,7 +18,12 @@ fi
 # -----------------------------------------------------------------------------
 echo "Checking include files listed in makefile.am"
 echo "-------------------------------------------------------" 
-ls cppad/*.h cppad/*.hpp cppad/local/*.hpp cppad/speed/*.hpp  | \
+ls \
+	cppad/*.h \
+	cppad/*.hpp \
+	cppad/local/*.hpp \
+	cppad/local/code_gen/*.hpp \
+	cppad/speed/*.hpp  | \
 	sed -e '/^cppad\/config\.h$/d' | \
 	sort > check_makefile1.$$
 #

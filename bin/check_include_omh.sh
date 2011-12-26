@@ -29,7 +29,6 @@ find . \( -name '*.cpp' \) -or \
 list="
 	cpl1.0.txt
 	cppad_ipopt/example/example_windows.bat
-	gpl2.txt
 "
 for file in $list
 do
