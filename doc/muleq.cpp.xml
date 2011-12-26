@@ -1,0 +1,146 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD Computed Assignment Multiplication: Example and Test</title>
+<meta name="description" id="description" content="AD Computed Assignment Multiplication: Example and Test"/>
+<meta name="keywords" id="keywords" content=" *= Ad example computed assignment multiply test assign plus add "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_muleq.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="subeq.cpp.xml" target="_top">Prev</a>
+</td><td><a href="diveq.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>Arithmetic</option>
+<option>compute_assign</option>
+<option>MulEq.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Arithmetic-&gt;</option>
+<option>UnaryPlus</option>
+<option>UnaryMinus</option>
+<option>ad_binary</option>
+<option>compute_assign</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>compute_assign-&gt;</option>
+<option>AddEq.cpp</option>
+<option>SubEq.cpp</option>
+<option>MulEq.cpp</option>
+<option>DivEq.cpp</option>
+</select>
+</td>
+<td>MulEq.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+<center><b><big><big>AD Computed Assignment Multiplication: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+
+bool MulEq(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+
+	// domain space vector
+	size_t  n = 1;
+	double x0 = .5;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; x(n);
+	x[0]      = x0; 
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(x);
+
+	// range space vector 
+	size_t m = 2;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; y(m);
+	y[0] = x[0];         // initial value
+	y[0] *= 2;           // <a href="ad.xml" target="_top">AD</a>&lt;double&gt; *= int
+	y[0] *= 4.;          // <a href="ad.xml" target="_top">AD</a>&lt;double&gt; *= double
+	y[1] = y[0] *= x[0]; // use the result of a computed assignment
+
+	// create f: x -&gt; y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(x, y); 
+
+	// check value 
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0] , x0*2.*4.*x0,  1e-10 , 1e-10);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[1] ,        y[0],  1e-10 , 1e-10);
+
+	// forward computation of partials w.r.t. x[0]
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dy(m);
+	dx[0] = 1.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0], 8.*2.*x0, 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[1], 8.*2.*x0, 1e-10, 1e-10);
+
+	// reverse computation of derivative of y[0]
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;  w(m);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dw(n);
+	w[0]  = 1.;
+	w[1]  = 0.;
+	dw    = f.<a href="reverse.xml" target="_top">Reverse</a>(1, w);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dw[0], 8.*2.*x0, 1e-10, 1e-10);
+
+	// use a VecAD&lt;Base&gt;::reference object with computed multiplication
+	CppAD::VecAD&lt;double&gt; v(1);
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; zero(0);
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; result = 1;
+	v[zero] = 2;
+	result *= v[zero];
+	ok     &amp;= (result == 2);
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/mul_eq.cpp
+
+</body>
+</html>

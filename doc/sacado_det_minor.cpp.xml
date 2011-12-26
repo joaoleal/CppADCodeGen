@@ -1,0 +1,150 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Sacado Speed: Gradient of Determinant by Minor Expansion</title>
+<meta name="description" id="description" content="Sacado Speed: Gradient of Determinant by Minor Expansion"/>
+<meta name="keywords" id="keywords" content=" sacado speed minor link_det_minor "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sacado_det_minor.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="speed_sacado.xml" target="_top">Prev</a>
+</td><td><a href="sacado_det_lu.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_sacado</option>
+<option>sacado_det_minor.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_sacado-&gt;</option>
+<option>sacado_det_minor.cpp</option>
+<option>sacado_det_lu.cpp</option>
+<option>sacado_mat_mul.cpp</option>
+<option>sacado_ode.cpp</option>
+<option>sacado_poly.cpp</option>
+<option>sacado_sparse_hessian.cpp</option>
+<option>sacado_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>sacado_det_minor.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>link_det_minor</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Sacado Speed: Gradient of Determinant by Minor Expansion</big></big></b></center>
+<br/>
+<b><big><a name="link_det_minor" id="link_det_minor">link_det_minor</a></big></b>
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;vector&gt;
+# include &lt;Sacado.hpp&gt;
+# include &lt;cppad/speed/det_by_minor.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+
+bool link_det_minor(
+	size_t                     size     , 
+	size_t                     repeat   , 
+	CppAD::vector&lt;double&gt;     &amp;matrix   ,
+	CppAD::vector&lt;double&gt;     &amp;gradient )
+{
+	// -----------------------------------------------------
+	// setup
+
+	// object for computing determinant
+	typedef Sacado::Rad::ADvar&lt;double&gt;    ADScalar; 
+	typedef CppAD::vector&lt;ADScalar&gt;        ADVector; 
+	CppAD::det_by_minor&lt;ADScalar&gt;         Det(size);
+
+	size_t i;                // temporary index
+	size_t n = size * size;  // number of independent variables
+	ADScalar   detA;         // AD value of the determinant
+	ADVector   A(n);         // AD version of matrix 
+	
+	// ------------------------------------------------------
+	while(repeat--)
+       {	// get the next matrix
+		CppAD::uniform_01(n, matrix);
+
+		// set independent variable values
+		for(i = 0; i &lt; n; i++)
+			A[i] = matrix[i];
+
+		// compute the determinant
+		detA = Det(A);
+
+		// Compute the gradient of detA
+		ADScalar::Gradcomp();
+
+		// return gradient using reverse mode
+		for(i =0; i &lt; n; i++)
+			gradient[i] = A[i].adj(); // partial detA w.r.t A[i]
+	}
+	// ---------------------------------------------------------
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/sacado/det_minor.cpp
+
+</body>
+</html>

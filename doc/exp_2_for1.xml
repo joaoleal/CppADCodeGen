@@ -1,0 +1,979 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>exp_2: First Order Forward Mode</title>
+<meta name="description" id="description" content="exp_2: First Order Forward Mode"/>
+<meta name="keywords" id="keywords" content=" exp_2 forward mode example first order expansion "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_exp_2_for1_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exp_2_for0.cpp.xml" target="_top">Prev</a>
+</td><td><a href="exp_2_for1.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>exp_2</option>
+<option>exp_2_for1</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>exp_2-&gt;</option>
+<option>exp_2.hpp</option>
+<option>exp_2.cpp</option>
+<option>exp_2_for0</option>
+<option>exp_2_for1</option>
+<option>exp_2_rev1</option>
+<option>exp_2_for2</option>
+<option>exp_2_rev2</option>
+<option>exp_2_cppad</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>exp_2_for1-&gt;</option>
+<option>exp_2_for1.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>First Order Expansion</option>
+<option>Purpose</option>
+<option>Mathematical Form</option>
+<option>Operation Sequence</option>
+<option>---..Index</option>
+<option>---..Operation</option>
+<option>---..Zero Order</option>
+<option>---..Derivative</option>
+<option>---..First Order</option>
+<option>---..Sweep</option>
+<option>Return Value</option>
+<option>Verification</option>
+<option>Exercises</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>exp_2: First Order Forward Mode</big></big></b></center>
+<br/>
+<b><big><a name="First Order Expansion" id="First Order Expansion">First Order Expansion</a></big></b>
+
+
+
+<br/>
+We define 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ near 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+ by the first order expansion
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+it follows that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+ is the zero,
+and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+ the first,
+order derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+In general, a first order forward sweep is given the
+<a href="exp_2_for0.xml#Zero Order Expansion" target="_top"><span style='white-space: nowrap'>zero&#xA0;order&#xA0;derivative</span></a>
+
+for all of the variables in an operation sequence,
+and the first order derivatives for the independent variables.
+It uses these to compute the first order derivatives,
+and thereby obtain the first order expansion,
+for all the other variables in the operation sequence.
+
+<br/>
+<br/>
+<b><big><a name="Mathematical Form" id="Mathematical Form">Mathematical Form</a></big></b>
+<br/>
+Suppose that we use the algorithm <a href="exp_2.hpp.xml" target="_top"><span style='white-space: nowrap'>exp_2.hpp</span></a>
+ to compute 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+The corresponding derivative function is 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</msub>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+An algorithmic differentiation package
+does not operate on the mathematical form of the function,
+or its derivative,
+but rather on the 
+<a href="exp_2_for0.xml#Operation Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+
+for the for the algorithm that is used to evaluate the function.
+
+<br/>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+We consider the case where <a href="exp_2.hpp.xml" target="_top"><span style='white-space: nowrap'>exp_2.hpp</span></a>
+ is executed with
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>.5</mn>
+</mrow></math>
+
+.
+The corresponding operation sequence and 
+zero order forward mode values
+(see <a href="exp_2_for0.xml#Operation Sequence.Sweep" target="_top"><span style='white-space: nowrap'>zero&#xA0;order&#xA0;sweep</span></a>
+)
+are inputs and are used by a first order forward sweep.
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.Index" id="Operation Sequence.Index">Index</a></b>
+<br/>
+The Index column contains the index in the operation sequence
+of the corresponding atomic operation. 
+A Forward sweep starts with the first operation 
+and ends with the last.
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.Operation" id="Operation Sequence.Operation">Operation</a></b>
+<br/>
+The Operation column contains the 
+mathematical function corresponding to each atomic operation in the sequence.
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.Zero Order" id="Operation Sequence.Zero Order">Zero Order</a></b>
+<br/>
+The Zero Order column contains the zero order derivatives
+for the corresponding variable in the operation sequence
+(see <a href="exp_2_for0.xml#Operation Sequence.Sweep" target="_top"><span style='white-space: nowrap'>zero&#xA0;order&#xA0;sweep</span></a>
+).
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.Derivative" id="Operation Sequence.Derivative">Derivative</a></b>
+<br/>
+The Derivative column contains the
+mathematical function corresponding to the derivative
+with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+,
+at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+, for each variable in the sequence.
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.First Order" id="Operation Sequence.First Order">First Order</a></b>
+<br/>
+The First Order column contains the first order derivatives
+for the corresponding variable in the operation sequence; i.e.,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow></math>
+
+ so that differentiation
+with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+,
+at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+, is the same as partial differentiation 
+with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+ at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+.
+
+
+
+<br/>
+<br/>
+<b><a name="Operation Sequence.Sweep" id="Operation Sequence.Sweep">Sweep</a></b>
+
+
+<center>
+<table><tr><td align='left'  valign='top'>
+
+<b>Index</b>
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>Operation</b> 
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>Zero Order</b>
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>Derivative</b>
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>First Order</b>
+</td></tr><tr><td align='left'  valign='top'>
+
+1
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 0.5
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+	
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+2
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+</msub>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 1.5
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+	
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+3
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>3</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+</msub>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 0.25
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+	
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>3</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>2</mn>
+<mo stretchy="false">*</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">*</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>3</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+4
+	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>4</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>3</mn>
+</msub>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 0.125
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+	
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>4</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>3</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>4</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>0.5</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+5	</td><td align='left'  valign='top'>
+ <code><span style='white-space: nowrap'>&#xA0;</span></code>  </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+</msub>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>4</mn>
+</msub>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 1.625
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+
+	
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>4</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mn>1.5</mn>
+</mrow></math>
+
+
+</td></tr>
+</table>
+</center><b><big><a name="Return Value" id="Return Value">Return Value</a></big></b>
+<br/>
+The derivative of the return value for this case is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mn>1.5</mn>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msub><mrow><mo stretchy="true">[</mo><mrow><mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<msub><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+</msub>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</mrow>
+</mfrac>
+</mrow><mo stretchy="true">]</mo></mrow>
+<mrow><mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+<mo stretchy="false">=</mo>
+<msub><mrow><mo stretchy="true">[</mo><mrow><mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</mrow>
+</mfrac>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow><mo stretchy="true">]</mo></mrow>
+<mrow><mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+(We have used the fact that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow></math>
+
+.)
+
+
+<br/>
+<br/>
+<b><big><a name="Verification" id="Verification">Verification</a></big></b>
+<br/>
+The file <a href="exp_2_for1.cpp.xml" target="_top"><span style='white-space: nowrap'>exp_2_for1.cpp</span></a>
+ contains a routine 
+which verifies the values computed above.
+It returns true for success and false for failure.
+
+<br/>
+<br/>
+<b><big><a name="Exercises" id="Exercises">Exercises</a></big></b>
+
+<ol type="1"><li>
+Which statement in the routine defined by <a href="exp_2_for1.cpp.xml" target="_top"><span style='white-space: nowrap'>exp_2_for1.cpp</span></a>
+ uses 
+the values that are calculated by the routine 
+defined by <a href="exp_2_for0.cpp.xml" target="_top"><span style='white-space: nowrap'>exp_2_for0.cpp</span></a>
+ ?
+</li><li>
+
+Suppose that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>.1</mn>
+</mrow></math>
+
+,
+what are the results of a zero and first order forward sweep for 
+the operation sequence above; 
+i.e., what are the corresponding values for
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">,</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">,</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+</mrow></math>
+
+ and
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>1</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">,</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>2</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">,</mo>
+<msubsup><mi mathvariant='italic'>v</mi>
+<mn>5</mn>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+</mrow></math>
+
+ ?
+</li><li>
+
+Create a modified version of <a href="exp_2_for1.cpp.xml" target="_top"><span style='white-space: nowrap'>exp_2_for1.cpp</span></a>
+ that verifies 
+the derivative values from the previous exercise.
+Also create and run a main program that reports the result
+of calling the modified version of
+<a href="exp_2_for1.cpp.xml" target="_top"><span style='white-space: nowrap'>exp_2_for1.cpp</span></a>
+.
+</li></ol>
+
+
+
+<hr/>Input File: introduction/exp_apx/exp_2.omh
+
+</body>
+</html>

@@ -1,0 +1,455 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ODE Fitting Using Simple Representation</title>
+<meta name="description" id="description" content="ODE Fitting Using Simple Representation"/>
+<meta name="keywords" id="keywords" content=" cppad_ipopt_nlp ode simple representation "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_ipopt_ode_simple_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ipopt_ode_problem.hpp.xml" target="_top">Prev</a>
+</td><td><a href="ipopt_ode_simple.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>cppad_ipopt_nlp</option>
+<option>cppad_ipopt_ode</option>
+<option>ipopt_ode_simple</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>cppad_ipopt_nlp-&gt;</option>
+<option>cppad_ipopt_windows</option>
+<option>ipopt_get_started.cpp</option>
+<option>cppad_ipopt_ode</option>
+<option>ipopt_ode_speed.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>cppad_ipopt_ode-&gt;</option>
+<option>ipopt_ode_problem</option>
+<option>ipopt_ode_simple</option>
+<option>ipopt_ode_fast</option>
+<option>ipopt_ode_run.hpp</option>
+<option>ipopt_ode_check.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>ipopt_ode_simple-&gt;</option>
+<option>ipopt_ode_simple.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Argument Vector</option>
+<option>Objective Function</option>
+<option>Initial Condition Constraint</option>
+<option>Trapezoidal Approximation Constraint</option>
+<option>Source</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>ODE Fitting Using Simple Representation</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+In this section we represent the objective and constraint functions,
+(in the simultaneous forward and reverse optimization problem)
+using the <a href="cppad_ipopt_nlp.xml#Simple Representation" target="_top"><span style='white-space: nowrap'>simple&#xA0;representation</span></a>
+
+in the sense of <code><font color="blue">cppad_ipopt_nlp</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Argument Vector" id="Argument Vector">Argument Vector</a></big></b>
+<br/>
+The argument vector that we are optimizing with respect to
+( 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+ in <a href="cppad_ipopt_nlp.xml" target="_top"><span style='white-space: nowrap'>cppad_ipopt_nlp</span></a>
+ )
+has the following structure
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">,</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>Nz</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+Note that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mrow><mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>Nz</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>Na</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+ and
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+</msup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>i</mi>
+</mrow>
+</msub>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">-</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>a</mi>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>Nz</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>Ny</mi>
+</mrow>
+</msub>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>Nz</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>Na</mi>
+<mo stretchy="false">-</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+<br/>
+<b><big><a name="Objective Function" id="Objective Function">Objective Function</a></big></b>
+<br/>
+The objective function
+( 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>fg</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ in <a href="cppad_ipopt_nlp.xml" target="_top"><span style='white-space: nowrap'>cppad_ipopt_nlp</span></a>
+ )
+has the following representation,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mi mathvariant='italic'>fg</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>Nz</mi>
+</mrow>
+</munderover>
+<msub><mi mathvariant='italic'>H</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="Initial Condition Constraint" id="Initial Condition Constraint">Initial Condition Constraint</a></big></b>
+<br/>
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>Ny</mi>
+</mrow></math>
+
+,
+we define the component functions 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>fg</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+,
+and corresponding constraint equations, by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mn>0</mn>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>fg</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mn>0</mn>
+</msubsup>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="Trapezoidal Approximation Constraint" id="Trapezoidal Approximation Constraint">Trapezoidal Approximation Constraint</a></big></b>
+<br/>
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>Nz</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+,
+and for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>Ny</mi>
+</mrow></math>
+
+,
+we define the component functions 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>fg</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>j</mi>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+,
+and corresponding constraint equations, by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mn>0</mn>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>fg</mi>
+<mrow><mi mathvariant='italic'>Ny</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>j</mi>
+</mrow>
+</msub>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+</mrow>
+</msubsup>
+<mo stretchy="false">-</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+<mn>-1</mn>
+</mrow>
+</msubsup>
+<mo stretchy="false">-</mo>
+<mrow><mo stretchy="true">[</mo><mrow><msub><mi mathvariant='italic'>G</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+</msup>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>G</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">)</mo>
+</mrow><mo stretchy="true">]</mo></mrow>
+<mo stretchy="false">*</mo>
+<mfrac><mrow><msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>t</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+</mrow>
+<mrow><mn>2</mn>
+</mrow>
+</mfrac>
+</mrow></math>
+
+<br/>
+<b><big><a name="Source" id="Source">Source</a></big></b>
+<br/>
+The file <a href="ipopt_ode_simple.hpp.xml" target="_top"><span style='white-space: nowrap'>ipopt_ode_simple.hpp</span></a>
+
+contains source code for this representation of the
+objective and constraints.
+
+
+<hr/>Input File: cppad_ipopt/example/ode2.omh
+
+</body>
+</html>

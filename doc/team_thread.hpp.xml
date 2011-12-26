@@ -1,0 +1,255 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Specifications for A Team of AD Threads</title>
+<meta name="description" id="description" content="Specifications for A Team of AD Threads"/>
+<meta name="keywords" id="keywords" content=" thread Ad team threads "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_team_thread.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="parallel_ad.xml" target="_top">Prev</a>
+</td><td><a href="team_openmp.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>multi_thread</option>
+<option>team_thread.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>multi_thread-&gt;</option>
+<option>parallel_ad</option>
+<option>team_thread.hpp</option>
+<option>thread_test.cpp</option>
+<option>simple_ad.cpp</option>
+<option>harmonic.cpp</option>
+<option>multi_newton.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>team_thread.hpp-&gt;</option>
+<option>team_openmp.cpp</option>
+<option>team_bthread.cpp</option>
+<option>team_pthread.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Restrictions</option>
+<option>team_start</option>
+<option>team_work</option>
+<option>team_stop</option>
+<option>team_name</option>
+<option>ok</option>
+<option>Example Use</option>
+<option>Example Implementation</option>
+<option>Source</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+<center><b><big><big>Specifications for A Team of AD Threads</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>include&#xA0;&quot;team_thread.hpp&quot;<br/>
+</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;=&#xA0;team_start(</span></font><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;=&#xA0;team_work(</span></font><i><font color="black"><span style='white-space: nowrap'>worker</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;=&#xA0;team_stop()<br/>
+</span></font><i><font color="black"><span style='white-space: nowrap'>name</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;team_name()<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+These routines start, use, and stop a team of threads that can
+be used with the CppAD type <code><font color="blue">AD&lt;double&gt;</font></code>.
+For example,
+these could be OpenMP threads, pthreads, or Boost threads to name a few.
+
+<br/>
+<br/>
+<b><big><a name="Restrictions" id="Restrictions">Restrictions</a></big></b>
+<br/>
+Calls to the routines
+<code><font color="blue">team_start</font></code>,
+<code><font color="blue">team_work</font></code>, and
+<code><font color="blue">team_stop</font></code>, must all be done by the master thread; i.e.,
+<a href="ta_thread_num.xml" target="_top"><span style='white-space: nowrap'>thread_num</span></a>
+ must be zero.
+In addition, they must all be done in sequential execution mode; i.e.,
+when the master thread is the only thread that is running
+(<a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>in_parallel</span></a>
+ must be false).
+
+<br/>
+<br/>
+<b><big><a name="team_start" id="team_start">team_start</a></big></b>
+<br/>
+The argument 
+
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&gt;&#xA0;0</span></font></code>
+ has type <code><font color="blue">size_t</font></code>
+and specifies the number of threads in this team.
+This initializes both <code><font color="blue">AD&lt;double&gt;</font></code> and <code><font color="blue">team_work</font></code>
+to be used with 
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i></code>
+.
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&gt;&#xA0;1</span></font></code>
+,
+
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;-&#xA0;1</span></font></code>
+ new threads are created
+and put in a waiting state until <code><font color="blue">team_work</font></code> is called.
+
+<br/>
+<br/>
+<b><big><a name="team_work" id="team_work">team_work</a></big></b>
+<br/>
+This routine may be called one or more times
+between the call to <code><font color="blue">team_start</font></code> and <code><font color="blue">team_stop</font></code>.
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>worker</span></font></i></code>
+ has type
+
+<code><font color="blue"><span style='white-space: nowrap'>bool&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>worker</span></font></i><font color="blue"><span style='white-space: nowrap'>(void)</span></font></code>
+.
+Each call to <code><font color="blue">team_work</font></code> runs 
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i></code>
+ versions
+of 
+<code><i><font color="black"><span style='white-space: nowrap'>worker</span></font></i></code>
+ with the corresponding value of
+<a href="ta_thread_num.xml" target="_top"><span style='white-space: nowrap'>thread_num</span></a>
+ 
+between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;-&#xA0;1</span></font></code>
+ and
+different for each thread,
+
+<br/>
+<br/>
+<b><big><a name="team_stop" id="team_stop">team_stop</a></big></b>
+<br/>
+This routine terminates all the other threads except for
+thread number zero; i.e., it terminates the threads corresponding to
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>thread_num</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;1&#xA0;,&#xA0;...&#xA0;,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>num_threads</span></font></i><font color="blue"><span style='white-space: nowrap'>-1<br/>
+</span></font></code>
+<br/>
+<b><big><a name="team_name" id="team_name">team_name</a></big></b>
+<br/>
+This routines returns a name that identifies this thread_team.
+The return value has prototype
+
+<code><i><font color="black"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;char*&#xA0;</span></font></i><font color="blue"><span style='white-space: nowrap'>name</span></font><i><font color="black"><span style='white-space: nowrap'><br/>
+</span></font></i></code>
+and is a statically allocated <code><font color="blue">'\0'</font></code> terminated C string.
+
+<br/>
+<br/>
+<b><big><a name="ok" id="ok">ok</a></big></b>
+<br/>
+The return value 
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i></code>
+ has type <code><font color="blue">bool</font></code>.
+It is <code><font color="blue">false</font></code> if an error is detected during the
+corresponding call.
+Otherwise it is <code><font color="blue">true</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Example Use" id="Example Use">Example Use</a></big></b>
+<br/>
+Example use of these specifications can be found in the file
+<a href="simple_ad.cpp.xml" target="_top"><span style='white-space: nowrap'>simple_ad.cpp</span></a>
+.
+
+
+<br/>
+<br/>
+<b><big><a name="Example Implementation" id="Example Implementation">Example Implementation</a></big></b>
+<br/>
+Example implementations of these specifications can be found in the files:
+<table><tr><td align='left'  valign='top'>
+
+<a href="team_openmp.cpp.xml" target="_top">team_openmp.cpp</a></td><td>
+OpenMP Implementation of a Team of AD Threads</td></tr>
+<tr><td>
+
+<a href="team_bthread.cpp.xml" target="_top">team_bthread.cpp</a></td><td>
+Boost Thread Implementation of a Team of AD Threads</td></tr>
+<tr><td>
+
+<a href="team_pthread.cpp.xml" target="_top">team_pthread.cpp</a></td><td>
+Pthread Implementation of a Team of AD Threads</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Source" id="Source">Source</a></big></b>
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;cstddef&gt; // for size_t
+
+extern bool team_start(size_t num_threads);
+extern bool team_work(void worker(void));
+extern bool team_stop(void);
+extern const char* team_name(void);
+</pre></font></code>
+
+
+<hr/>Input File: multi_thread/team_thread.hpp
+
+</body>
+</html>

@@ -1,0 +1,209 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Adolc Speed: Sparse Hessian</title>
+<meta name="description" id="description" content="Adolc Speed: Sparse Hessian"/>
+<meta name="keywords" id="keywords" content=" adolc speed sparse Hessian link_sparse_hessian "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_adolc_sparse_hessian.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="adolc_poly.cpp.xml" target="_top">Prev</a>
+</td><td><a href="adolc_sparse_jacobian.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_adolc</option>
+<option>adolc_sparse_hessian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_adolc-&gt;</option>
+<option>adolc_det_minor.cpp</option>
+<option>adolc_det_lu.cpp</option>
+<option>adolc_mat_mul.cpp</option>
+<option>adolc_ode.cpp</option>
+<option>adolc_poly.cpp</option>
+<option>adolc_sparse_hessian.cpp</option>
+<option>adolc_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>adolc_sparse_hessian.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Operation Sequence</option>
+<option>link_sparse_hessian</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Adolc Speed: Sparse Hessian</big></big></b></center>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+Note that the 
+<a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+
+depends on the vectors <i>i</i> and <i>j</i>.
+Hence we use a different <a href="adfun.xml" target="_top"><span style='white-space: nowrap'>ADFun</span></a>
+ object for 
+each choice of <i>i</i> and <i>j</i>.
+
+<br/>
+<br/>
+<b><big><a name="link_sparse_hessian" id="link_sparse_hessian">link_sparse_hessian</a></big></b>
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;cppad/vector.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/thread_alloc.hpp&gt;
+# include &lt;cppad/speed/sparse_evaluate.hpp&gt;
+
+# include &lt;adolc/adouble.h&gt;
+# include &lt;adolc/taping.h&gt;
+# include &lt;adolc/drivers/drivers.h&gt;
+
+bool link_sparse_hessian(
+	size_t                     repeat   , 
+	CppAD::vector&lt;double&gt;     &amp;x_arg    ,
+	CppAD::vector&lt;size_t&gt;     &amp;i        ,
+	CppAD::vector&lt;size_t&gt;     &amp;j        ,
+	CppAD::vector&lt;double&gt;     &amp;h        )
+{
+	// -----------------------------------------------------
+	// setup
+	size_t k, m;
+	size_t order = 0;         // derivative order corresponding to function
+	size_t tag  = 0;          // tape identifier
+	size_t keep = 1;          // keep forward mode results in buffer
+	size_t n = x_arg.size();  // number of independent variables
+	size_t ell = i.size();    // number of indices in i and j
+	double f;                 // function value
+
+	// use thread_alloc memory allocator (fast and checks for leaks)
+	using CppAD::thread_alloc; // the allocator
+	size_t capacity;           // capacity of an allocation
+
+	typedef CppAD::vector&lt;double&gt;  DblVector;
+	typedef CppAD::vector&lt;adouble&gt; ADVector;
+	typedef CppAD::vector&lt;size_t&gt;  SizeVector;
+
+	ADVector   X(n);    // AD domain space vector
+	ADVector   Y(1);    // AD range space value
+	DblVector tmp(2 * ell);       // double temporary vector
+
+	// double version of domain space vector
+	double* x  = thread_alloc::create_array&lt;double&gt;(n, capacity);
+	// Hessian as computed by adolc
+	double** H = thread_alloc::create_array&lt;double*&gt;(n, capacity);
+	for(k = 0; k &lt; n; k++)
+		H[k] = thread_alloc::create_array&lt;double&gt;(n, capacity);
+
+	// choose a value for x 
+	CppAD::uniform_01(n, x);
+	for(k = 0; k &lt; n; k++)
+		x_arg[k] = x[k];
+
+	// ------------------------------------------------------
+	while(repeat--)
+	{
+		// get the next set of indices
+		CppAD::uniform_01(2 * ell, tmp);
+		for(k = 0; k &lt; ell; k++)
+		{	i[k] = size_t( n * tmp[k] );
+			i[k] = std::min(n-1, i[k]);
+			//
+			j[k] = size_t( n * tmp[k + ell] );
+			j[k] = std::min(n-1, j[k]);
+		}
+
+		// declare independent variables
+		trace_on(tag, keep);
+		for(k = 0; k &lt; n; k++)
+			X[k] &lt;&lt;= x[k];
+
+		// AD computation of f(x)
+		CppAD::sparse_evaluate(X, i, j, order, Y);
+
+		// create function object f : X -&gt; Y
+		Y[0] &gt;&gt;= f;
+		trace_off();
+
+		// evaluate and return the hessian of f
+		hessian(int(tag), int(n), x, H);
+	}
+	for(k = 0; k &lt; n; k++)
+	{	for(m = 0; m &lt;= k; m++)
+		{	h[ k * n + m] = H[k][m];
+			h[ m * n + k] = H[k][m];
+		}
+		thread_alloc::delete_array(H[k]);
+	}
+	thread_alloc::delete_array(H);
+	thread_alloc::delete_array(x);
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/adolc/sparse_hessian.cpp
+
+</body>
+</html>

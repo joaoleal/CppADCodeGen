@@ -1,0 +1,420 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>CppAD Examples and Tests</title>
+<meta name="description" id="description" content="CppAD Examples and Tests"/>
+<meta name="keywords" id="keywords" content=" example Cppad test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_example.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exampleutility.xml" target="_top">Prev</a>
+</td><td><a href="speed_example.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>ExampleUtility</option>
+<option>example.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ExampleUtility-&gt;</option>
+<option>example.cpp</option>
+<option>speed_example.cpp</option>
+<option>LuVecAD</option>
+</select>
+</td>
+<td>example.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Running Tests</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>CppAD Examples and Tests</big></big></b></center>
+<br/>
+<b><big><a name="Running Tests" id="Running Tests">Running Tests</a></big></b>
+<br/>
+To build this program and run its correctness tests,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;example<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+There are a lot of tests, so this may take a while to compile.
+
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+// system include files used for I/O
+# include &lt;iostream&gt;
+
+// C style asserts
+# include &lt;cassert&gt;
+
+// standard string
+# include &lt;string&gt;
+
+// memory leak utility
+# include &lt;cppad/memory_leak.hpp&gt;
+
+// external complied tests
+extern bool abort_recording(void);
+extern bool Abs(void);
+extern bool Acos(void);
+extern bool Add(void);
+extern bool AddEq(void);
+extern bool ad_fun(void);
+extern bool ad_in_c(void);
+extern bool Asin(void);
+extern bool Atan(void);
+extern bool Atan2(void);
+extern bool BenderQuad(void);
+extern bool BoolFun(void);
+extern bool vectorBool(void);
+extern bool CheckNumericType(void);
+extern bool checkpoint(void);
+extern bool CheckSimpleVector(void);
+extern bool Compare(void);
+extern bool CompareChange(void);
+extern bool complex_poly(void);
+extern bool CondExp(void);
+extern bool conj_grad(void);
+extern bool CopyAD(void);
+extern bool CopyBase(void);
+extern bool Cos(void);
+extern bool Cosh(void);
+extern bool CppAD_vector(void);
+extern bool Default(void);
+extern bool Div(void);
+extern bool DivEq(void);
+extern bool epsilon(void);
+extern bool Eq(void);
+extern bool EqualOpSeq(void);
+extern bool Erf(void);
+extern bool ErrorHandler(void);
+extern bool Exp(void);
+extern bool ForOne(void);
+extern bool ForTwo(void);
+extern bool ForSparseJac(void);
+extern bool Forward(void);
+extern bool fun_assign(void);
+extern bool FunCheck(void);
+extern bool HesLagrangian(void);
+extern bool HesLuDet(void);
+extern bool HesMinorDet(void);
+extern bool Hessian(void);
+extern bool HesTimesDir(void);
+extern bool <a href="independent.xml" target="_top">Independent</a>(void);
+extern bool Integer(void);
+extern bool Interface2C(void);
+extern bool interp_onetape(void);
+extern bool interp_retape(void);
+extern bool JacLuDet(void);
+extern bool JacMinorDet(void);
+extern bool Jacobian(void);
+extern bool Log(void);
+extern bool Log10(void);
+extern bool LuFactor(void);
+extern bool LuInvert(void);
+extern bool LuRatio(void);
+extern bool LuSolve(void);
+extern bool LuVecADOk(void);
+extern bool mat_mul(void);
+extern bool Mul(void);
+extern bool MulEq(void);
+extern bool mul_level(void);
+extern bool mul_level_adolc(void);
+extern bool nan(void);
+extern bool Near_Equal(void);
+extern bool NearEqualExt(void);
+extern bool not_complex_ad(void);
+extern bool NumericType(void);
+extern bool OdeErrControl(void);
+extern bool OdeErrMaxabs(void);
+extern bool OdeGear(void);
+extern bool OdeGearControl(void);
+extern bool OdeStiff(void);
+extern bool ode_taylor(void);
+extern bool ode_taylor_adolc(void);
+extern bool omp_alloc(void);
+extern bool opt_val_hes(void);
+extern bool optimize(void);
+extern bool Output(void);
+extern bool ParVar(void);
+extern bool Poly(void);
+extern bool Pow(void);
+extern bool pow_int(void);
+extern bool print_for(void);
+extern bool reverse_any(void);
+extern bool reverse_one(void);
+extern bool reverse_three(void);
+extern bool reverse_two(void);
+extern bool RevOne(void);
+extern bool RevSparseHes(void);
+extern bool RevSparseJac(void);
+extern bool RevTwo(void);
+extern bool RombergMul(void);
+extern bool RombergOne(void);
+extern bool Rosen34(void);
+extern bool runge_45_1(void);
+extern bool runge_45_2(void);
+extern bool seq_property(void);
+extern bool SimpleVector(void);
+extern bool Sin(void);
+extern bool Sinh(void);
+extern bool sparse_hessian(void);
+extern bool sparse_jacobian(void);
+extern bool Sqrt(void);
+extern bool StackMachine(void);
+extern bool Sub(void);
+extern bool SubEq(void);
+extern bool Tan(void);
+extern bool Tanh(void);
+extern bool TapeIndex(void);
+extern bool thread_alloc(void);
+extern bool UnaryMinus(void);
+extern bool UnaryPlus(void);
+extern bool user_tan(void);
+extern bool Value(void);
+extern bool Var2Par(void);
+extern bool vec_ad(void);
+
+namespace {
+	// function that runs one test
+	static size_t Run_ok_count    = 0;
+	static size_t Run_error_count = 0;
+	bool Run(bool TestOk(void), std::string name)
+	{	bool ok      = true;
+		std::streamsize width =  20;         
+		std::cout.width( width );
+		std::cout.setf( std::ios_base::left );
+		std::cout &lt;&lt; name;
+		//
+		ok &amp;= name.size() &lt; size_t(width);
+		ok &amp;= TestOk();
+		if( ok )
+		{	std::cout &lt;&lt; &quot;OK&quot; &lt;&lt; std::endl;
+			Run_ok_count++;
+		}
+		else
+		{	std::cout &lt;&lt; &quot;Error&quot; &lt;&lt; std::endl;
+			Run_error_count++;
+		}
+		return ok;
+	}
+}
+
+// main program that runs all the tests
+int main(void)
+{	bool ok = true;
+
+	// This line is used by test_one.sh
+
+	// external compiled tests
+	ok &amp;= Run( abort_recording,   &quot;abort_recording&quot;  );
+	ok &amp;= Run( Abs,               &quot;Abs&quot;              );
+	ok &amp;= Run( Acos,              &quot;Acos&quot;             );
+	ok &amp;= Run( Add,               &quot;Add&quot;              );
+	ok &amp;= Run( AddEq,             &quot;AddEq&quot;            );
+	ok &amp;= Run( ad_fun,            &quot;ad_fun&quot;           );
+	ok &amp;= Run( ad_in_c,           &quot;ad_in_c&quot;          );
+	ok &amp;= Run( Asin,              &quot;Asin&quot;             );
+	ok &amp;= Run( Atan,              &quot;Atan&quot;             );
+	ok &amp;= Run( Atan2,             &quot;Atan2&quot;            );
+	ok &amp;= Run( BenderQuad,        &quot;BenderQuad&quot;       );
+	ok &amp;= Run( BoolFun,           &quot;BoolFun&quot;          );
+	ok &amp;= Run( vectorBool,        &quot;vectorBool&quot;       );
+	ok &amp;= Run( CheckNumericType,  &quot;CheckNumericType&quot; );
+	ok &amp;= Run( checkpoint,        &quot;checkpoint&quot;       );
+	ok &amp;= Run( CheckSimpleVector, &quot;CheckSimpleVector&quot;);
+	ok &amp;= Run( Compare,           &quot;Compare&quot;          );
+	ok &amp;= Run( CompareChange,     &quot;CompareChange&quot;    );
+	ok &amp;= Run( complex_poly,      &quot;complex_poly&quot;     );
+	ok &amp;= Run( CondExp,           &quot;CondExp&quot;          );
+	ok &amp;= Run( conj_grad,         &quot;conj_grad&quot;        );
+	ok &amp;= Run( CopyAD,            &quot;CopyAD&quot;           );
+	ok &amp;= Run( CopyBase,          &quot;CopyBase&quot;         );
+	ok &amp;= Run( Cos,               &quot;Cos&quot;              );
+	ok &amp;= Run( Cosh,              &quot;Cosh&quot;             );
+	ok &amp;= Run( CppAD_vector,      &quot;CppAD_vector&quot;     );
+	ok &amp;= Run( Default,           &quot;Default&quot;          );
+	ok &amp;= Run( Div,               &quot;Div&quot;              );
+	ok &amp;= Run( DivEq,             &quot;DivEq&quot;            );
+	ok &amp;= Run( epsilon,           &quot;epsilon&quot;          );
+	ok &amp;= Run( Eq,                &quot;Eq&quot;               );
+	ok &amp;= Run( EqualOpSeq,        &quot;EqualOpSeq&quot;       );
+	ok &amp;= Run( Erf,               &quot;Erf&quot;              );
+	ok &amp;= Run( ErrorHandler,      &quot;ErrorHandler&quot;     );
+	ok &amp;= Run( Exp,               &quot;Exp&quot;              );
+	ok &amp;= Run( ForOne,            &quot;ForOne&quot;           );
+	ok &amp;= Run( ForTwo,            &quot;ForTwo&quot;           );
+	ok &amp;= Run( Forward,           &quot;Forward&quot;          ); 
+	ok &amp;= Run( ForSparseJac,      &quot;ForSparseJac&quot;     );
+	ok &amp;= Run( fun_assign,        &quot;fun_assign&quot;       );
+	ok &amp;= Run( FunCheck,          &quot;FunCheck&quot;         );
+	ok &amp;= Run( HesLagrangian,     &quot;HesLagrangian&quot;    );
+	ok &amp;= Run( HesLuDet,          &quot;HesLuDet&quot;         );
+	ok &amp;= Run( HesMinorDet,       &quot;HesMinorDet&quot;      );
+	ok &amp;= Run( Hessian,           &quot;Hessian&quot;          );
+	ok &amp;= Run( HesTimesDir,       &quot;HesTimesDir&quot;      );
+	ok &amp;= Run( Independent,       &quot;Independent&quot;      );
+	ok &amp;= Run( Integer,           &quot;Integer&quot;          );
+	ok &amp;= Run( Interface2C,       &quot;Interface2C&quot;      );
+	ok &amp;= Run( interp_onetape,    &quot;interp_onetape&quot;   );
+	ok &amp;= Run( interp_retape,     &quot;interp_retape&quot;    );
+	ok &amp;= Run( JacLuDet,          &quot;JacLuDet&quot;         );
+	ok &amp;= Run( JacMinorDet,       &quot;JacMinorDet&quot;      );
+	ok &amp;= Run( Jacobian,          &quot;Jacobian&quot;         );
+	ok &amp;= Run( Log,               &quot;Log&quot;              );
+	ok &amp;= Run( Log10,             &quot;Log10&quot;            );
+	ok &amp;= Run( LuFactor,          &quot;LuFactor&quot;         );
+	ok &amp;= Run( LuInvert,          &quot;LuInvert&quot;         );
+	ok &amp;= Run( LuRatio,           &quot;LuRatio&quot;          );
+	ok &amp;= Run( LuSolve,           &quot;LuSolve&quot;          );
+	ok &amp;= Run( LuVecADOk,         &quot;LuVecADOk&quot;        );
+	ok &amp;= Run( mat_mul,           &quot;mat_mul&quot;          );
+	ok &amp;= Run( Mul,               &quot;Mul&quot;              );
+	ok &amp;= Run( MulEq,             &quot;MulEq&quot;            );
+	ok &amp;= Run( mul_level,         &quot;mul_level&quot;        );
+	ok &amp;= Run( nan,               &quot;nan&quot;              );
+	ok &amp;= Run( Near_Equal,        &quot;Near_Equal&quot;       );
+	ok &amp;= Run( NearEqualExt,      &quot;NearEqualExt&quot;     );
+	ok &amp;= Run( not_complex_ad,    &quot;not_complex_ad&quot;   );
+	ok &amp;= Run( NumericType,       &quot;NumericType&quot;      );
+	ok &amp;= Run( OdeErrControl,     &quot;OdeErrControl&quot;    );
+	ok &amp;= Run( OdeErrMaxabs,      &quot;OdeErrMaxabs&quot;     );
+	ok &amp;= Run( OdeGear,           &quot;OdeGear&quot;          );
+	ok &amp;= Run( OdeGearControl,    &quot;OdeGearControl&quot;   );
+	ok &amp;= Run( OdeStiff,          &quot;OdeStiff&quot;         );
+	ok &amp;= Run( ode_taylor,        &quot;ode_taylor&quot;       );
+	ok &amp;= Run( omp_alloc,         &quot;omp_alloc&quot;        );
+	ok &amp;= Run( opt_val_hes,       &quot;opt_val_hes&quot;      );
+	ok &amp;= Run( optimize,          &quot;optimize&quot;         );
+	ok &amp;= Run( Output,            &quot;Output&quot;           );
+	ok &amp;= Run( ParVar,            &quot;ParVar&quot;           );
+	ok &amp;= Run( Pow,               &quot;Poly&quot;             );
+	ok &amp;= Run( Pow,               &quot;Pow&quot;              );
+	ok &amp;= Run( pow_int,           &quot;pow_int&quot;          );
+	ok &amp;= Run( reverse_any,       &quot;reverse_any&quot;      );
+	ok &amp;= Run( reverse_one,       &quot;reverse_one&quot;      );
+	ok &amp;= Run( reverse_three,     &quot;reverse_three&quot;    );
+	ok &amp;= Run( reverse_two,       &quot;reverse_two&quot;      );
+	ok &amp;= Run( RevOne,            &quot;RevOne&quot;           );
+	ok &amp;= Run( RevSparseHes,      &quot;RevSparseHes&quot;     );
+	ok &amp;= Run( RevSparseJac,      &quot;RevSparseJac&quot;     );
+	ok &amp;= Run( RevTwo,            &quot;RevTwo&quot;           );
+	ok &amp;= Run( RombergMul,        &quot;RombergMul&quot;       );
+	ok &amp;= Run( RombergOne,        &quot;RombergOne&quot;       );
+	ok &amp;= Run( Rosen34,           &quot;Rosen34&quot;          );
+	ok &amp;= Run( runge_45_1,        &quot;runge_45_1&quot;       );
+	ok &amp;= Run( runge_45_2,        &quot;runge_45_2&quot;       );
+	ok &amp;= Run( seq_property,      &quot;seq_property&quot;     );
+	ok &amp;= Run( SimpleVector,      &quot;SimpleVector&quot;     );
+	ok &amp;= Run( Sin,               &quot;Sin&quot;              );
+	ok &amp;= Run( Sinh,              &quot;Sinh&quot;             );
+	ok &amp;= Run( sparse_hessian,    &quot;sparse_hessian&quot;   );
+	ok &amp;= Run( sparse_jacobian,   &quot;sparse_jacobian&quot;  );
+	ok &amp;= Run( Sqrt,              &quot;Sqrt&quot;             );
+	ok &amp;= Run( StackMachine,      &quot;StackMachine&quot;     );
+	ok &amp;= Run( Sub,               &quot;Sub&quot;              );
+	ok &amp;= Run( SubEq,             &quot;SubEq&quot;            );
+	ok &amp;= Run( Tan,               &quot;Tan&quot;              );
+	ok &amp;= Run( Tanh,              &quot;Tanh&quot;             );
+	ok &amp;= Run( TapeIndex,         &quot;TapeIndex&quot;        );
+	ok &amp;= Run( thread_alloc,      &quot;thread_alloc&quot;     );
+	ok &amp;= Run( UnaryMinus,        &quot;UnaryMinus&quot;       );
+	ok &amp;= Run( UnaryPlus,         &quot;UnaryPlus&quot;        );
+	ok &amp;= Run( user_tan,           &quot;user_tan&quot;        );
+	ok &amp;= Run( Value,             &quot;Value&quot;            );
+	ok &amp;= Run( Var2Par,           &quot;Var2Par&quot;          );
+	ok &amp;= Run( vec_ad,            &quot;vec_ad&quot;           );
+# ifdef CPPAD_ADOLC_EXAMPLES
+	ok &amp;= Run( mul_level_adolc,   &quot;mul_level_adolc&quot;  );
+	ok &amp;= Run( ode_taylor_adolc,  &quot;ode_taylor_adolc&quot; );
+# endif
+
+	// check for errors
+	using std::cout;
+	using std::endl;
+	assert( ok || (Run_error_count &gt; 0) );
+	if( CppAD::memory_leak() )
+	{	ok = false;
+		Run_error_count++;
+		cout &lt;&lt; &quot;Error: &quot; &lt;&lt; &quot;memory leak detected&quot; &lt;&lt; endl;
+	}
+	else
+	{	Run_ok_count++;
+		cout &lt;&lt; &quot;OK:    &quot; &lt;&lt; &quot;No memory leak detected&quot; &lt;&lt; endl;
+	}
+	// convert int(size_t) to avoid warning on _MSC_VER systems
+	if( ok )
+		cout &lt;&lt; &quot;All &quot; &lt;&lt; int(Run_ok_count) &lt;&lt; &quot; tests passed.&quot; &lt;&lt; endl;
+	else	cout &lt;&lt; int(Run_error_count) &lt;&lt; &quot; tests failed.&quot; &lt;&lt; endl;
+
+	return static_cast&lt;int&gt;( ! ok );
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/example.cpp
+
+</body>
+</html>

@@ -1,0 +1,664 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Trigonometric and Hyperbolic Sine and Cosine Forward Theory</title>
+<meta name="description" id="description" content="Trigonometric and Hyperbolic Sine and Cosine Forward Theory"/>
+<meta name="keywords" id="keywords" content=" sin forward sinh cos cosh theory "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sincosforward_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="sqrtforward.xml" target="_top">Prev</a>
+</td><td><a href="atanforward.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>Theory</option>
+<option>ForwardTheory</option>
+<option>SinCosForward</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Theory-&gt;</option>
+<option>ForwardTheory</option>
+<option>ReverseTheory</option>
+<option>reverse_identity</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ForwardTheory-&gt;</option>
+<option>ExpForward</option>
+<option>LogForward</option>
+<option>SqrtForward</option>
+<option>SinCosForward</option>
+<option>AtanForward</option>
+<option>AsinForward</option>
+<option>AcosForward</option>
+<option>tan_forward</option>
+</select>
+</td>
+<td>SinCosForward</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Differential Equation</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Trigonometric and Hyperbolic Sine and Cosine Forward Theory</big></big></b></center>
+<br/>
+<b><big><a name="Differential Equation" id="Differential Equation">Differential Equation</a></big></b>
+<br/>
+The
+<a href="forwardtheory.xml#Standard Math Functions.Differential Equation" target="_top"><span style='white-space: nowrap'>standard&#xA0;math&#xA0;function&#xA0;differential&#xA0;equation</span></a>
+
+is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>B</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>F</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>D</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+In this sections we consider forward mode for the following choices:
+
+<table><tr><td align='left'  valign='top'>
+
+<code><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;</span></code> 
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ 
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>cos</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>sinh</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>cosh</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>0</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>0</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>0</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>0</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>B</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ 
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>1</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>1</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>1</mn>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>1</mn>
+</mrow></math>
+
+
+</td></tr><tr><td align='left'  valign='top'>
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>D</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>cos</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">-</mo>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>cosh</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+	</td><td align='left'  valign='top'>
+ </td><td align='left'  valign='top'>
+ 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi>sinh</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+</td></tr>
+</table>
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>a</mi>
+</mrow></math>
+
+, 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>b</mi>
+</mrow></math>
+
+, 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>d</mi>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+</mrow></math>
+
+ for the
+Taylor coefficients of
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+, 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>B</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+, 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>D</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+,
+and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ respectively.
+It now follows from the general
+<a href="forwardtheory.xml#Standard Math Functions.Taylor Coefficients Recursion Formula" target="_top"><span style='white-space: nowrap'>Taylor&#xA0;coefficients&#xA0;recursion&#xA0;formula</span></a>
+
+that for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>D</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='italic'>e</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>d</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">+</mo>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>j</mi>
+</mrow>
+</munderover>
+<msup><mi mathvariant='italic'>a</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>d</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</mfrac>
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><msup><mi mathvariant='italic'>b</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow>
+</mfrac>
+<mrow><mo stretchy="true">(</mo><mrow><munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</munderover>
+<mi mathvariant='italic'>k</mi>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<msup><mi mathvariant='italic'>e</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">-</mo>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>j</mi>
+</munderover>
+<mi mathvariant='italic'>k</mi>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<msup><mi mathvariant='italic'>b</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow><mo stretchy="true">)</mo></mrow>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</mfrac>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</munderover>
+<mi mathvariant='italic'>k</mi>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<msup><mi mathvariant='italic'>d</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mtd></mtr></mtable>
+</mrow></math>
+
+The formula above generates the 
+order 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow></math>
+
+ coefficient of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ from the
+lower order coefficients for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>D</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+.
+
+
+<hr/>Input File: omh/sin_cos_forward.omh
+
+</body>
+</html>

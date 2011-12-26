@@ -1,0 +1,219 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Using Subversion To Download Source Code</title>
+<meta name="description" id="description" content="Using Subversion To Download Source Code"/>
+<meta name="keywords" id="keywords" content=" download subversion "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_subversion_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="installunix.xml" target="_top">Prev</a>
+</td><td><a href="pkgconfig.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Install</option>
+<option>InstallUnix</option>
+<option>subversion</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Install-&gt;</option>
+<option>InstallUnix</option>
+<option>pkgconfig</option>
+<option>InstallWindows</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>InstallUnix-&gt;</option>
+<option>subversion</option>
+</select>
+</td>
+<td>subversion</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>File Format</option>
+<option>Subversion</option>
+<option>OMhelp</option>
+<option>Current Version</option>
+<option>Stable Versions</option>
+<option>Release Versions</option>
+<option>Build the Documentation</option>
+<option>Continue with Installation</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Using Subversion To Download Source Code</big></big></b></center>
+<br/>
+<b><big><a name="File Format" id="File Format">File Format</a></big></b>
+<br/>
+The files corresponding to this download
+procedure are in Unix format; i.e., 
+each line ends with just a line feed.
+
+<br/>
+<br/>
+<b><big><a name="Subversion" id="Subversion">Subversion</a></big></b>
+<br/>
+You must have
+<a href="http://subversion.tigris.org/" target="_top"><span style='white-space: nowrap'>subversion</span></a>
+
+installed to use this download procedure.
+In Unix, you can check if subversion 
+is already installed in your path by entering the command
+<code><font color='blue'><pre style='display:inline'> 
+	which svn
+</pre></font></code>
+
+
+
+<br/>
+<br/>
+<b><big><a name="OMhelp" id="OMhelp">OMhelp</a></big></b>
+<br/>
+The documentation for CppAD is built from the source code files using
+<a href="http://www.seanet.com/~bradbell/omhelp/" target="_top"><span style='white-space: nowrap'>OMhelp</span></a>
+.
+In Unix, you can check if OMhelp 
+is already installed in your path by entering the command
+<code><font color='blue'><pre style='display:inline'> 
+	which omhelp
+</pre></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Current Version" id="Current Version">Current Version</a></big></b>
+<br/>
+The following command will download the 
+current version of the CppAD source code:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;svn&#xA0;co&#xA0;https://projects.coin-or.org/svn/CppAD/</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+where 
+<code><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i></code>
+ is replaced by <code><font color="blue">trunk</font></code>.
+To see if this has been done correctly, check for the following file:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad/cppad.hpp<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Stable Versions" id="Stable Versions">Stable Versions</a></big></b>
+<br/>
+Subversion downloads are available for a set of stable versions
+(after the specified date, only bug fixes get applied).
+The following link will list the available 
+<code><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i></code>
+ values
+corresponding to 
+<a href="https://projects.coin-or.org/CppAD/browser/stable" target="_top"><span style='white-space: nowrap'>stable&#xA0;versions</span></a>
+.
+The following command will download a 
+stable version of the CppAD source code:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;svn&#xA0;co&#xA0;https://projects.coin-or.org/svn/CppAD/stable/</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+To see if this has been done correctly, check for the following file:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad/cppad.hpp<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Release Versions" id="Release Versions">Release Versions</a></big></b>
+<br/>
+Subversion downloads are available for a set of release versions
+(no changes are applied).
+The following link will list the available 
+<code><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i></code>
+ values
+corresponding to 
+<a href="https://projects.coin-or.org/CppAD/browser/releases" target="_top"><span style='white-space: nowrap'>release&#xA0;versions</span></a>
+.
+The following command will download a 
+stable version of the CppAD source code:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;svn&#xA0;co&#xA0;https://projects.coin-or.org/svn/CppAD/stable/</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+To see if this has been done correctly, check for the following file:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad/cppad.hpp<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Build the Documentation" id="Build the Documentation">Build the Documentation</a></big></b>
+<br/>
+Now build the documentation for this version using the commands
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;mkdir&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/doc<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/doc<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;omhelp&#xA0;../doc.omh&#xA0;-noframe&#xA0;-debug&#xA0;-l&#xA0;http://www.coin-or.org/CppAD/&#xA0;-xml<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Continue with Installation" id="Continue with Installation">Continue with Installation</a></big></b>
+<br/>
+Once the steps above are completed,
+you can proceed with the install instructions in 
+the documentation you just built.
+Start by opening the file
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>dir</span></font></i><font color="blue"><span style='white-space: nowrap'>/doc/index.xml<br/>
+</span></font></code>
+in a web browser and proceeding to the 
+<a href="installunix.xml" target="_top"><span style='white-space: nowrap'>Unix</span></a>
+ or <a href="installwindows.xml" target="_top"><span style='white-space: nowrap'>Windows</span></a>
+
+install instructions.
+
+
+<hr/>Input File: omh/subversion.omh
+
+</body>
+</html>

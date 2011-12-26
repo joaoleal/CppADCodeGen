@@ -1,0 +1,161 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>CompareChange and Re-Tape: Example and Test</title>
+<meta name="description" id="description" content="CompareChange and Re-Tape: Example and Test"/>
+<meta name="keywords" id="keywords" content=" compare change example Comparechange test re-tape "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_comparechange.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="comparechange.xml" target="_top">Prev</a>
+</td><td><a href="capacity_taylor.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>FunEval</option>
+<option>Forward</option>
+<option>CompareChange</option>
+<option>CompareChange.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>FunEval-&gt;</option>
+<option>Forward</option>
+<option>Reverse</option>
+<option>Sparse</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Forward-&gt;</option>
+<option>ForwardZero</option>
+<option>ForwardOne</option>
+<option>ForwardAny</option>
+<option>size_taylor</option>
+<option>CompareChange</option>
+<option>capacity_taylor</option>
+<option>Forward.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>CompareChange-&gt;</option>
+<option>CompareChange.cpp</option>
+</select>
+</td>
+<td>CompareChange.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>CompareChange and Re-Tape: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+
+namespace { // put this function in the empty namespace
+	template &lt;typename Type&gt;
+	Type Minimum(const Type &amp;x, const Type &amp;y)
+	{	// Use a comparision to compute the min(x, y)
+		// (note that CondExp would never require retaping). 
+		if( x &lt; y )  
+			return x;
+		return y;
+	}
+}
+
+bool CompareChange(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::ADFun;
+	using CppAD::Independent;
+
+	// domain space vector
+	size_t n = 2;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	X[0] = 3.;
+	X[1] = 4.;
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// range space vector
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	Y[0] = Minimum(X[0], X[1]);
+
+	// create f: x -&gt; y and stop tape recording
+	<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// evaluate zero mode Forward where conditional has the same result
+	// note that f.CompareChange is not defined when NDEBUG is true
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; y(m);
+	x[0] = 3.5;
+	x[1] = 4.;  
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok  &amp;= (y[0] == x[0]);
+	ok  &amp;= (y[0] == Minimum(x[0], x[1]));
+	ok  &amp;= (f.CompareChange() == 0);
+
+	// evaluate zero mode Forward where conditional has different result
+	x[0] = 4.;
+	x[1] = 3.;
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok  &amp;= (y[0] == x[0]);
+	ok  &amp;= (y[0] != Minimum(x[0], x[1]));
+	ok  &amp;= (f.CompareChange() == 1); 
+
+	// re-tape to obtain the new AD operation sequence
+	X[0] = 4.;
+	X[1] = 3.;
+	<a href="independent.xml" target="_top">Independent</a>(X);
+	Y[0] = Minimum(X[0], X[1]);
+
+	// stop tape and store result in f
+	f.Dependent(Y);
+
+	// evaluate the function at new argument values
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok  &amp;= (y[0] == x[1]);
+	ok  &amp;= (y[0] == Minimum(x[0], x[1]));
+	ok  &amp;= (f.CompareChange() == 0); 
+
+	return ok;
+}
+
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/compare_change.cpp
+
+</body>
+</html>

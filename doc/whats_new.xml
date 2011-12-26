@@ -1,0 +1,116 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Changes and Additions to CppAD</title>
+<meta name="description" id="description" content="Changes and Additions to CppAD"/>
+<meta name="keywords" id="keywords" content=" "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_whats_new_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="wishlist.xml" target="_top">Prev</a>
+</td><td><a href="whats_new_11.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>whats_new</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>whats_new-&gt;</option>
+<option>whats_new_11</option>
+<option>whats_new_10</option>
+<option>whats_new_09</option>
+<option>whats_new_08</option>
+<option>whats_new_07</option>
+<option>whats_new_06</option>
+<option>whats_new_05</option>
+<option>whats_new_04</option>
+<option>whats_new_03</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Introduction</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Changes and Additions to CppAD</big></big></b></center>
+<br/>
+<b><big><a name="Introduction" id="Introduction">Introduction</a></big></b>
+<br/>
+The sections listed below contain a list of the changes to CppAD 
+in reverse order by date.
+The purpose of these sections is to
+assist you in learning about changes between various versions of CppAD.
+
+<br/>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<table>
+<tr><td><a href="whats_new_11.xml" target="_top">whats_new_11</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2011</td></tr><tr><td><a href="whats_new_10.xml" target="_top">whats_new_10</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2010</td></tr><tr><td><a href="whats_new_09.xml" target="_top">whats_new_09</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2009</td></tr><tr><td><a href="whats_new_08.xml" target="_top">whats_new_08</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2008</td></tr><tr><td><a href="whats_new_07.xml" target="_top">whats_new_07</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2007</td></tr><tr><td><a href="whats_new_06.xml" target="_top">whats_new_06</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2006</td></tr><tr><td><a href="whats_new_05.xml" target="_top">whats_new_05</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2005</td></tr><tr><td><a href="whats_new_04.xml" target="_top">whats_new_04</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2004</td></tr><tr><td><a href="whats_new_03.xml" target="_top">whats_new_03</a></td><td>Changes&#xA0;and&#xA0;Additions&#xA0;to&#xA0;CppAD&#xA0;During&#xA0;2003</td></tr></table>
+<hr/>Input File: omh/whats_new.omh
+
+</body>
+</html>

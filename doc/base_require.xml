@@ -1,0 +1,266 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD&lt;Base&gt; Requirements for Base Type</title>
+<meta name="description" id="description" content="AD&lt;Base&gt; Requirements for Base Type"/>
+<meta name="keywords" id="keywords" content=" Base require type Integer base epsilon machine "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_base_require_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="vec_ad.cpp.xml" target="_top">Prev</a>
+</td><td><a href="base_cond_exp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>base_require-&gt;</option>
+<option>base_cond_exp</option>
+<option>base_identical</option>
+<option>base_ordered</option>
+<option>base_std_math</option>
+<option>base_float.hpp</option>
+<option>base_double.hpp</option>
+<option>base_complex.hpp</option>
+<option>base_adolc.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Warning</option>
+<option>Purpose</option>
+<option>---..Standard Base Types</option>
+<option>Include Order</option>
+<option>Numeric Type</option>
+<option>Integer</option>
+<option>---..Suggestion</option>
+<option>epsilon</option>
+<option>isnan</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>AD&lt;Base&gt; Requirements for Base Type</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<code><font color="blue"><br/>
+include &lt;cppad/base_require.hpp&gt;</font></code>
+
+<br/>
+<br/>
+<b><big><a name="Warning" id="Warning">Warning</a></big></b>
+<br/>
+This is a preliminary version of these specifications
+and it is subject to change in future versions of CppAD.
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+This section lists the requirements that the type
+
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ so that the type 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ can be used.
+
+<br/>
+<br/>
+<b><a name="Purpose.Standard Base Types" id="Purpose.Standard Base Types">Standard Base Types</a></b>
+<br/>
+In the case where 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ is 
+<code><font color="blue">float</font></code>, 
+<code><font color="blue">double</font></code>,
+<code><font color="blue">std::complex&lt;float&gt;</font></code>, 
+<code><font color="blue">std::complex&lt;double&gt;</font></code>,
+or 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Other</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+,
+these requirements are provided by including the file
+<code><font color="blue">cppad/cppad.hpp</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Include Order" id="Include Order">Include Order</a></big></b>
+<br/>
+If you are linking a non-standard base type to CppAD,
+you must first include the file <code><font color="blue">cppad/base_require.hpp/</font></code>,
+then provide the specifications below, 
+and then include the file <code><font color="blue">cppad/cppad.hpp</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Numeric Type" id="Numeric Type">Numeric Type</a></big></b>
+<br/>
+The type 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ must support all the operations for a 
+<a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Integer" id="Integer">Integer</a></big></b>
+
+
+
+<br/>
+The type 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ must support the syntax
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;CppAD::Integer(</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+which converts 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ to an <code><font color="blue">int</font></code>.
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and the return value 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;int&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><a name="Integer.Suggestion" id="Integer.Suggestion">Suggestion</a></b>
+<br/>
+In many cases, the 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ version of the <code><font color="blue">Integer</font></code> function
+can be defined by
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+namespace&#xA0;CppAD&#xA0;{<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;inline&#xA0;int&#xA0;Integer(const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&amp;&#xA0;x)<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;{&#xA0;&#xA0;&#xA0;&#xA0;return&#xA0;static_cast&lt;int&gt;(x);&#xA0;}<br/>
+}<br/>
+</span></font></code>
+For example, see
+<a href="base_float.hpp.xml#Integer" target="_top"><span style='white-space: nowrap'>float</span></a>
+,
+<a href="base_double.hpp.xml#Integer" target="_top"><span style='white-space: nowrap'>double</span></a>
+, and
+<a href="base_complex.hpp.xml#Integer" target="_top"><span style='white-space: nowrap'>complex</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="epsilon" id="epsilon">epsilon</a></big></b>
+
+
+
+<br/>
+The template specialization
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;CppAD::epsilon&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;()<br/>
+</span></font></code>
+must return machine epsilon for the type 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+.
+For example, see
+<a href="base_float.hpp.xml#epsilon" target="_top"><span style='white-space: nowrap'>float</span></a>
+,
+<a href="base_double.hpp.xml#epsilon" target="_top"><span style='white-space: nowrap'>float</span></a>
+, and
+<a href="base_complex.hpp.xml#epsilon" target="_top"><span style='white-space: nowrap'>float</span></a>
+,
+
+<br/>
+<br/>
+<b><big><a name="isnan" id="isnan">isnan</a></big></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ defines the <code><font color="blue">isnan</font></code> function,
+you may also have to provide a definition in the CppAD namespace
+(to avoid a function ambiguity).
+For example, 
+<a href="base_complex.hpp.xml#isnan" target="_top"><span style='white-space: nowrap'>complex&#xA0;isnan</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<table>
+<tr><td><a href="base_cond_exp.xml" target="_top">base_cond_exp</a></td><td>Base&#xA0;Type&#xA0;Requirements&#xA0;for&#xA0;Conditional&#xA0;Expressions</td></tr><tr><td><a href="base_identical.xml" target="_top">base_identical</a></td><td>Base&#xA0;Type&#xA0;Requirements&#xA0;for&#xA0;Identically&#xA0;Equal&#xA0;Comparisons</td></tr><tr><td><a href="base_ordered.xml" target="_top">base_ordered</a></td><td>Base&#xA0;Type&#xA0;Requirements&#xA0;for&#xA0;Ordered&#xA0;Comparisons</td></tr><tr><td><a href="base_std_math.xml" target="_top">base_std_math</a></td><td>Base&#xA0;Type&#xA0;Requirements&#xA0;for&#xA0;Standard&#xA0;Math&#xA0;Functions</td></tr><tr><td><a href="base_float.hpp.xml" target="_top">base_float.hpp</a></td><td>Enable&#xA0;use&#xA0;of&#xA0;AD&lt;Base&gt;&#xA0;where&#xA0;Base&#xA0;is&#xA0;float</td></tr><tr><td><a href="base_double.hpp.xml" target="_top">base_double.hpp</a></td><td>Enable&#xA0;use&#xA0;of&#xA0;AD&lt;Base&gt;&#xA0;where&#xA0;Base&#xA0;is&#xA0;double</td></tr><tr><td><a href="base_complex.hpp.xml" target="_top">base_complex.hpp</a></td><td>Enable&#xA0;use&#xA0;of&#xA0;AD&lt;Base&gt;&#xA0;where&#xA0;Base&#xA0;is&#xA0;std::complex&lt;double&gt;</td></tr><tr><td><a href="base_adolc.hpp.xml" target="_top">base_adolc.hpp</a></td><td>Enable&#xA0;use&#xA0;of&#xA0;AD&lt;Base&gt;&#xA0;where&#xA0;Base&#xA0;is&#xA0;Adolc's&#xA0;adouble&#xA0;Type</td></tr></table>
+<hr/>Input File: cppad/base_require.hpp
+
+</body>
+</html>

@@ -1,0 +1,90 @@
+/* $Id: multi_thread.omh 2214 2011-11-27 21:40:42Z bradbell $ */
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+$begin multi_thread$$
+$spell
+	alloc
+	CppAD
+	Rosen
+	Runge
+$$
+
+$section Using CppAD in a Multi-Threading Environment$$
+$index parallel, mode$$
+$index execution, parallel$$
+$index mode, parallel$$
+$index multi-threading$$
+
+$head Purpose$$
+Extra steps and care must be taken to use CppAD 
+in $cref/parallel/ta_in_parallel/$$ execution mode. 
+This section collects this information in one place.
+
+$head CPPAD_MAX_NUM_THREADS$$
+$index maximum, number of threads$$
+$index threads, maximum number of$$
+$index CPPAD_MAX_NUM_THREADS$$
+If the preprocessor symbol $code CPPAD_MAX_NUM_THREADS$$ is defined
+before including any CppAD header files,
+it must be an integer greater than or equal to 4 and it
+specifies an absolute maximum for 
+the number of threads that CppAD should support.
+Otherwise, CppAD may, or may not, define this preprocessor symbol
+and impose an unspecified absolute maximum of its own.
+Currently, CppAD sets this maximum to 48 and this maximum is only expected
+to increase if it does change.
+In the future, the need for this maximum may be eliminated.
+
+$head parallel_setup$$
+Using any of the following routines in a multi-threading environment
+requires that $cref/thread_alloc::parallel_setup/ta_parallel_setup/$$ 
+has been completed:
+$cref/CppAD::vector/CppAD_vector/Memory and Parallel Mode/$$,
+$cref/CheckSimpleVector/CheckSimpleVector/Parallel Mode/$$,
+$cref/CheckNumericType/CheckNumericType/Parallel Mode/$$,
+$cref/parallel_ad/$$.
+
+$head Parallel AD$$
+One must first call
+$cref/thread_alloc::parallel_setup/ta_parallel_setup/$$ 
+and then call $cref/parallel_ad/$$ before using $code AD$$ types
+in $cref/parallel/ta_in_parallel/$$ execution mode.
+
+$head Initialization$$
+The following routines must be called at least once before being used
+in parallel mode:
+$cref/CheckSimpleVector/CheckSimpleVector/Parallel Mode/$$,
+$cref/CheckNumericType/CheckNumericType/Parallel Mode/$$,
+$cref/discrete functions/Discrete/Parallel Mode/$$,
+$cref/nan/nan/Parallel Mode/$$,
+$cref/Rosen34/Rosen34/Parallel Mode/$$,
+$cref/Runge45/Runge45/Parallel Mode/$$.
+
+$head Same Thread$$
+Some operations must be preformed by the same thread:
+$cref/ADFun/FunConstruct/Parallel Mode/$$,
+$cref Independent$$, $cref Dependent$$.
+
+
+$head Parallel Prohibited$$
+The following routine cannot be called in parallel mode:
+$cref/ErrorHandler constructor/ErrorHandler/Constructor/Parallel Mode/$$.
+
+$childtable%
+	cppad/local/parallel_ad.hpp%
+	multi_thread/team_thread.hpp%
+	multi_thread/thread_test.cpp%
+	multi_thread/simple_ad.cpp%
+	multi_thread/harmonic.cpp%
+	multi_thread/multi_newton.cpp
+%$$
+
+$end

@@ -1,0 +1,474 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Getting Started Using CppAD to Compute Derivatives</title>
+<meta name="description" id="description" content="Getting Started Using CppAD to Compute Derivatives"/>
+<meta name="keywords" id="keywords" content=" getting started simple example start using Cppad "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_get_started.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="introduction.xml" target="_top">Prev</a>
+</td><td><a href="exp_2.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>get_started.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>get_started.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Function</option>
+<option>Derivative</option>
+<option>Value</option>
+<option>Poly</option>
+<option>Exercises</option>
+<option>Program</option>
+<option>Output</option>
+<option>Running</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Getting Started Using CppAD to Compute Derivatives</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Demonstrate the use of CppAD by computing the derivative 
+of a simple example function.
+
+<br/>
+<br/>
+<b><big><a name="Function" id="Function">Function</a></big></b>
+<br/>
+The example function 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x02192;</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+</mrow></math>
+
+ is defined by 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+</mrow></math>
+
+where <i>a</i> is a fixed vector of length <i>k</i>.
+
+<br/>
+<br/>
+<b><big><a name="Derivative" id="Derivative">Derivative</a></big></b>
+<br/>
+The derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is given by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">+</mo>
+<mn>2</mn>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>2</mn>
+</msub>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mn>-1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mn>-2</mn>
+</mrow>
+</msup>
+</mrow></math>
+
+<br/>
+<b><big><a name="Value" id="Value">Value</a></big></b>
+<br/>
+For the particular case in this example,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+ is equal to 5, 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, and 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>3</mn>
+</mrow></math>
+
+.
+If follows that 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mn>3</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<mn>2</mn>
+<mo stretchy="false">*</mo>
+<mn>3</mn>
+<mo stretchy="false">+</mo>
+<mn>3</mn>
+<mo stretchy="false">*</mo>
+<msup><mn>3</mn>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<mn>4</mn>
+<mo stretchy="false">*</mo>
+<msup><mn>3</mn>
+<mn>3</mn>
+</msup>
+<mo stretchy="false">=</mo>
+<mn>142</mn>
+</mrow></math>
+
+<br/>
+<b><big><a name="Poly" id="Poly">Poly</a></big></b>
+<br/>
+The routine <code><font color="blue">Poly</font></code> is defined below for this particular application.
+A general purpose polynomial evaluation routine is documented and
+distributed with CppAD (see <a href="poly.xml" target="_top"><span style='white-space: nowrap'>Poly</span></a>
+).
+
+<br/>
+<br/>
+<b><big><a name="Exercises" id="Exercises">Exercises</a></big></b>
+<br/>
+Modify the program below to accomplish the following tasks
+using CppAD:
+<ol type="1"><li>
+Compute and print the derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>3</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>4</mn>
+</msup>
+</mrow></math>
+
+
+at the point 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>2</mn>
+</mrow></math>
+
+. 
+</li><li>
+
+Compute and print the derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+
+at the point 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>.5</mn>
+</mrow></math>
+
+.
+</li><li>
+
+Compute and print the derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi>exp</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<mn>1</mn>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">-</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+
+at the point 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">=</mo>
+<mn>.5</mn>
+</mrow></math>
+
+.
+</li></ol>
+
+
+
+<br/>
+<br/>
+<b><big><a name="Program" id="Program">Program</a></big></b>
+
+<code><font color='blue'><pre style='display:inline'> 
+#include &lt;iostream&gt;      // standard input/output 
+#include &lt;vector&gt;        // standard vector
+#include &lt;cppad/cppad.hpp&gt; // the CppAD package http://www.coin-or.org/CppAD/
+
+namespace { 
+      // define y(x) = Poly(a, x) in the empty namespace
+      template &lt;class Type&gt;
+      Type Poly(const std::vector&lt;double&gt; &amp;a, const Type &amp;x)
+      {     size_t k  = a.size();
+            Type y   = 0.;  // initialize summation
+            Type x_i = 1.;  // initialize x^i
+            size_t i;
+            for(i = 0; i &lt; k; i++)
+            {     y   += a[i] * x_i;  // y   = y + a_i * x^i
+                  x_i *= x;           // x_i = x_i * x
+            }
+            return y;
+      }
+}
+// main program
+int main(void)
+{     using CppAD::AD;           // use AD as abbreviation for CppAD::AD
+      using std::vector;         // use vector as abbreviation for std::vector
+      size_t i;                  // a temporary index
+
+      // vector of polynomial coefficients
+      size_t k = 5;              // number of polynomial coefficients
+      vector&lt;double&gt; a(k);       // vector of polynomial coefficients
+      for(i = 0; i &lt; k; i++)
+            a[i] = 1.;           // value of polynomial coefficients
+
+      // domain space vector
+      size_t n = 1;              // number of domain space variables
+      vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n); // vector of domain space variables
+      X[0] = 3.;                 // value corresponding to operation sequence
+
+      // declare independent variables and start recording operation sequence
+      CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+      // range space vector
+      size_t m = 1;              // number of ranges space variables
+      vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m); // vector of ranges space variables
+      Y[0] = Poly(a, X[0]);      // value during recording of operations
+
+      // store operation sequence in f: X -&gt; Y and stop recording
+      CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+      // compute derivative using operation sequence stored in f
+      vector&lt;double&gt; jac(m * n); // Jacobian of f (m by n matrix)
+      vector&lt;double&gt; x(n);       // domain space vector
+      x[0] = 3.;                 // argument value for derivative
+      jac  = f.<a href="jacobian.xml" target="_top">Jacobian</a>(x);      // Jacobian for operation sequence
+
+      // print the results
+      std::cout &lt;&lt; &quot;f'(3) computed by CppAD = &quot; &lt;&lt; jac[0] &lt;&lt; std::endl;
+
+      // check if the derivative is correct
+      int error_code;
+      if( jac[0] == 142. )
+            error_code = 0;      // return code for correct case
+      else  error_code = 1;      // return code for incorrect case
+
+      return error_code;
+}
+</pre></font></code>
+
+<br/>
+<br/>
+<b><big><a name="Output" id="Output">Output</a></big></b>
+<br/>
+Executing the program above will generate the following output:
+<code><font color='blue'><pre style='display:inline'> 
+	f'(3) computed by CppAD = 142
+</pre></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Running" id="Running">Running</a></big></b>
+<br/>
+To build and run this program,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;introduction/get_started<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+
+<hr/>Input File: introduction/get_started/get_started.cpp
+
+</body>
+</html>

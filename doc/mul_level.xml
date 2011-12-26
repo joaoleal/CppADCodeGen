@@ -1,0 +1,275 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Using Multiple Levels of AD</title>
+<meta name="description" id="description" content="Using Multiple Levels of AD"/>
+<meta name="keywords" id="keywords" content=" multiple Ad level "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_mul_level_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="jacludet.cpp.xml" target="_top">Prev</a>
+</td><td><a href="mul_level.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>General</option>
+<option>mul_level</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>General-&gt;</option>
+<option>ad_fun.cpp</option>
+<option>ad_in_c.cpp</option>
+<option>conj_grad.cpp</option>
+<option>HesMinorDet.cpp</option>
+<option>HesLuDet.cpp</option>
+<option>Interface2C.cpp</option>
+<option>JacMinorDet.cpp</option>
+<option>JacLuDet.cpp</option>
+<option>mul_level</option>
+<option>OdeStiff.cpp</option>
+<option>ode_taylor.cpp</option>
+<option>ode_taylor_adolc.cpp</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>mul_level-&gt;</option>
+<option>mul_level.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Background</option>
+<option>Motivation</option>
+<option>General Solution</option>
+<option>General Procedure</option>
+<option>---..Start ADBaseTape</option>
+<option>---..Start ADDBaseTape</option>
+<option>---..Inner Function Calculations</option>
+<option>---..Derivative of Inner Function</option>
+<option>---..Outer Function</option>
+<option>---..Derivative of Outer Function</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>Using Multiple Levels of AD</big></big></b></center>
+<br/>
+<b><big><a name="Background" id="Background">Background</a></big></b>
+<br/>
+If <i>f</i> is an <code><font color="blue"><span style='white-space: nowrap'>ADFun&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code> object,
+the vectors returned by 
+<a href="forward.xml" target="_top"><span style='white-space: nowrap'>f.Forward</span></a>
+,
+and
+<a href="reverse.xml" target="_top"><span style='white-space: nowrap'>f.Reverse</span></a>
+,
+have values in the base type (<i>Base</i>) and not
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>.
+This reflects the fact that operations used to calculate
+these function values are not recorded by the tape corresponding to
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code> operations. 
+
+<br/>
+<br/>
+<b><big><a name="Motivation" id="Motivation">Motivation</a></big></b>
+<br/>
+Suppose that you uses derivatives of one or more inner functions
+as part of the operations 
+needed to compute an outer function.
+For example,
+the derivatives returned by <code><font color="blue"></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>.Forward</span></font></code>
+might be used as part of 
+Taylor's method for solving ordinary
+differential equations. 
+In addition, we might want to differentiate the
+solution of a differential equation with respect to parameters
+in the equation.
+This can be accomplished in the following way:
+
+<ol type="1"><li>
+The operations during the calculations of the function defining the
+differential equation could be preformed using the a class of the form
+<code><font color="blue"><span style='white-space: nowrap'>&#xA0;AD&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code>. 
+
+</li><li>
+
+The operations during the calculation of Taylor's method
+could be preformed using the <code><font color="blue"><span style='white-space: nowrap'>&#xA0;AD&lt;double&gt;</span></font></code> class.
+
+</li><li>
+
+The results of the solution of the differential equation
+could then be preformed using the <code><font color="blue">double</font></code> class.
+
+</li></ol>
+
+
+<br/>
+<br/>
+<b><big><a name="General Solution" id="General Solution">General Solution</a></big></b>
+<br/>
+Provided that we are currently recording
+<code><font color="blue"><span style='white-space: nowrap'>&#xA0;AD&lt;double&gt;</span></font></code> operations,
+and <i>fin</i> is an <code><font color="blue"><span style='white-space: nowrap'>ADFun&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code> object,
+the operations used to compute the vectors
+returned by 
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>fin</span></i><code><font color="blue"><span style='white-space: nowrap'>.Forward</span></font></code>,
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>fin</span></i><code><font color="blue"><span style='white-space: nowrap'>.Rev</span></font></code>,
+and
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>fin</span></i><code><font color="blue"><span style='white-space: nowrap'>.RevTwo</span></font></code>,
+will be recorded on the tape corresponding to
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code> operations. 
+
+
+<br/>
+<br/>
+<b><big><a name="General Procedure" id="General Procedure">General Procedure</a></big></b>
+
+
+<br/>
+<br/>
+<b><a name="General Procedure.Start ADBaseTape" id="General Procedure.Start ADBaseTape">Start ADBaseTape</a></b>
+<br/>
+The first step is to declare the independent variables using
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;Independent(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>where <i>x</i> is 
+a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ with elements of type <code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code>.
+This will start recording a new tape of
+operations performed using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code> class objects.
+
+<br/>
+<br/>
+<b><a name="General Procedure.Start ADDBaseTape" id="General Procedure.Start ADDBaseTape">Start ADDBaseTape</a></b>
+<br/>
+The next step is to declare the independent variables using 
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;Independent(</span></font></code><i><span style='white-space: nowrap'>X</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>where <i>X</i> is 
+a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ with elements of type 
+<code><font color="blue"><span style='white-space: nowrap'>CPPAD_TEST_VECTOR&lt;&#xA0;AD&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;&#xA0;&gt;</span></font></code>.
+This will start recording a new tape of 
+operations performed using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code> class objects.
+
+<br/>
+<br/>
+<b><a name="General Procedure.Inner Function Calculations" id="General Procedure.Inner Function Calculations">Inner Function Calculations</a></b>
+<br/>
+The next step is to calculation
+the inner functions 
+using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code> class objects.
+
+<br/>
+<br/>
+<b><a name="General Procedure.Derivative of Inner Function" id="General Procedure.Derivative of Inner Function">Derivative of Inner Function</a></b>
+<br/>
+The next step is to create the 
+<code><font color="blue"><span style='white-space: nowrap'>ADFun&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code> function object <i>fin</i>.
+This will also stop recording of
+operations performed using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;&#xA0;AD&lt;double&gt;&#xA0;&gt;</span></font></code> class objects.
+The <i>fin</i> object can then be used to calculate
+the derivatives needed to compute the outer function.
+
+<br/>
+<br/>
+<b><a name="General Procedure.Outer Function" id="General Procedure.Outer Function">Outer Function</a></b>
+<br/>
+The next step is to compute the 
+outer function
+using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code> class objects.
+
+<br/>
+<br/>
+<b><a name="General Procedure.Derivative of Outer Function" id="General Procedure.Derivative of Outer Function">Derivative of Outer Function</a></b>
+<br/>
+The next step is to create the 
+<code><font color="blue"><span style='white-space: nowrap'>ADFun&lt;double&gt;</span></font></code> function object <i>fout</i>.
+This will also stop the recording of
+operations performed using <code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code> class objects.
+The <i>fout</i> object can then be used to calculate
+the derivatives of the outer function.
+
+
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+<br/>
+The file
+<a href="mul_level.cpp.xml" target="_top"><span style='white-space: nowrap'>mul_level.cpp</span></a>
+
+contains an example and test of this procedure.   
+It returns true if it succeeds and false otherwise.
+The file <a href="ode_taylor.cpp.xml" target="_top"><span style='white-space: nowrap'>ode_taylor.cpp</span></a>
+ is a more complex example
+use of multiple tapes.
+
+
+<hr/>Input File: omh/mul_level.omh
+
+</body>
+</html>

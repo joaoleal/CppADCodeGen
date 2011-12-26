@@ -1,0 +1,177 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Sparse Hessian: Example and Test</title>
+<meta name="description" id="description" content="Sparse Hessian: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Hessian sparse example test spare "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sparse_hessian.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="sparse_hessian.xml" target="_top">Prev</a>
+</td><td><a href="funcheck.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>Drivers</option>
+<option>sparse_hessian</option>
+<option>sparse_hessian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Drivers-&gt;</option>
+<option>Jacobian</option>
+<option>ForOne</option>
+<option>RevOne</option>
+<option>Hessian</option>
+<option>ForTwo</option>
+<option>RevTwo</option>
+<option>sparse_jacobian</option>
+<option>sparse_hessian</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>sparse_hessian-&gt;</option>
+<option>sparse_hessian.cpp</option>
+</select>
+</td>
+<td>sparse_hessian.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Sparse Hessian: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+bool sparse_hessian(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+	size_t i, j, k;
+
+	// domain space vector
+	size_t n = 3;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt;  X(n);
+	for(i = 0; i &lt; n; i++)
+		X[i] = <a href="ad.xml" target="_top">AD</a>&lt;double&gt; (0);
+
+	// declare independent variables and starting recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt;  Y(m);
+	Y[0] = X[0] * X[0] + X[0] * X[1] + X[1] * X[1] + X[2] * X[2];
+
+	// create f: X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// new value for the independent variable vector
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n);
+	for(i = 0; i &lt; n; i++)
+		x[i] = double(i);
+
+	// second derivative of y[1] 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; w(m);
+	w[0] = 1.;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; h( n * n );
+	h = f.SparseHessian(x, w);
+	/*
+	    [ 2 1 0 ]
+	h = [ 1 2 0 ]
+            [ 0 0 2 ]
+	*/
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; check(n * n);
+	check[0] = 2.; check[1] = 1.; check[2] = 0.;
+	check[3] = 1.; check[4] = 2.; check[5] = 0.;
+	check[6] = 0.; check[7] = 0.; check[8] = 2.;
+	for(k = 0; k &lt; n * n; k++)
+		ok &amp;=  <a href="nearequal.xml" target="_top">NearEqual</a>(check[k], h[k], 1e-10, 1e-10 );
+
+	// use vectors of bools to compute sparse hessian -------------------
+	// determine the sparsity pattern p for Hessian of w^T F
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;bool&gt; r_bool(n * n);
+        for(j = 0; j &lt; n; j++)
+        {       for(k = 0; k &lt; n; k++)
+                        r_bool[j * n + k] = false;
+                r_bool[j * n + j] = true;
+        }
+        f.ForSparseJac(n, r_bool);
+        //
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;bool&gt; s_bool(m);
+        for(i = 0; i &lt; m; i++)
+                s_bool[i] = w[i] != 0;
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;bool&gt; p_bool = f.RevSparseHes(n, s_bool);
+
+	// test passing sparsity pattern
+	h = f.SparseHessian(x, w, p_bool);
+	for(k = 0; k &lt; n * n; k++)
+		ok &amp;=  <a href="nearequal.xml" target="_top">NearEqual</a>(check[k], h[k], 1e-10, 1e-10 );
+
+	// use vectors of sets to compute sparse hessian ------------------
+	// determine the sparsity pattern p for Hessian of w^T F
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; std::set&lt;size_t&gt; &gt; r_set(n);
+        for(j = 0; j &lt; n; j++)
+                r_set[j].insert(j);
+        f.ForSparseJac(n, r_set);
+        //
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; std::set&lt;size_t&gt; &gt; s_set(1);
+        for(i = 0; i &lt; m; i++)
+		if( w[i] != 0. )
+			s_set[0].insert(i);
+        <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; std::set&lt;size_t&gt; &gt; p_set = f.RevSparseHes(n, s_set);
+
+	// test passing sparsity pattern
+	h = f.SparseHessian(x, w, p_set);
+	for(k = 0; k &lt; n * n; k++)
+		ok &amp;=  <a href="nearequal.xml" target="_top">NearEqual</a>(check[k], h[k], 1e-10, 1e-10 );
+
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/sparse_hessian.cpp
+
+</body>
+</html>

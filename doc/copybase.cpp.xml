@@ -1,0 +1,129 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD Constructor From Base Type: Example and Test</title>
+<meta name="description" id="description" content="AD Constructor From Base Type: Example and Test"/>
+<meta name="keywords" id="keywords" content=" construct from base type convert to Ad example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_copybase.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="copyad.cpp.xml" target="_top">Prev</a>
+</td><td><a href="eq.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ad_copy</option>
+<option>CopyBase.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ad_copy-&gt;</option>
+<option>CopyAD.cpp</option>
+<option>CopyBase.cpp</option>
+<option>Eq.cpp</option>
+</select>
+</td>
+<td>CopyBase.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>AD Constructor From Base Type: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+
+bool CopyBase(void)
+{	bool ok = true;    // initialize test result flag
+	using CppAD::AD;   // so can use AD in place of CppAD::AD
+
+	// construct directly from Base where Base is double 
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; x(1.); 
+
+	// construct from a type that converts to Base where Base is double
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; y = 2;
+
+	// construct from a type that converts to Base where Base = <a href="ad.xml" target="_top">AD</a>&lt;double&gt;
+	<a href="ad.xml" target="_top">AD</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; z(3); 
+
+	// check that resulting objects are parameters
+	ok &amp;= Parameter(x);
+	ok &amp;= Parameter(y);
+	ok &amp;= Parameter(z);
+
+	// check values of objects (compare <a href="ad.xml" target="_top">AD</a>&lt;double&gt; with double)
+	ok &amp;= ( x == 1.);
+	ok &amp;= ( y == 2.);
+	ok &amp;= ( Value(z) == 3.);
+
+	// user constructor through the static_cast template function
+	x   = static_cast &lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt;( 4 );
+	z  = static_cast &lt; <a href="ad.xml" target="_top">AD</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; &gt;( 5 );
+
+	ok &amp;= ( x == 4. );
+	ok &amp;= ( Value(z) == 5. );
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/copy_base.cpp
+
+</body>
+</html>

@@ -1,0 +1,81 @@
+$Id: speed.omh 1370 2009-05-31 05:31:50Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+$begin speed$$
+$spell
+	cppad
+	CppAD
+	Cygwin
+	Microsoft
+	chdir
+	Workspace
+	dsw
+	exe
+	sln
+$$
+
+$index speed, test$$
+$index test, speed$$
+
+$section Speed Test Routines$$
+
+$head Purpose$$
+CppAD has a set of speed tests that are used to determine if 
+certain changes improve its execution speed
+and to compare the C++ AD packages 
+$href%
+        http://www.math.tu-dresden.de/~adol-c/%
+        Adolc
+%$$,
+$href%
+	http://www.coin-or.org/CppAD/%
+	CppAD
+%$$,
+$href%
+        http://www.imm.dtu.dk/fadbad.html/%
+        Fadbad
+%$$ and
+$href%
+	http://trilinos.sandia.gov/packages/sacado/%
+	Sacado
+%$$.
+This section explains how you can run these tests on your computer.
+
+$head Windows$$
+$index windows, speed test$$
+$index test, speed windows$$
+$index speed, test windows$$
+The speed test routines have not yet been compiled or tested using
+the MS Windows C++ compiler.
+Under Windows, you can use
+$href%
+        http://www.cygwin.com%
+        Cygwin
+%$$
+or,
+$href%
+        http://www.mingw.org%
+        MinGW with MSYS
+%$$
+to run these speed tests.
+
+$contents%
+	speed/main.cpp%
+	omh/speed_utility.omh%
+	omh/speed_double.omh%
+	omh/speed_adolc.omh%
+	omh/speed_cppad.omh%
+	omh/speed_fadbad.omh%
+	omh/speed_sacado.omh
+%$$
+
+$end

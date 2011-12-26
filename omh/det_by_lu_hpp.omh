@@ -1,0 +1,36 @@
+$Id: det_by_lu_hpp.omh 1370 2009-05-31 05:31:50Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+$begin det_by_lu.hpp$$
+$spell
+	det_by_lu
+	ifndef
+	endif
+$$
+
+$section Source: det_by_lu$$
+
+$index det_by_lu, source$$
+$index source, det_by_lu$$
+
+$code
+# ifndef CPPAD_DET_BY_LU_INCLUDED 
+$pre
+$$
+# define CPPAD_DET_BY_LU_INCLUDED
+
+$verbatim%cppad/speed/det_by_lu.hpp%0%// BEGIN PROGRAM%// END PROGRAM%$$
+
+# endif
+$$
+
+$end

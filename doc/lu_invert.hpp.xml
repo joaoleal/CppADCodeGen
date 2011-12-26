@@ -1,0 +1,188 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Source: LuInvert</title>
+<meta name="description" id="description" content="Source: LuInvert"/>
+<meta name="keywords" id="keywords" content=" Luinvert source "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_lu_invert.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="luinvert.cpp.xml" target="_top">Prev</a>
+</td><td><a href="rombergone.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>LuDetAndSolve</option>
+<option>LuInvert</option>
+<option>lu_invert.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>LuDetAndSolve-&gt;</option>
+<option>LuSolve</option>
+<option>LuFactor</option>
+<option>LuInvert</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>LuInvert-&gt;</option>
+<option>LuInvert.cpp</option>
+<option>lu_invert.hpp</option>
+</select>
+</td>
+<td>lu_invert.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Source: LuInvert</big></big></b></center>
+<code><font color="blue"># ifndef CPPAD_LU_INVERT_INCLUDED 
+<code><span style='white-space: nowrap'><br/>
+</span></code># define CPPAD_LU_INVERT_INCLUDED
+
+<pre style='display:inline'> 
+# include &lt;cppad/local/cppad_assert.hpp&gt;
+# include &lt;cppad/check_simple_vector.hpp&gt;
+# include &lt;cppad/check_numeric_type.hpp&gt;
+
+namespace CppAD { // BEGIN CppAD namespace
+
+// LuInvert
+template &lt;typename SizeVector, typename FloatVector&gt;
+void LuInvert(
+	const SizeVector  &amp;ip, 
+	const SizeVector  &amp;jp, 
+	const FloatVector &amp;LU,
+	FloatVector       &amp;B )
+{	size_t k; // column index in X
+	size_t p; // index along diagonal in LU
+	size_t i; // row index in LU and X
+
+	typedef typename FloatVector::value_type Float;
+
+	// check numeric type specifications
+	CheckNumericType&lt;Float&gt;();
+
+	// check simple vector class specifications
+	CheckSimpleVector&lt;Float, FloatVector&gt;();
+	CheckSimpleVector&lt;size_t, SizeVector&gt;();
+
+	Float etmp;
+	
+	size_t n = ip.size();
+	CPPAD_ASSERT_KNOWN(
+		jp.size() == n,
+		&quot;Error in LuInvert: jp must have size equal to n * n&quot;
+	);
+	CPPAD_ASSERT_KNOWN(
+		LU.size() == n * n,
+		&quot;Error in LuInvert: Lu must have size equal to n * m&quot;
+	);
+	size_t m = B.size() / n;
+	CPPAD_ASSERT_KNOWN(
+		B.size() == n * m,
+		&quot;Error in LuSolve: B must have size equal to a multiple of n&quot;
+	);
+
+	// temporary storage for reordered solution
+	FloatVector x(n);
+
+	// loop over equations
+	for(k = 0; k &lt; m; k++)
+	{	// invert the equation c = L * b
+		for(p = 0; p &lt; n; p++)
+		{	// solve for c[p]
+			etmp = B[ ip[p] * m + k ] / LU[ ip[p] * n + jp[p] ];
+			B[ ip[p] * m + k ] = etmp;
+			// subtract off effect on other variables
+			for(i = p+1; i &lt; n; i++)
+				B[ ip[i] * m + k ] -=
+					etmp * LU[ ip[i] * n + jp[p] ];
+		}
+
+		// invert the equation x = U * c
+		p = n;
+		while( p &gt; 0 )
+		{	--p;
+			etmp       = B[ ip[p] * m + k ];
+			x[ jp[p] ] = etmp;
+			for(i = 0; i &lt; p; i++ )
+				B[ ip[i] * m + k ] -= 
+					etmp * LU[ ip[i] * n + jp[p] ];
+		}
+
+		// copy reordered solution into B
+		for(i = 0; i &lt; n; i++)
+			B[i * m + k] = x[i];
+	}
+	return;
+}
+} // END CppAD namespace </pre>
+
+# endif
+</font></code>
+
+
+<hr/>Input File: omh/lu_invert_hpp.omh
+
+</body>
+</html>

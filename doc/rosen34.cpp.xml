@@ -1,0 +1,392 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Rosen34: Example and Test</title>
+<meta name="description" id="description" content="Rosen34: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Rosen34 example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_rosen34.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="rosen34.xml" target="_top">Prev</a>
+</td><td><a href="odeerrcontrol.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>Rosen34</option>
+<option>Rosen34.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Rosen34-&gt;</option>
+<option>Rosen34.cpp</option>
+</select>
+</td>
+<td>Rosen34.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Rosen34: Example and Test</big></big></b></center>
+Define 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>t</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+</mrow></math>
+
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+.
+It follows that
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mn>0</mn>
+</mtd><mtd columnalign="right" >
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>for</mi>
+<mspace width='.3em'/>
+<mi mathvariant='normal'>all</mi>
+<mspace width='.3em'/>
+</mstyle></mrow>
+<mi mathvariant='italic'>i</mi>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mn>1</mn>
+</mtd><mtd columnalign="right" >
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>if</mi>
+<mspace width='.3em'/>
+</mstyle></mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msup>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<msub><mi mathvariant='italic'>X</mi>
+<mrow><mi mathvariant='italic'>i</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="right" >
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>if</mi>
+<mspace width='.3em'/>
+</mstyle></mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&gt;</mo>
+<mn>0</mn>
+</mtd></mtr></mtable>
+</mrow></math>
+
+The example tests Rosen34 using the relations above:
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;        // For automatic differentiation
+
+namespace {
+	class Fun {
+	public:
+		// constructor
+		Fun(bool use_x_) : use_x(use_x_) 
+		{ }
+
+		// compute f(t, x) both for double and <a href="ad.xml" target="_top">AD</a>&lt;double&gt;
+		template &lt;typename Scalar&gt;
+		void Ode(
+			const Scalar                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;Scalar&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;Scalar&gt;       &amp;f)
+		{	size_t n  = x.size();	
+			Scalar ti(1);
+			f[0]   = Scalar(1);
+			size_t i;
+			for(i = 1; i &lt; n; i++)
+			{	ti *= t;
+				// convert int(size_t) to avoid warning
+				// on _MSC_VER systems
+				if( use_x )
+					f[i] = int(i+1) * x[i-1];
+				else	f[i] = int(i+1) * ti;
+			}
+		}
+
+		// compute partial of f(t, x) w.r.t. t using AD
+		void Ode_ind(
+			const double                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;       &amp;f_t)
+		{	using namespace CppAD;
+
+			size_t n  = x.size();	
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; T(1);
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; F(n);
+
+			// set argument values
+			T[0] = t;
+			size_t i;
+			for(i = 0; i &lt; n; i++)
+				X[i] = x[i];
+
+			// declare independent variables
+			<a href="independent.xml" target="_top">Independent</a>(T);
+
+			// compute f(t, x)
+			this-&gt;Ode(T[0], X, F);
+
+			// define AD function object
+			<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; fun(T, F);
+
+			// compute partial of f w.r.t t
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dt(1);
+			dt[0] = 1.;
+			f_t = fun.<a href="forward.xml" target="_top">Forward</a>(1, dt);
+		}
+
+		// compute partial of f(t, x) w.r.t. x using AD
+		void Ode_dep(
+			const double                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;       &amp;f_x)
+		{	using namespace CppAD;
+
+			size_t n  = x.size();	
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; T(1);
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; F(n);
+
+			// set argument values
+			T[0] = t;
+			size_t i, j;
+			for(i = 0; i &lt; n; i++)
+				X[i] = x[i];
+
+			// declare independent variables
+			<a href="independent.xml" target="_top">Independent</a>(X);
+
+			// compute f(t, x)
+			this-&gt;Ode(T[0], X, F);
+
+			// define AD function object
+			<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; fun(X, F);
+
+			// compute partial of f w.r.t x
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx(n);
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; df(n);
+			for(j = 0; j &lt; n; j++)
+				dx[j] = 0.;
+			for(j = 0; j &lt; n; j++)
+			{	dx[j] = 1.;
+				df = fun.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+				for(i = 0; i &lt; n; i++)
+					f_x [i * n + j] = df[i];
+				dx[j] = 0.;
+			}
+		}
+
+	private:
+		const bool use_x;
+
+	};
+}
+
+bool Rosen34(void)
+{	bool ok = true;     // initial return value
+	size_t i;           // temporary indices
+
+	size_t  n = 4;      // number components in X(t) and order of method
+	size_t  M = 2;      // number of Rosen34 steps in [ti, tf]
+	double ti = 0.;     // initial time
+	double tf = 2.;     // final time 
+
+	// xi = X(0)
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; xi(n); 
+	for(i = 0; i &lt;n; i++)
+		xi[i] = 0.;
+
+	size_t use_x;
+	for( use_x = 0; use_x &lt; 2; use_x++)
+	{	// function object depends on value of use_x
+		Fun F(use_x &gt; 0); 
+
+		// compute Rosen34 approximation for X(tf)
+		<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; xf(n), e(n); 
+		xf = CppAD::Rosen34(F, M, ti, tf, xi, e);
+
+		double check = tf;
+		for(i = 0; i &lt; n; i++)
+		{	// check that error is always positive
+			ok    &amp;= (e[i] &gt;= 0.);
+			// 4th order method is exact for i &lt; 4
+			if( i &lt; 4 ) ok &amp;=
+				CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(xf[i], check, 1e-10, 1e-10);
+			// 3rd order method is exact for i &lt; 3
+			if( i &lt; 3 )
+				ok &amp;= (e[i] &lt;= 1e-10);
+
+			// check value for next i
+			check *= tf;
+		}
+	}
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/rosen_34.cpp
+
+</body>
+</html>

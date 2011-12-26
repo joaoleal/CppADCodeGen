@@ -1,0 +1,116 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>exp_eps: Implementation</title>
+<meta name="description" id="description" content="exp_eps: Implementation"/>
+<meta name="keywords" id="keywords" content=" implementation exp_eps "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_exp_eps.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exp_eps.xml" target="_top">Prev</a>
+</td><td><a href="exp_eps.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>exp_eps</option>
+<option>exp_eps.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>exp_eps-&gt;</option>
+<option>exp_eps.hpp</option>
+<option>exp_eps.cpp</option>
+<option>exp_eps_for0</option>
+<option>exp_eps_for1</option>
+<option>exp_eps_rev1</option>
+<option>exp_eps_for2</option>
+<option>exp_eps_rev2</option>
+<option>exp_eps_cppad</option>
+</select>
+</td>
+<td>exp_eps.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>exp_eps: Implementation</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+template &lt;class Type&gt;
+Type exp_eps(const Type &amp;x, const Type &amp;epsilon)
+{	// abs_x = |x|
+	Type abs_x = x;
+	if( Type(0) &gt; x )
+		abs_x = - x;
+	// initialize
+	int  k    = 0;          // initial order 
+	Type term = 1.;         // term = |x|^k / k !
+	Type sum  = term;       // initial sum
+	while(term &gt; epsilon)
+	{	k         = k + 1;          // order for next term
+		Type temp = term * abs_x;   // term = |x|^k / (k-1)!
+		term      = temp / Type(k); // term = |x|^k / k !
+		sum       = sum + term;     // sum  = 1 + ... + |x|^k / k !
+	}
+	// In the case where x is negative, use exp(x) = 1 / exp(-|x|)
+	if( Type(0) &gt; x ) 
+		sum = Type(1) / sum;
+	return sum;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: introduction/exp_apx/exp_eps.omh
+
+</body>
+</html>

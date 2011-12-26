@@ -1,0 +1,175 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ADFun Operation Sequence Optimization: Example and Test</title>
+<meta name="description" id="description" content="ADFun Operation Sequence Optimization: Example and Test"/>
+<meta name="keywords" id="keywords" content=" optimize operation sequence test example "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_optimize.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="optimize.xml" target="_top">Prev</a>
+</td><td><a href="multi_thread.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>optimize</option>
+<option>optimize.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>optimize-&gt;</option>
+<option>optimize.cpp</option>
+</select>
+</td>
+<td>optimize.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+<center><b><big><big>ADFun Operation Sequence Optimization: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+namespace {
+	template &lt;class Float&gt;
+	void fun(const Float&amp; x, Float&amp; y, size_t&amp; n_var, size_t&amp; n_opt)
+	{	using CppAD::exp;
+
+	 	// Create a variable that is optimized out because 
+	 	// it is only used in the comparision operation.
+		Float a = 1. / x;
+		n_var += 1;
+		n_opt += 0;
+
+		// Create a variable that is used by the result
+		Float b = x * 5.;
+		n_var += 1;
+		n_opt += 1;
+
+		Float c;
+		if( a &lt; x )  
+			c = b / 3.; // only one variable created by this choice
+		else	c = b / 2.;
+		n_var += 1;
+		n_opt += 1;
+
+		// Create a variable that is optimized out because it
+		// will always have the same value as b
+		Float d = 5. * x;
+		n_var += 1;
+		n_opt += 0;
+
+		// Create three variables that will be converted to one
+		// cumulative summation. Note that a is not connected to 
+		// the result y (in the operation sequence).
+		y      = 1. + b + c + d; 
+		n_var += 3;
+		n_opt += 1;
+	}
+}
+
+bool optimize(void)
+{	bool ok = true;
+	using CppAD::AD;
+
+	// domain space vector
+	size_t n  = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	X[0]      = .5; 
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+	size_t n_var = 1 + n; // one phantom variable at the beginning
+	size_t n_opt = 1 + n; // and one for each independent variable
+
+	// range space vector 
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	fun(X[0], Y[0], n_var, n_opt);
+
+	// create f: X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; F(X, Y);
+	ok &amp;= (F.size_var() == n_var);
+
+	// Check zero order forward mode on the original operation sequence
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n), y(m);
+	x[0] = Value(X[0]);
+	size_t i = 0; // temporary variable (we do not use value)
+	double check;
+	fun(x[0], check, i, i);
+	y   = F.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok &amp;= (y[0] == check);
+
+	// Optimize the operation sequence
+	F.optimize();
+	ok &amp;= (F.size_var() == n_opt);
+
+	// Check result for a zero order calculation.
+	// This has already been checked if NDEBUG is not defined.
+	fun(x[0], check, i, i);
+	ok &amp;= (y[0] == check);
+	y   = F.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/optimize.cpp
+
+</body>
+</html>

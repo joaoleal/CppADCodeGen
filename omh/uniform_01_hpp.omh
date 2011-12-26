@@ -1,0 +1,36 @@
+$Id: uniform_01_hpp.omh 1370 2009-05-31 05:31:50Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+$begin uniform_01.hpp$$
+$spell
+	uniform_01
+	ifndef
+	endif
+$$
+
+$section Source: uniform_01$$
+
+$index uniform_01, source$$
+$index source, uniform_01$$
+
+$code
+# ifndef CPPAD_UNIFORM_01_INCLUDED 
+$pre
+$$
+# define CPPAD_UNIFORM_01_INCLUDED
+
+$verbatim%cppad/speed/uniform_01.hpp%0%// BEGIN PROGRAM%// END PROGRAM%$$
+
+# endif
+$$
+
+$end

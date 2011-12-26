@@ -1,0 +1,1041 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>An Error Controller for Gear's Ode Solvers</title>
+<meta name="description" id="description" content="An Error Controller for Gear's Ode Solvers"/>
+<meta name="keywords" id="keywords" content=" Odegearcontrol control Ode Gear error differential equation "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_odegearcontrol_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="odegear.cpp.xml" target="_top">Prev</a>
+</td><td><a href="odegearcontrol.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>OdeGearControl</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>OdeGearControl-&gt;</option>
+<option>OdeGearControl.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Include</option>
+<option>Notation</option>
+<option>xf</option>
+<option>Fun</option>
+<option>---..t</option>
+<option>---..x</option>
+<option>---..f</option>
+<option>---..f_x</option>
+<option>---..Warning</option>
+<option>M</option>
+<option>ti</option>
+<option>tf</option>
+<option>xi</option>
+<option>smin</option>
+<option>smax</option>
+<option>sini</option>
+<option>eabs</option>
+<option>erel</option>
+<option>ef</option>
+<option>maxabs</option>
+<option>nstep</option>
+<option>Error Criteria Discussion</option>
+<option>Scalar</option>
+<option>Vector</option>
+<option>Example</option>
+<option>Theory</option>
+<option>Source Code</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+
+
+ 
+<center><b><big><big>An Error Controller for Gear's Ode Solvers</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"><span style='white-space: nowrap'>#&#xA0;include&#xA0;&lt;cppad/ode_gear_control.hpp&gt;<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>xf</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;OdeGearControl(</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>M</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>ti</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>tf</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>xi</span></i><code><font color="blue"><span style='white-space: nowrap'>,<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>smin</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>smax</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>sini</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>eabs</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>erel</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>ef</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;,&#xA0;</span></font></code><i><span style='white-space: nowrap'>maxabs</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>nstep</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+</mrow></math>
+
+ denote the real numbers
+and let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x000D7;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ be a smooth function.
+We define 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">:</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ by 
+the following initial value problem:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>xi</mi>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+The routine <a href="odegear.xml" target="_top"><span style='white-space: nowrap'>OdeGear</span></a>
+ is a stiff multi-step method that
+can be used to approximate the solution to this equation.
+The routine <code><font color="blue">OdeGearControl</font></code> sets up this multi-step method
+and controls the error during such an approximation.
+
+<br/>
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/ode_gear_control.hpp</font></code> 
+is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest of 
+the <code><font color="blue">CppAD</font></code> routines.
+
+<br/>
+<br/>
+<b><big><a name="Notation" id="Notation">Notation</a></big></b>
+<br/>
+The template parameter types <a href="odegearcontrol.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+ and
+<a href="odegearcontrol.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ are documented below.
+
+<br/>
+<br/>
+<b><big><a name="xf" id="xf">xf</a></big></b>
+<br/>
+The return value <i>xf</i> has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>xf</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and the size of <i>xf</i> is equal to <i>n</i>
+(see description of <a href="odegear.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below).
+It is the approximation for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="Fun" id="Fun">Fun</a></big></b>
+<br/>
+The class <i>Fun</i> 
+and the object <i>F</i> satisfy the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Fun</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>This must support the following set of calls
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode(</span></font></code><i><span style='white-space: nowrap'>t</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode_dep(</span></font></code><i><span style='white-space: nowrap'>t</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>f_x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><br/>
+<b><a name="Fun.t" id="Fun.t">t</a></b>
+<br/>
+The argument <i>t</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>t</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see description of <a href="odegear.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><a name="Fun.x" id="Fun.x">x</a></b>
+<br/>
+The argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and has size <i>N</i>
+(see description of <a href="odegear.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><a name="Fun.f" id="Fun.f">f</a></b>
+<br/>
+The argument <i>f</i> to <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode</span></font></code> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>On input and output, <i>f</i> is a vector of size <i>N</i>
+and the input values of the elements of <i>f</i> do not matter.
+On output,
+<i>f</i> is set equal to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+(see <i>f(t, x)</i> in <a href="odegear.xml#Purpose" target="_top"><span style='white-space: nowrap'>Purpose</span></a>
+). 
+
+<br/>
+<br/>
+<b><a name="Fun.f_x" id="Fun.f_x">f_x</a></b>
+<br/>
+The argument <i>f_x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>f_x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>On input and output, <i>f_x</i> is a vector of size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>N</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>N</mi>
+</mrow></math>
+
+
+and the input values of the elements of <i>f_x</i> do not matter.
+On output, 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">_</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mrow><mi mathvariant='italic'>x</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msub>
+<msub><mi mathvariant='italic'>f</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><a name="Fun.Warning" id="Fun.Warning">Warning</a></b>
+<br/>
+The arguments <i>f</i>, and <i>f_x</i>
+must have a call by reference in their prototypes; i.e.,
+do not forget the <code><font color="blue">&amp;</font></code> in the prototype for 
+<i>f</i> and <i>f_x</i>.
+
+<br/>
+<br/>
+<b><big><a name="M" id="M">M</a></big></b>
+<br/>
+The argument <i>M</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font></code><i><span style='white-space: nowrap'>M</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the order of the multi-step method; i.e.,
+the order of the approximating polynomial
+(after the initialization process).
+The argument <i>M</i> must greater than or equal one.
+
+<br/>
+<br/>
+<b><big><a name="ti" id="ti">ti</a></big></b>
+<br/>
+The argument <i>ti</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>ti</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the initial time for the integration of 
+the differential equation.
+
+<br/>
+<br/>
+<b><big><a name="tf" id="tf">tf</a></big></b>
+<br/>
+The argument <i>tf</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>tf</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the final time for the integration of 
+the differential equation.
+
+<br/>
+<br/>
+<b><big><a name="xi" id="xi">xi</a></big></b>
+<br/>
+The argument <i>xi</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>xi</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and size <i>n</i>.
+It specifies value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="smin" id="smin">smin</a></big></b>
+<br/>
+The argument <i>smin</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>smin</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>The minimum value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>T</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>M</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>T</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>M</mi>
+<mn>-1</mn>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ in a call to <code><font color="blue">OdeGear</font></code>
+will be 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>smin</mi>
+</mrow></math>
+
+ except for the last two calls where it may be
+as small as 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>smin</mi>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mrow></math>
+
+.
+The value of <i>smin</i> must be less than or equal <i>smax</i>.
+
+<br/>
+<br/>
+<b><big><a name="smax" id="smax">smax</a></big></b>
+<br/>
+The argument <i>smax</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>smax</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the maximum step size to use during the integration; 
+i.e., the maximum value for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>T</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>M</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>T</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>M</mi>
+<mn>-1</mn>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ 
+in a call to <code><font color="blue">OdeGear</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="sini" id="sini">sini</a></big></b>
+<br/>
+The argument <i>sini</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>sini</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>The value of <i>sini</i> is the minimum 
+step size to use during initialization of the multi-step method; i.e.,
+for calls to <code><font color="blue">OdeGear</font></code> where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>m</mi>
+<mo stretchy="false">&lt;</mo>
+<mi mathvariant='italic'>M</mi>
+</mrow></math>
+
+.
+The value of <i>sini</i> must be less than or equal <i>smax</i>
+(and can also be less than <i>smin</i>).
+
+<br/>
+<br/>
+<b><big><a name="eabs" id="eabs">eabs</a></big></b>
+<br/>
+The argument <i>eabs</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>eabs</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and size <i>n</i>.
+Each of the elements of <i>eabs</i> must be 
+greater than or equal zero.
+It specifies a bound for the absolute
+error in the return value <i>xf</i> as an approximation for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+(see the 
+<a href="odegearcontrol.xml#Error Criteria Discussion" target="_top"><span style='white-space: nowrap'>error&#xA0;criteria&#xA0;discussion</span></a>
+ 
+below). 
+
+<br/>
+<br/>
+<b><big><a name="erel" id="erel">erel</a></big></b>
+<br/>
+The argument <i>erel</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>erel</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and is greater than or equal zero.
+It specifies a bound for the relative 
+error in the return value <i>xf</i> as an approximation for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+(see the 
+<a href="odegearcontrol.xml#Error Criteria Discussion" target="_top"><span style='white-space: nowrap'>error&#xA0;criteria&#xA0;discussion</span></a>
+ 
+below). 
+
+<br/>
+<br/>
+<b><big><a name="ef" id="ef">ef</a></big></b>
+<br/>
+The argument value <i>ef</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>ef</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and size <i>n</i>.
+The input value of its elements does not matter.
+On output, 
+it contains an estimated bound for the 
+absolute error in the approximation <i>xf</i>; i.e.,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mi mathvariant='italic'>ef</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">&gt;</mo>
+<mo stretchy="false">|</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>xf</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">|</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="maxabs" id="maxabs">maxabs</a></big></b>
+<br/>
+The argument <i>maxabs</i> is optional in the call to <code><font color="blue">OdeGearControl</font></code>.
+If it is present, it has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>maxabs</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and size <i>n</i>.
+The input value of its elements does not matter.
+On output, 
+it contains an estimate for the 
+maximum absolute value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+; i.e.,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>maxabs</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02248;</mo>
+<mi>max</mi>
+<mrow><mo stretchy="true">{</mo><mrow><mo stretchy="false">|</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">|</mo>
+<mspace width='.3em'/>
+<mo stretchy="false">:</mo>
+<mspace width='.3em'/>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">&#x02208;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">]</mo>
+</mrow><mo stretchy="true">}</mo></mrow>
+</mrow></math>
+
+<br/>
+<b><big><a name="nstep" id="nstep">nstep</a></big></b>
+<br/>
+The argument <i>nstep</i> has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>size_t</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>nstep</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>Its input value does not matter and its output value
+is the number of calls to <a href="odegear.xml" target="_top"><span style='white-space: nowrap'>OdeGear</span></a>
+
+used by <code><font color="blue">OdeGearControl</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Error Criteria Discussion" id="Error Criteria Discussion">Error Criteria Discussion</a></big></b>
+<br/>
+The relative error criteria <i>erel</i> and
+absolute error criteria <i>eabs</i> are enforced during each step of the
+integration of the ordinary differential equations.
+In addition, they are inversely scaled by the step size so that
+the total error bound is less than the sum of the error bounds.
+To be specific, if 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mover accent='false'><mrow><mi mathvariant='italic'>X</mi>
+</mrow>
+<mo stretchy='false'>&#x002DC;</mo></mover>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is the approximate solution
+at time 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+, 
+<i>ta</i> is the initial step time,
+and <i>tb</i> is the final step time,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mrow><mo stretchy="true">|</mo><mrow><mover accent='false'><mrow><mi mathvariant='italic'>X</mi>
+</mrow>
+<mo stretchy='false'>&#x002DC;</mo></mover>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tb</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tb</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>j</mi>
+</msub>
+</mrow><mo stretchy="true">|</mo></mrow>
+<mo stretchy="false">&#x02264;</mo>
+<mfrac><mrow><mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+</mrow>
+<mrow><mi mathvariant='italic'>tb</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ta</mi>
+</mrow>
+</mfrac>
+<mrow><mo stretchy="true">[</mo><mrow><mi mathvariant='italic'>eabs</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>erel</mi>
+<mspace width='.3em'/>
+<mo stretchy="false">|</mo>
+<mover accent='false'><mrow><mi mathvariant='italic'>X</mi>
+</mrow>
+<mo stretchy='false'>&#x002DC;</mo></mover>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tb</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">|</mo>
+</mrow><mo stretchy="true">]</mo></mrow>
+</mrow></math>
+
+If 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tb</mi>
+<msub><mo stretchy="false">)</mo>
+<mi mathvariant='italic'>j</mi>
+</msub>
+</mrow></math>
+
+ is near zero for some 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>tb</mi>
+<mo stretchy="false">&#x02208;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+,
+and one uses an absolute error criteria 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>eabs</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ of zero,
+the error criteria above will force <code><font color="blue">OdeGearControl</font></code>
+to use step sizes equal to 
+<a href="odegearcontrol.xml#smin" target="_top"><span style='white-space: nowrap'>smin</span></a>
+
+for steps ending near 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>tb</mi>
+</mrow></math>
+
+.
+In this case, the error relative to <i>maxabs</i> can be judged after
+<code><font color="blue">OdeGearControl</font></code> returns.
+If <i>ef</i> is to large relative to <i>maxabs</i>, 
+<code><font color="blue">OdeGearControl</font></code> can be called again 
+with a smaller value of <i>smin</i>.
+
+<br/>
+<br/>
+<b><big><a name="Scalar" id="Scalar">Scalar</a></big></b>
+<br/>
+The type <i>Scalar</i> must satisfy the conditions
+for a <a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+ type.
+The routine <a href="checknumerictype.xml" target="_top"><span style='white-space: nowrap'>CheckNumericType</span></a>
+ will generate an error message
+if this is not the case.
+In addition, the following operations must be defined for 
+<i>Scalar</i> objects <i>a</i> and <i>b</i>:
+
+<table><tr><td align='left'  valign='top'>
+
+<b>Operation</b> </td><td align='left'  valign='top'>
+ <b>Description</b>  </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&lt;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>b</span></i> </td><td align='left'  valign='top'>
+
+	returns true (false) if <i>a</i> is less than or equal 
+	(greater than) <i>b</i>.
+</td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;</span></font></code><i><span style='white-space: nowrap'>b</span></i> </td><td align='left'  valign='top'>
+
+	returns true (false) if <i>a</i> is equal to <i>b</i>.
+</td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue"><span style='white-space: nowrap'>log(</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code> </td><td align='left'  valign='top'>
+
+	returns a <i>Scalar</i> equal to the logarithm of <i>a</i>
+</td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue"><span style='white-space: nowrap'>exp(</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code> </td><td align='left'  valign='top'>
+
+	returns a <i>Scalar</i> equal to the exponential of <i>a</i>
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Vector" id="Vector">Vector</a></big></b>
+<br/>
+The type <i>Vector</i> must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class with
+<a href="simplevector.xml#Elements of Specified Type" target="_top"><span style='white-space: nowrap'>elements&#xA0;of&#xA0;type&#xA0;Scalar</span></a>
+.
+The routine <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+ will generate an error message
+if this is not the case.
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="odegearcontrol.cpp.xml" target="_top"><span style='white-space: nowrap'>OdeGearControl.cpp</span></a>
+
+contains an example and test a test of using this routine.
+It returns true if it succeeds and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Theory" id="Theory">Theory</a></big></b>
+<br/>
+Let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ be the error as a function of the
+step size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>s</mi>
+</mrow></math>
+
+ and suppose that there is a constant
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>K</mi>
+</mrow></math>
+
+ such that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>K</mi>
+<msup><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mrow></math>
+
+.
+Let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>a</mi>
+</mrow></math>
+
+ be our error bound.
+Given the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, a step of size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='normal'>&#x003BB;</mi>
+<mi mathvariant='italic'>s</mi>
+</mrow></math>
+
+
+would be ok provided that
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>a</mi>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x02265;</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='normal'>&#x003BB;</mi>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='normal'>&#x003BB;</mi>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>a</mi>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x02265;</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>K</mi>
+<msup><mi mathvariant='normal'>&#x003BB;</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+<msup><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='normal'>&#x003BB;</mi>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>a</mi>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x02265;</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='normal'>&#x003BB;</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+<msup><mi mathvariant='italic'>s</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msup><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>a</mi>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x02265;</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='normal'>&#x003BB;</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>s</mi>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='normal'>&#x003BB;</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</msup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x02264;</mo>
+</mtd><mtd columnalign="left" >
+<mfrac><mrow><mi mathvariant='italic'>a</mi>
+</mrow>
+<mrow><mi mathvariant='italic'>e</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>s</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</mfrac>
+<mfrac><mrow><mi mathvariant='italic'>s</mi>
+</mrow>
+<mrow><mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+</mrow>
+</mfrac>
+</mtd></mtr></mtable>
+</mrow></math>
+
+Thus if the right hand side of the last inequality is greater 
+than or equal to one, the step of size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>s</mi>
+</mrow></math>
+
+ is ok. 
+
+<br/>
+<br/>
+<b><big><a name="Source Code" id="Source Code">Source Code</a></big></b>
+<br/>
+The source code for this routine is in the file
+<code><font color="blue">cppad/ode_gear_control.hpp</font></code>.
+
+
+<hr/>Input File: cppad/ode_gear_control.hpp
+
+</body>
+</html>

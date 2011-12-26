@@ -1,0 +1,87 @@
+$Id: log_reverse.omh 1370 2009-05-31 05:31:50Z bradbell $
+// BEGIN SHORT COPYRIGHT
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+// END SHORT COPYRIGHT
+
+$begin LogReverse$$
+$spell
+	Taylor
+$$
+
+$index log, reverse theory$$
+$index theory, log reverse$$
+$index reverse, log theory$$
+
+$section Logarithm Function Reverse Mode Theory$$
+
+
+We use the reverse theory
+$xref%
+	ReverseTheory%
+	Standard Math Functions%
+	standard math function
+%$$
+definition for the functions $latex H$$ and $latex G$$.
+
+The forward mode formulas for the
+$xref/LogForward//logarithm/$$
+function are
+$latex \[
+	z^{(j)}  =  \log ( x^{(0)} ) 
+\] $$
+
+for the case $latex j = 0$$, and for $latex j > 0$$,
+
+$latex \[
+z^{(j)} 
+=  \frac{1}{ x^{(0)} } \frac{1}{j} 
+\left(
+	j x^{(j)}
+	- \sum_{k=1}^{j-1} k z^{(k)} x^{(j-k)}  
+\right)
+\] $$ 
+otherwise.
+If $latex j = 0$$, we have the relation
+$latex \[
+\D{H}{ x^{(j)} } = 
+\D{G}{ x^{(j)} }  + \D{G}{ z^{(j)} } \frac{1}{ x^{(0)} }
+\] $$
+
+If $latex j > 0$$, then for $latex k = 1 , \ldots , j-1$$
+
+$latex \[
+\begin{array}{rcl}
+\D{H}{ x^{(0)} } & = &
+\D{G}{ x^{(0)} } - \D{G}{ z^{(j)} } \frac{1}{ x^{(0)} } 
+\frac{1}{ x^{(0)} } \frac{1}{j} 
+\left(
+	j x^{(j)}
+	- \sum_{m=1}^{j-1} m z^{(m)} x^{(j-m)}  
+\right)
+\\
+& = &
+\D{G}{ x^{(0)} } - \D{G}{ z^{(j)} } \frac{1}{ x^{(0)} } z^{(j)}
+\\
+\D{H}{ x^{(j)} } & = & 
+\D{G}{ x^{(j)} } + \D{G}{ z^{(j)} } \frac{1}{ x^{(0)} } 
+\\
+\D{H}{ x^{(j-k)} } & = & 
+\D{G}{ x^{(j-k)} }  - 
+	\D{G}{ z^{(j)} } \frac{1}{ x^{(0)} } \frac{1}{j}  k z^{(k)}
+\\
+\D{H}{ z^{(k)} } & = & 
+\D{G}{ z^{(k)} }  - 
+	\D{G}{ z^{(j)} } \frac{1}{ x^{(0)} } \frac{1}{j}  k x^{(j-k)}
+\end{array}
+\] $$
+
+$end

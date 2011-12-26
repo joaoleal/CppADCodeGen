@@ -1,0 +1,268 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Number Taylor Coefficients, Per Variable, Currently Stored</title>
+<meta name="description" id="description" content="Number Taylor Coefficients, Per Variable, Currently Stored"/>
+<meta name="keywords" id="keywords" content=" "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_size_taylor_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="forwardany.xml" target="_top">Prev</a>
+</td><td><a href="comparechange.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>FunEval</option>
+<option>Forward</option>
+<option>size_taylor</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>FunEval-&gt;</option>
+<option>Forward</option>
+<option>Reverse</option>
+<option>Sparse</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Forward-&gt;</option>
+<option>ForwardZero</option>
+<option>ForwardOne</option>
+<option>ForwardAny</option>
+<option>size_taylor</option>
+<option>CompareChange</option>
+<option>capacity_taylor</option>
+<option>Forward.cpp</option>
+</select>
+</td>
+<td>size_taylor</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>---..See Also</option>
+<option>Purpose</option>
+<option>f</option>
+<option>s</option>
+<option>Constructor</option>
+<option>Forward</option>
+<option>capacity_taylor</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Number Taylor Coefficients, Per Variable, Currently Stored</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>f</span></font></i><font color="blue"><span style='white-space: nowrap'>.size_taylor()</span></font></code>
+
+
+<br/>
+<br/>
+<b><a name="Syntax.See Also" id="Syntax.See Also">See Also</a></b>
+
+<br/>
+<a href="seq_property.xml" target="_top"><span style='white-space: nowrap'>seq_property</span></a>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Determine the number of Taylor coefficients, per variable,
+currently calculated and stored in the ADFun object 
+<code><i><font color="black"><span style='white-space: nowrap'>f</span></font></i></code>
+. 
+See the discussion under 
+<a href="size_taylor.xml#Constructor" target="_top"><span style='white-space: nowrap'>Constructor</span></a>
+,
+<a href="size_taylor.xml#Forward" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+, and
+<a href="size_taylor.xml#capacity_taylor" target="_top"><span style='white-space: nowrap'>capacity_taylor</span></a>
+
+for a description of when this value can change.
+
+
+<br/>
+<br/>
+<b><big><a name="f" id="f">f</a></big></b>
+<br/>
+The object 
+<code><i><font color="black"><span style='white-space: nowrap'>f</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;ADFun&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>f</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><big><a name="s" id="s">s</a></big></b>
+<br/>
+The result 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and is the number of Taylor coefficients, 
+per variable in the AD operation sequence,
+currently calculated and stored in the ADFun object 
+<code><i><font color="black"><span style='white-space: nowrap'>f</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="Constructor" id="Constructor">Constructor</a></big></b>
+<br/>
+Directly after the <a href="funconstruct.xml" target="_top"><span style='white-space: nowrap'>FunConstruct</span></a>
+ syntax
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;ADFun&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>f</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+the value of 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ returned by <code><font color="blue">size_taylor</font></code> is one.
+This is because
+there is an implicit call to <code><font color="blue">Forward</font></code> that computes
+the zero order Taylor coefficients during this constructor.
+
+<br/>
+<br/>
+<b><big><a name="Forward" id="Forward">Forward</a></big></b>
+<br/>
+After a call to <a href="forwardany.xml" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+ with the syntax
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>f</span></font></i><font color="blue"><span style='white-space: nowrap'>.Forward(</span></font><i><font color="black"><span style='white-space: nowrap'>p</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x_p</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+the value of 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ returned by <code><font color="blue">size_taylor</font></code> 
+would be 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>p</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow></math>
+
+.
+The call to <code><font color="blue">Forward</font></code> above
+uses the lower order Taylor coefficients to compute and store 
+the <i>p</i>-th order Taylor coefficients for all
+the variables in the operation sequence corresponding to 
+<code><i><font color="black"><span style='white-space: nowrap'>f</span></font></i></code>
+.
+Thus there are 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>p</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow></math>
+
+ (order zero through 
+<code><i><font color="black"><span style='white-space: nowrap'>p</span></font></i></code>
+)
+Taylor coefficients per variable.
+(You can determine the number of variables in the operation sequence
+using the <a href="seq_property.xml#size_var" target="_top"><span style='white-space: nowrap'>size_var</span></a>
+ function.)
+
+<br/>
+<br/>
+<b><big><a name="capacity_taylor" id="capacity_taylor">capacity_taylor</a></big></b>
+<br/>
+If the number of Taylor coefficients
+currently stored in 
+<code><i><font color="black"><span style='white-space: nowrap'>f</span></font></i></code>
+ is less than or equal 
+<code><i><font color="black"><span style='white-space: nowrap'>c</span></font></i></code>
+, 
+a call to <a href="capacity_taylor.xml" target="_top"><span style='white-space: nowrap'>capacity_taylor</span></a>
+ with the syntax
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>f</span></font></i><font color="blue"><span style='white-space: nowrap'>.capacity_taylor(</span></font><i><font color="black"><span style='white-space: nowrap'>c</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+does not affect the value 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ returned by <code><font color="blue">size_taylor</font></code>.
+Otherwise,
+the value 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ returned by <code><font color="blue">size_taylor</font></code>
+is equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>c</span></font></i></code>
+
+(only Taylor coefficients of order zero through 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>c</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ 
+have been retained).
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+<br/>
+The file
+<a href="forward.cpp.xml" target="_top"><span style='white-space: nowrap'>Forward.cpp</span></a>
+
+contains an example and test of this operation.
+It returns true if it succeeds and false otherwise.
+
+
+<hr/>Input File: omh/forward.omh
+
+</body>
+</html>

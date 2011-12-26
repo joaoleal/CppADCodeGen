@@ -1,0 +1,197 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Memory Leak Detection</title>
+<meta name="description" id="description" content="Memory Leak Detection"/>
+<meta name="keywords" id="keywords" content=" memory_leak leak memory check "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_memory_leak_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ta_delete_array.xml" target="_top">Prev</a>
+</td><td><a href="cppad_ipopt_nlp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>memory_leak</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>flag</option>
+<option>Purpose</option>
+<option>NDEBUG</option>
+<option>inuse</option>
+<option>available</option>
+<option>TRACK_COUNT</option>
+<option>Error Message</option>
+<option>Multi-Threading</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Memory Leak Detection</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><i><font color="black"><span style='white-space: nowrap'>flag</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>memory_leak()</span></font></i></code>
+
+
+<br/>
+<br/>
+<b><big><a name="flag" id="flag">flag</a></big></b>
+<br/>
+The return value 
+<code><i><font color="black"><span style='white-space: nowrap'>flag</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>flag</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+This routine check for leaks in the <a href="thread_alloc.xml" target="_top"><span style='white-space: nowrap'>thread_alloc</span></a>
+ memory allocator.
+The deprecated routines in <a href="tracknewdel.xml" target="_top"><span style='white-space: nowrap'>TrackNewDel</span></a>
+ is also checked.
+Memory errors in the deprecated routine <a href="omp_alloc.xml" target="_top"><span style='white-space: nowrap'>omp_alloc</span></a>
+ are
+reported as being in <code><font color="blue">thread_alloc</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="NDEBUG" id="NDEBUG">NDEBUG</a></big></b>
+<br/>
+If <code><font color="blue">NDEBUG</font></code> is defined,
+this routine returns true.
+Otherwise it returns true unless one of the conditions below occurs.
+
+<br/>
+<br/>
+<b><big><a name="inuse" id="inuse">inuse</a></big></b>
+<br/>
+When this routine is called, it is assumed that no memory
+should be <a href="ta_inuse.xml" target="_top"><span style='white-space: nowrap'>inuse</span></a>
+ or <a href="omp_inuse.xml" target="_top"><span style='white-space: nowrap'>omp_inuse</span></a>
+ for any thread.
+If it is, a message is printed and this routine returns false.
+
+<br/>
+<br/>
+<b><big><a name="available" id="available">available</a></big></b>
+<br/>
+This routine 
+checks that no memory is <a href="ta_available.xml" target="_top"><span style='white-space: nowrap'>available</span></a>
+ or <a href="omp_available.xml" target="_top"><span style='white-space: nowrap'>omp_available</span></a>
+
+for any thread;
+i.e., it all has been returned to the system.
+If there is memory still available for a thread,
+this routine returns false. 
+
+<br/>
+<br/>
+<b><big><a name="TRACK_COUNT" id="TRACK_COUNT">TRACK_COUNT</a></big></b>
+<br/>
+if <a href="tracknewdel.xml#TrackCount" target="_top"><span style='white-space: nowrap'>TrackCount</span></a>
+ returns a non-zero value,
+this routine returns false.
+
+<br/>
+<br/>
+<b><big><a name="Error Message" id="Error Message">Error Message</a></big></b>
+<br/>
+If this routine returns false, it prints a message
+to standard output describing the condition before returning false.
+
+<br/>
+<br/>
+<b><big><a name="Multi-Threading" id="Multi-Threading">Multi-Threading</a></big></b>
+<br/>
+This routine cannot be used in <a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>in_parallel</span></a>
+
+execution mode.
+
+
+<hr/>Input File: cppad/memory_leak.hpp
+
+</body>
+</html>

@@ -1,0 +1,104 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>exp_2: Implementation</title>
+<meta name="description" id="description" content="exp_2: Implementation"/>
+<meta name="keywords" id="keywords" content=" implementation exp_2 "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_exp_2.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exp_2.xml" target="_top">Prev</a>
+</td><td><a href="exp_2.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>exp_2</option>
+<option>exp_2.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>exp_2-&gt;</option>
+<option>exp_2.hpp</option>
+<option>exp_2.cpp</option>
+<option>exp_2_for0</option>
+<option>exp_2_for1</option>
+<option>exp_2_rev1</option>
+<option>exp_2_for2</option>
+<option>exp_2_rev2</option>
+<option>exp_2_cppad</option>
+</select>
+</td>
+<td>exp_2.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>exp_2: Implementation</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+template &lt;class Type&gt;
+Type exp_2(const Type &amp;x) 
+{       Type v1  = x;                // v1 = x
+        Type v2  = Type(1) + v1;     // v2 = 1 + x
+        Type v3  = v1 * v1;          // v3 = x^2
+        Type v4  = v3 / Type(2);     // v4 = x^2 / 2 
+        Type v5  = v2 + v4;          // v5 = 1 + x + x^2 / 2
+        return v5;                   // exp_2(x) = 1 + x + x^2 / 2
+}</pre>
+</font></code>
+
+
+<hr/>Input File: introduction/exp_apx/exp_2.omh
+
+</body>
+</html>

@@ -1,0 +1,626 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Evaluate a Function That Has a Sparse Hessian</title>
+<meta name="description" id="description" content="Evaluate a Function That Has a Sparse Hessian"/>
+<meta name="keywords" id="keywords" content=" sparse_evaluate function "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sparse_evaluate_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ode_evaluate.hpp.xml" target="_top">Prev</a>
+</td><td><a href="sparse_evaluate.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>sparse_evaluate-&gt;</option>
+<option>sparse_evaluate.cpp</option>
+<option>sparse_evaluate.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Inclusion</option>
+<option>Float</option>
+<option>x</option>
+<option>i</option>
+<option>j</option>
+<option>m</option>
+<option>fm</option>
+<option>---..Function</option>
+<option>---..Gradient</option>
+<option>---..Hessian</option>
+<option>Example</option>
+<option>Source Code</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Evaluate a Function That Has a Sparse Hessian</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>#&#xA0;include&#xA0;&lt;cppad/speed/sparse_evaluate.hpp&gt;<br/>
+</span></font></code>
+
+<code><font color="blue"><span style='white-space: nowrap'>sparse_evaluate(</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>fm</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+This routine evaluates
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, or 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>2</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+where the Hessian 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>2</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is sparse.
+The function 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">:</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+</mrow></math>
+
+ depends on the 
+index vectors 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>j</span></font></i></code>
+. 
+The non-zero entries in the Hessian of this function have 
+one of the following forms:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+<mspace width='.3em'/>
+<mo stretchy="false">,</mo>
+<mspace width='.3em'/>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+<mspace width='.3em'/>
+<mo stretchy="false">,</mo>
+<mspace width='.3em'/>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+<mspace width='.3em'/>
+<mo stretchy="false">,</mo>
+<mspace width='.3em'/>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+</mrow></math>
+
+for some \( k \) between zero and \( \ell-1 \).
+All the other terms of the Hessian are zero.
+
+<br/>
+<br/>
+<b><big><a name="Inclusion" id="Inclusion">Inclusion</a></big></b>
+<br/>
+The template function <code><font color="blue">sparse_evaluate</font></code> 
+is defined in the <code><font color="blue">CppAD</font></code> namespace by including 
+the file <code><font color="blue">cppad/speed/sparse_evaluate.hpp</font></code> 
+(relative to the CppAD distribution directory).
+It is only intended for example and testing purposes, 
+so it is not automatically included by
+<a href="cppad.xml" target="_top"><span style='white-space: nowrap'>cppad.hpp</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Float" id="Float">Float</a></big></b>
+<br/>
+The type 
+<code><i><font color="black"><span style='white-space: nowrap'>Float</span></font></i></code>
+ must be a <a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+.
+In addition, if 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+ are 
+<code><i><font color="black"><span style='white-space: nowrap'>Float</span></font></i></code>
+ objects,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;exp(</span></font><i><font color="black"><span style='white-space: nowrap'>z</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+must set the 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ equal the exponential of 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+, i.e.,
+the derivative of 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ with respect to 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+ is equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Float</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It contains he argument value for which the function,
+or its derivative, is being evaluated.
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>n</mi>
+</mrow></math>
+
+ to denote the size of the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="i" id="i">i</a></big></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;size_t&gt;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It specifies one of the first 
+index of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+ for each non-zero Hessian term
+(see <a href="sparse_evaluate.xml#Purpose" target="_top"><span style='white-space: nowrap'>purpose</span></a>
+ above).
+All the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ must be between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+.
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+</mrow></math>
+
+ to denote the size of the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="j" id="j">j</a></big></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>j</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;size_t&gt;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and is a vector with size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+</mrow></math>
+
+.
+It specifies one of the second 
+index of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+ for each non-zero Hessian term.
+All the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>j</span></font></i></code>
+ must be between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="m" id="m">m</a></big></b>
+<br/>
+The argument <i>m</i> has prototype
+
+<code><i><font color="black"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font></i><font color="blue"><span style='white-space: nowrap'>m</span></font><i><font color="black"><span style='white-space: nowrap'><br/>
+</span></font></i></code>
+It is between zero and two and
+specifies the order of the derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+</mrow></math>
+
+
+that is being evaluated, i.e., 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>m</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is evaluated.
+
+<br/>
+<br/>
+<b><big><a name="fm" id="fm">fm</a></big></b>
+<br/>
+The argument <i>fm</i> has prototype
+
+<code><i><font color="black"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;</span></font></i><font color="blue"><span style='white-space: nowrap'>Float</span></font><i><font color="black"><span style='white-space: nowrap'>&gt;&#xA0;&amp;</span></font></i><font color="blue"><span style='white-space: nowrap'>fm</span></font><i><font color="black"><span style='white-space: nowrap'><br/>
+</span></font></i></code>
+The input value of the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>fm</span></font></i></code>
+ does not matter.
+
+<br/>
+<br/>
+<b><a name="fm.Function" id="fm.Function">Function</a></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+ is zero, <i>fm</i> has size one and
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>fm</span></i><code><font color="blue"><span style='white-space: nowrap'>[0]</span></font></code> is the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="fm.Gradient" id="fm.Gradient">Gradient</a></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+ is one, <i>fm</i> has size <i>n</i> and 
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>fm</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+<br/>
+<b><a name="fm.Hessian" id="fm.Hessian">Hessian</a></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+ is two, <i>fm</i> has size <code><font color="blue"></font></code><i><span style='white-space: nowrap'>n</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;*&#xA0;</span></font></code><i><span style='white-space: nowrap'>n</span></i> and
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>m</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<mi mathvariant='italic'>f</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>m</mi>
+<mo stretchy="false">]</mo>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>fm</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>m</mi>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+<br/>
+The file
+<a href="sparse_evaluate.cpp.xml" target="_top"><span style='white-space: nowrap'>sparse_evaluate.cpp</span></a>
+
+contains an example and test  of <code><font color="blue">sparse_evaluate.hpp</font></code>.
+It returns true if it succeeds and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Source Code" id="Source Code">Source Code</a></big></b>
+<br/>
+The file 
+<a href="sparse_evaluate.hpp.xml" target="_top"><span style='white-space: nowrap'>sparse_evaluate.hpp</span></a>
+
+contains the source code for this template function.
+
+
+<hr/>Input File: cppad/speed/sparse_evaluate.hpp
+
+</body>
+</html>

@@ -1,0 +1,215 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>The AD Error Function</title>
+<meta name="description" id="description" content="The AD Error Function"/>
+<meta name="keywords" id="keywords" content=" erf Ad function error "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_erf_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="epsilon.cpp.xml" target="_top">Prev</a>
+</td><td><a href="erf.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>MathOther</option>
+<option>erf</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>MathOther-&gt;</option>
+<option>abs</option>
+<option>atan2</option>
+<option>epsilon</option>
+<option>erf</option>
+<option>pow</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>erf-&gt;</option>
+<option>Erf.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Description</option>
+<option>x</option>
+<option>Operation Sequence</option>
+<option>Method</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+<center><b><big><big>The AD Error Function</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;erf(</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+
+<br/>
+<br/>
+<b><big><a name="Description" id="Description">Description</a></big></b>
+<br/>
+Returns the value of the error function which is defined by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>erf</mi>
+</mstyle></mrow>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mn>2</mn>
+</mrow>
+<mrow><msqrt><mrow><mi mathvariant='normal'>&#x003C0;</mi>
+</mrow>
+</msqrt>
+</mrow>
+</mfrac>
+<msubsup><mo stretchy="false">&#x0222B;</mo>
+<mn>0</mn>
+<mi mathvariant='italic'>x</mi>
+</msubsup>
+<mi>exp</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mspace width='.3em'/>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>d</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>t</mi>
+</mrow></math>
+
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+, and the result 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+
+have one of the following paris of prototypes:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;float</span></font><i><font color="black"></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;float</span></font><i><font color="black"></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;double</span></font><i><font color="black"></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;double</span></font><i><font color="black"></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;VecAD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;::reference&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+The AD of 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+
+operation sequence used to calculate 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ is
+<a href="glossary.xml#Operation.Independent" target="_top"><span style='white-space: nowrap'>independent</span></a>
+
+of 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="Method" id="Method">Method</a></big></b>
+<br/>
+This is a fast approximation (few numerical operations) 
+with relative error bound 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mn>4</mn>
+<mo stretchy="false">&#x000D7;</mo>
+<msup><mn>10</mn>
+<mrow><mn>-4</mn>
+</mrow>
+</msup>
+</mrow></math>
+
+; see
+Vedder, J.D.,
+<i>Simple approximations for the error function and its inverse</i>,
+American Journal of Physics, 
+v 55, 
+n 8, 
+1987, 
+p 762-3.
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="erf.cpp.xml" target="_top"><span style='white-space: nowrap'>Erf.cpp</span></a>
+
+contains an example and test of this function.   
+It returns true if it succeeds and false otherwise.
+
+
+<hr/>Input File: cppad/local/erf.hpp
+
+</body>
+</html>

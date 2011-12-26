@@ -1,0 +1,143 @@
+$Id: numeric_type.omh 1370 2009-05-31 05:31:50Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-08 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+/*
+$begin NumericType$$
+$spell
+	const
+	std
+	valarray
+$$
+
+$index numeric, type$$
+$index type, numeric$$
+
+$section Definition of a Numeric Type$$
+
+$head Type Requirements$$
+A $italic NumericType$$ is any type
+that satisfies the requirements below.
+The following is a list of some numeric types:
+$code int$$, $code float$$, $code double$$, 
+$code AD<double>$$, $code AD< AD<double> >$$.
+The routine $xref/CheckNumericType/$$ can be used to check
+that a type satisfies these conditions.
+
+$head Default Constructor$$
+$index default, numeric constructor$$
+$index constructor, numeric$$
+The syntax 
+$syntax%
+	%NumericType% %x%;
+%$$
+creates a $italic NumericType$$ object
+with an unspecified value.
+
+$head Constructor From Integer$$
+$index int, numeric constructor$$
+$index constructor, numeric$$
+If $italic i$$ is an $code int$$,
+the syntax 
+$syntax%
+	%NumericType% %x%(%i%);
+%$$
+creates a $italic NumericType$$ object with a value
+equal to $italic i$$ where $italic i$$ can be $code const$$.
+
+$head Copy Constructor$$
+$index copy, numeric constructor$$
+$index constructor, numeric copy$$
+If $italic x$$ is a $italic NumericType$$ object
+the syntax 
+$syntax%
+	%NumericType% %y%(%x%);
+%$$
+creates a $italic NumericType$$ object $italic y$$
+with the same value as $italic x$$
+where $italic x$$ can be $code const$$.
+
+$head Assignment$$
+If $italic x$$ and $italic y$$ are $italic NumericType$$ objects,
+the syntax
+$syntax%
+	%x% = %y%
+%$$
+sets the value of $italic x$$ equal to the value of $italic y$$
+where $italic y$$ can be $code const$$.
+The expression corresponding to this operation is unspecified; i.e.,
+it could be $code void$$ and hence
+$syntax%
+	%x% = %y% = %z%
+%$$
+may not be legal.
+
+$head Operators$$
+Suppose $italic x$$, $italic y$$ and $italic z$$
+$italic NumericType$$ objects where
+$italic x$$ and $italic y$$ may be $code const$$.
+In the result type column,
+$italic NumericType$$ can be replaced by any type that can 
+be used just like a $italic NumericType$$ object.
+$table
+$bold Operation$$     $cnext $bold Description$$               $cnext
+	$bold Result Type$$  $rnext
+$syntax%+%x%$$        $cnext unary plus                        $cnext
+	$italic NumericType$$    $rnext
+$syntax%-%x%$$        $cnext unary minus                       $cnext
+	$italic NumericType$$    $rnext
+$syntax%%x% +  %y%$$  $cnext binary addition                   $cnext
+	$italic NumericType$$    $rnext
+$syntax%%x% -  %y%$$  $cnext binary subtraction                $cnext
+	$italic NumericType$$    $rnext
+$syntax%%x% *  %y%$$  $cnext binary multiplication             $cnext
+	$italic NumericType$$    $rnext
+$syntax%%x% /  %y%$$  $cnext binary division                   $cnext
+	$italic NumericType$$    $rnext
+$syntax%%z% += %y%$$  $cnext computed assignment addition       $cnext
+	unspecified          $rnext
+$syntax%%z% -= %y%$$  $cnext computed assignment subtraction    $cnext
+	unspecified          $rnext
+$syntax%%z% *= %y%$$  $cnext computed assignment multiplication $cnext
+	unspecified          $rnext
+$syntax%%z% /= %y%$$  $cnext computed assignment division       $cnext
+	unspecified      
+$tend
+
+$head Example$$
+$children%
+	example/numeric_type.cpp
+%$$
+The file
+$xref/NumericType.cpp/$$
+contains an example and test of using numeric types.
+It returns true if it succeeds and false otherwise.
+(It is easy to modify to test additional numeric types.)
+
+$head Exercise$$
+$index exercise, numeric type$$
+
+$list number$$
+List three operators that are not supported by every
+numeric type but that are supported by the numeric types
+$code int$$, 
+$code float$$, 
+$code double$$.
+
+$lnext
+Which of the following are numeric types:
+$code std::complex<double>$$,
+$code std::valarray<double>$$,
+$code std::vector<double>$$ ?
+
+$lend
+
+$end

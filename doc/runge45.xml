@@ -1,0 +1,566 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>An Embedded 4th and 5th Order Runge-Kutta ODE Solver</title>
+<meta name="description" id="description" content="An Embedded 4th and 5th Order Runge-Kutta ODE Solver"/>
+<meta name="keywords" id="keywords" content=" Runge45 Ode Runge-kutta Runge Kutta solve differential equation parallel "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_runge45_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="rombergmul.cpp.xml" target="_top">Prev</a>
+</td><td><a href="runge_45_1.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>Runge45</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>Runge45-&gt;</option>
+<option>runge_45_1.cpp</option>
+<option>runge_45_2.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Include</option>
+<option>xf</option>
+<option>Fun</option>
+<option>---..t</option>
+<option>---..x</option>
+<option>---..f</option>
+<option>---..Warning</option>
+<option>M</option>
+<option>ti</option>
+<option>tf</option>
+<option>xi</option>
+<option>e</option>
+<option>Scalar</option>
+<option>Vector</option>
+<option>Parallel Mode</option>
+<option>Example</option>
+<option>Source Code</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+
+
+
+ 
+<center><b><big><big>An Embedded 4th and 5th Order Runge-Kutta ODE Solver</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"><span style='white-space: nowrap'>#&#xA0;include&#xA0;&lt;cppad/runge_45.hpp&gt;<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>xf</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;Runge45(</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>M</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>ti</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>tf</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>xi</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>xf</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;Runge45(</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>M</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>ti</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>tf</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>xi</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>e</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+This is an implementation of the
+Cash-Karp embedded 4th and 5th order Runge-Kutta ODE solver 
+described in Section 16.2 of <a href="bib.xml#Numerical Recipes" target="_top"><span style='white-space: nowrap'>Numerical&#xA0;Recipes</span></a>
+.
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>n</mi>
+</mrow></math>
+
+ for the size of the vector <i>xi</i>.
+Let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+</mrow></math>
+
+ denote the real numbers
+and let 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x000D7;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ be a smooth function.
+The return value <i>xf</i> contains a 5th order
+approximation for the value 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ where 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">:</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ is defined by 
+the following initial value problem:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>xi</mi>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">'</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+If your set of ordinary differential equations
+are stiff, an implicit method may be better
+(perhaps <a href="rosen34.xml" target="_top"><span style='white-space: nowrap'>Rosen34</span></a>
+.)
+
+<br/>
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/runge_45.hpp</font></code> is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest of 
+the <code><font color="blue">CppAD</font></code> routines.
+
+<br/>
+<br/>
+<b><big><a name="xf" id="xf">xf</a></big></b>
+<br/>
+The return value <i>xf</i> has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>xf</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and the size of <i>xf</i> is equal to <i>n</i> 
+(see description of <a href="runge45.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below).
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>xf</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>O</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>h</mi>
+<mn>6</mn>
+</msup>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>M</mi>
+</mrow></math>
+
+ is the step size.
+If <i>xf</i> contains not a number <a href="nan.xml" target="_top"><span style='white-space: nowrap'>nan</span></a>
+,
+see the discussion for <a href="runge45.xml#Fun.f" target="_top"><span style='white-space: nowrap'>f</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Fun" id="Fun">Fun</a></big></b>
+<br/>
+The class <i>Fun</i> 
+and the object <i>F</i> satisfy the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Fun</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>The object <i>F</i> (and the class <i>Fun</i>)
+must have a member function named <code><font color="blue">Ode</font></code> 
+that supports the syntax
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode(</span></font></code><i><span style='white-space: nowrap'>t</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><br/>
+<b><a name="Fun.t" id="Fun.t">t</a></b>
+<br/>
+The argument <i>t</i> to <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode</span></font></code> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>t</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see description of <a href="runge45.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><a name="Fun.x" id="Fun.x">x</a></b>
+<br/>
+The argument <i>x</i> to <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode</span></font></code> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and has size <i>n</i>
+(see description of <a href="runge45.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><a name="Fun.f" id="Fun.f">f</a></b>
+<br/>
+The argument <i>f</i> to <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode</span></font></code> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>On input and output, <i>f</i> is a vector of size <i>n</i>
+and the input values of the elements of <i>f</i> do not matter.
+On output,
+<i>f</i> is set equal to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ in the differential equation.
+If any of the elements of <i>f</i> have the value not a number <code><font color="blue">nan</font></code>
+the routine <code><font color="blue">Runge45</font></code> returns with all the
+elements of <i>xf</i> and <i>e</i> equal to <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><a name="Fun.Warning" id="Fun.Warning">Warning</a></b>
+<br/>
+The argument <i>f</i> to <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>.Ode</span></font></code>
+must have a call by reference in its prototype; i.e.,
+do not forget the <code><font color="blue">&amp;</font></code> in the prototype for <i>f</i>.
+
+<br/>
+<br/>
+<b><big><a name="M" id="M">M</a></big></b>
+<br/>
+The argument <i>M</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font></code><i><span style='white-space: nowrap'>M</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the number of steps
+to use when solving the differential equation.
+This must be greater than or equal one.
+The step size is given by 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>M</mi>
+</mrow></math>
+
+, thus
+the larger <i>M</i>, the more accurate the
+return value <i>xf</i> is as an approximation
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="ti" id="ti">ti</a></big></b>
+<br/>
+The argument <i>ti</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>ti</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see description of <a href="runge45.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+ below). 
+It specifies the initial time for <i>t</i> in the 
+differential equation; i.e., 
+the time corresponding to the value <i>xi</i>.
+
+<br/>
+<br/>
+<b><big><a name="tf" id="tf">tf</a></big></b>
+<br/>
+The argument <i>tf</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Scalar</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>tf</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the final time for <i>t</i> in the 
+differential equation; i.e., 
+the time corresponding to the value <i>xf</i>.
+
+<br/>
+<br/>
+<b><big><a name="xi" id="xi">xi</a></big></b>
+<br/>
+The argument <i>xi</i> has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>xi</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and the size of <i>xi</i> is equal to <i>n</i>.
+It specifies the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+
+<br/>
+<br/>
+<b><big><a name="e" id="e">e</a></big></b>
+<br/>
+The argument <i>e</i> is optional and has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>e</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>If <i>e</i> is present,
+the size of <i>e</i> must be equal to <i>n</i>.
+The input value of the elements of <i>e</i> does not matter.
+On output
+it contains an element by element
+estimated bound for the absolute value of the error in <i>xf</i>
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>e</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>O</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>h</mi>
+<mn>5</mn>
+</msup>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>tf</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>ti</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>M</mi>
+</mrow></math>
+
+ is the step size.
+If on output, <i>e</i> contains not a number <code><font color="blue">nan</font></code>,
+see the discussion for <a href="runge45.xml#Fun.f" target="_top"><span style='white-space: nowrap'>f</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Scalar" id="Scalar">Scalar</a></big></b>
+<br/>
+The type <i>Scalar</i> must satisfy the conditions
+for a <a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+ type.
+The routine <a href="checknumerictype.xml" target="_top"><span style='white-space: nowrap'>CheckNumericType</span></a>
+ will generate an error message
+if this is not the case.
+In addition, the following operations must be defined for 
+<i>Scalar</i> objects <i>a</i> and <i>b</i>:
+
+<table><tr><td align='left'  valign='top'>
+
+<b>Operation</b> </td><td align='left'  valign='top'>
+ <b>Description</b>  </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&lt;&#xA0;</span></font></code><i><span style='white-space: nowrap'>b</span></i> </td><td align='left'  valign='top'>
+
+	less than operator (returns a <code><font color="blue">bool</font></code> object)
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Vector" id="Vector">Vector</a></big></b>
+<br/>
+The type <i>Vector</i> must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class with
+<a href="simplevector.xml#Elements of Specified Type" target="_top"><span style='white-space: nowrap'>elements&#xA0;of&#xA0;type&#xA0;Scalar</span></a>
+.
+The routine <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+ will generate an error message
+if this is not the case.
+
+<br/>
+<br/>
+<b><big><a name="Parallel Mode" id="Parallel Mode">Parallel Mode</a></big></b>
+
+
+<br/>
+For each set of types
+<a href="runge45.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+, 
+<a href="runge45.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+, and
+<a href="runge45.xml#Fun" target="_top"><span style='white-space: nowrap'>Fun</span></a>
+, 
+the first call to <code><font color="blue">Runge45</font></code>
+must not be <a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>parallel</span></a>
+ execution mode.
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="runge_45_1.cpp.xml" target="_top"><span style='white-space: nowrap'>runge_45_1.cpp</span></a>
+
+contains a simple example and test of <code><font color="blue">Runge45</font></code>.
+It returns true if it succeeds and false otherwise.
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>The file
+<a href="runge_45_2.cpp.xml" target="_top"><span style='white-space: nowrap'>runge_45_2.cpp</span></a>
+ contains an example using <code><font color="blue">Runge45</font></code>
+in the context of algorithmic differentiation.
+It also returns true if it succeeds and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Source Code" id="Source Code">Source Code</a></big></b>
+<br/>
+The source code for this routine is in the file
+<code><font color="blue">cppad/runge_45.hpp</font></code>.
+
+
+<hr/>Input File: cppad/runge_45.hpp
+
+</body>
+</html>

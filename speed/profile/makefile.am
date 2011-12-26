@@ -1,0 +1,57 @@
+# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+#
+# automake input file
+#
+# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+DEFS          =
+#
+if CppAD_BOOST_DIR
+BOOST_INCLUDE = -I$(BOOST_DIR)
+else
+BOOST_INCLUDE =
+endif
+#
+EXTRA_DIST       = gprof.sed
+#
+check_PROGRAMS   = profile 
+#
+AM_CPPFLAGS   = -I$(top_srcdir) $(BOOST_INCLUDE)
+#
+# BEGIN OPTIMIZE
+AM_CXXFLAGS   = -pg -O2 -DSPEED_PROFILE -DNDEBUG $(CXX_FLAGS)
+# END OPTIMIZE
+#
+# BEGIN DEBUG
+# AM_CXXFLAGS = -g $(CXX_FLAGS) -DSPEED_PROFILE
+# END DEBUG
+#
+LDADD         = -lspeed
+AM_LDFLAGS    = -L../src -pg
+#
+profile_SOURCES = \
+	../main.cpp \
+	../cppad/ode.cpp \
+	../cppad/det_lu.cpp  \
+	../cppad/det_minor.cpp  \
+	../cppad/mat_mul.cpp  \
+	../cppad/poly.cpp \
+	../cppad/sparse_hessian.cpp \
+	../cppad/sparse_jacobian.cpp
+
+test.sh: profile$(EXEEXT)
+	echo "#! /bin/sh -e"                 > test.sh
+	echo "./profile correct 123"        >> test.sh
+	chmod +x test.sh
+
+test: test.sh
+	./test.sh

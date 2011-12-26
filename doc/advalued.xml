@@ -1,0 +1,103 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD Valued Operations and Functions</title>
+<meta name="description" id="description" content="AD Valued Operations and Functions"/>
+<meta name="keywords" id="keywords" content=" operation Ad valued function "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_advalued_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="var2par.cpp.xml" target="_top">Prev</a>
+</td><td><a href="arithmetic.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+<center><b><big><big>AD Valued Operations and Functions</big></big></b></center>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<table>
+<tr><td><a href="arithmetic.xml" target="_top">Arithmetic</a></td><td>AD&#xA0;Arithmetic&#xA0;Operators&#xA0;and&#xA0;Computed&#xA0;Assignments</td></tr><tr><td><a href="std_math_ad.xml" target="_top">std_math_ad</a></td><td>AD&#xA0;Standard&#xA0;Math&#xA0;Unary&#xA0;Functions</td></tr><tr><td><a href="mathother.xml" target="_top">MathOther</a></td><td>Other&#xA0;AD&#xA0;Math&#xA0;Functions</td></tr><tr><td><a href="condexp.xml" target="_top">CondExp</a></td><td>AD&#xA0;Conditional&#xA0;Expressions</td></tr><tr><td><a href="discrete.xml" target="_top">Discrete</a></td><td>Discrete&#xA0;AD&#xA0;Functions</td></tr><tr><td><a href="user_atomic.xml" target="_top">user_atomic</a></td><td>User&#xA0;Defined&#xA0;Atomic&#xA0;AD&#xA0;Functions</td></tr></table>
+<hr/>Input File: cppad/local/ad_valued.hpp
+
+</body>
+</html>

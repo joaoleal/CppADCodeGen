@@ -1,0 +1,47 @@
+# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+# automake input file
+#
+# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+DEFS          =
+#
+if CppAD_BOOST_DIR
+BOOST_INCLUDE = -I$(BOOST_DIR)
+else
+BOOST_INCLUDE =
+endif
+# 
+#
+AM_CXXFLAGS               = -g $(CXX_FLAGS) 
+#
+AM_CPPFLAGS               = \
+	-I. \
+	-I$(top_srcdir) \
+	$(BOOST_INCLUDE) \
+	-I$(IPOPT_DIR)/include
+#
+# make building the library conditional on having IPOPT_DIR specified
+if CppAD_IPOPT_CPPAD
+lib_LIBRARIES            = libcppad_ipopt.a
+libcppad_ipopt_a_SOURCES = \
+	cppad_ipopt_nlp.cpp \
+	cppad_ipopt_nlp.hpp \
+	fun_record.hpp \
+	hes_fg_map.cpp \
+	hes_fg_map.hpp \
+	jac_g_map.cpp \
+	jac_g_map.hpp \
+	sparse_map2vec.cpp \
+	sparse_map2vec.hpp \
+	vec_fun_pattern.cpp  \
+	vec_fun_pattern.hpp 
+endif

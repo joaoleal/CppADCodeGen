@@ -1,0 +1,365 @@
+# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+#
+BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
+$(top_srcdir)/cppad/configure.hpp: cppad/configure.hpp
+	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp 
+#
+if CppAD_POSTFIX
+postfix_dir  = $(POSTFIX_DIR)
+else
+postfix_dir  = .
+endif
+#
+# Did user specify a value for ADOLC_DIR in configure command line
+if CppAD_ADOLC
+SPEED_ADOLC_TESTS   = speed/adolc
+else
+SPEED_ADOLC_TESTS   = 
+endif
+#
+# Did user specify a value for FADBAD_DIR in configure command line
+if CppAD_FADBAD
+SPEED_FADBAD_TESTS  = speed/fadbad
+else
+SPEED_FADBAD_TESTS  = 
+endif
+#
+# Did user specify a value for SACADO_DIR in configure command line
+if CppAD_SACADO
+SPEED_SACADO_TESTS  = speed/sacado
+else
+SPEED_SACADO_TESTS  = 
+endif
+#
+# Did user specify a value for IPOPT_DIR in configure command line 
+if CppAD_IPOPT_CPPAD
+IPOPT_TESTS = \
+	cppad_ipopt/example \
+	cppad_ipopt/speed \
+	cppad_ipopt/test
+#
+IPOPT_DIRS = \
+	cppad_ipopt/src \
+	$(IPOPT_TESTS) 
+#
+IPOPT_HEADER = \
+	cppad_ipopt/src/cppad_ipopt_nlp.hpp
+else
+IPOPT_TESTS  =
+IPOPT_DIRS   =
+IPOPT_HEADER =
+endif
+#
+# Is the library archiving program present
+if CppAD_HAVE_AR
+SPEED_TESTS = \
+	$(SPEED_ADOLC_TESTS)  \
+	speed/cppad \
+	speed/double \
+	speed/example \
+	$(SPEED_FADBAD_TESTS) \
+	speed/profile \
+	$(SPEED_SACADO_TESTS)
+#
+SPEED_DIRS = \
+	speed/src \
+	$(SPEED_TESTS)
+else
+	SPEED_DIRS =
+endif
+# ---------------------------------------------------------------------------
+myincludedir = $(includedir)/$(postfix_dir)
+#
+myinclude_HEADERS = \
+	$(IPOPT_HEADER)
+#
+nobase_myinclude_HEADERS =  \
+	cppad/CheckNumericType.h \
+	cppad/CheckSimpleVector.h \
+	cppad/CppAD.h \
+	cppad/CppAD_vector.h \
+	cppad/ErrorHandler.h \
+	cppad/LuFactor.h \
+	cppad/LuInvert.h \
+	cppad/LuSolve.h \
+	cppad/NearEqual.h \
+	cppad/OdeErrControl.h \
+	cppad/OdeGearControl.h \
+	cppad/OdeGear.h \
+	cppad/Poly.h \
+	cppad/PowInt.h \
+	cppad/RombergMul.h \
+	cppad/RombergOne.h \
+	cppad/Rosen34.h \
+	cppad/Runge45.h \
+	cppad/SpeedTest.h \
+	cppad/TrackNewDel.h \
+	\
+	cppad/base_require.hpp \
+	cppad/check_numeric_type.hpp \
+	cppad/check_simple_vector.hpp \
+	cppad/configure.hpp \
+	cppad/cppad.hpp \
+	cppad/elapsed_seconds.hpp \
+	cppad/error_handler.hpp \
+	cppad/local/abort_recording.hpp \
+	cppad/local/abs.hpp \
+	cppad/local/abs_op.hpp \
+	cppad/local/acos_op.hpp \
+	cppad/local/ad_binary.hpp \
+	cppad/local/ad_copy.hpp \
+	cppad/local/add_eq.hpp \
+	cppad/local/add.hpp \
+	cppad/local/add_op.hpp \
+	cppad/local/ad_fun.hpp \
+	cppad/local/ad.hpp \
+	cppad/local/ad_tape.hpp \
+	cppad/local/ad_valued.hpp \
+	cppad/local/arithmetic.hpp \
+	cppad/local/asin_op.hpp \
+	cppad/local/atan2.hpp \
+	cppad/local/atan_op.hpp \
+	cppad/local/base_complex.hpp \
+	cppad/local/base_cond_exp.hpp \
+	cppad/local/base_double.hpp \
+	cppad/local/base_float.hpp \
+	cppad/local/base_std_math.hpp \
+	cppad/local/bender_quad.hpp \
+	cppad/local/bool_fun.hpp \
+	cppad/local/bool_valued.hpp \
+	cppad/local/cap_taylor.hpp \
+	cppad/local/compare.hpp \
+	cppad/local/comp_op.hpp \
+	cppad/local/compute_assign.hpp \
+	cppad/local/cond_exp.hpp \
+	cppad/local/cond_op.hpp \
+	cppad/local/convert.hpp \
+	cppad/local/cosh_op.hpp \
+	cppad/local/cos_op.hpp \
+	cppad/local/cppad_assert.hpp \
+	cppad/local/csum_op.hpp \
+	cppad/local/declare_ad.hpp \
+	cppad/local/default.hpp \
+	cppad/local/define.hpp \
+	cppad/local/dependent.hpp \
+	cppad/local/discrete.hpp \
+	cppad/local/discrete_op.hpp \
+	cppad/local/div_eq.hpp \
+	cppad/local/div.hpp \
+	cppad/local/div_op.hpp \
+	cppad/local/drivers.hpp \
+	cppad/local/epsilon.hpp \
+	cppad/local/equal_op_seq.hpp \
+	cppad/local/erf.hpp \
+	cppad/local/exp_op.hpp \
+	cppad/local/for_jac_sweep.hpp \
+	cppad/local/for_one.hpp \
+	cppad/local/for_sparse_jac.hpp \
+	cppad/local/for_two.hpp \
+	cppad/local/forward0sweep.hpp \
+	cppad/local/forward.hpp \
+	cppad/local/forward_sweep.hpp \
+	cppad/local/fun_check.hpp \
+	cppad/local/fun_construct.hpp \
+	cppad/local/fun_eval.hpp \
+	cppad/local/hash_code.hpp \
+	cppad/local/hessian.hpp \
+	cppad/local/identical.hpp \
+	cppad/local/independent.hpp \
+	cppad/local/integer.hpp \
+	cppad/local/jacobian.hpp \
+	cppad/local/load_op.hpp \
+	cppad/local/log_op.hpp \
+	cppad/local/lu_ratio.hpp \
+	cppad/local/math_other.hpp \
+	cppad/local/mul_eq.hpp \
+	cppad/local/mul.hpp \
+	cppad/local/mul_op.hpp \
+	cppad/local/near_equal_ext.hpp \
+	cppad/local/omp_max_thread.hpp \
+	cppad/local/op_code.hpp \
+	cppad/local/op.hpp \
+	cppad/local/optimize.hpp \
+	cppad/local/opt_val_hes.hpp \
+	cppad/local/ordered.hpp \
+	cppad/local/output.hpp \
+	cppad/local/parallel_ad.hpp \
+	cppad/local/parameter_op.hpp \
+	cppad/local/par_var.hpp \
+	cppad/local/player.hpp \
+	cppad/local/pod_vector.hpp \
+	cppad/local/pow.hpp \
+	cppad/local/pow_op.hpp \
+	cppad/local/print_for.hpp \
+	cppad/local/print_op.hpp \
+	cppad/local/prototype_op.hpp \
+	cppad/local/recorder.hpp \
+	cppad/local/reverse.hpp \
+	cppad/local/reverse_sweep.hpp \
+	cppad/local/rev_hes_sweep.hpp \
+	cppad/local/rev_jac_sweep.hpp \
+	cppad/local/rev_one.hpp \
+	cppad/local/rev_sparse_hes.hpp \
+	cppad/local/rev_sparse_jac.hpp \
+	cppad/local/rev_two.hpp \
+	cppad/local/sinh_op.hpp \
+	cppad/local/sin_op.hpp \
+	cppad/local/sparse_binary_op.hpp \
+	cppad/local/sparse_hessian.hpp \
+	cppad/local/sparse.hpp \
+	cppad/local/sparse_jacobian.hpp \
+	cppad/local/sparse_pack.hpp \
+	cppad/local/sparse_set.hpp \
+	cppad/local/sparse_unary_op.hpp \
+	cppad/local/sqrt_op.hpp \
+	cppad/local/std_math_ad.hpp \
+	cppad/local/std_set.hpp \
+	cppad/local/store_op.hpp \
+	cppad/local/sub_eq.hpp \
+	cppad/local/sub.hpp \
+	cppad/local/sub_op.hpp \
+	cppad/local/tanh_op.hpp \
+	cppad/local/tan_op.hpp \
+	cppad/local/tape_link.hpp \
+	cppad/local/test_vector.hpp \
+	cppad/local/unary_minus.hpp \
+	cppad/local/unary_plus.hpp \
+	cppad/local/undef.hpp \
+	cppad/local/user_ad.hpp \
+	cppad/local/user_atomic.hpp \
+	cppad/local/value.hpp \
+	cppad/local/var2par.hpp \
+	cppad/local/vec_ad.hpp \
+	\
+	cppad/local/code_gen/ad_code_gen_name_provider.hpp \
+	cppad/local/code_gen/ad_fun_code_gen.hpp \
+	cppad/local/code_gen/add_op.hpp \
+	cppad/local/code_gen/cos_op.hpp \
+	cppad/local/code_gen/forward_code_gen.hpp \
+	cppad/local/code_gen/forward_code_gen_sweep.hpp \
+	cppad/local/code_gen/op.hpp \
+	cppad/local/code_gen/sub_op.hpp \
+	cppad/local/code_gen/sparse_jacobian.hpp\
+        \
+	cppad/lu_factor.hpp \
+	cppad/lu_invert.hpp \
+	cppad/lu_solve.hpp \
+	cppad/memory_leak.hpp \
+	cppad/nan.hpp \
+	cppad/near_equal.hpp \
+	cppad/ode_err_control.hpp \
+	cppad/ode_gear_control.hpp \
+	cppad/ode_gear.hpp \
+	cppad/omp_alloc.hpp \
+	cppad/poly.hpp \
+	cppad/pow_int.hpp \
+	cppad/romberg_mul.hpp \
+	cppad/romberg_one.hpp \
+	cppad/rosen_34.hpp \
+	cppad/runge_45.hpp \
+	cppad/speed/det_33.hpp \
+	cppad/speed/det_by_lu.hpp \
+	cppad/speed/det_by_minor.hpp \
+	cppad/speed/det_grad_33.hpp \
+	cppad/speed/det_of_minor.hpp \
+	cppad/speed/mat_sum_sq.hpp \
+	cppad/speed/ode_evaluate.hpp \
+	cppad/speed/sparse_evaluate.hpp \
+	cppad/speed_test.hpp \
+	cppad/speed/uniform_01.hpp \
+	cppad/thread_alloc.hpp \
+	cppad/time_test.hpp \
+	cppad/track_new_del.hpp \
+	cppad/vector.hpp
+	
+	
+	
+	
+# End nobase_myinclude_HEADERS (check_makefile.sh uses this comment) 
+# ---------------------------------------------------------------
+#
+# No objects or executables are required to install CppAD.
+# See 'make test' below for building the tests.
+SUBDIRS =  \
+	$(IPOPT_DIRS) \
+	$(SPEED_DIRS) \
+	example \
+	introduction/get_started \
+	introduction/exp_apx \
+	print_for \
+	test_more \
+	test_code_gen
+
+#	multi_thread 
+
+
+#
+# note that bin/gpl_license.sh is deleted by dist-hook
+EXTRA_DIST = \
+	bin \
+	build.sh \
+	cpl1.0.txt \
+	doc \
+	doc.omh.in \
+	doxyfile.in \
+	omh \
+	uw_copy_040507.html
+
+test_directory_list = \
+	$(IPOPT_TESTS) \
+	$(SPEED_TESTS) \
+	example \
+	introduction/get_started \
+	introduction/exp_apx \
+	multi_thread \
+	print_for \
+	test_more 
+
+test: all 
+	rm -f test.log
+	touch test.log
+	rm -f test.sh
+	echo "#! /bin/sh -e"                               >  test.sh
+	for dir in $(test_directory_list) ; do (                        \
+		rm -f $$dir/test.sh                                        \
+		echo "#"                                      >> test.sh ; \
+		echo "cd $$dir "                              >> test.sh ; \
+		echo "make test.sh"                           >> test.sh ; \
+		echo "echo \"Running test.sh in $$dir\""      >> test.sh ; \
+		echo "./test.sh"                              >> test.sh ; \
+		echo "cd $(ABS_TOP_BUILDDIR)"                 >> test.sh ; \
+	) done
+	echo "exit 0"                                      >> test.sh
+	chmod +x test.sh
+	./test.sh
+#
+#
+dist-hook:
+	rm -rf `find . -name .svn`
+	rm $(distdir)/doc/error.wrd
+	rm $(distdir)/bin/gpl_license.sh
+#
+if CppAD_DOCUMENTATION
+doc_postfix = $(DESTDIR)$(datadir)/doc/$(postfix_dir)
+doc_package = $(DESTDIR)$(datadir)/doc/$(postfix_dir)/$(PACKAGE)-$(VERSION)
+install-data-hook:
+	if [ ! -e $(doc_postfix) ] ; then mkdir -p $(doc_postfix) ; fi
+	if [ -e $(doc_package) ] ; then rm -rf $(doc_package) ; fi
+	cp -a $(top_builddir)/doc $(doc_package)
+	chmod -R a-w $(doc_package)
+	chmod -R u+w $(doc_package)
+	chmod -R a+r $(doc_package)
+endif
+#
+pkgconfigdir = $(datadir)/pkgconfig
+pkgconfig_DATA = pkgconfig/cppad.pc

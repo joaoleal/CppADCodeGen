@@ -1,0 +1,141 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Source: det_by_minor</title>
+<meta name="description" id="description" content="Source: det_by_minor"/>
+<meta name="keywords" id="keywords" content=" det_by_minor source "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_det_by_minor.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="det_by_minor.cpp.xml" target="_top">Prev</a>
+</td><td><a href="det_by_lu.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>det_by_minor</option>
+<option>det_by_minor.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>det_by_minor-&gt;</option>
+<option>det_by_minor.cpp</option>
+<option>det_by_minor.hpp</option>
+</select>
+</td>
+<td>det_by_minor.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Source: det_by_minor</big></big></b></center>
+<code><font color="blue"># ifndef CPPAD_DET_BY_MINOR_INCLUDED 
+<code><span style='white-space: nowrap'><br/>
+</span></code># define CPPAD_DET_BY_MINOR_INCLUDED
+
+<pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cppad/speed/det_of_minor.hpp&gt;
+
+// BEGIN CppAD namespace
+namespace CppAD {
+
+template &lt;class Scalar&gt;
+class det_by_minor {
+private:
+	size_t              m_;
+
+	// made mutable because modified and then restored
+	mutable std::vector&lt;size_t&gt; r_;
+	mutable std::vector&lt;size_t&gt; c_;
+
+	// make mutable because its value does not matter
+	mutable std::vector&lt;Scalar&gt; a_;
+public:
+	det_by_minor(size_t m) : m_(m) , r_(m + 1) , c_(m + 1), a_(m * m)
+	{
+		size_t i;
+
+		// values for r and c that correspond to entire matrix
+		for(i = 0; i &lt; m; i++)
+		{	r_[i] = i+1;
+			c_[i] = i+1;
+		}
+		r_[m] = 0;
+		c_[m] = 0;
+	}
+
+	template &lt;class Vector&gt;
+	inline Scalar operator()(const Vector &amp;x) const
+	{	size_t i = m_ * m_;
+		while(i--)
+			a_[i] = x[i];
+		return det_of_minor(a_, m_, m_, r_, c_); 
+	}
+
+};
+
+} // END CppAD namespace</pre>
+
+# endif
+</font></code>
+
+
+<hr/>Input File: omh/det_by_minor_hpp.omh
+
+</body>
+</html>

@@ -1,0 +1,172 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Independent and ADFun Constructor: Example and Test</title>
+<meta name="description" id="description" content="Independent and ADFun Constructor: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Independent example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_independent.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="independent.xml" target="_top">Prev</a>
+</td><td><a href="funconstruct.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>Independent</option>
+<option>Independent.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Independent-&gt;</option>
+<option>Independent.cpp</option>
+</select>
+</td>
+<td>Independent.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Independent and ADFun Constructor: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+
+namespace { // --------------------------------------------------------
+// define the template function Test&lt;VectorAD&gt;(void) in empty namespace
+template &lt;class VectorAD&gt;
+bool Test(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+
+	// domain space vector
+	size_t  n  = 2;
+	VectorAD X(n);  // VectorAD is the template parameter in call to Test
+	X[0] = 0.;
+	X[1] = 1.;
+
+	// declare independent variables and start recording 
+	// use the template parameter VectorAD for the vector type
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; a = X[0] + X[1];      // first AD operation
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; b = X[0] * X[1];      // second AD operation
+
+	// range space vector
+	size_t m = 2;
+	VectorAD Y(m);  // VectorAD is the template paraemter in call to Test
+	Y[0] = a;
+	Y[1] = b;
+
+	// create f: X -&gt; Y and stop tape recording
+	// use the template parameter VectorAD for the vector type
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y); 
+
+	// check value 
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(Y[0] , 1.,  1e-10 , 1e-10);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(Y[1] , 0.,  1e-10 , 1e-10);
+
+	// compute f(1, 2)
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; y(m);
+	x[0] = 1.;
+	x[1] = 2.;
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0] , 3.,  1e-10 , 1e-10);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[1] , 2.,  1e-10 , 1e-10);
+
+	// compute partial of f w.r.t x[0] at (1, 2)
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dy(m);
+	dx[0] = 1.;
+	dx[1] = 0.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0] ,   1.,  1e-10 , 1e-10);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[1] , x[1],  1e-10 , 1e-10);
+
+	// compute partial of f w.r.t x[1] at (1, 2)
+	dx[0] = 0.;
+	dx[1] = 1.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0] ,   1.,  1e-10 , 1e-10);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[1] , x[0],  1e-10 , 1e-10);
+
+	return ok;
+}
+} // End of empty namespace -------------------------------------------
+
+# include &lt;vector&gt;
+# include &lt;valarray&gt;
+bool <a href="independent.xml" target="_top">Independent</a>(void)
+{	bool ok = true;
+	typedef CppAD::<a href="ad.xml" target="_top">AD</a>&lt;double&gt; ADdouble;
+	// Run with VectorAD equal to three different cases
+	// all of which are Simple Vectors with elements of type <a href="ad.xml" target="_top">AD</a>&lt;double&gt;.
+	ok &amp;= Test&lt; CppAD::vector  &lt;ADdouble&gt; &gt;();
+	ok &amp;= Test&lt; std::vector    &lt;ADdouble&gt; &gt;();
+	ok &amp;= Test&lt; std::valarray  &lt;ADdouble&gt; &gt;();
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/independent.cpp
+
+</body>
+</html>

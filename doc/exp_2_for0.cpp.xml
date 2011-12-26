@@ -1,0 +1,112 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>exp_2: Verify Zero Order Forward Sweep</title>
+<meta name="description" id="description" content="exp_2: Verify Zero Order Forward Sweep"/>
+<meta name="keywords" id="keywords" content=" zero order exp_2 "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_exp_2_for0.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exp_2_for0.xml" target="_top">Prev</a>
+</td><td><a href="exp_2_for1.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>exp_2</option>
+<option>exp_2_for0</option>
+<option>exp_2_for0.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>exp_2-&gt;</option>
+<option>exp_2.hpp</option>
+<option>exp_2.cpp</option>
+<option>exp_2_for0</option>
+<option>exp_2_for1</option>
+<option>exp_2_rev1</option>
+<option>exp_2_for2</option>
+<option>exp_2_rev2</option>
+<option>exp_2_cppad</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>exp_2_for0-&gt;</option>
+<option>exp_2_for0.cpp</option>
+</select>
+</td>
+<td>exp_2_for0.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>exp_2: Verify Zero Order Forward Sweep</big></big></b></center>
+<code><font color='blue'><pre style='display:inline'> # include &lt;cmath&gt;            // for fabs function
+bool exp_2_for0(double *v0)  // double v0[6]
+{	bool  ok = true;
+	double x = .5;
+
+	v0[1] = x;                                  // v1 = x
+	ok  &amp;= std::fabs( v0[1] - 0.5) &lt; 1e-10;
+
+	v0[2] = 1. + v0[1];                         // v2 = 1 + v1
+	ok  &amp;= std::fabs( v0[2] - 1.5) &lt; 1e-10;
+
+	v0[3] = v0[1] * v0[1];                      // v3 = v1 * v1
+	ok  &amp;= std::fabs( v0[3] - 0.25) &lt; 1e-10;
+
+	v0[4] = v0[3] / 2.;                         // v4 = v3 / 2
+	ok  &amp;= std::fabs( v0[4] - 0.125) &lt; 1e-10;
+
+	v0[5] = v0[2] + v0[4];                      // v5  = v2 + v4
+	ok  &amp;= std::fabs( v0[5] - 1.625) &lt; 1e-10;
+
+	return ok;
+}
+bool exp_2_for0(void)
+{	double v0[6];
+	return exp_2_for0(v0);
+}
+</pre></font></code>
+
+
+<hr/>Input File: introduction/exp_apx/exp_2_for0.cpp
+
+</body>
+</html>

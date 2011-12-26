@@ -1,0 +1,271 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD Boolean Functions</title>
+<meta name="description" id="description" content="AD Boolean Functions"/>
+<meta name="keywords" id="keywords" content=" bool Ad function unary binary Cppad_bool_unary Cppad_bool_binary "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_boolfun_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="nearequalext.cpp.xml" target="_top">Prev</a>
+</td><td><a href="boolfun.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>BoolValued</option>
+<option>BoolFun</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>BoolValued-&gt;</option>
+<option>Compare</option>
+<option>NearEqualExt</option>
+<option>BoolFun</option>
+<option>ParVar</option>
+<option>EqualOpSeq</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>BoolFun-&gt;</option>
+<option>BoolFun.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>unary_name</option>
+<option>u</option>
+<option>x</option>
+<option>b</option>
+<option>Create Unary</option>
+<option>binary_name</option>
+<option>v</option>
+<option>y</option>
+<option>Create Binary</option>
+<option>Operation Sequence</option>
+<option>Example</option>
+<option>Deprecated</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+
+<center><b><big><big>AD Boolean Functions</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"><span style='white-space: nowrap'>CPPAD_BOOL_UNARY(</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>unary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>unary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>u</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>unary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"><span style='white-space: nowrap'>CPPAD_BOOL_BINARY(</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>binary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>binary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>u</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>v</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>binary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Create a <code><font color="blue">bool</font></code> valued function that has <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code> arguments.
+
+<br/>
+<br/>
+<b><big><a name="unary_name" id="unary_name">unary_name</a></big></b>
+<br/>
+This is the name of the <code><font color="blue">bool</font></code> valued function with one argument
+(as it is used in the source code).
+The user must provide a version of <i>unary_name</i> where
+the argument has type <i>Base</i>.
+CppAD uses this to create a version of <i>unary_name</i> where the
+argument has type <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>.
+
+<br/>
+<br/>
+<b><big><a name="u" id="u">u</a></big></b>
+<br/>
+The argument <i>u</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>u</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is the value at which the user provided version of <i>unary_name</i>
+is to be evaluated.
+It is also used for the first argument to the 
+user provided version of <i>binary_name</i>.
+
+<br/>
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is the value at which the CppAD provided version of <i>unary_name</i>
+is to be evaluated.
+It is also used for the first argument to the 
+CppAD provided version of <i>binary_name</i>.
+
+<br/>
+<br/>
+<b><big><a name="b" id="b">b</a></big></b>
+<br/>
+The result <i>b</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code><br/>
+<b><big><a name="Create Unary" id="Create Unary">Create Unary</a></big></b>
+
+<br/>
+The preprocessor macro invocation
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CPPAD_BOOL_UNARY(</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>unary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>defines the version of <i>unary_name</i> with a <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+argument.
+This can with in a namespace 
+(not the <code><font color="blue">CppAD</font></code> namespace)
+but must be outside of any routine.
+
+<br/>
+<br/>
+<b><big><a name="binary_name" id="binary_name">binary_name</a></big></b>
+<br/>
+This is the name of the <code><font color="blue">bool</font></code> valued function with two arguments
+(as it is used in the source code).
+The user must provide a version of <i>binary_name</i> where
+the arguments have type <i>Base</i>.
+CppAD uses this to create a version of <i>binary_name</i> where the
+arguments have type <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>.
+
+<br/>
+<br/>
+<b><big><a name="v" id="v">v</a></big></b>
+<br/>
+The argument <i>v</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>v</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is the second argument to
+the user provided version of <i>binary_name</i>.
+
+<br/>
+<br/>
+<b><big><a name="y" id="y">y</a></big></b>
+<br/>
+The argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is the second argument to
+the CppAD provided version of <i>binary_name</i>.
+
+<br/>
+<br/>
+<b><big><a name="Create Binary" id="Create Binary">Create Binary</a></big></b>
+
+<br/>
+The preprocessor macro invocation
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CPPAD_BOOL_BINARY(</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>binary_name</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>defines the version of <i>binary_name</i> with <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+arguments.
+This can with in a namespace 
+(not the <code><font color="blue">CppAD</font></code> namespace)
+but must be outside of any routine.
+
+
+<br/>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+The result of this operation is not an
+<a href="glossary.xml#AD of Base" target="_top"><span style='white-space: nowrap'>AD&#xA0;of&#xA0;Base</span></a>
+ object.
+Thus it will not be recorded as part of an
+AD of <i>Base</i>
+<a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="boolfun.cpp.xml" target="_top"><span style='white-space: nowrap'>BoolFun.cpp</span></a>
+
+contains an example and test of these operations.
+It returns true if it succeeds and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Deprecated" id="Deprecated">Deprecated</a></big></b>
+<br/>
+The preprocessor symbols <code><font color="blue">CppADCreateUnaryBool</font></code> 
+and <code><font color="blue">CppADCreateBinaryBool</font></code> are defined to be the same as
+<code><font color="blue">CPPAD_BOOL_UNARY</font></code> and <code><font color="blue">CPPAD_BOOL_BINARY</font></code> respectively
+(but their use is deprecated).
+
+
+<hr/>Input File: cppad/local/bool_fun.hpp
+
+</body>
+</html>

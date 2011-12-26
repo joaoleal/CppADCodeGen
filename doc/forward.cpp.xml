@@ -1,0 +1,182 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Forward Mode: Example and Test</title>
+<meta name="description" id="description" content="Forward Mode: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Forward example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_forward.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="capacity_taylor.xml" target="_top">Prev</a>
+</td><td><a href="reverse.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>FunEval</option>
+<option>Forward</option>
+<option>Forward.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>FunEval-&gt;</option>
+<option>Forward</option>
+<option>Reverse</option>
+<option>Sparse</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Forward-&gt;</option>
+<option>ForwardZero</option>
+<option>ForwardOne</option>
+<option>ForwardAny</option>
+<option>size_taylor</option>
+<option>CompareChange</option>
+<option>capacity_taylor</option>
+<option>Forward.cpp</option>
+</select>
+</td>
+<td>Forward.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Forward Mode: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+namespace { // --------------------------------------------------------
+// define the template function ForwardCases&lt;Vector&gt; in empty namespace
+template &lt;class Vector&gt; 
+bool ForwardCases(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+
+	// domain space vector
+	size_t n = 2;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	X[0] = 0.; 
+	X[1] = 1.;
+
+	// declare independent variables and starting recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// range space vector
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	Y[0] = X[0] * X[0] * X[1];
+
+	// create f: X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// The highest order Forward mode calculation below is is second order.
+	// This corresponds to three Taylor coefficients per variable 
+	// (zero, first, and second order).
+	f.capacity_taylor(3);  // pre-allocate memory for speed of execution
+
+	// initially, the variable values during taping are stored in f
+	ok &amp;= f.size_taylor() == 1;
+
+	// zero order forward mode using notaiton in ForwardZero
+	// use the template parameter Vector for the vector type
+	Vector x(n);
+	Vector y(m);
+	x[0] = 3.;
+	x[1] = 4.;
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok  &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0] , x[0]*x[0]*x[1], 1e-10, 1e-10);
+	ok  &amp;= f.size_taylor() == 1;
+
+	// first order forward mode using notation in ForwardOne
+	// X(t)           = x + dx * t
+	// Y(t) = F[X(t)] = y + dy * t + o(t)
+	Vector dx(n);
+	Vector dy(m);
+	dx[0] = 1.;
+	dx[1] = 0.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx); // partial F w.r.t. x[0]
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0] , 2.*x[0]*x[1], 1e-10, 1e-10);
+	ok   &amp;= f.size_taylor() == 2;
+
+	// second order forward mode using notaiton in ForwardAny
+	// X(t) =           x + dx * t + x_2 * t^2
+	// Y(t) = F[X(t)] = y + dy * t + y_2 * t^2 + o(t^3)
+	Vector x_2(n);
+	Vector y_2(m);
+	x_2[0]      = 0.;
+	x_2[1]      = 0.;
+	y_2         = f.<a href="forward.xml" target="_top">Forward</a>(2, x_2);
+	double F_00 = 2. * y_2[0]; // second partial F w.r.t. x[0], x[0]
+	ok         &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(F_00, 2.*x[1], 1e-10, 1e-10);
+	ok         &amp;= f.size_taylor() == 3;
+
+	// suppose we no longer need second order Taylor coefficients
+	f.capacity_taylor(2);
+	ok &amp;= f.size_taylor() == 2;
+
+	// actually we no longer need any Taylor coefficients
+	f.capacity_taylor(0);
+	ok &amp;= f.size_taylor() == 0;
+
+	return ok;
+}
+} // End empty namespace 
+# include &lt;vector&gt;
+# include &lt;valarray&gt;
+bool Forward(void)
+{	bool ok = true;
+	// Run with Vector equal to three different cases
+	// all of which are Simple Vectors with elements of type double.
+	ok &amp;= ForwardCases&lt; CppAD::vector  &lt;double&gt; &gt;();
+	ok &amp;= ForwardCases&lt; std::vector    &lt;double&gt; &gt;();
+	ok &amp;= ForwardCases&lt; std::valarray  &lt;double&gt; &gt;();
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/forward.cpp
+
+</body>
+</html>

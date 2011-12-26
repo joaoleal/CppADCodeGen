@@ -1,0 +1,60 @@
+# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+# automake input file
+#
+# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+DEFS          =
+#
+if CppAD_BOOST_DIR
+BOOST_INCLUDE = -I$(BOOST_DIR)
+else
+BOOST_INCLUDE =
+endif
+#
+# Microsoft project files
+EXTRA_DIST        = \
+	exp_apx.sln \
+	exp_apx.vcproj \
+	exp_2.omh \
+	exp_eps.omh
+#
+check_PROGRAMS    = exp_apx 
+#
+AM_CPPFLAGS       = -I. -I$(top_srcdir) $(BOOST_INCLUDE)
+AM_CXXFLAGS       = -g $(CXX_FLAGS)
+#
+exp_apx_SOURCES   = \
+	main.cpp \
+	exp_2.cpp \
+        exp_2.hpp \
+	exp_2_cppad.cpp \
+	exp_2_for1.cpp \
+	exp_2_for2.cpp \
+	exp_2_rev1.cpp \
+	exp_2_rev2.cpp \
+	exp_2_for0.cpp \
+	exp_eps.cpp  \
+	exp_eps.hpp \
+	exp_eps_cppad.cpp \
+	exp_eps_for1.cpp \
+	exp_eps_for2.cpp \
+	exp_eps_for0.cpp \
+	exp_eps_rev1.cpp \
+	exp_eps_rev2.cpp
+
+test.sh: exp_apx$(EXEEXT)
+	echo "#! /bin/sh -e"  > test.sh
+	echo "./exp_apx"     >> test.sh
+	chmod +x test.sh
+
+test: test.sh
+	./test.sh

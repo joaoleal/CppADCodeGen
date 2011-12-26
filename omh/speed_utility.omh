@@ -1,0 +1,73 @@
+$Id: speed_utility.omh 1891 2011-02-21 17:10:14Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+$begin speed_utility$$
+
+$section Speed Testing Utilities$$
+
+$index speed, utility$$
+$index utility, speed$$
+
+$children%
+	cppad/speed/uniform_01.hpp%
+	cppad/speed/det_of_minor.hpp%
+	cppad/speed/det_by_minor.hpp%
+	cppad/speed/det_by_lu.hpp%
+	cppad/speed/det_33.hpp%
+	cppad/speed/det_grad_33.hpp%
+	cppad/speed/mat_sum_sq.hpp%
+	cppad/speed/ode_evaluate.hpp%
+	cppad/speed/sparse_evaluate.hpp
+%$$
+
+$head Speed Main Program$$
+$table
+$rref speed_main$$
+$tend
+
+$head Speed Utility Routines$$
+$table
+$rref det_by_lu$$
+$rref det_by_minor$$
+$rref det_of_minor$$
+$rref det_33$$
+$rref det_grad_33$$
+$rref mat_sum_sq$$
+$rref sparse_evaluate$$
+$rref uniform_01$$
+$tend 
+
+$head Library Routines$$
+$table
+$rref LuFactor$$
+$rref LuInvert$$
+$rref LuSolve$$
+$rref Poly$$
+$tend
+
+$head Source Code$$
+$table
+$rref det_by_lu.hpp$$
+$rref det_by_minor.hpp$$
+$rref det_grad_33.hpp$$
+$rref det_of_minor.hpp$$
+$rref lu_factor.hpp$$
+$rref lu_invert.hpp$$
+$rref lu_solve.hpp$$
+$rref mat_sum_sq.hpp$$
+$rref poly.hpp$$
+$rref sparse_evaluate.hpp$$
+$rref uniform_01.hpp$$
+$tend
+
+
+$end

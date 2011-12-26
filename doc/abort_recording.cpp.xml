@@ -1,0 +1,151 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Abort Current Recording: Example and Test</title>
+<meta name="description" id="description" content="Abort Current Recording: Example and Test"/>
+<meta name="keywords" id="keywords" content=" abort example test recording "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_abort_recording.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="abort_recording.xml" target="_top">Prev</a>
+</td><td><a href="seq_property.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>abort_recording</option>
+<option>abort_recording.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>abort_recording-&gt;</option>
+<option>abort_recording.cpp</option>
+</select>
+</td>
+<td>abort_recording.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Abort Current Recording: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;limits&gt;
+
+bool abort_recording(void)
+{	bool ok = true;
+	double eps = 10. * CppAD::epsilon&lt;double&gt;();
+
+	using CppAD::AD;
+
+	try 
+	{	// domain space vector
+		size_t n = 1;
+		<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; x(n);
+		x[0]     = 0.;
+
+		// declare independent variables and start tape recording
+		CppAD::<a href="independent.xml" target="_top">Independent</a>(x);
+
+		// simulate an error during calculation of y and the execution
+		// stream was aborted
+		throw 1;
+	}
+	catch (int e)
+	{	ok &amp;= (e == 1);
+
+		// do this incase throw occured after the call to Independent
+		// (for case above this is known, but in general it is unknown)
+		<a href="ad.xml" target="_top">AD</a>&lt;double&gt;::abort_recording();
+	}
+	/*
+ 	Now make sure that we can start another recording
+	*/
+
+	// declare independent variables and start tape recording
+	size_t n  = 1;
+	double x0 = 0.5;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; x(n);
+	x[0]      = x0; 
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(x);
+
+	// range space vector 
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; y(m);
+	y[0] = 2 * x[0];
+
+	// create f: x -&gt; y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(x, y); 
+
+	// forward computation of partials w.r.t. x[0]
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dy(m);
+	dx[0] = 1.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+	ok   &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(dy[0], 2., eps, eps);
+
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/abort_recording.cpp
+
+</body>
+</html>

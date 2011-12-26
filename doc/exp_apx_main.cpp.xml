@@ -1,0 +1,176 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Correctness Tests For Exponential Approximation in Introduction</title>
+<meta name="description" id="description" content="Correctness Tests For Exponential Approximation in Introduction"/>
+<meta name="keywords" id="keywords" content=" exp_apx main test run "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_exp_apx_main.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="exp_eps_cppad.xml" target="_top">Prev</a>
+</td><td><a href="ad.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Introduction</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Introduction-&gt;</option>
+<option>get_started.cpp</option>
+<option>exp_2</option>
+<option>exp_eps</option>
+<option>exp_apx_main.cpp</option>
+</select>
+</td>
+<td>exp_apx_main.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Running Tests</option>
+<option>main.cpp</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Correctness Tests For Exponential Approximation in Introduction</big></big></b></center>
+<br/>
+<b><big><a name="Running Tests" id="Running Tests">Running Tests</a></big></b>
+<br/>
+To build this program and run its correctness tests,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;introduction/exp_apx<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+<br/>
+<b><big><a name="main.cpp" id="main.cpp">main.cpp</a></big></b>
+
+<code><font color="blue">
+<br/>
+<pre style='display:inline'> 
+
+// system include files used for I/O
+# include &lt;iostream&gt;
+
+// external complied tests
+extern bool exp_2(void);
+extern bool exp_2_cppad(void);
+extern bool exp_2_for1(void);
+extern bool exp_2_for2(void);
+extern bool exp_2_rev1(void);
+extern bool exp_2_rev2(void);
+extern bool exp_2_for0(void);
+extern bool exp_eps(void);
+extern bool exp_eps_cppad(void);
+extern bool exp_eps_for1(void);
+extern bool exp_eps_for2(void);
+extern bool exp_eps_for0(void);
+extern bool exp_eps_rev1(void);
+extern bool exp_eps_rev2(void);
+
+namespace {
+	static size_t Run_ok_count    = 0;
+	static size_t Run_error_count = 0;
+	bool Run(bool TestOk(void), std::string name)
+	{	bool ok               = true;
+		std::streamsize width =  20;         
+		std::cout.width( width );
+		std::cout.setf( std::ios_base::left );
+		std::cout &lt;&lt; name.c_str();
+		//
+		ok &amp;= name.size() &lt; size_t(width);
+		ok &amp;= TestOk();
+		if( ok )
+		{	std::cout &lt;&lt; &quot;OK&quot; &lt;&lt; std::endl;
+			Run_ok_count++;
+		}
+		else
+		{	std::cout &lt;&lt; &quot;Error&quot; &lt;&lt; std::endl;
+			Run_error_count++;
+		}
+		return ok;
+	}
+}
+
+// main program that runs all the tests
+int main(void)
+{	bool ok = true;
+	using namespace std;
+
+	// This comment is used by OneTest 
+
+	// external compiled tests
+	ok &amp;= Run( exp_2,           &quot;exp_2&quot;          );
+	ok &amp;= Run( exp_2_cppad,     &quot;exp_2_cppad&quot;    );
+	ok &amp;= Run( exp_2_for0,      &quot;exp_2_for0&quot;     );
+	ok &amp;= Run( exp_2_for1,      &quot;exp_2_for1&quot;     );
+	ok &amp;= Run( exp_2_for2,      &quot;exp_2_for2&quot;     );
+	ok &amp;= Run( exp_2_rev1,      &quot;exp_2_rev1&quot;     );
+	ok &amp;= Run( exp_2_rev2,      &quot;exp_2_rev2&quot;     );
+	ok &amp;= Run( exp_eps,         &quot;exp_eps&quot;        );
+	ok &amp;= Run( exp_eps_cppad,   &quot;exp_eps_cppad&quot;  );
+	ok &amp;= Run( exp_eps_for0,    &quot;exp_eps_for0&quot;   );
+	ok &amp;= Run( exp_eps_for1,    &quot;exp_eps_for1&quot;   );
+	ok &amp;= Run( exp_eps_for2,    &quot;exp_eps_for2&quot;   );
+	ok &amp;= Run( exp_eps_rev1,    &quot;exp_eps_rev1&quot;   );
+	ok &amp;= Run( exp_eps_rev2,    &quot;exp_eps_rev2&quot;   );
+	if( ok )
+		cout &lt;&lt; &quot;All &quot; &lt;&lt; int(Run_ok_count) &lt;&lt; &quot; tests passed.&quot; &lt;&lt; endl;
+	else	cout &lt;&lt; int(Run_error_count) &lt;&lt; &quot; tests failed.&quot; &lt;&lt; endl;
+
+	return static_cast&lt;int&gt;( ! ok );
+}</pre>
+</font></code>
+
+
+<hr/>Input File: introduction/exp_apx/main.cpp
+
+</body>
+</html>

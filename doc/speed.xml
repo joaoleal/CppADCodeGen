@@ -1,0 +1,149 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Speed Test Routines</title>
+<meta name="description" id="description" content="Speed Test Routines"/>
+<meta name="keywords" id="keywords" content=" speed test windows "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_speed_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="faq.xml" target="_top">Prev</a>
+</td><td><a href="speed_main.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Windows</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+<center><b><big><big>Speed Test Routines</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+CppAD has a set of speed tests that are used to determine if 
+certain changes improve its execution speed
+and to compare the C++ AD packages 
+<a href="http://www.math.tu-dresden.de/~adol-c/" target="_top"><span style='white-space: nowrap'>Adolc</span></a>
+,
+<a href="http://www.coin-or.org/CppAD/" target="_top"><span style='white-space: nowrap'>CppAD</span></a>
+,
+<a href="http://www.imm.dtu.dk/fadbad.html/" target="_top"><span style='white-space: nowrap'>Fadbad</span></a>
+ and
+<a href="http://trilinos.sandia.gov/packages/sacado/" target="_top"><span style='white-space: nowrap'>Sacado</span></a>
+.
+This section explains how you can run these tests on your computer.
+
+<br/>
+<br/>
+<b><big><a name="Windows" id="Windows">Windows</a></big></b>
+
+
+
+<br/>
+The speed test routines have not yet been compiled or tested using
+the MS Windows C++ compiler.
+Under Windows, you can use
+<a href="http://www.cygwin.com" target="_top"><span style='white-space: nowrap'>Cygwin</span></a>
+
+or,
+<a href="http://www.mingw.org" target="_top"><span style='white-space: nowrap'>MinGW&#xA0;with&#xA0;MSYS</span></a>
+
+to run these speed tests.
+
+<br/>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<div><a href="speed_main.xml" target="_top">Speed&#xA0;Testing&#xA0;Main&#xA0;Program</a><br/>
+<a href="speed_utility.xml" target="_top">Speed&#xA0;Testing&#xA0;Utilities</a><br/>
+<a href="speed_double.xml" target="_top">Speed&#xA0;Test&#xA0;of&#xA0;Functions&#xA0;in&#xA0;Double</a><br/>
+<a href="speed_adolc.xml" target="_top">Speed&#xA0;Test&#xA0;of&#xA0;Derivatives&#xA0;Using&#xA0;Adolc</a><br/>
+<a href="speed_cppad.xml" target="_top">Speed&#xA0;Test&#xA0;Derivatives&#xA0;Using&#xA0;CppAD</a><br/>
+<a href="speed_fadbad.xml" target="_top">Speed&#xA0;Test&#xA0;Derivatives&#xA0;Using&#xA0;Fadbad</a><br/>
+<a href="speed_sacado.xml" target="_top">Speed&#xA0;Test&#xA0;Derivatives&#xA0;Using&#xA0;Sacado</a><br/>
+</div>
+<hr/>Input File: omh/speed.omh
+
+</body>
+</html>

@@ -1,0 +1,269 @@
+$Id: doc.omh.in 2210 2011-11-24 21:56:53Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+$begin CppAD$$
+$comment default navigate command for all of CppAD documentation$$
+$navigate%
+	Prev%Prev%
+	Next%Next%
+	Across%Index%
+	Up%Up%
+	Down_up_3%_up_3%
+	Down_up_2%_up_2%
+	Down_up_1%_up_1%
+	Down_up_0%_up_0%
+	Current%Headings
+%$$
+$spell
+	cppad.hpp
+	cppad
+	namespaces
+	std
+	templated
+	const
+	CppADvector
+	multiplicative
+	Microsoft
+	bool
+	Det
+	namespace
+	Cpp
+	Var
+	Diff
+	initializes
+$$
+
+$index AD$$,
+$index algorithmic differentiation$$
+$index automatic differentiation$$
+$index C++, algorithm derivative$$
+$index CppAD$$
+$index version, CppAD$$
+
+$section 
+cppad-@VERSION@: A Package for Differentiation of C++ Algorithms
+$$ 
+
+
+$comment This comment is used to remove the table below$$
+$table
+$cnext
+	One web page per Section $pre  $$ $cnext
+	All as one web page
+$rnext
+$cnext
+	(fast to load) $pre  $$ $cnext
+	(slow to load)
+$rnext
+Math displayed using Latex $pre  $$ $cnext
+$href%cppad.htm%$$
+$pre  $$ $cnext
+$href%_printable.htm%$$
+$rnext
+Math displayed using MathML $pre  $$ $cnext
+$href%cppad.xml%$$ $pre  $$ $cnext
+$href%_printable.xml%$$
+$tend
+
+$head Syntax$$
+$code # include <cppad/cppad.hpp>$$
+
+$head Introduction$$
+$index introduction$$
+We refer to the
+step by step conversion from an algorithm that computes function values
+to an algorithm that computes derivative values
+as $italic Algorithmic Differentiation$$
+(often referred to as $italic Automatic Differentiation$$.) 
+Given a C++ algorithm that computes function values,
+CppAD generates an algorithm that computes its derivative values.
+A brief introduction to Algorithmic Differentiation can be found in
+$href%http://en.wikipedia.org/wiki/Automatic_differentiation%wikipedia%$$.
+The web site 
+$href%http://www.autodiff.org%autodiff.org%$$
+is dedicated to research about, and promoting the use of, AD.
+
+$list number$$
+$href%http://www.coin-or.org/CppAD/%CppAD%$$
+uses operator overloading to compute derivatives of algorithms defined in C++.
+It is distributed by the 
+$href%http://www.coin-or.org/foundation.html%COIN-OR Foundation%$$
+with the Common Public License 
+$href%http://www.opensource.org/licenses/cpl1.0.php%CPL%$$
+or the GNU General Public License
+$href%http://www.opensource.org/licenses/gpl-license.php%GPL%$$.
+Installation procedures are provided for both
+$xref/InstallUnix//Unix/$$ and $xref/InstallWindows//MS Windows/$$
+operating systems.
+Extensive user and developer documentation is included.
+
+$lnext
+An AD of $italic Base$$
+$xref/glossary/Operation/Sequence/operation sequence/1/$$
+is stored as an 
+$xref/ADFun//AD function object/$$ 
+which can evaluate function values and derivatives.
+Arbitrary order 
+$xref/Forward//forward/$$ and $xref/Reverse//reverse/$$
+mode derivative calculations
+can be preformed on the operation sequence.
+Logical comparisons can be included in an operation sequence
+using AD $xref/CondExp//conditional expressions/$$.
+Evaluation of user defined unary 
+$xref/Discrete//discrete functions/$$ can also be included
+in the sequence of operations; i.e.,
+functions that depend on the
+$cref/independent variables/glossary/Tape/Independent Variable/$$
+but which have identically zero derivatives
+(e.g., a step function).
+
+$lnext
+Derivatives of functions that are defined in terms of other derivatives
+can be computed using multiple levels of AD;
+see $cref/mul_level.cpp/$$ for a simple example
+and $cref/ode_taylor.cpp/$$ for a more realistic example.
+To this end, CppAD can also be used with other AD types; for example see
+$cref/ode_taylor_adolc.cpp/$$.
+
+$lnext
+A set of programs for doing $cref/speed/$$ comparisons between
+$href%http://www.math.tu-dresden.de/~adol-c/%Adolc%$$,
+CppAD,
+$href%http://www.imm.dtu.dk/fadbad.html/%Fadbad%$$,
+and
+$href%http://trilinos.sandia.gov/packages/sacado/%Sacado%$$
+are included.
+
+
+$lnext
+Includes a C++ $xref/library/$$ that is useful
+for general operator overloaded numerical method.
+Allows for replacement of the
+$cref/test_vector/$$ 
+template vector class which is used for extensive testing; 
+for example, you can do your testing with the
+$href%http://www.boost.org/libs/numeric/ublas/doc/index.htm%uBlas%$$ 
+template vector class.
+
+$lnext
+See $xref/whats_new/$$ for a list of recent extensions and bug fixes.
+
+$lend
+
+You can find out about other algorithmic differentiation tools
+and about algorithmic differentiation in general at the following web sites:
+$href%http://en.wikipedia.org/wiki/Automatic_differentiation%wikipedia%$$,
+$href%http://www.autodiff.org%autodiff.org%$$.
+
+$head Example$$
+The file
+$xref/get_started.cpp/$$
+contains an example and test of using CppAD to compute
+the derivative of a polynomial.
+There are many other 
+$xref/Example//examples/$$.
+
+$head Include File$$
+$index include, cppad.hpp$$
+$index cppad.hpp, include$$
+The following include directive
+$syntax%
+	# include <cppad/cppad.hpp>
+%$$
+includes the CppAD package for the rest of the current compilation unit.
+
+$head Preprocessor Symbols$$
+$index symbol, preprocessor CppAD$$
+$index preprocessor, symbol CppAD$$
+$index CppAD, preprocessor symbol$$
+All the $cref preprocessor$$ symbols used by CppAD begin with eight
+$code CppAD$$ or $code CPPAD_$$.
+
+$head Namespace$$
+$index CppAD, namespace$$
+$index namespace, CppAD$$
+All of the functions and objects defined by CppAD are in the
+$code CppAD$$ namespace; for example, you can access the $xref/AD/$$ types as 
+$syntax%
+	size_t n = 2;
+	CppAD::vector< CppAD::AD<%Base%> > %x%(%n%)
+%$$ 
+You can abbreviate access to one object or function a $code using$$ 
+command of the form
+$syntax%
+	using CppAD::AD
+	CppAD::vector< AD<%Base%> > %x%(%n%)
+%$$ 
+You can abbreviate access to all CppAD objects and functions 
+with a command of the form
+$syntax%
+	using namespace CppAD
+	vector< AD<%Base%> > %x%(%n%)
+%$$ 
+If you include other namespaces in a similar manner,
+this can cause naming conflicts.
+
+
+$childtable%
+	omh/install.omh%
+	omh/introduction.omh%
+	cppad/local/user_ad.hpp%
+	cppad/local/ad_fun.hpp%
+	omh/multi_thread.omh%
+	omh/library.omh%
+	cppad_ipopt/src/cppad_ipopt_nlp.hpp%
+	omh/example.omh%
+	omh/preprocessor.omh%
+	omh/appendix.omh
+%$$
+
+$latex
+% --------------------------------------------------------------------
+% Latex macros defined here and used throughout the CppAD documentation
+\newcommand{\T}{ {\rm T} }
+\newcommand{\R}{ {\bf R} }
+\newcommand{\C}{ {\bf C} }
+\newcommand{\D}[2]{ \frac{\partial #1}{\partial #2} }
+\newcommand{\DD}[3]{ \frac{\partial^2 #1}{\partial #2 \partial #3} }
+\newcommand{\Dpow}[2]{ \frac{\partial^{#1}}{\partial  {#2}^{#1}} }
+\newcommand{\dpow}[2]{ \frac{ {\rm d}^{#1}}{{\rm d}\, {#2}^{#1}} }
+$$
+$comment -------------------------------------------------------------
+hilite commands used throughout the CppAD documentation
+$$
+$hilitecmd%
+	verbatim%
+	codep
+%$$
+$hiliteseq%
+
+ CppAD::%AD%<%                AD
+%       %AD%<%                AD
+
+%CppAD::%ADFun%<%             FunConstruct
+%       %ADFun%<%             FunConstruct
+
+%       %CPPAD_TEST_VECTOR%<% test_vector
+
+      %.%Forward%(%           Forward
+
+%CppAD::%Independent%(%       Independent
+%       %Independent%(%       Independent
+
+      %.%Jacobian%(%          Jacobian
+
+%CppAD::%NearEqual%(%         NearEqual
+%       %NearEqual%(%         NearEqual
+
+      %.%Reverse%(%           Reverse
+%$$
+
+$end

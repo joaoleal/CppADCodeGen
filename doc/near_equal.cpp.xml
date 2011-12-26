@@ -1,0 +1,171 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>NearEqual Function: Example and Test</title>
+<meta name="description" id="description" content="NearEqual Function: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Nearequal example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_near_equal.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="nearequal.xml" target="_top">Prev</a>
+</td><td><a href="speed_test.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>NearEqual</option>
+<option>Near_Equal.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>NearEqual-&gt;</option>
+<option>Near_Equal.cpp</option>
+</select>
+</td>
+<td>Near_Equal.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>File Name</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>NearEqual Function: Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="File Name" id="File Name">File Name</a></big></b>
+<br/>
+This file is called <code><font color="blue">near_equal.cpp</font></code> instead of 
+<code><font color="blue">NearEqual.cpp</font></code>
+to avoid a name conflict with <code><font color="blue">../lib/NearEqual.cpp</font></code>
+in the corresponding Microsoft project file.
+
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+# include &lt;cppad/near_equal.hpp&gt;
+
+# include &lt;complex&gt;
+
+bool Near_Equal(void)
+{	bool ok = true;
+	typedef std::complex&lt;double&gt; Complex;
+	using CppAD::NearEqual;
+
+	// double 
+	double x    = 1.00000;
+	double y    = 1.00001;
+	double a    =  .00003;
+	double r    =  .00003;
+	double zero = 0.; 
+	double inf  = 1. / zero;
+	double nan  = 0. / zero;
+
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(x, y, zero, a);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(x, y, r, zero);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(x, y, r, a);
+
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(x, y, r / 10., a / 10.);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(inf, inf, r, a);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(-inf, -inf, r, a);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(nan, nan, r, a);
+
+	// complex 
+	Complex X(x, x / 2.);
+	Complex Y(y, y / 2.);
+	Complex Inf(inf, zero);
+	Complex Nan(zero, nan);
+
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(X, Y, zero, a);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(X, Y, r, zero);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(X, Y, r, a);
+
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(X, Y, r / 10., a / 10.);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(Inf, Inf, r, a);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(-Inf, -inf, r, a);
+	ok &amp;= ! <a href="nearequal.xml" target="_top">NearEqual</a>(Nan, Nan, r, a);
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/near_equal.cpp
+
+</body>
+</html>

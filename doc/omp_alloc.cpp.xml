@@ -1,0 +1,266 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>OpenMP Memory Allocator: Example and Test</title>
+<meta name="description" id="description" content="OpenMP Memory Allocator: Example and Test"/>
+<meta name="keywords" id="keywords" content=" openmp memory allocation multi-thread example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_omp_alloc.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="old_max_num_threads.xml" target="_top">Prev</a>
+</td><td><a href="license.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>deprecated</option>
+<option>omp_alloc</option>
+<option>omp_alloc.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>deprecated-&gt;</option>
+<option>include_deprecated</option>
+<option>FunDeprecated</option>
+<option>omp_max_thread</option>
+<option>TrackNewDel</option>
+<option>omp_alloc</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>omp_alloc-&gt;</option>
+<option>omp_max_num_threads</option>
+<option>omp_in_parallel</option>
+<option>omp_get_thread_num</option>
+<option>omp_get_memory</option>
+<option>omp_return_memory</option>
+<option>omp_free_available</option>
+<option>omp_inuse</option>
+<option>omp_available</option>
+<option>omp_create_array</option>
+<option>omp_delete_array</option>
+<option>omp_efficient</option>
+<option>old_max_num_threads</option>
+<option>omp_alloc.cpp</option>
+</select>
+</td>
+<td>omp_alloc.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>OpenMP Memory Allocator: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/omp_alloc.hpp&gt;
+# include &lt;vector&gt;
+
+namespace { // Begin empty namespace
+
+bool omp_alloc_bytes(void)
+{	bool ok = true;
+	using CppAD::omp_alloc;
+
+	// check initial memory values
+	size_t thread;
+	for(thread = 0; thread &lt; omp_alloc::get_max_num_threads(); thread++)
+	{	// how much memory is inuse
+		ok &amp;= omp_alloc::inuse(thread) == 0;
+		// how much memory is being heald for this thread
+		ok &amp;= omp_alloc::available(thread) == 0;
+	}
+
+	// determine the currently executing thread
+	// (should be zero because not in parallel mode)
+	thread = omp_alloc::get_thread_num();
+
+	// repeatedly allocate enough memory for at least two size_t values.
+	size_t min_size_t = 2;
+	size_t min_bytes  = min_size_t * sizeof(size_t);
+	size_t n_outter   = 10;
+	size_t n_inner    = 5;
+	size_t cap_bytes, i, j, k;
+	for(i = 0; i &lt; n_outter; i++)
+	{	// Do not use CppAD::vector here because its use of omp_alloc
+		// complicates the inuse and avaialble results.	
+		std::vector&lt;void*&gt; v_ptr(n_inner);
+		for( j = 0; j &lt; n_inner; j++)
+		{	// allocate enough memory for min_size_t size_t objects
+			v_ptr[j]    = omp_alloc::get_memory(min_bytes, cap_bytes);
+			size_t* ptr = reinterpret_cast&lt;size_t*&gt;(v_ptr[j]);
+			// determine the number of size_t values we have obtained
+			size_t  cap_size_t = cap_bytes / sizeof(size_t);
+			ok                &amp;= min_size_t &lt;= cap_size_t;
+			// use placement new to call the size_t copy constructor
+			for(k = 0; k &lt; cap_size_t; k++)
+				new(ptr + k) size_t(i + j + k);
+			// check that the constructor worked
+			for(k = 0; k &lt; cap_size_t; k++)
+				ok &amp;= ptr[k] == (i + j + k);
+		}
+		// check that n_inner * cap_bytes are inuse and none are available
+		ok &amp;= omp_alloc::inuse(thread) == n_inner * cap_bytes;
+		ok &amp;= omp_alloc::available(thread) == 0;
+		// return the memrory to omp_alloc
+		for(j = 0; j &lt; n_inner; j++)
+			omp_alloc::return_memory(v_ptr[j]);
+		// check that now n_inner * cap_bytes are now available
+		// and none are in use
+		ok &amp;= omp_alloc::inuse(thread) == 0;
+		ok &amp;= omp_alloc::available(thread) == n_inner * cap_bytes;
+	}
+	// return all the available memory to the system
+	omp_alloc::free_available(thread);
+	ok &amp;= omp_alloc::available(thread) == 0;
+	
+	return ok;
+}
+
+class my_char {
+public:
+	char ch_ ;
+	my_char(void) : ch_(' ')
+	{ }
+	my_char(const my_char&amp; my_ch) : ch_(my_ch.ch_)
+	{ }
+};
+
+bool omp_alloc_array(void)
+{	bool ok = true;
+	using CppAD::omp_alloc;
+	size_t i; 
+
+	// check initial memory values
+	size_t thread = omp_alloc::get_thread_num();
+	ok &amp;= omp_alloc::inuse(thread) == 0;
+	ok &amp;= omp_alloc::available(thread) == 0;
+
+	// initial allocation of an array
+	size_t  size_min  = 3;
+	size_t  size_one;
+	my_char *array_one  = 
+		omp_alloc::create_array&lt;my_char&gt;(size_min, size_one);
+
+	// check the values and change them to null 'x'
+	for(i = 0; i &lt; size_one; i++)
+	{	ok &amp;= array_one[i].ch_ == ' ';
+		array_one[i].ch_ = 'x';
+	}
+
+	// now create a longer array
+	size_t size_two;
+	my_char *array_two = 
+		omp_alloc::create_array&lt;my_char&gt;(2 * size_min, size_two);
+
+	// check the values in array one
+	for(i = 0; i &lt; size_one; i++)
+		ok &amp;= array_one[i].ch_ == 'x';
+
+	// check the values in array two
+	for(i = 0; i &lt; size_two; i++)
+		ok &amp;= array_two[i].ch_ == ' ';
+
+	// check the amount of inuse and available memory
+	// (an extra size_t value is used for each memory block).
+	size_t check = sizeof(my_char)*(size_one + size_two);
+	ok   &amp;= omp_alloc::inuse(thread) - check &lt; sizeof(my_char);
+	ok   &amp;= omp_alloc::available(thread) == 0;
+
+	// delete the arrays 
+	omp_alloc::delete_array(array_one);
+	omp_alloc::delete_array(array_two);
+	ok   &amp;= omp_alloc::inuse(thread) == 0;
+	ok   &amp;= omp_alloc::available(thread) - check &lt; sizeof(my_char);
+
+	// free the memory for use by this thread
+	omp_alloc::free_available(thread);
+	ok &amp;= omp_alloc::inuse(thread) == 0;
+	ok &amp;= omp_alloc::available(thread) == 0;
+
+	return ok;
+}
+} // End empty namespace
+
+bool omp_alloc(void)
+{	bool ok  = true;
+	using CppAD::omp_alloc;
+
+	// check initial state of allocator
+	ok  &amp;= omp_alloc::get_max_num_threads() == 1;
+
+	// set the maximum number of threads greater than one
+	// so that omp_alloc holds onto memory
+	CppAD::omp_alloc::set_max_num_threads(2);
+	ok  &amp;= omp_alloc::get_max_num_threads() == 2;
+	size_t thread;
+	for(thread = 0; thread &lt; 2; thread++)
+	{	ok &amp;= omp_alloc::inuse(thread) == 0;
+		ok &amp;= omp_alloc::available(thread) == 0;
+	}
+
+	// now use memory allocatore in state where it holds onto memory
+	ok   &amp;= omp_alloc_bytes();
+	ok   &amp;= omp_alloc_array();
+
+	// check that the tests have not held onto memory
+	for(thread = 0; thread &lt; 2; thread++)
+	{	ok &amp;= omp_alloc::inuse(thread) == 0;
+		ok &amp;= omp_alloc::available(thread) == 0;
+	}
+
+	// set the maximum number of threads back to one 
+	// so that omp_alloc no longer holds onto memory
+	CppAD::omp_alloc::set_max_num_threads(1);
+
+	return ok;
+}
+
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/omp_alloc.cpp
+
+</body>
+</html>

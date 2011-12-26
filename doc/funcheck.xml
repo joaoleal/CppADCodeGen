@@ -1,0 +1,518 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Check an ADFun Sequence of Operations</title>
+<meta name="description" id="description" content="Check an ADFun Sequence of Operations"/>
+<meta name="keywords" id="keywords" content=" Funcheck check Adfun "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_funcheck_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="sparse_hessian.cpp.xml" target="_top">Prev</a>
+</td><td><a href="funcheck.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>FunCheck</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>FunCheck-&gt;</option>
+<option>FunCheck.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>f</option>
+<option>g</option>
+<option>---..x</option>
+<option>y</option>
+<option>x</option>
+<option>r</option>
+<option>a</option>
+<option>ok</option>
+<option>Vector</option>
+<option>FunCheck Uses Forward</option>
+<option>Discussion</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>Check an ADFun Sequence of Operations</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>ok</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;FunCheck(</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>g</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>r</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+<code><span style='white-space: nowrap'><br/>
+</span></code><b>See Also</b>
+<a href="comparechange.xml" target="_top"><span style='white-space: nowrap'>CompareChange</span></a>
+
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mrow></math>
+
+ to denote the
+<a href="glossary.xml#AD Function" target="_top"><span style='white-space: nowrap'>AD&#xA0;function</span></a>
+ corresponding to <i>f</i>.
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mrow></math>
+
+ to denote the
+function corresponding to the C++ function object <i>g</i>.
+This routine check if
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+If 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02260;</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, the
+<a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+
+corresponding to <i>f</i> does not represents the algorithm used
+by <i>g</i> to calculate values for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+</mrow></math>
+
+
+(see <a href="funcheck.xml#Discussion" target="_top"><span style='white-space: nowrap'>Discussion</span></a>
+ below).
+
+<br/>
+<br/>
+<b><big><a name="f" id="f">f</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> argument <i>f</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;ADFun&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>Note that the <a href="adfun.xml" target="_top"><span style='white-space: nowrap'>ADFun</span></a>
+ object <i>f</i> is not <code><font color="blue">const</font></code>
+(see <a href="funcheck.xml#FunCheck Uses Forward" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+ below).
+
+<br/>
+<br/>
+<b><big><a name="g" id="g">g</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> argument <i>g</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Fun</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>g</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(<i>Fun</i> is defined the properties of <i>g</i>).
+The C++ function object <i>g</i> supports the syntax
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>g</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>which computes 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="g.x" id="g.x">x</a></b>
+<br/>
+The <i>g</i> argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see <a href="funcheck.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below)
+and its size 
+must be equal to <i>n</i>, the dimension of the
+<a href="seq_property.xml#Domain" target="_top"><span style='white-space: nowrap'>domain</span></a>
+ space for <i>f</i>.
+
+<br/>
+<br/>
+<b><big><a name="y" id="y">y</a></big></b>
+<br/>
+The <i>g</i> result <i>y</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and its value is 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+The size of <i>y</i> 
+is equal to <i>m</i>, the dimension of the
+<a href="seq_property.xml#Range" target="_top"><span style='white-space: nowrap'>range</span></a>
+ space for <i>f</i>.
+
+<br/>
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and its size 
+must be equal to <i>n</i>, the dimension of the
+<a href="seq_property.xml#Domain" target="_top"><span style='white-space: nowrap'>domain</span></a>
+ space for <i>f</i>.
+This specifies that point at which to compare the values
+calculated by <i>f</i> and <i>G</i>. 
+
+<br/>
+<br/>
+<b><big><a name="r" id="r">r</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> argument <i>r</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>r</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the relative error the element by element
+comparison of the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="a" id="a">a</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> argument <i>a</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the absolute error the element by element
+comparison of the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="ok" id="ok">ok</a></big></b>
+<br/>
+The <code><font color="blue">FunCheck</font></code> result <i>ok</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font></code><i><span style='white-space: nowrap'>ok</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is true, if for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ 
+either the relative error bound is satisfied
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mo stretchy="false">|</mo>
+<msub><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>G</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">|</mo>
+<mo stretchy="false">&#x02264;</mo>
+<mi mathvariant='italic'>r</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">|</mo>
+<msub><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">|</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">|</mo>
+<msub><mi mathvariant='italic'>G</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">|</mo>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+or the absolute error bound is satisfied
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mo stretchy="false">|</mo>
+<msub><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>G</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">|</mo>
+<mo stretchy="false">&#x02264;</mo>
+<mi mathvariant='italic'>a</mi>
+</mrow></math>
+
+It is false if for some 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ neither
+of these bounds is satisfied.
+
+<br/>
+<br/>
+<b><big><a name="Vector" id="Vector">Vector</a></big></b>
+<br/>
+The type <i>Vector</i> must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class with
+<a href="simplevector.xml#Elements of Specified Type" target="_top"><span style='white-space: nowrap'>elements&#xA0;of&#xA0;type</span></a>
+
+<i>Base</i>.
+The routine <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+ will generate an error message
+if this is not the case.
+
+<br/>
+<br/>
+<b><big><a name="FunCheck Uses Forward" id="FunCheck Uses Forward">FunCheck Uses Forward</a></big></b>
+<br/>
+After each call to <a href="forward.xml" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+,
+the object <i>f</i> contains the corresponding 
+<a href="glossary.xml#Taylor Coefficient" target="_top"><span style='white-space: nowrap'>Taylor&#xA0;coefficients</span></a>
+.
+After <code><font color="blue">FunCheck</font></code>,
+the previous calls to <a href="forward.xml" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+ are undefined.
+
+<br/>
+<br/>
+<b><big><a name="Discussion" id="Discussion">Discussion</a></big></b>
+<br/>
+Suppose that the algorithm corresponding to <i>g</i> contains
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;if(&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&gt;=&#xA0;0&#xA0;)<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;exp(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;else&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;exp(-</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>where <i>x</i> and <i>y</i> are <code><font color="blue"><span style='white-space: nowrap'>AD&lt;double&gt;</span></font></code> objects.
+It follows that the 
+AD of <code><font color="blue">double</font></code> <a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+
+depends on the value of <i>x</i>.
+If the sequence of operations stored in <i>f</i> corresponds to 
+<i>g</i> with 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02265;</mo>
+<mn>0</mn>
+</mrow></math>
+
+, 
+the function values computed using <i>f</i> when 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&lt;</mo>
+<mn>0</mn>
+</mrow></math>
+
+
+will not agree with the function values computed by 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>g</mi>
+</mrow></math>
+
+.
+This is because the operation sequence corresponding to <i>g</i> changed
+(and hence the object <i>f</i> does not represent the function
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+</mrow></math>
+
+ for this value of <i>x</i>).
+In this case, you probably want to re-tape the calculations
+performed by <i>g</i> with the
+<a href="glossary.xml#Tape.Independent Variable" target="_top"><span style='white-space: nowrap'>independent&#xA0;variables</span></a>
+ 
+equal to the values in <i>x</i> 
+(so AD operation sequence properly represents the algorithm
+for this value of independent variables).
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="funcheck.cpp.xml" target="_top"><span style='white-space: nowrap'>FunCheck.cpp</span></a>
+
+contains an example and test of this function.   
+It returns true if it succeeds and false otherwise.
+
+
+<hr/>Input File: cppad/local/fun_check.hpp
+
+</body>
+</html>

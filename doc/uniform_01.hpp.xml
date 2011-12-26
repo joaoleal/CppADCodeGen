@@ -1,0 +1,111 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Source: uniform_01</title>
+<meta name="description" id="description" content="Source: uniform_01"/>
+<meta name="keywords" id="keywords" content=" uniform_01 source "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_uniform_01.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="uniform_01.xml" target="_top">Prev</a>
+</td><td><a href="det_of_minor.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>uniform_01</option>
+<option>uniform_01.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>uniform_01-&gt;</option>
+<option>uniform_01.hpp</option>
+</select>
+</td>
+<td>uniform_01.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Source: uniform_01</big></big></b></center>
+<code><font color="blue"># ifndef CPPAD_UNIFORM_01_INCLUDED 
+<code><span style='white-space: nowrap'><br/>
+</span></code># define CPPAD_UNIFORM_01_INCLUDED
+
+<pre style='display:inline'> 
+# include &lt;cstdlib&gt;
+
+namespace CppAD {
+	inline void uniform_01(size_t seed)
+	{	std::srand( (unsigned int) seed); }
+
+	template &lt;class Vector&gt;
+	void uniform_01(size_t n, Vector &amp;x)
+	{	static double factor = 1. / double(RAND_MAX);
+		while(n--)
+			x[n] = std::rand() * factor;
+	}
+}</pre>
+
+# endif
+</font></code>
+
+
+<hr/>Input File: omh/uniform_01_hpp.omh
+
+</body>
+</html>

@@ -1,0 +1,432 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>A Stiff Ode: Example and Test</title>
+<meta name="description" id="description" content="A Stiff Ode: Example and Test"/>
+<meta name="keywords" id="keywords" content=" stiff ode example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_odestiff.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="mul_level.cpp.xml" target="_top">Prev</a>
+</td><td><a href="ode_taylor.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>General</option>
+<option>OdeStiff.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>General-&gt;</option>
+<option>ad_fun.cpp</option>
+<option>ad_in_c.cpp</option>
+<option>conj_grad.cpp</option>
+<option>HesMinorDet.cpp</option>
+<option>HesLuDet.cpp</option>
+<option>Interface2C.cpp</option>
+<option>JacMinorDet.cpp</option>
+<option>JacLuDet.cpp</option>
+<option>mul_level</option>
+<option>OdeStiff.cpp</option>
+<option>ode_taylor.cpp</option>
+<option>ode_taylor_adolc.cpp</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>OdeStiff.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>A Stiff Ode: Example and Test</big></big></b></center>
+Define 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mn>2</mn>
+</msup>
+</mrow></math>
+
+ by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mn>1</mn>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mn>0</mn>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+<mo stretchy="false">&#x02032;</mo>
+</msubsup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+<mo stretchy="false">&#x02032;</mo>
+</msubsup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+If 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">&#x0226B;</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">&gt;</mo>
+<mn>0</mn>
+</mrow></math>
+
+, this is a stiff Ode and 
+the analytic solution is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi>exp</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">[</mo>
+<mi>exp</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<mi>exp</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>a</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+The example tests Rosen34 using the relations above:
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt; 
+
+// To print the comparision, change the 0 to 1 on the next line.
+# define CPPAD_ODE_STIFF_PRINT 0
+
+namespace {
+	// --------------------------------------------------------------
+	class Fun {
+	private:
+		<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; a;
+	public:
+		// constructor
+		Fun(const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;&amp; a_) : a(a_)
+		{ }
+		// compute f(t, x) 
+		void Ode(
+			const double                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;       &amp;f)
+		{	f[0]  = - a[0] * x[0];
+			f[1]  = + a[0] * x[0] - a[1] * x[1]; 
+		}
+		// compute partial of f(t, x) w.r.t. t 
+		void Ode_ind(
+			const double                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;       &amp;f_t)
+		{	f_t[0] = 0.;
+			f_t[1] = 0.;
+		}
+		// compute partial of f(t, x) w.r.t. x 
+		void Ode_dep(
+			const double                    &amp;t, 
+			const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;x, 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;       &amp;f_x)
+		{	f_x[0] = -a[0];  
+			f_x[1] = 0.;
+			f_x[2] = +a[0];
+			f_x[3] = -a[1];
+		}
+	};
+	// --------------------------------------------------------------
+	class RungeMethod {
+	private:
+		Fun F;
+	public:
+		// constructor
+		RungeMethod(const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;a_) : F(a_)
+		{ }
+		void step(
+			double                     ta , 
+			double                     tb , 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;xa ,
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;xb ,
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;eb )
+		{	xb = CppAD::Runge45(F, 1, ta, tb, xa, eb);
+		}
+		size_t order(void)
+		{	return 5; }
+	};
+	class RosenMethod {
+	private:
+		Fun F;
+	public:
+		// constructor
+		RosenMethod(const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;a_) : F(a_)
+		{ }
+		void step(
+			double                     ta , 
+			double                     tb , 
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;xa ,
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;xb ,
+			<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; &amp;eb )
+		{	xb = CppAD::Rosen34(F, 1, ta, tb, xa, eb);
+		}
+		size_t order(void)
+		{	return 4; }
+	};
+}
+
+bool OdeStiff(void)
+{	bool ok = true;     // initial return value
+
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; a(2);
+	a[0] = 1e3;
+	a[1] = 1.;
+	RosenMethod rosen(a);
+	RungeMethod runge(a);
+	Fun          gear(a);
+
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; xi(2);
+	xi[0] = 1.;
+	xi[1] = 0.;
+
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; eabs(2);
+	eabs[0] = 1e-6;
+	eabs[1] = 1e-6;
+
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; ef(2);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; xf(2);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; maxabs(2);
+	size_t                nstep;
+
+	size_t k;
+	for(k = 0; k &lt; 3; k++)
+	{	
+		size_t M    = 5;
+		double ti   = 0.;
+		double tf   = 1.;
+		double smin = 1e-7;
+		double sini = 1e-7;
+		double smax = 1.;
+		double scur = .5;
+		double erel = 0.;
+
+		if( k == 0 )
+		{	xf = CppAD::OdeErrControl(rosen, ti, tf, 
+			xi, smin, smax, scur, eabs, erel, ef, maxabs, nstep);
+		}
+		else if( k == 1 )
+		{	xf = CppAD::OdeErrControl(runge, ti, tf, 
+			xi, smin, smax, scur, eabs, erel, ef, maxabs, nstep);
+		}
+		else if( k == 2 )
+		{	xf = CppAD::OdeGearControl(gear, M, ti, tf,
+			xi, smin, smax, sini, eabs, erel, ef, maxabs, nstep);
+		}
+		double x0 = exp(-a[0]*tf);
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(x0, xf[0], 0., eabs[0]);
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(0., ef[0], 0., eabs[0]);
+
+		double x1 = a[0] * 
+			(exp(-a[1]*tf) - exp(-a[0]*tf))/(a[0] - a[1]);
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(x1, xf[1], 0., eabs[1]);
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(0., ef[1], 0., eabs[0]);
+# if CPPAD_ODE_STIFF_PRINT
+		const char* method[]={ &quot;Rosen34&quot;, &quot;Runge45&quot;, &quot;Gear5&quot; };
+		std::cout &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;method     = &quot; &lt;&lt; method[k] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;nstep      = &quot; &lt;&lt; nstep  &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;x0         = &quot; &lt;&lt; x0 &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;xf[0]      = &quot; &lt;&lt; xf[0] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;x0 - xf[0] = &quot; &lt;&lt; x0 - xf[0] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;ef[0]      = &quot; &lt;&lt; ef[0] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;x1         = &quot; &lt;&lt; x1 &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;xf[1]      = &quot; &lt;&lt; xf[1] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;x1 - xf[1] = &quot; &lt;&lt; x1 - xf[1] &lt;&lt; std::endl;
+		std::cout &lt;&lt; &quot;ef[1]      = &quot; &lt;&lt; ef[1] &lt;&lt; std::endl;
+# endif
+	}
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/ode_stiff.cpp
+
+</body>
+</html>

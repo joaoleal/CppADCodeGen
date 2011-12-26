@@ -1,0 +1,286 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Fast Multi-Threading Memory Allocator: Example and Test</title>
+<meta name="description" id="description" content="Fast Multi-Threading Memory Allocator: Example and Test"/>
+<meta name="keywords" id="keywords" content=" openmp memory allocation pthread boost multi-thread example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_thread_alloc.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="thread_alloc.xml" target="_top">Prev</a>
+</td><td><a href="ta_parallel_setup.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>thread_alloc</option>
+<option>thread_alloc.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>thread_alloc-&gt;</option>
+<option>thread_alloc.cpp</option>
+<option>ta_parallel_setup</option>
+<option>ta_num_threads</option>
+<option>ta_in_parallel</option>
+<option>ta_thread_num</option>
+<option>ta_get_memory</option>
+<option>ta_return_memory</option>
+<option>ta_free_available</option>
+<option>ta_inuse</option>
+<option>ta_available</option>
+<option>ta_create_array</option>
+<option>ta_delete_array</option>
+</select>
+</td>
+<td>thread_alloc.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+<center><b><big><big>Fast Multi-Threading Memory Allocator: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/thread_alloc.hpp&gt;
+# include &lt;vector&gt;
+
+# define NUMBER_THREADS 2
+
+namespace {
+	// Setup for one thread in sequential execution mode
+	bool in_parallel_false(void)
+	{	return false; }
+	size_t thread_num_zero(void)
+	{	return 0; }
+}
+
+namespace { // Begin empty namespace
+
+bool raw_allocate(void)
+{	bool ok = true;
+	using CppAD::thread_alloc;
+
+	// check that no memory is initilaly inuse or available
+	size_t thread;
+	for(thread = 0; thread &lt; NUMBER_THREADS; thread++)
+	{	ok &amp;= thread_alloc::inuse(thread) == 0;
+		ok &amp;= thread_alloc::available(thread) == 0;
+	}
+
+	// repeatedly allocate enough memory for at least two size_t values.
+	size_t min_size_t = 2;
+	size_t min_bytes  = min_size_t * sizeof(size_t);
+	size_t n_outter   = 10;
+	size_t n_inner    = 5;
+	size_t cap_bytes, i, j, k;
+	for(i = 0; i &lt; n_outter; i++)
+	{	// Do not use CppAD::vector here because its use of thread_alloc
+		// complicates the inuse and avaialble results.	
+		std::vector&lt;void*&gt; v_ptr(n_inner);
+		for( j = 0; j &lt; n_inner; j++)
+		{	// allocate enough memory for min_size_t size_t objects
+			v_ptr[j]    = thread_alloc::get_memory(min_bytes, cap_bytes);
+			size_t* ptr = reinterpret_cast&lt;size_t*&gt;(v_ptr[j]);
+			// determine the number of size_t values we have obtained
+			size_t  cap_size_t = cap_bytes / sizeof(size_t);
+			ok                &amp;= min_size_t &lt;= cap_size_t;
+			// use placement new to call the size_t copy constructor
+			for(k = 0; k &lt; cap_size_t; k++)
+				new(ptr + k) size_t(i + j + k);
+			// check that the constructor worked
+			for(k = 0; k &lt; cap_size_t; k++)
+				ok &amp;= ptr[k] == (i + j + k);
+		}
+		// check that n_inner * cap_bytes are inuse and none are available
+		thread = thread_alloc::thread_num();
+		ok    &amp;= thread_alloc::inuse(thread) == n_inner * cap_bytes;
+		ok    &amp;= thread_alloc::available(thread) == 0;
+		// return the memrory to thread_alloc
+		for(j = 0; j &lt; n_inner; j++)
+			thread_alloc::return_memory(v_ptr[j]);
+		// check that now n_inner * cap_bytes are now available
+		// and none are in use
+		ok &amp;= thread_alloc::inuse(thread) == 0;
+		ok &amp;= thread_alloc::available(thread) == n_inner * cap_bytes;
+	}
+	thread_alloc::free_available(thread);
+	
+	// check that the tests have not held onto memory
+	for(thread = 0; thread &lt; thread_alloc::num_threads(); thread++)
+	{	ok &amp;= thread_alloc::inuse(thread) == 0;
+		ok &amp;= thread_alloc::available(thread) == 0;
+	}
+	return ok;
+}
+
+class my_char {
+public:
+	char ch_ ;
+	my_char(void) : ch_(' ')
+	{ }
+	my_char(const my_char&amp; my_ch) : ch_(my_ch.ch_)
+	{ }
+};
+
+bool type_allocate(void)
+{	bool ok = true;
+	using CppAD::thread_alloc;
+	size_t i; 
+
+	// check initial memory values
+	size_t thread = thread_alloc::thread_num();
+	ok &amp;= thread_alloc::inuse(thread) == 0;
+	ok &amp;= thread_alloc::available(thread) == 0;
+
+	// initial allocation of an array
+	size_t  size_min  = 3;
+	size_t  size_one;
+	my_char *array_one  = 
+		thread_alloc::create_array&lt;my_char&gt;(size_min, size_one);
+
+	// check the values and change them to null 'x'
+	for(i = 0; i &lt; size_one; i++)
+	{	ok &amp;= array_one[i].ch_ == ' ';
+		array_one[i].ch_ = 'x';
+	}
+
+	// now create a longer array
+	size_t size_two;
+	my_char *array_two = 
+		thread_alloc::create_array&lt;my_char&gt;(2 * size_min, size_two);
+
+	// check the values in array one
+	for(i = 0; i &lt; size_one; i++)
+		ok &amp;= array_one[i].ch_ == 'x';
+
+	// check the values in array two
+	for(i = 0; i &lt; size_two; i++)
+		ok &amp;= array_two[i].ch_ == ' ';
+
+	// check the amount of inuse and available memory
+	// (an extra size_t value is used for each memory block).
+	size_t check = sizeof(my_char)*(size_one + size_two);
+	ok   &amp;= thread_alloc::inuse(thread) - check &lt; sizeof(my_char);
+	ok   &amp;= thread_alloc::available(thread) == 0;
+
+	// delete the arrays 
+	thread_alloc::delete_array(array_one);
+	thread_alloc::delete_array(array_two);
+	ok   &amp;= thread_alloc::inuse(thread) == 0;
+	ok   &amp;= thread_alloc::available(thread) - check &lt; sizeof(my_char);
+
+	// free the memory for use by this thread
+	thread_alloc::free_available(thread);
+	
+	// check that the tests have not held onto memory
+	for(thread = 0; thread &lt; thread_alloc::num_threads(); thread++)
+	{	ok &amp;= thread_alloc::inuse(thread) == 0;
+		ok &amp;= thread_alloc::available(thread) == 0;
+	}
+	return ok;
+}
+
+} // End empty namespace
+
+
+bool thread_alloc(void)
+{	bool ok  = true;
+	using CppAD::thread_alloc;
+
+	// check initial state of allocator
+	ok  &amp;= thread_alloc::num_threads() == 1;
+
+	// Tell thread_alloc that there are two threads so it starts holding
+	// onto memory (but actuall the there is only on thread with id zero).
+	thread_alloc::parallel_setup(2, in_parallel_false, thread_num_zero);
+	ok  &amp;= thread_alloc::num_threads() == 2;
+	ok  &amp;= thread_alloc::thread_num() == 0;
+	ok  &amp;= thread_alloc::in_parallel() == false;
+
+	// run raw allocation tests
+	ok &amp;= raw_allocate();
+
+	// run typed allocation tests
+	ok &amp;= type_allocate();
+	
+	// return allocator to single thread mode
+	thread_alloc::parallel_setup(1, in_parallel_false, thread_num_zero);
+	return ok;
+}
+
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/thread_alloc.cpp
+
+</body>
+</html>

@@ -1,0 +1,176 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Speed Test of Functions in Double</title>
+<meta name="description" id="description" content="Speed Test of Functions in Double"/>
+<meta name="keywords" id="keywords" content=" speed test double "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_speed_double_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="sparse_evaluate.hpp.xml" target="_top">Prev</a>
+</td><td><a href="double_det_minor.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_double</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>speed_double-&gt;</option>
+<option>double_det_minor.cpp</option>
+<option>double_det_lu.cpp</option>
+<option>double_mat_mul.cpp</option>
+<option>double_ode.cpp</option>
+<option>double_poly.cpp</option>
+<option>double_sparse_hessian.cpp</option>
+<option>double_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Running Tests</option>
+<option>C++ Compiler Flags</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>Speed Test of Functions in Double</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+CppAD has a set of speed tests for just calculating functions
+(in double precision instead of an AD type).
+This section links to the source code the function value speed tests.
+
+<br/>
+<br/>
+<b><big><a name="Running Tests" id="Running Tests">Running Tests</a></big></b>
+<br/>
+To build these speed tests, and run their correctness tests,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/double<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+You can then run the corresponding speed tests 
+with the following command
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;./double&#xA0;speed&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>seed</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+where 
+<code><i><font color="black"><span style='white-space: nowrap'>seed</span></font></i></code>
+ is a positive integer.
+See <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for more options.
+
+<br/>
+<br/>
+<b><big><a name="C++ Compiler Flags" id="C++ Compiler Flags">C++ Compiler Flags</a></big></b>
+<br/>
+The C++ compiler flags used to build the <code><font color="blue">double</font></code> program are
+<code><font color="blue">
+<pre style='display:inline'> 
+     AM_CXXFLAGS   = -O2 -DNDEBUG -DSPEED_DOUBLE $(CXX_FLAGS)</pre>
+</font></code>
+where <code><font color="blue">CXX_FLAGS</font></code> is specified by the 
+<a href="installunix.xml#Configure" target="_top"><span style='white-space: nowrap'>configure</span></a>
+ command.
+
+<br/>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<div><a href="double_det_minor.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Determinant&#xA0;by&#xA0;Minor&#xA0;Expansion</a><br/>
+<a href="double_det_lu.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Determinant&#xA0;Using&#xA0;Lu&#xA0;Factorization</a><br/>
+<a href="double_mat_mul.cpp.xml" target="_top">CppAD&#xA0;Speed:&#xA0;Matrix&#xA0;Multiplication&#xA0;(Double&#xA0;Version)</a><br/>
+<a href="double_ode.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Ode&#xA0;Solution</a><br/>
+<a href="double_poly.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Evaluate&#xA0;a&#xA0;Polynomial</a><br/>
+<a href="double_sparse_hessian.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Sparse&#xA0;Hessian</a><br/>
+<a href="double_sparse_jacobian.cpp.xml" target="_top">Double&#xA0;Speed:&#xA0;Sparse&#xA0;Jacobian</a><br/>
+</div>
+<hr/>Input File: omh/speed_double.omh
+
+</body>
+</html>

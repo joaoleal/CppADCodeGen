@@ -1,0 +1,393 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Hessian: Easy Driver</title>
+<meta name="description" id="description" content="Hessian: Easy Driver"/>
+<meta name="keywords" id="keywords" content=" Hessian driver second derivative "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_hessian_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="revone.cpp.xml" target="_top">Prev</a>
+</td><td><a href="hessian.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>Drivers</option>
+<option>Hessian</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Drivers-&gt;</option>
+<option>Jacobian</option>
+<option>ForOne</option>
+<option>RevOne</option>
+<option>Hessian</option>
+<option>ForTwo</option>
+<option>RevTwo</option>
+<option>sparse_jacobian</option>
+<option>sparse_hessian</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>Hessian-&gt;</option>
+<option>Hessian.cpp</option>
+<option>HesLagrangian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>f</option>
+<option>x</option>
+<option>l</option>
+<option>w</option>
+<option>hes</option>
+<option>Vector</option>
+<option>Hessian Uses Forward</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>Hessian: Easy Driver</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>hes</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>.Hessian(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>w</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>hes</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'>.Hessian(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>l</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code><br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mrow></math>
+
+ to denote the
+<a href="glossary.xml#AD Function" target="_top"><span style='white-space: nowrap'>AD&#xA0;function</span></a>
+ corresponding to <i>f</i>.
+The syntax above sets <i>hes</i> to the Hessian 
+The syntax above sets <i>h</i> to the Hessian 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>hes</mi>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><msup><mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>d</mi>
+</mstyle></mrow>
+<mrow><mn>2</mn>
+</mrow>
+</msup>
+</mrow>
+<mrow><mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>d</mi>
+</mstyle></mrow>
+<mspace width='.18em'/>
+<msup><mrow><mi mathvariant='italic'>x</mi>
+</mrow>
+<mrow><mn>2</mn>
+</mrow>
+</msup>
+</mrow>
+</mfrac>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>m</mi>
+</munderover>
+<msub><mi mathvariant='italic'>w</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<msub><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+The routine <a href="sparse_hessian.xml" target="_top"><span style='white-space: nowrap'>sparse_hessian</span></a>
+ may be faster in the case
+where the Hessian is sparse.
+
+<br/>
+<br/>
+<b><big><a name="f" id="f">f</a></big></b>
+<br/>
+The object <i>f</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;ADFun&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font></code><i><span style='white-space: nowrap'>f</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>Note that the <a href="adfun.xml" target="_top"><span style='white-space: nowrap'>ADFun</span></a>
+ object <i>f</i> is not <code><font color="blue">const</font></code>
+(see <a href="hessian.xml#Hessian Uses Forward" target="_top"><span style='white-space: nowrap'>Hessian&#xA0;Uses&#xA0;Forward</span></a>
+ below).
+
+<br/>
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The argument <i>x</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see <a href="hessian.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below)
+and its size 
+must be equal to <i>n</i>, the dimension of the
+<a href="seq_property.xml#Domain" target="_top"><span style='white-space: nowrap'>domain</span></a>
+ space for <i>f</i>.
+It specifies
+that point at which to evaluate the Hessian.
+
+<br/>
+<br/>
+<b><big><a name="l" id="l">l</a></big></b>
+<br/>
+If the argument <i>l</i> is present, it has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font></code><i><span style='white-space: nowrap'>l</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and is less than <i>m</i>, the dimension of the
+<a href="seq_property.xml#Range" target="_top"><span style='white-space: nowrap'>range</span></a>
+ space for <i>f</i>.
+It specifies the component of <i>F</i>
+for which we are evaluating the Hessian.
+To be specific, in the case where the argument <i>l</i> is present,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mi mathvariant='italic'>w</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">{</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="left" >
+<mn>1</mn>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>l</mi>
+</mtd></mtr><mtr><mtd columnalign="left" >
+<mn>0</mn>
+</mtd><mtd columnalign="left" >
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>otherwise</mi>
+</mstyle></mrow>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true"> </mo></mrow>
+</mrow></math>
+
+<br/>
+<b><big><a name="w" id="w">w</a></big></b>
+<br/>
+If the argument <i>w</i> is present, it has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>w</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>and size 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>m</mi>
+</mrow></math>
+
+.
+It specifies the value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>w</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+</mrow></math>
+
+ in the expression 
+for <i>h</i>.
+
+<br/>
+<br/>
+<b><big><a name="hes" id="hes">hes</a></big></b>
+<br/>
+The result <i>hes</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Vector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>hes</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>(see <a href="hessian.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ below)
+and its size is 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow></math>
+
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">-</mo>
+<mn>1</mn>
+</mrow></math>
+
+ 
+and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">-</mo>
+<mn>1</mn>
+</mrow></math>
+
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>hes</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><msup><mo stretchy="false">&#x02202;</mo>
+<mn>2</mn>
+</msup>
+<msup><mi mathvariant='italic'>w</mi>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+<mi mathvariant='italic'>F</mi>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">&#x02202;</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msub>
+</mrow>
+</mfrac>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="Vector" id="Vector">Vector</a></big></b>
+<br/>
+The type <i>Vector</i> must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class with
+<a href="simplevector.xml#Elements of Specified Type" target="_top"><span style='white-space: nowrap'>elements&#xA0;of&#xA0;type</span></a>
+
+<i>Base</i>.
+The routine <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+ will generate an error message
+if this is not the case.
+
+<br/>
+<br/>
+<b><big><a name="Hessian Uses Forward" id="Hessian Uses Forward">Hessian Uses Forward</a></big></b>
+<br/>
+After each call to <a href="forward.xml" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+,
+the object <i>f</i> contains the corresponding 
+<a href="glossary.xml#Taylor Coefficient" target="_top"><span style='white-space: nowrap'>Taylor&#xA0;coefficients</span></a>
+.
+After <code><font color="blue">Hessian</font></code>,
+the previous calls to <a href="forward.xml" target="_top"><span style='white-space: nowrap'>Forward</span></a>
+ are undefined.
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The routines 
+<a href="hessian.cpp.xml" target="_top"><span style='white-space: nowrap'>Hessian.cpp</span></a>
+ and
+<a href="heslagrangian.cpp.xml" target="_top"><span style='white-space: nowrap'>HesLagrangian.cpp</span></a>
+
+are examples and tests of <code><font color="blue">Hessian</font></code>.
+They return <code><font color="blue">true</font></code>, if they succeed and <code><font color="blue">false</font></code> otherwise.
+
+
+
+<hr/>Input File: cppad/local/hessian.hpp
+
+</body>
+</html>

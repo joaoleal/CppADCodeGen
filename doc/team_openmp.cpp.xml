@@ -1,0 +1,174 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>OpenMP Implementation of a Team of AD Threads</title>
+<meta name="description" id="description" content="OpenMP Implementation of a Team of AD Threads"/>
+<meta name="keywords" id="keywords" content=" openmp Ad team "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_team_openmp.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="team_thread.hpp.xml" target="_top">Prev</a>
+</td><td><a href="team_bthread.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>multi_thread</option>
+<option>team_thread.hpp</option>
+<option>team_openmp.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>multi_thread-&gt;</option>
+<option>parallel_ad</option>
+<option>team_thread.hpp</option>
+<option>thread_test.cpp</option>
+<option>simple_ad.cpp</option>
+<option>harmonic.cpp</option>
+<option>multi_newton.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>team_thread.hpp-&gt;</option>
+<option>team_openmp.cpp</option>
+<option>team_bthread.cpp</option>
+<option>team_pthread.cpp</option>
+</select>
+</td>
+<td>team_openmp.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>OpenMP Implementation of a Team of AD Threads</big></big></b></center>
+See <a href="team_thread.hpp.xml" target="_top"><span style='white-space: nowrap'>team_thread.hpp</span></a>
+ for this routines specifications.
+
+<code><font color="blue">
+<pre style='display:inline'> 
+# include &lt;omp.h&gt;
+# include &lt;cppad/cppad.hpp&gt;
+# include &quot;../team_thread.hpp&quot;
+
+namespace {
+	// number of threads in this team
+	size_t num_threads_;
+
+	// used to inform CppAD when we are in parallel execution mode
+	bool in_parallel(void)
+	{	return static_cast&lt;bool&gt; ( omp_in_parallel() ); }
+
+	// used to inform CppAD of the current thread number
+	size_t thread_num(void)
+	{	return static_cast&lt;size_t&gt;( omp_get_thread_num() ); } 
+}
+
+bool team_start(size_t num_threads)
+{
+	bool ok = ! in_parallel();
+	ok     &amp;= thread_num() == 0;;
+	ok     &amp;= num_threads &gt; 0;
+
+	// Turn off dynamic thread adjustment
+	omp_set_dynamic(0);
+
+	// Set the number of OpenMP threads
+	omp_set_num_threads( int(num_threads) );
+
+	// setup for using CppAD::<a href="ad.xml" target="_top">AD</a>&lt;double&gt; in parallel 
+	CppAD::thread_alloc::parallel_setup(num_threads, in_parallel, thread_num);
+	CppAD::parallel_ad&lt;double&gt;();
+
+	// inform team_work of number of threads
+	num_threads_ = num_threads;
+
+	return ok;
+}
+
+bool team_work(void worker(void))
+{	bool ok = ! in_parallel();
+	ok     &amp;= thread_num() == 0;;
+	ok     &amp;= num_threads_ &gt; 0;
+
+	int number_threads = int(num_threads_);
+	int thread_num;
+# pragma omp parallel for
+	for(thread_num = 0; thread_num &lt; number_threads; thread_num++)
+		worker();
+// end omp parallel for	
+
+	return ok;
+}
+
+bool team_stop(void)
+{	bool ok = ! in_parallel();
+	ok     &amp;= thread_num() == 0;;
+	ok     &amp;= num_threads_ &gt; 0;
+
+	// inform team_work of number of threads
+	num_threads_ = 1;
+
+	// Set the number of OpenMP threads to one
+	omp_set_num_threads(num_threads_);
+
+	// inform CppAD no longer in multi-threading mode
+	using CppAD::thread_alloc;
+	thread_alloc::parallel_setup(num_threads_, in_parallel, thread_num);
+
+	return ok;
+}
+
+const char* team_name(void)
+{	return &quot;openmp&quot;; }</pre>
+</font></code>
+
+
+<hr/>Input File: multi_thread/openmp/team_openmp.cpp
+
+</body>
+</html>

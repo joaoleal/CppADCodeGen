@@ -1,0 +1,214 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Source: LuSolve</title>
+<meta name="description" id="description" content="Source: LuSolve"/>
+<meta name="keywords" id="keywords" content=" Lusolve source "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_lu_solve.hpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="lusolve.cpp.xml" target="_top">Prev</a>
+</td><td><a href="lufactor.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>LuDetAndSolve</option>
+<option>LuSolve</option>
+<option>lu_solve.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>LuDetAndSolve-&gt;</option>
+<option>LuSolve</option>
+<option>LuFactor</option>
+<option>LuInvert</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>LuSolve-&gt;</option>
+<option>LuSolve.cpp</option>
+<option>lu_solve.hpp</option>
+</select>
+</td>
+<td>lu_solve.hpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Source: LuSolve</big></big></b></center>
+<code><font color="blue"># ifndef CPPAD_LU_SOLVE_INCLUDED 
+<code><span style='white-space: nowrap'><br/>
+</span></code># define CPPAD_LU_SOLVE_INCLUDED
+
+<pre style='display:inline'> 
+# include &lt;complex&gt;
+# include &lt;vector&gt;
+
+// link exp for float and double cases
+# include &lt;cppad/base_require.hpp&gt;
+
+# include &lt;cppad/local/cppad_assert.hpp&gt;
+# include &lt;cppad/check_simple_vector.hpp&gt;
+# include &lt;cppad/check_numeric_type.hpp&gt;
+# include &lt;cppad/lu_factor.hpp&gt;
+# include &lt;cppad/lu_invert.hpp&gt;
+
+namespace CppAD { // BEGIN CppAD namespace
+
+// LeqZero
+template &lt;typename Float&gt;
+inline bool LeqZero(const Float &amp;x)
+{	return x &lt;= Float(0); }
+inline bool LeqZero( const std::complex&lt;double&gt; &amp;x )
+{	return x == std::complex&lt;double&gt;(0); }
+inline bool LeqZero( const std::complex&lt;float&gt; &amp;x )
+{	return x == std::complex&lt;float&gt;(0); }
+
+// LuSolve
+template &lt;typename Float, typename FloatVector&gt;
+int LuSolve(
+	size_t             n      ,
+	size_t             m      , 
+	const FloatVector &amp;A      , 
+	const FloatVector &amp;B      , 
+	FloatVector       &amp;X      , 
+	Float        &amp;logdet      )
+{	
+	// check numeric type specifications
+	CheckNumericType&lt;Float&gt;();
+
+	// check simple vector class specifications
+	CheckSimpleVector&lt;Float, FloatVector&gt;();
+
+	size_t        p;       // index of pivot element (diagonal of L)
+	int     signdet;       // sign of the determinant
+	Float     pivot;       // pivot element
+
+	// the value zero
+	const Float zero(0);
+
+	// pivot row and column order in the matrix
+	std::vector&lt;size_t&gt; ip(n);
+	std::vector&lt;size_t&gt; jp(n);
+
+	// -------------------------------------------------------
+	CPPAD_ASSERT_KNOWN(
+		A.size() == n * n,
+		&quot;Error in LuSolve: A must have size equal to n * n&quot;
+	);
+	CPPAD_ASSERT_KNOWN(
+		B.size() == n * m,
+		&quot;Error in LuSolve: B must have size equal to n * m&quot;
+	);
+	CPPAD_ASSERT_KNOWN(
+		X.size() == n * m,
+		&quot;Error in LuSolve: X must have size equal to n * m&quot;
+	);
+	// -------------------------------------------------------
+
+	// copy A so that it does not change
+	FloatVector Lu(A);
+
+	// copy B so that it does not change
+	X = B;
+
+	// Lu factor the matrix A
+	signdet = LuFactor(ip, jp, Lu);
+
+	// compute the log of the determinant
+	logdet  = Float(0);
+	for(p = 0; p &lt; n; p++)
+	{	// pivot using the max absolute element
+		pivot   = Lu[ ip[p] * n + jp[p] ];
+
+		// check for determinant equal to zero
+		if( pivot == zero )
+		{	// abort the mission
+			logdet = Float(0);
+			return   0;
+		}
+
+		// update the determinant
+		if( LeqZero ( pivot ) )
+		{	logdet += log( - pivot );
+			signdet = - signdet;
+		}
+		else	logdet += log( pivot );
+
+	}
+
+	// solve the linear equations
+	LuInvert(ip, jp, Lu, X);
+
+	// return the sign factor for the determinant
+	return signdet;
+}
+} // END CppAD namespace </pre>
+
+# endif
+</font></code>
+
+
+<hr/>Input File: omh/lu_solve_hpp.omh
+
+</body>
+</html>

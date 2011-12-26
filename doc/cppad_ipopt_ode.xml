@@ -1,0 +1,99 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Example Simultaneous Solution of Forward and Inverse Problem</title>
+<meta name="description" id="description" content="Example Simultaneous Solution of Forward and Inverse Problem"/>
+<meta name="keywords" id="keywords" content=" "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_cppad_ipopt_ode_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ipopt_get_started.cpp.xml" target="_top">Prev</a>
+</td><td><a href="ipopt_ode_problem.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>cppad_ipopt_nlp</option>
+<option>cppad_ipopt_ode</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>cppad_ipopt_nlp-&gt;</option>
+<option>cppad_ipopt_windows</option>
+<option>ipopt_get_started.cpp</option>
+<option>cppad_ipopt_ode</option>
+<option>ipopt_ode_speed.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>cppad_ipopt_ode-&gt;</option>
+<option>ipopt_ode_problem</option>
+<option>ipopt_ode_simple</option>
+<option>ipopt_ode_fast</option>
+<option>ipopt_ode_run.hpp</option>
+<option>ipopt_ode_check.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+<center><b><big><big>Example Simultaneous Solution of Forward and Inverse Problem</big></big></b></center>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<div><a href="ipopt_ode_problem.xml" target="_top">An&#xA0;ODE&#xA0;Inverse&#xA0;Problem&#xA0;Example</a><br/>
+<a href="ipopt_ode_simple.xml" target="_top">ODE&#xA0;Fitting&#xA0;Using&#xA0;Simple&#xA0;Representation</a><br/>
+<a href="ipopt_ode_fast.xml" target="_top">ODE&#xA0;Fitting&#xA0;Using&#xA0;Fast&#xA0;Representation</a><br/>
+<a href="ipopt_ode_run.hpp.xml" target="_top">Driver&#xA0;for&#xA0;Running&#xA0;the&#xA0;Ipopt&#xA0;ODE&#xA0;Example</a><br/>
+<a href="ipopt_ode_check.cpp.xml" target="_top">Correctness&#xA0;Check&#xA0;for&#xA0;Both&#xA0;Simple&#xA0;and&#xA0;Fast&#xA0;Representations</a><br/>
+</div>
+<hr/>Input File: cppad_ipopt/example/ode1.omh
+
+</body>
+</html>

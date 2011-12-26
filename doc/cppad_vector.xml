@@ -1,0 +1,526 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>The CppAD::vector Template Class</title>
+<meta name="description" id="description" content="The CppAD::vector Template Class"/>
+<meta name="keywords" id="keywords" content=" vector Cppad template class assignment [] push_back push_vector push vectorbool thread_alloc exercise Cppad::vector "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_cppad_vector_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="luratio.cpp.xml" target="_top">Prev</a>
+</td><td><a href="cppad_vector.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>CppAD_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>CppAD_vector-&gt;</option>
+<option>CppAD_vector.cpp</option>
+<option>vectorBool.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Description</option>
+<option>Include</option>
+<option>capacity</option>
+<option>Assignment</option>
+<option>Element Access</option>
+<option>push_back</option>
+<option>push_vector</option>
+<option>Output</option>
+<option>resize</option>
+<option>vectorBool</option>
+<option>Memory and Parallel Mode</option>
+<option>Example</option>
+<option>Exercise</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>The CppAD::vector Template Class</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<code><font color="blue"><br/>
+# include &lt;cppad/vector.hpp&gt;</font></code>
+
+<br/>
+<br/>
+<b><big><a name="Description" id="Description">Description</a></big></b>
+<br/>
+The include file <code><font color="blue">cppad/vector.hpp</font></code> defines the
+vector template class <code><font color="blue">CppAD::vector</font></code>.
+This is a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ template class and in addition
+it has the features listed below:
+
+<br/>
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/vector.hpp</font></code> is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest of the 
+CppAD include files.
+
+<br/>
+<br/>
+<b><big><a name="capacity" id="capacity">capacity</a></big></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is a 
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+,
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>cap</span></font></i></code>
+ is a <code><font color="blue">size_t</font></code> object,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>cap</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>.capacity()<br/>
+</span></font></code>
+set 
+<code><i><font color="black"><span style='white-space: nowrap'>cap</span></font></i></code>
+ to the number of 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ objects that
+could fit in the memory currently allocated for 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+.
+Note that
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&lt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>.capacity()<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Assignment" id="Assignment">Assignment</a></big></b>
+
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ are 
+
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ objects,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+has all the properties listed for a
+<a href="simplevector.xml#Assignment" target="_top"><span style='white-space: nowrap'>simple&#xA0;vector&#xA0;assignment</span></a>
+
+plus the following:
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>The <code><font color="blue">CppAD::vector</font></code> template class will check that
+the size of 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is equal to the size of 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+
+before doing the assignment.
+If the sizes are not equal, <code><font color="blue">CppAD::vector</font></code> will use
+<a href="errorhandler.xml" target="_top"><span style='white-space: nowrap'>ErrorHandler</span></a>
+
+to generate an appropriate error report.
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>A reference to the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>y</span></font></i></code>
+ is returned.
+An example use of this reference is in multiple assignments of the form
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>z</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><big><a name="Element Access" id="Element Access">Element Access</a></big></b>
+
+
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is a 
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ object
+and <code><font color="blue">i</font></code> has type <code><font color="blue">size_t</font></code>,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]<br/>
+</span></font></code>
+has all the properties listed for a
+<a href="simplevector.xml#Element Access" target="_top"><span style='white-space: nowrap'>simple&#xA0;vector&#xA0;element&#xA0;access</span></a>
+
+plus the following:
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>The object 
+<code><font color="blue"></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ has type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+
+(is not possibly a different type that can be converted to 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+).
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>If 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ is not less than the size of the 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+,
+<code><font color="blue">CppAD::vector</font></code> will use
+<a href="errorhandler.xml" target="_top"><span style='white-space: nowrap'>ErrorHandler</span></a>
+
+to generate an appropriate error report.
+
+<br/>
+<br/>
+<b><big><a name="push_back" id="push_back">push_back</a></big></b>
+
+
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is a 
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ object
+with size equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+ and
+
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>.push_back(</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+extends the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ so that its new size is 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+ plus one
+and 
+<code><font color="blue"></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+
+(equal in the sense of the 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ assignment operator).
+
+
+<br/>
+<br/>
+<b><big><a name="push_vector" id="push_vector">push_vector</a></big></b>
+
+
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is a 
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ object
+with size equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+ and
+
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i></code>
+ is a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>simple&#xA0;vector</span></a>
+
+with elements of type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ and size 
+<code><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>.push_vector(</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+extends the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ so that its new size is 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>+</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is equal to 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+
+for 
+<code><i><font color="black"><span style='white-space: nowrap'>i&#xA0;=&#xA0;1&#xA0;,&#xA0;...&#xA0;,&#xA0;m-1</span></font></i></code>
+
+(equal in the sense of the 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ assignment operator).
+
+<br/>
+<br/>
+<b><big><a name="Output" id="Output">Output</a></big></b>
+<br/>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ is a 
+<code><font color="blue"><span style='white-space: nowrap'>CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ object
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>os</span></font></i></code>
+ is an <code><font color="blue">std::ostream</font></code>,
+and the operation
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>os</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&lt;&lt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+will output the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ to the standard
+output stream 
+<code><i><font color="black"><span style='white-space: nowrap'>os</span></font></i></code>
+.
+The elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ are enclosed at the beginning by a
+<code><font color="blue">{</font></code> character,
+they are separated by <code><font color="blue">,</font></code> characters,
+and they are enclosed at the end by <code><font color="blue">}</font></code> character.
+It is assumed by this operation that if 
+<code><i><font color="black"><span style='white-space: nowrap'>e</span></font></i></code>
+
+is an object with type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>os</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&lt;&lt;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>e</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+will output the value 
+<code><i><font color="black"><span style='white-space: nowrap'>e</span></font></i></code>
+ to the standard
+output stream 
+<code><i><font color="black"><span style='white-space: nowrap'>os</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="resize" id="resize">resize</a></big></b>
+<br/>
+If the <code><font color="blue">resize</font></code> member function is called with argument
+value zero, all memory allocated for the vector will be freed.
+The can be useful when using very large vectors
+and when checking for memory leaks (and there are global vectors)
+see the <a href="cppad_vector.xml#Memory and Parallel Mode" target="_top"><span style='white-space: nowrap'>memory</span></a>
+ discussion.
+
+<br/>
+<br/>
+<b><big><a name="vectorBool" id="vectorBool">vectorBool</a></big></b>
+
+<br/>
+The file <code><font color="blue">&lt;cppad/vector.hpp&gt;</font></code> also defines the class
+<code><font color="blue">CppAD::vectorBool</font></code>.
+This has the same specifications as <code><font color="blue">CppAD::vector&lt;bool&gt;</font></code> 
+with the following exceptions
+
+<ol type="1"><li>
+The class <code><font color="blue">vectorBool</font></code> conserves on memory
+(on the other hand, <code><font color="blue">CppAD::vector&lt;bool&gt;</font></code> is expected to be faster
+than <code><font color="blue">vectorBool</font></code>).
+
+</li><li>
+
+The <code><font color="blue">CppAD::vectorBool</font></code> output operator
+prints each boolean value as 
+a <code><font color="blue">0</font></code> for false,
+a <code><font color="blue">1</font></code> for true, 
+and does not print any other output; i.e.,
+the vector is written a long sequence of zeros and ones with no
+surrounding <code><font color="blue">{</font></code>, <code><font color="blue">}</font></code> and with no separating commas or spaces. 
+
+</li><li>
+
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>x</span></font></i></code>
+ has type <code><font color="blue">vectorBool</font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>i</span></font></i></code>
+ has type <code><font color="blue">size_t</font></code>,
+the element access value 
+<code><font color="blue"></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ has an unspecified type
+(referred to here as 
+<code><i><font color="black"><span style='white-space: nowrap'>elementType</span></font></i></code>
+)
+that can be implicitly converted to <code><font color="blue">bool</font></code>.
+The return value of the assignment operator
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+also has type 
+<code><i><font color="black"><span style='white-space: nowrap'>elementType</span></font></i></code>
+. Thus, if 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+
+has type <code><font color="blue">bool</font></code>, the syntax
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>z</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>x</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>y</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+is valid.
+</li></ol>
+
+
+<br/>
+<br/>
+<b><big><a name="Memory and Parallel Mode" id="Memory and Parallel Mode">Memory and Parallel Mode</a></big></b>
+
+
+<br/>
+These vectors use the OpenMP fast memory allocator <a href="thread_alloc.xml" target="_top"><span style='white-space: nowrap'>thread_alloc</span></a>
+:
+
+<ol type="1"><li>
+The routine <a href="ta_parallel_setup.xml" target="_top"><span style='white-space: nowrap'>parallel_setup</span></a>
+ must
+be called before these vectors can be used 
+<a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>in&#xA0;parallel</span></a>
+.
+</li><li>
+
+Using these vectors affects the amount of memory 
+<a href="ta_inuse.xml" target="_top"><span style='white-space: nowrap'>in_use</span></a>
+ and <a href="ta_available.xml" target="_top"><span style='white-space: nowrap'>available</span></a>
+.
+</li><li>
+
+Calling <a href="cppad_vector.xml#resize" target="_top"><span style='white-space: nowrap'>resize</span></a>
+ with a zero argument,
+makes the corresponding memory available (though <code><font color="blue">thread_alloc</font></code>)
+to the current thread.
+</li><li>
+
+Available memory
+can then be completely freed using <a href="ta_free_available.xml" target="_top"><span style='white-space: nowrap'>free_available</span></a>
+.
+</li></ol>
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The files
+<a href="cppad_vector.cpp.xml" target="_top"><span style='white-space: nowrap'>CppAD_vector.cpp</span></a>
+ and
+<a href="vectorbool.cpp.xml" target="_top"><span style='white-space: nowrap'>vectorBool.cpp</span></a>
+ each
+contain an example and test of this template class.
+They return true if they succeed and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Exercise" id="Exercise">Exercise</a></big></b>
+
+<br/>
+Create and run a program that contains the following code:
+<code><font color='blue'><pre style='display:inline'> 
+	CppAD::vector&lt;double&gt; x(3);
+	size_t i;
+	for(i = 0; i &lt; 3; i++)
+		x[i] = 4. - i;
+	std::cout &lt;&lt; &quot;x = &quot; &lt;&lt; x &lt;&lt; std::endl;
+</pre></font></code>
+
+
+
+<hr/>Input File: cppad/vector.hpp
+
+</body>
+</html>

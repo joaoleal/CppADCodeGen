@@ -1,0 +1,241 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Speed Testing Utilities</title>
+<meta name="description" id="description" content="Speed Testing Utilities"/>
+<meta name="keywords" id="keywords" content=" speed utility "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_speed_utility_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="microsoft_timer.xml" target="_top">Prev</a>
+</td><td><a href="uniform_01.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Speed Main Program</option>
+<option>Speed Utility Routines</option>
+<option>Library Routines</option>
+<option>Source Code</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+<center><b><big><big>Speed Testing Utilities</big></big></b></center>
+<br/>
+<b><big><a name="Speed Main Program" id="Speed Main Program">Speed Main Program</a></big></b>
+
+<table><tr><td align='left'  valign='top'>
+
+<a href="speed_main.xml" target="_top">speed_main</a></td><td>
+Speed Testing Main Program</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Speed Utility Routines" id="Speed Utility Routines">Speed Utility Routines</a></big></b>
+
+<table><tr><td align='left'  valign='top'>
+
+<a href="det_by_lu.xml" target="_top">det_by_lu</a></td><td>
+Determinant Using Expansion by Lu Factorization</td></tr>
+<tr><td>
+
+<a href="det_by_minor.xml" target="_top">det_by_minor</a></td><td>
+Determinant Using Expansion by Minors</td></tr>
+<tr><td>
+
+<a href="det_of_minor.xml" target="_top">det_of_minor</a></td><td>
+Determinant of a Minor</td></tr>
+<tr><td>
+
+<a href="det_33.xml" target="_top">det_33</a></td><td>
+Check Determinant of 3 by 3 matrix</td></tr>
+<tr><td>
+
+<a href="det_grad_33.xml" target="_top">det_grad_33</a></td><td>
+Check Gradient of Determinant of 3 by 3 matrix</td></tr>
+<tr><td>
+
+<a href="mat_sum_sq.xml" target="_top">mat_sum_sq</a></td><td>
+Sum Elements of a Matrix Times Itself</td></tr>
+<tr><td>
+
+<a href="sparse_evaluate.xml" target="_top">sparse_evaluate</a></td><td>
+Evaluate a Function That Has a Sparse Hessian</td></tr>
+<tr><td>
+
+<a href="uniform_01.xml" target="_top">uniform_01</a></td><td>
+Simulate a [0,1] Uniform Random Variate</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Library Routines" id="Library Routines">Library Routines</a></big></b>
+
+<table><tr><td align='left'  valign='top'>
+
+<a href="lufactor.xml" target="_top">LuFactor</a></td><td>
+LU Factorization of A Square Matrix</td></tr>
+<tr><td>
+
+<a href="luinvert.xml" target="_top">LuInvert</a></td><td>
+Invert an LU Factored Equation</td></tr>
+<tr><td>
+
+<a href="lusolve.xml" target="_top">LuSolve</a></td><td>
+Compute Determinant and Solve Linear Equations</td></tr>
+<tr><td>
+
+<a href="poly.xml" target="_top">Poly</a></td><td>
+Evaluate a Polynomial or its Derivative</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Source Code" id="Source Code">Source Code</a></big></b>
+
+<table><tr><td align='left'  valign='top'>
+
+<a href="det_by_lu.hpp.xml" target="_top">det_by_lu.hpp</a></td><td>
+Source: det_by_lu</td></tr>
+<tr><td>
+
+<a href="det_by_minor.hpp.xml" target="_top">det_by_minor.hpp</a></td><td>
+Source: det_by_minor</td></tr>
+<tr><td>
+
+<a href="det_grad_33.hpp.xml" target="_top">det_grad_33.hpp</a></td><td>
+Source: det_grad_33</td></tr>
+<tr><td>
+
+<a href="det_of_minor.hpp.xml" target="_top">det_of_minor.hpp</a></td><td>
+Source: det_of_minor</td></tr>
+<tr><td>
+
+<a href="lu_factor.hpp.xml" target="_top">lu_factor.hpp</a></td><td>
+Source: LuFactor</td></tr>
+<tr><td>
+
+<a href="lu_invert.hpp.xml" target="_top">lu_invert.hpp</a></td><td>
+Source: LuInvert</td></tr>
+<tr><td>
+
+<a href="lu_solve.hpp.xml" target="_top">lu_solve.hpp</a></td><td>
+Source: LuSolve</td></tr>
+<tr><td>
+
+<a href="mat_sum_sq.hpp.xml" target="_top">mat_sum_sq.hpp</a></td><td>
+Source: mat_sum_sq</td></tr>
+<tr><td>
+
+<a href="poly.hpp.xml" target="_top">poly.hpp</a></td><td>
+Source: Poly</td></tr>
+<tr><td>
+
+<a href="sparse_evaluate.hpp.xml" target="_top">sparse_evaluate.hpp</a></td><td>
+Source: sparse_evaluate</td></tr>
+<tr><td>
+
+<a href="uniform_01.hpp.xml" target="_top">uniform_01.hpp</a></td><td>
+Source: uniform_01</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+
+<hr/>Input File: omh/speed_utility.omh
+
+</body>
+</html>

@@ -1,0 +1,334 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Matrix Multiply as a User Atomic Operation: Example and Test</title>
+<meta name="description" id="description" content="Matrix Multiply as a User Atomic Operation: Example and Test"/>
+<meta name="keywords" id="keywords" content=" user_atomic example test matrix atomic mat_mul "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_mat_mul.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="user_tan.cpp.xml" target="_top">Prev</a>
+</td><td><a href="mat_mul.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>user_atomic</option>
+<option>mat_mul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>user_atomic-&gt;</option>
+<option>user_tan.cpp</option>
+<option>mat_mul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>mat_mul.cpp-&gt;</option>
+<option>mat_mul.hpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Include File</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Matrix Multiply as a User Atomic Operation: Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="Include File" id="Include File">Include File</a></big></b>
+<br/>
+This routine uses the include file <a href="mat_mul.hpp.xml" target="_top"><span style='white-space: nowrap'>mat_mul.hpp</span></a>
+.
+
+<code><font color="blue">
+<pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &quot;mat_mul.hpp&quot;
+
+bool mat_mul(void)
+{	bool ok = true;
+	using CppAD::AD;
+
+	// matrix sizes for this test
+	size_t nr_result = 2;
+	size_t n_middle  = 2;
+	size_t nc_result = 2;
+	
+	// declare the <a href="ad.xml" target="_top">AD</a>&lt;double&gt; vectors ax and ay and X 
+	size_t n = nr_result * n_middle + n_middle * nc_result;
+	size_t m = nr_result * nc_result;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(4), ax(n), ay(m);
+	size_t i, j;
+	for(j = 0; j &lt; X.size(); j++)
+		X[j] = (j + 1);
+
+	// X is the vector of independent variables
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+	// left matrix
+	ax[0]  = X[0];  // left[0,0]   = x[0] = 1
+	ax[1]  = X[1];  // left[0,1]   = x[1] = 2
+	ax[2]  = 5.;    // left[1,0]   = 5
+	ax[3]  = 6.;    // left[1,1]   = 6
+	// right matrix
+	ax[4]  = X[2];  // right[0,0]  = x[2] = 3
+	ax[5]  = 7.;    // right[0,1]  = 7
+	ax[6]  = X[3];  // right[1,0]  = x[3] = 4 
+	ax[7]  = 8.;    // right[1,1]  = 8
+	/*
+	[ x0 , x1 ] * [ x2 , 7 ] = [ x0*x2 + x1*x3 , x0*7 + x1*8 ]
+	[ 5  , 6 ]    [ x3 , 8 ]   [ 5*x2  + 6*x3  , 5*7 + 6*8 ]
+	*/
+
+	// The call back routines need to know the dimensions of the matrices.
+	// Store information about the matrix multiply for this call to mat_mul.
+	call_info info;
+	info.nr_result = nr_result;
+	info.n_middle  = n_middle;
+	info.nc_result = nc_result;
+	// info.vx gets set by forward during call to mat_mul below
+	assert( info.vx.size() == 0 ); 
+	size_t id      = info_.size();
+	info_.push_back(info);
+
+	// user defined <a href="ad.xml" target="_top">AD</a>&lt;double&gt; version of matrix multiply
+	mat_mul(id, ax, ay);
+	//----------------------------------------------------------------------
+	// check <a href="ad.xml" target="_top">AD</a>&lt;double&gt;  results
+	ok &amp;= ay[0] == (1*3 + 2*4); ok &amp;= Variable( ay[0] );
+	ok &amp;= ay[1] == (1*7 + 2*8); ok &amp;= Variable( ay[1] );
+	ok &amp;= ay[2] == (5*3 + 6*4); ok &amp;= Variable( ay[2] );
+	ok &amp;= ay[3] == (5*7 + 6*8); ok &amp;= Parameter( ay[3] );
+	//----------------------------------------------------------------------
+	// use mat_mul to define a function g : X -&gt; ay
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; G(X, ay);
+	// g(x) = [ x0*x2 + x1*x3 , x0*7 + x1*8 , 5*x2  + 6*x3  , 5*7 + 6*8 ]^T
+	//----------------------------------------------------------------------
+	// Test zero order forward mode evaluation of g(x)
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x( X.size() ), y(m);
+	for(j = 0; j &lt;  X.size() ; j++)
+		x[j] = j + 2;
+	y = G.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok &amp;= y[0] == x[0] * x[2] + x[1] * x[3];
+	ok &amp;= y[1] == x[0] * 7.   + x[1] * 8.;
+	ok &amp;= y[2] == 5. * x[2]   + 6. * x[3];
+	ok &amp;= y[3] == 5. * 7.     + 6. * 8.;
+
+	//----------------------------------------------------------------------
+	// Test first order forward mode evaluation of g'(x) * [1, 2, 3, 4]^T 
+	// g'(x) = [ x2, x3, x0, x1 ]
+	//         [ 7 ,  8,  0, 0  ]
+	//         [ 0 ,  0,  5, 6  ]
+	//         [ 0 ,  0,  0, 0  ] 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx( X.size() ), dy(m);
+	for(j = 0; j &lt;  X.size() ; j++)
+		dx[j] = j + 1;
+	dy = G.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+	ok &amp;= dy[0] == 1. * x[2] + 2. * x[3] + 3. * x[0] + 4. * x[1];
+	ok &amp;= dy[1] == 1. * 7.   + 2. * 8.   + 3. * 0.   + 4. * 0.;
+	ok &amp;= dy[2] == 1. * 0.   + 2. * 0.   + 3. * 5.   + 4. * 6.;
+	ok &amp;= dy[3] == 1. * 0.   + 2. * 0.   + 3. * 0.   + 4. * 0.;
+
+	//----------------------------------------------------------------------
+	// Test second order forward mode 
+	// g_0^2 (x) = [ 0, 0, 1, 0 ], g_0^2 (x) * [1] = [3]
+	//             [ 0, 0, 0, 1 ]              [2]   [4]
+	//             [ 1, 0, 0, 0 ]              [3]   [1]
+	//             [ 0, 1, 0, 0 ]              [4]   [2]
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; ddx( X.size() ), ddy(m);
+	for(j = 0; j &lt;  X.size() ; j++)
+		ddx[j] = 0.;
+	ddy = G.<a href="forward.xml" target="_top">Forward</a>(2, ddx);
+	// [1, 2, 3, 4] * g_0^2 (x) * [1, 2, 3, 4]^T = 1*3 + 2*4 + 3*1 + 4*2
+	ok &amp;= 2. * ddy[0] == 1. * 3. + 2. * 4. + 3. * 1. + 4. * 2.; 
+	// for i &gt; 0, [1, 2, 3, 4] * g_i^2 (x) * [1, 2, 3, 4]^T = 0
+	ok &amp;= ddy[1] == 0.;
+	ok &amp;= ddy[2] == 0.;
+	ok &amp;= ddy[3] == 0.;
+
+	//----------------------------------------------------------------------
+	// Test second order reverse mode 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; w(m), dw(2 *  X.size() );
+	for(i = 0; i &lt; m; i++)
+		w[i] = 0.;
+	w[0] = 1.;
+	dw = G.<a href="reverse.xml" target="_top">Reverse</a>(2, w);
+	// g_0'(x) = [ x2, x3, x0, x1 ]
+	ok &amp;= dw[0*2 + 0] == x[2];
+	ok &amp;= dw[1*2 + 0] == x[3];
+	ok &amp;= dw[2*2 + 0] == x[0];
+	ok &amp;= dw[3*2 + 0] == x[1];
+	// g_0'(x)   * [1, 2, 3, 4]  = 1 * x2 + 2 * x3 + 3 * x0 + 4 * x1
+	// g_0^2 (x) * [1, 2, 3, 4]  = [3, 4, 1, 2]
+	ok &amp;= dw[0*2 + 1] == 3.;
+	ok &amp;= dw[1*2 + 1] == 4.;
+	ok &amp;= dw[2*2 + 1] == 1.;
+	ok &amp;= dw[3*2 + 1] == 2.;
+
+	//----------------------------------------------------------------------
+	// Test forward and reverse Jacobian sparsity pattern
+	/*
+	[ x0 , x1 ] * [ x2 , 7 ] = [ x0*x2 + x1*x3 , x0*7 + x1*8 ]
+	[ 5  , 6 ]    [ x3 , 8 ]   [ 5*x2  + 6*x3  , 5*7 + 6*8 ]
+	so the sparsity pattern should be
+	s[0] = {0, 1, 2, 3}
+	s[1] = {0, 1}
+	s[2] = {2, 3}
+	s[3] = {}
+	*/
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; std::set&lt;size_t&gt; &gt; r( X.size() ), s(m);
+	for(j = 0; j &lt;  X.size() ; j++)
+	{	assert( r[j].empty() );
+		r[j].insert(j);
+	}
+	s = G.ForSparseJac( X.size() , r);
+	for(j = 0; j &lt;  X.size() ; j++)
+	{	// s[0] = {0, 1, 2, 3}
+		ok &amp;= s[0].find(j) != s[0].end();
+		// s[1] = {0, 1}
+		if( j == 0 || j == 1 )
+			ok &amp;= s[1].find(j) != s[1].end();
+		else	ok &amp;= s[1].find(j) == s[1].end();
+		// s[2] = {2, 3}
+		if( j == 2 || j == 3 )
+			ok &amp;= s[2].find(j) != s[2].end();
+		else	ok &amp;= s[2].find(j) == s[2].end();
+	}
+	// s[3] == {}
+	ok &amp;= s[3].empty();
+	
+	//----------------------------------------------------------------------
+	// Test reverse Jacobian sparsity pattern
+	/*
+	[ x0 , x1 ] * [ x2 , 7 ] = [ x0*x2 + x1*x3 , x0*7 + x1*8 ]
+	[ 5  , 6 ]    [ x3 , 8 ]   [ 5*x2  + 6*x3  , 5*7 + 6*8 ]
+	so the sparsity pattern should be
+	r[0] = {0, 1, 2, 3}
+	r[1] = {0, 1}
+	r[2] = {2, 3}
+	r[3] = {}
+	*/
+	for(i = 0; i &lt;  m; i++)
+	{	s[i].clear();
+		s[i].insert(i);
+	}
+	r = G.RevSparseJac(m, s);
+	for(j = 0; j &lt;  X.size() ; j++)
+	{	// r[0] = {0, 1, 2, 3}
+		ok &amp;= r[0].find(j) != r[0].end();
+		// r[1] = {0, 1}
+		if( j == 0 || j == 1 )
+			ok &amp;= r[1].find(j) != r[1].end();
+		else	ok &amp;= r[1].find(j) == r[1].end();
+		// r[2] = {2, 3}
+		if( j == 2 || j == 3 )
+			ok &amp;= r[2].find(j) != r[2].end();
+		else	ok &amp;= r[2].find(j) == r[2].end();
+	}
+	// r[3] == {}
+	ok &amp;= r[3].empty();
+
+	//----------------------------------------------------------------------
+	/* Test reverse Hessian sparsity pattern
+	g_0^2 (x) = [ 0, 0, 1, 0 ] and for i &gt; 0, g_i^2 = 0
+	            [ 0, 0, 0, 1 ]
+	            [ 1, 0, 0, 0 ]
+	            [ 0, 1, 0, 0 ]
+	so for the sparsity pattern for the first component of g is
+	h[0] = {2}
+	h[1] = {3}
+	h[2] = {0}
+	h[3] = {1}
+	*/
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; std::set&lt;size_t&gt; &gt; h( X.size() ), t(1);
+	t[0].clear();
+	t[0].insert(0);
+	h = G.RevSparseHes(X.size() , t);
+	size_t check[] = {2, 3, 0, 1};
+	for(j = 0; j &lt;  X.size() ; j++)
+	{	// h[j] = { check[j] }
+		for(i = 0; i &lt; n; i++) 
+		{	if( i == check[j] )
+				ok &amp;= h[j].find(i) != h[j].end();
+			else	ok &amp;= h[j].find(i) == h[j].end();
+		}
+	}
+	t[0].clear();
+	for( j = 1; j &lt; X.size(); j++)
+			t[0].insert(j);
+	h = G.RevSparseHes(X.size() , t);
+	for(j = 0; j &lt;  X.size() ; j++)
+	{	// h[j] = { }
+		for(i = 0; i &lt; X.size(); i++) 
+			ok &amp;= h[j].find(i) == h[j].end();
+	}
+
+	// --------------------------------------------------------------------
+	// Free temporary work space. (If there are future calls to 
+	// mat_mul they would create new temporary work space.)
+	CppAD::user_atomic&lt;double&gt;::clear();
+	info_.resize(0);
+
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/mat_mul.cpp
+
+</body>
+</html>

@@ -1,0 +1,730 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Differentiate Conjugate Gradient Algorithm: Example and Test</title>
+<meta name="description" id="description" content="Differentiate Conjugate Gradient Algorithm: Example and Test"/>
+<meta name="keywords" id="keywords" content=" gradient conjugate example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_conj_grad.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ad_in_c.cpp.xml" target="_top">Prev</a>
+</td><td><a href="hesminordet.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>General</option>
+<option>conj_grad.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>General-&gt;</option>
+<option>ad_fun.cpp</option>
+<option>ad_in_c.cpp</option>
+<option>conj_grad.cpp</option>
+<option>HesMinorDet.cpp</option>
+<option>HesLuDet.cpp</option>
+<option>Interface2C.cpp</option>
+<option>JacMinorDet.cpp</option>
+<option>JacLuDet.cpp</option>
+<option>mul_level</option>
+<option>OdeStiff.cpp</option>
+<option>ode_taylor.cpp</option>
+<option>ode_taylor_adolc.cpp</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>conj_grad.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Algorithm</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Differentiate Conjugate Gradient Algorithm: Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+The conjugate gradient algorithm is sparse linear solver and
+a good example where checkpointing can be applied (for each iteration). 
+This example is a preliminary version of a new library routine 
+for the conjugate gradient algorithm.
+
+<br/>
+<br/>
+<b><big><a name="Algorithm" id="Algorithm">Algorithm</a></big></b>
+<br/>
+Given a positive definite matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+,
+a vector 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>b</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+,
+and tolerance 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='normal'>&#x003B5;</mi>
+</mrow></math>
+
+,
+the conjugate gradient algorithm finds an 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ 
+such that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02016;</mo>
+<mi mathvariant='italic'>A</mi>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>b</mi>
+<msup><mo stretchy="false">&#x02016;</mo>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x02264;</mo>
+<msup><mi mathvariant='normal'>&#x003B5;</mi>
+<mn>2</mn>
+</msup>
+</mrow></math>
+
+
+(or it terminates at a specified maximum number of iterations).
+
+<ol type="1"><li>
+Input: 
+<code><span style='white-space: nowrap'><br/>
+</span></code>The matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+, 
+the vector 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>b</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+,
+a tolerance 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='normal'>&#x003B5;</mi>
+<mo stretchy="false">&#x02265;</mo>
+<mn>0</mn>
+</mrow></math>
+
+,
+a maximum number of iterations 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>m</mi>
+</mrow></math>
+
+,
+and the initial approximate solution 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+
+(can use zero for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+</mrow></math>
+
+).
+
+</li><li>
+
+Initialize:
+<code><span style='white-space: nowrap'><br/>
+</span></code>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>g</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>A</mi>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>b</mi>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>d</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">-</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mn>0</mn>
+</msup>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>s</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mn>0</mn>
+</msup>
+<msup><mo stretchy="false">)</mo>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+<msup><mi mathvariant='italic'>g</mi>
+<mn>0</mn>
+</msup>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+.
+
+</li><li>
+
+Convergence Check:
+<code><span style='white-space: nowrap'><br/>
+</span></code>if 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>m</mi>
+</mrow></math>
+
+ or 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msqrt><mrow><msub><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>k</mi>
+</msub>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow>
+</msqrt>
+<mo stretchy="false">&lt;</mo>
+<mi mathvariant='normal'>&#x003B5;</mi>
+</mrow></math>
+
+,
+return 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+ as the number of iterations and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mrow></math>
+
+ 
+as the approximate solution.
+
+</li><li>
+
+Next 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+:
+<code><span style='white-space: nowrap'><br/>
+</span></code>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='normal'>&#x003BC;</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>k</mi>
+</msub>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">[</mo>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>d</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<msup><mo stretchy="false">)</mo>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+<mi mathvariant='italic'>A</mi>
+<msup><mi mathvariant='italic'>d</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='normal'>&#x003BC;</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<msup><mi mathvariant='italic'>d</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mrow></math>
+
+.
+
+</li><li>
+
+Next 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>g</mi>
+</mrow></math>
+
+:
+<code><span style='white-space: nowrap'><br/>
+</span></code>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">+</mo>
+<msub><mi mathvariant='normal'>&#x003BC;</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mi mathvariant='italic'>A</mi>
+<msup><mi mathvariant='italic'>d</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>s</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<msup><mo stretchy="false">)</mo>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+</mrow></math>
+
+.
+
+</li><li>
+
+Next 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>d</mi>
+</mrow></math>
+
+:
+<code><span style='white-space: nowrap'><br/>
+</span></code>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>d</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">-</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>s</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>s</mi>
+<mi mathvariant='italic'>k</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<msup><mi mathvariant='italic'>d</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mrow></math>
+
+.
+
+</li><li>
+
+Iterate: 
+<code><span style='white-space: nowrap'><br/>
+</span></code>
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow></math>
+
+,
+goto Convergence Check.
+</li></ol>
+
+
+<code><font color="blue">
+<pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cstdlib&gt;
+# include &lt;cmath&gt;
+
+namespace { // Begin empty namespace
+	using CppAD::AD;
+
+	// A simple matrix multiply c = a * b , where a has n columns 
+	// and b has n rows. This should be changed to a function so that
+	// it can efficiently handle the case were A is large and sparse.
+	template &lt;class Vector&gt; // a simple vector class
+	void mat_mul(size_t n, const Vector&amp; a, const Vector&amp; b, Vector&amp; c)
+	{	typedef typename Vector::value_type scalar;
+
+		size_t m, p;
+		m = a.size() / n;
+		p = b.size() / n;
+
+		assert( m * n == a.size() );
+		assert( n * p == b.size() );
+		assert( m * p == c.size() );
+
+		size_t i, j, k, ij;
+		for(i = 0; i &lt; m; i++)
+		{	for(j = 0; j &lt; p; j++)
+			{	ij    = i * p + j;
+				c[ij] = scalar(0);
+				for(k = 0; k &lt; n; k++)
+					c[ij] = c[ij] + a[i * m + k] * b[k * p + j];
+			}
+		}
+		return;
+	}
+
+	// Solve A * x == b to tolerance epsilon or terminate at m interations.
+	template &lt;class Vector&gt; // a simple vector class
+	size_t conjugate_gradient(
+		size_t         m       , // input
+		double         epsilon , // input
+		const Vector&amp;  A       , // input
+		const Vector&amp;  b       , // input
+		Vector&amp;        x       ) // input / output
+	{	typedef typename Vector::value_type scalar;
+		scalar mu, s_previous;
+		size_t i, k;
+
+		size_t n = x.size();
+		assert( A.size() == n * n );
+		assert( b.size() == n );
+
+		Vector g(n), d(n), s(1), Ad(n), dAd(1);
+
+		// g = A * x
+		mat_mul(n, A, x, g);
+		for(i = 0; i &lt; n; i++)
+		{	// g = A * x - b
+			g[i] = g[i] - b[i];
+
+			// d = - g
+			d[i] = -g[i];
+		}
+		// s = g^T * g
+		mat_mul(n, g, g, s);
+
+		for(k = 0; k &lt; m; k++)
+		{	s_previous = s[0];
+			if( s_previous &lt; epsilon )
+				return k;
+
+			// Ad = A * d
+			mat_mul(n, A, d, Ad);
+
+			// dAd = d^T * A * d
+			mat_mul(n, d, Ad, dAd);
+
+			// mu = s / d^T * A * d
+			mu = s_previous / dAd[0];
+
+			// g = g + mu * A * d 
+			for(i = 0; i &lt; n; i++)
+			{	x[i] = x[i] + mu * d[i];
+				g[i] = g[i] + mu * Ad[i];
+			}
+
+			// s = g^T * g
+			mat_mul(n, g, g, s);
+
+			// d = - g + (s / s_previous) * d
+			for(i = 0; i &lt; n; i++)
+				d[i] = - g[i] + ( s[0] / s_previous) * d[i];
+		}
+		return m;
+	}
+
+} // End empty namespace
+
+bool conj_grad(void)
+{	bool ok = true;
+
+	// ----------------------------------------------------------------------
+	// Setup
+	// ----------------------------------------------------------------------
+	using CppAD::AD;
+	using CppAD::NearEqual;
+	using CppAD::vector;
+	using std::cout;
+	using std::endl;
+	size_t i, j;
+
+
+	// size of the vectors  
+	size_t n  = 40;
+	vector&lt;double&gt; D(n * n), Dt(n * n), A(n * n), x(n), b(n), c(n);
+	vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; a_A(n * n), a_x(n), a_b(n);
+
+	// D = diagonally dominant matrix
+	// c = vector of ones
+	for(i = 0; i &lt; n; i++)
+	{	c[i] = 1.;
+		double sum = 0;
+		for(j = 0; j &lt; n; j++) if( i != j )
+		{	D[ i * n + j ] = std::rand() / double(RAND_MAX);
+			Dt[j * n + i ] = D[i * n + j ];
+			sum           += D[i * n + j ];
+		}
+		Dt[ i * n + i ] = D[ i * n + i ] = sum * 1.1;
+	}
+
+	// A = D^T * D
+	mat_mul(n, Dt, D, A);
+
+	// b = D^T * c
+	mat_mul(n, Dt, c, b);
+
+	// copy from double to <a href="ad.xml" target="_top">AD</a>&lt;double&gt;
+	for(i = 0; i &lt; n; i++)
+	{	a_b[i] = b[i];
+		for(j = 0; j &lt; n; j++)
+			a_A[ i * n + j ] = A[ i * n + j ];
+	}
+
+	// ---------------------------------------------------------------------
+	// Record the function f : b -&gt; x
+	// ---------------------------------------------------------------------
+	// Make b the independent variable vector
+	<a href="independent.xml" target="_top">Independent</a>(a_b);
+
+	// Solve A * x = b using conjugate gradient method
+	double epsilon = 1e-7;
+	for(i = 0; i &lt; n; i++)
+			a_x[i] = <a href="ad.xml" target="_top">AD</a>&lt;double&gt;(0);
+	size_t m = n + 1;
+	size_t k = conjugate_gradient(m, epsilon, a_A, a_b, a_x);
+
+	// create f_cg: b -&gt; x and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(a_b, a_x);
+
+	// ---------------------------------------------------------------------
+	// Check for correctness
+	// ---------------------------------------------------------------------
+
+	// conjugate gradient should converge with in n iterations
+	ok &amp;= (k &lt;= n);
+
+	// accuracy to which we expect values to agree
+	double delta = 10. * epsilon * std::sqrt( double(n) );
+
+	// copy x from <a href="ad.xml" target="_top">AD</a>&lt;double&gt; to double
+	for(i = 0; i &lt; n; i++)
+		x[i] = Value( a_x[i] );
+
+	// check c = A * x
+	mat_mul(n, A, x, c);
+	for(i = 0; i &lt; n; i++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(c[i] , b[i],  delta , delta);
+
+	// forward computation of partials w.r.t. b[0]
+	vector&lt;double&gt; db(n), dx(n);
+	for(j = 0; j &lt; n; j++)
+		db[j] = 0.;
+	db[0] = 1.;
+
+	// check db = A * dx 
+	delta = 5. * delta;
+	dx = f.<a href="forward.xml" target="_top">Forward</a>(1, db);
+	mat_mul(n, A, dx, c);
+	for(i = 0; i &lt; n; i++)
+		ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(c[i], db[i], delta, delta);
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/conj_grad.cpp
+
+</body>
+</html>

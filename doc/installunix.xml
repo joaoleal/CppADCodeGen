@@ -1,0 +1,830 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Unix Download, Test and Installation</title>
+<meta name="description" id="description" content="Unix Download, Test and Installation"/>
+<meta name="keywords" id="keywords" content=" Cppad unix install free Fedora rpm cppad.spec download tar file configure speed profile cppad prefix directory documentation std::vector vector std boost compile flags Openmp postfix Adolc Fadbad Sacado Ipopt memory usage tape "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_installunix_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="install.xml" target="_top">Prev</a>
+</td><td><a href="subversion.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Install</option>
+<option>InstallUnix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Install-&gt;</option>
+<option>InstallUnix</option>
+<option>pkgconfig</option>
+<option>InstallWindows</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>InstallUnix-&gt;</option>
+<option>subversion</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Fedora</option>
+<option>RPM</option>
+<option>Download</option>
+<option>---..Subversion</option>
+<option>---..Web Link</option>
+<option>---..Unix Tar Files</option>
+<option>---..Tar File Extraction</option>
+<option>---..Work Directory</option>
+<option>Configure</option>
+<option>make</option>
+<option>---..Examples and Tests</option>
+<option>Profiling CppAD</option>
+<option>PrefixDir</option>
+<option>--with-Documentation</option>
+<option>--with-stdvector</option>
+<option>--with-boostvector</option>
+<option>CompilerFlags</option>
+<option>OpenmpFlags</option>
+<option>PostfixDir</option>
+<option>AdolcDir</option>
+<option>---..Linux</option>
+<option>---..Cygwin</option>
+<option>FadbadDir</option>
+<option>SacadoDir</option>
+<option>BoostDir</option>
+<option>IpoptDir</option>
+<option>TapeAddrType</option>
+<option>make install</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Unix Download, Test and Installation</big></big></b></center>
+<br/>
+<b><big><a name="Fedora" id="Fedora">Fedora</a></big></b>
+
+
+<br/>
+CppAD is available through yum on the Fedora operating system starting
+Fedora version 7. You can download and install CppAD with the instruction
+<code><font color="blue">
+	yum install cppad-devel
+</font></code>
+(In Fedora, <code><font color="blue">devel</font></code> is used for program development tools.)
+You can download and install the corresponding version of the
+documentation using the command
+<code><font color="blue">
+	yum install cppad-doc
+</font></code> 
+
+<br/>
+<br/>
+<b><big><a name="RPM" id="RPM">RPM</a></big></b>
+
+
+<br/>
+If you want to use the Fedora <code><font color="blue">cppad.spec</font></code> file
+to build an RPM for some other operating system,
+it can be found at
+<code><span style='white-space: nowrap'><br/>
+</span></code><a href="https://projects.coin-or.org/CppAD/browser/trunk/cppad.spec" target="_top"><span style='white-space: nowrap'>https://projects.coin-or.org/CppAD/browser/trunk/cppad.spec</span></a>
+
+
+
+<br/>
+<br/>
+<b><big><a name="Download" id="Download">Download</a></big></b>
+
+
+
+
+
+<br/>
+<br/>
+<b><a name="Download.Subversion" id="Download.Subversion">Subversion</a></b>
+<br/>
+If you are familiar with subversion, you may want to follow
+the more complicated CppAD download instructions;
+see the following <a href="subversion.xml" target="_top"><span style='white-space: nowrap'>subversion&#xA0;instructions</span></a>
+.
+
+<br/>
+<br/>
+<b><a name="Download.Web Link" id="Download.Web Link">Web Link</a></b>
+<br/>
+If you are not using the subversion download instructions,
+make sure you are reading the web version of this documentation by
+following the link 
+<a href="http://www.coin-or.org/CppAD/Doc/installunix.htm" target="_top"><span style='white-space: nowrap'>web&#xA0;version</span></a>
+.
+Then proceed with the instruction that appear below this point.
+
+<br/>
+<br/>
+<b><a name="Download.Unix Tar Files" id="Download.Unix Tar Files">Unix Tar Files</a></b>
+
+
+<br/>
+The download files below were first archived with <code><font color="blue">tar</font></code>
+and then compressed with <code><font color="blue">gzip</font></code>:
+The ascii files for these downloads are in 
+Unix format; i.e., each line ends with just a line feed.
+
+<table><tr><td align='left'  valign='top'>
+
+CPL License <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="cppad-20111219.cpl.tgz" target="_top"><span style='white-space: nowrap'>cppad-20111219.cpl.tgz</span></a>
+ 
+</td></tr><tr><td align='left'  valign='top'>
+
+GPL License <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="cppad-20111219.gpl.tgz" target="_top"><span style='white-space: nowrap'>cppad-20111219.gpl.tgz</span></a>
+
+</td></tr>
+</table>
+<br/>
+<b><a name="Download.Tar File Extraction" id="Download.Tar File Extraction">Tar File Extraction</a></b>
+<br/>
+Use the unix command
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;tar&#xA0;-xvzf&#xA0;cppad-20111219.</span></font><i><font color="black"><span style='white-space: nowrap'>license</span></font></i><font color="blue"><span style='white-space: nowrap'>.tgz<br/>
+</span></font></code>
+(where 
+<code><i><font color="black"><span style='white-space: nowrap'>license</span></font></i></code>
+ is <code><font color="blue">cpl</font></code> or <code><font color="blue">gpl</font></code>)
+to decompress and extract the unix format version
+into the distribution directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cppad-20111219<br/>
+</span></font></code>
+To see if this has been done correctly, check for the following file:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cppad-20111219/cppad/cppad.hpp<br/>
+</span></font></code>
+<br/>
+<b><a name="Download.Work Directory" id="Download.Work Directory">Work Directory</a></b>
+<br/>
+Create the directory <code><font color="blue">cppad-20111219/work</font></code>,
+which will be referred to as the work directory below.
+
+<br/>
+<br/>
+<b><big><a name="Configure" id="Configure">Configure</a></big></b>
+<br/>
+Execute the following command in the work directory:
+
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;./configure&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;--prefix=</span></font><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;--with-Documentation&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;--with-stdvector&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\&#xA0;&#xA0;<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;--with-boostvector&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\&#xA0;&#xA0;<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CXX_FLAGS=</span></font><i><font color="black"><span style='white-space: nowrap'>CompilerFlags</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;OPENMP_FLAGS=</span></font><i><font color="black"><span style='white-space: nowrap'>OpenmpFlags</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;POSTFIX_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>PostfixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;ADOLC_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;FADBAD_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>FadbadDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;SADADO_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>SacadoDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;BOOST_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>BoostDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;IPOPT_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>IpoptDir</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;\<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;TAPE_ADDR_TYPE=</span></font><i><font color="black"><span style='white-space: nowrap'>TapeAddrType</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+where only the <code><font color="blue">configure</font></code> line need appear; i.e.,
+the entries one each of the other lines are optional.
+The text in italic is replaced values that you choose;
+see discussion below.
+
+<br/>
+<br/>
+<b><big><a name="make" id="make">make</a></big></b>
+<br/>
+CppAD has some object libraries that are used for its correctness tests.
+(Currently, none of these libraries get installed.)
+You can build these libraries by executing the command
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;<br/>
+</span></font></code>
+in the work directory.
+
+<br/>
+<br/>
+<b><a name="make.Examples and Tests" id="make.Examples and Tests">Examples and Tests</a></b>
+<br/>
+Once you have executed the <code><font color="blue">make</font></code> command,
+you can run the correctness and speed tests.
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>The following command will build all the correctness and speed tests.
+In addition, it will run all the correctness tests:
+<code><font color='blue'><pre style='display:inline'> 
+	make test
+</pre></font></code>
+
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>The following links describe how to build and run subsets of these tests:
+<table><tr><td align='left'  valign='top'>
+
+<a href="get_started.cpp.xml#Running" target="_top"><span style='white-space: nowrap'>get_started</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Getting Started Using CppAD to Compute Derivatives 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="exp_apx_main.cpp.xml#Running Tests" target="_top"><span style='white-space: nowrap'>exp_apx_main</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Correctness Tests For Exponential Approximation in Introduction 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="example.cpp.xml#Running Tests" target="_top"><span style='white-space: nowrap'>example</span></a>
+  
+	</td><td align='left'  valign='top'>
+ CppAD Examples and Tests 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="print_for_cout.cpp.xml#Running" target="_top"><span style='white-space: nowrap'>print_for_cout</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Printing During Forward Mode: Example and Test 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_example.cpp.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_example</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Run the Speed Examples 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_double.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_double</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Speed Test of Functions in Double 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_adolc.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_adolc</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Speed Test of Derivatives Using Adolc 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_cppad.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_cppad</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Speed Test Derivatives Using CppAD 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_fadbad.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_fadbad</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Speed Test Derivatives Using Fadbad 
+</td></tr><tr><td align='left'  valign='top'>
+
+<a href="speed_sacado.xml#Running Tests" target="_top"><span style='white-space: nowrap'>speed_sacado</span></a>
+  
+	</td><td align='left'  valign='top'>
+ Speed Test Derivatives Using Sacado 
+</td></tr>
+</table>
+In addition,
+you can run a large subset of correctness tests 
+(that are not intended to be examples)
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;test_more<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+<br/>
+<b><big><a name="Profiling CppAD" id="Profiling CppAD">Profiling CppAD</a></big></b>
+
+
+
+<br/>
+The CppAD derivative speed tests mentioned above can be profiled.
+You can test that the results computed during this profiling are correct
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/profile<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+After executing <code><font color="blue">make test</font></code>, you can run a profile speed test 
+by executing the command <code><font color="blue">./profile</font></code>;
+see <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for the meaning of the command line
+options to this program.
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>After you have run a profiling speed test,
+you can then obtain the profiling results with
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;gprof&#xA0;-b&#xA0;profile<br/>
+</span></font></code>
+If you are using a windows operating system with Cygwin or MinGW, 
+you may have to replace <code><font color="blue">profile</font></code> by <code><font color="blue">profile.exe</font></code>
+in the <code><font color="blue">gprof</font></code> command above; i.e.,
+<code><font color='blue'><pre style='display:inline'> 
+	gprof -b profile.exe
+</pre></font></code>
+
+In C++, template parameters and argument types become part of a 
+routines's name.
+This can make the <code><font color="blue">gprof</font></code> output hard to read 
+(the routine names can be very long).
+You can remove the template parameters and argument types from the 
+routine names by executing the following command
+<code><font color='blue'><pre style='display:inline'> 
+	gprof -b profile | sed -f gprof.sed
+</pre></font></code>
+
+If you are using a windows operating system with Cygwin or MinGW, 
+you would need to use
+<code><font color='blue'><pre style='display:inline'> 
+	gprof -b profile.exe | sed -f gprof.sed
+</pre></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="PrefixDir" id="PrefixDir">PrefixDir</a></big></b>
+
+
+
+<br/>
+The default value for prefix directory is <code><font color="blue">$HOME</font></code>
+i.e., by default the CppAD include files 
+will <a href="installunix.xml#make install" target="_top"><span style='white-space: nowrap'>install</span></a>
+ below <code><font color="blue">$HOME</font></code>.
+If you want to install elsewhere, you will have to use this option.
+As an example of using the 
+<code><font color="blue"><span style='white-space: nowrap'>--prefix=</span></font><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i></code>
+ option,
+if you specify
+<code><font color='blue'><pre style='display:inline'> 
+	./configure --prefix=/usr/local
+</pre></font></code>
+ 
+the CppAD include files will be installed in the directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;/usr/local/include/cppad<br/>
+</span></font></code>
+If <a href="installunix.xml#--with-Documentation" target="_top"><span style='white-space: nowrap'>--with-Documentation</span></a>
+
+is specified, the CppAD documentation files will be installed in the directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;/usr/local/share/doc/cppad-20111219<br/>
+</span></font></code>
+<br/>
+<b><big><a name="--with-Documentation" id="--with-Documentation">--with-Documentation</a></big></b>
+
+
+<br/>
+If the command line argument <code><font color="blue">--with-Documentation</font></code> is specified,
+the CppAD documentation HTML and XML files are copied to the directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/share/doc/</span></font><i><font color="black"><span style='white-space: nowrap'>PostfixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad-20111219<br/>
+</span></font></code>
+(see <a href="installunix.xml#PostfixDir" target="_top"><span style='white-space: nowrap'>PostfixDir</span></a>
+).
+The top of the CppAD HTML documentation tree 
+(with mathematics displayed as LaTex command) will be located at
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/share/doc/</span></font><i><font color="black"><span style='white-space: nowrap'>PostfixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad-20111219/cppad.htm<br/>
+</span></font></code>
+and the top of the XML documentation tree
+(with mathematics displayed as MathML) will be located at
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/share/doc/</span></font><i><font color="black"><span style='white-space: nowrap'>PostfixDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/cppad-20111219/cppad.xml<br/>
+</span></font></code>
+<br/>
+<b><big><a name="--with-stdvector" id="--with-stdvector">--with-stdvector</a></big></b>
+
+
+<br/>
+The 
+<small><a href="test_vector.xml" target="_top"><span style='white-space: nowrap'>CPPAD_TEST_VECTOR</span></a>
+ </small>
+template class is used for extensive examples and testing of CppAD.
+If the command line argument <code><font color="blue">--with-stdvector</font></code> is specified,
+the default definition this template class is replaced by
+<code><font color='blue'><pre style='display:inline'> 
+	std::vector
+</pre></font></code>
+
+In this case <code><font color="blue">--with-boostvector</font></code> must not also be specified.
+
+<br/>
+<br/>
+<b><big><a name="--with-boostvector" id="--with-boostvector">--with-boostvector</a></big></b>
+
+
+<br/>
+The 
+<small><a href="test_vector.xml" target="_top"><span style='white-space: nowrap'>CPPAD_TEST_VECTOR</span></a>
+ </small>
+template class is used for extensive examples and testing of CppAD.
+If the command line argument <code><font color="blue">--with-boostvector</font></code> is specified,
+the default definition this template class is replaced by
+<code><font color='blue'><pre style='display:inline'> 
+	boost::numeric::ublas::vector
+</pre></font></code>
+
+In this case <code><font color="blue">--with-stdvector</font></code> must not also be specified.
+See also, <a href="installunix.xml#BoostDir" target="_top"><span style='white-space: nowrap'>BoostDir</span></a>
+
+
+<br/>
+<br/>
+<b><big><a name="CompilerFlags" id="CompilerFlags">CompilerFlags</a></big></b>
+
+
+<br/>
+If the command line argument 
+<code><i><font color="black"><span style='white-space: nowrap'>CompilerFlags</span></font></i></code>
+ is present,
+it specifies compiler flags.
+For example,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CXX_FLAGS=&quot;-Wall&#xA0;-ansi&quot;<br/>
+</span></font></code>
+would specify that warning flags <code><font color="blue">-Wall</font></code>
+and <code><font color="blue">-ansi</font></code> should be included
+in all the C++ compile commands.
+The error and warning flags chosen must be valid options
+for the C++ compiler.
+The default value for 
+<code><i><font color="black"><span style='white-space: nowrap'>CompilerFlags</span></font></i></code>
+ is the
+empty string.
+
+<br/>
+<br/>
+<b><big><a name="OpenmpFlags" id="OpenmpFlags">OpenmpFlags</a></big></b>
+
+
+
+<br/>
+If the command line argument 
+<code><i><font color="black"><span style='white-space: nowrap'>OpenmpFlags</span></font></i></code>
+ is present,
+it specifies the necessary flags so that the compiler will
+properly interpret OpenMP directives.
+For example, when using the GNU <code><font color="blue">g++</font></code> compiler, 
+the following setting includes the OpenMP tests:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;OPENMP_FLAGS=-fopenmp<br/>
+</span></font></code>
+If you specify configure command,
+the CppAD OpenMP correctness and speed tests will be built; see
+<a href="thread_test.cpp.xml#Running Tests.threading" target="_top"><span style='white-space: nowrap'>threading</span></a>
+ 
+multi-threading tests.
+
+<br/>
+<br/>
+<b><big><a name="PostfixDir" id="PostfixDir">PostfixDir</a></big></b>
+
+
+
+<br/>
+By default, the postfix directory is empty; i.e., there
+is no postfix directory.
+As an example of using the 
+<code><font color="blue"><span style='white-space: nowrap'>POSTFIX_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>PostfixDir</span></font></i></code>
+ option,
+if you specify
+<code><font color='blue'><pre style='display:inline'> 
+	./configure --prefix=/usr/local POSTFIX_DIR=coin
+</pre></font></code>
+ 
+the CppAD include files will be 
+<a href="installunix.xml#make install" target="_top"><span style='white-space: nowrap'>installed</span></a>
+ in the directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;/usr/local/include/coin/cppad<br/>
+</span></font></code>
+If <a href="installunix.xml#--with-Documentation" target="_top"><span style='white-space: nowrap'>--with-Documentation</span></a>
+
+is specified, the CppAD documentation files will be installed in the directory
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;/usr/local/share/doc/coin/cppad-20111219<br/>
+</span></font></code>
+<br/>
+<b><big><a name="AdolcDir" id="AdolcDir">AdolcDir</a></big></b>
+
+<br/>
+If you have 
+<a href="http://www.math.tu-dresden.de/~adol-c/" target="_top"><span style='white-space: nowrap'>Adolc&#xA0;1.10.2</span></a>
+
+installed on your system, you can 
+specify a value for 
+<code><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i></code>
+ in the 
+<a href="installunix.xml#Configure" target="_top"><span style='white-space: nowrap'>configure</span></a>
+ command line.
+The value of 
+<code><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i></code>
+ must be such that
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/include/adolc/adouble.h<br/>
+</span></font></code>
+is a valid way to reference <code><font color="blue">adouble.h</font></code>.
+In this case, you can run the Adolc speed correctness tests 
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/adolc<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+After executing <code><font color="blue">make test</font></code>, you can run an Adolc speed tests 
+by executing the command <code><font color="blue">./adolc</font></code>;
+see <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for the meaning of the command line
+options to this program.
+
+<br/>
+<br/>
+<b><a name="AdolcDir.Linux" id="AdolcDir.Linux">Linux</a></b>
+<br/>
+If you are using Linux, 
+you will have to add to following lines to the file
+<code><font color="blue">.bash_profile</font></code> in your home directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;LD_LIBRARY_PATH=</span></font><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/lib:${LD_LIBRARY_PATH}<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;export&#xA0;LD_LIBRARY_PATH<br/>
+</span></font></code>
+in order for Adolc to run properly.
+
+<br/>
+<br/>
+<b><a name="AdolcDir.Cygwin" id="AdolcDir.Cygwin">Cygwin</a></b>
+<br/>
+If you are using Cygwin, 
+you will have to add to following lines to the file
+<code><font color="blue">.bash_profile</font></code> in your home directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;PATH=</span></font><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/bin:${PATH}<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;export&#xA0;PATH<br/>
+</span></font></code>
+in order for Adolc to run properly.
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i></code>
+ begins with a disk specification,
+you must use the Cygwin format for the disk specification.
+For example, 
+if <code><font color="blue">d:/adolc_base</font></code> is the proper directory,
+<code><font color="blue">/cygdrive/d/adolc_base</font></code> should be used for 
+<code><i><font color="black"><span style='white-space: nowrap'>AdolcDir</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="FadbadDir" id="FadbadDir">FadbadDir</a></big></b>
+
+<br/>
+If you have
+<a href="http://www.fadbad.com/" target="_top"><span style='white-space: nowrap'>Fadbad&#xA0;2.1</span></a>
+
+installed on your system, you can 
+specify a value for 
+<code><i><font color="black"><span style='white-space: nowrap'>FadbadDir</span></font></i></code>
+.
+It must be such that
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>FadbadDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/FADBAD++/badiff.h<br/>
+</span></font></code>
+is a valid reference to <code><font color="blue">badiff.h</font></code>.
+In this case, you can run the Fadbad speed correctness tests
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/fadbad<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+After executing <code><font color="blue">make test</font></code>, you can run a Fadbad speed tests 
+by executing the command <code><font color="blue">./fadbad</font></code>;
+see <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for the meaning of the command line
+options to this program.
+
+
+<br/>
+<br/>
+<b><big><a name="SacadoDir" id="SacadoDir">SacadoDir</a></big></b>
+
+<br/>
+If you have
+<a href="http://trilinos.sandia.gov/packages/sacado/" target="_top"><span style='white-space: nowrap'>Sacado</span></a>
+
+installed on your system, you can 
+specify a value for 
+<code><i><font color="black"><span style='white-space: nowrap'>SacadoDir</span></font></i></code>
+.
+It must be such that
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>SacadoDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/include/Sacado.hpp<br/>
+</span></font></code>
+is a valid reference to <code><font color="blue">Sacado.hpp</font></code>.
+In this case, you can run the Sacado speed correctness tests
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/sacado<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+After executing <code><font color="blue">make test</font></code>, you can run a Sacado speed tests 
+by executing the command <code><font color="blue">./sacado</font></code>;
+see <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for the meaning of the command line
+options to this program.
+
+
+<br/>
+<br/>
+<b><big><a name="BoostDir" id="BoostDir">BoostDir</a></big></b>
+
+<br/>
+If the command line argument
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;BOOST_DIR=</span></font><i><font color="black"><span style='white-space: nowrap'>BoostDir</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+is present, it must be such that files
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>BoostDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/boost/numeric/ublas/vector.hpp<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>BoostDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/boost/thread.hpp<br/>
+</span></font></code>
+are present.
+In this case, these files will be used by CppAD.
+See also, <a href="installunix.xml#--with-boostvector" target="_top"><span style='white-space: nowrap'>--with-boostvector</span></a>
+
+
+<br/>
+<br/>
+<b><big><a name="IpoptDir" id="IpoptDir">IpoptDir</a></big></b>
+
+<br/>
+If you have
+<a href="http://www.coin-or.org/projects/Ipopt.xml" target="_top"><span style='white-space: nowrap'>Ipopt</span></a>
+
+installed on your system, you can 
+specify a value for 
+<code><i><font color="black"><span style='white-space: nowrap'>IpoptDir</span></font></i></code>
+.
+It must be such that
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>IpoptDir</span></font></i><font color="blue"><span style='white-space: nowrap'>/include/coin/IpIpoptApplication.hpp<br/>
+</span></font></code>
+is a valid reference to <code><font color="blue">IpIpoptApplication.hpp</font></code>.
+In this case, the CppAD interface to Ipopt
+<a href="cppad_ipopt_nlp.xml#Example" target="_top"><span style='white-space: nowrap'>examples</span></a>
+ can be built and tested
+by executing the following commands starting in the work directory:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;#<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;cppad_ipopt/example<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;#<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;../test<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;#<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;../speed<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+Once this has been done, you can execute the program
+<code><font color="blue">./speed</font></code> in the <code><font color="blue">work/cppad_ipopt/speed</font></code> directory;
+see <a href="ipopt_ode_speed.cpp.xml" target="_top"><span style='white-space: nowrap'>ipopt_ode_speed.cpp</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="TapeAddrType" id="TapeAddrType">TapeAddrType</a></big></b>
+
+
+
+<br/>
+If the command line argument 
+<code><i><font color="black"><span style='white-space: nowrap'>TapeAddrType</span></font></i></code>
+ is present,
+it specifies the type used for address in the AD recordings (tapes).
+The valid values for this argument are
+<code><font color="blue">unsigned short int</font></code>,
+<code><font color="blue">unsigned int</font></code>,
+<code><font color="blue">size_t</font></code>.
+The smaller the value of 
+<code><i><font color="black"><span style='white-space: nowrap'>sizeof(</span></font></i><font color="blue"><span style='white-space: nowrap'>TapeAddrType</span></font><i><font color="black"><span style='white-space: nowrap'>)</span></font></i></code>
+,
+the less memory is used.
+On the other hand, the value
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;std::numeric_limits&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>TapeAddrType</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;::max()<br/>
+</span></font></code>
+must be larger than any of the following:
+<a href="seq_property.xml#size_op" target="_top"><span style='white-space: nowrap'>size_op</span></a>
+,
+<a href="seq_property.xml#size_op_arg" target="_top"><span style='white-space: nowrap'>size_op_arg</span></a>
+,
+<a href="seq_property.xml#size_text" target="_top"><span style='white-space: nowrap'>size_par</span></a>
+,
+<a href="seq_property.xml#size_par" target="_top"><span style='white-space: nowrap'>size_par</span></a>
+,
+<a href="seq_property.xml#size_VecAD" target="_top"><span style='white-space: nowrap'>size_par</span></a>
+.
+
+
+<br/>
+<br/>
+<b><big><a name="make install" id="make install">make install</a></big></b>
+<br/>
+Once you are satisfied that the tests are giving correct results,
+you can install CppAD into easy to use directories by executing the command
+<code><font color='blue'><pre style='display:inline'> 
+	make install
+</pre></font></code>
+
+This will install CppAD in the location specified by 
+<a href="installunix.xml#PrefixDir" target="_top"><span style='white-space: nowrap'>PrefixDir</span></a>
+.
+You must have permission to write in the 
+<code><i><font color="black"><span style='white-space: nowrap'>PrefixDir</span></font></i></code>
+
+directory to execute this command. 
+You may optionally specify a destination directory for the install; i.e.,
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;install&#xA0;DESTDIR=</span></font><i><font color="black"><span style='white-space: nowrap'>DestinationDirectory</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+
+<hr/>Input File: omh/install_unix.omh
+
+</body>
+</html>

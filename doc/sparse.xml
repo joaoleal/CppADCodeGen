@@ -1,0 +1,111 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Calculating Sparsity Patterns</title>
+<meta name="description" id="description" content="Calculating Sparsity Patterns"/>
+<meta name="keywords" id="keywords" content=" sparsity pattern "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sparse_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="checkpoint.cpp.xml" target="_top">Prev</a>
+</td><td><a href="forsparsejac.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>ADFun</option>
+<option>FunEval</option>
+<option>Sparse</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADFun-&gt;</option>
+<option>Independent</option>
+<option>FunConstruct</option>
+<option>Dependent</option>
+<option>abort_recording</option>
+<option>seq_property</option>
+<option>FunEval</option>
+<option>Drivers</option>
+<option>FunCheck</option>
+<option>optimize</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>FunEval-&gt;</option>
+<option>Forward</option>
+<option>Reverse</option>
+<option>Sparse</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>Sparse-&gt;</option>
+<option>ForSparseJac</option>
+<option>RevSparseJac</option>
+<option>RevSparseHes</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+<center><b><big><big>Calculating Sparsity Patterns</big></big></b></center>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<table>
+<tr><td><a href="forsparsejac.xml" target="_top">ForSparseJac</a></td><td>Jacobian&#xA0;Sparsity&#xA0;Pattern:&#xA0;Forward&#xA0;Mode</td></tr><tr><td><a href="revsparsejac.xml" target="_top">RevSparseJac</a></td><td>Jacobian&#xA0;Sparsity&#xA0;Pattern:&#xA0;Reverse&#xA0;Mode</td></tr><tr><td><a href="revsparsehes.xml" target="_top">RevSparseHes</a></td><td>Hessian&#xA0;Sparsity&#xA0;Pattern:&#xA0;Reverse&#xA0;Mode</td></tr></table>
+<hr/>Input File: cppad/local/sparse.hpp
+
+</body>
+</html>

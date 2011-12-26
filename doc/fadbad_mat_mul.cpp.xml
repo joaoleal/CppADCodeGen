@@ -1,0 +1,107 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Fadbad Speed: Matrix Multiplication</title>
+<meta name="description" id="description" content="Fadbad Speed: Matrix Multiplication"/>
+<meta name="keywords" id="keywords" content=" "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_fadbad_mat_mul.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="fadbad_det_lu.cpp.xml" target="_top">Prev</a>
+</td><td><a href="fadbad_ode.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_fadbad</option>
+<option>fadbad_mat_mul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_fadbad-&gt;</option>
+<option>fadbad_det_minor.cpp</option>
+<option>fadbad_det_lu.cpp</option>
+<option>fadbad_mat_mul.cpp</option>
+<option>fadbad_ode.cpp</option>
+<option>fadbad_poly.cpp</option>
+<option>fadbad_sparse_hessian.cpp</option>
+<option>fadbad_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>fadbad_mat_mul.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Fadbad Speed: Matrix Multiplication</big></big></b></center>
+<code><font color='blue'><pre style='display:inline'> // The Fadbad version of this test is not yet available
+# include &lt;cppad/vector.hpp&gt;
+bool link_mat_mul(
+	size_t                           size     , 
+	size_t                           repeat   , 
+	CppAD::vector&lt;double&gt;&amp;           x        ,
+	CppAD::vector&lt;double&gt;&amp;           z        ,
+	CppAD::vector&lt;double&gt;&amp;           dz
+)
+{	return false; }
+</pre></font></code>
+
+
+<hr/>Input File: speed/fadbad/mat_mul.cpp
+
+</body>
+</html>

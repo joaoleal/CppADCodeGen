@@ -1,0 +1,178 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>One Dimensional Romberg Integration: Example and Test</title>
+<meta name="description" id="description" content="One Dimensional Romberg Integration: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Romberg example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_rombergone.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="rombergone.xml" target="_top">Prev</a>
+</td><td><a href="rombergmul.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>RombergOne</option>
+<option>RombergOne.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>RombergOne-&gt;</option>
+<option>RombergOne.cpp</option>
+</select>
+</td>
+<td>RombergOne.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>One Dimensional Romberg Integration: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/romberg_one.hpp&gt;
+# include &lt;cppad/vector.hpp&gt;
+# include &lt;cppad/near_equal.hpp&gt;
+
+namespace {
+	class Fun {
+	private:
+		const size_t degree;
+	public:
+		// constructor
+		Fun(size_t degree_) : degree(degree_) 
+		{ }
+
+		// function F(x) = x^degree
+		template &lt;class Type&gt;
+		Type operator () (const Type &amp;x)
+		{	size_t i;
+			Type   f = 1;
+			for(i = 0; i &lt; degree; i++)
+				f *= x;
+			return f;
+		}
+	};
+}
+
+bool RombergOne(void)
+{	bool ok = true;
+	size_t i;
+
+	size_t degree = 4;
+	Fun F(degree);
+
+	// arguments to RombergOne
+	double a = 0.;
+	double b = 1.;
+	size_t n = 4;
+	size_t p;
+	double r, e;
+
+	// int_a^b F(x) dx = [ b^(degree+1) - a^(degree+1) ] / (degree+1) 
+	double bpow = 1.;
+	double apow = 1.;
+	for(i = 0; i &lt;= degree; i++)
+	{	bpow *= b;
+		apow *= a;
+	}  
+	double check = (bpow - apow) / (degree+1);
+
+	// step size corresponding to r
+	double step = (b - a) / exp(log(2.)*(n-1));
+	// step size corresponding to error estimate
+	step *= 2.;
+	// step size raised to a power
+	double spow = 1;
+
+	for(p = 0; p &lt; n; p++)
+	{	spow = spow * step * step;
+
+		r = CppAD::RombergOne(F, a, b, n, p, e);
+
+		ok  &amp;= e &lt; (degree+1) * spow;
+		ok  &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(check, r, 0., e);	
+	}
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/romberg_one.cpp
+
+</body>
+</html>

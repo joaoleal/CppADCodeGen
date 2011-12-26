@@ -1,0 +1,130 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Determinant Using Expansion by Minors: Example and Test</title>
+<meta name="description" id="description" content="Determinant Using Expansion by Minors: Example and Test"/>
+<meta name="keywords" id="keywords" content=" determinant by minors example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_det_by_minor.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="det_by_minor.xml" target="_top">Prev</a>
+</td><td><a href="det_by_minor.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>det_by_minor</option>
+<option>det_by_minor.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>det_by_minor-&gt;</option>
+<option>det_by_minor.cpp</option>
+<option>det_by_minor.hpp</option>
+</select>
+</td>
+<td>det_by_minor.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Determinant Using Expansion by Minors: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cppad/speed/det_by_minor.hpp&gt;
+
+bool det_by_minor()
+{	bool ok = true;
+
+	// dimension of the matrix
+	size_t n = 3;
+
+	// construct the determinat object
+	CppAD::det_by_minor&lt;double&gt; Det(n);
+
+	double  a[] = {
+		1., 2., 3.,  // a[0] a[1] a[2]
+		3., 2., 1.,  // a[3] a[4] a[5]
+		2., 1., 2.   // a[6] a[7] a[8]
+	};
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; A(9);
+	size_t i;
+	for(i = 0; i &lt; 9; i++)
+		A[i] = a[i];
+
+
+	// evaluate the determinant
+	double det = Det(A);
+
+	double check;
+	check = a[0]*(a[4]*a[8] - a[5]*a[7])
+	      - a[1]*(a[3]*a[8] - a[5]*a[6])
+	      + a[2]*(a[3]*a[7] - a[4]*a[6]);
+
+	ok = det == check;
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: speed/example/det_by_minor.cpp
+
+</body>
+</html>

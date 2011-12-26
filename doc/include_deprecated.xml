@@ -1,0 +1,297 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Deprecated Include Files</title>
+<meta name="description" id="description" content="Deprecated Include Files"/>
+<meta name="keywords" id="keywords" content=" deprecated include file "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_include_deprecated_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="deprecated.xml" target="_top">Prev</a>
+</td><td><a href="fundeprecated.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>deprecated</option>
+<option>include_deprecated</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>deprecated-&gt;</option>
+<option>include_deprecated</option>
+<option>FunDeprecated</option>
+<option>omp_max_thread</option>
+<option>TrackNewDel</option>
+<option>omp_alloc</option>
+</select>
+</td>
+<td>include_deprecated</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>Linking New Files to Deprecated Commands</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Deprecated Include Files</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+The following is a list of deprecated include file names 
+and the corresponding names that should be used. 
+For example, if your program uses the deprecated preprocessor command
+<code><font color='blue'><pre style='display:inline'> 
+	# include &lt;CppAD/CppAD.h&gt;
+</pre></font></code>
+
+you should change it to the command
+<code><font color='blue'><pre style='display:inline'> 
+	# include &lt;cppad/cppad.hpp&gt;
+</pre></font></code>
+
+
+
+<br/>
+<br/>
+<b><big><a name="Linking New Files to Deprecated Commands" id="Linking New Files to Deprecated Commands">Linking New Files to Deprecated Commands</a></big></b>
+<br/>
+On Unix systems, references in your source code of the from
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;#&#xA0;include&#xA0;&lt;CppAD/</span></font></code><i><span style='white-space: nowrap'>name</span></i><code><font color="blue"><span style='white-space: nowrap'>.h&gt;<br/>
+</span></font></code>will refer to the older versions of CppAD unless you preform the 
+following steps (this only needs to be done once, not for every install):
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cp&#xA0;</span></font></code><i><span style='white-space: nowrap'>PrefixDir</span></i><code><font color="blue"><span style='white-space: nowrap'>/include<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;sudo&#xA0;mv&#xA0;CppAD&#xA0;CppAD.old<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;sudo&#xA0;ln&#xA0;-s&#xA0;cppad&#xA0;CppAD<br/>
+</span></font></code>where 
+<a href="installunix.xml#PrefixDir" target="_top"><span style='white-space: nowrap'>PrefixDir</span></a>
+
+is the prefix directory corresponding to your
+<a href="installunix.xml" target="_top"><span style='white-space: nowrap'>Unix&#xA0;installation</span></a>
+.
+This will link form the deprecated commands
+to the commands that should be used:
+
+<table><tr><td align='left'  valign='top'>
+
+<b>Deprecated</b>         <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>Should Use</b>   
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <b>Documentation</b>
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/CheckNumericType.h   <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/check_numeric_type.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="checknumerictype.xml" target="_top"><span style='white-space: nowrap'>CheckNumericType</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/CheckSimpleVector.h  <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/check_simple_vector.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/CppAD.h              <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/cppad.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="cppad.xml" target="_top"><span style='white-space: nowrap'>CppAD</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/CppAD_vector.h       <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/vector.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="cppad_vector.xml" target="_top"><span style='white-space: nowrap'>CppAD_vector</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/ErrorHandler.h       <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/error_handler.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="errorhandler.xml" target="_top"><span style='white-space: nowrap'>ErrorHandler</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/LuFactor.h           <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/lu_factor.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="lufactor.xml" target="_top"><span style='white-space: nowrap'>LuFactor</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/LuInvert.h           <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/lu_invert.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="luinvert.xml" target="_top"><span style='white-space: nowrap'>LuInvert</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/LuSolve.h            <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/lu_solve.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="lusolve.xml" target="_top"><span style='white-space: nowrap'>LuSolve</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/NearEqual.h          <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/near_equal.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="nearequal.xml" target="_top"><span style='white-space: nowrap'>NearEqual</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/OdeErrControl.h      <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/ode_err_control.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="odeerrcontrol.xml" target="_top"><span style='white-space: nowrap'>OdeErrControl</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/OdeGear.h            <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/ode_gear.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="odegear.xml" target="_top"><span style='white-space: nowrap'>OdeGear</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/OdeGearControl.h     <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/ode_gear_control.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="odegearcontrol.xml" target="_top"><span style='white-space: nowrap'>OdeGearControl</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/Poly.h               <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/poly.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="poly.xml" target="_top"><span style='white-space: nowrap'>Poly</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/RombergMul.h         <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/romberg_mul.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="rombergmul.xml" target="_top"><span style='white-space: nowrap'>RombergMul</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/RombergOne.h         <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/romberg_one.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="rombergone.xml" target="_top"><span style='white-space: nowrap'>RombergOne</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/Rosen34.h            <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/rosen_34.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="rosen34.xml" target="_top"><span style='white-space: nowrap'>Rosen34</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/Runge45.h            <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/runge_45.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="runge45.xml" target="_top"><span style='white-space: nowrap'>Runge45</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/SpeedTest.h          <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/speed_test.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="speedtest.xml" target="_top"><span style='white-space: nowrap'>SpeedTest</span></a>
+
+</td></tr><tr><td align='left'  valign='top'>
+
+
+CppAD/TrackNewDel.h        <code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ cppad/track_new_del.hpp
+	<code><span style='white-space: nowrap'>&#xA0;&#xA0;</span></code> </td><td align='left'  valign='top'>
+ <a href="tracknewdel.xml" target="_top"><span style='white-space: nowrap'>TrackNewDel</span></a>
+
+</td></tr>
+</table>
+
+<hr/>Input File: omh/include_deprecated.omh
+
+</body>
+</html>

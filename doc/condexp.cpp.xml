@@ -1,0 +1,264 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Conditional Expressions: Example and Test</title>
+<meta name="description" id="description" content="Conditional Expressions: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Condexp example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_condexp.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="condexp.xml" target="_top">Prev</a>
+</td><td><a href="discrete.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>CondExp</option>
+<option>CondExp.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>CondExp-&gt;</option>
+<option>CondExp.cpp</option>
+</select>
+</td>
+<td>CondExp.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Description</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Conditional Expressions: Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="Description" id="Description">Description</a></big></b>
+<br/>
+Use <code><font color="blue">CondExp</font></code> to compute
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</munderover>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mi>log</mi>
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+and its derivative at various argument values
+( where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">&#x02265;</mo>
+<mn>0</mn>
+</mrow></math>
+
+ )
+with out having to re-tape; i.e.,
+using only one <a href="adfun.xml" target="_top"><span style='white-space: nowrap'>ADFun</span></a>
+ object.
+Note that 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mi>log</mi>
+<mo stretchy="false">(</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02192;</mo>
+<mn>0</mn>
+</mrow></math>
+
+
+as 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">&#x02193;</mo>
+<mn>0</mn>
+</mrow></math>
+
+ and
+we need to handle the case 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+
+in a special way to avoid multiplying zero by infinity.
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;limits&gt;
+
+bool CondExp(void)
+{	bool ok = true;
+
+	using CppAD::isnan;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+	using CppAD::log; 
+	using CppAD::abs;
+	double eps  = 100. * CppAD::epsilon&lt;double&gt;();
+	double fmax = std::numeric_limits&lt;double&gt;::max();
+
+	// domain space vector
+	size_t n = 5;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	size_t j;
+	for(j = 0; j &lt; n; j++)
+		X[j] = 1.;
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; Sum  = 0.;
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; Zero = 0.;
+	for(j = 0; j &lt; n; j++)
+	{	// if x_j &gt; 0, add x_j * log( x_j ) to the sum
+		Sum += CppAD::CondExpGt(X[j], Zero, X[j] * log(X[j]),    Zero);
+	}
+
+	// range space vector 
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	Y[0] = Sum;
+
+	// create f: X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// vectors for arguments to the function object f
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n);   // argument values
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; y(m);   // function values 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; w(m);   // function weights 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dw(n);  // derivative of weighted function
+
+	// a case where x[j] &gt; 0 for all j
+	double check  = 0.;
+	for(j = 0; j &lt; n; j++)
+	{	x[j]   = double(j + 1); 
+		check += x[j] * log( x[j] );
+	}
+
+	// function value 
+	y  = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0], check, eps, eps);
+
+	// compute derivative of y[0]
+	w[0] = 1.;
+	dw   = f.<a href="reverse.xml" target="_top">Reverse</a>(1, w);
+	for(j = 0; j &lt; n; j++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dw[j], log(x[j]) + 1., eps, eps); 
+
+	// a case where x[3] is equal to zero
+	check -= x[3] * log( x[3] );
+	x[3]   = 0.;
+
+	// function value 
+	y   = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+	ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0], check, eps, eps);
+
+	// check derivative of y[0]
+	w[0] = 1.;
+	dw   = f.<a href="reverse.xml" target="_top">Reverse</a>(1, w);
+	for(j = 0; j &lt; n; j++)
+	{	if( x[j] &gt; 0 )
+			ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dw[j], log(x[j]) + 1., eps, eps); 
+		else
+		{	// In this case computing dw[j] is computed using 
+			//      log(x[j]) + x[j] / x[j] 
+			// which has limit minus infinity but computes as nan.
+			ok &amp;= ( isnan( dw[j] ) || dw[j] &lt;= -fmax );
+		}
+	}
+	
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/cond_exp.cpp
+
+</body>
+</html>

@@ -1,0 +1,2871 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>User Defined Atomic AD Functions</title>
+<meta name="description" id="description" content="User Defined Atomic AD Functions"/>
+<meta name="keywords" id="keywords" content=" Cppad_user_atomic atomic user function operation parallel user_atomic "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_user_atomic_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="interp_retape.cpp.xml" target="_top">Prev</a>
+</td><td><a href="user_tan.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>user_atomic-&gt;</option>
+<option>user_tan.cpp</option>
+<option>mat_mul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>---..Define Function</option>
+<option>---..Use Function</option>
+<option>---..Callback Routines</option>
+<option>---..Free Static Memory</option>
+<option>Purpose</option>
+<option>Partial Implementation</option>
+<option>CPPAD_USER_ATOMIC</option>
+<option>---..Tvector</option>
+<option>---..Base</option>
+<option>ok</option>
+<option>id</option>
+<option>k</option>
+<option>n</option>
+<option>m</option>
+<option>tx</option>
+<option>ty</option>
+<option>afun</option>
+<option>---..ax</option>
+<option>---..ay</option>
+<option>---..Parallel Mode</option>
+<option>forward</option>
+<option>---..Usage</option>
+<option>---..vx</option>
+<option>---..vy</option>
+<option>reverse</option>
+<option>---..Usage</option>
+<option>---..py</option>
+<option>---..px</option>
+<option>for_jac_sparse</option>
+<option>---..Usage</option>
+<option>---..q</option>
+<option>---..r</option>
+<option>---..s</option>
+<option>rev_jac_sparse</option>
+<option>---..Usage</option>
+<option>---..q</option>
+<option>---..s</option>
+<option>---..r</option>
+<option>rev_hes_sparse</option>
+<option>---..Usage</option>
+<option>---..q</option>
+<option>---..r</option>
+<option>---..s</option>
+<option>---..t</option>
+<option>---..u</option>
+<option>---..v</option>
+<option>clear</option>
+<option>Example</option>
+<option>---..Tangent Function</option>
+<option>---..Matrix Multiplication</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>User Defined Atomic AD Functions</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+
+<br/>
+<br/>
+<b><a name="Syntax.Define Function" id="Syntax.Define Function">Define Function</a></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>CPPAD_USER_ATOMIC(</span></font><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Tvector</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+)<br/>
+</span></font></code>
+<br/>
+<b><a name="Syntax.Use Function" id="Syntax.Use Function">Use Function</a></b>
+
+<br/>
+
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+<br/>
+<b><a name="Syntax.Callback Routines" id="Syntax.Callback Routines">Callback Routines</a></b>
+
+<br/>
+
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>px</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>py</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>t</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>u</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+<br/>
+<b><a name="Syntax.Free Static Memory" id="Syntax.Free Static Memory">Free Static Memory</a></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>user_atomic&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;::clear()</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+In some cases, the user knows how to compute the derivative
+of a function 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mspace width='.3em'/>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>where</mi>
+</mstyle></mrow>
+<mspace width='.3em'/>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+</mrow></math>
+
+more efficiently than by coding it 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ 
+<a href="glossary.xml#Operation.Atomic" target="_top"><span style='white-space: nowrap'>atomic</span></a>
+ operations
+and letting CppAD do the rest.
+In this case, <code><font color="blue">CPPAD_USER_ATOMIC</font></code> can be used
+add the user code for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+, and its derivatives,
+to the set of 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ atomic operations. 
+
+<br/>
+<br/>
+<b><big><a name="Partial Implementation" id="Partial Implementation">Partial Implementation</a></big></b>
+<br/>
+The routines 
+<a href="user_atomic.xml#forward" target="_top"><span style='white-space: nowrap'>forward</span></a>
+,
+<a href="user_atomic.xml#reverse" target="_top"><span style='white-space: nowrap'>reverse</span></a>
+,
+<a href="user_atomic.xml#for_jac_sparse" target="_top"><span style='white-space: nowrap'>for_jac_sparse</span></a>
+,
+<a href="user_atomic.xml#rev_jac_sparse" target="_top"><span style='white-space: nowrap'>rev_jac_sparse</span></a>
+, and
+<a href="user_atomic.xml#rev_hes_sparse" target="_top"><span style='white-space: nowrap'>rev_hes_sparse</span></a>
+,
+must be defined by the user.
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ the routine, 
+for the case 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;0</span></font></code>
+, must be implemented.
+Functions with the correct prototype,
+that just return 
+<code><i><font color="black"><span style='white-space: nowrap'>false</span></font></i></code>
+, 
+can be used for the other cases 
+(unless they are required by your calculations). 
+For example, you need not implement
+
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ for the case 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;2</span></font></code>
+ until you require
+forward mode calculation of second derivatives.
+
+<br/>
+<br/>
+<b><big><a name="CPPAD_USER_ATOMIC" id="CPPAD_USER_ATOMIC">CPPAD_USER_ATOMIC</a></big></b>
+
+<br/>
+The macro 
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+CPPAD_USER_ATOMIC(</span></font><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Tvector</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+)<br/>
+</span></font></code>
+defines the 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ routine 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+.
+This macro can be placed within a namespace 
+(not the <code><font color="blue">CppAD</font></code> namespace) 
+but must be outside of any routine.
+
+<br/>
+<br/>
+<b><a name="CPPAD_USER_ATOMIC.Tvector" id="CPPAD_USER_ATOMIC.Tvector">Tvector</a></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>Tvector</span></font></i></code>
+ must be a
+<a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>simple&#xA0;vector&#xA0;template&#xA0;class</span></a>
+.
+It determines the type of vectors used as arguments to the routine 
+
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><a name="CPPAD_USER_ATOMIC.Base" id="CPPAD_USER_ATOMIC.Base">Base</a></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+ specifies the 
+<a href="base_require.xml" target="_top"><span style='white-space: nowrap'>base&#xA0;type</span></a>
+
+corresponding to 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base&gt;</span></font></i></code>
+ operation sequences.
+Calling the routine 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+ will add the operator defined
+by this macro to an 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base&gt;</span></font></i></code>
+ operation sequence.
+
+<br/>
+<br/>
+<b><big><a name="ok" id="ok">ok</a></big></b>
+<br/>
+For all routines documented below,
+the return value 
+<code><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+If it is <code><font color="blue">true</font></code>, the corresponding evaluation succeeded,
+otherwise it failed.
+
+<br/>
+<br/>
+<b><big><a name="id" id="id">id</a></big></b>
+<br/>
+For all routines documented below,
+the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>id</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+Its value in all other calls is the same as in the corresponding
+call to 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+.
+It can be used to store and retrieve extra information about
+a specific call to 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+. 
+
+<br/>
+<br/>
+<b><big><a name="k" id="k">k</a></big></b>
+<br/>
+For all routines documented below, the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+The value 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+ is the order of the Taylor coefficient that
+we are evaluating (<a href="user_atomic.xml#forward" target="_top"><span style='white-space: nowrap'>forward</span></a>
+)
+or taking the derivative of (<a href="user_atomic.xml#reverse" target="_top"><span style='white-space: nowrap'>reverse</span></a>
+).
+
+<br/>
+<br/>
+<b><big><a name="n" id="n">n</a></big></b>
+<br/>
+For all routines documented below, 
+the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is the size of the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i></code>
+ in the corresponding call to
+
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+; i.e.,
+the dimension of the domain space for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="m" id="m">m</a></big></b>
+<br/>
+For all routines documented below, the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is the size of the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i></code>
+ in the corresponding call to
+
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+; i.e.,
+the dimension of the range space for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="tx" id="tx">tx</a></big></b>
+<br/>
+For all routines documented below, 
+the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+,
+we use the Taylor coefficient notation
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>tx</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>j</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mn>0</mn>
+</msubsup>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mn>1</mn>
+</msubsup>
+<msup><mi mathvariant='italic'>t</mi>
+<mn>1</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mtd></mtr></mtable>
+</mrow></math>
+
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+,
+the other components of 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i></code>
+ are not specified and should not be used.
+Note that superscripts represent an index for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mrow></math>
+
+
+and an exponent for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>t</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msup>
+</mrow></math>
+
+.
+Also note that the Taylor coefficients for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ correspond
+to the derivatives of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+ in the following way:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">!</mo>
+</mrow>
+</mfrac>
+<msubsup><mi mathvariant='italic'>X</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="ty" id="ty">ty</a></big></b>
+<br/>
+In calls to <a href="user_atomic.xml#forward" target="_top"><span style='white-space: nowrap'>forward</span></a>
+, 
+the argument 
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+while in calls to <a href="user_atomic.xml#reverse" target="_top"><span style='white-space: nowrap'>reverse</span></a>
+ it has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+For all calls, 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+,
+we use the Taylor coefficient notation
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>ty</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mi mathvariant='italic'>Y</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mn>0</mn>
+</msubsup>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mn>1</mn>
+</msubsup>
+<msup><mi mathvariant='italic'>t</mi>
+<mn>1</mn>
+</msup>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">+</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>o</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>o</mi>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<mn>0</mn>
+</mrow></math>
+
+ as 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">&#x02192;</mo>
+<mn>0</mn>
+</mrow></math>
+
+.
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+,
+the other components of 
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i></code>
+ are not specified and should not be used.
+Note that superscripts represent an index for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mrow></math>
+
+
+and an exponent for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>t</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msup>
+</mrow></math>
+
+.
+Also note that the Taylor coefficients for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ correspond
+to the derivatives of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ at 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+ in the following way:
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">!</mo>
+</mrow>
+</mfrac>
+<msubsup><mi mathvariant='italic'>Y</mi>
+<mi mathvariant='italic'>j</mi>
+<mrow><mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+<br/>
+<b><big><a name="afun" id="afun">afun</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+,
+is the name of the AD function corresponding to this atomic
+operation (as it is used in the source code).
+CppAD uses the other functions,
+where the arguments are vectors with elements of type 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+,
+to implement the function 
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+where the argument are vectors with elements of type 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+.
+
+<br/>
+<br/>
+<b><a name="afun.ax" id="afun.ax">ax</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Tvector</span></font></i><font color="blue"><span style='white-space: nowrap'>&lt;&#xA0;AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is the argument vector 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ 
+at which the 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ version of 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is to be evaluated.
+The dimension of the domain space for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+is specified by <a href="user_atomic.xml#n" target="_top"><span style='white-space: nowrap'>n</span></a>
+ 
+<code><font color="blue"><span style='white-space: nowrap'>=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()</span></font></code>
+,
+which must be greater than zero.
+
+<br/>
+<br/>
+<b><a name="afun.ay" id="afun.ay">ay</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+ result 
+<code><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Tvector</span></font></i><font color="blue"><span style='white-space: nowrap'>&lt;&#xA0;AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+The input values of its elements do not matter.
+Upon return, it is the 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>
+ version of the 
+result vector 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+The dimension of the range space for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+is specified by <a href="user_atomic.xml#m" target="_top"><span style='white-space: nowrap'>m</span></a>
+ 
+<code><font color="blue"><span style='white-space: nowrap'>=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()</span></font></code>
+,
+which must be greater than zero.
+
+<br/>
+<br/>
+<b><a name="afun.Parallel Mode" id="afun.Parallel Mode">Parallel Mode</a></b>
+
+
+<br/>
+The first call to 
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+must not be in <a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>parallel</span></a>
+ mode.
+
+<br/>
+<br/>
+<b><big><a name="forward" id="forward">forward</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ is a
+user defined function
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+that computes results during a <a href="forward.xml" target="_top"><span style='white-space: nowrap'>forward</span></a>
+ mode sweep.
+For this call, we are given the Taylor coefficients in 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i></code>
+ 
+form order zero through 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+,
+and the Taylor coefficients in  
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i></code>
+ with order less than 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+.
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ routine computes the 
+
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+ order Taylor coefficients for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+</mrow></math>
+
+ using the definition
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+. 
+For example, for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mn>0</mn>
+</msubsup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msub><mi mathvariant='italic'>f</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mn>1</mn>
+</msubsup>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>Y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>f</mi>
+<mi mathvariant='italic'>i</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">)</mo>
+<msup><mi mathvariant='italic'>X</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>f</mi>
+<mi mathvariant='italic'>i</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">(</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msup>
+<mo stretchy="false">)</mo>
+<msup><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msup>
+</mtd></mtr></mtable>
+</mrow></math>
+
+Then, for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+, it sets
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>ty</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+</mrow></math>
+
+The other components of 
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i></code>
+ must be left unchanged.
+
+<br/>
+<br/>
+<b><a name="forward.Usage" id="forward.Usage">Usage</a></b>
+<br/>
+This routine is used,
+with 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;0</span></font></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;0</span></font></code>
+,
+by calls to 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+.
+It is used,
+with 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;=&#xA0;0</span></font></code>
+ and
+
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+ equal to the order of the derivative begin computed,
+by calls to <a href="forwardany.xml" target="_top"><span style='white-space: nowrap'>forward</span></a>
+.
+
+<br/>
+<br/>
+<b><a name="forward.vx" id="forward.vx">vx</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;bool&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+The case 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;0</span></font></code>
+ occurs 
+once for each call to 
+<code><i><font color="black"><span style='white-space: nowrap'>afun</span></font></i></code>
+,
+during the call,
+and before any of the other callbacks corresponding to that call.
+Hence such a call can be used to cache information attached to 
+the corresponding 
+<code><i><font color="black"><span style='white-space: nowrap'>id</span></font></i></code>
+
+(such as the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i></code>
+).
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;0</span></font></code>
+ then
+
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;0</span></font></code>
+, 
+
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+, and
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is true if and only if
+
+<code><i><font color="black"><span style='white-space: nowrap'>ax</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is a <a href="glossary.xml#Variable" target="_top"><span style='white-space: nowrap'>variable</span></a>
+.
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code>If 
+<code><i><font color="black"><span style='white-space: nowrap'>vx</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;==&#xA0;0</span></font></code>
+, 
+then 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;==&#xA0;0</span></font></code>
+ and neither of these vectors
+should be used.
+
+<br/>
+<br/>
+<b><a name="forward.vy" id="forward.vy">vy</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>forward</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;bool&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;==&#xA0;0</span></font></code>
+, it should not be used.
+Otherwise, 
+
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;0</span></font></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+The input values of the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i></code>
+ do not matter.
+Upon return, for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is true if and only if
+
+<code><i><font color="black"><span style='white-space: nowrap'>ay</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ is a variable.
+(CppAD uses 
+<code><i><font color="black"><span style='white-space: nowrap'>vy</span></font></i></code>
+ to reduce the necessary computations.)
+
+<br/>
+<br/>
+<b><big><a name="reverse" id="reverse">reverse</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i></code>
+
+is a user defined function
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>px</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>py</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+that computes results during a <a href="reverse.xml" target="_top"><span style='white-space: nowrap'>reverse</span></a>
+ mode sweep. 
+The input value of the vectors 
+<code><i><font color="black"><span style='white-space: nowrap'>tx</span></font></i></code>
+ and 
+<code><i><font color="black"><span style='white-space: nowrap'>ty</span></font></i></code>
+
+contain Taylor coefficient, up to order 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i></code>
+,
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>X</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ respectively.
+We use the 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+
+to denote these Taylor coefficients where the implicit range indices are
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+.
+Using the calculations done by <a href="user_atomic.xml#forward" target="_top"><span style='white-space: nowrap'>forward</span></a>
+,
+the Taylor coefficients 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+ are a function of the Taylor
+coefficients for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+; i.e., given 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+we define the function
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+ by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">=</mo>
+<msubsup><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+We use 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<mi mathvariant='italic'>B</mi>
+</mrow></math>
+
+
+to denote an arbitrary scalar valued function of the Taylor coefficients for 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ and write  
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+The <code><font color="blue">reverse</font></code> routine
+is given the derivative of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+</mrow></math>
+
+ with respect to
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+ and computes its derivative with respect
+to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="reverse.Usage" id="reverse.Usage">Usage</a></b>
+<br/>
+This routine is used,
+with 
+<code><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1</span></font></code>
+ equal to the order of the derivative being calculated,
+by calls to <a href="reverse_any.xml" target="_top"><span style='white-space: nowrap'>reverse</span></a>
+.
+
+<br/>
+<br/>
+<b><a name="reverse.py" id="reverse.py">py</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>py</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>py</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>py</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>py</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mrow></math>
+
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>py</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+,
+the other components of 
+<code><i><font color="black"><span style='white-space: nowrap'>py</span></font></i></code>
+ are not specified and should not be used.
+
+<br/>
+<br/>
+<b><a name="reverse.px" id="reverse.px">px</a></b>
+<br/>
+We define the function 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>H</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>reverse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>px</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>px</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>px</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+The input values of the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>px</span></font></i></code>
+ do not matter.
+Upon return,
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>k</mi>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>px</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>H</mi>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">{</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">}</mo>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</munderover>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mi mathvariant='italic'>k</mi>
+</munderover>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>G</mi>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>y</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</munderover>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mi mathvariant='italic'>k</mi>
+</munderover>
+<mi mathvariant='italic'>py</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">*</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x02113;</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">(</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>F</mi>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">&#x02202;</mo>
+<msubsup><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">&#x02113;</mo>
+</msubsup>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+If 
+<code><i><font color="black"><span style='white-space: nowrap'>px</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;&#xA0;(</span></font><i><font color="black"><span style='white-space: nowrap'>k</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;+&#xA0;1)&#xA0;*&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+,
+the other components of 
+<code><i><font color="black"><span style='white-space: nowrap'>px</span></font></i></code>
+ are not specified and should not be used.
+
+<br/>
+<br/>
+<b><big><a name="for_jac_sparse" id="for_jac_sparse">for_jac_sparse</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i></code>
+
+is a user defined function
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+that is used to compute results during a forward Jacobian sparsity sweep.
+For a fixed 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow></math>
+
+ matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+,
+the Jacobian of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>q</mi>
+</msup>
+</mrow></math>
+
+ is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+Given a <a href="glossary.xml#Sparsity Pattern" target="_top"><span style='white-space: nowrap'>sparsity&#xA0;pattern</span></a>
+ for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+,
+
+<code><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i></code>
+ computes a sparsity pattern for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="for_jac_sparse.Usage" id="for_jac_sparse.Usage">Usage</a></b>
+<br/>
+This routine is used by calls to <a href="forsparsejac.xml" target="_top"><span style='white-space: nowrap'>ForSparseJac</span></a>
+.
+
+<br/>
+<br/>
+<b><a name="for_jac_sparse.q" id="for_jac_sparse.q">q</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It specifies the number of columns in 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+ and the Jacobian 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+. 
+
+<br/>
+<br/>
+<b><a name="for_jac_sparse.r" id="for_jac_sparse.r">r</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ are between
+zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This specifies a sparsity pattern for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="for_jac_sparse.s" id="for_jac_sparse.s">s</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>for_jac_sparse</span></font></i></code>
+ return value 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"></font></code>
+.
+The input values of its sets do not matter. Upon return 
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ are between
+zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This represents a sparsity pattern for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="rev_jac_sparse" id="rev_jac_sparse">rev_jac_sparse</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i></code>
+
+is a user defined function
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+that is used to compute results during a reverse Jacobian sparsity sweep.
+For a fixed 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>q</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>m</mi>
+</mrow></math>
+
+ matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+</mrow></math>
+
+,
+the Jacobian of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ is
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">*</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+Given a <a href="glossary.xml#Sparsity Pattern" target="_top"><span style='white-space: nowrap'>sparsity&#xA0;pattern</span></a>
+ for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+</mrow></math>
+
+,
+
+<code><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i></code>
+ computes a sparsity pattern for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="rev_jac_sparse.Usage" id="rev_jac_sparse.Usage">Usage</a></b>
+<br/>
+This routine is used by calls to <a href="revsparsejac.xml" target="_top"><span style='white-space: nowrap'>RevSparseJac</span></a>
+
+and to <a href="optimize.xml" target="_top"><span style='white-space: nowrap'>optimize</span></a>
+.
+
+
+<br/>
+<br/>
+<b><a name="rev_jac_sparse.q" id="rev_jac_sparse.q">q</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It specifies the number of rows in 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>q</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>m</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+ and the Jacobian 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>q</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+. 
+
+<br/>
+<br/>
+<b><a name="rev_jac_sparse.s" id="rev_jac_sparse.s">s</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+, 
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>}</span></font></code>
+
+are between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This specifies a sparsity pattern for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>S</mi>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="rev_jac_sparse.r" id="rev_jac_sparse.r">r</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_jac_sparse</span></font></i></code>
+ return value 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+The input values of its sets do not matter.
+Upon return for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+
+are between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This represents a sparsity pattern for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<msup><mo stretchy="false">)</mo>
+<mrow><mstyle mathvariant='normal'><mi mathvariant='normal'>T</mi>
+</mstyle></mrow>
+</msup>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="rev_hes_sparse" id="rev_hes_sparse">rev_hes_sparse</a></big></b>
+<br/>
+The macro argument 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+
+is a user defined function
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>ok</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i><font color="blue"><span style='white-space: nowrap'>(</span></font><i><font color="black"><span style='white-space: nowrap'>id</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>t</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>u</span></font></i><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+There is an unspecified scalar valued function 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">:</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mi mathvariant='italic'>m</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<mi mathvariant='italic'>B</mi>
+</mrow></math>
+
+.
+Given a sparsity pattern for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+
+and information about the function 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+,
+this routine computes the sparsity pattern for
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>V</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">&#x02218;</mo>
+<mi mathvariant='italic'>f</mi>
+<msup><mo stretchy="false">)</mo>
+<mrow><mo stretchy="false">(</mo>
+<mn>2</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>R</mi>
+</mrow></math>
+
+<br/>
+<b><a name="rev_hes_sparse.Usage" id="rev_hes_sparse.Usage">Usage</a></b>
+<br/>
+This routine is used by calls to <a href="revsparsehes.xml" target="_top"><span style='white-space: nowrap'>RevSparseHes</span></a>
+.
+
+<br/>
+<br/>
+<b><a name="rev_hes_sparse.q" id="rev_hes_sparse.q">q</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It specifies the number of columns in the sparsity patterns.
+
+<br/>
+<br/>
+<b><a name="rev_hes_sparse.r" id="rev_hes_sparse.r">r</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>r</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+ are between
+zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This specifies a sparsity pattern for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>R</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="rev_hes_sparse.s" id="rev_hes_sparse.s">s</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;bool&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+This specifies a sparsity pattern for the matrix 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>S</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mn>1</mn>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>m</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="rev_hes_sparse.t" id="rev_hes_sparse.t">t</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>t</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;bool&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>t</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>t</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+The input values of its elements do not matter.
+Upon return it represents a sparsity pattern for the matrix 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>T</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">&#x02218;</mo>
+<mi mathvariant='italic'>f</mi>
+<msup><mo stretchy="false">)</mo>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mn>1</mn>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>n</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><a name="rev_hes_sparse.u" id="rev_hes_sparse.u">u</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>u</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>u</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>u</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>m</span></font></i></code>
+.
+For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>u</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>i</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+
+are between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This specifies a sparsity pattern
+for the matrix 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>U</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+ defined by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>U</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>u</mi>
+</msub>
+<mo stretchy="false">{</mo>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>R</mi>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">]</mo>
+<msub><mo stretchy="false">}</mo>
+<mrow><mi mathvariant='italic'>u</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>u</mi>
+</msub>
+<mo stretchy="false">{</mo>
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>R</mi>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">]</mo>
+<msub><mo stretchy="false">}</mo>
+<mrow><mi mathvariant='italic'>u</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>g</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>2</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+<msup><mi mathvariant='italic'>f</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>R</mi>
+</mtd></mtr></mtable>
+</mrow></math>
+
+<br/>
+<b><a name="rev_hes_sparse.v" id="rev_hes_sparse.v">v</a></b>
+<br/>
+The 
+<code><i><font color="black"><span style='white-space: nowrap'>rev_hes_sparse</span></font></i></code>
+ argument 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CppAD::vector&lt;&#xA0;std::set&lt;size_t&gt;&#xA0;&gt;&amp;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+and 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>.size()&#xA0;&gt;=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>n</span></font></i></code>
+.
+The input values of its elements do not matter.
+Upon return, for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>j</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+all the elements of 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>[</span></font><i><font color="black"><span style='white-space: nowrap'>j</span></font></i><font color="blue"><span style='white-space: nowrap'>]</span></font></code>
+
+are between zero and 
+<code><i><font color="black"><span style='white-space: nowrap'>q</span></font></i><font color="blue"><span style='white-space: nowrap'>-1</span></font></code>
+ inclusive.
+This represents a sparsity pattern for the matrix 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>V</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mi mathvariant='italic'>B</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">&#x000D7;</mo>
+<mi mathvariant='italic'>q</mi>
+</mrow>
+</msup>
+</mrow></math>
+
+ defined by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>V</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>u</mi>
+</msub>
+<mo stretchy="false">[</mo>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">&#x02218;</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>R</mi>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<msub><mo stretchy="false">]</mo>
+<mrow><mi mathvariant='italic'>u</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>u</mi>
+</msub>
+<mo stretchy="false">[</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">&#x02218;</mo>
+<mi mathvariant='italic'>f</mi>
+<msup><mo stretchy="false">)</mo>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>R</mi>
+<mi mathvariant='italic'>u</mi>
+<mo stretchy="false">)</mo>
+<msub><mo stretchy="false">]</mo>
+<mrow><mi mathvariant='italic'>u</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">&#x02218;</mo>
+<mi mathvariant='italic'>f</mi>
+<msup><mo stretchy="false">)</mo>
+<mrow><mo stretchy="false">(</mo>
+<mn>2</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='italic'>R</mi>
+</mtd></mtr></mtable>
+</mrow></math>
+
+<br/>
+<b><big><a name="clear" id="clear">clear</a></big></b>
+<br/>
+User atomic functions hold onto static work space in order to
+increase speed by avoiding system memory allocation calls.
+The function call 
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;user_atomic&lt;</span></font><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i><font color="blue"><span style='white-space: nowrap'>&gt;::clear()<br/>
+</span></font></code>
+makes to work space <a href="ta_available.xml" target="_top"><span style='white-space: nowrap'>available</span></a>
+ to
+for other uses by the same thread.
+This should be called when you are done using the 
+user atomic functions for a specific value of 
+<code><i><font color="black"><span style='white-space: nowrap'>Base</span></font></i></code>
+.
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+
+<br/>
+<br/>
+<b><a name="Example.Tangent Function" id="Example.Tangent Function">Tangent Function</a></b>
+<br/>
+The file <a href="user_tan.cpp.xml" target="_top"><span style='white-space: nowrap'>user_tan.cpp</span></a>
+ contains an example and test
+implementation of the tangent function as a user atomic operation.
+
+<br/>
+<br/>
+<b><a name="Example.Matrix Multiplication" id="Example.Matrix Multiplication">Matrix Multiplication</a></b>
+<br/>
+The file  <a href="mat_mul.cpp.xml" target="_top"><span style='white-space: nowrap'>mat_mul.cpp</span></a>
+ contains an example and test
+implementation of matrix multiplication a a user atomic operation.
+
+
+<hr/>Input File: cppad/local/user_atomic.hpp
+
+</body>
+</html>

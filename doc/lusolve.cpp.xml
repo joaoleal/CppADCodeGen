@@ -1,0 +1,166 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>LuSolve With Complex Arguments: Example and Test</title>
+<meta name="description" id="description" content="LuSolve With Complex Arguments: Example and Test"/>
+<meta name="keywords" id="keywords" content=" complex Lusolve example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_lusolve.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="lusolve.xml" target="_top">Prev</a>
+</td><td><a href="lu_solve.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>LuDetAndSolve</option>
+<option>LuSolve</option>
+<option>LuSolve.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>LuDetAndSolve-&gt;</option>
+<option>LuSolve</option>
+<option>LuFactor</option>
+<option>LuInvert</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>LuSolve-&gt;</option>
+<option>LuSolve.cpp</option>
+<option>lu_solve.hpp</option>
+</select>
+</td>
+<td>LuSolve.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>LuSolve With Complex Arguments: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/lu_solve.hpp&gt;       // for CppAD::LuSolve
+# include &lt;cppad/near_equal.hpp&gt;     // for CppAD::NearEqual
+# include &lt;cppad/vector.hpp&gt;  // for CppAD::vector
+# include &lt;complex&gt;               // for std::complex
+
+typedef std::complex&lt;double&gt; Complex;    // define the Complex type
+bool LuSolve(void)
+{	bool  ok = true;
+	using namespace CppAD;
+
+	size_t   n = 3;           // number rows in A and B
+	size_t   m = 2;           // number columns in B, X and S
+
+	// A is an n by n matrix, B, X, and S are n by m matrices
+	CppAD::vector&lt;Complex&gt; A(n * n), B(n * m), X(n * m) , S(n * m);
+
+	Complex  logdet;          // log of determinant of A
+	int      signdet;         // zero if A is singular
+	Complex  det;             // determinant of A
+	size_t   i, j, k;         // some temporary indices
+
+	// set A equal to the n by n Hilbert Matrix
+	for(i = 0; i &lt; n; i++)
+		for(j = 0; j &lt; n; j++)
+			A[i * n + j] = 1. / (double) (i + j + 1);
+
+	// set S to the solution of the equation we will solve
+	for(j = 0; j &lt; n; j++)
+		for(k = 0; k &lt; m; k++)
+			S[ j * m + k ] = Complex(j, j + k);
+		
+	// set B = A * S 
+	size_t ik;
+	Complex sum;
+	for(k = 0; k &lt; m; k++)
+	{	for(i = 0; i &lt; n; i++)
+		{	sum = 0.;
+			for(j = 0; j &lt; n; j++)
+				sum += A[i * n + j] * S[j * m + k];
+			B[i * m + k] = sum;
+		}
+	}
+
+	// solve the equation A * X = B and compute determinant of A
+	signdet = CppAD::LuSolve(n, m, A, B, X, logdet);
+	det     = Complex( signdet ) * exp( logdet );
+
+	double cond  = 4.62963e-4;       // condition number of A when n = 3
+	double determinant = 1. / 2160.; // determinant of A when n = 3
+	double delta = 1e-14 / cond;     // accuracy expected in X
+
+	// check determinant
+	ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(det, determinant, delta, delta);
+
+	// check solution
+	for(ik = 0; ik &lt; n * m; ik++)
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(X[ik], S[ik], delta, delta);
+
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/lu_solve.cpp
+
+</body>
+</html>

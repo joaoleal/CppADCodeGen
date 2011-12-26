@@ -1,0 +1,53 @@
+# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+# automake input file
+#
+# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+DEFS          =
+#
+if CppAD_BOOST_DIR
+BOOST_INCLUDE = -I$(BOOST_DIR)
+else
+BOOST_INCLUDE =
+endif
+#
+# Make sure that ../cppad-uninstalled.pc works for determining cflags
+if CppAD_PKG_CONFIG
+CPPAD_INCLUDE = `( \
+	export PKG_CONFIG_PATH=$(top_builddir)/pkgconfig ; \
+	pkg-config --cflags cppad \
+)`
+else
+CPPAD_INCLUDE = -I$(top_srcdir)
+endif
+#
+# Microsoft project files
+EXTRA_DIST        = print_for.sln print_for.vcproj
+#
+check_PROGRAMS    = print_for
+#
+AM_CPPFLAGS       = -I. $(CPPAD_INCLUDE) $(BOOST_INCLUDE)
+#
+AM_CXXFLAGS       = -g $(CXX_FLAGS)
+#
+print_for_SOURCES = print_for.cpp
+
+test.sh: print_for$(EXEEXT)
+	echo "#! /bin/sh -e"                                     > test.sh
+	echo "./print_for | tee test.log"                       >> test.sh
+	echo "sed -e '/^Test passes/,\$$d' < test.log > test.1" >> test.sh
+	echo "sed -e '1,/^Test passes/d'   < test.log > test.2" >> test.sh
+	echo "if ! diff test.1 test.2 ; then exit 1 ; fi"       >> test.sh
+	chmod +x test.sh
+
+test: test.sh
+	./test.sh

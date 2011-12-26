@@ -1,0 +1,472 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>AD Binary Arithmetic Operators</title>
+<meta name="description" id="description" content="AD Binary Arithmetic Operators"/>
+<meta name="keywords" id="keywords" content=" binary operator + add plus - subtract minus * multiply times / divide "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_ad_binary_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="unaryminus.cpp.xml" target="_top">Prev</a>
+</td><td><a href="add.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>Arithmetic</option>
+<option>ad_binary</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Arithmetic-&gt;</option>
+<option>UnaryPlus</option>
+<option>UnaryMinus</option>
+<option>ad_binary</option>
+<option>compute_assign</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>ad_binary-&gt;</option>
+<option>Add.cpp</option>
+<option>Sub.cpp</option>
+<option>Mul.cpp</option>
+<option>Div.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Op</option>
+<option>Base</option>
+<option>x</option>
+<option>y</option>
+<option>z</option>
+<option>Operation Sequence</option>
+<option>Example</option>
+<option>Derivative</option>
+<option>---..Addition</option>
+<option>---..Subtraction</option>
+<option>---..Multiplication</option>
+<option>---..Division</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>AD Binary Arithmetic Operators</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>z</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>Op</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i>
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Performs arithmetic operations where either <i>x</i> or <i>y</i>
+has type 
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code> or
+<a href="vecad.xml#VecAD&lt;Base&gt;::reference" target="_top"><span style='white-space: nowrap'>VecAD&lt;Base&gt;::reference</span></a>
+. 
+
+<br/>
+<br/>
+<b><big><a name="Op" id="Op">Op</a></big></b>
+<br/>
+The operator <i>Op</i> is one of the following
+<table><tr><td align='left'  valign='top'>
+
+<b>Op</b>  </td><td align='left'  valign='top'>
+ <b>Meaning</b> </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue">+</font></code>   </td><td align='left'  valign='top'>
+ <i>z</i> is <i>x</i> plus <i>y</i> </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue">-</font></code>   </td><td align='left'  valign='top'>
+ <i>z</i> is <i>x</i> minus <i>y</i> </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue">*</font></code>   </td><td align='left'  valign='top'>
+ <i>z</i> is <i>x</i> times <i>y</i> </td></tr><tr><td align='left'  valign='top'>
+
+<code><font color="blue">/</font></code>   </td><td align='left'  valign='top'>
+ <i>z</i> is <i>x</i> divided by <i>y</i> 
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Base" id="Base">Base</a></big></b>
+<br/>
+The type <i>Base</i> is determined by the operand that
+has type <code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code> or <code><font color="blue"><span style='white-space: nowrap'>VecAD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;::reference</span></font></code>.
+
+<br/>
+<br/>
+<b><big><a name="x" id="x">x</a></big></b>
+<br/>
+The operand <i>x</i> has the following prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Type</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>where <i>Type</i> is
+<code><font color="blue"><span style='white-space: nowrap'>VecAD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;::reference</span></font></code>,
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>,
+<i>Base</i>, or
+<code><font color="blue">double</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="y" id="y">y</a></big></b>
+<br/>
+The operand <i>y</i> has the following prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Type</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>where <i>Type</i> is
+<code><font color="blue"><span style='white-space: nowrap'>VecAD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;::reference</span></font></code>,
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>,
+<i>Base</i>, or
+<code><font color="blue">double</font></code>.
+
+
+<br/>
+<br/>
+<b><big><a name="z" id="z">z</a></big></b>
+<br/>
+The result <i>z</i> has the following prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Type</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>z</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>where <i>Type</i> is
+<code><font color="blue"><span style='white-space: nowrap'>AD&lt;</span></font></code><i><span style='white-space: nowrap'>Base</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;</span></font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+This is an <a href="glossary.xml#Operation.Atomic" target="_top"><span style='white-space: nowrap'>atomic</span></a>
+
+<a href="glossary.xml#AD of Base" target="_top"><span style='white-space: nowrap'>AD&#xA0;of&#xA0;Base</span></a>
+ operation
+and hence it is part of the current
+AD of <i>Base</i> 
+<a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+.
+
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+<br/>
+The following files contain examples and tests of these functions.
+Each test returns true if it succeeds and false otherwise.
+<table><tr><td align='left'  valign='top'>
+
+<a href="add.cpp.xml" target="_top">Add.cpp</a></td><td>
+AD Binary Addition: Example and Test</td></tr>
+<tr><td>
+
+<a href="sub.cpp.xml" target="_top">Sub.cpp</a></td><td>
+AD Binary Subtraction: Example and Test</td></tr>
+<tr><td>
+
+<a href="mul.cpp.xml" target="_top">Mul.cpp</a></td><td>
+AD Binary Multiplication: Example and Test</td></tr>
+<tr><td>
+
+<a href="div.cpp.xml" target="_top">Div.cpp</a></td><td>
+AD Binary Division: Example and Test</td></tr>
+<tr><td>
+
+</td></tr>
+</table>
+<br/>
+<b><big><a name="Derivative" id="Derivative">Derivative</a></big></b>
+<br/>
+If 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>f</mi>
+</mrow></math>
+
+ and 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>g</mi>
+</mrow></math>
+
+ are 
+<a href="glossary.xml#Base Function" target="_top"><span style='white-space: nowrap'>Base&#xA0;functions</span></a>
+
+
+<br/>
+<br/>
+<b><a name="Derivative.Addition" id="Derivative.Addition">Addition</a></b>
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">+</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+</mrow></math>
+
+<br/>
+<b><a name="Derivative.Subtraction" id="Derivative.Subtraction">Subtraction</a></b>
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">-</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+</mrow></math>
+
+<br/>
+<b><a name="Derivative.Multiplication" id="Derivative.Multiplication">Multiplication</a></b>
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">+</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">*</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+</mrow></math>
+
+<br/>
+<b><a name="Derivative.Division" id="Derivative.Division">Division</a></b>
+
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<mo stretchy="false">[</mo>
+<mn>1</mn>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">*</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+<mo stretchy="false">-</mo>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>f</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<msup><mo stretchy="false">)</mo>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">*</mo>
+<mfrac><mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+<mrow><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</mrow>
+</mfrac>
+</mrow></math>
+
+
+<hr/>Input File: cppad/local/ad_binary.hpp
+
+</body>
+</html>

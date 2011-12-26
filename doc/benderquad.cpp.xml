@@ -1,0 +1,517 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>BenderQuad: Example and Test</title>
+<meta name="description" id="description" content="BenderQuad: Example and Test"/>
+<meta name="keywords" id="keywords" content=" Benderquad example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_benderquad.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="benderquad.xml" target="_top">Prev</a>
+</td><td><a href="opt_val_hes.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>BenderQuad</option>
+<option>BenderQuad.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>BenderQuad-&gt;</option>
+<option>BenderQuad.cpp</option>
+</select>
+</td>
+<td>BenderQuad.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>BenderQuad: Example and Test</big></big></b></center>
+Define 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">:</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x000D7;</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mo stretchy="false">&#x02192;</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+</mrow></math>
+
+ by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mfrac><mrow><mn>1</mn>
+</mrow>
+<mrow><mn>2</mn>
+</mrow>
+</mfrac>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>N</mi>
+</munderover>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">*</mo>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>z</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<msup><mo stretchy="false">]</mo>
+<mn>2</mn>
+</msup>
+</mrow></math>
+
+where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">&#x02208;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>N</mi>
+</msup>
+</mrow></math>
+
+ is a fixed vector.
+It follows that
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>N</mi>
+</munderover>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">*</mo>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">-</mo>
+<msub><mi mathvariant='italic'>z</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">]</mo>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>N</mi>
+</munderover>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<msup><mo stretchy="false">)</mo>
+<mn>2</mn>
+</msup>
+</mtd></mtr></mtable>
+</mrow></math>
+
+Furthermore if we define 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ 
+as the argmin of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<mi mathvariant='italic'>Y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">-</mo>
+<mo stretchy="false">[</mo>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+<msup><mo stretchy="false">]</mo>
+<mrow><mn>-1</mn>
+</mrow>
+</msup>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>y</mi>
+</msub>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">]</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mrow><mo stretchy="true"> </mo><mrow><munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>N</mi>
+</munderover>
+<msub><mi mathvariant='italic'>z</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mo stretchy="false">)</mo>
+</mrow><mo stretchy="true">/</mo></mrow>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>1</mn>
+</mrow>
+<mi mathvariant='italic'>N</mi>
+</munderover>
+<msub><mi mathvariant='italic'>z</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<mi>sin</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">*</mo>
+<msub><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+<msup><mo stretchy="false">)</mo>
+<mn>2</mn>
+</msup>
+</mtd></mtr></mtable>
+</mrow></math>
+
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+
+namespace {
+	using CppAD::AD;
+	typedef <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;         BAvector;
+	typedef <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt;   ADvector;
+
+	class Fun {
+	private:
+		BAvector t_; // measurement times
+		BAvector z_; // measurement values
+	public:
+		// constructor
+		Fun(const BAvector &amp;t, const BAvector &amp;z)
+		: t_(t), z_(z)
+		{ }
+		// Fun.f(x, y) = F(x, y)
+		ADvector f(const ADvector &amp;x, const ADvector &amp;y)
+		{	size_t i;
+			size_t N = z_.size();
+
+			ADvector F(1);
+			F[0] = 0.;
+
+			<a href="ad.xml" target="_top">AD</a>&lt;double&gt; residual;
+			for(i = 0; i &lt; N; i++)
+			{	residual = y[0] * sin( x[0] * t_[i] ) - z_[i];
+				F[0]    += .5 * residual * residual;
+			}
+			return F;
+		}
+		// Fun.h(x, y) = H(x, y) = F_y (x, y)
+		ADvector h(const ADvector &amp;x, const BAvector &amp;y)
+		{	size_t i;
+			size_t N = z_.size();
+
+			ADvector fy(1);
+			fy[0] = 0.;
+
+			<a href="ad.xml" target="_top">AD</a>&lt;double&gt; residual;
+			for(i = 0; i &lt; N; i++)
+			{	residual = y[0] * sin( x[0] * t_[i] ) - z_[i];
+				fy[0]   += residual * sin( x[0] * t_[i] );
+			}
+			return fy;
+		}
+		// Fun.dy(x, y, h) = - H_y (x,y)^{-1} * h 
+		//                 = - F_yy (x, y)^{-1} * h
+		ADvector dy(
+			const BAvector &amp;x , 
+			const BAvector &amp;y , 
+			const ADvector &amp;H )
+		{	size_t i;
+			size_t N = z_.size();
+
+			ADvector Dy(1);
+			<a href="ad.xml" target="_top">AD</a>&lt;double&gt; fyy = 0.;
+
+			for(i = 0; i &lt; N; i++)
+			{	fyy += sin( x[0] * t_[i] ) * sin( x[0] * t_[i] );
+			}
+			Dy[0] = - H[0] / fyy;
+
+			return Dy;
+		}
+	};
+
+	// Used to test calculation of Hessian of G
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; G(const ADvector&amp; x, const BAvector&amp; t, const BAvector&amp; z)
+	{	// compute Y(x)
+		<a href="ad.xml" target="_top">AD</a>&lt;double&gt; numerator = 0.;
+		<a href="ad.xml" target="_top">AD</a>&lt;double&gt; denominator = 0.;
+		size_t k;
+		for(k = 0; k &lt; t.size(); k++)
+		{	numerator   += sin( x[0] * t[k] ) * z[k];
+			denominator += sin( x[0] * t[k] ) * sin( x[0] * t[k] ); 	
+		}
+		<a href="ad.xml" target="_top">AD</a>&lt;double&gt; y = numerator / denominator;
+
+		// V(x) = F[x, Y(x)]
+		<a href="ad.xml" target="_top">AD</a>&lt;double&gt; sum = 0;
+		for(k = 0; k &lt; t.size(); k++)
+		{	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; residual = y * sin( x[0] * t[k] ) - z[k];
+			sum += .5 * residual * residual;
+		}
+		return sum;
+	}
+}
+
+bool BenderQuad(void)
+{	bool ok = true;
+	using CppAD::AD;
+	using CppAD::NearEqual;
+
+	// temporary indices
+	size_t i, j;
+
+	// x space vector
+	size_t n = 1;
+	BAvector x(n);
+	x[0] = 2. * 3.141592653;
+
+	// y space vector
+	size_t m = 1;
+	BAvector y(m);
+	y[0] = 1.;
+
+	// t and z vectors
+	size_t N = 10;
+	BAvector t(N);
+	BAvector z(N);
+	for(i = 0; i &lt; N; i++)
+	{	t[i] = double(i) / double(N);       // time of measurement
+		z[i] = y[0] * sin( x[0] * t[i] );   // data without noise
+	}
+
+	// construct the function object 
+	Fun fun(t, z);
+
+	// evaluate the G(x), G'(x) and G''(x)
+	BAvector g(1), gx(n), gxx(n * n);
+	CppAD::BenderQuad(x, y, fun, g, gx, gxx);
+
+
+	// create ADFun object Gfun corresponding to G(x)
+	ADvector a_x(n), a_g(1);
+	for(j = 0; j &lt; n; j++)
+		a_x[j] = x[j];
+	<a href="independent.xml" target="_top">Independent</a>(a_x);
+	a_g[0] = G(a_x, t, z);
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; Gfun(a_x, a_g);
+
+	// accuracy for checks
+	double eps = 10. * CppAD::epsilon&lt;double&gt;();
+
+	// check Jacobian
+	BAvector check_gx = Gfun.<a href="jacobian.xml" target="_top">Jacobian</a>(x);
+	for(j = 0; j &lt; n; j++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(gx[j], check_gx[j], eps, eps);
+
+	// check Hessian
+	BAvector check_gxx = Gfun.Hessian(x, 0);
+	for(j = 0; j &lt; n*n; j++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(gxx[j], check_gxx[j], eps, eps);
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/bender_quad.cpp
+
+</body>
+</html>

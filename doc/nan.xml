@@ -1,0 +1,372 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Obtain Nan or Determine if a Value is Nan</title>
+<meta name="description" id="description" content="Obtain Nan or Determine if a Value is Nan"/>
+<meta name="keywords" id="keywords" content=" isnan hasnan nan macro parallel user_atomic "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_nan_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="checksimplevector.cpp.xml" target="_top">Prev</a>
+</td><td><a href="nan.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>nan</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>nan-&gt;</option>
+<option>nan.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Include</option>
+<option>---..Macros</option>
+<option>nan</option>
+<option>---..z</option>
+<option>---..s</option>
+<option>isnan</option>
+<option>---..s</option>
+<option>---..b</option>
+<option>hasnan</option>
+<option>---..v</option>
+<option>---..b</option>
+<option>Scalar</option>
+<option>Vector</option>
+<option>Parallel Mode</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Obtain Nan or Determine if a Value is Nan</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>#&#xA0;include&#xA0;&lt;cppad/nan.hpp&gt;<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;nan(</span></font><i><font color="black"><span style='white-space: nowrap'>z</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>b</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;isnan(</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+
+<code><i><font color="black"><span style='white-space: nowrap'>b</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;hasnan(</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+It obtain and check for the value not a number <code><font color="blue">nan</font></code>.
+The IEEE standard specifies that a floating point value 
+<code><i><font color="black"><span style='white-space: nowrap'>a</span></font></i></code>
+ 
+is <code><font color="blue">nan</font></code> if and only if the following returns true
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>a</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;!=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>a</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+Some systems do not get this correct, so we also use the fact that
+zero divided by zero should result in a <code><font color="blue">nan</font></code>.
+To be specific, if a value is not equal to itself or 
+if it is equal to zero divided by zero, it is considered to be a <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/nan.hpp</font></code> is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest of 
+the <code><font color="blue">CppAD</font></code> routines.
+
+<br/>
+<br/>
+<b><a name="Include.Macros" id="Include.Macros">Macros</a></b>
+
+
+
+
+<br/>
+Some C++ compilers use preprocessor symbols called <code><font color="blue">nan</font></code> 
+and <code><font color="blue">isnan</font></code>.
+These preprocessor symbols will no longer be defined after 
+this file is included. 
+
+<br/>
+<br/>
+<b><big><a name="nan" id="nan">nan</a></big></b>
+<br/>
+This routine returns a <code><font color="blue">nan</font></code> with the same type as 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><a name="nan.z" id="nan.z">z</a></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>z</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>z</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;<br/>
+</span></font></code>
+and its value is zero
+(see <a href="nan.xml#Scalar" target="_top"><span style='white-space: nowrap'>Scalar</span></a>
+ for the definition of 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+).
+
+<br/>
+<br/>
+<b><a name="nan.s" id="nan.s">s</a></b>
+<br/>
+The return value 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is the value <code><font color="blue">nan</font></code> for this floating point type.
+
+<br/>
+<br/>
+<b><big><a name="isnan" id="isnan">isnan</a></big></b>
+<br/>
+This routine determines if a scalar value is <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><a name="isnan.s" id="isnan.s">s</a></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+<br/>
+<b><a name="isnan.b" id="isnan.b">b</a></b>
+<br/>
+The return value 
+<code><i><font color="black"><span style='white-space: nowrap'>b</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is true if the value 
+<code><i><font color="black"><span style='white-space: nowrap'>s</span></font></i></code>
+ is <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="hasnan" id="hasnan">hasnan</a></big></b>
+<br/>
+This routine determines if a 
+<a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ has an element that is <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><a name="hasnan.v" id="hasnan.v">v</a></b>
+<br/>
+The argument 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>Vector</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font><i><font color="black"><span style='white-space: nowrap'>v</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+(see <a href="nan.xml#Vector" target="_top"><span style='white-space: nowrap'>Vector</span></a>
+ for the definition of 
+<code><i><font color="black"><span style='white-space: nowrap'>Vector</span></font></i></code>
+).
+
+<br/>
+<br/>
+<b><a name="hasnan.b" id="hasnan.b">b</a></b>
+<br/>
+The return value 
+<code><i><font color="black"><span style='white-space: nowrap'>b</span></font></i></code>
+ has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;bool&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+It is true if the vector 
+<code><i><font color="black"><span style='white-space: nowrap'>v</span></font></i></code>
+ has a <code><font color="blue">nan</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="Scalar" id="Scalar">Scalar</a></big></b>
+<br/>
+The type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ must support the following operations;
+<table><tr><td align='left'  valign='top'>
+
+<b>Operation</b> </td><td align='left'  valign='top'>
+ <b>Description</b>  </td></tr><tr><td align='left'  valign='top'>
+
+
+<code><i><font color="black"><span style='white-space: nowrap'>a</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;/&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i></code>
+ </td><td align='left'  valign='top'>
+
+	division operator (returns a 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+ object)
+</td></tr><tr><td align='left'  valign='top'>
+
+
+<code><i><font color="black"><span style='white-space: nowrap'>a</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;==&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i></code>
+ </td><td align='left'  valign='top'>
+
+	equality operator (returns a <code><font color="blue">bool</font></code> object)
+</td></tr><tr><td align='left'  valign='top'>
+
+
+<code><i><font color="black"><span style='white-space: nowrap'>a</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;!=&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i></code>
+ </td><td align='left'  valign='top'>
+
+	not equality operator (returns a <code><font color="blue">bool</font></code> object)
+</td></tr>
+</table>
+Note that the division operator will be used with 
+<code><i><font color="black"><span style='white-space: nowrap'>a</span></font></i></code>
+ and <i>b</i>
+equal to zero. For some types (e.g. <code><font color="blue">int</font></code>) this may generate
+an exception. No attempt is made to catch any such exception.
+
+<br/>
+<br/>
+<b><big><a name="Vector" id="Vector">Vector</a></big></b>
+<br/>
+The type 
+<code><i><font color="black"><span style='white-space: nowrap'>Vector</span></font></i></code>
+ must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class with
+elements of type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+.
+
+<br/>
+<br/>
+<b><big><a name="Parallel Mode" id="Parallel Mode">Parallel Mode</a></big></b>
+
+
+<br/>
+For each type 
+<code><i><font color="black"><span style='white-space: nowrap'>Scalar</span></font></i></code>
+,
+the first call to
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>b</span></font></i><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;isnan(</span></font><i><font color="black"><span style='white-space: nowrap'>s</span></font></i><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>
+must not be <a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>parallel</span></a>
+ execution mode; 
+see <code><font color="blue">isnan</font></code> in <a href="parallel_ad.xml#isnan" target="_top"><span style='white-space: nowrap'>parallel_ad</span></a>
+.
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+<br/>
+The file <a href="nan.cpp.xml" target="_top"><span style='white-space: nowrap'>nan.cpp</span></a>
+
+contains an example and test of this routine.
+It returns true if it succeeds and false otherwise.
+
+
+<hr/>Input File: cppad/nan.hpp
+
+</body>
+</html>

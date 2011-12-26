@@ -1,0 +1,68 @@
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the 
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+# automake input file
+#
+# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+
+if CppAD_BOOST_DIR
+BOOST_INCLUDE = -I$(BOOST_DIR)
+else
+BOOST_INCLUDE =
+endif
+#
+
+#check_PROGRAMS    = test_joao
+#
+AM_CPPFLAGS       = -I. \
+	-I$(top_srcdir) \
+	$(BOOST_INCLUDE)
+	
+#
+AM_CXXFLAGS       = -O0 -g $(CXX_FLAGS)
+#
+
+noinst_bin_PROGRAMS        = testCodeGen
+noinst_bindir              = testCodeGen
+testCodeGen_SOURCES        = test_code_gen.cpp \
+	                     abs.cpp \
+			     acos.cpp \
+	                     add.cpp \
+                             asin.cpp \
+                             atan.cpp \
+                             atan_2.cpp \
+                             compare_change.cpp \
+                             cond_exp.cpp \
+                             cos.cpp \
+                             div.cpp \
+                             exp.cpp \
+                             log.cpp \
+                             log_10.cpp \
+                             mul.cpp \
+                             parameter.cpp \
+                             pow.cpp \
+                             sin.cpp \
+                             sub.cpp \
+                             tan.cpp \
+	                     gcc_load_dynamic.cpp \
+	                     TestException.cpp
+testCodeGen_LDADD          = -ldl
+
+#ndebug.$(OBJEXT): ndebug.cpp
+#	$(CXXCOMPILE) \
+#	-DNDEBUG -c $(top_srcdir)/test_joao/ndebug.cpp -o ndebug.$(OBJEXT)
+
+#test.sh: test_joao$(EXEEXT)
+#	echo "#! /bin/sh -e"  > test.sh
+#	echo "./test_joao "  >> test.sh
+#	chmod +x test.sh
+
+#test: test.sh
+#	./test.sh

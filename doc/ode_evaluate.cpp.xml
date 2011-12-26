@@ -1,0 +1,142 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>ode_evaluate: Example and test</title>
+<meta name="description" id="description" content="ode_evaluate: Example and test"/>
+<meta name="keywords" id="keywords" content=" ode_evaluate example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_ode_evaluate.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ode_evaluate.xml" target="_top">Prev</a>
+</td><td><a href="ode_evaluate.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>ode_evaluate</option>
+<option>ode_evaluate.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ode_evaluate-&gt;</option>
+<option>ode_evaluate.cpp</option>
+<option>ode_evaluate.hpp</option>
+</select>
+</td>
+<td>ode_evaluate.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>ode_evaluate: Example and test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/speed/ode_evaluate.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/cppad.hpp&gt;
+
+bool ode_evaluate(void)
+{	using CppAD::NearEqual;
+	using CppAD::AD;
+
+	bool ok = true;
+
+	size_t n = 3;
+	CppAD::vector&lt;double&gt;       x(n);
+	CppAD::vector&lt;double&gt;       ym(n * n);
+	CppAD::vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	CppAD::vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Ym(n);
+
+	// choose x
+	size_t j;
+	for(j = 0; j &lt; n; j++)
+	{	x[j] = double(j + 1);
+		X[j] = x[j];
+	}
+
+	// declare independent variables
+	<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// evaluate function
+	size_t m = 0;
+	CppAD::ode_evaluate(X, m, Ym);
+
+	// evaluate derivative
+	m = 1;
+	CppAD::ode_evaluate(x, m, ym);
+
+	// use AD to evaluate derivative
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt;   F(X, Ym);
+	CppAD::vector&lt;double&gt;  dy(n * n);
+	dy = F.<a href="jacobian.xml" target="_top">Jacobian</a>(x);
+
+	size_t k;
+	for(k = 0; k &lt; n * n; k++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(ym[k], dy[k] , 1e-7, 1e-7);
+ 
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: speed/example/ode_evaluate.cpp
+
+</body>
+</html>

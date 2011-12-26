@@ -1,0 +1,198 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Run the Speed Examples</title>
+<meta name="description" id="description" content="Run the Speed Examples"/>
+<meta name="keywords" id="keywords" content=" speed example program "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_speed_example.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="example.cpp.xml" target="_top">Prev</a>
+</td><td><a href="luvecad.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>ExampleUtility</option>
+<option>speed_example.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>ExampleUtility-&gt;</option>
+<option>example.cpp</option>
+<option>speed_example.cpp</option>
+<option>LuVecAD</option>
+</select>
+</td>
+<td>speed_example.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Running Tests</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+
+<center><b><big><big>Run the Speed Examples</big></big></b></center>
+<br/>
+<b><big><a name="Running Tests" id="Running Tests">Running Tests</a></big></b>
+<br/>
+To build this program and run its correctness tests,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/example<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+
+// various example routines
+extern bool det_of_minor(void);
+extern bool det_by_lu(void);
+extern bool det_by_minor(void);
+extern bool elapsed_seconds(void);
+extern bool mat_sum_sq(void);
+extern bool ode_evaluate(void);
+extern bool sparse_evaluate(void);
+extern bool speed_test(void);
+extern bool time_test(void);
+
+namespace {
+	// function that runs one test
+	size_t Run_ok_count    = 0;
+	size_t Run_error_count = 0;
+	const char* exception_list[] = {
+		&quot;elapsed_seconds&quot;,
+		&quot;speed_test&quot;,
+		&quot;time_test&quot;
+	};
+	size_t n_exception = sizeof(exception_list) / sizeof(exception_list[0]);
+	bool Run(bool TestOk(void), std::string name)
+	{	bool ok               = true;
+		std::streamsize width =  20;         
+		std::cout.width( width );
+		std::cout.setf( std::ios_base::left );
+		std::cout &lt;&lt; name;
+		bool exception = false;
+		for(size_t i = 0; i &lt; n_exception; i++)
+			exception |= exception_list[i] == name;
+		//
+		ok &amp;= name.size() &lt; size_t(width);
+		ok &amp;= TestOk();
+		if( ok )
+		{	std::cout &lt;&lt; &quot;OK&quot; &lt;&lt; std::endl;
+			Run_ok_count++;
+		}
+		else if ( exception )
+		{	std::cout &lt;&lt; &quot;Error: perhaps too many other programs running&quot;;
+			std::cout &lt;&lt; std::endl;
+			// no change to Run_ok_count
+			ok = true;
+		}
+		else
+		{	std::cout &lt;&lt; &quot;Error&quot; &lt;&lt; std::endl;
+			Run_error_count++;
+		}
+		return ok;
+	}
+}
+
+// main program that runs all the tests
+int main(void)
+{	bool ok = true;
+	using std::cout;
+	using std::endl;
+
+	ok &amp;= Run(det_of_minor,          &quot;det_of_minor&quot;   );
+	ok &amp;= Run(det_by_minor,         &quot;det_by_minor&quot;    );
+	ok &amp;= Run(det_by_lu,               &quot;det_by_lu&quot;    );
+	ok &amp;= Run(elapsed_seconds,   &quot;elapsed_seconds&quot;    );
+	ok &amp;= Run(mat_sum_sq,             &quot;mat_sum_sq&quot;    );
+	ok &amp;= Run(ode_evaluate,         &quot;ode_evaluate&quot;    );
+	ok &amp;= Run(sparse_evaluate,   &quot;sparse_evaluate&quot;    );
+	ok &amp;= Run(speed_test,             &quot;speed_test&quot;    );
+	ok &amp;= Run(time_test,               &quot;time_test&quot;    );
+
+	// check for memory leak in previous calculations
+	if( CppAD::memory_leak() )
+		cout &lt;&lt; &quot;Error: memroy leak detected&quot; &lt;&lt; endl;
+
+	assert( ok || (Run_error_count &gt; 0) );
+	if( ok )
+	{	cout &lt;&lt; &quot;All &quot; &lt;&lt; int(Run_ok_count) &lt;&lt; &quot; tests passed &quot;;
+		cout &lt;&lt; &quot;(possibly excepting elapsed_seconds).&quot;;
+	}
+	else	cout &lt;&lt; int(Run_error_count) &lt;&lt; &quot; tests failed.&quot;;
+	cout &lt;&lt; endl;
+
+
+	return static_cast&lt;int&gt;( ! ok );
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: speed/example/example.cpp
+
+</body>
+</html>

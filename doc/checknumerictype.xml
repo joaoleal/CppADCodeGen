@@ -1,0 +1,169 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Check NumericType Class Concept</title>
+<meta name="description" id="description" content="Check NumericType Class Concept"/>
+<meta name="keywords" id="keywords" content=" numeric check concept parallel Checknumerictype "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_checknumerictype_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="numerictype.cpp.xml" target="_top">Prev</a>
+</td><td><a href="checknumerictype.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>CheckNumericType</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>CheckNumericType-&gt;</option>
+<option>CheckNumericType.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>Include</option>
+<option>Parallel Mode</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Check NumericType Class Concept</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<code><font color="blue"><br/>
+# include &lt;cppad/check_numeric_type.hpp&gt;</font></code>
+<code><span style='white-space: nowrap'><br/>
+</span></code><code><font color="blue"><span style='white-space: nowrap'>CheckNumericType&lt;</span></font></code><i><span style='white-space: nowrap'>NumericType</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;()</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+The syntax 
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;CheckNumericType&lt;</span></font></code><i><span style='white-space: nowrap'>NumericType</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;()<br/>
+</span></font></code>preforms compile and run time checks that the type specified
+by <i>NumericType</i> satisfies all the requirements for 
+a <a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+ class. 
+If a requirement is not satisfied,
+a an error message makes it clear what condition is not satisfied.
+
+<br/>
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/check_numeric_type.hpp</font></code> is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest
+if the CppAD include files.
+
+<br/>
+<br/>
+<b><big><a name="Parallel Mode" id="Parallel Mode">Parallel Mode</a></big></b>
+
+
+<br/>
+The routine <a href="ta_parallel_setup.xml" target="_top"><span style='white-space: nowrap'>thread_alloc::parallel_setup</span></a>
+ 
+must be called before it
+can be used in <a href="ta_in_parallel.xml" target="_top"><span style='white-space: nowrap'>parallel</span></a>
+ mode.
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file <a href="checknumerictype.cpp.xml" target="_top"><span style='white-space: nowrap'>CheckNumericType.cpp</span></a>
+
+contains an example and test of this function. 
+It returns true, if it succeeds an false otherwise.
+The comments in this example suggest a way to change the example
+so an error message occurs.
+
+
+<hr/>Input File: cppad/check_numeric_type.hpp
+
+</body>
+</html>

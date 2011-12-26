@@ -1,0 +1,150 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>sparse_evaluate: Example and test</title>
+<meta name="description" id="description" content="sparse_evaluate: Example and test"/>
+<meta name="keywords" id="keywords" content=" sparse_evaluate example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_sparse_evaluate.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="sparse_evaluate.xml" target="_top">Prev</a>
+</td><td><a href="sparse_evaluate.hpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_utility</option>
+<option>sparse_evaluate</option>
+<option>sparse_evaluate.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed_utility-&gt;</option>
+<option>uniform_01</option>
+<option>det_of_minor</option>
+<option>det_by_minor</option>
+<option>det_by_lu</option>
+<option>det_33</option>
+<option>det_grad_33</option>
+<option>mat_sum_sq</option>
+<option>ode_evaluate</option>
+<option>sparse_evaluate</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>sparse_evaluate-&gt;</option>
+<option>sparse_evaluate.cpp</option>
+<option>sparse_evaluate.hpp</option>
+</select>
+</td>
+<td>sparse_evaluate.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>sparse_evaluate: Example and test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/speed/sparse_evaluate.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/cppad.hpp&gt;
+
+bool sparse_evaluate(void)
+{	using CppAD::NearEqual;
+	using CppAD::AD;
+
+	bool ok = true;
+
+	size_t n   = 3;
+	size_t ell = 5;
+	CppAD::vector&lt;size_t&gt;     i(ell);
+	CppAD::vector&lt;size_t&gt;     j(ell);
+	CppAD::vector&lt;double&gt;       x(n);
+	CppAD::vector&lt;double&gt;       ym(n);
+	CppAD::vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	CppAD::vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Ym(1);
+
+	// choose x
+	size_t k;
+	for(k = 0; k &lt; n; k++)
+	{	x[k] = double(k + 1);
+		X[k] = x[k];
+	}
+
+	// choose i, j
+	for(k = 0; k &lt; ell; k++)
+	{	i[k] = k % n;
+		j[k] = (ell - k) % n;
+	}
+
+	// declare independent variables
+	<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// evaluate function
+	size_t m = 0;
+	CppAD::sparse_evaluate(X, i, j, m, Ym);
+
+	// evaluate derivative
+	m = 1;
+	CppAD::sparse_evaluate(x, i, j, m, ym);
+
+	// use AD to evaluate derivative
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt;   F(X, Ym);
+	CppAD::vector&lt;double&gt;     dy(n);
+	dy = F.<a href="jacobian.xml" target="_top">Jacobian</a>(x);
+
+	for(k = 0; k &lt; n; k++)
+		ok &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(ym[k], dy[k] , 1e-10, 1e-10);
+ 
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: speed/example/sparse_evaluate.cpp
+
+</body>
+</html>

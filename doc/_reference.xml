@@ -1,0 +1,588 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Alphabetic Listing of Cross Reference Tags</title>
+<meta name="description" id="description" content="Alphabetic Listing of Cross Reference Tags"/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='__reference_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="license.xml" target="_top">Prev</a>
+</td><td><a href="_index.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>_reference</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>_reference</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>A</option>
+<option>B</option>
+<option>C</option>
+<option>D</option>
+<option>E</option>
+<option>F</option>
+<option>G</option>
+<option>H</option>
+<option>I</option>
+<option>J</option>
+<option>L</option>
+<option>M</option>
+<option>N</option>
+<option>O</option>
+<option>P</option>
+<option>R</option>
+<option>S</option>
+<option>T</option>
+<option>U</option>
+<option>V</option>
+<option>W</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Alphabetic Listing of Cross Reference Tags</big></big></b></center>
+<table>
+<tr valign="top"><td>
+
+<b><big><a name="A">A</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="a11c_bthread.cpp.xml" target="_top">a11c_bthread.cpp</a><br/> </td><td> A Simple Boost Thread Example and Test </td></tr><tr valign="top"><td>
+<a href="a11c_openmp.cpp.xml" target="_top">a11c_openmp.cpp</a><br/> </td><td> A Simple OpenMP Example and Test </td></tr><tr valign="top"><td>
+<a href="a11c_pthread.cpp.xml" target="_top">a11c_pthread.cpp</a><br/> </td><td> A Simple Parallel Pthread Example and Test </td></tr><tr valign="top"><td>
+<a href="abort_recording.xml" target="_top">abort_recording</a><br/> </td><td> Abort Recording of an Operation Sequence </td></tr><tr valign="top"><td>
+<a href="abort_recording.cpp.xml" target="_top">abort_recording.cpp</a><br/> </td><td> Abort Current Recording: Example and Test </td></tr><tr valign="top"><td>
+<a href="abs.xml" target="_top">abs</a><br/> </td><td> AD Absolute Value Function </td></tr><tr valign="top"><td>
+<a href="abs.cpp.xml" target="_top">Abs.cpp</a><br/> </td><td> AD Absolute Value Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="acos.cpp.xml" target="_top">Acos.cpp</a><br/> </td><td> The AD acos Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="acosforward.xml" target="_top">AcosForward</a><br/> </td><td> Arccosine Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="acosreverse.xml" target="_top">AcosReverse</a><br/> </td><td> Arccosine Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+<a href="ad.xml" target="_top">AD</a><br/> </td><td> AD Objects </td></tr><tr valign="top"><td>
+<a href="ad_binary.xml" target="_top">ad_binary</a><br/> </td><td> AD Binary Arithmetic Operators </td></tr><tr valign="top"><td>
+<a href="ad_copy.xml" target="_top">ad_copy</a><br/> </td><td> AD Copy Constructor and Assignment Operator </td></tr><tr valign="top"><td>
+<a href="ad_fun.cpp.xml" target="_top">ad_fun.cpp</a><br/> </td><td> Creating Your Own Interface to an ADFun Object </td></tr><tr valign="top"><td>
+<a href="ad_in_c.cpp.xml" target="_top">ad_in_c.cpp</a><br/> </td><td> Example and Test Linking CppAD to Languages Other than C++ </td></tr><tr valign="top"><td>
+<a href="add.cpp.xml" target="_top">Add.cpp</a><br/> </td><td> AD Binary Addition: Example and Test </td></tr><tr valign="top"><td>
+<a href="addeq.cpp.xml" target="_top">AddEq.cpp</a><br/> </td><td> AD Computed Assignment Addition: Example and Test </td></tr><tr valign="top"><td>
+<a href="adfun.xml" target="_top">ADFun</a><br/> </td><td> ADFun Objects </td></tr><tr valign="top"><td>
+<a href="adolc_det_lu.cpp.xml" target="_top">adolc_det_lu.cpp</a><br/> </td><td> Adolc Speed: Gradient of Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="adolc_det_minor.cpp.xml" target="_top">adolc_det_minor.cpp</a><br/> </td><td> Adolc Speed: Gradient of Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="adolc_mat_mul.cpp.xml" target="_top">adolc_mat_mul.cpp</a><br/> </td><td> Adolc Speed: Matrix Multiplication </td></tr><tr valign="top"><td>
+<a href="adolc_ode.cpp.xml" target="_top">adolc_ode.cpp</a><br/> </td><td> Adolc Speed: Ode </td></tr><tr valign="top"><td>
+<a href="adolc_poly.cpp.xml" target="_top">adolc_poly.cpp</a><br/> </td><td> Adolc Speed: Second Derivative of a Polynomial </td></tr><tr valign="top"><td>
+<a href="adolc_sparse_hessian.cpp.xml" target="_top">adolc_sparse_hessian.cpp</a><br/> </td><td> Adolc Speed: Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="adolc_sparse_jacobian.cpp.xml" target="_top">adolc_sparse_jacobian.cpp</a><br/> </td><td> adolc Speed: sparse_jacobian </td></tr><tr valign="top"><td>
+<a href="advalued.xml" target="_top">ADValued</a><br/> </td><td> AD Valued Operations and Functions </td></tr><tr valign="top"><td>
+<a href="appendix.xml" target="_top">Appendix</a><br/> </td><td> Appendix </td></tr><tr valign="top"><td>
+<a href="arc_tan.cpp.xml" target="_top">arc_tan.cpp</a><br/> </td><td> Two Argument Inverse Tangent Function </td></tr><tr valign="top"><td>
+<a href="arithmetic.xml" target="_top">Arithmetic</a><br/> </td><td> AD Arithmetic Operators and Computed Assignments </td></tr><tr valign="top"><td>
+<a href="asin.cpp.xml" target="_top">Asin.cpp</a><br/> </td><td> The AD asin Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="asinforward.xml" target="_top">AsinForward</a><br/> </td><td> Arcsine Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="asinreverse.xml" target="_top">AsinReverse</a><br/> </td><td> Arcsine Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+<a href="atan.cpp.xml" target="_top">Atan.cpp</a><br/> </td><td> The AD atan Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="atan2.xml" target="_top">atan2</a><br/> </td><td> AD Two Argument Inverse Tangent Function </td></tr><tr valign="top"><td>
+<a href="atan2.cpp.xml" target="_top">Atan2.cpp</a><br/> </td><td> The AD atan2 Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="atanforward.xml" target="_top">AtanForward</a><br/> </td><td> Arctangent Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="atanreverse.xml" target="_top">AtanReverse</a><br/> </td><td> Arctangent Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+
+<b><big><a name="B">B</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="base_adolc.hpp.xml" target="_top">base_adolc.hpp</a><br/> </td><td> Enable use of AD&lt;Base&gt; where Base is Adolc's adouble Type </td></tr><tr valign="top"><td>
+<a href="base_complex.hpp.xml" target="_top">base_complex.hpp</a><br/> </td><td> Enable use of AD&lt;Base&gt; where Base is std::complex&lt;double&gt; </td></tr><tr valign="top"><td>
+<a href="base_cond_exp.xml" target="_top">base_cond_exp</a><br/> </td><td> Base Type Requirements for Conditional Expressions </td></tr><tr valign="top"><td>
+<a href="base_double.hpp.xml" target="_top">base_double.hpp</a><br/> </td><td> Enable use of AD&lt;Base&gt; where Base is double </td></tr><tr valign="top"><td>
+<a href="base_float.hpp.xml" target="_top">base_float.hpp</a><br/> </td><td> Enable use of AD&lt;Base&gt; where Base is float </td></tr><tr valign="top"><td>
+<a href="base_identical.xml" target="_top">base_identical</a><br/> </td><td> Base Type Requirements for Identically Equal Comparisons </td></tr><tr valign="top"><td>
+<a href="base_ordered.xml" target="_top">base_ordered</a><br/> </td><td> Base Type Requirements for Ordered Comparisons </td></tr><tr valign="top"><td>
+<a href="base_require.xml" target="_top">base_require</a><br/> </td><td> AD&lt;Base&gt; Requirements for Base Type </td></tr><tr valign="top"><td>
+<a href="base_std_math.xml" target="_top">base_std_math</a><br/> </td><td> Base Type Requirements for Standard Math Functions </td></tr><tr valign="top"><td>
+<a href="benderquad.xml" target="_top">BenderQuad</a><br/> </td><td> Computing Jacobian and Hessian of Bender's Reduced Objective </td></tr><tr valign="top"><td>
+<a href="benderquad.cpp.xml" target="_top">BenderQuad.cpp</a><br/> </td><td> BenderQuad: Example and Test </td></tr><tr valign="top"><td>
+<a href="bib.xml" target="_top">Bib</a><br/> </td><td> Bibliography </td></tr><tr valign="top"><td>
+<a href="boolfun.xml" target="_top">BoolFun</a><br/> </td><td> AD Boolean Functions </td></tr><tr valign="top"><td>
+<a href="boolfun.cpp.xml" target="_top">BoolFun.cpp</a><br/> </td><td> AD Boolean Functions: Example and Test </td></tr><tr valign="top"><td>
+<a href="boolvalued.xml" target="_top">BoolValued</a><br/> </td><td> Bool Valued Operations and Functions with AD Arguments </td></tr><tr valign="top"><td>
+<a href="bugs.xml" target="_top">Bugs</a><br/> </td><td> Know Bugs and Problems Using CppAD </td></tr><tr valign="top"><td>
+
+<b><big><a name="C">C</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="capacity_taylor.xml" target="_top">capacity_taylor</a><br/> </td><td> Controlling Taylor Coefficients Memory Allocation </td></tr><tr valign="top"><td>
+<a href="checknumerictype.xml" target="_top">CheckNumericType</a><br/> </td><td> Check NumericType Class Concept </td></tr><tr valign="top"><td>
+<a href="checknumerictype.cpp.xml" target="_top">CheckNumericType.cpp</a><br/> </td><td> The CheckNumericType Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="checkpoint.cpp.xml" target="_top">checkpoint.cpp</a><br/> </td><td> Checkpoint and Function Composition: Example and Test </td></tr><tr valign="top"><td>
+<a href="checksimplevector.xml" target="_top">CheckSimpleVector</a><br/> </td><td> Check Simple Vector Concept </td></tr><tr valign="top"><td>
+<a href="checksimplevector.cpp.xml" target="_top">CheckSimpleVector.cpp</a><br/> </td><td> The CheckSimpleVector Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="compare.xml" target="_top">Compare</a><br/> </td><td> AD Binary Comparison Operators </td></tr><tr valign="top"><td>
+<a href="compare.cpp.xml" target="_top">Compare.cpp</a><br/> </td><td> AD Binary Comparison Operators: Example and Test </td></tr><tr valign="top"><td>
+<a href="comparechange.xml" target="_top">CompareChange</a><br/> </td><td> Comparison Changes During Zero Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="comparechange.cpp.xml" target="_top">CompareChange.cpp</a><br/> </td><td> CompareChange and Re-Tape: Example and Test </td></tr><tr valign="top"><td>
+<a href="complexpoly.cpp.xml" target="_top">ComplexPoly.cpp</a><br/> </td><td> Complex Polynomial: Example and Test </td></tr><tr valign="top"><td>
+<a href="compute_assign.xml" target="_top">compute_assign</a><br/> </td><td> AD Computed Assignment Operators </td></tr><tr valign="top"><td>
+<a href="condexp.xml" target="_top">CondExp</a><br/> </td><td> AD Conditional Expressions </td></tr><tr valign="top"><td>
+<a href="condexp.cpp.xml" target="_top">CondExp.cpp</a><br/> </td><td> Conditional Expressions: Example and Test </td></tr><tr valign="top"><td>
+<a href="conj_grad.cpp.xml" target="_top">conj_grad.cpp</a><br/> </td><td> Differentiate Conjugate Gradient Algorithm: Example and Test </td></tr><tr valign="top"><td>
+<a href="convert.xml" target="_top">Convert</a><br/> </td><td> Conversion and Printing of AD Objects </td></tr><tr valign="top"><td>
+<a href="copyad.cpp.xml" target="_top">CopyAD.cpp</a><br/> </td><td> AD Copy Constructor: Example and Test </td></tr><tr valign="top"><td>
+<a href="copybase.cpp.xml" target="_top">CopyBase.cpp</a><br/> </td><td> AD Constructor From Base Type: Example and Test </td></tr><tr valign="top"><td>
+<a href="cos.cpp.xml" target="_top">Cos.cpp</a><br/> </td><td> The AD cos Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="cosh.cpp.xml" target="_top">Cosh.cpp</a><br/> </td><td> The AD cosh Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="cppad.xml" target="_top">CppAD</a><br/> </td><td> cppad-20111219: A Package for Differentiation of C++ Algorithms </td></tr><tr valign="top"><td>
+<a href="cppad_assert.xml" target="_top">cppad_assert</a><br/> </td><td> CppAD Assertions During Execution </td></tr><tr valign="top"><td>
+<a href="cppad_det_lu.cpp.xml" target="_top">cppad_det_lu.cpp</a><br/> </td><td> CppAD Speed: Gradient of Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="cppad_det_minor.cpp.xml" target="_top">cppad_det_minor.cpp</a><br/> </td><td> CppAD Speed: Gradient of Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="cppad_ipopt_nlp.xml" target="_top">cppad_ipopt_nlp</a><br/> </td><td> Nonlinear Programming Using the CppAD Interface to Ipopt </td></tr><tr valign="top"><td>
+<a href="cppad_ipopt_ode.xml" target="_top">cppad_ipopt_ode</a><br/> </td><td> Example Simultaneous Solution of Forward and Inverse Problem </td></tr><tr valign="top"><td>
+<a href="cppad_ipopt_windows.xml" target="_top">cppad_ipopt_windows</a><br/> </td><td> Linking the CppAD Interface to Ipopt in Visual Studio 9.0 </td></tr><tr valign="top"><td>
+<a href="cppad_mat_mul.cpp.xml" target="_top">cppad_mat_mul.cpp</a><br/> </td><td> CppAD Speed: Matrix Multiplication </td></tr><tr valign="top"><td>
+<a href="cppad_ode.cpp.xml" target="_top">cppad_ode.cpp</a><br/> </td><td> CppAD Speed: Gradient of Ode Solution </td></tr><tr valign="top"><td>
+<a href="cppad_poly.cpp.xml" target="_top">cppad_poly.cpp</a><br/> </td><td> CppAD Speed: Second Derivative of a Polynomial </td></tr><tr valign="top"><td>
+<a href="cppad_sparse_hessian.cpp.xml" target="_top">cppad_sparse_hessian.cpp</a><br/> </td><td> CppAD Speed: Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="cppad_sparse_jacobian.cpp.xml" target="_top">cppad_sparse_jacobian.cpp</a><br/> </td><td> CppAD Speed: Sparse Jacobian </td></tr><tr valign="top"><td>
+<a href="cppad_vector.xml" target="_top">CppAD_vector</a><br/> </td><td> The CppAD::vector Template Class </td></tr><tr valign="top"><td>
+<a href="cppad_vector.cpp.xml" target="_top">CppAD_vector.cpp</a><br/> </td><td> CppAD::vector Template Class: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="D">D</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="default.xml" target="_top">Default</a><br/> </td><td> AD Default Constructor </td></tr><tr valign="top"><td>
+<a href="default.cpp.xml" target="_top">Default.cpp</a><br/> </td><td> Default AD Constructor: Example and Test </td></tr><tr valign="top"><td>
+<a href="dependent.xml" target="_top">Dependent</a><br/> </td><td> Stop Recording and Store Operation Sequence </td></tr><tr valign="top"><td>
+<a href="deprecated.xml" target="_top">deprecated</a><br/> </td><td> CppAD Deprecated API Features </td></tr><tr valign="top"><td>
+<a href="det_33.xml" target="_top">det_33</a><br/> </td><td> Check Determinant of 3 by 3 matrix </td></tr><tr valign="top"><td>
+<a href="det_33.hpp.xml" target="_top">det_33.hpp</a><br/> </td><td> Source: det_33 </td></tr><tr valign="top"><td>
+<a href="det_by_lu.xml" target="_top">det_by_lu</a><br/> </td><td> Determinant Using Expansion by Lu Factorization </td></tr><tr valign="top"><td>
+<a href="det_by_lu.cpp.xml" target="_top">det_by_lu.cpp</a><br/> </td><td> Determinant Using Lu Factorization: Example and Test </td></tr><tr valign="top"><td>
+<a href="det_by_lu.hpp.xml" target="_top">det_by_lu.hpp</a><br/> </td><td> Source: det_by_lu </td></tr><tr valign="top"><td>
+<a href="det_by_minor.xml" target="_top">det_by_minor</a><br/> </td><td> Determinant Using Expansion by Minors </td></tr><tr valign="top"><td>
+<a href="det_by_minor.cpp.xml" target="_top">det_by_minor.cpp</a><br/> </td><td> Determinant Using Expansion by Minors: Example and Test </td></tr><tr valign="top"><td>
+<a href="det_by_minor.hpp.xml" target="_top">det_by_minor.hpp</a><br/> </td><td> Source: det_by_minor </td></tr><tr valign="top"><td>
+<a href="det_grad_33.xml" target="_top">det_grad_33</a><br/> </td><td> Check Gradient of Determinant of 3 by 3 matrix </td></tr><tr valign="top"><td>
+<a href="det_grad_33.hpp.xml" target="_top">det_grad_33.hpp</a><br/> </td><td> Source: det_grad_33 </td></tr><tr valign="top"><td>
+<a href="det_of_minor.xml" target="_top">det_of_minor</a><br/> </td><td> Determinant of a Minor </td></tr><tr valign="top"><td>
+<a href="det_of_minor.cpp.xml" target="_top">det_of_minor.cpp</a><br/> </td><td> Determinant of a Minor: Example and Test </td></tr><tr valign="top"><td>
+<a href="det_of_minor.hpp.xml" target="_top">det_of_minor.hpp</a><br/> </td><td> Source: det_of_minor </td></tr><tr valign="top"><td>
+<a href="discrete.xml" target="_top">Discrete</a><br/> </td><td> Discrete AD Functions </td></tr><tr valign="top"><td>
+<a href="div.cpp.xml" target="_top">Div.cpp</a><br/> </td><td> AD Binary Division: Example and Test </td></tr><tr valign="top"><td>
+<a href="diveq.cpp.xml" target="_top">DivEq.cpp</a><br/> </td><td> AD Computed Assignment Division: Example and Test </td></tr><tr valign="top"><td>
+<a href="double_det_lu.cpp.xml" target="_top">double_det_lu.cpp</a><br/> </td><td> Double Speed: Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="double_det_minor.cpp.xml" target="_top">double_det_minor.cpp</a><br/> </td><td> Double Speed: Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="double_mat_mul.cpp.xml" target="_top">double_mat_mul.cpp</a><br/> </td><td> CppAD Speed: Matrix Multiplication (Double Version) </td></tr><tr valign="top"><td>
+<a href="double_ode.cpp.xml" target="_top">double_ode.cpp</a><br/> </td><td> Double Speed: Ode Solution </td></tr><tr valign="top"><td>
+<a href="double_poly.cpp.xml" target="_top">double_poly.cpp</a><br/> </td><td> Double Speed: Evaluate a Polynomial </td></tr><tr valign="top"><td>
+<a href="double_sparse_hessian.cpp.xml" target="_top">double_sparse_hessian.cpp</a><br/> </td><td> Double Speed: Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="double_sparse_jacobian.cpp.xml" target="_top">double_sparse_jacobian.cpp</a><br/> </td><td> Double Speed: Sparse Jacobian </td></tr><tr valign="top"><td>
+<a href="drivers.xml" target="_top">Drivers</a><br/> </td><td> First and Second Derivatives: Easy Drivers </td></tr><tr valign="top"><td>
+
+<b><big><a name="E">E</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="elapsed_seconds.xml" target="_top">elapsed_seconds</a><br/> </td><td> Returns Elapsed Number of Seconds </td></tr><tr valign="top"><td>
+<a href="elapsed_seconds.cpp.xml" target="_top">elapsed_seconds.cpp</a><br/> </td><td> Elapsed Seconds: Example and Test </td></tr><tr valign="top"><td>
+<a href="epsilon.xml" target="_top">epsilon</a><br/> </td><td> Machine Epsilon For AD Types </td></tr><tr valign="top"><td>
+<a href="epsilon.cpp.xml" target="_top">epsilon.cpp</a><br/> </td><td> Machine Epsilon: Example and Test </td></tr><tr valign="top"><td>
+<a href="eq.cpp.xml" target="_top">Eq.cpp</a><br/> </td><td> AD Assignment Operator: Example and Test </td></tr><tr valign="top"><td>
+<a href="equalopseq.xml" target="_top">EqualOpSeq</a><br/> </td><td> Check if Two Value are Identically Equal </td></tr><tr valign="top"><td>
+<a href="equalopseq.cpp.xml" target="_top">EqualOpSeq.cpp</a><br/> </td><td> EqualOpSeq: Example and Test </td></tr><tr valign="top"><td>
+<a href="erf.xml" target="_top">erf</a><br/> </td><td> The AD Error Function </td></tr><tr valign="top"><td>
+<a href="erf.cpp.xml" target="_top">Erf.cpp</a><br/> </td><td> The AD erf Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="errorhandler.xml" target="_top">ErrorHandler</a><br/> </td><td> Replacing the CppAD Error Handler </td></tr><tr valign="top"><td>
+<a href="errorhandler.cpp.xml" target="_top">ErrorHandler.cpp</a><br/> </td><td> Replacing The CppAD Error Handler: Example and Test </td></tr><tr valign="top"><td>
+<a href="example.xml" target="_top">Example</a><br/> </td><td> Examples </td></tr><tr valign="top"><td>
+<a href="example.cpp.xml" target="_top">example.cpp</a><br/> </td><td> CppAD Examples and Tests </td></tr><tr valign="top"><td>
+<a href="exampleutility.xml" target="_top">ExampleUtility</a><br/> </td><td> Utility Routines used by CppAD Examples </td></tr><tr valign="top"><td>
+<a href="exp.cpp.xml" target="_top">Exp.cpp</a><br/> </td><td> The AD exp Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="exp_2.xml" target="_top">exp_2</a><br/> </td><td> Second Order Exponential Approximation </td></tr><tr valign="top"><td>
+<a href="exp_2.cpp.xml" target="_top">exp_2.cpp</a><br/> </td><td> exp_2: Test </td></tr><tr valign="top"><td>
+<a href="exp_2.hpp.xml" target="_top">exp_2.hpp</a><br/> </td><td> exp_2: Implementation </td></tr><tr valign="top"><td>
+<a href="exp_2_cppad.xml" target="_top">exp_2_cppad</a><br/> </td><td> exp_2: CppAD Forward and Reverse Sweeps </td></tr><tr valign="top"><td>
+<a href="exp_2_for0.xml" target="_top">exp_2_for0</a><br/> </td><td> exp_2: Operation Sequence and Zero Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="exp_2_for0.cpp.xml" target="_top">exp_2_for0.cpp</a><br/> </td><td> exp_2: Verify Zero Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_2_for1.xml" target="_top">exp_2_for1</a><br/> </td><td> exp_2: First Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="exp_2_for1.cpp.xml" target="_top">exp_2_for1.cpp</a><br/> </td><td> exp_2: Verify First Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_2_for2.xml" target="_top">exp_2_for2</a><br/> </td><td> exp_2: Second Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="exp_2_for2.cpp.xml" target="_top">exp_2_for2.cpp</a><br/> </td><td> exp_2: Verify Second Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_2_rev1.xml" target="_top">exp_2_rev1</a><br/> </td><td> exp_2: First Order Reverse Mode </td></tr><tr valign="top"><td>
+<a href="exp_2_rev1.cpp.xml" target="_top">exp_2_rev1.cpp</a><br/> </td><td> exp_2: Verify First Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="exp_2_rev2.xml" target="_top">exp_2_rev2</a><br/> </td><td> exp_2: Second Order Reverse Mode </td></tr><tr valign="top"><td>
+<a href="exp_2_rev2.cpp.xml" target="_top">exp_2_rev2.cpp</a><br/> </td><td> exp_2: Verify Second Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="exp_apx_main.cpp.xml" target="_top">exp_apx_main.cpp</a><br/> </td><td> Correctness Tests For Exponential Approximation in Introduction </td></tr><tr valign="top"><td>
+<a href="exp_eps.xml" target="_top">exp_eps</a><br/> </td><td> An Epsilon Accurate Exponential Approximation </td></tr><tr valign="top"><td>
+<a href="exp_eps.cpp.xml" target="_top">exp_eps.cpp</a><br/> </td><td> exp_eps: Test of exp_eps </td></tr><tr valign="top"><td>
+<a href="exp_eps.hpp.xml" target="_top">exp_eps.hpp</a><br/> </td><td> exp_eps: Implementation </td></tr><tr valign="top"><td>
+<a href="exp_eps_cppad.xml" target="_top">exp_eps_cppad</a><br/> </td><td> exp_eps: CppAD Forward and Reverse Sweeps </td></tr><tr valign="top"><td>
+<a href="exp_eps_for0.xml" target="_top">exp_eps_for0</a><br/> </td><td> exp_eps: Operation Sequence and Zero Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_for0.cpp.xml" target="_top">exp_eps_for0.cpp</a><br/> </td><td> exp_eps: Verify Zero Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_for1.xml" target="_top">exp_eps_for1</a><br/> </td><td> exp_eps: First Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_for1.cpp.xml" target="_top">exp_eps_for1.cpp</a><br/> </td><td> exp_eps: Verify First Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_for2.xml" target="_top">exp_eps_for2</a><br/> </td><td> exp_eps: Second Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="exp_eps_for2.cpp.xml" target="_top">exp_eps_for2.cpp</a><br/> </td><td> exp_eps: Verify Second Order Forward Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_rev1.xml" target="_top">exp_eps_rev1</a><br/> </td><td> exp_eps: First Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_rev1.cpp.xml" target="_top">exp_eps_rev1.cpp</a><br/> </td><td> exp_eps: Verify First Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_rev2.xml" target="_top">exp_eps_rev2</a><br/> </td><td> exp_eps: Second Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="exp_eps_rev2.cpp.xml" target="_top">exp_eps_rev2.cpp</a><br/> </td><td> exp_eps: Verify Second Order Reverse Sweep </td></tr><tr valign="top"><td>
+<a href="expforward.xml" target="_top">ExpForward</a><br/> </td><td> Exponential Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="expreverse.xml" target="_top">ExpReverse</a><br/> </td><td> Exponential Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+
+<b><big><a name="F">F</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="fadbad_det_lu.cpp.xml" target="_top">fadbad_det_lu.cpp</a><br/> </td><td> Fadbad Speed: Gradient of Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="fadbad_det_minor.cpp.xml" target="_top">fadbad_det_minor.cpp</a><br/> </td><td> Fadbad Speed: Gradient of Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="fadbad_mat_mul.cpp.xml" target="_top">fadbad_mat_mul.cpp</a><br/> </td><td> Fadbad Speed: Matrix Multiplication </td></tr><tr valign="top"><td>
+<a href="fadbad_ode.cpp.xml" target="_top">fadbad_ode.cpp</a><br/> </td><td> Fadbad Speed: Ode </td></tr><tr valign="top"><td>
+<a href="fadbad_poly.cpp.xml" target="_top">fadbad_poly.cpp</a><br/> </td><td> Fadbad Speed: Second Derivative of a Polynomial </td></tr><tr valign="top"><td>
+<a href="fadbad_sparse_hessian.cpp.xml" target="_top">fadbad_sparse_hessian.cpp</a><br/> </td><td> Fadbad Speed: Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="fadbad_sparse_jacobian.cpp.xml" target="_top">fadbad_sparse_jacobian.cpp</a><br/> </td><td> fadbad Speed: sparse_jacobian </td></tr><tr valign="top"><td>
+<a href="faq.xml" target="_top">Faq</a><br/> </td><td> Frequently Asked Questions and Answers </td></tr><tr valign="top"><td>
+<a href="forone.xml" target="_top">ForOne</a><br/> </td><td> First Order Partial Derivative: Driver Routine </td></tr><tr valign="top"><td>
+<a href="forone.cpp.xml" target="_top">ForOne.cpp</a><br/> </td><td> First Order Partial Driver: Example and Test </td></tr><tr valign="top"><td>
+<a href="forsparsejac.xml" target="_top">ForSparseJac</a><br/> </td><td> Jacobian Sparsity Pattern: Forward Mode </td></tr><tr valign="top"><td>
+<a href="forsparsejac.cpp.xml" target="_top">ForSparseJac.cpp</a><br/> </td><td> Forward Mode Jacobian Sparsity: Example and Test </td></tr><tr valign="top"><td>
+<a href="fortwo.xml" target="_top">ForTwo</a><br/> </td><td> Forward Mode Second Partial Derivative Driver </td></tr><tr valign="top"><td>
+<a href="fortwo.cpp.xml" target="_top">ForTwo.cpp</a><br/> </td><td> Subset of Second Order Partials: Example and Test </td></tr><tr valign="top"><td>
+<a href="forward.xml" target="_top">Forward</a><br/> </td><td> Forward Mode </td></tr><tr valign="top"><td>
+<a href="forward.cpp.xml" target="_top">Forward.cpp</a><br/> </td><td> Forward Mode: Example and Test </td></tr><tr valign="top"><td>
+<a href="forwardany.xml" target="_top">ForwardAny</a><br/> </td><td> Any Order Forward Mode </td></tr><tr valign="top"><td>
+<a href="forwardone.xml" target="_top">ForwardOne</a><br/> </td><td> First Order Forward Mode: Derivative Values </td></tr><tr valign="top"><td>
+<a href="forwardtheory.xml" target="_top">ForwardTheory</a><br/> </td><td> The Theory of Forward Mode </td></tr><tr valign="top"><td>
+<a href="forwardzero.xml" target="_top">ForwardZero</a><br/> </td><td> Zero Order Forward Mode: Function Values </td></tr><tr valign="top"><td>
+<a href="fun_assign.cpp.xml" target="_top">fun_assign.cpp</a><br/> </td><td> ADFun Assignment: Example and Test </td></tr><tr valign="top"><td>
+<a href="funcheck.xml" target="_top">FunCheck</a><br/> </td><td> Check an ADFun Sequence of Operations </td></tr><tr valign="top"><td>
+<a href="funcheck.cpp.xml" target="_top">FunCheck.cpp</a><br/> </td><td> ADFun Check and Re-Tape: Example and Test </td></tr><tr valign="top"><td>
+<a href="funconstruct.xml" target="_top">FunConstruct</a><br/> </td><td> Construct an ADFun Object and Stop Recording </td></tr><tr valign="top"><td>
+<a href="fundeprecated.xml" target="_top">FunDeprecated</a><br/> </td><td> ADFun Object Deprecated Member Functions </td></tr><tr valign="top"><td>
+<a href="funeval.xml" target="_top">FunEval</a><br/> </td><td> Evaluate ADFun Functions, Derivatives, and Sparsity Patterns </td></tr><tr valign="top"><td>
+
+<b><big><a name="G">G</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="general.xml" target="_top">General</a><br/> </td><td> General Examples </td></tr><tr valign="top"><td>
+<a href="get_started.cpp.xml" target="_top">get_started.cpp</a><br/> </td><td> Getting Started Using CppAD to Compute Derivatives </td></tr><tr valign="top"><td>
+<a href="glossary.xml" target="_top">glossary</a><br/> </td><td> Glossary </td></tr><tr valign="top"><td>
+
+<b><big><a name="H">H</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="harmonic.cpp.xml" target="_top">harmonic.cpp</a><br/> </td><td> Multi-Threaded Implementation of Summation of 1/i </td></tr><tr valign="top"><td>
+<a href="harmonic_time.cpp.xml" target="_top">harmonic_time.cpp</a><br/> </td><td> Timing Test of Multi-Threaded Summation of 1/i </td></tr><tr valign="top"><td>
+<a href="harmonic_work.cpp.xml" target="_top">harmonic_work.cpp</a><br/> </td><td> Multi-threading Sum of 1/i Utility Routines </td></tr><tr valign="top"><td>
+<a href="heslagrangian.cpp.xml" target="_top">HesLagrangian.cpp</a><br/> </td><td> Hessian of Lagrangian and  ADFun Default Constructor: Example and Test </td></tr><tr valign="top"><td>
+<a href="hesludet.cpp.xml" target="_top">HesLuDet.cpp</a><br/> </td><td> Gradient of Determinant Using LU Factorization: Example and Test </td></tr><tr valign="top"><td>
+<a href="hesminordet.cpp.xml" target="_top">HesMinorDet.cpp</a><br/> </td><td> Gradient of Determinant Using Expansion by Minors: Example and Test </td></tr><tr valign="top"><td>
+<a href="hessian.xml" target="_top">Hessian</a><br/> </td><td> Hessian: Easy Driver </td></tr><tr valign="top"><td>
+<a href="hessian.cpp.xml" target="_top">Hessian.cpp</a><br/> </td><td> Hessian: Example and Test </td></tr><tr valign="top"><td>
+<a href="hestimesdir.cpp.xml" target="_top">HesTimesDir.cpp</a><br/> </td><td> Hessian Times Direction: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="I">I</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="include_deprecated.xml" target="_top">include_deprecated</a><br/> </td><td> Deprecated Include Files </td></tr><tr valign="top"><td>
+<a href="independent.xml" target="_top">Independent</a><br/> </td><td> Declare Independent Variables and Start Recording </td></tr><tr valign="top"><td>
+<a href="independent.cpp.xml" target="_top">Independent.cpp</a><br/> </td><td> Independent and ADFun Constructor: Example and Test </td></tr><tr valign="top"><td>
+<a href="install.xml" target="_top">Install</a><br/> </td><td> CppAD Download, Test, and Installation Instructions </td></tr><tr valign="top"><td>
+<a href="installunix.xml" target="_top">InstallUnix</a><br/> </td><td> Unix Download, Test and Installation </td></tr><tr valign="top"><td>
+<a href="installwindows.xml" target="_top">InstallWindows</a><br/> </td><td> Windows Download and Test </td></tr><tr valign="top"><td>
+<a href="integer.xml" target="_top">Integer</a><br/> </td><td> Convert From AD to Integer </td></tr><tr valign="top"><td>
+<a href="integer.cpp.xml" target="_top">Integer.cpp</a><br/> </td><td> Convert From AD to Integer: Example and Test </td></tr><tr valign="top"><td>
+<a href="interface2c.cpp.xml" target="_top">Interface2C.cpp</a><br/> </td><td> Interfacing to C: Example and Test </td></tr><tr valign="top"><td>
+<a href="interp_onetape.cpp.xml" target="_top">interp_onetape.cpp</a><br/> </td><td> Interpolation With Out Retaping: Example and Test </td></tr><tr valign="top"><td>
+<a href="interp_retape.cpp.xml" target="_top">interp_retape.cpp</a><br/> </td><td> Interpolation With Retaping: Example and Test </td></tr><tr valign="top"><td>
+<a href="introduction.xml" target="_top">Introduction</a><br/> </td><td> An Introduction by Example to Algorithmic Differentiation </td></tr><tr valign="top"><td>
+<a href="ipopt_get_started.cpp.xml" target="_top">ipopt_get_started.cpp</a><br/> </td><td> Nonlinear Programming Using CppAD and Ipopt: Example and Test </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_check.cpp.xml" target="_top">ipopt_ode_check.cpp</a><br/> </td><td> Correctness Check for Both Simple and Fast Representations </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_fast.xml" target="_top">ipopt_ode_fast</a><br/> </td><td> ODE Fitting Using Fast Representation </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_fast.hpp.xml" target="_top">ipopt_ode_fast.hpp</a><br/> </td><td> ODE Fitting Using Fast Representation </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_problem.xml" target="_top">ipopt_ode_problem</a><br/> </td><td> An ODE Inverse Problem Example </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_problem.hpp.xml" target="_top">ipopt_ode_problem.hpp</a><br/> </td><td> ODE Inverse Problem Definitions: Source Code </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_run.hpp.xml" target="_top">ipopt_ode_run.hpp</a><br/> </td><td> Driver for Running the Ipopt ODE Example </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_simple.xml" target="_top">ipopt_ode_simple</a><br/> </td><td> ODE Fitting Using Simple Representation </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_simple.hpp.xml" target="_top">ipopt_ode_simple.hpp</a><br/> </td><td> ODE Fitting Using Simple Representation </td></tr><tr valign="top"><td>
+<a href="ipopt_ode_speed.cpp.xml" target="_top">ipopt_ode_speed.cpp</a><br/> </td><td> Speed Test for Both Simple and Fast Representations </td></tr><tr valign="top"><td>
+
+<b><big><a name="J">J</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="jacludet.cpp.xml" target="_top">JacLuDet.cpp</a><br/> </td><td> Gradient of Determinant Using Lu Factorization: Example and Test </td></tr><tr valign="top"><td>
+<a href="jacminordet.cpp.xml" target="_top">JacMinorDet.cpp</a><br/> </td><td> Gradient of Determinant Using Expansion by Minors: Example and Test </td></tr><tr valign="top"><td>
+<a href="jacobian.xml" target="_top">Jacobian</a><br/> </td><td> Jacobian: Driver Routine </td></tr><tr valign="top"><td>
+<a href="jacobian.cpp.xml" target="_top">Jacobian.cpp</a><br/> </td><td> Jacobian: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="L">L</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="library.xml" target="_top">library</a><br/> </td><td> The CppAD General Purpose Library </td></tr><tr valign="top"><td>
+<a href="license.xml" target="_top">License</a><br/> </td><td> Your License for the CppAD Software </td></tr><tr valign="top"><td>
+<a href="link_det_lu.xml" target="_top">link_det_lu</a><br/> </td><td> Speed Testing Gradient of Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="link_det_minor.xml" target="_top">link_det_minor</a><br/> </td><td> Speed Testing Gradient of Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="link_mat_mul.xml" target="_top">link_mat_mul</a><br/> </td><td> Speed Testing Derivative of Matrix Multiply </td></tr><tr valign="top"><td>
+<a href="link_ode.xml" target="_top">link_ode</a><br/> </td><td> Speed Testing the Jacobian of Ode Solution </td></tr><tr valign="top"><td>
+<a href="link_poly.xml" target="_top">link_poly</a><br/> </td><td> Speed Testing Second Derivative of a Polynomial </td></tr><tr valign="top"><td>
+<a href="link_sparse_hessian.xml" target="_top">link_sparse_hessian</a><br/> </td><td> Speed Testing Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="link_sparse_jacobian.xml" target="_top">link_sparse_jacobian</a><br/> </td><td> Speed Testing Sparse Jacobian </td></tr><tr valign="top"><td>
+<a href="listallexamples.xml" target="_top">ListAllExamples</a><br/> </td><td> List of All the CppAD Examples </td></tr><tr valign="top"><td>
+<a href="log.cpp.xml" target="_top">Log.cpp</a><br/> </td><td> The AD log Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="log10.cpp.xml" target="_top">Log10.cpp</a><br/> </td><td> The AD log10 Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="logforward.xml" target="_top">LogForward</a><br/> </td><td> Logarithm Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="logreverse.xml" target="_top">LogReverse</a><br/> </td><td> Logarithm Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+<a href="lu_factor.hpp.xml" target="_top">lu_factor.hpp</a><br/> </td><td> Source: LuFactor </td></tr><tr valign="top"><td>
+<a href="lu_invert.hpp.xml" target="_top">lu_invert.hpp</a><br/> </td><td> Source: LuInvert </td></tr><tr valign="top"><td>
+<a href="lu_solve.hpp.xml" target="_top">lu_solve.hpp</a><br/> </td><td> Source: LuSolve </td></tr><tr valign="top"><td>
+<a href="ludetandsolve.xml" target="_top">LuDetAndSolve</a><br/> </td><td> Compute Determinants and Solve Equations by LU Factorization </td></tr><tr valign="top"><td>
+<a href="lufactor.xml" target="_top">LuFactor</a><br/> </td><td> LU Factorization of A Square Matrix </td></tr><tr valign="top"><td>
+<a href="lufactor.cpp.xml" target="_top">LuFactor.cpp</a><br/> </td><td> LuFactor: Example and Test </td></tr><tr valign="top"><td>
+<a href="luinvert.xml" target="_top">LuInvert</a><br/> </td><td> Invert an LU Factored Equation </td></tr><tr valign="top"><td>
+<a href="luinvert.cpp.xml" target="_top">LuInvert.cpp</a><br/> </td><td> LuInvert: Example and Test </td></tr><tr valign="top"><td>
+<a href="luratio.xml" target="_top">LuRatio</a><br/> </td><td> LU Factorization of A Square Matrix and Stability Calculation </td></tr><tr valign="top"><td>
+<a href="luratio.cpp.xml" target="_top">LuRatio.cpp</a><br/> </td><td> LuRatio: Example and Test </td></tr><tr valign="top"><td>
+<a href="lusolve.xml" target="_top">LuSolve</a><br/> </td><td> Compute Determinant and Solve Linear Equations </td></tr><tr valign="top"><td>
+<a href="lusolve.cpp.xml" target="_top">LuSolve.cpp</a><br/> </td><td> LuSolve With Complex Arguments: Example and Test </td></tr><tr valign="top"><td>
+<a href="luvecad.xml" target="_top">LuVecAD</a><br/> </td><td> Lu Factor and Solve with Recorded Pivoting </td></tr><tr valign="top"><td>
+<a href="luvecadok.cpp.xml" target="_top">LuVecADOk.cpp</a><br/> </td><td> Lu Factor and Solve With Recorded Pivoting: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="M">M</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="mat_mul.cpp.xml" target="_top">mat_mul.cpp</a><br/> </td><td> Matrix Multiply as a User Atomic Operation: Example and Test </td></tr><tr valign="top"><td>
+<a href="mat_mul.hpp.xml" target="_top">mat_mul.hpp</a><br/> </td><td> Define Matrix Multiply as a User Atomic Operation </td></tr><tr valign="top"><td>
+<a href="mat_sum_sq.xml" target="_top">mat_sum_sq</a><br/> </td><td> Sum Elements of a Matrix Times Itself </td></tr><tr valign="top"><td>
+<a href="mat_sum_sq.cpp.xml" target="_top">mat_sum_sq.cpp</a><br/> </td><td> Sum of the Elements of the Square of a Matrix: Example and Test </td></tr><tr valign="top"><td>
+<a href="mat_sum_sq.hpp.xml" target="_top">mat_sum_sq.hpp</a><br/> </td><td> Source: mat_sum_sq </td></tr><tr valign="top"><td>
+<a href="mathother.xml" target="_top">MathOther</a><br/> </td><td> Other AD Math Functions </td></tr><tr valign="top"><td>
+<a href="memory_leak.xml" target="_top">memory_leak</a><br/> </td><td> Memory Leak Detection </td></tr><tr valign="top"><td>
+<a href="microsoft_timer.xml" target="_top">microsoft_timer</a><br/> </td><td> Microsoft Version of Elapsed Number of Seconds </td></tr><tr valign="top"><td>
+<a href="mul.cpp.xml" target="_top">Mul.cpp</a><br/> </td><td> AD Binary Multiplication: Example and Test </td></tr><tr valign="top"><td>
+<a href="mul_level.xml" target="_top">mul_level</a><br/> </td><td> Using Multiple Levels of AD </td></tr><tr valign="top"><td>
+<a href="mul_level.cpp.xml" target="_top">mul_level.cpp</a><br/> </td><td> Multiple Tapes: Example and Test </td></tr><tr valign="top"><td>
+<a href="mul_level_adolc.cpp.xml" target="_top">mul_level_adolc.cpp</a><br/> </td><td> Using Adolc with Multiple Levels of Taping: Example and Test </td></tr><tr valign="top"><td>
+<a href="muleq.cpp.xml" target="_top">MulEq.cpp</a><br/> </td><td> AD Computed Assignment Multiplication: Example and Test </td></tr><tr valign="top"><td>
+<a href="multi_newton.cpp.xml" target="_top">multi_newton.cpp</a><br/> </td><td> A Multi-Threaded Newton's Method </td></tr><tr valign="top"><td>
+<a href="multi_newton_time.cpp.xml" target="_top">multi_newton_time.cpp</a><br/> </td><td> Timing Test of Multi-Threaded Newton Method </td></tr><tr valign="top"><td>
+<a href="multi_newton_work.cpp.xml" target="_top">multi_newton_work.cpp</a><br/> </td><td> Multi-threading Newton Method Utility Routines </td></tr><tr valign="top"><td>
+<a href="multi_thread.xml" target="_top">multi_thread</a><br/> </td><td> Using CppAD in a Multi-Threading Environment </td></tr><tr valign="top"><td>
+
+<b><big><a name="N">N</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="nan.xml" target="_top">nan</a><br/> </td><td> Obtain Nan or Determine if a Value is Nan </td></tr><tr valign="top"><td>
+<a href="nan.cpp.xml" target="_top">nan.cpp</a><br/> </td><td> nan: Example and Test </td></tr><tr valign="top"><td>
+<a href="near_equal.cpp.xml" target="_top">Near_Equal.cpp</a><br/> </td><td> NearEqual Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="nearequal.xml" target="_top">NearEqual</a><br/> </td><td> Determine if Two Values Are Nearly Equal </td></tr><tr valign="top"><td>
+<a href="nearequalext.xml" target="_top">NearEqualExt</a><br/> </td><td> Compare AD and Base Objects for Nearly Equal </td></tr><tr valign="top"><td>
+<a href="nearequalext.cpp.xml" target="_top">NearEqualExt.cpp</a><br/> </td><td> Compare AD with Base Objects: Example and Test </td></tr><tr valign="top"><td>
+<a href="not_complex_ad.cpp.xml" target="_top">not_complex_ad.cpp</a><br/> </td><td> Not Complex Differentiable: Example and Test </td></tr><tr valign="top"><td>
+<a href="numerictype.xml" target="_top">NumericType</a><br/> </td><td> Definition of a Numeric Type </td></tr><tr valign="top"><td>
+<a href="numerictype.cpp.xml" target="_top">NumericType.cpp</a><br/> </td><td> The NumericType: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="O">O</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="ode_evaluate.xml" target="_top">ode_evaluate</a><br/> </td><td> Evaluate a Function Defined in Terms of an ODE </td></tr><tr valign="top"><td>
+<a href="ode_evaluate.cpp.xml" target="_top">ode_evaluate.cpp</a><br/> </td><td> ode_evaluate: Example and test </td></tr><tr valign="top"><td>
+<a href="ode_evaluate.hpp.xml" target="_top">ode_evaluate.hpp</a><br/> </td><td> Source: ode_evaluate </td></tr><tr valign="top"><td>
+<a href="ode_taylor.cpp.xml" target="_top">ode_taylor.cpp</a><br/> </td><td> Taylor's Ode Solver: An Example and Test </td></tr><tr valign="top"><td>
+<a href="ode_taylor_adolc.cpp.xml" target="_top">ode_taylor_adolc.cpp</a><br/> </td><td> Using Adolc with Taylor's Ode Solver: An Example and Test </td></tr><tr valign="top"><td>
+<a href="odeerrcontrol.xml" target="_top">OdeErrControl</a><br/> </td><td> An Error Controller for ODE Solvers </td></tr><tr valign="top"><td>
+<a href="odeerrcontrol.cpp.xml" target="_top">OdeErrControl.cpp</a><br/> </td><td> OdeErrControl: Example and Test </td></tr><tr valign="top"><td>
+<a href="odeerrmaxabs.cpp.xml" target="_top">OdeErrMaxabs.cpp</a><br/> </td><td> OdeErrControl: Example and Test Using Maxabs Argument </td></tr><tr valign="top"><td>
+<a href="odegear.xml" target="_top">OdeGear</a><br/> </td><td> An Arbitrary Order Gear Method </td></tr><tr valign="top"><td>
+<a href="odegear.cpp.xml" target="_top">OdeGear.cpp</a><br/> </td><td> OdeGear: Example and Test </td></tr><tr valign="top"><td>
+<a href="odegearcontrol.xml" target="_top">OdeGearControl</a><br/> </td><td> An Error Controller for Gear's Ode Solvers </td></tr><tr valign="top"><td>
+<a href="odegearcontrol.cpp.xml" target="_top">OdeGearControl.cpp</a><br/> </td><td> OdeGearControl: Example and Test </td></tr><tr valign="top"><td>
+<a href="odestiff.cpp.xml" target="_top">OdeStiff.cpp</a><br/> </td><td> A Stiff Ode: Example and Test </td></tr><tr valign="top"><td>
+<a href="old_max_num_threads.xml" target="_top">old_max_num_threads</a><br/> </td><td> Set Maximum Number of Threads for omp_alloc Allocator </td></tr><tr valign="top"><td>
+<a href="omp_alloc.xml" target="_top">omp_alloc</a><br/> </td><td> A Quick OpenMP Memory Allocator Used by CppAD </td></tr><tr valign="top"><td>
+<a href="omp_alloc.cpp.xml" target="_top">omp_alloc.cpp</a><br/> </td><td> OpenMP Memory Allocator: Example and Test </td></tr><tr valign="top"><td>
+<a href="omp_available.xml" target="_top">omp_available</a><br/> </td><td> Amount of Memory Available for Quick Use by a Thread </td></tr><tr valign="top"><td>
+<a href="omp_create_array.xml" target="_top">omp_create_array</a><br/> </td><td> Allocate Memory and Create A Raw Array </td></tr><tr valign="top"><td>
+<a href="omp_delete_array.xml" target="_top">omp_delete_array</a><br/> </td><td> Return A Raw Array to The Available Memory for a Thread </td></tr><tr valign="top"><td>
+<a href="omp_efficient.xml" target="_top">omp_efficient</a><br/> </td><td> Check If A Memory Allocation is Efficient for Another Use </td></tr><tr valign="top"><td>
+<a href="omp_free_available.xml" target="_top">omp_free_available</a><br/> </td><td> Free Memory Currently Available for Quick Use by a Thread </td></tr><tr valign="top"><td>
+<a href="omp_get_memory.xml" target="_top">omp_get_memory</a><br/> </td><td> Get At Least A Specified Amount of Memory </td></tr><tr valign="top"><td>
+<a href="omp_get_thread_num.xml" target="_top">omp_get_thread_num</a><br/> </td><td> Get the Current OpenMP Thread Number </td></tr><tr valign="top"><td>
+<a href="omp_in_parallel.xml" target="_top">omp_in_parallel</a><br/> </td><td> Is The Current Execution in OpenMP Parallel Mode </td></tr><tr valign="top"><td>
+<a href="omp_inuse.xml" target="_top">omp_inuse</a><br/> </td><td> Amount of Memory a Thread is Currently Using </td></tr><tr valign="top"><td>
+<a href="omp_max_num_threads.xml" target="_top">omp_max_num_threads</a><br/> </td><td> Set and Get Maximum Number of Threads for omp_alloc Allocator </td></tr><tr valign="top"><td>
+<a href="omp_max_thread.xml" target="_top">omp_max_thread</a><br/> </td><td> OpenMP Parallel Setup </td></tr><tr valign="top"><td>
+<a href="omp_return_memory.xml" target="_top">omp_return_memory</a><br/> </td><td> Return Memory to omp_alloc </td></tr><tr valign="top"><td>
+<a href="opt_val_hes.xml" target="_top">opt_val_hes</a><br/> </td><td> Jacobian and Hessian of Optimal Values </td></tr><tr valign="top"><td>
+<a href="opt_val_hes.cpp.xml" target="_top">opt_val_hes.cpp</a><br/> </td><td> opt_val_hes: Example and Test </td></tr><tr valign="top"><td>
+<a href="optimize.xml" target="_top">optimize</a><br/> </td><td> Optimize an ADFun Object Tape </td></tr><tr valign="top"><td>
+<a href="optimize.cpp.xml" target="_top">optimize.cpp</a><br/> </td><td> ADFun Operation Sequence Optimization: Example and Test </td></tr><tr valign="top"><td>
+<a href="output.xml" target="_top">Output</a><br/> </td><td> AD Output Stream Operator </td></tr><tr valign="top"><td>
+<a href="output.cpp.xml" target="_top">Output.cpp</a><br/> </td><td> AD Output Operator: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="P">P</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="parallel_ad.xml" target="_top">parallel_ad</a><br/> </td><td> Enable AD Calculations During Parallel Mode </td></tr><tr valign="top"><td>
+<a href="parvar.xml" target="_top">ParVar</a><br/> </td><td> Is an AD Object a Parameter or Variable </td></tr><tr valign="top"><td>
+<a href="parvar.cpp.xml" target="_top">ParVar.cpp</a><br/> </td><td> AD Parameter and Variable Functions: Example and Test </td></tr><tr valign="top"><td>
+<a href="pkgconfig.xml" target="_top">pkgconfig</a><br/> </td><td> CppAD pkg-config Files </td></tr><tr valign="top"><td>
+<a href="poly.xml" target="_top">Poly</a><br/> </td><td> Evaluate a Polynomial or its Derivative </td></tr><tr valign="top"><td>
+<a href="poly.cpp.xml" target="_top">Poly.cpp</a><br/> </td><td> Polynomial Evaluation: Example and Test </td></tr><tr valign="top"><td>
+<a href="poly.hpp.xml" target="_top">poly.hpp</a><br/> </td><td> Source: Poly </td></tr><tr valign="top"><td>
+<a href="pow.xml" target="_top">pow</a><br/> </td><td> The AD Power Function </td></tr><tr valign="top"><td>
+<a href="pow.cpp.xml" target="_top">Pow.cpp</a><br/> </td><td> The AD Power Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="pow_int.xml" target="_top">pow_int</a><br/> </td><td> The Integer Power Function </td></tr><tr valign="top"><td>
+<a href="pow_int.cpp.xml" target="_top">pow_int.cpp</a><br/> </td><td> The Pow Integer Exponent: Example and Test </td></tr><tr valign="top"><td>
+<a href="preprocessor.xml" target="_top">preprocessor</a><br/> </td><td> CppAD API Preprocessor Symbols </td></tr><tr valign="top"><td>
+<a href="print_for_cout.cpp.xml" target="_top">print_for_cout.cpp</a><br/> </td><td> Printing During Forward Mode: Example and Test </td></tr><tr valign="top"><td>
+<a href="print_for_string.cpp.xml" target="_top">print_for_string.cpp</a><br/> </td><td> Print During Zero Order Forward Mode: Example and Test </td></tr><tr valign="top"><td>
+<a href="printfor.xml" target="_top">PrintFor</a><br/> </td><td> Printing AD Values During Forward Mode </td></tr><tr valign="top"><td>
+
+<b><big><a name="R">R</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="reverse.xml" target="_top">Reverse</a><br/> </td><td> Reverse Mode </td></tr><tr valign="top"><td>
+<a href="reverse_any.xml" target="_top">reverse_any</a><br/> </td><td> Any Order Reverse Mode </td></tr><tr valign="top"><td>
+<a href="reverse_any.cpp.xml" target="_top">reverse_any.cpp</a><br/> </td><td> Reverse Mode General Case: Example and Test </td></tr><tr valign="top"><td>
+<a href="reverse_identity.xml" target="_top">reverse_identity</a><br/> </td><td> An Important Reverse Mode Identity </td></tr><tr valign="top"><td>
+<a href="reverse_one.xml" target="_top">reverse_one</a><br/> </td><td> First Order Reverse Mode </td></tr><tr valign="top"><td>
+<a href="reverse_one.cpp.xml" target="_top">reverse_one.cpp</a><br/> </td><td> First Order Reverse Mode: Example and Test </td></tr><tr valign="top"><td>
+<a href="reverse_three.cpp.xml" target="_top">reverse_three.cpp</a><br/> </td><td> Third Order Reverse Mode: Example and Test </td></tr><tr valign="top"><td>
+<a href="reverse_two.xml" target="_top">reverse_two</a><br/> </td><td> Second Order Reverse Mode </td></tr><tr valign="top"><td>
+<a href="reverse_two.cpp.xml" target="_top">reverse_two.cpp</a><br/> </td><td> Second Order Reverse ModeExample and Test </td></tr><tr valign="top"><td>
+<a href="reversetheory.xml" target="_top">ReverseTheory</a><br/> </td><td> The Theory of Reverse Mode </td></tr><tr valign="top"><td>
+<a href="revone.xml" target="_top">RevOne</a><br/> </td><td> First Order Derivative: Driver Routine </td></tr><tr valign="top"><td>
+<a href="revone.cpp.xml" target="_top">RevOne.cpp</a><br/> </td><td> First Order Derivative Driver: Example and Test </td></tr><tr valign="top"><td>
+<a href="revsparsehes.xml" target="_top">RevSparseHes</a><br/> </td><td> Hessian Sparsity Pattern: Reverse Mode </td></tr><tr valign="top"><td>
+<a href="revsparsehes.cpp.xml" target="_top">RevSparseHes.cpp</a><br/> </td><td> Reverse Mode Hessian Sparsity: Example and Test </td></tr><tr valign="top"><td>
+<a href="revsparsejac.xml" target="_top">RevSparseJac</a><br/> </td><td> Jacobian Sparsity Pattern: Reverse Mode </td></tr><tr valign="top"><td>
+<a href="revsparsejac.cpp.xml" target="_top">RevSparseJac.cpp</a><br/> </td><td> Reverse Mode Jacobian Sparsity: Example and Test </td></tr><tr valign="top"><td>
+<a href="revtwo.xml" target="_top">RevTwo</a><br/> </td><td> Reverse Mode Second Partial Derivative Driver </td></tr><tr valign="top"><td>
+<a href="revtwo.cpp.xml" target="_top">RevTwo.cpp</a><br/> </td><td> Second Partials Reverse Driver: Example and Test </td></tr><tr valign="top"><td>
+<a href="rombergmul.xml" target="_top">RombergMul</a><br/> </td><td> Multi-dimensional Romberg Integration </td></tr><tr valign="top"><td>
+<a href="rombergmul.cpp.xml" target="_top">RombergMul.cpp</a><br/> </td><td> One Dimensional Romberg Integration: Example and Test </td></tr><tr valign="top"><td>
+<a href="rombergone.xml" target="_top">RombergOne</a><br/> </td><td> One DimensionalRomberg Integration </td></tr><tr valign="top"><td>
+<a href="rombergone.cpp.xml" target="_top">RombergOne.cpp</a><br/> </td><td> One Dimensional Romberg Integration: Example and Test </td></tr><tr valign="top"><td>
+<a href="rosen34.xml" target="_top">Rosen34</a><br/> </td><td> A 3rd and 4th Order Rosenbrock ODE Solver </td></tr><tr valign="top"><td>
+<a href="rosen34.cpp.xml" target="_top">Rosen34.cpp</a><br/> </td><td> Rosen34: Example and Test </td></tr><tr valign="top"><td>
+<a href="runge45.xml" target="_top">Runge45</a><br/> </td><td> An Embedded 4th and 5th Order Runge-Kutta ODE Solver </td></tr><tr valign="top"><td>
+<a href="runge_45_1.cpp.xml" target="_top">runge_45_1.cpp</a><br/> </td><td> Runge45: Example and Test </td></tr><tr valign="top"><td>
+<a href="runge_45_2.cpp.xml" target="_top">runge_45_2.cpp</a><br/> </td><td> Runge45: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="S">S</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="sacado_det_lu.cpp.xml" target="_top">sacado_det_lu.cpp</a><br/> </td><td> Sacado Speed: Gradient of Determinant Using Lu Factorization </td></tr><tr valign="top"><td>
+<a href="sacado_det_minor.cpp.xml" target="_top">sacado_det_minor.cpp</a><br/> </td><td> Sacado Speed: Gradient of Determinant by Minor Expansion </td></tr><tr valign="top"><td>
+<a href="sacado_mat_mul.cpp.xml" target="_top">sacado_mat_mul.cpp</a><br/> </td><td> Sacado Speed: Matrix Multiplication </td></tr><tr valign="top"><td>
+<a href="sacado_ode.cpp.xml" target="_top">sacado_ode.cpp</a><br/> </td><td> Sacado Speed: Gradient of Ode Solution </td></tr><tr valign="top"><td>
+<a href="sacado_poly.cpp.xml" target="_top">sacado_poly.cpp</a><br/> </td><td> Sacado Speed: Second Derivative of a Polynomial </td></tr><tr valign="top"><td>
+<a href="sacado_sparse_hessian.cpp.xml" target="_top">sacado_sparse_hessian.cpp</a><br/> </td><td> Sacado Speed: Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="sacado_sparse_jacobian.cpp.xml" target="_top">sacado_sparse_jacobian.cpp</a><br/> </td><td> sacado Speed: sparse_jacobian </td></tr><tr valign="top"><td>
+<a href="seq_property.xml" target="_top">seq_property</a><br/> </td><td> ADFun Sequence Properties </td></tr><tr valign="top"><td>
+<a href="seq_property.cpp.xml" target="_top">seq_property.cpp</a><br/> </td><td> ADFun Sequence Properties: Example and Test </td></tr><tr valign="top"><td>
+<a href="simple_ad.cpp.xml" target="_top">simple_ad.cpp</a><br/> </td><td> Simple Multi-Threading AD: Example and Test </td></tr><tr valign="top"><td>
+<a href="simplevector.xml" target="_top">SimpleVector</a><br/> </td><td> Definition of a Simple Vector </td></tr><tr valign="top"><td>
+<a href="simplevector.cpp.xml" target="_top">SimpleVector.cpp</a><br/> </td><td> Simple Vector Template Class: Example and Test </td></tr><tr valign="top"><td>
+<a href="sin.cpp.xml" target="_top">Sin.cpp</a><br/> </td><td> The AD sin Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="sincosforward.xml" target="_top">SinCosForward</a><br/> </td><td> Trigonometric and Hyperbolic Sine and Cosine Forward Theory </td></tr><tr valign="top"><td>
+<a href="sincosreverse.xml" target="_top">SinCosReverse</a><br/> </td><td> Trigonometric and Hyperbolic Sine and Cosine Reverse Theory </td></tr><tr valign="top"><td>
+<a href="sinh.cpp.xml" target="_top">Sinh.cpp</a><br/> </td><td> The AD sinh Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="size_taylor.xml" target="_top">size_taylor</a><br/> </td><td> Number Taylor Coefficients, Per Variable, Currently Stored </td></tr><tr valign="top"><td>
+<a href="sparse.xml" target="_top">Sparse</a><br/> </td><td> Calculating Sparsity Patterns </td></tr><tr valign="top"><td>
+<a href="sparse_evaluate.xml" target="_top">sparse_evaluate</a><br/> </td><td> Evaluate a Function That Has a Sparse Hessian </td></tr><tr valign="top"><td>
+<a href="sparse_evaluate.cpp.xml" target="_top">sparse_evaluate.cpp</a><br/> </td><td> sparse_evaluate: Example and test </td></tr><tr valign="top"><td>
+<a href="sparse_evaluate.hpp.xml" target="_top">sparse_evaluate.hpp</a><br/> </td><td> Source: sparse_evaluate </td></tr><tr valign="top"><td>
+<a href="sparse_hessian.xml" target="_top">sparse_hessian</a><br/> </td><td> Sparse Hessian: Easy Driver </td></tr><tr valign="top"><td>
+<a href="sparse_hessian.cpp.xml" target="_top">sparse_hessian.cpp</a><br/> </td><td> Sparse Hessian: Example and Test </td></tr><tr valign="top"><td>
+<a href="sparse_jacobian.xml" target="_top">sparse_jacobian</a><br/> </td><td> Sparse Jacobian: Easy Driver </td></tr><tr valign="top"><td>
+<a href="sparse_jacobian.cpp.xml" target="_top">sparse_jacobian.cpp</a><br/> </td><td> Sparse Jacobian: Example and Test </td></tr><tr valign="top"><td>
+<a href="speed.xml" target="_top">speed</a><br/> </td><td> Speed Test Routines </td></tr><tr valign="top"><td>
+<a href="speed_adolc.xml" target="_top">speed_adolc</a><br/> </td><td> Speed Test of Derivatives Using Adolc </td></tr><tr valign="top"><td>
+<a href="speed_cppad.xml" target="_top">speed_cppad</a><br/> </td><td> Speed Test Derivatives Using CppAD </td></tr><tr valign="top"><td>
+<a href="speed_double.xml" target="_top">speed_double</a><br/> </td><td> Speed Test of Functions in Double </td></tr><tr valign="top"><td>
+<a href="speed_example.cpp.xml" target="_top">speed_example.cpp</a><br/> </td><td> Run the Speed Examples </td></tr><tr valign="top"><td>
+<a href="speed_fadbad.xml" target="_top">speed_fadbad</a><br/> </td><td> Speed Test Derivatives Using Fadbad </td></tr><tr valign="top"><td>
+<a href="speed_main.xml" target="_top">speed_main</a><br/> </td><td> Speed Testing Main Program </td></tr><tr valign="top"><td>
+<a href="speed_program.cpp.xml" target="_top">speed_program.cpp</a><br/> </td><td> Example Use of SpeedTest </td></tr><tr valign="top"><td>
+<a href="speed_sacado.xml" target="_top">speed_sacado</a><br/> </td><td> Speed Test Derivatives Using Sacado </td></tr><tr valign="top"><td>
+<a href="speed_test.xml" target="_top">speed_test</a><br/> </td><td> Run One Speed Test and Return Results </td></tr><tr valign="top"><td>
+<a href="speed_test.cpp.xml" target="_top">speed_test.cpp</a><br/> </td><td> speed_test: Example and test </td></tr><tr valign="top"><td>
+<a href="speed_utility.xml" target="_top">speed_utility</a><br/> </td><td> Speed Testing Utilities </td></tr><tr valign="top"><td>
+<a href="speedtest.xml" target="_top">SpeedTest</a><br/> </td><td> Run One Speed Test and Print Results </td></tr><tr valign="top"><td>
+<a href="sqrt.cpp.xml" target="_top">Sqrt.cpp</a><br/> </td><td> The AD sqrt Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="sqrtforward.xml" target="_top">SqrtForward</a><br/> </td><td> Square Root Function Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="sqrtreverse.xml" target="_top">SqrtReverse</a><br/> </td><td> Square Root Function Reverse Mode Theory </td></tr><tr valign="top"><td>
+<a href="stackmachine.cpp.xml" target="_top">StackMachine.cpp</a><br/> </td><td> Example Differentiating a Stack Machine Interpreter </td></tr><tr valign="top"><td>
+<a href="std_math_ad.xml" target="_top">std_math_ad</a><br/> </td><td> AD Standard Math Unary Functions </td></tr><tr valign="top"><td>
+<a href="sub.cpp.xml" target="_top">Sub.cpp</a><br/> </td><td> AD Binary Subtraction: Example and Test </td></tr><tr valign="top"><td>
+<a href="subeq.cpp.xml" target="_top">SubEq.cpp</a><br/> </td><td> AD Computed Assignment Subtraction: Example and Test </td></tr><tr valign="top"><td>
+<a href="subversion.xml" target="_top">subversion</a><br/> </td><td> Using Subversion To Download Source Code </td></tr><tr valign="top"><td>
+
+<b><big><a name="T">T</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="ta_available.xml" target="_top">ta_available</a><br/> </td><td> Amount of Memory Available for Quick Use by a Thread </td></tr><tr valign="top"><td>
+<a href="ta_create_array.xml" target="_top">ta_create_array</a><br/> </td><td> Allocate An Array and Call Default Constructor for its Elements </td></tr><tr valign="top"><td>
+<a href="ta_delete_array.xml" target="_top">ta_delete_array</a><br/> </td><td> Deallocate An Array and Call Destructor for its Elements </td></tr><tr valign="top"><td>
+<a href="ta_free_available.xml" target="_top">ta_free_available</a><br/> </td><td> Free Memory Currently Available for Quick Use by a Thread </td></tr><tr valign="top"><td>
+<a href="ta_get_memory.xml" target="_top">ta_get_memory</a><br/> </td><td> Get At Least A Specified Amount of Memory </td></tr><tr valign="top"><td>
+<a href="ta_in_parallel.xml" target="_top">ta_in_parallel</a><br/> </td><td> Is The Current Execution in Parallel Mode </td></tr><tr valign="top"><td>
+<a href="ta_inuse.xml" target="_top">ta_inuse</a><br/> </td><td> Amount of Memory a Thread is Currently Using </td></tr><tr valign="top"><td>
+<a href="ta_num_threads.xml" target="_top">ta_num_threads</a><br/> </td><td> Get Number of Threads </td></tr><tr valign="top"><td>
+<a href="ta_parallel_setup.xml" target="_top">ta_parallel_setup</a><br/> </td><td> Setup thread_alloc For Use in Multi-Threading Environment </td></tr><tr valign="top"><td>
+<a href="ta_return_memory.xml" target="_top">ta_return_memory</a><br/> </td><td> Return Memory to thread_alloc </td></tr><tr valign="top"><td>
+<a href="ta_thread_num.xml" target="_top">ta_thread_num</a><br/> </td><td> Get the Current Thread Number </td></tr><tr valign="top"><td>
+<a href="tan.cpp.xml" target="_top">Tan.cpp</a><br/> </td><td> The AD tan Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="tan_forward.xml" target="_top">tan_forward</a><br/> </td><td> Tangent and Hyperbolic Tangent Forward Taylor Polynomial Theory </td></tr><tr valign="top"><td>
+<a href="tan_reverse.xml" target="_top">tan_reverse</a><br/> </td><td> Tangent and Hyperbolic Tangent Reverse Mode Theory </td></tr><tr valign="top"><td>
+<a href="tanh.cpp.xml" target="_top">Tanh.cpp</a><br/> </td><td> The AD tanh Function: Example and Test </td></tr><tr valign="top"><td>
+<a href="tapeindex.cpp.xml" target="_top">TapeIndex.cpp</a><br/> </td><td> Taping Array Index Operation: Example and Test </td></tr><tr valign="top"><td>
+<a href="team_bthread.cpp.xml" target="_top">team_bthread.cpp</a><br/> </td><td> Boost Thread Implementation of a Team of AD Threads </td></tr><tr valign="top"><td>
+<a href="team_openmp.cpp.xml" target="_top">team_openmp.cpp</a><br/> </td><td> OpenMP Implementation of a Team of AD Threads </td></tr><tr valign="top"><td>
+<a href="team_pthread.cpp.xml" target="_top">team_pthread.cpp</a><br/> </td><td> Pthread Implementation of a Team of AD Threads </td></tr><tr valign="top"><td>
+<a href="team_thread.hpp.xml" target="_top">team_thread.hpp</a><br/> </td><td> Specifications for A Team of AD Threads </td></tr><tr valign="top"><td>
+<a href="test_vector.xml" target="_top">test_vector</a><br/> </td><td> Choosing The Vector Testing Template Class </td></tr><tr valign="top"><td>
+<a href="theory.xml" target="_top">Theory</a><br/> </td><td> The Theory of Derivative Calculations </td></tr><tr valign="top"><td>
+<a href="thread_alloc.xml" target="_top">thread_alloc</a><br/> </td><td> A Fast Multi-Threading Memory Allocator </td></tr><tr valign="top"><td>
+<a href="thread_alloc.cpp.xml" target="_top">thread_alloc.cpp</a><br/> </td><td> Fast Multi-Threading Memory Allocator: Example and Test </td></tr><tr valign="top"><td>
+<a href="thread_test.cpp.xml" target="_top">thread_test.cpp</a><br/> </td><td> Run Multi-Threading Examples and Speed Tests </td></tr><tr valign="top"><td>
+<a href="time_test.xml" target="_top">time_test</a><br/> </td><td> Determine Amount of Time to Execute a Test </td></tr><tr valign="top"><td>
+<a href="time_test.cpp.xml" target="_top">time_test.cpp</a><br/> </td><td> time_test: Example and test </td></tr><tr valign="top"><td>
+<a href="tracknewdel.xml" target="_top">TrackNewDel</a><br/> </td><td> Routines That Track Use of New and Delete </td></tr><tr valign="top"><td>
+<a href="tracknewdel.cpp.xml" target="_top">TrackNewDel.cpp</a><br/> </td><td> Tracking Use of New and Delete: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="U">U</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="unaryminus.xml" target="_top">UnaryMinus</a><br/> </td><td> AD Unary Minus Operator </td></tr><tr valign="top"><td>
+<a href="unaryminus.cpp.xml" target="_top">UnaryMinus.cpp</a><br/> </td><td> AD Unary Minus Operator: Example and Test </td></tr><tr valign="top"><td>
+<a href="unaryplus.xml" target="_top">UnaryPlus</a><br/> </td><td> AD Unary Plus Operator </td></tr><tr valign="top"><td>
+<a href="unaryplus.cpp.xml" target="_top">UnaryPlus.cpp</a><br/> </td><td> AD Unary Plus Operator: Example and Test </td></tr><tr valign="top"><td>
+<a href="uniform_01.xml" target="_top">uniform_01</a><br/> </td><td> Simulate a [0,1] Uniform Random Variate </td></tr><tr valign="top"><td>
+<a href="uniform_01.hpp.xml" target="_top">uniform_01.hpp</a><br/> </td><td> Source: uniform_01 </td></tr><tr valign="top"><td>
+<a href="user_atomic.xml" target="_top">user_atomic</a><br/> </td><td> User Defined Atomic AD Functions </td></tr><tr valign="top"><td>
+<a href="user_tan.cpp.xml" target="_top">user_tan.cpp</a><br/> </td><td> Tan and Tanh as User Atomic Operations: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="V">V</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="value.xml" target="_top">Value</a><br/> </td><td> Convert From an AD Type to its Base Type </td></tr><tr valign="top"><td>
+<a href="value.cpp.xml" target="_top">Value.cpp</a><br/> </td><td> Convert From AD to its Base Type: Example and Test </td></tr><tr valign="top"><td>
+<a href="var2par.xml" target="_top">Var2Par</a><br/> </td><td> Convert an AD Variable to a Parameter </td></tr><tr valign="top"><td>
+<a href="var2par.cpp.xml" target="_top">Var2Par.cpp</a><br/> </td><td> Convert an AD Variable to a Parameter: Example and Test </td></tr><tr valign="top"><td>
+<a href="vec_ad.cpp.xml" target="_top">vec_ad.cpp</a><br/> </td><td> AD Vectors that Record Index Operations: Example and Test </td></tr><tr valign="top"><td>
+<a href="vecad.xml" target="_top">VecAD</a><br/> </td><td> AD Vectors that Record Index Operations </td></tr><tr valign="top"><td>
+<a href="vectorbool.cpp.xml" target="_top">vectorBool.cpp</a><br/> </td><td> CppAD::vectorBool Class: Example and Test </td></tr><tr valign="top"><td>
+
+<b><big><a name="W">W</a></big></b> </td><td>  </td></tr><tr valign="top"><td>
+<a href="whats_new.xml" target="_top">whats_new</a><br/> </td><td> Changes and Additions to CppAD </td></tr><tr valign="top"><td>
+<a href="whats_new_03.xml" target="_top">whats_new_03</a><br/> </td><td> Changes and Additions to CppAD During 2003 </td></tr><tr valign="top"><td>
+<a href="whats_new_04.xml" target="_top">whats_new_04</a><br/> </td><td> Changes and Additions to CppAD During 2004 </td></tr><tr valign="top"><td>
+<a href="whats_new_05.xml" target="_top">whats_new_05</a><br/> </td><td> Changes and Additions to CppAD During 2005 </td></tr><tr valign="top"><td>
+<a href="whats_new_06.xml" target="_top">whats_new_06</a><br/> </td><td> Changes and Additions to CppAD During 2006 </td></tr><tr valign="top"><td>
+<a href="whats_new_07.xml" target="_top">whats_new_07</a><br/> </td><td> Changes and Additions to CppAD During 2007 </td></tr><tr valign="top"><td>
+<a href="whats_new_08.xml" target="_top">whats_new_08</a><br/> </td><td> Changes and Additions to CppAD During 2008 </td></tr><tr valign="top"><td>
+<a href="whats_new_09.xml" target="_top">whats_new_09</a><br/> </td><td> Changes and Additions to CppAD During 2009 </td></tr><tr valign="top"><td>
+<a href="whats_new_10.xml" target="_top">whats_new_10</a><br/> </td><td> Changes and Additions to CppAD During 2010 </td></tr><tr valign="top"><td>
+<a href="whats_new_11.xml" target="_top">whats_new_11</a><br/> </td><td> Changes and Additions to CppAD During 2011 </td></tr><tr valign="top"><td>
+<a href="wishlist.xml" target="_top">WishList</a><br/> </td><td> The CppAD Wish List </td></tr><tr valign="top"><td>
+</td></tr></table>
+
+</body>
+</html>

@@ -1,0 +1,238 @@
+$Id: example_list.omh 2214 2011-11-27 21:40:42Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+
+
+$begin General$$
+$spell
+	Cpp
+$$
+
+$index example, general$$
+$index general, example$$
+$index realistic, example$$
+
+$section General Examples$$ 
+
+$head Description$$
+Most of the examples in CppAD are part of the documentation
+for a specific feature; for example, $xref/Add.cpp/$$ is an 
+example using the $cref/addition operator/ad_binary/$$.
+The examples list in this section are of a more general nature.
+
+$childtable%
+	example/ad_fun.cpp%
+	example/ad_in_c.cpp%
+	example/conj_grad.cpp%
+	example/hes_minor_det.cpp%
+	example/hes_lu_det.cpp%
+	example/interface_2c.cpp%
+	example/jac_minor_det.cpp%
+	example/jac_lu_det.cpp%
+	omh/mul_level.omh%
+	example/ode_stiff.cpp%
+	example/ode_taylor.cpp%
+	example/ode_taylor_adolc.cpp%
+	example/stack_machine.cpp
+%$$
+
+$end
+
+-----------------------------------------------------------------------------
+$begin ExampleUtility$$
+$spell
+	CppAD
+$$
+
+$section Utility Routines used by CppAD Examples$$
+
+$childtable%
+	example/example.cpp%
+	speed/example/example.cpp%
+	example/lu_vec_ad.cpp
+%$$ 
+
+$end
+-----------------------------------------------------------------------------
+$begin ListAllExamples$$
+$spell 
+	CppAD
+$$
+
+$section List of All the CppAD Examples$$
+
+$comment 
+	omit:   TestOne.cpp OneCase.cpp lu_vec_ad.cpp
+$$
+
+$table
+$rref a11c_bthread.cpp$$
+$rref a11c_openmp.cpp$$
+$rref a11c_pthread.cpp$$
+$rref abort_recording.cpp$$
+$rref Abs.cpp$$
+$rref Acos.cpp$$
+$rref Add.cpp$$
+$rref AddEq.cpp$$
+$rref ad_fun.cpp$$
+$rref ad_in_c.cpp$$
+$rref arc_tan.cpp$$
+$rref Asin.cpp$$
+$rref Atan.cpp$$
+$rref Atan2.cpp$$
+$rref base_adolc.hpp$$
+$rref base_complex.hpp$$
+$rref BenderQuad.cpp$$
+$rref BoolFun.cpp$$
+$rref team_bthread.cpp$$
+$rref CheckNumericType.cpp$$
+$rref checkpoint.cpp$$
+$rref CheckSimpleVector.cpp$$
+$rref Compare.cpp$$
+$rref CompareChange.cpp$$
+$rref ComplexPoly.cpp$$
+$rref CondExp.cpp$$
+$rref conj_grad.cpp$$
+$rref CopyAD.cpp$$
+$rref CopyBase.cpp$$
+$rref Cos.cpp$$
+$rref Cosh.cpp$$
+$rref CppAD_vector.cpp$$
+$rref Default.cpp$$
+$rref det_by_lu.cpp$$
+$rref det_by_minor.cpp$$
+$rref det_of_minor.cpp$$
+$rref Div.cpp$$
+$rref DivEq.cpp$$
+$rref epsilon.cpp$$
+$rref Eq.cpp$$
+$rref EqualOpSeq.cpp$$
+$rref Erf.cpp$$
+$rref ErrorHandler.cpp$$
+$rref example.cpp$$
+$rref Exp.cpp$$
+$rref ForOne.cpp$$
+$rref ForTwo.cpp$$
+$rref Forward.cpp$$
+$rref ForSparseJac.cpp$$
+$rref fun_assign.cpp$$
+$rref FunCheck.cpp$$
+$rref get_started.cpp$$
+$rref cppad_ipopt_nlp$$
+$rref ipopt_get_started.cpp$$
+$rref ipopt_ode_fast.hpp$$
+$rref ipopt_ode_problem.hpp$$
+$rref ipopt_ode_check.cpp$$
+$rref ipopt_ode_run.hpp$$
+$rref ipopt_ode_simple.hpp$$
+$rref ipopt_ode_speed.cpp$$
+$rref HesLagrangian.cpp$$
+$rref HesLuDet.cpp$$
+$rref HesMinorDet.cpp$$
+$rref HesTimesDir.cpp$$
+$rref Hessian.cpp$$
+$rref Independent.cpp$$
+$rref Integer.cpp$$
+$rref Interface2C.cpp$$
+$rref interp_onetape.cpp$$
+$rref interp_retape.cpp$$
+$rref JacLuDet.cpp$$
+$rref JacMinorDet.cpp$$
+$rref Jacobian.cpp$$
+$rref Log.cpp$$
+$rref Log10.cpp$$
+$rref LuFactor.cpp$$
+$rref LuInvert.cpp$$
+$rref LuRatio.cpp$$
+$rref LuSolve.cpp$$
+$rref LuVecADOk.cpp$$
+$rref mat_mul.cpp$$
+$rref mat_mul.hpp$$
+$rref Mul.cpp$$
+$rref MulEq.cpp$$
+$rref mul_level.cpp$$
+$rref mul_level_adolc.cpp$$
+$rref multi_newton.cpp$$
+$rref multi_newton_time.cpp$$
+$rref multi_newton_work.cpp$$
+$rref nan.cpp$$
+$rref NearEqualExt.cpp$$
+$rref Near_Equal.cpp$$
+$rref not_complex_ad.cpp$$
+$rref NumericType.cpp$$
+$rref OdeErrControl.cpp$$
+$rref OdeErrMaxabs.cpp$$
+$rref OdeGear.cpp$$
+$rref OdeGearControl.cpp$$
+$rref OdeStiff.cpp$$
+$rref ode_evaluate.cpp$$
+$rref ode_taylor.cpp$$
+$rref ode_taylor_adolc.cpp$$
+$rref omp_alloc.cpp$$
+$rref team_openmp.cpp$$
+$rref thread_test.cpp$$
+$rref opt_val_hes.cpp$$
+$rref optimize.cpp$$
+$rref Output.cpp$$
+$rref ParVar.cpp$$
+$rref Poly.cpp$$
+$rref Pow.cpp$$
+$rref pow_int.cpp$$
+$rref print_for_cout.cpp$$
+$rref print_for_string.cpp$$
+$rref team_pthread.cpp$$
+$rref RevOne.cpp$$
+$rref RevSparseHes.cpp$$
+$rref RevSparseJac.cpp$$
+$rref RevTwo.cpp$$
+$rref reverse_any.cpp$$
+$rref reverse_one.cpp$$
+$rref reverse_three.cpp$$
+$rref reverse_two.cpp$$
+$rref RombergMul.cpp$$
+$rref RombergOne.cpp$$
+$rref Rosen34.cpp$$
+$rref runge_45_1.cpp$$
+$rref runge_45_2.cpp$$
+$rref seq_property.cpp$$
+$rref simple_ad.cpp$$
+$rref SimpleVector.cpp$$
+$rref Sin.cpp$$
+$rref Sinh.cpp$$
+$rref sparse_evaluate.cpp$$
+$rref sparse_hessian.cpp$$
+$rref sparse_jacobian.cpp$$
+$rref speed_program.cpp$$
+$rref speed_test.cpp$$
+$rref Sqrt.cpp$$
+$rref StackMachine.cpp$$
+$rref Sub.cpp$$
+$rref SubEq.cpp$$
+$rref harmonic.cpp$$
+$rref harmonic_time.cpp$$
+$rref harmonic_work.cpp$$
+$rref Tan.cpp$$
+$rref Tanh.cpp$$
+$rref TapeIndex.cpp$$
+$rref thread_alloc.cpp$$
+$rref team_thread.hpp$$
+$rref UnaryMinus.cpp$$
+$rref UnaryPlus.cpp$$
+$rref user_tan.cpp$$
+$rref Value.cpp$$
+$rref Var2Par.cpp$$
+$rref vec_ad.cpp$$
+$rref vectorBool.cpp$$
+$tend
+
+$end
+

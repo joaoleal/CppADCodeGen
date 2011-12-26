@@ -1,0 +1,186 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Speed Test Derivatives Using Fadbad</title>
+<meta name="description" id="description" content="Speed Test Derivatives Using Fadbad"/>
+<meta name="keywords" id="keywords" content=" speed test fadbad "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_speed_fadbad_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="cppad_sparse_jacobian.cpp.xml" target="_top">Prev</a>
+</td><td><a href="fadbad_det_minor.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_fadbad</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>speed_fadbad-&gt;</option>
+<option>fadbad_det_minor.cpp</option>
+<option>fadbad_det_lu.cpp</option>
+<option>fadbad_mat_mul.cpp</option>
+<option>fadbad_ode.cpp</option>
+<option>fadbad_poly.cpp</option>
+<option>fadbad_sparse_hessian.cpp</option>
+<option>fadbad_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>FadbadDir</option>
+<option>Running Tests</option>
+<option>C++ Compiler Flags</option>
+<option>Contents</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+
+
+
+
+<center><b><big><big>Speed Test Derivatives Using Fadbad</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+CppAD has a set of speed tests that are used to compare
+Fadbad with other AD packages.
+This section links to the source code the Fadbad speed tests
+(any suggestions to make the Fadbad results faster are welcome).
+
+<br/>
+<br/>
+<b><big><a name="FadbadDir" id="FadbadDir">FadbadDir</a></big></b>
+<br/>
+To run these tests, you must include the <code><font color="blue">configure</font></code> command line option
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;FADBAD_DIR=</span></font></code><i><span style='white-space: nowrap'>FadbadDir</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>during <a href="installunix.xml#FadbadDir" target="_top"><span style='white-space: nowrap'>installation</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Running Tests" id="Running Tests">Running Tests</a></big></b>
+<br/>
+To build these speed tests, and run their correctness tests,
+execute the following commands starting in the
+<a href="installunix.xml#Download.Work Directory" target="_top"><span style='white-space: nowrap'>work&#xA0;directory</span></a>
+:
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;cd&#xA0;speed/double<br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;make&#xA0;test<br/>
+</span></font></code>
+You can then run the corresponding speed tests 
+with the following command
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;./double&#xA0;speed&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>seed</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+where 
+<code><i><font color="black"><span style='white-space: nowrap'>seed</span></font></i></code>
+ is a positive integer.
+See <a href="speed_main.xml" target="_top"><span style='white-space: nowrap'>speed_main</span></a>
+ for more options.
+
+<br/>
+<br/>
+<b><big><a name="C++ Compiler Flags" id="C++ Compiler Flags">C++ Compiler Flags</a></big></b>
+<br/>
+The C++ compiler flags used to build the Fadbad speed tests are
+<code><font color="blue">
+<pre style='display:inline'> 
+     # Use special version of CXX_FLAGS with -Wshadow removed (if present).
+     AM_CXXFLAGS   = -O2 -DNDEBUG -DSPEED_FADBAD $(CXX_FLAGS_FADBAD)</pre>
+</font></code>
+
+<br/>
+<br/>
+<b><big><a name="Contents" id="Contents">Contents</a></big></b>
+<br/>
+<div><a href="fadbad_det_minor.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Gradient&#xA0;of&#xA0;Determinant&#xA0;by&#xA0;Minor&#xA0;Expansion</a><br/>
+<a href="fadbad_det_lu.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Gradient&#xA0;of&#xA0;Determinant&#xA0;Using&#xA0;Lu&#xA0;Factorization</a><br/>
+<a href="fadbad_mat_mul.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Matrix&#xA0;Multiplication</a><br/>
+<a href="fadbad_ode.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Ode</a><br/>
+<a href="fadbad_poly.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Second&#xA0;Derivative&#xA0;of&#xA0;a&#xA0;Polynomial</a><br/>
+<a href="fadbad_sparse_hessian.cpp.xml" target="_top">Fadbad&#xA0;Speed:&#xA0;Sparse&#xA0;Hessian</a><br/>
+<a href="fadbad_sparse_jacobian.cpp.xml" target="_top">fadbad&#xA0;Speed:&#xA0;sparse_jacobian</a><br/>
+</div>
+<hr/>Input File: omh/speed_fadbad.omh
+
+</body>
+</html>

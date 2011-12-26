@@ -1,0 +1,178 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>CppAD::vectorBool Class: Example and Test</title>
+<meta name="description" id="description" content="CppAD::vectorBool Class: Example and Test"/>
+<meta name="keywords" id="keywords" content=" bool Cppad::vector vectorbool Cppad Cppad::vectorbool example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_vectorbool.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="cppad_vector.cpp.xml" target="_top">Prev</a>
+</td><td><a href="thread_alloc.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>CppAD_vector</option>
+<option>vectorBool.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>CppAD_vector-&gt;</option>
+<option>CppAD_vector.cpp</option>
+<option>vectorBool.cpp</option>
+</select>
+</td>
+<td>vectorBool.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>CppAD::vectorBool Class: Example and Test</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cppad/vector.hpp&gt;
+# include &lt;cppad/check_simple_vector.hpp&gt;
+# include &lt;sstream&gt; // sstream and string are used to test output operation
+# include &lt;string&gt;
+
+bool vectorBool(void)
+{	bool ok = true;
+	using CppAD::vectorBool;
+
+	vectorBool x;          // default constructor 
+	ok &amp;= (x.size() == 0);
+
+	x.resize(2);             // resize and set element assignment to bool
+	ok &amp;= (x.size() == 2);
+	x[0] = false;
+	x[1] = true;
+
+	vectorBool y(2);       // sizing constructor
+	ok &amp;= (y.size() == 2);
+
+	const vectorBool z(x); // copy constructor and const element access
+	ok &amp;= (z.size() == 2);
+	ok &amp;= ( (z[0] == false) &amp;&amp; (z[1] == true) );
+
+	x[0] = true;           // modify, assignment changes x
+	ok &amp;= (x[0] == true);
+
+	x = y = z;              // vector assignment
+	ok &amp;= ( (x[0] == false) &amp;&amp; (x[1] == true) );
+	ok &amp;= ( (y[0] == false) &amp;&amp; (y[1] == true) );
+	ok &amp;= ( (z[0] == false) &amp;&amp; (z[1] == true) );
+
+	// test of push_vector
+	y.push_vector(z);
+	ok &amp;= y.size() == 4;
+	ok &amp;= ( (y[0] == false) &amp;&amp; (y[1] == true) );
+	ok &amp;= ( (y[2] == false) &amp;&amp; (y[3] == true) );
+
+	y[1] = false;           // element assignment to another element
+	x[0] = y[1];
+	ok &amp;= (x[0] == false);
+
+	// test of output
+	std::string        correct= &quot;01&quot;;
+	std::string        str;
+	std::ostringstream buf;
+	buf &lt;&lt; z;
+	str = buf.str();
+	ok &amp;= (str == correct);
+
+	// test of push_back element
+	size_t i;
+	x.resize(0);
+	for(i = 0; i &lt; 100; i++)
+		x.push_back( (i % 3) != 0 );
+	ok &amp;= (x.size() == 100);
+	for(i = 0; i &lt; 100; i++)
+		ok &amp;= ( x[i] == ((i % 3) != 0) );
+
+	// is that boolvector is
+	// a simple vector class with elements of type bool
+	CppAD::CheckSimpleVector&lt; bool, vectorBool &gt;();
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/vector_bool.cpp
+
+</body>
+</html>

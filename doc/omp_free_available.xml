@@ -1,0 +1,158 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Free Memory Currently Available for Quick Use by a Thread</title>
+<meta name="description" id="description" content="Free Memory Currently Available for Quick Use by a Thread"/>
+<meta name="keywords" id="keywords" content=" free_available omp_alloc "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_omp_free_available_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="omp_return_memory.xml" target="_top">Prev</a>
+</td><td><a href="omp_inuse.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>deprecated</option>
+<option>omp_alloc</option>
+<option>omp_free_available</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>deprecated-&gt;</option>
+<option>include_deprecated</option>
+<option>FunDeprecated</option>
+<option>omp_max_thread</option>
+<option>TrackNewDel</option>
+<option>omp_alloc</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>omp_alloc-&gt;</option>
+<option>omp_max_num_threads</option>
+<option>omp_in_parallel</option>
+<option>omp_get_thread_num</option>
+<option>omp_get_memory</option>
+<option>omp_return_memory</option>
+<option>omp_free_available</option>
+<option>omp_inuse</option>
+<option>omp_available</option>
+<option>omp_create_array</option>
+<option>omp_delete_array</option>
+<option>omp_efficient</option>
+<option>old_max_num_threads</option>
+<option>omp_alloc.cpp</option>
+</select>
+</td>
+<td>omp_free_available</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Deprecated</option>
+<option>Syntax</option>
+<option>Purpose</option>
+<option>thread</option>
+<option>Example</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Free Memory Currently Available for Quick Use by a Thread</big></big></b></center>
+<br/>
+<b><big><a name="Deprecated" id="Deprecated">Deprecated</a></big></b>
+
+
+<br/>
+Use the function <a href="ta_free_available.xml" target="_top"><span style='white-space: nowrap'>thread_alloc::free_available</span></a>
+ 
+instead.
+
+<br/>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<br/>
+
+<code><font color="blue"><span style='white-space: nowrap'>omp_alloc::free_available(</span></font><i><font color="black"><span style='white-space: nowrap'>thread</span></font></i><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+Free memory, currently available for quick use by a specific thread, 
+for general future use.
+
+<br/>
+<br/>
+<b><big><a name="thread" id="thread">thread</a></big></b>
+<br/>
+This argument has prototype
+
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;size_t&#xA0;</span></font><i><font color="black"><span style='white-space: nowrap'>thread</span></font></i><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>
+Either <a href="omp_get_thread_num.xml" target="_top"><span style='white-space: nowrap'>omp_get_thread_num</span></a>
+ must be the same as 
+<code><i><font color="black"><span style='white-space: nowrap'>thread</span></font></i></code>
+,
+or the current execution mode must be sequential 
+(not <a href="omp_in_parallel.xml" target="_top"><span style='white-space: nowrap'>parallel</span></a>
+).
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+<a href="omp_alloc.cpp.xml" target="_top"><span style='white-space: nowrap'>omp_alloc.cpp</span></a>
+
+
+
+<hr/>Input File: cppad/omp_alloc.hpp
+
+</body>
+</html>

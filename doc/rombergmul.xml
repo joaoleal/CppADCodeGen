@@ -1,0 +1,433 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Multi-dimensional Romberg Integration</title>
+<meta name="description" id="description" content="Multi-dimensional Romberg Integration"/>
+<meta name="keywords" id="keywords" content=" integrate multi-dimensional Romberg multi dimensional integration dimension "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_rombergmul_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="rombergone.cpp.xml" target="_top">Prev</a>
+</td><td><a href="rombergmul.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>library</option>
+<option>RombergMul</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>library-&gt;</option>
+<option>ErrorHandler</option>
+<option>NearEqual</option>
+<option>speed_test</option>
+<option>SpeedTest</option>
+<option>time_test</option>
+<option>NumericType</option>
+<option>CheckNumericType</option>
+<option>SimpleVector</option>
+<option>CheckSimpleVector</option>
+<option>nan</option>
+<option>pow_int</option>
+<option>Poly</option>
+<option>LuDetAndSolve</option>
+<option>RombergOne</option>
+<option>RombergMul</option>
+<option>Runge45</option>
+<option>Rosen34</option>
+<option>OdeErrControl</option>
+<option>OdeGear</option>
+<option>OdeGearControl</option>
+<option>BenderQuad</option>
+<option>opt_val_hes</option>
+<option>LuRatio</option>
+<option>CppAD_vector</option>
+<option>thread_alloc</option>
+<option>memory_leak</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down0(this)'>
+<option>RombergMul-&gt;</option>
+<option>RombergMul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Syntax</option>
+<option>Description</option>
+<option>Include</option>
+<option>m</option>
+<option>r</option>
+<option>F</option>
+<option>a</option>
+<option>b</option>
+<option>n</option>
+<option>p</option>
+<option>e</option>
+<option>Float</option>
+<option>FloatVector</option>
+<option>Example</option>
+<option>Source Code</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Multi-dimensional Romberg Integration</big></big></b></center>
+<br/>
+<b><big><a name="Syntax" id="Syntax">Syntax</a></big></b>
+
+<code><font color="blue"><br/>
+# include &lt;cppad/romberg_mul.hpp&gt;</font></code>
+<code><span style='white-space: nowrap'><br/>
+</span></code><code><font color="blue"><span style='white-space: nowrap'>RombergMul&lt;</span></font></code><i><span style='white-space: nowrap'>Fun</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>SizeVector</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>FloatVector</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>m</span></i><code><font color="blue"><span style='white-space: nowrap'>&gt;&#xA0;</span></font></code><i><span style='white-space: nowrap'>R</span></i>
+<code><span style='white-space: nowrap'><br/>
+</span></code><code><font color="blue"></font></code><i><span style='white-space: nowrap'>r</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>R</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>n</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>p</span></i><code><font color="blue"><span style='white-space: nowrap'>,&#xA0;</span></font></code><i><span style='white-space: nowrap'>e</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code>
+
+
+<br/>
+<br/>
+<b><big><a name="Description" id="Description">Description</a></big></b>
+<br/>
+Returns the Romberg integration estimate
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>r</mi>
+</mrow></math>
+
+ for the multi-dimensional integral
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>r</mi>
+<mo stretchy="false">=</mo>
+<msubsup><mo stretchy="false">&#x0222B;</mo>
+<mrow><mi mathvariant='italic'>a</mi>
+<mo stretchy="false">[</mo>
+<mn>0</mn>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mi mathvariant='italic'>b</mi>
+<mo stretchy="false">[</mo>
+<mn>0</mn>
+<mo stretchy="false">]</mo>
+</mrow>
+</msubsup>
+<mo stretchy="false">&#x022EF;</mo>
+<msubsup><mo stretchy="false">&#x0222B;</mo>
+<mrow><mi mathvariant='italic'>a</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+<mo stretchy="false">]</mo>
+</mrow>
+<mrow><mi mathvariant='italic'>b</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+<mo stretchy="false">]</mo>
+</mrow>
+</msubsup>
+<mspace width='.3em'/>
+<mi mathvariant='italic'>F</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mspace width='.3em'/>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>d</mi>
+</mstyle></mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">&#x022EF;</mo>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>d</mi>
+</mstyle></mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mspace width='.3em'/>
+<mo stretchy="false">+</mo>
+<mspace width='.3em'/>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mrow><mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow>
+</munderover>
+<mi mathvariant='italic'>O</mi>
+<msup><mrow><mo stretchy="true">[</mo><mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>b</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">-</mo>
+<mi mathvariant='italic'>a</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msup><mn>2</mn>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mn>-1</mn>
+</mrow>
+</msup>
+</mrow><mo stretchy="true">]</mo></mrow>
+<mrow><mn>2</mn>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>p</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+</mrow></math>
+
+<br/>
+<b><big><a name="Include" id="Include">Include</a></big></b>
+<br/>
+The file <code><font color="blue">cppad/romberg_mul.hpp</font></code> is included by <code><font color="blue">cppad/cppad.hpp</font></code>
+but it can also be included separately with out the rest of 
+the <code><font color="blue">CppAD</font></code> routines.
+
+<br/>
+<br/>
+<b><big><a name="m" id="m">m</a></big></b>
+<br/>
+The template parameter <i>m</i> must be convertible to a <code><font color="blue">size_t</font></code> 
+object with a value that can be determined at compile time; for example
+<code><font color="blue">2</font></code>.
+It determines the dimension of the domain space for the integration.
+
+<br/>
+<br/>
+<b><big><a name="r" id="r">r</a></big></b>
+<br/>
+The return value <i>r</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Float</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;</span></font></code><i><span style='white-space: nowrap'>r</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It is the estimate computed by <code><font color="blue">RombergMul</font></code> for the integral above
+(see description of <a href="rombergmul.xml#Float" target="_top"><span style='white-space: nowrap'>Float</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><big><a name="F" id="F">F</a></big></b>
+<br/>
+The object <i>F</i> has the prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Fun</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It must support the operation
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)<br/>
+</span></font></code>The argument <i>x</i> to <i>F</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>Float</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>The return value of <i>F</i> is a <i>Float</i> object
+
+<br/>
+<br/>
+<b><big><a name="a" id="a">a</a></big></b>
+<br/>
+The argument <i>a</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>FloatVector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>a</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the lower limit for the integration
+(see description of <a href="rombergmul.xml#FloatVector" target="_top"><span style='white-space: nowrap'>FloatVector</span></a>
+ below). 
+
+<br/>
+<br/>
+<b><big><a name="b" id="b">b</a></big></b>
+<br/>
+The argument <i>b</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>FloatVector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>b</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>It specifies the upper limit for the integration.
+
+<br/>
+<br/>
+<b><big><a name="n" id="n">n</a></big></b>
+<br/>
+The argument <i>n</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>SizeVector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>n</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>A total number of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mn>2</mn>
+<mrow><mi mathvariant='italic'>n</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+<mn>-1</mn>
+</mrow>
+</msup>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow></math>
+
+ 
+evaluations of <code><font color="blue"></font></code><i><span style='white-space: nowrap'>F</span></i><code><font color="blue"><span style='white-space: nowrap'>(</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>)</span></font></code> are used to estimate the integral
+with respect to 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>d</mi>
+</mstyle></mrow>
+<msub><mi mathvariant='italic'>x</mi>
+<mi mathvariant='italic'>i</mi>
+</msub>
+</mrow></math>
+
+.
+
+<br/>
+<br/>
+<b><big><a name="p" id="p">p</a></big></b>
+<br/>
+The argument <i>p</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;const&#xA0;</span></font></code><i><span style='white-space: nowrap'>SizeVector</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>p</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>For 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>m</mi>
+<mn>-1</mn>
+</mrow></math>
+
+,
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>i</mi>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+ determines the accuracy order in the 
+approximation for the integral 
+that is returned by <code><font color="blue">RombergMul</font></code>.
+The values in <i>p</i> must be less than or equal <i>n</i>; i.e.,
+<code><font color="blue"></font></code><i><span style='white-space: nowrap'>p</span></i><code><font color="blue"><span style='white-space: nowrap'>[</span></font></code><i><span style='white-space: nowrap'>i</span></i><code><font color="blue"><span style='white-space: nowrap'>]&#xA0;&lt;=&#xA0;</span></font></code><i><span style='white-space: nowrap'>n</span></i><code><font color="blue"><span style='white-space: nowrap'>[</span></font></code><i><span style='white-space: nowrap'>i</span></i><code><font color="blue"><span style='white-space: nowrap'>]</span></font></code>.
+
+<br/>
+<br/>
+<b><big><a name="e" id="e">e</a></big></b>
+<br/>
+The argument <i>e</i> has prototype
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>Float</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&amp;</span></font></code><i><span style='white-space: nowrap'>e</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>The input value of <i>e</i> does not matter
+and its output value is an approximation for the absolute error in 
+the integral estimate.
+
+<br/>
+<br/>
+<b><big><a name="Float" id="Float">Float</a></big></b>
+<br/>
+The type <i>Float</i> is defined as the type of the elements of
+<a href="rombergmul.xml#FloatVector" target="_top"><span style='white-space: nowrap'>FloatVector</span></a>
+.
+The type <i>Float</i> must satisfy the conditions
+for a <a href="numerictype.xml" target="_top"><span style='white-space: nowrap'>NumericType</span></a>
+ type.
+The routine <a href="checknumerictype.xml" target="_top"><span style='white-space: nowrap'>CheckNumericType</span></a>
+ will generate an error message
+if this is not the case.
+In addition, if <i>x</i> and <i>y</i> are <i>Float</i> objects,
+<code><font color="blue"><span style='white-space: nowrap'><br/>
+&#xA0;&#xA0;&#xA0;&#xA0;&#xA0;</span></font></code><i><span style='white-space: nowrap'>x</span></i><code><font color="blue"><span style='white-space: nowrap'>&#xA0;&lt;&#xA0;</span></font></code><i><span style='white-space: nowrap'>y</span></i><code><font color="blue"><span style='white-space: nowrap'><br/>
+</span></font></code>returns the <code><font color="blue">bool</font></code> value true if <i>x</i> is less than 
+<i>y</i> and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="FloatVector" id="FloatVector">FloatVector</a></big></b>
+<br/>
+The type <i>FloatVector</i> must be a <a href="simplevector.xml" target="_top"><span style='white-space: nowrap'>SimpleVector</span></a>
+ class.
+The routine <a href="checksimplevector.xml" target="_top"><span style='white-space: nowrap'>CheckSimpleVector</span></a>
+ will generate an error message
+if this is not the case.
+
+
+
+<br/>
+<br/>
+<b><big><a name="Example" id="Example">Example</a></big></b>
+
+<br/>
+The file
+<a href="rombergmul.cpp.xml" target="_top"><span style='white-space: nowrap'>RombergMul.cpp</span></a>
+
+contains an example and test a test of using this routine.
+It returns true if it succeeds and false otherwise.
+
+<br/>
+<br/>
+<b><big><a name="Source Code" id="Source Code">Source Code</a></big></b>
+<br/>
+The source code for this routine is in the file
+<code><font color="blue">cppad/romberg_mul.hpp</font></code>.
+
+
+<hr/>Input File: cppad/romberg_mul.hpp
+
+</body>
+</html>

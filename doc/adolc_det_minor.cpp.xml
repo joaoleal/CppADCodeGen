@@ -1,0 +1,222 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Adolc Speed: Gradient of Determinant by Minor Expansion</title>
+<meta name="description" id="description" content="Adolc Speed: Gradient of Determinant by Minor Expansion"/>
+<meta name="keywords" id="keywords" content=" adolc speed minor link_det_minor "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_adolc_det_minor.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="speed_adolc.xml" target="_top">Prev</a>
+</td><td><a href="adolc_det_lu.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_adolc</option>
+<option>adolc_det_minor.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_adolc-&gt;</option>
+<option>adolc_det_minor.cpp</option>
+<option>adolc_det_lu.cpp</option>
+<option>adolc_mat_mul.cpp</option>
+<option>adolc_ode.cpp</option>
+<option>adolc_poly.cpp</option>
+<option>adolc_sparse_hessian.cpp</option>
+<option>adolc_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>adolc_det_minor.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>link_det_minor</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Adolc Speed: Gradient of Determinant by Minor Expansion</big></big></b></center>
+<br/>
+<b><big><a name="link_det_minor" id="link_det_minor">link_det_minor</a></big></b>
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;cppad/vector.hpp&gt;
+# include &lt;cppad/speed/det_by_minor.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/track_new_del.hpp&gt;
+
+# include &lt;adolc/adouble.h&gt;
+# include &lt;adolc/taping.h&gt;
+# include &lt;adolc/interfaces.h&gt;
+
+bool link_det_minor(
+	size_t                     size     , 
+	size_t                     repeat   , 
+	CppAD::vector&lt;double&gt;     &amp;matrix   ,
+	CppAD::vector&lt;double&gt;     &amp;gradient )
+{
+	// -----------------------------------------------------
+	// setup
+	int tag  = 0;         // tape identifier
+	int keep = 1;         // keep forward mode results in buffer
+	int m    = 1;         // number of dependent variables
+	int n    = size*size; // number of independent variables
+	double f;             // function value
+	int j;                // temporary index
+
+	// set up for omp_alloc memory allocator (fast and checks for leaks)
+	using CppAD::omp_alloc; // the allocator
+	size_t capacity;        // capacity of an allocation
+
+	// object for computing determinant
+	typedef adouble    ADScalar;
+	typedef ADScalar*  ADVector;
+	CppAD::det_by_minor&lt;ADScalar&gt; Det(size);
+
+	// AD value of determinant
+	ADScalar   detA;
+
+	// AD version of matrix
+	ADVector A  = omp_alloc::create_array&lt;ADScalar&gt;(n, capacity);
+	
+	// vectors of reverse mode weights 
+	double* u   = omp_alloc::create_array&lt;double&gt;(m, capacity);
+	u[0] = 1.;
+
+	// vector with matrix value
+	double* mat  = omp_alloc::create_array&lt;double&gt;(n, capacity);
+
+	// vector to receive gradient result
+	double* grad = omp_alloc::create_array&lt;double&gt;(n, capacity);
+
+	extern bool global_retape;
+	if( global_retape ) while(repeat--)
+	{
+		// choose a matrix
+		CppAD::uniform_01(n, mat);
+
+		// declare independent variables
+		trace_on(tag, keep);
+		for(j = 0; j &lt; n; j++)
+			A[j] &lt;&lt;= mat[j];
+
+		// AD computation of the determinant
+		detA = Det(A);
+
+		// create function object f : A -&gt; detA
+		detA &gt;&gt;= f;
+		trace_off();
+
+		// get the next matrix
+		CppAD::uniform_01(n, mat);
+
+		// evaluate the determinant at the new matrix value
+		zos_forward(tag, m, n, keep, mat, &amp;f); 
+
+		// evaluate and return gradient using reverse mode
+		fos_reverse(tag, m, n, u, grad);
+	}
+	else
+	{
+		// choose a matrix
+		CppAD::uniform_01(n, mat);
+
+		// declare independent variables
+		trace_on(tag, keep);
+		for(j = 0; j &lt; n; j++)
+			A[j] &lt;&lt;= mat[j];
+
+		// AD computation of the determinant
+		detA = Det(A);
+
+		// create function object f : A -&gt; detA
+		detA &gt;&gt;= f;
+		trace_off();
+
+		while(repeat--)
+		{	// get the next matrix
+			CppAD::uniform_01(n, mat);
+
+			// evaluate the determinant at the new matrix value
+			zos_forward(tag, m, n, keep, mat, &amp;f); 
+
+			// evaluate and return gradient using reverse mode
+			fos_reverse(tag, m, n, u, grad);
+		}
+	}
+
+	// return matrix and gradient
+	for(j = 0; j &lt; n; j++)
+	{	matrix[j] = mat[j];
+		gradient[j] = grad[j];
+	}
+
+	// tear down
+	omp_alloc::delete_array(grad);
+	omp_alloc::delete_array(mat);
+	omp_alloc::delete_array(u);
+	omp_alloc::delete_array(A);
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/adolc/det_minor.cpp
+
+</body>
+</html>

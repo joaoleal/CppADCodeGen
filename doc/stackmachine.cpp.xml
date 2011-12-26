@@ -1,0 +1,288 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Example Differentiating a Stack Machine Interpreter</title>
+<meta name="description" id="description" content="Example Differentiating a Stack Machine Interpreter"/>
+<meta name="keywords" id="keywords" content=" interpreter example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_stackmachine.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="ode_taylor_adolc.cpp.xml" target="_top">Prev</a>
+</td><td><a href="exampleutility.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>General</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>General-&gt;</option>
+<option>ad_fun.cpp</option>
+<option>ad_in_c.cpp</option>
+<option>conj_grad.cpp</option>
+<option>HesMinorDet.cpp</option>
+<option>HesLuDet.cpp</option>
+<option>Interface2C.cpp</option>
+<option>JacMinorDet.cpp</option>
+<option>JacLuDet.cpp</option>
+<option>mul_level</option>
+<option>OdeStiff.cpp</option>
+<option>ode_taylor.cpp</option>
+<option>ode_taylor_adolc.cpp</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>StackMachine.cpp</td>
+<td>Headings</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Example Differentiating a Stack Machine Interpreter</big></big></b></center>
+<code><font color="blue"><pre style='display:inline'> 
+
+# include &lt;cstring&gt;
+# include &lt;cstddef&gt;
+# include &lt;cstdlib&gt;
+# include &lt;cctype&gt;
+# include &lt;cassert&gt;
+# include &lt;stack&gt;
+
+# include &lt;cppad/cppad.hpp&gt;
+
+namespace { 
+// Begin empty namespace ------------------------------------------------
+
+bool is_number( const std::string &amp;s )
+{	char ch = s[0];
+	bool number = (std::strchr(&quot;0123456789.&quot;, ch) != 0);
+	return number;
+}
+bool is_binary( const std::string &amp;s )
+{	char ch = s[0];
+	bool binary = (strchr(&quot;+-*/.&quot;, ch) != 0);
+	return binary;
+}
+bool is_variable( const std::string &amp;s )
+{	char ch = s[0];
+	bool variable = ('a' &lt;= ch) &amp; (ch &lt;= 'z');
+	return variable;
+}
+
+void StackMachine( 
+	std::stack&lt; std::string &gt;          &amp;token_stack  ,
+	CppAD::vector&lt; CppAD::<a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; &amp;variable     )
+{	using std::string;
+	using std::stack;
+
+	using CppAD::AD;
+
+	stack&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; value_stack;
+	string              token;
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt;          value_one;
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt;          value_two;
+
+	while( ! token_stack.empty() )
+	{	string s = token_stack.top();
+		token_stack.pop();
+
+		if( is_number(s) )
+		{	value_one = std::atof( s.c_str() );
+			value_stack.push( value_one );
+		}
+		else if( is_variable(s) )
+		{	value_one = variable[ size_t(s[0]) - size_t('a') ];
+			value_stack.push( value_one );
+		}
+		else if( is_binary(s) ) 
+		{	assert( value_stack.size() &gt;= 2 );
+			value_one = value_stack.top();
+			value_stack.pop();
+			value_two = value_stack.top();
+			value_stack.pop();
+
+			switch( s[0] )
+			{
+				case '+':
+				value_stack.push(value_one + value_two);
+				break;
+
+				case '-':
+				value_stack.push(value_one - value_two);
+				break;
+
+				case '*':
+				value_stack.push(value_one * value_two);
+				break;
+
+				case '/':
+				value_stack.push(value_one / value_two);
+				break;
+
+				default:
+				assert(0);
+			}
+		}
+		else if( s[0] == '=' )
+		{	assert( value_stack.size() &gt;= 1 ); 	
+			assert( token_stack.size() &gt;= 1 );
+			//
+			s = token_stack.top();
+			token_stack.pop();
+			//
+			assert( is_variable( s ) );
+			value_one = value_stack.top();
+			value_stack.pop();
+			//
+			variable[ size_t(s[0]) - size_t('a') ] = value_one;
+		}
+		else assert(0);
+	}
+	return;
+}
+
+// End empty namespace -------------------------------------------------------
+}
+
+bool StackMachine(void)
+{	bool ok = true;
+
+	using std::string;
+	using std::stack;
+
+	using CppAD::AD;
+	using CppAD::NearEqual;
+	using CppAD::vector;
+
+	// The users program in that stack machine language
+	const char *program[] = {
+		&quot;1.0&quot;, &quot;a&quot;, &quot;+&quot;, &quot;=&quot;, &quot;b&quot;,  // b = a + 1
+		&quot;2.0&quot;, &quot;b&quot;, &quot;*&quot;, &quot;=&quot;, &quot;c&quot;,  // c = b * 2
+		&quot;3.0&quot;, &quot;c&quot;, &quot;-&quot;, &quot;=&quot;, &quot;d&quot;,  // d = c - 3
+		&quot;4.0&quot;, &quot;d&quot;, &quot;/&quot;, &quot;=&quot;, &quot;e&quot;   // e = d / 4
+	};
+	size_t n_program = sizeof( program ) / sizeof( program[0] );
+
+	// put the program in the token stack
+	stack&lt; string &gt; token_stack;
+	size_t i = n_program;
+	while(i--)
+		token_stack.push( program[i] );
+
+	// domain space vector
+	size_t n = 1;
+	vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	X[0] = 0.;
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+		
+	// x[0] corresponds to a in the stack machine
+	vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; variable(26);
+	variable[0] = X[0];
+
+	// calculate the resutls of the program
+	StackMachine( token_stack , variable);
+
+	// range space vector
+	size_t m = 4;
+	vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	Y[0] = variable[1];   // b = a + 1
+	Y[1] = variable[2];   // c = (a + 1) * 2
+	Y[2] = variable[3];   // d = (a + 1) * 2 - 3
+	Y[3] = variable[4];   // e = ( (a + 1) * 2 - 3 ) / 4 
+	
+	// create f : X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// use forward mode to evaluate function at different argument value
+	size_t p = 0;
+	vector&lt;double&gt; x(n);
+	vector&lt;double&gt; y(m);
+	x[0] = 1.;
+	y    = f.<a href="forward.xml" target="_top">Forward</a>(p, x);
+
+	// check function values
+	ok &amp;= (y[0] == x[0] + 1.);
+	ok &amp;= (y[1] == (x[0] + 1.) * 2.);
+	ok &amp;= (y[2] == (x[0] + 1.) * 2. - 3.);
+	ok &amp;= (y[3] == ( (x[0] + 1.) * 2. - 3.) / 4.);
+
+	// Use forward mode (because x is shorter than y) to calculate Jacobian
+	p = 1;
+	vector&lt;double&gt; dx(n);
+	vector&lt;double&gt; dy(m);
+	dx[0] = 1.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(p, dx);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0], 1., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[1], 2., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[2], 2., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[3], .5, 1e-10, 1e-10);
+
+	// Use Jacobian routine (which automatically decides which mode to use)
+	dy = f.<a href="jacobian.xml" target="_top">Jacobian</a>(x);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0], 1., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[1], 2., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[2], 2., 1e-10, 1e-10);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[3], .5, 1e-10, 1e-10);
+
+	return ok;
+}</pre>
+</font></code>
+
+
+<hr/>Input File: example/stack_machine.cpp
+
+</body>
+</html>

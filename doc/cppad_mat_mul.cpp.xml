@@ -1,0 +1,260 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>CppAD Speed: Matrix Multiplication</title>
+<meta name="description" id="description" content="CppAD Speed: Matrix Multiplication"/>
+<meta name="keywords" id="keywords" content=" cppad speed matrix multiply link_mat_mul "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_cppad_mat_mul.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="cppad_det_lu.cpp.xml" target="_top">Prev</a>
+</td><td><a href="cppad_ode.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_cppad</option>
+<option>cppad_mat_mul.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_cppad-&gt;</option>
+<option>cppad_det_minor.cpp</option>
+<option>cppad_det_lu.cpp</option>
+<option>cppad_mat_mul.cpp</option>
+<option>cppad_ode.cpp</option>
+<option>cppad_poly.cpp</option>
+<option>cppad_sparse_hessian.cpp</option>
+<option>cppad_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>cppad_mat_mul.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Specifications</option>
+<option>Implementation</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>CppAD Speed: Matrix Multiplication</big></big></b></center>
+<br/>
+<b><big><a name="Specifications" id="Specifications">Specifications</a></big></b>
+<br/>
+See <a href="link_mat_mul.xml" target="_top"><span style='white-space: nowrap'>link_mat_mul</span></a>
+.
+
+<br/>
+<br/>
+<b><big><a name="Implementation" id="Implementation">Implementation</a></big></b>
+
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cppad/speed/mat_sum_sq.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &quot;../../example/mat_mul.hpp&quot;
+
+bool link_mat_mul(
+	size_t                           size     , 
+	size_t                           repeat   , 
+	CppAD::vector&lt;double&gt;&amp;           x        ,
+	CppAD::vector&lt;double&gt;&amp;           z        ,
+	CppAD::vector&lt;double&gt;&amp;           dz
+)
+{
+	// -----------------------------------------------------
+	// setup
+	typedef CppAD::<a href="ad.xml" target="_top">AD</a>&lt;double&gt;           ADScalar; 
+	typedef CppAD::vector&lt;ADScalar&gt;     ADVector; 
+
+	size_t j;               // temporary index
+	size_t m = 1;           // number of dependent variables
+	size_t n = size * size; // number of independent variables
+	ADVector   X(n);        // AD domain space vector
+	ADVector   Z(m);        // AD range space vector
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f; // AD function object
+	
+	// vectors of reverse mode weights 
+	CppAD::vector&lt;double&gt; w(1);
+	w[0] = 1.;
+
+	// ------------------------------------------------------
+	ADVector Y(n);          // Store product matrix
+	static bool printed = false;
+	bool print_this_time = (! printed) &amp; (repeat &gt; 1) &amp; (size &gt;= 10);
+
+	// user atomic information
+	extern bool global_atomic;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;ADScalar&gt; ax(2 * n), ay(n);
+	call_info info;
+	info.nr_result = size;
+	info.n_middle  = size;
+	info.nc_result = size;
+	size_t   info_id = info_.size();  
+	
+
+	extern bool global_retape;
+	if( global_retape ) while(repeat--)
+	{	// get the next matrix
+		CppAD::uniform_01(n, x);
+		for( j = 0; j &lt; n; j++)
+			X[j] = x[j];
+
+		// declare independent variables
+		<a href="independent.xml" target="_top">Independent</a>(X);
+
+		// do computations
+		if( ! global_atomic )
+			mat_sum_sq(size, X, Y, Z);
+		else
+		{	info_.push_back(info);
+			for(j = 0; j &lt; n; j++)
+			{	ax[j]   = X[j];
+				ax[j+n] = X[j];
+			}
+			// Y = X * X
+			mat_mul(info_id, ax, ay);
+			Z[0] = 0.;
+			for(j = 0; j &lt; n; j++)
+				Z[0] += ay[j];
+		} 
+		// create function object f : X -&gt; Z
+		f.Dependent(X, Z);
+
+		extern bool global_optimize;
+		if( global_optimize )
+		{	size_t before, after;
+			before = f.size_var();
+			f.optimize();
+			if( print_this_time ) 
+			{	after = f.size_var();
+				std::cout &lt;&lt; &quot;cppad_mat_mul_optimize_size_&quot; 
+				          &lt;&lt; int(size) &lt;&lt; &quot; = [ &quot; &lt;&lt; int(before) 
+				          &lt;&lt; &quot;, &quot; &lt;&lt; int(after) &lt;&lt; &quot;]&quot; &lt;&lt; std::endl;
+				printed         = true;
+				print_this_time = false;
+			}
+		}
+
+		// evaluate and return gradient using reverse mode
+		z  = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+		dz = f.<a href="reverse.xml" target="_top">Reverse</a>(1, w);
+	}
+	else
+	{	// get a next matrix
+		CppAD::uniform_01(n, x);
+		for(j = 0; j &lt; n; j++)
+			X[j] = x[j];
+
+		// declare independent variables
+		<a href="independent.xml" target="_top">Independent</a>(X);
+
+		// do computations
+		if( ! global_atomic )
+			mat_sum_sq(size, X, Y, Z);
+		else
+		{	info_.push_back(info);
+			for(j = 0; j &lt; n; j++)
+			{	ax[j]   = X[j];
+				ax[j+n] = X[j];
+			}
+			// Y = X * X
+			mat_mul(info_id, ax, ay);
+			Z[0] = 0.;
+			for(j = 0; j &lt; n; j++)
+				Z[0] += ay[j];
+		} 
+	
+		// create function object f : X -&gt; Z
+		f.Dependent(X, Z);
+
+		extern bool global_optimize;
+		if( global_optimize )
+		{	size_t before, after;
+			before = f.size_var();
+			f.optimize();
+			if( print_this_time ) 
+			{	after = f.size_var();
+				std::cout &lt;&lt; &quot;cppad_mat_mul_optimize_size_&quot; 
+				          &lt;&lt; int(size) &lt;&lt; &quot; = [ &quot; &lt;&lt; int(before) 
+				          &lt;&lt; &quot;, &quot; &lt;&lt; int(after) &lt;&lt; &quot;]&quot; &lt;&lt; std::endl;
+				printed         = true;
+				print_this_time = false;
+			}
+		}
+		while(repeat--)
+		{	// get a next matrix
+			CppAD::uniform_01(n, x);
+
+			// evaluate and return gradient using reverse mode
+			z  = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+			dz = f.<a href="reverse.xml" target="_top">Reverse</a>(1, w);
+		}
+	}
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/cppad/mat_mul.cpp
+
+</body>
+</html>

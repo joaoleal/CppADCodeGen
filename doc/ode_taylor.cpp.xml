@@ -1,0 +1,1034 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Taylor's Ode Solver: An Example and Test</title>
+<meta name="description" id="description" content="Taylor's Ode Solver: An Example and Test"/>
+<meta name="keywords" id="keywords" content=" Ode Taylor example test "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_ode_taylor.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="odestiff.cpp.xml" target="_top">Prev</a>
+</td><td><a href="ode_taylor_adolc.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Example</option>
+<option>General</option>
+<option>ode_taylor.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>CppAD-&gt;</option>
+<option>Install</option>
+<option>Introduction</option>
+<option>AD</option>
+<option>ADFun</option>
+<option>multi_thread</option>
+<option>library</option>
+<option>cppad_ipopt_nlp</option>
+<option>Example</option>
+<option>preprocessor</option>
+<option>Appendix</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>Example-&gt;</option>
+<option>General</option>
+<option>ExampleUtility</option>
+<option>ListAllExamples</option>
+<option>test_vector</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>General-&gt;</option>
+<option>ad_fun.cpp</option>
+<option>ad_in_c.cpp</option>
+<option>conj_grad.cpp</option>
+<option>HesMinorDet.cpp</option>
+<option>HesLuDet.cpp</option>
+<option>Interface2C.cpp</option>
+<option>JacMinorDet.cpp</option>
+<option>JacLuDet.cpp</option>
+<option>mul_level</option>
+<option>OdeStiff.cpp</option>
+<option>ode_taylor.cpp</option>
+<option>ode_taylor_adolc.cpp</option>
+<option>StackMachine.cpp</option>
+</select>
+</td>
+<td>ode_taylor.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Purpose</option>
+<option>ODE</option>
+<option>ODE Solution</option>
+<option>Derivative of ODE Solution</option>
+<option>Taylor's Method Using AD</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Taylor's Ode Solver: An Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="Purpose" id="Purpose">Purpose</a></big></b>
+<br/>
+This is a realistic example using 
+two levels of taping (see <a href="mul_level.xml" target="_top"><span style='white-space: nowrap'>mul_level</span></a>
+).
+The first level of taping uses <code><font color="blue">AD&lt;double&gt;</font></code> to tape the solution of an 
+ordinary differential equation.
+This solution is then differentiated with respect to a parameter vector.
+The second level of taping uses <code><font color="blue">AD&lt; AD&lt;double&gt; &gt;</font></code>
+to take derivatives during the solution of the differential equation.
+These derivatives are used in the application
+of Taylor's method to the solution of the ODE.
+The example <a href="ode_taylor_adolc.cpp.xml" target="_top"><span style='white-space: nowrap'>ode_taylor_adolc.cpp</span></a>
+ computes the same values using
+Adolc's type <code><font color="blue">adouble</font></code> and CppAD's type <code><font color="blue">AD&lt;adouble&gt;</font></code>.
+
+<br/>
+<br/>
+<b><big><a name="ODE" id="ODE">ODE</a></big></b>
+<br/>
+For this example the ODE's are defined by the function
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">:</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x000D7;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ where
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">(</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-2</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true">)</mo></mrow>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">(</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="center" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true">)</mo></mrow>
+</mrow></math>
+
+and the initial condition 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow></math>
+
+.
+The value of 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+ is fixed during the solution of the ODE
+and the function 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">:</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">&#x02192;</mo>
+<msup><mrow><mstyle mathvariant='bold'><mi mathvariant='bold'>R</mi>
+</mstyle></mrow>
+<mi mathvariant='italic'>n</mi>
+</msup>
+</mrow></math>
+
+ is used to
+define the ODE where
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">(</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mn>0</mn>
+</msub>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-2</mn>
+</mrow>
+</msub>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true">)</mo></mrow>
+</mrow></math>
+
+<br/>
+<b><big><a name="ODE Solution" id="ODE Solution">ODE Solution</a></big></b>
+<br/>
+The solution for this example can be calculated by 
+starting with the first row and then using the solution
+for the first row to solve the second and so on.
+Doing this we obtain
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">(</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<mi mathvariant='italic'>t</mi>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<msup><mi mathvariant='italic'>t</mi>
+<mn>2</mn>
+</msup>
+<mo stretchy="false">/</mo>
+<mn>2</mn>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-2</mn>
+</mrow>
+</msub>
+<mo stretchy="false">&#x02026;</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>n</mi>
+</msup>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>n</mi>
+<mo stretchy="false">!</mo>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true">)</mo></mrow>
+</mrow></math>
+
+<br/>
+<b><big><a name="Derivative of ODE Solution" id="Derivative of ODE Solution">Derivative of ODE Solution</a></big></b>
+<br/>
+Differentiating the solution above,
+with respect to the parameter vector 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>x</mi>
+</mrow></math>
+
+,
+we notice that
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>x</mi>
+</msub>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mrow><mo stretchy="true">(</mo><mrow><mtable rowalign="center" ><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mn>0</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+</mtd><mtd columnalign="center" >
+<mn>0</mn>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x022EF;</mo>
+</mtd><mtd columnalign="center" >
+<mn>0</mn>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+</mtd><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mn>1</mn>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+</mtd><mtd columnalign="center" >
+<mn>0</mn>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x022EE;</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x022F1;</mo>
+</mtd><mtd columnalign="center" >
+<mn>0</mn>
+</mtd></mtr><mtr><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>0</mn>
+</msub>
+</mtd><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mn>1</mn>
+</msub>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">&#x022EF;</mo>
+</mtd><mtd columnalign="center" >
+<msub><mi mathvariant='italic'>y</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<msub><mi mathvariant='italic'>x</mi>
+<mrow><mi mathvariant='italic'>n</mi>
+<mn>-1</mn>
+</mrow>
+</msub>
+</mtd></mtr></mtable>
+</mrow><mo stretchy="true">)</mo></mrow>
+</mrow></math>
+
+<br/>
+<b><big><a name="Taylor's Method Using AD" id="Taylor's Method Using AD">Taylor's Method Using AD</a></big></b>
+<br/>
+An <i>m</i>-th order Taylor method for 
+approximating the solution of an
+ordinary differential equations is 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">+</mo>
+<mi mathvariant='normal'>&#x00394;</mi>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">&#x02248;</mo>
+<munderover><mo displaystyle='true' largeop='true'>&#x02211;</mo>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">=</mo>
+<mn>0</mn>
+</mrow>
+<mi mathvariant='italic'>p</mi>
+</munderover>
+<msubsup><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mfrac><mrow><mi mathvariant='normal'>&#x00394;</mi>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msup>
+</mrow>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">!</mo>
+</mrow>
+</mfrac>
+<mo stretchy="false">=</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='normal'>&#x00394;</mi>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">+</mo>
+<mo stretchy="false">&#x022EF;</mo>
+<mo stretchy="false">+</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>p</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mi mathvariant='normal'>&#x00394;</mi>
+<msup><mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>p</mi>
+</msup>
+</mrow></math>
+
+where the Taylor coefficients 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ are defined by
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<msubsup><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">!</mo>
+</mrow></math>
+
+We define the function 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ by the equation
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>g</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+<mo stretchy="false">=</mo>
+<mi mathvariant='italic'>h</mi>
+<mo stretchy="false">[</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">]</mo>
+</mrow></math>
+
+It follows that 
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<mtable rowalign="center" ><mtr><mtd columnalign="right" >
+<msub><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+</msub>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msubsup><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+<mrow><mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+</mrow>
+</msubsup>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msubsup><mo stretchy="false">&#x02202;</mo>
+<mi mathvariant='italic'>t</mi>
+<mi mathvariant='italic'>k</mi>
+</msubsup>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd></mtr><mtr><mtd columnalign="right" >
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mtd><mtd columnalign="center" >
+<mo stretchy="false">=</mo>
+</mtd><mtd columnalign="left" >
+<msup><mi mathvariant='italic'>z</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">/</mo>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mtd></mtr></mtable>
+</mrow></math>
+
+where 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>z</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+ is the 
+<i>k</i>-th order Taylor coefficient
+for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<mi mathvariant='italic'>z</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+In the example below, the Taylor coefficients
+
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="block"><mrow>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mn>0</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+<mo stretchy="false">,</mo>
+<mo stretchy="false">&#x02026;</mo>
+<mo stretchy="false">,</mo>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+are used to calculate the Taylor coefficient 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>z</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+
+which in turn gives the value for 
+<math xmlns="http://www.w3.org/1998/Math/MathML" display="inline"><mrow>
+<msup><mi mathvariant='italic'>y</mi>
+<mrow><mo stretchy="false">(</mo>
+<mi mathvariant='italic'>k</mi>
+<mo stretchy="false">+</mo>
+<mn>1</mn>
+<mo stretchy="false">)</mo>
+</mrow>
+</msup>
+<mi mathvariant='italic'>y</mi>
+<mo stretchy="false">(</mo>
+<mi mathvariant='italic'>t</mi>
+<mo stretchy="false">,</mo>
+<mi mathvariant='italic'>x</mi>
+<mo stretchy="false">)</mo>
+</mrow></math>
+
+.
+
+<code><font color="blue">
+<pre style='display:inline'> 
+
+# include &lt;cppad/cppad.hpp&gt;
+
+// =========================================================================
+// define types for each level
+namespace { // BEGIN empty namespace
+typedef CppAD::<a href="ad.xml" target="_top">AD</a>&lt;double&gt;     ADdouble;
+typedef CppAD::<a href="ad.xml" target="_top">AD</a>&lt; ADdouble &gt; ADDdouble;
+
+// -------------------------------------------------------------------------
+// class definition for C++ function object that defines ODE
+class Ode {
+private:
+	// copy of a that is set by constructor and used by g(y)
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt; x_; 
+public:
+	// constructor
+	Ode( <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt; x) : x_(x)
+	{ }
+	// the function g(y) is evaluated with two levels of taping
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADDdouble &gt; operator()
+	( const <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADDdouble &gt; &amp;y) const
+	{	size_t n = y.size();
+		<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADDdouble &gt; g(n);
+		size_t i;
+		g[0] = x_[0];
+		for(i = 1; i &lt; n; i++)
+			g[i] = x_[i] * y[i-1];
+
+		return g;
+	}
+};
+
+// -------------------------------------------------------------------------
+// Routine that uses Taylor's method to solve ordinary differential equaitons
+// and allows for algorithmic differentiation of the solution. 
+<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a> &lt; ADdouble &gt; taylor_ode(
+	Ode                     G       ,  // function that defines the ODE
+	size_t                  order   ,  // order of Taylor's method used
+	size_t                  nstep   ,  // number of steps to take
+	ADdouble                &amp;dt     ,  // Delta t for each step
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt; &amp;y_ini  )  // y(t) at the initial time
+{
+	// some temporary indices
+	size_t i, k, ell;
+
+	// number of variables in the ODE
+	size_t n = y_ini.size();
+
+	// copies of x and g(y) with two levels of taping
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADDdouble &gt;   Y(n), Z(n);
+
+	// y, y^{(k)} , z^{(k)}, and y^{(k+1)}
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt;  y(n), y_k(n), z_k(n), y_kp(n);
+	
+	// initialize x
+	for(i = 0; i &lt; n; i++)
+		y[i] = y_ini[i];
+
+	// loop with respect to each step of Taylors method
+	for(ell = 0; ell &lt; nstep; ell++)
+	{	// prepare to compute derivatives of in ADdouble
+		for(i = 0; i &lt; n; i++)
+			Y[i] = y[i];
+		CppAD::<a href="independent.xml" target="_top">Independent</a>(Y);
+
+		// evaluate ODE in ADDdouble
+		Z = G(Y);
+
+		// define differentiable version of g: X -&gt; Y
+		// that computes its derivatives in ADdouble
+		CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;ADdouble&gt; g(Y, Z);
+
+		// Use Taylor's method to take a step
+		y_k            = y;     // initialize y^{(k)}
+		ADdouble dt_kp = dt;    // initialize dt^(k+1)
+		for(k = 0; k &lt;= order; k++)
+		{	// evaluate k-th order Taylor coefficient of y
+			z_k = g.<a href="forward.xml" target="_top">Forward</a>(k, y_k);
+ 
+			for(i = 0; i &lt; n; i++)
+			{	// convert to (k+1)-Taylor coefficient for x
+				y_kp[i] = z_k[i] / ADdouble(k + 1);
+
+				// add term for to this Taylor coefficient
+				// to solution for y(t, x)
+				y[i]    += y_kp[i] * dt_kp;
+			}
+			// next power of t
+			dt_kp *= dt;
+			// next Taylor coefficient
+			y_k   = y_kp;
+		}
+	}
+	return y;
+}
+} // END empty namespace
+// ==========================================================================
+// Routine that tests alogirhtmic differentiation of solutions computed
+// by the routine taylor_ode.
+bool ode_taylor(void)
+{	// initialize the return value as true	
+	bool ok = true;
+
+	// number of components in differential equation
+	size_t n = 4;
+
+	// some temporary indices
+	size_t i, j;
+
+	// parameter vector in both double and ADdouble
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt;   x(n);
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;ADdouble&gt; X(n);
+	for(i = 0; i &lt; n; i++)
+		X[i] = x[i] = double(i + 1);
+
+	// declare the parameters as the independent variable
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// arguments to taylor_ode 
+	Ode G(X);                // function that defines the ODE
+	size_t   order = n;      // order of Taylor's method used
+	size_t   nstep = 2;      // number of steps to take
+	ADdouble DT    = 1.;     // Delta t for each step
+	// value of y(t, x) at the initial time
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt; Y_INI(n);
+	for(i = 0; i &lt; n; i++)
+		Y_INI[i] = 0.;
+
+	// integrate the differential equation
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; ADdouble &gt; Y_FINAL(n);
+ 	Y_FINAL = taylor_ode(G, order, nstep, DT, Y_INI);
+
+	// define differentiable fucntion object f : A -&gt; Y_FINAL
+	// that computes its derivatives in double
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y_FINAL);
+
+	// check function values
+	double check = 1.;
+	double t     = nstep * Value(DT);
+	for(i = 0; i &lt; n; i++)
+	{	check *= x[i] * t / double(i + 1);
+		ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(Value(Y_FINAL[i]), check, 1e-10, 1e-10);
+	}
+
+	// evaluate the Jacobian of h at a
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; jac ( f.<a href="jacobian.xml" target="_top">Jacobian</a>(x) );
+	// There appears to be a bug in g++ version 4.4.2 becasue it generates
+	// a warning for the equivalent form
+	// <a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; jac = f.<a href="jacobian.xml" target="_top">Jacobian</a>(x);
+
+	// check Jacobian 
+	for(i = 0; i &lt; n; i++)
+	{	for(j = 0; j &lt; n; j++)
+		{	double jac_ij = jac[i * n + j]; 
+			if( i &lt; j )
+				check = 0.;
+			else	check = Value( Y_FINAL[i] ) / x[j];
+			ok &amp;= CppAD::<a href="nearequal.xml" target="_top">NearEqual</a>(jac_ij, check, 1e-10, 1e-10);
+		}
+	}
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/ode_taylor.cpp
+
+</body>
+</html>

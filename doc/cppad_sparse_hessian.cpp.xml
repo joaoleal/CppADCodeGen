@@ -1,0 +1,223 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>CppAD Speed: Sparse Hessian</title>
+<meta name="description" id="description" content="CppAD Speed: Sparse Hessian"/>
+<meta name="keywords" id="keywords" content=" cppad speed sparse Hessian link_sparse_hessian "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_cppad_sparse_hessian.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="cppad_poly.cpp.xml" target="_top">Prev</a>
+</td><td><a href="cppad_sparse_jacobian.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_cppad</option>
+<option>cppad_sparse_hessian.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_cppad-&gt;</option>
+<option>cppad_det_minor.cpp</option>
+<option>cppad_det_lu.cpp</option>
+<option>cppad_mat_mul.cpp</option>
+<option>cppad_ode.cpp</option>
+<option>cppad_poly.cpp</option>
+<option>cppad_sparse_hessian.cpp</option>
+<option>cppad_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>cppad_sparse_hessian.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>Operation Sequence</option>
+<option>Sparse Hessian</option>
+<option>link_sparse_hessian</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>CppAD Speed: Sparse Hessian</big></big></b></center>
+<br/>
+<b><big><a name="Operation Sequence" id="Operation Sequence">Operation Sequence</a></big></b>
+<br/>
+Note that the 
+<a href="glossary.xml#Operation.Sequence" target="_top"><span style='white-space: nowrap'>operation&#xA0;sequence</span></a>
+
+depends on the vectors <i>i</i> and <i>j</i>.
+Hence we use a different <a href="adfun.xml" target="_top"><span style='white-space: nowrap'>ADFun</span></a>
+ object for 
+each choice of <i>i</i> and <i>j</i>.
+
+<br/>
+<br/>
+<b><big><a name="Sparse Hessian" id="Sparse Hessian">Sparse Hessian</a></big></b>
+<br/>
+If the preprocessor symbol <code><font color="blue">CPPAD_USE_SPARSE_HESSIAN</font></code> is 
+true, the routine <a href="sparse_hessian.xml" target="_top"><span style='white-space: nowrap'>SparseHessian</span></a>
+ 
+is used for the calculation.
+Otherwise, the routine <a href="hessian.xml" target="_top"><span style='white-space: nowrap'>Hessian</span></a>
+ is used.
+
+<br/>
+<br/>
+<b><big><a name="link_sparse_hessian" id="link_sparse_hessian">link_sparse_hessian</a></big></b>
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/speed/sparse_evaluate.hpp&gt;
+
+// value can be true or false
+# define CPPAD_USE_SPARSE_HESSIAN  1
+
+bool link_sparse_hessian(
+	size_t                     repeat   , 
+	CppAD::vector&lt;double&gt;     &amp;x        ,
+	CppAD::vector&lt;size_t&gt;     &amp;i        ,
+	CppAD::vector&lt;size_t&gt;     &amp;j        ,
+	CppAD::vector&lt;double&gt;     &amp;hessian  )
+{
+	// -----------------------------------------------------
+	// setup
+	using CppAD::AD;
+	typedef CppAD::vector&lt;double&gt;       DblVector;
+	typedef CppAD::vector&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; ADVector;
+	typedef CppAD::vector&lt;size_t&gt;       SizeVector;
+
+	size_t order = 0;         // derivative order corresponding to function
+	size_t m = 1;             // number of dependent variables
+	size_t n = x.size();      // number of independent variables
+	size_t ell = i.size();    // number of indices in i and j
+	ADVector   X(n);          // AD domain space vector
+	ADVector   Y(m);          // AD range space vector
+	DblVector  w(m);          // double range space vector
+	DblVector tmp(2 * ell);   // double temporary vector
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f;   // AD function object
+
+	
+	// choose a value for x 
+	CppAD::uniform_01(n, x);
+	size_t k;
+	for(k = 0; k &lt; n; k++)
+		X[k] = x[k];
+
+	// weights for hessian calculation (only one component of f)
+	w[0] = 1.;
+
+	// used to display results of optimizing the operation sequence
+        static bool printed = false;
+        bool print_this_time = (! printed) &amp; (repeat &gt; 1) &amp; (n &gt;= 30);
+
+	// ------------------------------------------------------
+	while(repeat--)
+	{
+		// get the next set of indices
+		CppAD::uniform_01(2 * ell, tmp);
+		for(k = 0; k &lt; ell; k++)
+		{	i[k] = size_t( n * tmp[k] );
+			i[k] = std::min(n-1, i[k]);
+			//
+			j[k] = size_t( n * tmp[k + ell] );
+			j[k] = std::min(n-1, j[k]);
+		}
+
+		// declare independent variables
+		<a href="independent.xml" target="_top">Independent</a>(X);	
+
+		// AD computation of f(x)
+		CppAD::sparse_evaluate&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt;(X, i, j, order, Y);
+
+		// create function object f : X -&gt; Y
+		f.Dependent(X, Y);
+
+		extern bool global_optimize;
+		if( global_optimize )
+		{	size_t before, after;
+			before = f.size_var();
+			f.optimize();
+			if( print_this_time ) 
+			{	after = f.size_var();
+				std::cout &lt;&lt; &quot;cppad_sparse_hessian_optimize_size_&quot;
+				          &lt;&lt; int(n) &lt;&lt; &quot; = [ &quot; &lt;&lt; int(before) 
+				          &lt;&lt; &quot;, &quot; &lt;&lt; int(after) &lt;&lt; &quot;]&quot; &lt;&lt; std::endl;
+				printed         = true;
+				print_this_time = false;
+			}
+		}
+
+		// evaluate and return the hessian of f
+# if CPPAD_USE_SPARSE_HESSIAN
+		hessian = f.SparseHessian(x, w);
+# else
+		hessian = f.Hessian(x, w);
+# endif
+	}
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/cppad/sparse_hessian.cpp
+
+</body>
+</html>

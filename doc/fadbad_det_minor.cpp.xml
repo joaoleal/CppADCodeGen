@@ -1,0 +1,151 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Fadbad Speed: Gradient of Determinant by Minor Expansion</title>
+<meta name="description" id="description" content="Fadbad Speed: Gradient of Determinant by Minor Expansion"/>
+<meta name="keywords" id="keywords" content=" fadbad speed minor link_det_minor "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_fadbad_det_minor.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="speed_fadbad.xml" target="_top">Prev</a>
+</td><td><a href="fadbad_det_lu.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>Appendix</option>
+<option>speed</option>
+<option>speed_fadbad</option>
+<option>fadbad_det_minor.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>Appendix-&gt;</option>
+<option>Faq</option>
+<option>speed</option>
+<option>Theory</option>
+<option>glossary</option>
+<option>Bib</option>
+<option>Bugs</option>
+<option>WishList</option>
+<option>whats_new</option>
+<option>deprecated</option>
+<option>License</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>speed-&gt;</option>
+<option>speed_main</option>
+<option>speed_utility</option>
+<option>speed_double</option>
+<option>speed_adolc</option>
+<option>speed_cppad</option>
+<option>speed_fadbad</option>
+<option>speed_sacado</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>speed_fadbad-&gt;</option>
+<option>fadbad_det_minor.cpp</option>
+<option>fadbad_det_lu.cpp</option>
+<option>fadbad_mat_mul.cpp</option>
+<option>fadbad_ode.cpp</option>
+<option>fadbad_poly.cpp</option>
+<option>fadbad_sparse_hessian.cpp</option>
+<option>fadbad_sparse_jacobian.cpp</option>
+</select>
+</td>
+<td>fadbad_det_minor.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>link_det_minor</option>
+</select>
+</td>
+</tr></table><br/>
+<center><b><big><big>Fadbad Speed: Gradient of Determinant by Minor Expansion</big></big></b></center>
+<br/>
+<b><big><a name="link_det_minor" id="link_det_minor">link_det_minor</a></big></b>
+
+
+<code><font color='blue'><pre style='display:inline'> 
+# include &lt;FADBAD++/badiff.h&gt;
+# include &lt;cppad/speed/det_by_minor.hpp&gt;
+# include &lt;cppad/speed/uniform_01.hpp&gt;
+# include &lt;cppad/vector.hpp&gt;
+
+bool link_det_minor(
+	size_t                     size     , 
+	size_t                     repeat   , 
+	CppAD::vector&lt;double&gt;     &amp;matrix   ,
+	CppAD::vector&lt;double&gt;     &amp;gradient )
+{
+	// -----------------------------------------------------
+	// setup
+
+	// object for computing determinant
+	typedef fadbad::B&lt;double&gt;       ADScalar; 
+	typedef CppAD::vector&lt;ADScalar&gt; ADVector; 
+	CppAD::det_by_minor&lt;ADScalar&gt;   Det(size);
+
+	size_t i;                // temporary index
+	size_t m = 1;            // number of dependent variables
+	size_t n = size * size;  // number of independent variables
+	ADScalar   detA;         // AD value of the determinant
+	ADVector   A(n);         // AD version of matrix 
+	
+	// ------------------------------------------------------
+	while(repeat--)
+       {	// get the next matrix
+		CppAD::uniform_01(n, matrix);
+
+		// set independent variable values
+		for(i = 0; i &lt; n; i++)
+			A[i] = matrix[i];
+
+		// compute the determinant
+		detA = Det(A);
+
+		// create function object f : A -&gt; detA
+		detA.diff(0, m);  // index 0 of m dependent variables
+
+		// evaluate and return gradient using reverse mode
+		for(i =0; i &lt; n; i++)
+			gradient[i] = A[i].d(0); // partial detA w.r.t A[i]
+	}
+	// ---------------------------------------------------------
+	return true;
+}
+</pre></font></code>
+
+
+<hr/>Input File: speed/fadbad/det_minor.cpp
+
+</body>
+</html>

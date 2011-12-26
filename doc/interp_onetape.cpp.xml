@@ -1,0 +1,222 @@
+<?xml version='1.0'?>
+<?xml-stylesheet type='text/xsl' href='pmathml.xsl'?>
+<html xmlns='http://www.w3.org/1999/xhtml'>
+<head>
+<title>Interpolation With Out Retaping: Example and Test</title>
+<meta name="description" id="description" content="Interpolation With Out Retaping: Example and Test"/>
+<meta name="keywords" id="keywords" content=" interpolate example test tape retape "/>
+<style type='text/css'>
+body { color : black }
+body { background-color : white }
+A:link { color : blue }
+A:visited { color : purple }
+A:active { color : purple }
+</style>
+<script type='text/javascript' language='JavaScript' src='_interp_onetape.cpp_xml.js'>
+</script>
+</head>
+<body>
+<table><tr>
+<td>
+<a href="http://www.coin-or.org/CppAD/" target="_top"><img border="0" src="_image.gif"/></a>
+</td>
+<td><a href="tapeindex.cpp.xml" target="_top">Prev</a>
+</td><td><a href="interp_retape.cpp.xml" target="_top">Next</a>
+</td><td>
+<select onchange='choose_across0(this)'>
+<option>Index-&gt;</option>
+<option>contents</option>
+<option>reference</option>
+<option>index</option>
+<option>search</option>
+<option>external</option>
+</select>
+</td>
+<td>
+<select onchange='choose_up0(this)'>
+<option>Up-&gt;</option>
+<option>CppAD</option>
+<option>AD</option>
+<option>ADValued</option>
+<option>Discrete</option>
+<option>interp_onetape.cpp</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down3(this)'>
+<option>AD-&gt;</option>
+<option>Default</option>
+<option>ad_copy</option>
+<option>Convert</option>
+<option>ADValued</option>
+<option>BoolValued</option>
+<option>VecAD</option>
+<option>base_require</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down2(this)'>
+<option>ADValued-&gt;</option>
+<option>Arithmetic</option>
+<option>std_math_ad</option>
+<option>MathOther</option>
+<option>CondExp</option>
+<option>Discrete</option>
+<option>user_atomic</option>
+</select>
+</td>
+<td>
+<select onchange='choose_down1(this)'>
+<option>Discrete-&gt;</option>
+<option>TapeIndex.cpp</option>
+<option>interp_onetape.cpp</option>
+<option>interp_retape.cpp</option>
+</select>
+</td>
+<td>interp_onetape.cpp</td>
+<td>
+<select onchange='choose_current0(this)'>
+<option>Headings-&gt;</option>
+<option>See Also</option>
+</select>
+</td>
+</tr></table><br/>
+
+
+
+<center><b><big><big>Interpolation With Out Retaping: Example and Test</big></big></b></center>
+<br/>
+<b><big><a name="See Also" id="See Also">See Also</a></big></b>
+
+<br/>
+<a href="interp_retape.cpp.xml" target="_top"><span style='white-space: nowrap'>interp_retape.cpp</span></a>
+
+<code><span style='white-space: nowrap'><br/>
+<br/>
+</span></code><code><font color="blue"><pre style='display:inline'> 
+# include &lt;cppad/cppad.hpp&gt;
+# include &lt;cassert&gt;
+# include &lt;cmath&gt;
+
+namespace {
+	double ArgumentValue[] = {
+		.0 ,
+		.2 ,
+		.4 ,
+		.8 ,
+		1.
+	};
+	double FunctionValue[] = {
+		std::sin( ArgumentValue[0] ) ,
+		std::sin( ArgumentValue[1] ) ,
+		std::sin( ArgumentValue[2] ) ,
+		std::sin( ArgumentValue[3] ) ,
+		std::sin( ArgumentValue[4] )
+	};
+	size_t TableLength = 5;
+
+	size_t Index(const double &amp;x)
+	{	// determine the index j such that x is between
+		// ArgumentValue[j] and ArgumentValue[j+1] 
+		static size_t j = 0;
+		while ( x &lt; ArgumentValue[j] &amp;&amp; j &gt; 0 )
+			j--;
+		while ( x &gt; ArgumentValue[j+1] &amp;&amp; j &lt; TableLength - 2)
+			j++;
+		// assert conditions that must be true given logic above
+		assert( j &gt;= 0 &amp;&amp; j &lt; TableLength - 1 );
+		return j;
+	}
+
+	double Argument(const double &amp;x)
+	{	size_t j = Index(x);
+		return ArgumentValue[j];
+	}
+	double Function(const double &amp;x)
+	{	size_t j = Index(x);
+		return FunctionValue[j];
+	}
+
+	double Slope(const double &amp;x)
+	{	size_t j  = Index(x);
+		double dx = ArgumentValue[j+1] - ArgumentValue[j];
+		double dy = FunctionValue[j+1] - FunctionValue[j];
+		return dy / dx;
+	}
+	CPPAD_DISCRETE_FUNCTION(double, Argument)
+	CPPAD_DISCRETE_FUNCTION(double, Function)
+	CPPAD_DISCRETE_FUNCTION(double, Slope)
+}
+
+
+bool interp_onetape(void)
+{	bool ok = true;
+
+	using CppAD::AD;
+	using CppAD::NearEqual;
+
+	// domain space vector
+	size_t n = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; X(n);
+	X[0] = .4 * ArgumentValue[1] + .6 * ArgumentValue[2];
+
+	// declare independent variables and start tape recording
+	CppAD::<a href="independent.xml" target="_top">Independent</a>(X);
+
+	// evaluate piecewise linear interpolant at X[0]
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; A = Argument(X[0]); 
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; F = Function(X[0]);
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; S = Slope(X[0]);
+	<a href="ad.xml" target="_top">AD</a>&lt;double&gt; I = F + (X[0] - A) * S;
+
+	// range space vector
+	size_t m = 1;
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt; <a href="ad.xml" target="_top">AD</a>&lt;double&gt; &gt; Y(m);
+	Y[0] = I;
+
+	// create f: X -&gt; Y and stop tape recording
+	CppAD::<a href="funconstruct.xml" target="_top">ADFun</a>&lt;double&gt; f(X, Y);
+
+	// vectors for arguments to the function object f
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; x(n);   // argument values
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; y(m);   // function values 
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dx(n);  // differentials in x space
+	<a href="test_vector.xml" target="_top">CPPAD_TEST_VECTOR</a>&lt;double&gt; dy(m);  // differentials in y space
+
+	// to check function value we use the fact that X[0] is between 
+	// ArgumentValue[1] and ArgumentValue[2]
+	x[0]          = Value(X[0]);
+	double delta  = ArgumentValue[2] - ArgumentValue[1];
+	double check  = FunctionValue[2] * (x[0] - ArgumentValue[1]) / delta
+	              + FunctionValue[1] * (ArgumentValue[2] - x[0]) / delta; 
+	ok  &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(Y[0], check, 1e-10, 1e-10);
+
+	// evaluate f where x has different value
+	x[0]   = .7 * ArgumentValue[2] + .3 * ArgumentValue[3];
+	y      = f.<a href="forward.xml" target="_top">Forward</a>(0, x);
+
+	// check function value 
+	delta  = ArgumentValue[3] - ArgumentValue[2];
+	check  = FunctionValue[3] * (x[0] - ArgumentValue[2]) / delta
+	              + FunctionValue[2] * (ArgumentValue[3] - x[0]) / delta; 
+	ok  &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(y[0], check, 1e-10, 1e-10);
+
+	// evaluate partials w.r.t. x[0] 
+	dx[0] = 1.;
+	dy    = f.<a href="forward.xml" target="_top">Forward</a>(1, dx);
+
+	// check that the derivative is the slope
+	check = (FunctionValue[3] - FunctionValue[2])
+	      / (ArgumentValue[3] - ArgumentValue[2]);
+	ok   &amp;= <a href="nearequal.xml" target="_top">NearEqual</a>(dy[0], check, 1e-10, 1e-10);
+
+	return ok;
+}
+</pre>
+</font></code>
+
+
+<hr/>Input File: example/interp_onetape.cpp
+
+</body>
+</html>
