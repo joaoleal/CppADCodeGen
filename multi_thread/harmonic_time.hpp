@@ -1,6 +1,6 @@
 /* $Id: harmonic_time.hpp 2197 2011-11-20 16:37:53Z bradbell $ */
-# ifndef CPPAD_HARMONIC_TME_INCLUDED
-# define CPPAD_HARMONIC_TME_INCLUDED
+# ifndef CPPAD_HARMONIC_TIME_INCLUDED
+# define CPPAD_HARMONIC_TIME_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 

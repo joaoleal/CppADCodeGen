@@ -95,7 +95,7 @@ then
 	"
 	for name in $list
 	do
-		svn revert $name
+		git checkout $name
 	done
 	
 	echo "sed -i.old AUTHORS ..."

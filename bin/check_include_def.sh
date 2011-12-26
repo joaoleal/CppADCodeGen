@@ -26,7 +26,7 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	cppad/local/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
-	openmp/*.hpp \
+	multi_thread/*.hpp \
 	| sed \
 	-e 's|.*# *ifndef *CPPAD_\([0-9a-zA-Z_]*\)_INCLUDED$|\1.HPP|' \
 	| tr [a-zA-Z] [A-Za-z] \
@@ -39,7 +39,7 @@ ls \
 	cppad/local/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
-	openmp/*.hpp \
+	multi_thread/*.hpp \
 	| sed -e 's|.*/||' -e 's|^cppad_||' \
 	| sort -u \
 	> bin/check_include_def.2.$$
