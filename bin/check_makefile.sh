@@ -65,6 +65,9 @@ do
 		(multi_thread/makefile.am)
 		;;
 
+		(test_code_gen/makefile.am)
+		;;
+
 		(speed/example/makefile.am)
 		if grep '\-DNDEBUG' $file > /dev/null
 		then

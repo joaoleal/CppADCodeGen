@@ -322,7 +322,6 @@ then
 		check_include_omh.sh
 		check_makefile.sh
 		check_op_code.sh
-		check_svn_id.sh
 		check_verbatim.sh
 	"
 	for check in $list 
@@ -421,19 +420,9 @@ then
 	exit 0
 fi
 # -----------------------------------------------------------------------------
-if [ "$1" = "gpl" ] 
-then
-	# create GPL licensed version
-	echo "bin/gpl_license.sh"
-	bin/gpl_license.sh
-	#
-	echo "OK: ./build.sh gpl"
-	exit 0
-fi
-# -----------------------------------------------------------------------------
 if [ "$1" = "copy2doc" ] 
 then
-	for ext in cpl gpl
+	for ext in cpl
 	do
 		echo "cp work/cppad-$version.$ext.tgz doc/cppad-$version.$ext.tgz"
 		cp work/cppad-$version.$ext.tgz doc/cppad-$version.$ext.tgz
@@ -454,7 +443,6 @@ then
 		dist
 		omhelp
 		doxygen
-		gpl
 		copy2doc
 	"
 	if [ "$version_type" != "trunk" ]
@@ -624,8 +612,7 @@ configure: run the configure script in the work directory.            automake
 dist:      create the distribution file work/cppad-version.cpl.tgz.   configure
 omhelp:    build all formats of user documentation in doc/*.          configure
 doxygen:   build developer documentation in doxydoc/*.                configure
-gpl:       create work/*.gpl.zip and work/*.cpl.zip.                  dist
-copy2doc:  copy tarballs and doxygen output into doc directory.       gpl
+copy2doc:  copy tarballs and doxygen output into doc directory.       doxygen
 
 all:       $all_cases
 test:      use tarball to make test and put result in build_test.log. dist
