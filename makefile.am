@@ -87,6 +87,7 @@ nobase_myinclude_HEADERS =  \
 	cppad/CheckNumericType.h \
 	cppad/CheckSimpleVector.h \
 	cppad/CppAD.h \
+	cppad/cppad_code_gen.hpp \
 	cppad/CppAD_vector.h \
 	cppad/ErrorHandler.h \
 	cppad/LuFactor.h \
@@ -241,16 +242,36 @@ nobase_myinclude_HEADERS =  \
 	cppad/local/var2par.hpp \
 	cppad/local/vec_ad.hpp \
 	\
-	cppad/local/code_gen/ad_code_gen_name_provider.hpp \
-	cppad/local/code_gen/ad_fun_code_gen.hpp \
-	cppad/local/code_gen/add_op.hpp \
-	cppad/local/code_gen/cos_op.hpp \
-	cppad/local/code_gen/forward_code_gen.hpp \
-	cppad/local/code_gen/forward_code_gen_sweep.hpp \
-	cppad/local/code_gen/op.hpp \
-	cppad/local/code_gen/sub_op.hpp \
-	cppad/local/code_gen/sparse_jacobian.hpp\
-        \
+	cppad/local/code_gen/abs_op.hpp
+	cppad/local/code_gen/acos_op.hpp
+	cppad/local/code_gen/ad_code_gen_name_provider.hpp
+	cppad/local/code_gen/add_op.hpp
+	cppad/local/code_gen/ad_fun_code_gen.hpp
+	cppad/local/code_gen/asin_op.hpp
+	cppad/local/code_gen/atan_op.hpp
+	cppad/local/code_gen/comp_op.hpp
+	cppad/local/code_gen/cond_op.hpp
+	cppad/local/code_gen/cosh_op.hpp
+	cppad/local/code_gen/cos_op.hpp
+	cppad/local/code_gen/discrete_op.hpp
+	cppad/local/code_gen/div_op.hpp
+	cppad/local/code_gen/exp_op.hpp
+	cppad/local/code_gen/forward_code_gen.hpp
+	cppad/local/code_gen/forward_code_gen_sweep.hpp
+	cppad/local/code_gen/log_op.hpp
+	cppad/local/code_gen/mul_op.hpp
+	cppad/local/code_gen/op.hpp
+	cppad/local/code_gen/parameter_op.hpp
+	cppad/local/code_gen/pow_op.hpp
+	cppad/local/code_gen/print_op.hpp
+	cppad/local/code_gen/sinh_op.hpp
+	cppad/local/code_gen/sin_op.hpp
+	cppad/local/code_gen/sparse_jacobian.hpp
+	cppad/local/code_gen/sqrt_op.hpp
+	cppad/local/code_gen/sub_op.hpp
+	cppad/local/code_gen/tanh_op.hpp
+	cppad/local/code_gen/tan_op.hpp
+	\
 	cppad/lu_factor.hpp \
 	cppad/lu_invert.hpp \
 	cppad/lu_solve.hpp \
@@ -298,9 +319,8 @@ SUBDIRS =  \
 	introduction/exp_apx \
 	print_for \
 	test_more \
+	multi_thread \ 
 	test_code_gen
-
-#	multi_thread 
 
 
 #
@@ -345,9 +365,7 @@ test: all
 #
 #
 dist-hook:
-	rm -rf `find . -name .svn`
 	rm $(distdir)/doc/error.wrd
-	rm $(distdir)/bin/gpl_license.sh
 #
 if CppAD_DOCUMENTATION
 doc_postfix = $(DESTDIR)$(datadir)/doc/$(postfix_dir)
