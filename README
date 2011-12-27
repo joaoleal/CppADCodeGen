@@ -1,4 +1,7 @@
-CppAD is available with both the CPL and GPL licenses; see the CppAD home page.
+CppADCodeGen is available with both the CPL and GPL licenses; see the CppAD home
+page.
+
+CppADCodeGen is based upon the source code of CppAD:
 
 http://www.coin-or.org/CppAD
 is the CppAD home page.
@@ -32,6 +35,7 @@ pkgconfig      pkg-config support files.
 print_for      Example printing during forward mode, pkg-config support files.
 speed          Speed comparison tests for CppAD and other AD packages.
 test_more      Extra tests that are not intended as examples.
+test_code_gen  Tests for the source code generation.
 uw_copy*.html  UW policy on intellectual property.
 
 
