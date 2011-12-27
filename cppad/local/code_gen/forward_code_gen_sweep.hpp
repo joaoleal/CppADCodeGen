@@ -36,11 +36,12 @@ player<Base> *Rec) {
 #if CPPAD_USE_FORWARD0SWEEP
     CPPAD_ASSERT_UNKNOWN(d > 0);
 #else
-    addr_t* non_const_arg;
+    // addr_t* non_const_arg;
 #endif
     const addr_t* arg = 0;
 
     // temporary indices
+    // size_t ell;
     size_t i, ell;
 
     // initialize the comparison operator (ComOp) counter
@@ -60,17 +61,17 @@ player<Base> *Rec) {
     }
 
     // work space used by UserOp.
-    const size_t user_k = d; // order of this forward mode calculation
-    const size_t user_k1 = d + 1; // number of orders for this calculation
-    vector<Base> user_tx; // argument vector Taylor coefficients 
-    vector<Base> user_ty; // result vector Taylor coefficients 
-    vector<size_t> user_iy; // variable indices for results vector
-    size_t user_index = 0; // indentifier for this user_atomic operation
-    size_t user_id = 0; // user identifier for this call to operator
-    size_t user_i = 0; // index in result vector
-    size_t user_j = 0; // index in argument vector
-    size_t user_m = 0; // size of result vector
-    size_t user_n = 0; // size of arugment vector
+    // const size_t user_k = d; // order of this forward mode calculation
+    // const size_t user_k1 = d + 1; // number of orders for this calculation
+    // vector<Base> user_tx; // argument vector Taylor coefficients 
+    // vector<Base> user_ty; // result vector Taylor coefficients 
+    // vector<size_t> user_iy; // variable indices for results vector
+    // size_t user_index = 0; // indentifier for this user_atomic operation
+    // size_t user_id = 0; // user identifier for this call to operator
+    // size_t user_i = 0; // index in result vector
+    // size_t user_j = 0; // index in argument vector
+    // size_t user_m = 0; // size of result vector
+    // size_t user_n = 0; // size of arugment vector
     // next expected operator in a UserOp sequence
 
     enum {

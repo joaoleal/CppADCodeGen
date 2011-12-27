@@ -22,8 +22,8 @@ void ADFunCodeGen<Base>::ForwardCodeGen(
     // number of independent variables
     size_t n = ADFun<Base>::Domain();
 
-    // number of dependent variables
-    size_t m = ADFun<Base>::Range();
+    // number of dependent variables is not used
+    // size_t m = ADFun<Base>::Range();
 
     player<Base>& play = ADFun<Base>::Play();
 

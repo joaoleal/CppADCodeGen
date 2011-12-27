@@ -108,7 +108,7 @@ CodeGenNameProvider<Base>& n,
 const addr_t* arg,
 size_t num_par,
 const Base* parameter) {
-    bool result;
+    // bool result;
 
     CPPAD_ASSERT_UNKNOWN(NumArg(ComOp) == 4);
     CPPAD_ASSERT_UNKNOWN(NumRes(ComOp) == 0);
@@ -116,7 +116,7 @@ const Base* parameter) {
     CPPAD_ASSERT_UNKNOWN(arg[1] != 0);
 
     // result of comparison during recording
-    result = (arg[1] & 1) == 1;
+    // result = (arg[1] & 1) == 1;
 
     std::string left;
     std::string right;
