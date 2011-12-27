@@ -1,4 +1,4 @@
-// $Id: team_pthread.cpp 2213 2011-11-25 14:48:50Z bradbell $
+// $Id: team_pthread.cpp 2233 2011-12-20 19:34:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -157,13 +157,13 @@ namespace {
 	}
 }
 
-bool team_start(size_t num_threads)
+bool team_create(size_t num_threads)
 {	using CppAD::thread_alloc;
 	bool ok = true;;
 	int rc;
 
 	if( num_threads > MAX_NUMBER_THREADS )
-	{	std::cerr << "team_start: num_threads greater than ";
+	{	std::cerr << "team_create: num_threads greater than ";
 		std::cerr << MAX_NUMBER_THREADS << std::endl;
 		exit(1);
 	}
@@ -286,7 +286,7 @@ bool team_work(void worker(void))
 	return ok;
 }
 
-bool team_stop(void)
+bool team_destroy(void)
 {	int rc;
 
 	// Current state is other threads are at wait_for_job_.

@@ -1,4 +1,4 @@
-// $Id: simple_ad.cpp 2191 2011-11-09 15:38:25Z bradbell $
+// $Id: simple_ad.cpp 2233 2011-12-20 19:34:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -134,9 +134,9 @@ bool simple_ad(void)
 		work_all_[thread_num].theta        = thread_num * pi / num_threads;
 	}
 
-	ok &= team_start(num_threads);
+	ok &= team_create(num_threads);
 	ok &= team_work(worker);
-	ok &= team_stop();
+	ok &= team_destroy();
 
 
 	// Check that no memory currently in use, and free avialable memory.

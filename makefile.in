@@ -101,7 +101,8 @@ DIST_SUBDIRS = cppad_ipopt/src cppad_ipopt/example cppad_ipopt/speed \
 	cppad_ipopt/test speed/src speed/adolc speed/cppad \
 	speed/double speed/example speed/fadbad speed/profile \
 	speed/sacado example introduction/get_started \
-	introduction/exp_apx print_for test_more test_code_gen
+	introduction/exp_apx print_for test_more multi_thread \
+	test_code_gen
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -335,6 +336,7 @@ nobase_myinclude_HEADERS = \
 	cppad/CheckNumericType.h \
 	cppad/CheckSimpleVector.h \
 	cppad/CppAD.h \
+	cppad/cppad_code_gen.hpp \
 	cppad/CppAD_vector.h \
 	cppad/ErrorHandler.h \
 	cppad/LuFactor.h \
@@ -489,46 +491,7 @@ nobase_myinclude_HEADERS = \
 	cppad/local/var2par.hpp \
 	cppad/local/vec_ad.hpp \
 	\
-	cppad/local/code_gen/ad_code_gen_name_provider.hpp \
-	cppad/local/code_gen/ad_fun_code_gen.hpp \
-	cppad/local/code_gen/add_op.hpp \
-	cppad/local/code_gen/cos_op.hpp \
-	cppad/local/code_gen/forward_code_gen.hpp \
-	cppad/local/code_gen/forward_code_gen_sweep.hpp \
-	cppad/local/code_gen/op.hpp \
-	cppad/local/code_gen/sub_op.hpp \
-	cppad/local/code_gen/sparse_jacobian.hpp\
-        \
-	cppad/lu_factor.hpp \
-	cppad/lu_invert.hpp \
-	cppad/lu_solve.hpp \
-	cppad/memory_leak.hpp \
-	cppad/nan.hpp \
-	cppad/near_equal.hpp \
-	cppad/ode_err_control.hpp \
-	cppad/ode_gear_control.hpp \
-	cppad/ode_gear.hpp \
-	cppad/omp_alloc.hpp \
-	cppad/poly.hpp \
-	cppad/pow_int.hpp \
-	cppad/romberg_mul.hpp \
-	cppad/romberg_one.hpp \
-	cppad/rosen_34.hpp \
-	cppad/runge_45.hpp \
-	cppad/speed/det_33.hpp \
-	cppad/speed/det_by_lu.hpp \
-	cppad/speed/det_by_minor.hpp \
-	cppad/speed/det_grad_33.hpp \
-	cppad/speed/det_of_minor.hpp \
-	cppad/speed/mat_sum_sq.hpp \
-	cppad/speed/ode_evaluate.hpp \
-	cppad/speed/sparse_evaluate.hpp \
-	cppad/speed_test.hpp \
-	cppad/speed/uniform_01.hpp \
-	cppad/thread_alloc.hpp \
-	cppad/time_test.hpp \
-	cppad/track_new_del.hpp \
-	cppad/vector.hpp
+	cppad/local/code_gen/abs_op.hpp
 
 
 # End nobase_myinclude_HEADERS (check_makefile.sh uses this comment) 
@@ -544,10 +507,9 @@ SUBDIRS = \
 	introduction/exp_apx \
 	print_for \
 	test_more \
+	multi_thread \
 	test_code_gen
 
-
-#	multi_thread 
 
 #
 # note that bin/gpl_license.sh is deleted by dist-hook
@@ -1141,6 +1103,65 @@ uninstall-am: uninstall-myincludeHEADERS \
 $(top_srcdir)/cppad/configure.hpp: cppad/configure.hpp
 	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp 
 @CppAD_HAVE_AR_FALSE@	SPEED_DIRS =
+	cppad/local/code_gen/acos_op.hpp
+	cppad/local/code_gen/ad_code_gen_name_provider.hpp
+	cppad/local/code_gen/add_op.hpp
+	cppad/local/code_gen/ad_fun_code_gen.hpp
+	cppad/local/code_gen/asin_op.hpp
+	cppad/local/code_gen/atan_op.hpp
+	cppad/local/code_gen/comp_op.hpp
+	cppad/local/code_gen/cond_op.hpp
+	cppad/local/code_gen/cosh_op.hpp
+	cppad/local/code_gen/cos_op.hpp
+	cppad/local/code_gen/discrete_op.hpp
+	cppad/local/code_gen/div_op.hpp
+	cppad/local/code_gen/exp_op.hpp
+	cppad/local/code_gen/forward_code_gen.hpp
+	cppad/local/code_gen/forward_code_gen_sweep.hpp
+	cppad/local/code_gen/log_op.hpp
+	cppad/local/code_gen/mul_op.hpp
+	cppad/local/code_gen/op.hpp
+	cppad/local/code_gen/parameter_op.hpp
+	cppad/local/code_gen/pow_op.hpp
+	cppad/local/code_gen/print_op.hpp
+	cppad/local/code_gen/sinh_op.hpp
+	cppad/local/code_gen/sin_op.hpp
+	cppad/local/code_gen/sparse_jacobian.hpp
+	cppad/local/code_gen/sqrt_op.hpp
+	cppad/local/code_gen/sub_op.hpp
+	cppad/local/code_gen/tanh_op.hpp
+	cppad/local/code_gen/tan_op.hpp
+	\
+	cppad/lu_factor.hpp \
+	cppad/lu_invert.hpp \
+	cppad/lu_solve.hpp \
+	cppad/memory_leak.hpp \
+	cppad/nan.hpp \
+	cppad/near_equal.hpp \
+	cppad/ode_err_control.hpp \
+	cppad/ode_gear_control.hpp \
+	cppad/ode_gear.hpp \
+	cppad/omp_alloc.hpp \
+	cppad/poly.hpp \
+	cppad/pow_int.hpp \
+	cppad/romberg_mul.hpp \
+	cppad/romberg_one.hpp \
+	cppad/rosen_34.hpp \
+	cppad/runge_45.hpp \
+	cppad/speed/det_33.hpp \
+	cppad/speed/det_by_lu.hpp \
+	cppad/speed/det_by_minor.hpp \
+	cppad/speed/det_grad_33.hpp \
+	cppad/speed/det_of_minor.hpp \
+	cppad/speed/mat_sum_sq.hpp \
+	cppad/speed/ode_evaluate.hpp \
+	cppad/speed/sparse_evaluate.hpp \
+	cppad/speed_test.hpp \
+	cppad/speed/uniform_01.hpp \
+	cppad/thread_alloc.hpp \
+	cppad/time_test.hpp \
+	cppad/track_new_del.hpp \
+	cppad/vector.hpp
 
 test: all 
 	rm -f test.log
@@ -1162,9 +1183,7 @@ test: all
 #
 #
 dist-hook:
-	rm -rf `find . -name .svn`
 	rm $(distdir)/doc/error.wrd
-	rm $(distdir)/bin/gpl_license.sh
 @CppAD_DOCUMENTATION_TRUE@install-data-hook:
 @CppAD_DOCUMENTATION_TRUE@	if [ ! -e $(doc_postfix) ] ; then mkdir -p $(doc_postfix) ; fi
 @CppAD_DOCUMENTATION_TRUE@	if [ -e $(doc_package) ] ; then rm -rf $(doc_package) ; fi
