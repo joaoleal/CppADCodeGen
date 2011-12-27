@@ -307,6 +307,12 @@ then
 		      rm -r doc
 	fi
 	#
+	if [ -e bin/omhelp ]
+	then
+		dir=`pwd`
+		export PATH="$PATH:$dir/bin"
+	fi
+	#
 	echo "bin/run_omhelp.sh xml"
 	      bin/run_omhelp.sh xml
 	#
