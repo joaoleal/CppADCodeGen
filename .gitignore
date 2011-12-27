@@ -1,19 +1,28 @@
-/cppad_ipopt/example/.deps/
-/cppad_ipopt/speed/.deps/
-/cppad_ipopt/src/.deps/
-/cppad_ipopt/test/.deps/
-/example/.deps/
-/introduction/exp_apx/.deps/
-/introduction/get_started/.deps/
-/print_for/.deps/
-/nbproject/private/
-/speed/adolc/.deps/
-/speed/cppad/.deps/
-/speed/double/.deps/
-/speed/example/.deps/
-/speed/fadbad/.deps/
-/speed/profile/.deps/
-/speed/sacado/.deps/
-/speed/src/.deps/
-/test_code_gen/.deps/
-/test_more/.deps/
+#
+# directories created by build.sh
+work
+doc
+doxydoc
+
+# directory used by autoconf to cache information for future runs
+autom4te.cache
+
+# doxygen errors
+doxygen.err
+
+# omhelp output log
+omhelp.htm.log
+omhelp.xml.log
+
+# files created by configure and not in distribution
+cppad/configure.hpp
+doc.omh
+doxyfile
+example/test_one.sh
+omh/install_unix.omh
+omh/install_windows.omh
+test_more/test_one.sh
+
+# temporary files 
+junk
+junk.sh
