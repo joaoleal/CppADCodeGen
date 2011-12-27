@@ -76,6 +76,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(testCodeGen_SOURCES)
 DIST_SOURCES = $(testCodeGen_SOURCES)
 ETAGS = etags
@@ -217,28 +221,32 @@ AM_CPPFLAGS = -I. \
 #
 AM_CXXFLAGS = -O0 -g $(CXX_FLAGS)
 noinst_bindir = testCodeGen
-testCodeGen_SOURCES = test_code_gen.cpp \
-	                     abs.cpp \
-			     acos.cpp \
-	                     add.cpp \
-                             asin.cpp \
-                             atan.cpp \
-                             atan_2.cpp \
-                             compare_change.cpp \
-                             cond_exp.cpp \
-                             cos.cpp \
-                             div.cpp \
-                             exp.cpp \
-                             log.cpp \
-                             log_10.cpp \
-                             mul.cpp \
-                             parameter.cpp \
-                             pow.cpp \
-                             sin.cpp \
-                             sub.cpp \
-                             tan.cpp \
-	                     gcc_load_dynamic.cpp \
-	                     TestException.cpp
+testCodeGen_SOURCES = \
+	gcc_load_dynamic.hpp  \
+	TestException.hpp \
+	\
+	test_code_gen.cpp \
+	abs.cpp \
+	acos.cpp \
+	add.cpp \
+	asin.cpp \
+	atan.cpp \
+	atan_2.cpp \
+	compare_change.cpp \
+	cond_exp.cpp \
+	cos.cpp \
+	div.cpp \
+	exp.cpp \
+	log.cpp \
+	log_10.cpp \
+	mul.cpp \
+	parameter.cpp \
+	pow.cpp \
+	sin.cpp \
+	sub.cpp \
+	tan.cpp \
+	gcc_load_dynamic.cpp \
+	TestException.cpp
 
 testCodeGen_LDADD = -ldl
 all: all-am
