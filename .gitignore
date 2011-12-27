@@ -1,19 +1,23 @@
-/cppad_ipopt/example/.deps/
-/cppad_ipopt/speed/.deps/
-/cppad_ipopt/src/.deps/
-/cppad_ipopt/test/.deps/
-/example/.deps/
-/introduction/exp_apx/.deps/
-/introduction/get_started/.deps/
-/print_for/.deps/
-/nbproject/private/
-/speed/adolc/.deps/
-/speed/cppad/.deps/
-/speed/double/.deps/
-/speed/example/.deps/
-/speed/fadbad/.deps/
-/speed/profile/.deps/
-/speed/sacado/.deps/
-/speed/src/.deps/
-/test_code_gen/.deps/
-/test_more/.deps/
+# ignore temporary build process files
+.deps/
+makefile
+/autom4te.cache/
+/config.status
+/pkgconfig/*.pc
+/doxyfile
+
+#ignore log files
+*.log
+
+# ignore dolphin files
+.directory
+
+# ignore binary/compiled files
+*.[oa]
+*.so
+
+# ignore temporary files
+*~
+
+# ignore IDE files
+/nbproject/
