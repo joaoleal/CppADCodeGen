@@ -42,7 +42,7 @@ player<Base> *Rec) {
 
     // temporary indices
     // size_t ell;
-    size_t i, ell;
+    size_t i;
 
     // initialize the comparison operator (ComOp) counter
     size_t compareCount = 0;
