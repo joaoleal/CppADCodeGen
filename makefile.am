@@ -334,7 +334,9 @@ EXTRA_DIST = \
 	uw_copy_040507.html
 
 #
+# put test_code_gen at front of list so it is tested first
 test_directory_list = \
+	test_code_gen \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \
 	example \
@@ -342,8 +344,7 @@ test_directory_list = \
 	introduction/exp_apx \
 	multi_thread \
 	print_for \
-	test_more \
-	test_code_gen
+	test_more
 
 test: all
 	rm -f test.log

@@ -58,7 +58,7 @@ testCodeGen_LDADD  = -ldl
 
 test.sh: testCodeGen$(EXEEXT)
 	echo "#! /bin/sh -e"                          > test.sh
-	ehco "if [ ! -d tmp ] ; then mkdir tmp ; fi" >> test.sh
+	echo "if [ ! -d tmp ] ; then mkdir tmp ; fi" >> test.sh
 	echo "./testCodeGen "                        >> test.sh
 	chmod +x test.sh
 

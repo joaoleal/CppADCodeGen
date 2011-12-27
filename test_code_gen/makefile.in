@@ -525,8 +525,9 @@ uninstall-am:
 
 
 test.sh: testCodeGen$(EXEEXT)
-	echo "#! /bin/sh -e"  > test.sh
-	echo "./testCodeGen "  >> test.sh
+	echo "#! /bin/sh -e"                          > test.sh
+	echo "if [ ! -d tmp ] ; then mkdir tmp ; fi" >> test.sh
+	echo "./testCodeGen "                        >> test.sh
 	chmod +x test.sh
 
 test: test.sh
