@@ -1,4 +1,4 @@
-/* $Id: get_started.cpp 2178 2011-10-30 06:52:58Z bradbell $ */
+/* $Id: get_started.cpp 2234 2011-12-21 13:44:54Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -56,6 +56,7 @@ $end
 # include <cppad_ipopt_nlp.hpp>
 
 namespace {
+	using namespace cppad_ipopt;
 
 	class FG_info : public cppad_ipopt_fg_info
 	{

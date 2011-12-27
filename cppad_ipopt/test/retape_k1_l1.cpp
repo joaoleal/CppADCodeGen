@@ -1,6 +1,6 @@
-/* $Id: retape_k1_l1.cpp 1705 2010-09-23 11:46:10Z bradbell $ */
+/* $Id: retape_k1_l1.cpp 2234 2011-12-21 13:44:54Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -13,6 +13,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad_ipopt_nlp.hpp>
 
 namespace { // Begin empty namespace
+using namespace cppad_ipopt;
+
 // ---------------------------------------------------------------------------
 class FG_retape : public cppad_ipopt_fg_info
 {

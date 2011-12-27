@@ -1,8 +1,8 @@
-/* $Id: jac_g_map.hpp 1634 2010-01-24 08:44:17Z bradbell $ */
+/* $Id: jac_g_map.hpp 2234 2011-12-21 13:44:54Z bradbell $ */
 # ifndef  CPPAD_JAC_G_MAP_INCLUDED
 # define  CPPAD_JAC_G_MAP_INCLUDED
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,11 +12,14 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 # include "cppad_ipopt_nlp.hpp"
-CPPAD_BEGIN_NAMESPACE
 /*!
 \file jac_g_map.hpp
 \brief Create a mapping between two representations for Jacobian of g.
 */
+// ---------------------------------------------------------------------------
+namespace cppad_ipopt {
+// ---------------------------------------------------------------------------
+
 
 extern void jac_g_map(
 	cppad_ipopt_fg_info*  fg_info                                  , 
@@ -32,5 +35,8 @@ extern void jac_g_map(
 	CppAD::vector< std::map<size_t,size_t> >&       index_jac_g    
 );
 
-CPPAD_END_NAMESPACE
+// ---------------------------------------------------------------------------
+} // end namespace cppad_ipopt
+// ---------------------------------------------------------------------------
+
 # endif
