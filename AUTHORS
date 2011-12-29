@@ -3,3 +3,7 @@
 
 CppADCodeGen is developed by Joao Rui Leal and Bradley M. Bell and its source 
 code is based upon the code of CppAD which was developed by Bradley M. Bell.
+
+The original CppAD library copyright holder is Bradley M. Bell, while the 
+copyright of the modifications done in CppADCodeGen belongs to Ciengis, SA, and 
+Bradley M. Bell.
