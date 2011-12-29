@@ -6,7 +6,7 @@ makefile
 /pkgconfig/*.pc
 /doxyfile
 
-#ignore log files
+# ignore log files
 *.log
 
 # ignore dolphin files

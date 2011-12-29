@@ -12,11 +12,14 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #ifndef CPPAD_CODE_GEN_FORWARDCODEGEN_INCLUDED
 #define	CPPAD_CODE_GEN_FORWARDCODEGEN_INCLUDED
 
+#include "ad_fun_code_gen.hpp"
+#include "matrix.hpp"
+
 CPPAD_BEGIN_NAMESPACE
 
 template <typename Base>
 void ADFunCodeGen<Base>::ForwardCodeGen(
-        size_t p,
+        size_t d,
         std::ostream& s_out) {
 
     // number of independent variables
@@ -31,10 +34,17 @@ void ADFunCodeGen<Base>::ForwardCodeGen(
 
     const CppAD::vector<size_t>& ind_taddr = ADFun<Base>::IndependentTapeAddr();
 
+    //    if (zeroTaylor_.capacity() == 0) {
+    //        zeroTaylor_ = Matrix(d, total_num_var);
+    //    } else {
+    //        zeroTaylor_.resizeRows(d);
+    //        CPPAD_ASSERT_UNKNOWN(zeroTaylor_.columns() == total_num_var);
+    //    }
+
     CPPAD_ASSERT_KNOWN(
-            p <= taylor_per_var_,
+            d <= taylor_per_var_,
             "The number of taylor_ coefficient currently stored\n"
-            "in this ADFun object is less than p."
+            "in this ADFun object is less than d."
             );
 
     // set the p-th order taylor_ coefficients for independent variables
@@ -49,10 +59,10 @@ void ADFunCodeGen<Base>::ForwardCodeGen(
     }
 
     // generate the code
-    forward_code_gen_sweep(s_out, *nameGen_, false, p, n, total_num_var, &play);
+    forward_code_gen_sweep(s_out, *nameGen_, false, d, n, total_num_var, &play);
 
     // now we have p + 1  taylor_ coefficients per variable
-    taylor_per_var_ = p + 1;
+    taylor_per_var_ = d + 1;
 }
 
 CPPAD_END_NAMESPACE

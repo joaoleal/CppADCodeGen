@@ -212,10 +212,10 @@ public:
         std::stringstream str;
         // make sure all digits of floating point values are printed
 
-        str << std::scientific << std::setprecision(std::numeric_limits< double >::digits10 + 2) << value;
+        str << std::scientific << std::setprecision(std::numeric_limits< Base >::digits10 + 2) << value;
         std::string result;
         str >> result;
-        return CastStringToBase(result);
+        return result;
     }
 
     virtual std::string CastToBase(const int value) const {

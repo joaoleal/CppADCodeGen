@@ -68,7 +68,7 @@ void compile(const string& source, const string& library) throw (CppAD::TestExce
          */
         string linker = "-Wl,-soname," + library;
         execl("/usr/bin/gcc", "gcc", "-x", "c", "-O2", "-pipe", "-", "-fPIC", "-shared",
-                linker.c_str(), "-o", library.c_str(), (char *) NULL);
+              linker.c_str(), "-o", library.c_str(), (char *) NULL);
 
         exit(0);
     }
@@ -88,8 +88,8 @@ void compile(const string& source, const string& library) throw (CppAD::TestExce
 }
 
 bool runTest0(ADFunCodeGen<double>& f, const string& library, const string& function,
-        const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
-        double epsilonR, double epsilonA) {
+              const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
+              double epsilonR, double epsilonA) {
 
     assert(dep.size() == f.Range());
     std::vector<double> depCGen(dep.size());
@@ -104,8 +104,8 @@ bool runTest0(ADFunCodeGen<double>& f, const string& library, const string& func
 }
 
 bool run0(ADFunCodeGen<double>& f, const string& library, const string& function,
-        const std::vector<double>& ind,
-        int& comparisons, std::vector<double>& depCGen) {
+          const std::vector<double>& ind,
+          int& comparisons, std::vector<double>& depCGen) {
 
     stringstream code;
     f.ForwardCodeGen(0, code);
@@ -117,6 +117,7 @@ bool run0(ADFunCodeGen<double>& f, const string& library, const string& function
 
     // declare variables
     source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
+    source += "int " + n->tempIntegerVarName() + n->endl();
     source += "int " + n->compareChangeCounter() + " = 0 " + n->endl();
 
     const std::vector<VarID>& vars = n->getUsedVariables();
@@ -173,8 +174,8 @@ bool run0(ADFunCodeGen<double>& f, const string& library, const string& function
 }
 
 bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const string& function,
-        const std::vector<double>& ind, const std::vector<double>& jac,
-        double epsilonR, double epsilonA) {
+                      const std::vector<double>& ind, const std::vector<double>& jac,
+                      double epsilonR, double epsilonA) {
 
     stringstream code;
     f.SparseJacobianCodeGen(code);
@@ -186,6 +187,7 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const stri
 
     // declare variables
     source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
+    source += "int " + n->tempIntegerVarName() + n->endl();
     source += "int " + n->compareChangeCounter() + " = 0 " + n->endl();
 
     const std::vector<VarID>& vars = n->getUsedVariables();
@@ -240,8 +242,8 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const stri
 }
 
 bool test0nJac(const string& test, ADFunCodeGen<double>& f,
-        const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
-        double epsilonR, double epsilonA) {
+               const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
+               double epsilonR, double epsilonA) {
 
     bool ok = true;
     /**

@@ -24,8 +24,11 @@ private:
     /// number of taylor_ coefficient per variable (currently generated in source)
     size_t taylor_per_var_;
     DefaultCCodeGenNameProvider<Base> defaultCodeNameGen_;
+    // Source code generation
     CodeGenNameProvider<Base>* nameGen_;
-
+    // Indicates which taylor coefficients are always zero in the current 
+    // source code generation
+    //Matrix<bool> zeroTaylor_;
 public:
     /// copy constructor
 

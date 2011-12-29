@@ -208,11 +208,10 @@ const VectorSet& p) {
     ForwardCodeGen(0, s_out);
 
     // initialize the return value
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            s_out << "jac[" << (i * n + j) << "] = " << nameGen_->zero() << nameGen_->endl();
-        }
-    }
+    const std::string& si = nameGen_->tempIntegerVarName();
+    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
+            "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
+            "}";
 
     const CppAD::vector<size_t>& dep_taddr = this->DependentTapeAddr();
     const CppAD::vector<size_t>& ind_taddr = this->IndependentTapeAddr();
@@ -250,7 +249,7 @@ const VectorSet& p) {
 
         // loop over colors
         size_t c;
-        for (c = 0; c < n_color; c++) { // determine all the colums with this color
+        for (c = 0; c < n_color; c++) { // determine all the columns with this color
             for (j = 0; j < n; j++) {
                 std::string dx = nameGen_->generateVarName(1, ind_taddr[j]); // direction vector for calls to forward
                 if (color[j] == c) {

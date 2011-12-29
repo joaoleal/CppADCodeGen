@@ -38,7 +38,6 @@ CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
 size_t i_x) {
-    size_t k;
 
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(AbsOp) == 1);
