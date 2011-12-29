@@ -101,7 +101,8 @@ DIST_SUBDIRS = cppad_ipopt/src cppad_ipopt/example cppad_ipopt/speed \
 	cppad_ipopt/test speed/src speed/adolc speed/cppad \
 	speed/double speed/example speed/fadbad speed/profile \
 	speed/sacado example introduction/get_started \
-	introduction/exp_apx print_for test_more test_code_gen
+	introduction/exp_apx print_for test_more multi_thread \
+	test_code_gen
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -266,7 +267,7 @@ top_srcdir = @top_srcdir@
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
-# the terms of the 
+# the terms of the
 #                     Common Public License Version 1.0.
 #
 # A copy of this license is included in the COPYING file of this distribution.
@@ -291,7 +292,7 @@ BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
 @CppAD_SACADO_TRUE@SPEED_SACADO_TESTS = speed/sacado
 @CppAD_IPOPT_CPPAD_FALSE@IPOPT_TESTS = 
 #
-# Did user specify a value for IPOPT_DIR in configure command line 
+# Did user specify a value for IPOPT_DIR in configure command line
 @CppAD_IPOPT_CPPAD_TRUE@IPOPT_TESTS = \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/example \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/speed \
@@ -301,7 +302,7 @@ BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
 #
 @CppAD_IPOPT_CPPAD_TRUE@IPOPT_DIRS = \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/src \
-@CppAD_IPOPT_CPPAD_TRUE@	$(IPOPT_TESTS) 
+@CppAD_IPOPT_CPPAD_TRUE@	$(IPOPT_TESTS)
 
 @CppAD_IPOPT_CPPAD_FALSE@IPOPT_HEADER = 
 #
@@ -335,6 +336,7 @@ nobase_myinclude_HEADERS = \
 	cppad/CheckNumericType.h \
 	cppad/CheckSimpleVector.h \
 	cppad/CppAD.h \
+	cppad/cppad_code_gen.hpp \
 	cppad/CppAD_vector.h \
 	cppad/ErrorHandler.h \
 	cppad/LuFactor.h \
@@ -489,16 +491,36 @@ nobase_myinclude_HEADERS = \
 	cppad/local/var2par.hpp \
 	cppad/local/vec_ad.hpp \
 	\
+	cppad/local/code_gen/abs_op.hpp \
+	cppad/local/code_gen/acos_op.hpp \
 	cppad/local/code_gen/ad_code_gen_name_provider.hpp \
-	cppad/local/code_gen/ad_fun_code_gen.hpp \
 	cppad/local/code_gen/add_op.hpp \
+	cppad/local/code_gen/ad_fun_code_gen.hpp \
+	cppad/local/code_gen/asin_op.hpp \
+	cppad/local/code_gen/atan_op.hpp \
+	cppad/local/code_gen/comp_op.hpp \
+	cppad/local/code_gen/cond_op.hpp \
+	cppad/local/code_gen/cosh_op.hpp \
 	cppad/local/code_gen/cos_op.hpp \
+	cppad/local/code_gen/discrete_op.hpp \
+	cppad/local/code_gen/div_op.hpp \
+	cppad/local/code_gen/exp_op.hpp \
 	cppad/local/code_gen/forward_code_gen.hpp \
 	cppad/local/code_gen/forward_code_gen_sweep.hpp \
+	cppad/local/code_gen/log_op.hpp \
+	cppad/local/code_gen/mul_op.hpp \
 	cppad/local/code_gen/op.hpp \
+	cppad/local/code_gen/parameter_op.hpp \
+	cppad/local/code_gen/pow_op.hpp \
+	cppad/local/code_gen/print_op.hpp \
+	cppad/local/code_gen/sinh_op.hpp \
+	cppad/local/code_gen/sin_op.hpp \
+	cppad/local/code_gen/sparse_jacobian.hpp \
+	cppad/local/code_gen/sqrt_op.hpp \
 	cppad/local/code_gen/sub_op.hpp \
-	cppad/local/code_gen/sparse_jacobian.hpp\
-        \
+	cppad/local/code_gen/tanh_op.hpp \
+	cppad/local/code_gen/tan_op.hpp \
+	\
 	cppad/lu_factor.hpp \
 	cppad/lu_invert.hpp \
 	cppad/lu_solve.hpp \
@@ -531,7 +553,7 @@ nobase_myinclude_HEADERS = \
 	cppad/vector.hpp
 
 
-# End nobase_myinclude_HEADERS (check_makefile.sh uses this comment) 
+# End nobase_myinclude_HEADERS (check_makefile.sh uses this comment)
 # ---------------------------------------------------------------
 #
 # No objects or executables are required to install CppAD.
@@ -544,10 +566,8 @@ SUBDIRS = \
 	introduction/exp_apx \
 	print_for \
 	test_more \
+	multi_thread \
 	test_code_gen
-
-
-#	multi_thread 
 
 #
 # note that bin/gpl_license.sh is deleted by dist-hook
@@ -561,7 +581,11 @@ EXTRA_DIST = \
 	omh \
 	uw_copy_040507.html
 
+
+#
+# put test_code_gen at front of list so it is tested first
 test_directory_list = \
+	test_code_gen \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \
 	example \
@@ -569,7 +593,7 @@ test_directory_list = \
 	introduction/exp_apx \
 	multi_thread \
 	print_for \
-	test_more 
+	test_more
 
 #
 @CppAD_DOCUMENTATION_TRUE@doc_postfix = $(DESTDIR)$(datadir)/doc/$(postfix_dir)
@@ -1139,10 +1163,10 @@ uninstall-am: uninstall-myincludeHEADERS \
 	uninstall-pkgconfigDATA
 
 $(top_srcdir)/cppad/configure.hpp: cppad/configure.hpp
-	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp 
+	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp
 @CppAD_HAVE_AR_FALSE@	SPEED_DIRS =
 
-test: all 
+test: all
 	rm -f test.log
 	touch test.log
 	rm -f test.sh
@@ -1162,9 +1186,7 @@ test: all
 #
 #
 dist-hook:
-	rm -rf `find . -name .svn`
 	rm $(distdir)/doc/error.wrd
-	rm $(distdir)/bin/gpl_license.sh
 @CppAD_DOCUMENTATION_TRUE@install-data-hook:
 @CppAD_DOCUMENTATION_TRUE@	if [ ! -e $(doc_postfix) ] ; then mkdir -p $(doc_postfix) ; fi
 @CppAD_DOCUMENTATION_TRUE@	if [ -e $(doc_package) ] ; then rm -rf $(doc_package) ; fi

@@ -1,5 +1,5 @@
-#ifndef CPPAD_CODE_GEN_PAR_OP_INCLUDED
-#define CPPAD_CODE_GEN_PAR_OP_INCLUDED
+#ifndef CPPAD_CODE_GEN_PARAMETER_OP_INCLUDED
+#define CPPAD_CODE_GEN_PARAMETER_OP_INCLUDED
 
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis

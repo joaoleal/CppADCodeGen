@@ -23,6 +23,7 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \
 	cppad/local/*.hpp \
+	cppad/local/code_gen/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
 	multi_thread/*.hpp \
@@ -31,17 +32,19 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	| tr [a-zA-Z] [A-Za-z] \
 	| sort \
 	> bin/check_include_def.1.$$
- 
+#
 ls \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \
 	cppad/local/*.hpp \
+	cppad/local/code_gen/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
 	multi_thread/*.hpp \
-	| sed -e 's|.*/||' \
+	| sed -e 's|code_gen/|code_gen_|' -e 's|.*/||' \
 	| sort -u \
 	> bin/check_include_def.2.$$
+#
 if diff bin/check_include_def.1.$$ bin/check_include_def.2.$$
 then
 	different="no"

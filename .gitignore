@@ -1,23 +1,45 @@
-# ignore temporary build process files
-.deps/
-makefile
-/autom4te.cache/
-/config.status
-/pkgconfig/*.pc
-/doxyfile
+#
+# directories created by build.sh
+work
+doc
+doxydoc
 
-# ignore log files
+# log files
 *.log
 
-# ignore dolphin files
-.directory
+# directory used by autoconf to cache information for future runs
+autom4te.cache
 
-# ignore binary/compiled files
+# doxygen errors
+doxygen.err
+
+# omhelp output log
+omhelp.htm.log
+omhelp.xml.log
+
+# ./build.sh test output log
+build_test.log
+
+# files created by configure and not in distribution
+cppad/configure.hpp
+doc.omh
+doxyfile
+example/test_one.sh
+omh/install_unix.omh
+omh/install_windows.omh
+test_more/test_one.sh
+.deps
+config.status
+pkgconfig/*.pc
+
+# temporary files 
+junk
+junk.sh
+*~
+
+# binary/compiled files
 *.[oa]
 *.so
 
-# ignore temporary files
-*~
-
-# ignore IDE files
+# IDE files
 /nbproject/

@@ -1,4 +1,4 @@
-/* $Id: k_gt_one.cpp 1771 2011-01-01 15:41:51Z bradbell $ */
+/* $Id: k_gt_one.cpp 2234 2011-12-21 13:44:54Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -13,6 +13,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad_ipopt_nlp.hpp>
 
 namespace { // Begin empty namespace
+using namespace cppad_ipopt;
+
 // ---------------------------------------------------------------------------
 /*
 This solve the same problem as 

@@ -1,4 +1,4 @@
-// $Id: team_openmp.cpp 2191 2011-11-09 15:38:25Z bradbell $
+// $Id: team_openmp.cpp 2233 2011-12-20 19:34:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -46,7 +46,7 @@ namespace {
 	{	return static_cast<size_t>( omp_get_thread_num() ); } 
 }
 
-bool team_start(size_t num_threads)
+bool team_create(size_t num_threads)
 {
 	bool ok = ! in_parallel();
 	ok     &= thread_num() == 0;;
@@ -83,7 +83,7 @@ bool team_work(void worker(void))
 	return ok;
 }
 
-bool team_stop(void)
+bool team_destroy(void)
 {	bool ok = ! in_parallel();
 	ok     &= thread_num() == 0;;
 	ok     &= num_threads_ > 0;

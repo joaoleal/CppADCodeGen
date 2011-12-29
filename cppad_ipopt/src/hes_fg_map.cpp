@@ -1,6 +1,6 @@
-/* $Id: hes_fg_map.cpp 1641 2010-02-01 16:39:45Z bradbell $ */
+/* $Id: hes_fg_map.cpp 2234 2011-12-21 13:44:54Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,11 +12,14 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include "cppad_ipopt_nlp.hpp"
 # include "hes_fg_map.hpp"
 
-CPPAD_BEGIN_NAMESPACE
 /*!
 \file hes_fg_map.cpp
 \brief Creates a mapping between two representations for Hessian of fg. 
 */
+// ---------------------------------------------------------------------------
+namespace cppad_ipopt {
+// ---------------------------------------------------------------------------
+
 
 /*!
 Create mapping from CppAD to Ipopt sparse representations of Hessian of F(x).
@@ -168,4 +171,6 @@ void hes_fg_map(
 	return;
 }
 
-CPPAD_END_NAMESPACE
+// ---------------------------------------------------------------------------
+} // end namespace cppad_ipopt
+// ---------------------------------------------------------------------------

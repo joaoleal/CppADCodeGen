@@ -18,51 +18,49 @@ else
 BOOST_INCLUDE =
 endif
 #
-
-#check_PROGRAMS    = test_joao
+check_PROGRAMS    = testCodeGen
 #
 AM_CPPFLAGS       = -I. \
 	-I$(top_srcdir) \
 	$(BOOST_INCLUDE)
 	
 #
-AM_CXXFLAGS       = -O0 -g $(CXX_FLAGS)
+AM_CXXFLAGS       = -g $(CXX_FLAGS)
 #
+testCodeGen_SOURCES        = \
+	gcc_load_dynamic.hpp  \
+	TestException.hpp \
+	\
+	test_code_gen.cpp \
+	abs.cpp \
+	acos.cpp \
+	add.cpp \
+	asin.cpp \
+	atan.cpp \
+	atan_2.cpp \
+	compare_change.cpp \
+	cond_exp.cpp \
+	cos.cpp \
+	div.cpp \
+	exp.cpp \
+	log.cpp \
+	log_10.cpp \
+	mul.cpp \
+	parameter.cpp \
+	pow.cpp \
+	sin.cpp \
+	sub.cpp \
+	tan.cpp \
+	gcc_load_dynamic.cpp \
+	TestException.cpp
 
-noinst_bin_PROGRAMS        = testCodeGen
-noinst_bindir              = testCodeGen
-testCodeGen_SOURCES        = test_code_gen.cpp \
-	                     abs.cpp \
-			     acos.cpp \
-	                     add.cpp \
-                             asin.cpp \
-                             atan.cpp \
-                             atan_2.cpp \
-                             compare_change.cpp \
-                             cond_exp.cpp \
-                             cos.cpp \
-                             div.cpp \
-                             exp.cpp \
-                             log.cpp \
-                             log_10.cpp \
-                             mul.cpp \
-                             parameter.cpp \
-                             pow.cpp \
-                             sin.cpp \
-                             sub.cpp \
-                             tan.cpp \
-	                     gcc_load_dynamic.cpp \
-	                     TestException.cpp
-testCodeGen_LDADD          = -ldl
+testCodeGen_LDADD  = -ldl
 
-#ndebug.$(OBJEXT): ndebug.cpp
-#	$(CXXCOMPILE) \
-#	-DNDEBUG -c $(top_srcdir)/test_joao/ndebug.cpp -o ndebug.$(OBJEXT)
+test.sh: testCodeGen$(EXEEXT)
+	echo "#! /bin/sh -e"                          > test.sh
+	echo "if [ ! -d tmp ] ; then mkdir tmp ; fi" >> test.sh
+	echo "./testCodeGen "                        >> test.sh
+	chmod +x test.sh
 
-#test.sh: test_joao$(EXEEXT)
-#	echo "#! /bin/sh -e"  > test.sh
-#	echo "./test_joao "  >> test.sh
-#	chmod +x test.sh
-
-#test: test.sh
-#	./test.sh
+test: test.sh
+	./test.sh

@@ -1,4 +1,4 @@
-/* $Id: cppad_ipopt_nlp.hpp 2235 2011-12-21 14:50:24Z bradbell $ */
+/* $Id: cppad_ipopt_nlp.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
 # ifndef CPPAD_CPPAD_IPOPT_NLP_INCLUDED
 # define CPPAD_CPPAD_IPOPT_NLP_INCLUDED
 /* --------------------------------------------------------------------------

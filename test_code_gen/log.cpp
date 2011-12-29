@@ -53,7 +53,7 @@ namespace { // BEGIN empty namespace
 
         // independent variable vector
         std::vector<double> u(1);
-        size_t s = 0;
+        // size_t s = 0;
         u[0] = 1.;
 
         CPPAD_TEST_VECTOR< AD<double> > U(1);

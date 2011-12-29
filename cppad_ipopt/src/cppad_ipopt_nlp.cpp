@@ -1,4 +1,4 @@
-/* $Id: cppad_ipopt_nlp.cpp 2113 2011-10-13 11:04:24Z bradbell $ */
+/* $Id: cppad_ipopt_nlp.cpp 2234 2011-12-21 13:44:54Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -29,6 +29,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # if CPPAD_IPOPT_NLP_TRACE
 # include <cstdio>
 # endif
+
+// ---------------------------------------------------------------------------
+namespace cppad_ipopt {
+// ---------------------------------------------------------------------------
 
 
 /*! 
@@ -1133,3 +1137,7 @@ bool cppad_ipopt_nlp::intermediate_callback(
 	// std::cout << "intermediate_callback called" << std::endl;
 	return true;
 }
+
+// ---------------------------------------------------------------------------
+} // end namespace cppad_ipopt
+// ---------------------------------------------------------------------------

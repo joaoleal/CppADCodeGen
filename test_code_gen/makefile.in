@@ -28,7 +28,6 @@
 # automake input file
 #
 # CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
-
 VPATH = @srcdir@
 pkgdatadir = $(datadir)/@PACKAGE@
 pkgincludedir = $(includedir)/@PACKAGE@
@@ -46,7 +45,7 @@ POST_INSTALL = :
 NORMAL_UNINSTALL = :
 PRE_UNINSTALL = :
 POST_UNINSTALL = :
-noinst_bin_PROGRAMS = testCodeGen$(EXEEXT)
+check_PROGRAMS = testCodeGen$(EXEEXT)
 subdir = test_code_gen
 DIST_COMMON = $(srcdir)/makefile.am $(srcdir)/makefile.in
 ACLOCAL_M4 = $(top_srcdir)/aclocal.m4
@@ -56,8 +55,6 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am__installdirs = "$(DESTDIR)$(noinst_bindir)"
-PROGRAMS = $(noinst_bin_PROGRAMS)
 am_testCodeGen_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
 	atan_2.$(OBJEXT) compare_change.$(OBJEXT) cond_exp.$(OBJEXT) \
@@ -76,6 +73,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(testCodeGen_SOURCES)
 DIST_SOURCES = $(testCodeGen_SOURCES)
 ETAGS = etags
@@ -206,39 +207,40 @@ top_srcdir = @top_srcdir@
 @CppAD_BOOST_DIR_FALSE@BOOST_INCLUDE = 
 @CppAD_BOOST_DIR_TRUE@BOOST_INCLUDE = -I$(BOOST_DIR)
 #
-
-#check_PROGRAMS    = test_joao
-#
 AM_CPPFLAGS = -I. \
 	-I$(top_srcdir) \
 	$(BOOST_INCLUDE)
 
 
 #
-AM_CXXFLAGS = -O0 -g $(CXX_FLAGS)
-noinst_bindir = testCodeGen
-testCodeGen_SOURCES = test_code_gen.cpp \
-	                     abs.cpp \
-			     acos.cpp \
-	                     add.cpp \
-                             asin.cpp \
-                             atan.cpp \
-                             atan_2.cpp \
-                             compare_change.cpp \
-                             cond_exp.cpp \
-                             cos.cpp \
-                             div.cpp \
-                             exp.cpp \
-                             log.cpp \
-                             log_10.cpp \
-                             mul.cpp \
-                             parameter.cpp \
-                             pow.cpp \
-                             sin.cpp \
-                             sub.cpp \
-                             tan.cpp \
-	                     gcc_load_dynamic.cpp \
-	                     TestException.cpp
+AM_CXXFLAGS = -g $(CXX_FLAGS)
+#
+testCodeGen_SOURCES = \
+	gcc_load_dynamic.hpp  \
+	TestException.hpp \
+	\
+	test_code_gen.cpp \
+	abs.cpp \
+	acos.cpp \
+	add.cpp \
+	asin.cpp \
+	atan.cpp \
+	atan_2.cpp \
+	compare_change.cpp \
+	cond_exp.cpp \
+	cos.cpp \
+	div.cpp \
+	exp.cpp \
+	log.cpp \
+	log_10.cpp \
+	mul.cpp \
+	parameter.cpp \
+	pow.cpp \
+	sin.cpp \
+	sub.cpp \
+	tan.cpp \
+	gcc_load_dynamic.cpp \
+	TestException.cpp
 
 testCodeGen_LDADD = -ldl
 all: all-am
@@ -275,43 +277,9 @@ $(top_srcdir)/configure: @MAINTAINER_MODE_TRUE@ $(am__configure_deps)
 $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	cd $(top_builddir) && $(MAKE) $(AM_MAKEFLAGS) am--refresh
 $(am__aclocal_m4_deps):
-install-noinst_binPROGRAMS: $(noinst_bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(noinst_bindir)" || $(MKDIR_P) "$(DESTDIR)$(noinst_bindir)"
-	@list='$(noinst_bin_PROGRAMS)'; test -n "$(noinst_bindir)" || list=; \
-	for p in $$list; do echo "$$p $$p"; done | \
-	sed 's/$(EXEEXT)$$//' | \
-	while read p p1; do if test -f $$p; \
-	  then echo "$$p"; echo "$$p"; else :; fi; \
-	done | \
-	sed -e 'p;s,.*/,,;n;h' -e 's|.*|.|' \
-	    -e 'p;x;s,.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/' | \
-	sed 'N;N;N;s,\n, ,g' | \
-	$(AWK) 'BEGIN { files["."] = ""; dirs["."] = 1 } \
-	  { d=$$3; if (dirs[d] != 1) { print "d", d; dirs[d] = 1 } \
-	    if ($$2 == $$4) files[d] = files[d] " " $$1; \
-	    else { print "f", $$3 "/" $$4, $$1; } } \
-	  END { for (d in files) print "f", d, files[d] }' | \
-	while read type dir files; do \
-	    if test "$$dir" = .; then dir=; else dir=/$$dir; fi; \
-	    test -z "$$files" || { \
-	      echo " $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files '$(DESTDIR)$(noinst_bindir)$$dir'"; \
-	      $(INSTALL_PROGRAM_ENV) $(INSTALL_PROGRAM) $$files "$(DESTDIR)$(noinst_bindir)$$dir" || exit $$?; \
-	    } \
-	; done
 
-uninstall-noinst_binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(noinst_bin_PROGRAMS)'; test -n "$(noinst_bindir)" || list=; \
-	files=`for p in $$list; do echo "$$p"; done | \
-	  sed -e 'h;s,^.*/,,;s/$(EXEEXT)$$//;$(transform)' \
-	      -e 's/$$/$(EXEEXT)/' `; \
-	test -n "$$list" || exit 0; \
-	echo " ( cd '$(DESTDIR)$(noinst_bindir)' && rm -f" $$files ")"; \
-	cd "$(DESTDIR)$(noinst_bindir)" && rm -f $$files
-
-clean-noinst_binPROGRAMS:
-	-test -z "$(noinst_bin_PROGRAMS)" || rm -f $(noinst_bin_PROGRAMS)
+clean-checkPROGRAMS:
+	-test -z "$(check_PROGRAMS)" || rm -f $(check_PROGRAMS)
 testCodeGen$(EXEEXT): $(testCodeGen_OBJECTS) $(testCodeGen_DEPENDENCIES) 
 	@rm -f testCodeGen$(EXEEXT)
 	$(CXXLINK) $(testCodeGen_OBJECTS) $(testCodeGen_LDADD) $(LIBS)
@@ -442,12 +410,10 @@ distdir: $(DISTFILES)
 	  fi; \
 	done
 check-am: all-am
+	$(MAKE) $(AM_MAKEFLAGS) $(check_PROGRAMS)
 check: check-am
-all-am: makefile $(PROGRAMS)
+all-am: makefile
 installdirs:
-	for dir in "$(DESTDIR)$(noinst_bindir)"; do \
-	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
-	done
 install: install-am
 install-exec: install-exec-am
 install-data: install-data-am
@@ -475,7 +441,7 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-am
 
-clean-am: clean-generic clean-noinst_binPROGRAMS mostlyclean-am
+clean-am: clean-checkPROGRAMS clean-generic mostlyclean-am
 
 distclean: distclean-am
 	-rm -rf ./$(DEPDIR)
@@ -495,7 +461,7 @@ info: info-am
 
 info-am:
 
-install-data-am: install-noinst_binPROGRAMS
+install-data-am:
 
 install-dvi: install-dvi-am
 
@@ -540,35 +506,32 @@ ps: ps-am
 
 ps-am:
 
-uninstall-am: uninstall-noinst_binPROGRAMS
+uninstall-am:
 
-.MAKE: install-am install-strip
+.MAKE: check-am install-am install-strip
 
-.PHONY: CTAGS GTAGS all all-am check check-am clean clean-generic \
-	clean-noinst_binPROGRAMS ctags distclean distclean-compile \
-	distclean-generic distclean-tags distdir dvi dvi-am html \
-	html-am info info-am install install-am install-data \
-	install-data-am install-dvi install-dvi-am install-exec \
-	install-exec-am install-html install-html-am install-info \
-	install-info-am install-man install-noinst_binPROGRAMS \
-	install-pdf install-pdf-am install-ps install-ps-am \
-	install-strip installcheck installcheck-am installdirs \
-	maintainer-clean maintainer-clean-generic mostlyclean \
-	mostlyclean-compile mostlyclean-generic pdf pdf-am ps ps-am \
-	tags uninstall uninstall-am uninstall-noinst_binPROGRAMS
+.PHONY: CTAGS GTAGS all all-am check check-am clean \
+	clean-checkPROGRAMS clean-generic ctags distclean \
+	distclean-compile distclean-generic distclean-tags distdir dvi \
+	dvi-am html html-am info info-am install install-am \
+	install-data install-data-am install-dvi install-dvi-am \
+	install-exec install-exec-am install-html install-html-am \
+	install-info install-info-am install-man install-pdf \
+	install-pdf-am install-ps install-ps-am install-strip \
+	installcheck installcheck-am installdirs maintainer-clean \
+	maintainer-clean-generic mostlyclean mostlyclean-compile \
+	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
+	uninstall-am
 
 
-#ndebug.$(OBJEXT): ndebug.cpp
-#	$(CXXCOMPILE) \
-#	-DNDEBUG -c $(top_srcdir)/test_joao/ndebug.cpp -o ndebug.$(OBJEXT)
+test.sh: testCodeGen$(EXEEXT)
+	echo "#! /bin/sh -e"                          > test.sh
+	echo "if [ ! -d tmp ] ; then mkdir tmp ; fi" >> test.sh
+	echo "./testCodeGen "                        >> test.sh
+	chmod +x test.sh
 
-#test.sh: test_joao$(EXEEXT)
-#	echo "#! /bin/sh -e"  > test.sh
-#	echo "./test_joao "  >> test.sh
-#	chmod +x test.sh
-
-#test: test.sh
-#	./test.sh
+test: test.sh
+	./test.sh
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
