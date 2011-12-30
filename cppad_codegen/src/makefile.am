@@ -38,6 +38,7 @@ nobase_cginclude_HEADERS =  \
 	cppad_codegen/local/cond_op.hpp \
 	cppad_codegen/local/cosh_op.hpp \
 	cppad_codegen/local/cos_op.hpp \
+	cppad_codegen/local/csum_op.hpp \
 	cppad_codegen/local/discrete_op.hpp \
 	cppad_codegen/local/div_op.hpp \
 	cppad_codegen/local/exp_op.hpp \
