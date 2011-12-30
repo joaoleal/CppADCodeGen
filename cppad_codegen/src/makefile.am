@@ -1,0 +1,84 @@
+# -----------------------------------------------------------------------------
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis
+#
+# CppAD is distributed under multiple licenses. This distribution is under
+# the terms of the
+#                     Common Public License Version 1.0.
+#
+# A copy of this license is included in the COPYING file of this distribution.
+# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+# -----------------------------------------------------------------------------
+#
+#BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
+#$(top_srcdir)/cppad/configure.hpp: cppad/configure.hpp
+#	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp
+#
+if CppAD_POSTFIX
+postfix_dir  = $(POSTFIX_DIR)
+else
+postfix_dir  = .
+endif
+#
+#
+# ---------------------------------------------------------------------------
+cgincludedir = $(includedir)/$(postfix_dir)
+#
+#
+nobase_cginclude_HEADERS =  \
+	cppad_codegen/CppADCodeGen.h \
+	cppad_codegen/cppad_codegen.hpp \
+	cppad_codegen/local/abs_op.hpp \
+	cppad_codegen/local/acos_op.hpp \
+	cppad_codegen/local/ad_code_gen_name_provider.hpp \
+	cppad_codegen/local/add_op.hpp \
+	cppad_codegen/local/ad_fun_code_gen.hpp \
+	cppad_codegen/local/asin_op.hpp \
+	cppad_codegen/local/atan_op.hpp \
+	cppad_codegen/local/comp_op.hpp \
+	cppad_codegen/local/cond_op.hpp \
+	cppad_codegen/local/cosh_op.hpp \
+	cppad_codegen/local/cos_op.hpp \
+	cppad_codegen/local/discrete_op.hpp \
+	cppad_codegen/local/div_op.hpp \
+	cppad_codegen/local/exp_op.hpp \
+	cppad_codegen/local/forward_code_gen.hpp \
+	cppad_codegen/local/forward_code_gen_sweep.hpp \
+	cppad_codegen/local/log_op.hpp \
+	cppad_codegen/local/mul_op.hpp \
+	cppad_codegen/local/op.hpp \
+	cppad_codegen/local/parameter_op.hpp \
+	cppad_codegen/local/pow_op.hpp \
+	cppad_codegen/local/print_op.hpp \
+	cppad_codegen/local/sinh_op.hpp \
+	cppad_codegen/local/sin_op.hpp \
+	cppad_codegen/local/sparse_jacobian.hpp \
+	cppad_codegen/local/sqrt_op.hpp \
+	cppad_codegen/local/sub_op.hpp \
+	cppad_codegen/local/tanh_op.hpp \
+	cppad_codegen/local/tan_op.hpp \
+	cppad_codegen/local/matrix.hpp 
+
+	
+	
+# End nobase_include_HEADERS (check_makefile.sh uses this comment)
+# ---------------------------------------------------------------
+#
+# No objects or executables are required to install CppADCodeGen.
+#
+#dist-hook:
+#	rm $(distdir)/doc/error.wrd
+#
+#if CppAD_DOCUMENTATION
+#doc_postfix = $(DESTDIR)$(datadir)/doc/$(postfix_dir)
+#doc_package = $(DESTDIR)$(datadir)/doc/$(postfix_dir)/$(PACKAGE)-$(VERSION)
+#install-data-hook:
+#	if [ ! -e $(doc_postfix) ] ; then mkdir -p $(doc_postfix) ; fi
+#	if [ -e $(doc_package) ] ; then rm -rf $(doc_package) ; fi
+#	cp -a $(top_builddir)/doc $(doc_package)
+#	chmod -R a-w $(doc_package)
+#	chmod -R u+w $(doc_package)
+#	chmod -R a+r $(doc_package)
+#endif
+#
+#pkgconfigdir = $(datadir)/pkgconfig
+#pkgconfig_DATA = pkgconfig/cppad.pc

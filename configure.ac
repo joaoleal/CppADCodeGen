@@ -523,7 +523,8 @@ AC_CONFIG_FILES([
 	speed/sacado/makefile
 	speed/src/makefile
 	test_more/makefile 
-	test_code_gen/makefile
+	cppad_codegen/src/makefile
+	cppad_codegen/test/makefile
 ])
 dnl END AC_CONFIG_FILES 
 dnl the comment line above is used by ./new_stable.sh
