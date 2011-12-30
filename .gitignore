@@ -44,3 +44,8 @@ junk.sh
 
 # IDE files
 /nbproject/
+
+# debian temporary files
+/debian/*/
+/debian/files
+/debian/*.stamp
