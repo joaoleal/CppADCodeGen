@@ -44,10 +44,11 @@ CONFIG_CLEAN_VPATH_FILES =
 am_testCodeGen_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
 	atan_2.$(OBJEXT) compare_change.$(OBJEXT) cond_exp.$(OBJEXT) \
-	cos.$(OBJEXT) div.$(OBJEXT) exp.$(OBJEXT) log.$(OBJEXT) \
-	log_10.$(OBJEXT) mul.$(OBJEXT) parameter.$(OBJEXT) \
-	pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) tan.$(OBJEXT) \
-	gcc_load_dynamic.$(OBJEXT) TestException.$(OBJEXT)
+	cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) exp.$(OBJEXT) \
+	log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
+	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
+	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
+	TestException.$(OBJEXT)
 testCodeGen_OBJECTS = $(am_testCodeGen_OBJECTS)
 testCodeGen_LDADD = $(LDADD)
 testCodeGen_DEPENDENCIES =
@@ -235,6 +236,7 @@ testCodeGen_SOURCES = \
 	compare_change.cpp \
 	cond_exp.cpp \
 	cos.cpp \
+	cosh.cpp \
 	div.cpp \
 	exp.cpp \
 	log.cpp \
@@ -305,6 +307,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compare_change.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_exp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cos.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cosh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcc_load_dynamic.Po@am__quote@

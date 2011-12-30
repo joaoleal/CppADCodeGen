@@ -25,6 +25,7 @@ extern bool Atan2();
 extern bool CompareChange();
 extern bool CondExp();
 extern bool Cos();
+extern bool Cosh();
 extern bool Div();
 extern bool Exp();
 extern bool Log();
@@ -85,6 +86,7 @@ int main(void) {
     ok &= Run(CompareChange, "CompareChange");
     ok &= Run(CondExp, "CondExp");
     ok &= Run(Cos, "Cos");
+    ok &= Run(Cosh, "Cosh");
     ok &= Run(Div, "Div");
     ok &= Run(Exp, "Exp");
     ok &= Run(Log, "Log");

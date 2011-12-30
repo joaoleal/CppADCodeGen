@@ -1,1 +1,1 @@
-#include "cppad_codegen/cppad_code_gen.hpp"
+#include "cppad_codegen.hpp"

@@ -23,7 +23,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_codegen/local/cond_op.hpp>
 #include <cppad_codegen/local/cos_op.hpp>
 #include <cppad_codegen/local/cosh_op.hpp>
-//# include <cppad_codegen/local/csum_op.hpp>
+#include <cppad_codegen/local/csum_op.hpp>
 #include <cppad_codegen/local/discrete_op.hpp>
 #include <cppad_codegen/local/div_op.hpp>
 #include <cppad_codegen/local/exp_op.hpp>

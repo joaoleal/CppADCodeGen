@@ -46,6 +46,7 @@ testCodeGen_SOURCES        = \
 	compare_change.cpp \
 	cond_exp.cpp \
 	cos.cpp \
+	cosh.cpp \
 	div.cpp \
 	exp.cpp \
 	log.cpp \
