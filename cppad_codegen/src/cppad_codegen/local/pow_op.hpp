@@ -30,11 +30,11 @@ and the argument \a parameter is not used.
  */
 template <class Base>
 inline void forward_code_gen_powvv_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        const addr_t* arg) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+const addr_t* arg) {
     // convert from final result to first result
     i_z -= 2; // NumRes(PowvvOp) - 1;
 
@@ -87,10 +87,10 @@ and the argument \a parameter is not used.
  */
 template <class Base>
 inline void forward_code_gen_powvv_op_0(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t i_z,
-        const addr_t* arg) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t i_z,
+const addr_t* arg) {
     // convert from final result to first result
     i_z -= 2; // NumRes(PowvvOp) - 1;
 
@@ -132,41 +132,27 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //	// convert from final result to first result
-    //	i_z -= 2; // NumRes(PowvvOp) - 1;
-    //
-    //	// check assumptions
-    //	CPPAD_ASSERT_UNKNOWN( NumArg(PowvvOp) == 2 );
-    //	CPPAD_ASSERT_UNKNOWN( NumRes(PowvvOp) == 3 );
-    //	CPPAD_ASSERT_UNKNOWN( size_t(arg[0]) < i_z );
-    //	CPPAD_ASSERT_UNKNOWN( size_t(arg[1]) < i_z );
-    //	CPPAD_ASSERT_UNKNOWN( d < nc_taylor );
-    //	CPPAD_ASSERT_UNKNOWN( d < nc_partial );
-    //
-    //	// z_2 = exp(z_1)
-    //	reverse_exp_op(
-    //		d, i_z+2, i_z+1, nc_taylor, taylor, nc_partial, partial
-    //	);
-    //
-    //	// z_1 = z_0 * y
-    //	addr_t adr[2];
-    //	adr[0] = i_z;
-    //	adr[1] = arg[1];
-    //	reverse_mulvv_op(
-    //	d, i_z+1, adr, parameter, nc_taylor, taylor, nc_partial, partial
-    //	);
-    //
-    //	// z_0 = log(x)
-    //	reverse_log_op(
-    //		d, i_z, arg[0], nc_taylor, taylor, nc_partial, partial
-    //	);
-    throw "not implemented yet";
+const addr_t* arg) {
+    // convert from final result to first result
+    i_z -= 2; // NumRes(PowvvOp) - 1;
+
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(PowvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(PowvvOp) == 3);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // z_2 = exp(z_1)
+    reverse_code_gen_exp_op(s_out, n, d, i_z + 2, i_z + 1);
+
+    // z_1 = z_0 * y
+    addr_t adr[2];
+    adr[0] = i_z;
+    adr[1] = arg[1];
+    reverse_code_gen_mulvv_op(s_out, n, d, i_z + 1, adr);
+
+    // z_0 = log(x)
+    reverse_code_gen_log_op(s_out, n, d, i_z, arg[0]);
 }
 
 // --------------------------- Powpv -----------------------------------------
@@ -303,39 +289,36 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // convert from final result to first result
-    //    i_z -= 2; // NumRes(PowpvOp) - 1;
-    //
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(PowvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(PowvvOp) == 3);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // z_2 = exp(z_1)
-    //    reverse_exp_op(
-    //            d, i_z + 2, i_z + 1, nc_taylor, taylor, nc_partial, partial
-    //            );
-    //
-    //    // z_1 = z_0 * y
-    //    addr_t adr[2];
-    //    adr[0] = i_z * nc_taylor; // offset of z_0[0] in taylor 
-    //    adr[1] = arg[1]; // index of y in taylor and partial
-    //    // use taylor both for parameter and variable values
-    //    reverse_mulpv_op(
-    //            d, i_z + 1, adr, taylor, nc_taylor, taylor, nc_partial, partial
-    //            );
-    //
-    //    // z_0 = log(x)
-    //    // x is a parameter
-    throw "not implemented yet";
+const addr_t* arg) {
+    // convert from final result to first result
+    i_z -= 2; // NumRes(PowpvOp) - 1;
+
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(PowvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(PowvvOp) == 3);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    size_t i_y = arg[1];
+
+    // z_2 = exp(z_1)
+    reverse_code_gen_exp_op(s_out, n, d, i_z + 2, i_z + 1);
+
+    // z_1 = z_0 * y
+    // Arguments
+    std::string sz_0 = n.generateVarName(0, i_z);
+
+    // number of indices to access
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        std::string pz_j = n.generatePartialName(j, i_z + 1);
+        std::string py_j = n.generatePartialName(j, i_y);
+
+        s_out << py_j << " += " << pz_j << " * " << sz_0 << n.endl();
+
+    }
+    // z_0 = log(x)
+    // x is a parameter
 }
 
 // --------------------------- Powvp -----------------------------------------
@@ -466,39 +449,26 @@ CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
 const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // convert from final result to first result
-    //    i_z -= 2; // NumRes(PowvpOp) - 1;
-    //
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(PowvpOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(PowvpOp) == 3);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // z_2 = exp(z_1)
-    //    reverse_exp_op(
-    //            d, i_z + 2, i_z + 1, nc_taylor, taylor, nc_partial, partial
-    //            );
-    //
-    //    // z_1 = y * z_0
-    //    addr_t adr[2];
-    //    adr[0] = arg[1];
-    //    adr[1] = i_z;
-    //    reverse_mulpv_op(
-    //            d, i_z + 1, adr, parameter, nc_taylor, taylor, nc_partial, partial
-    //            );
-    //
-    //    // z_0 = log(x)
-    //    reverse_log_op(
-    //            d, i_z, arg[0], nc_taylor, taylor, nc_partial, partial
-    //            );
-    throw "not implemented yet";
+const Base* parameter) {
+    // convert from final result to first result
+    i_z -= 2; // NumRes(PowvpOp) - 1;
+
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(PowvpOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(PowvpOp) == 3);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+
+    // z_2 = exp(z_1)
+    reverse_code_gen_exp_op(s_out, n, d, i_z + 2, i_z + 1);
+
+    // z_1 = y * z_0
+    addr_t adr[2];
+    adr[0] = arg[1];
+    adr[1] = i_z;
+    reverse_code_gen_mulpv_op(s_out, n, d, i_z + 1, adr, parameter);
+
+    // z_0 = log(x)
+    reverse_code_gen_log_op(s_out, n, d, i_z, arg[0]);
 }
 
 CPPAD_END_NAMESPACE

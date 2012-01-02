@@ -50,6 +50,8 @@ nobase_cginclude_HEADERS =  \
 	cppad_codegen/local/parameter_op.hpp \
 	cppad_codegen/local/pow_op.hpp \
 	cppad_codegen/local/print_op.hpp \
+	cppad_codegen/local/reverse_code_gen.hpp \
+	cppad_codegen/local/reverse_code_gen_sweep.hpp \
 	cppad_codegen/local/sinh_op.hpp \
 	cppad_codegen/local/sin_op.hpp \
 	cppad_codegen/local/sparse_jacobian.hpp \

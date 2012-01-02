@@ -43,8 +43,8 @@ void ADFunCodeGen<Base>::ForwardCodeGen(
 
     CPPAD_ASSERT_KNOWN(
             d <= taylor_per_var_,
-            "The number of taylor_ coefficient currently stored\n"
-            "in this ADFun object is less than d."
+            "The number of taylor_ coefficient currently generated\n"
+            "is less than d."
             );
 
     // set the p-th order taylor_ coefficients for independent variables

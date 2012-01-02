@@ -409,7 +409,7 @@ player<Base> *Rec) {
                 // -------------------------------------------------
 
             case SubvvOp:
-                forward_code_gen_subvv_op(s_out, names, d, i_var, arg, parameter);
+                forward_code_gen_subvv_op(s_out, names, d, i_var, arg);
                 break;
                 // -------------------------------------------------
 

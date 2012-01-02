@@ -117,41 +117,32 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(MulvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(MulvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Arguments
-    //    const Base* x = taylor + arg[0] * nc_taylor;
-    //    const Base* y = taylor + arg[1] * nc_taylor;
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* px = partial + arg[0] * nc_partial;
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //
-    //    // number of indices to access
-    //    size_t j = d + 1;
-    //    size_t k;
-    //    while (j) {
-    //        --j;
-    //        for (k = 0; k <= j; k++) {
-    //            px[j - k] += pz[j] * y[k];
-    //            py[k] += pz[j] * x[j - k];
-    //        }
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(MulvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(MulvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // Arguments
+    size_t i_x = arg[0];
+    size_t i_y = arg[1];
+
+    // number of indices to access
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        for (size_t k = 0; k <= j; k++) {
+            std::string px_jk = n.generatePartialName(j - k, i_x);
+            std::string pz_j = n.generatePartialName(j, i_z);
+            std::string sy_k = n.generateVarName(k, i_y);
+            std::string sx_jk = n.generateVarName(j - k, i_x);
+            std::string py_k = n.generatePartialName(k, i_y);
+
+            s_out << px_jk << " += " << pz_j << " * " << sy_k << n.endl();
+            s_out << py_k << " += " << pz_j << " * " << sx_jk << n.endl();
+        }
+    }
 }
 // --------------------------- Mulpv -----------------------------------------
 
@@ -250,32 +241,27 @@ CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
 const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(MulvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(MulvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Arguments
-    //    Base x = parameter[ arg[0] ];
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // number of indices to access
-    //    size_t j = d + 1;
-    //    while (j) {
-    //        --j;
-    //        py[j] += pz[j] * x;
-    //    }
-    throw "not implemented yet";
+const Base* parameter) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(MulvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(MulvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    size_t i_y = arg[1];
+
+    // Arguments
+    std::string x = n.PrintBase(parameter[ arg[0] ]);
+
+    // number of indices to access
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        std::string pz_j = n.generatePartialName(j, i_z);
+        std::string py_j = n.generatePartialName(j, i_y);
+
+        s_out << py_j << " += " << pz_j << " * " << x << n.endl();
+
+    }
 }
 
 

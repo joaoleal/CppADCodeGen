@@ -74,6 +74,9 @@ public:
 
     void ForwardCodeGen(size_t p, std::ostream& s_out);
 
+    template <typename VectorBase>
+    void ReverseCodeGen(size_t p, const VectorBase &w, std::ostream& s_out);
+
     void SparseJacobianCodeGen(std::ostream& s_out);
 
     template<class VectorSet>

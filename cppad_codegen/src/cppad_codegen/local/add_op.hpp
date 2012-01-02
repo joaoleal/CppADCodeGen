@@ -107,36 +107,28 @@ and the argument \a parameter is not used.
 template <class Base>
 inline void reverse_code_gen_addvv_op(
 std::ostream& s_out,
-CodeGenNameProvider<Base>& names,
+CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(AddvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(AddvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* px = partial + arg[0] * nc_partial;
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // number of indices to access
-    //    size_t i = d + 1;
-    //    while (i) {
-    //        --i;
-    //        px[i] += pz[i];
-    //        py[i] += pz[i];
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(AddvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(AddvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // number of indices to access
+    size_t i = d + 1;
+    while (i) {
+        --i;
+        // Partial derivatives corresponding to arguments and result
+        std::string px = n.generatePartialName(i, arg[0]);
+        std::string py = n.generatePartialName(i, arg[1]);
+        std::string pz = n.generatePartialName(i, i_z);
+
+        s_out << px << " += " << pz << n.endl();
+        s_out << py << " += " << pz << n.endl();
+    }
 }
 
 // --------------------------- Addpv -----------------------------------------
@@ -233,30 +225,22 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(AddvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(AddvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // number of indices to access
-    //    size_t i = d + 1;
-    //    while (i) {
-    //        --i;
-    //        py[i] += pz[i];
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(AddvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(AddvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // number of indices to access
+    size_t i = d + 1;
+    while (i) {
+        --i;
+        // Partial derivatives corresponding to arguments and result
+        std::string py = n.generatePartialName(i, arg[1]);
+        std::string pz = n.generatePartialName(i, i_z);
+
+        s_out << py << " += " << pz << n.endl();
+    }
 }
 
 CPPAD_END_NAMESPACE

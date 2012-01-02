@@ -29,6 +29,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_codegen/local/op.hpp> // executes taped operations
 #include <cppad_codegen/local/forward_code_gen_sweep.hpp>
 #include <cppad_codegen/local/forward_code_gen.hpp>
+#include <cppad_codegen/local/reverse_code_gen_sweep.hpp>
+#include <cppad_codegen/local/reverse_code_gen.hpp>
 
 #include <cppad_codegen/local/sparse_jacobian.hpp>
 

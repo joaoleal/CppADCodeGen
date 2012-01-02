@@ -34,11 +34,11 @@ The C++ source code corresponding to this operation is
  */
 template <class Base>
 inline void forward_code_gen_exp_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(ExpOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(ExpOp) == 1);
@@ -77,10 +77,10 @@ The C++ source code corresponding to this operation is
  */
 template <class Base>
 inline void forward_code_gen_exp_op_0(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(ExpOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(ExpOp) == 1);
@@ -110,42 +110,36 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-size_t i_x,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //	// check assumptions
-    //	CPPAD_ASSERT_UNKNOWN( NumArg(ExpOp) == 1 );
-    //	CPPAD_ASSERT_UNKNOWN( NumRes(ExpOp) == 1 );
-    //	CPPAD_ASSERT_UNKNOWN( i_x < i_z );
-    //	CPPAD_ASSERT_UNKNOWN( d < nc_taylor );
-    //	CPPAD_ASSERT_UNKNOWN( d < nc_partial );
-    //
-    //	// Taylor coefficients and partials corresponding to argument
-    //	const Base* x  = taylor  + i_x * nc_taylor;
-    //	Base* px       = partial + i_x * nc_partial;
-    //
-    //	// Taylor coefficients and partials corresponding to result
-    //	const Base* z  = taylor  + i_z * nc_taylor;
-    //	Base* pz       = partial + i_z * nc_partial;
-    //
-    //	// lopp through orders in reverse
-    //	size_t j, k;
-    //	j = d;
-    //	while(j)
-    //	{	// scale partial w.r.t z[j]
-    //		pz[j] /= Base(j);
-    //
-    //		for(k = 1; k <= j; k++)
-    //		{	px[k]   += pz[j] * Base(k) * z[j-k]; 	
-    //			pz[j-k] += pz[j] * Base(k) * x[k];
-    //		}
-    //		--j;
-    //	}
-    //	px[0] += pz[0] * z[0];
-    //        
-    throw "not implemented yet";
+size_t i_x) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(ExpOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(NumRes(ExpOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(i_x < i_z);
+
+    // loop through orders in reverse
+    size_t j = d;
+    while (j) { // scale partial w.r.t z[j]
+        std::string pz_j = n.generatePartialName(j, i_z);
+
+        s_out << pz_j << " /= " << n.CastToBase(j) << n.endl();
+
+        for (size_t k = 1; k <= j; k++) {
+            std::string px_k = n.generatePartialName(k, i_x);
+            std::string pz_jk = n.generatePartialName(j - k, i_z);
+            std::string sz_jk = n.generateVarName(j - k, i_z);
+            std::string sx_k = n.generateVarName(k, i_x);
+
+            s_out << px_k << " += " << pz_j << " * " << n.CastToBase(k) << " * " << sz_jk << n.endl();
+            s_out << pz_jk << " += " << pz_j << " * " << n.CastToBase(k) << " * " << sx_k << n.endl();
+        }
+        --j;
+    }
+
+    std::string px_0 = n.generatePartialName(0, i_x);
+    std::string pz_0 = n.generatePartialName(0, i_z);
+    std::string sz_0 = n.generateVarName(0, i_z);
+
+    s_out << px_0 << " += " << pz_0 << " * " << sz_0 << n.endl();
 }
 
 CPPAD_END_NAMESPACE

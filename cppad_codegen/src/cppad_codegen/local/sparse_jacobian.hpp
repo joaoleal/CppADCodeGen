@@ -195,8 +195,12 @@ const VectorSet& p) {
     size_t m = this->Range();
     size_t n = this->Domain();
 
+    // some values
+    const Base zero(0);
+    const Base one(1);
+
     // check VectorSet is Simple Vector class with bool elements
-    CheckSimpleVector<bool, VectorSet > ();
+    CheckSimpleVector<bool, VectorSet> ();
 
     CPPAD_ASSERT_KNOWN(
             p.size() == m * n,
@@ -262,7 +266,8 @@ const VectorSet& p) {
             ForwardCodeGen(1, s_out);
 
             // set the corresponding components of the result
-            for (j = 0; j < n; j++) if (color[j] == c) {
+            for (j = 0; j < n; j++) {
+                if (color[j] == c) {
                     for (i = 0; i < m; i++) {
                         if (p[ i * n + j ]) {
                             std::string dy = nameGen_->generateVarName(1, dep_taddr[i]);
@@ -270,65 +275,69 @@ const VectorSet& p) {
                         }
                     }
                 }
+            }
         }
     } else { // use reverse mode ----------------------------------------
 
-        //        // initial coloring
-        //        SizeVector color(m);
-        //        for (i = 0; i < m; i++)
-        //            color[i] = i;
-        //
-        //        // See GreedyPartialD2Coloring Algorithm Section 3.6.2 of
-        //        // Graph Coloring in Optimization Revisited by
-        //        // Assefaw Gebremedhin, Fredrik Maane, Alex Pothen
-        //        VectorBool forbidden(m);
-        //        for (i = 0; i < m; i++) { // initial all colors as ok for this row
-        //            for (k = 0; k < m; k++)
-        //                forbidden[k] = false;
-        //            // for each column that is connected to row i
-        //            for (j = 0; j < n; j++) if (p[i * n + j]) { // for each row that is connected to column j
-        //                    for (k = 0; k < m; k++)
-        //                        if (p[k * n + j] & (i != k))
-        //                            forbidden[ color[k] ] = true;
-        //                }
-        //            k = 0;
-        //            while (forbidden[k] && k < m) {
-        //                k++;
-        //                CPPAD_ASSERT_UNKNOWN(k < n);
-        //            }
-        //            color[i] = k;
-        //        }
-        //        size_t n_color = 1;
-        //        for (k = 0; k < m; k++)
-        //            n_color = std::max(n_color, color[k] + 1);
-        //
-        //        // weight vector for calls to reverse
-        //        VectorBase w(m);
-        //
-        //        // location for return values from Reverse
-        //        VectorBase dw(n);
-        //
-        //        // loop over colors
-        //        size_t c;
-        //        for (c = 0; c < n_color; c++) { // determine all the rows with this color
-        //            for (i = 0; i < m; i++) {
-        //                if (color[i] == c)
-        //                    w[i] = one;
-        //                else w[i] = zero;
-        //            }
-        //
-        //
-        //            // call reverse mode for all these rows at once
-        //            dw = Reverse(1, w);
-        //
-        //            // set the corresponding components of the result
-        //            for (i = 0; i < m; i++) if (color[i] == c) {
-        //                    for (j = 0; j < n; j++)
-        //                        if (p[ i * n + j ])
-        //                            jac[i * n + j] = dw[j];
-        //                }
-        //        }
-        throw "not implemented yet";
+        // initial coloring
+        SizeVector color(m);
+        for (i = 0; i < m; i++)
+            color[i] = i;
+
+        // See GreedyPartialD2Coloring Algorithm Section 3.6.2 of
+        // Graph Coloring in Optimization Revisited by
+        // Assefaw Gebremedhin, Fredrik Maane, Alex Pothen
+        VectorBool forbidden(m);
+        for (i = 0; i < m; i++) { // initial all colors as ok for this row
+            for (k = 0; k < m; k++)
+                forbidden[k] = false;
+            // for each column that is connected to row i
+            for (j = 0; j < n; j++) if (p[i * n + j]) { // for each row that is connected to column j
+                    for (k = 0; k < m; k++)
+                        if (p[k * n + j] & (i != k))
+                            forbidden[ color[k] ] = true;
+                }
+            k = 0;
+            while (forbidden[k] && k < m) {
+                k++;
+                CPPAD_ASSERT_UNKNOWN(k < n);
+            }
+            color[i] = k;
+        }
+        size_t n_color = 1;
+        for (k = 0; k < m; k++)
+            n_color = std::max(n_color, color[k] + 1);
+
+        // weight vector for calls to reverse
+        std::vector<Base> w(m);
+
+        // loop over colors
+        size_t c;
+        for (c = 0; c < n_color; c++) { // determine all the rows with this color
+            for (i = 0; i < m; i++) {
+                if (color[i] == c) {
+                    w[i] = one;
+                } else {
+                    w[i] = zero;
+                }
+            }
+
+            // call reverse mode for all these rows at once
+            ReverseCodeGen(1, w, s_out);
+
+            // set the corresponding components of the result
+            for (i = 0; i < m; i++) {
+                if (color[i] == c) {
+                    for (j = 0; j < n; j++) {
+                        if (p[ i * n + j ]) {
+                            std::string dw = nameGen_->generatePartialName(1, ind_taddr[j]);
+                            s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
+                        }
+                    }
+                }
+            }
+
+        }
     }
 }
 
@@ -367,6 +376,10 @@ const VectorSet& p) {
     size_t m = this->Range();
     size_t n = this->Domain();
 
+    // some values
+    const Base zero(0);
+    const Base one(1);
+
     // check VectorSet is Simple Vector class with sets for elements
     CheckSimpleVector<std::set<size_t>, VectorSet > (
             one_element_std_set<size_t > (), two_element_std_set<size_t > ()
@@ -382,11 +395,10 @@ const VectorSet& p) {
     ForwardCodeGen(0, s_out);
 
     // initialize the return value
-    for (i = 0; i < m; i++) {
-        for (j = 0; j < n; j++) {
-            s_out << "jac[" << (i * n + j) << "] = " << nameGen_->zero() << nameGen_->endl();
-        }
-    }
+    const std::string& si = nameGen_->tempIntegerVarName();
+    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
+            "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
+            "}";
 
     // create a copy of the transpose sparsity pattern
     VectorSet q(n);
@@ -436,8 +448,9 @@ const VectorSet& p) {
             color[j] = k;
         }
         size_t n_color = 1;
-        for (k = 0; k < n; k++)
+        for (k = 0; k < n; k++) {
             n_color = std::max(n_color, color[k] + 1);
+        }
 
         // loop over colors
         size_t c;
@@ -468,68 +481,73 @@ const VectorSet& p) {
         }
     } else { // use reverse mode ----------------------------------------
 
-        //        // initial coloring
-        //        SizeVector color(m);
-        //        for (i = 0; i < m; i++)
-        //            color[i] = i;
-        //
-        //        // See GreedyPartialD2Coloring Algorithm Section 3.6.2 of
-        //        // Graph Coloring in Optimization Revisited by
-        //        // Assefaw Gebremedhin, Fredrik Maane, Alex Pothen
-        //        VectorBool forbidden(m);
-        //        for (i = 0; i < m; i++) { // initial all colors as ok for this row
-        //            for (k = 0; k < m; k++)
-        //                forbidden[k] = false;
-        //
-        //            // for each column connected to row i
-        //            itr_j = p[i].begin();
-        //            while (itr_j != p[i].end()) {
-        //                j = *itr_j++;
-        //                // for each row connected to column j
-        //                itr_i = q[j].begin();
-        //                while (itr_i != q[j].end()) { // if this is not i, forbid it
-        //                    k = *itr_i++;
-        //                    forbidden[ color[k] ] = (k != i);
-        //                }
-        //            }
-        //            k = 0;
-        //            while (forbidden[k] && k < m) {
-        //                k++;
-        //                CPPAD_ASSERT_UNKNOWN(k < n);
-        //            }
-        //            color[i] = k;
-        //        }
-        //        size_t n_color = 1;
-        //        for (k = 0; k < m; k++)
-        //            n_color = std::max(n_color, color[k] + 1);
-        //
-        //        // weight vector for calls to reverse
-        //        VectorBase w(m);
-        //
-        //        // location for return values from Reverse
-        //        VectorBase dw(n);
-        //
-        //        // loop over colors
-        //        size_t c;
-        //        for (c = 0; c < n_color; c++) { // determine all the rows with this color
-        //            for (i = 0; i < m; i++) {
-        //                if (color[i] == c)
-        //                    w[i] = one;
-        //                else w[i] = zero;
-        //            }
-        //            // call reverse mode for all these rows at once
-        //            dw = Reverse(1, w);
-        //
-        //            // set the corresponding components of the result
-        //            for (i = 0; i < m; i++) if (color[i] == c) {
-        //                    itr_j = p[i].begin();
-        //                    while (itr_j != p[i].end()) {
-        //                        j = *itr_j++;
-        //                        jac[i * n + j] = dw[j];
-        //                    }
-        //                }
-        //        }
-        throw "not implemented yet";
+        // initial coloring
+        SizeVector color(m);
+        for (i = 0; i < m; i++)
+            color[i] = i;
+
+        // See GreedyPartialD2Coloring Algorithm Section 3.6.2 of
+        // Graph Coloring in Optimization Revisited by
+        // Assefaw Gebremedhin, Fredrik Maane, Alex Pothen
+        VectorBool forbidden(m);
+        for (i = 0; i < m; i++) { // initial all colors as ok for this row
+            for (k = 0; k < m; k++) {
+                forbidden[k] = false;
+            }
+
+            // for each column connected to row i
+            itr_j = p[i].begin();
+            while (itr_j != p[i].end()) {
+                j = *itr_j++;
+                // for each row connected to column j
+                itr_i = q[j].begin();
+                while (itr_i != q[j].end()) { // if this is not i, forbid it
+                    k = *itr_i++;
+                    forbidden[ color[k] ] = (k != i);
+                }
+            }
+            k = 0;
+            while (forbidden[k] && k < m) {
+                k++;
+                CPPAD_ASSERT_UNKNOWN(k < n);
+            }
+            color[i] = k;
+        }
+        size_t n_color = 1;
+        for (k = 0; k < m; k++) {
+            n_color = std::max(n_color, color[k] + 1);
+        }
+
+        // weight vector for calls to reverse
+        std::vector<Base> w(m);
+
+        // loop over colors
+        size_t c;
+        for (c = 0; c < n_color; c++) { // determine all the rows with this color
+            for (i = 0; i < m; i++) {
+                if (color[i] == c) {
+                    w[i] = one;
+                } else {
+                    w[i] = zero;
+                }
+            }
+
+            // call reverse mode for all these rows at once
+            ReverseCodeGen(1, w, s_out);
+
+            // set the corresponding components of the result
+            for (i = 0; i < m; i++) {
+                if (color[i] == c) {
+                    itr_j = p[i].begin();
+                    while (itr_j != p[i].end()) {
+                        j = *itr_j++;
+                        std::string dw = nameGen_->generatePartialName(1, ind_taddr[j]);
+                        s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
+                    }
+                }
+            }
+
+        }
     }
 }
 

@@ -34,11 +34,11 @@ and the argument \a parameter is not used.
  */
 template <class Base>
 inline void forward_code_gen_divvv_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        const addr_t* arg) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+const addr_t* arg) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(DivvvOp) == 2);
     CPPAD_ASSERT_UNKNOWN(NumRes(DivvvOp) == 1);
@@ -123,48 +123,44 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(DivvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(DivvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Arguments
-    //    const Base* y = taylor + arg[1] * nc_taylor;
-    //    const Base* z = taylor + i_z * nc_taylor;
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* px = partial + arg[0] * nc_partial;
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // Using CondExp, it can make sense to divide by zero
-    //    // so do not make it an error.
-    //
-    //    size_t k;
-    //    // number of indices to access
-    //    size_t j = d + 1;
-    //    while (j) {
-    //        --j;
-    //        // scale partial w.r.t. z[j]
-    //        pz[j] /= y[0];
-    //
-    //        px[j] += pz[j];
-    //        for (k = 1; k <= j; k++) {
-    //            pz[j - k] -= pz[j] * y[k];
-    //            py[k] -= pz[j] * z[j - k];
-    //        }
-    //        py[0] -= pz[j] * z[j];
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(DivvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(DivvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // Using CondExp, it can make sense to divide by zero
+    // so do not make it an error.
+    size_t i_x = arg[0];
+    size_t i_y = arg[1];
+
+    std::string py_0 = n.generatePartialName(0, i_y);
+    std::string sy_0 = n.generateVarName(0, i_y);
+
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        std::string pz_j = n.generatePartialName(j, i_z);
+        std::string sz_j = n.generateVarName(j, i_z);
+        std::string px_j = n.generatePartialName(j, i_x);
+
+        // scale partial w.r.t. z[j]
+        s_out << pz_j << " /= " << sy_0 << n.endl();
+
+        s_out << px_j << " += " << pz_j << n.endl();
+        for (size_t k = 1; k <= j; k++) {
+            std::string pz_jk = n.generatePartialName(j - k, i_z);
+            std::string sy_k = n.generateVarName(k, i_y);
+            std::string sz_jk = n.generateVarName(j - k, i_z);
+            std::string py_k = n.generatePartialName(k, i_y);
+
+            s_out << pz_jk << " -= " << pz_j << " * " << sy_k << n.endl();
+            s_out << py_k << " -= " << pz_j << " * " << sz_jk << n.endl();
+        }
+
+        s_out << py_0 << " -= " << pz_j << " * " << sz_j << n.endl();
+    }
 }
 
 // --------------------------- Divpv -----------------------------------------
@@ -207,7 +203,7 @@ const Base* parameter) {
     if (d == 0) {
         // Parameter value
         Base x = parameter[ arg[0] ];
-        
+
         s_out << n.PrintBase(x);
     } else {
         for (size_t k = 1; k <= d; k++) {
@@ -277,45 +273,40 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(DivvvOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(DivvvOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Arguments
-    //    const Base* y = taylor + arg[1] * nc_taylor;
-    //    const Base* z = taylor + i_z * nc_taylor;
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* py = partial + arg[1] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // Using CondExp, it can make sense to divide by zero so do not
-    //    // make it an error.
-    //
-    //    size_t k;
-    //    // number of indices to access
-    //    size_t j = d + 1;
-    //    while (j) {
-    //        --j;
-    //        // scale partial w.r.t z[j]
-    //        pz[j] /= y[0];
-    //
-    //        for (k = 1; k <= j; k++) {
-    //            pz[j - k] -= pz[j] * y[k];
-    //            py[k] -= pz[j] * z[j - k];
-    //        }
-    //        py[0] -= pz[j] * z[j];
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(DivvvOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(DivvvOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[1]) < i_z);
+
+    // Using CondExp, it can make sense to divide by zero
+    // so do not make it an error.
+    size_t i_y = arg[1];
+
+    std::string py_0 = n.generatePartialName(0, i_y);
+    std::string sy_0 = n.generateVarName(0, i_y);
+
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        std::string pz_j = n.generatePartialName(j, i_z);
+        std::string sz_j = n.generateVarName(j, i_z);
+
+        // scale partial w.r.t. z[j]
+        s_out << pz_j << " /= " << sy_0 << n.endl();
+
+        for (size_t k = 1; k <= j; k++) {
+            std::string pz_jk = n.generatePartialName(j - k, i_z);
+            std::string sy_k = n.generateVarName(k, i_y);
+            std::string sz_jk = n.generateVarName(j - k, i_z);
+            std::string py_k = n.generatePartialName(k, i_y);
+
+            s_out << pz_jk << " -= " << pz_j << " * " << sy_k << n.endl();
+            s_out << py_k << " -= " << pz_j << " * " << sz_jk << n.endl();
+        }
+
+        s_out << py_0 << " -= " << pz_j << " * " << sz_j << n.endl();
+    }
 }
 
 
@@ -418,35 +409,28 @@ CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
 const addr_t* arg,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(DivvpOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(DivvpOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Argument values
-    //    Base y = parameter[ arg[1] ];
-    //
-    //    // Partial derivatives corresponding to arguments and result
-    //    Base* px = partial + arg[0] * nc_partial;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // Using CondExp, it can make sense to divide by zero
-    //    // so do not make it an error.
-    //
-    //    // number of indices to access
-    //    size_t j = d + 1;
-    //    while (j) {
-    //        --j;
-    //        px[j] += pz[j] / y;
-    //    }
-    throw "not implemented yet";
+const Base* parameter) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(DivvpOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(NumRes(DivvpOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < i_z);
+
+    // Using CondExp, it can make sense to divide by zero
+    // so do not make it an error.
+
+    size_t i_x = arg[0];
+    
+    // Argument values
+    std::string sy = n.PrintBase(parameter[ arg[1] ]);
+    
+    size_t j = d + 1;
+    while (j) {
+        --j;
+        std::string px_j = n.generatePartialName(j, i_x);
+        std::string pz_j = n.generatePartialName(j, i_z);
+
+        s_out << px_j << " += " << pz_j << " / " << sy << n.endl();
+    }
 }
 
 CPPAD_END_NAMESPACE

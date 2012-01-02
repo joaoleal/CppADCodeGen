@@ -28,11 +28,15 @@ class CodeGenNameProvider {
 public:
     virtual std::string generateVarName(size_t d, addr_t var) = 0;
 
+    virtual std::string generatePartialName(size_t d, addr_t var) = 0;
+
     std::string generateVarName(size_t d, const AD<Base>& var) {
         return generateVarName(d, getTapeAddr(var));
     }
 
     virtual void clearUsedVariables() = 0;
+
+    virtual void clearUsedPartials() = 0;
 
     virtual const std::string& baseTypeName() const = 0;
 
@@ -49,6 +53,8 @@ public:
     virtual const std::string& tempBaseVarName() const = 0;
 
     virtual std::vector<VarID> getUsedVariables() const = 0;
+
+    virtual std::vector<VarID> getUsedPartials() const = 0;
 
     virtual const std::string& PrintStreamName() const = 0;
 
@@ -112,6 +118,7 @@ protected:
     std::string _startComment;
     std::string _endComment;
     std::map<addr_t, std::vector<bool> > _usedVariables;
+    std::map<addr_t, std::vector<bool> > _usedPartials;
 public:
     /// default constructor
 
@@ -146,6 +153,19 @@ public:
         return name;
     }
 
+    virtual std::string generatePartialName(size_t d, addr_t var) {
+        std::map<addr_t, std::vector<bool> >::iterator it = _usedPartials.find(var);
+        if (it == _usedPartials.end()) {
+            _usedPartials[var].resize(d + 1);
+        } else if (it->second.size() < d + 1) {
+            it->second.resize(d + 1);
+        }
+        _usedPartials[var][d] = true;
+
+        std::string name = "p_" + this->toString(d) + "_" + this->toString(var);
+        return name;
+    }
+
     virtual std::vector<VarID> getUsedVariables() const {
         std::vector<VarID> used;
         std::map<addr_t, std::vector<bool> >::const_iterator it;
@@ -164,8 +184,30 @@ public:
         return used;
     }
 
+    virtual std::vector<VarID> getUsedPartials() const {
+        std::vector<VarID> used;
+        std::map<addr_t, std::vector<bool> >::const_iterator it;
+        for (it = _usedPartials.begin(); it != _usedPartials.end(); ++it) {
+            const std::vector<bool>& v = it->second;
+            for (size_t i = 0; i < v.size(); i++) {
+                if (v[i]) {
+                    VarID id;
+                    id.order = i;
+                    id.taddr = it->first;
+                    used.push_back(id);
+                }
+            }
+        }
+
+        return used;
+    }
+
     virtual void clearUsedVariables() {
         _usedVariables.clear();
+    }
+
+    virtual void clearUsedPartials() {
+        _usedPartials.clear();
     }
 
     virtual const std::string& baseTypeName() const {
