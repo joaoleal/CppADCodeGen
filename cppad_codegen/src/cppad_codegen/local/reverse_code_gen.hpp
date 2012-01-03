@@ -1,5 +1,5 @@
-#ifndef CPPAD_CODEGEN_REVERSE_CODEGEN_INCLUDED
-#define CPPAD_CODEGEN_REVERSE_CODEGEN_INCLUDED
+#ifndef CPPAD_CODEGEN_REVERSE_CODE_GEN_INCLUDED
+#define CPPAD_CODEGEN_REVERSE_CODE_GEN_INCLUDED
 
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis

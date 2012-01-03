@@ -49,6 +49,7 @@ fi
 rm bin/check_include_def.1.$$
 rm bin/check_include_def.2.$$
 #
+#          source code generation
 #
 cd cppad_codegen/src/;
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \

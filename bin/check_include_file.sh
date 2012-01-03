@@ -25,41 +25,68 @@ then
 	echo "bin/check_include_file.sh: unexpected bin/check_include_file.1.$$"
 	exit 1
 fi
-for ext in .cpp .hpp
+#
+declare -A files;
+declare -A root;
+declare -A rootInclude;
+#
+files[cppad]="cppad/*.hpp\
+	cppad/local/*.hpp\
+	cppad/speed/*.hpp"
+root[cppad]="cppad"
+rootInclude[cppad]=""
+#
+files[cppad_codegen]="cppad_codegen/src/cppad_codegen/*.hpp \
+	cppad_codegen/src/cppad_codegen/local/*.hpp"
+root[cppad_codegen]="cppad_codegen/src/"
+rootInclude[cppad_codegen]="cppad_codegen/src/"
+#
+different="no"
+for ff in cppad_codegen cppad
 do
-	dir_list=`find . -name "*$ext" | \
-		sed -e 's|^\./||' -e '/^work/d' -e 's|/[^/]*$||' | sort -u`  
-	for dir in $dir_list 
+	r=${root[$ff]}
+	for ext in .cpp .hpp
 	do
-		list=`ls $dir/*$ext`
-		for file in $list
+
+		dir_list=`find "$r" -name "*$ext" | \
+			sed -e 's|^\./||' -e '/^work/d' -e 's|/[^/]*$||' | sort -u`  
+		for dir in $dir_list 
 		do
-			sed -n -e '/^# *include *<cppad\//p' $file \
-				>> bin/check_include_file.1.$$
+			list=`ls $dir/*$ext`
+			for file in $list
+			do
+				sed -n -e '/^# *include *<'$ff'\//p' $file \
+					>> bin/check_include_file.1.$$
+			done
 		done
 	done
-done
 #
-cat bin/check_include_file.1.$$ | \
-	sed -e 's%[^<]*<%%'  -e 's%>.*$%%' | \
-	sort -u > bin/check_include_file.2.$$
+	cat bin/check_include_file.1.$$ | \
+		sed -e 's%[^<]*<%%'  -e 's%>.*$%%' -e 's|^${root[$ff]}||' | \
+		sort -u > bin/check_include_file.2.$$
 # The file cppad/local/prototype_op.hpp should never be included. 
 # All other files should.
-ls	cppad/*.hpp \
-	cppad/local/*.hpp \
-	cppad/local/code_gen/*.hpp \
-	cppad/speed/*.hpp | \
-		sed -e '/cppad\/local\/prototype_op.hpp/d' | \
-		sort > bin/check_include_file.3.$$ 
-if diff bin/check_include_file.2.$$ bin/check_include_file.3.$$
-then
-	different="no"
-else
-	different="yes"
-fi
-for index in 1 2 3
-do
-	rm bin/check_include_file.$index.$$
+	
+	if [ "${rootInclude[$ff]}" = "" ]
+ 	then
+ 	 	ls	${files[$ff]} | \
+			sed -e '/cppad\/local\/prototype_op.hpp/d' | \
+			sort > bin/check_include_file.3.$$ 
+ 	else
+ 	 	ls	${files[$ff]} | \
+			sed -e '/cppad\/local\/prototype_op.hpp/d' | \
+ 	 	 	sed -e "s|${rootInclude[$ff]}||" | \
+			sort > bin/check_include_file.3.$$ 
+        fi
+	if !(diff bin/check_include_file.2.$$ bin/check_include_file.3.$$)
+	then
+		different="yes"
+	fi
+	for index in 1 2 3
+	do
+		rm bin/check_include_file.$index.$$
+	done
+
 done
 #
 echo "-------------------------------------------------------------------"
