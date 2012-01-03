@@ -60,9 +60,11 @@ bool CompareChange() {
     std::vector<double> depCGen(Y.size());
     int comparisons;
 
-    ok &= run0(*f, "./tmp/test_CompareChange1.so", "CompareChange1", x, comparisons, depCGen);
+    std::vector<std::vector<double> > xV;
+    xV.push_back(x);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
+    ok &= run0(*f, "./tmp/test_CompareChange1.so", "CompareChange1", xV, comparisons);
+
     ok &= (comparisons == 6); // all comparisons have changed
 
     // done with this function
@@ -94,9 +96,8 @@ bool CompareChange() {
     // f : X -> Y
     f = new ADFunCodeGen<double> (X, Y);
 
-    ok &= run0(*f, "./tmp/test_CompareChange2.so", "CompareChange2", x, comparisons, depCGen);
+    ok &= run0(*f, "./tmp/test_CompareChange2.so", "CompareChange2", xV, comparisons);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
     ok &= (comparisons == 6); // all comparisons have changed
 
     // done with this function
@@ -128,11 +129,10 @@ bool CompareChange() {
     // f : X -> Y
     f = new ADFunCodeGen<double> (X, Y);
 
-    ok &= run0(*f, "./tmp/test_CompareChange3.so", "CompareChange3", x, comparisons, depCGen);
+    ok &= run0(*f, "./tmp/test_CompareChange3.so", "CompareChange3", xV, comparisons);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
     ok &= (comparisons == 6); // all comparisons have changed
-    
+
     // done with this function
     delete f;
 
@@ -163,9 +163,8 @@ bool CompareChange() {
     // f : X -> Y
     f = new ADFunCodeGen<double> (X, Y);
 
-    ok &= run0(*f, "./tmp/test_CompareChange4.so", "CompareChange4", x, comparisons, depCGen);
+    ok &= run0(*f, "./tmp/test_CompareChange4.so", "CompareChange4", xV, comparisons);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
     ok &= (comparisons == 6); // all comparisons have changed
 
     // done with this function
@@ -194,15 +193,14 @@ bool CompareChange() {
         Y[5] = X[0];
     else Y[5] = X[1];
 
-    
+
     // f : X -> Y
     f = new ADFunCodeGen<double> (X, Y);
 
-    ok &= run0(*f, "./tmp/test_CompareChange4.so", "CompareChange4", x, comparisons, depCGen);
+    ok &= run0(*f, "./tmp/test_CompareChange4.so", "CompareChange4", xV, comparisons);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
     // the first two comparisons do not change
-    ok &= (comparisons == 4); 
+    ok &= (comparisons == 4);
 
     // done with this function
     delete f;
@@ -231,15 +229,14 @@ bool CompareChange() {
     else Y[5] = X[1];
 
     // f : X -> Y
-        f = new ADFunCodeGen<double> (X, Y);
+    f = new ADFunCodeGen<double> (X, Y);
 
-    ok &= run0(*f, "./tmp/test_CompareChange5.so", "CompareChange5", x, comparisons, depCGen);
+    ok &= run0(*f, "./tmp/test_CompareChange5.so", "CompareChange5", xV, comparisons);
 
-    ok &= compareValues(depCGen, Y, "depCGEN", "depTape");
     // the first two comparisons do not change
-    ok &= (comparisons == 4); 
-    
-        // done with this function
+    ok &= (comparisons == 4);
+
+    // done with this function
     delete f;
 
     return ok;

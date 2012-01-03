@@ -58,6 +58,8 @@ void ADFunCodeGen<Base>::ForwardCodeGen(
         //taylor_[ind_taddr_[j] * taylor_col_dim_ + p] = x_p[j];
     }
 
+    s_out << nameGen_->Comment("forward sweep (order: " + nameGen_->toString(d) + ")");
+
     // generate the code
     forward_code_gen_sweep(s_out, *nameGen_, false, d, n, total_num_var, &play);
 

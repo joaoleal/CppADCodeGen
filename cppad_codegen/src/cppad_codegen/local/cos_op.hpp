@@ -38,11 +38,11 @@ and derivatives of z.
  */
 template <class Base>
 inline void forward_code_gen_cos_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(CosOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(CosOp) == 2);
@@ -93,10 +93,10 @@ The value of y is computed along with the value of z.
  */
 template <class Base>
 inline void forward_code_gen_cos_op_0(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(CosOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(CosOp) == 2);
@@ -129,55 +129,55 @@ The value of y is computed along with the value of z.
  */
 template <class Base>
 inline void reverse_code_gen_cos_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        size_t i_x,
-        size_t nc_partial
-        //Base* partial
-        ) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(CosOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(CosOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(i_x + 1 < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Taylor coefficients and partials corresponding to argument
-    //    const Base* x = taylor + i_x * nc_taylor;
-    //    Base* px = partial + i_x * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to first result
-    //    const Base* c = taylor + i_z * nc_taylor; // called z in doc
-    //    Base* pc = partial + i_z * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to auxillary result
-    //    const Base* s = c - nc_taylor; // called y in documentation
-    //    Base* ps = pc - nc_partial;
-    //
-    //
-    //    // rest of this routine is identical for the following cases:
-    //    // reverse_sin_op, reverse_cos_op, reverse_sinh_op, reverse_cosh_op.
-    //    size_t j = d;
-    //    size_t k;
-    //    while (j) {
-    //        ps[j] /= Base(j);
-    //        pc[j] /= Base(j);
-    //        for (k = 1; k <= j; k++) {
-    //            px[k] += ps[j] * Base(k) * c[j - k];
-    //            px[k] -= pc[j] * Base(k) * s[j - k];
-    //
-    //            ps[j - k] -= pc[j] * Base(k) * x[k];
-    //            pc[j - k] += ps[j] * Base(k) * x[k];
-    //
-    //        }
-    //        --j;
-    //    }
-    //    px[0] += ps[0] * c[0];
-    //    px[0] -= pc[0] * s[0];
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+size_t i_x
+) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(CosOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(NumRes(CosOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(i_x + 1 < i_z);
 
-    throw "not implemented yet";
+    size_t i_y = i_z - 1;
+
+    // rest of this routine is identical for the following cases:
+    // reverse_sin_op, reverse_cos_op, reverse_sinh_op, reverse_cosh_op.
+    size_t j = d;
+    size_t k;
+    while (j) {
+        std::string py_j = n.generatePartialName(j, i_y);
+        std::string sy_jk = n.generateVarName(j - k, i_y);
+        std::string pz_j = n.generatePartialName(j, i_z);
+        std::string sz_jk = n.generateVarName(j - k, i_z);
+
+        s_out << py_j << " /= " << n.CastToBase(j) << n.endl();
+        s_out << pz_j << " /= " << n.CastToBase(j) << n.endl();
+
+        for (k = 1; k <= j; k++) {
+            std::string sx_k = n.generateVarName(k, i_x);
+            std::string px_k = n.generatePartialName(k, i_x);
+            std::string py_jk = n.generatePartialName(j - k, i_y);
+            std::string pz_jk = n.generatePartialName(j - k, i_z);
+
+            s_out << px_k << " += " << py_j << " * " << k << " * " << sz_jk
+                    << " - " << pz_j << " * " << k << " * " << sy_jk << n.endl();
+
+            s_out << py_jk << " -= " << pz_j << " * " << k << " * " << sx_k << n.endl();
+            s_out << pz_jk << " += " << py_j << " * " << k << " * " << sx_k << n.endl();
+        }
+        --j;
+    }
+
+    std::string px_0 = n.generatePartialName(0, i_x);
+    std::string sy_0 = n.generateVarName(0, i_y);
+    std::string py_0 = n.generatePartialName(0, i_y);
+    std::string sz_0 = n.generateVarName(0, i_z);
+    std::string pz_0 = n.generatePartialName(0, i_z);
+
+    s_out << px_0 << " += " << py_0 << " * " << sz_0
+            << " - " << pz_0 << " * " << sy_0 << n.endl();
 }
 
 CPPAD_END_NAMESPACE

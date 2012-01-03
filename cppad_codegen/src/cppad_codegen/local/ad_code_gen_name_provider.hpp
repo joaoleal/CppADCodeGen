@@ -58,9 +58,7 @@ public:
 
     virtual const std::string& PrintStreamName() const = 0;
 
-    virtual const std::string& StartComment() const = 0;
-
-    virtual const std::string& EndComment() const = 0;
+    virtual std::string Comment(const std::string& comment) const = 0;
 
     virtual std::string PrintBase(const Base& value) const = 0;
 
@@ -115,8 +113,6 @@ protected:
     std::string _one; // value 1
     std::string _compCounter;
     std::string _printStreamName;
-    std::string _startComment;
-    std::string _endComment;
     std::map<addr_t, std::vector<bool> > _usedVariables;
     std::map<addr_t, std::vector<bool> > _usedPartials;
 public:
@@ -131,8 +127,6 @@ public:
         _one = this->PrintBase(Base(1));
         _compCounter = "comparison";
         _printStreamName = "stdout";
-        _startComment = "/**";
-        _endComment = "*/";
     }
 
     /// destructor
@@ -242,12 +236,21 @@ public:
         return _printStreamName;
     }
 
-    virtual const std::string& StartComment() const {
-        return _startComment;
-    }
+    virtual std::string Comment(const std::string& comment) const {
+        std::string out = "/** ";
+        std::string::size_type start = 0; // Must initialize
+        std::string::size_type end;
+        while ((end = comment.find("\n", start)) != std::string::npos) {
+            out += comment.substr(start, end - start + 1) + " *";
+            start = end + 1;
+        }
+        out += comment.substr(start);
+        if (start == 0) {
+            out += " ";
+        }
+        out += "*/\n";
 
-    virtual const std::string& EndComment() const {
-        return _endComment;
+        return out;
     }
 
     virtual std::string PrintBase(const Base& value) const {

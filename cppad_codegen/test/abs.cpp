@@ -32,7 +32,14 @@ bool Abs() {
     // f(v) = |w|
     CppAD::ADFunCodeGen<double> f(U, w);
 
-    ok &= test0nJac("abs", f, u, w);
+    std::vector<std::vector<double> > uV;
+    uV.push_back(u);
+    u[0] = 1;
+    uV.push_back(u);
+    u[0] = -1;
+    uV.push_back(u);
+
+    ok &= test0nJac("abs", f, uV);
 
     return ok;
 }

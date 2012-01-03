@@ -17,6 +17,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 CPPAD_BEGIN_NAMESPACE
 
+enum DiffMode {
+    FORWARD, REVERSE
+};
+
 template <class Base>
 class ADFunCodeGen : public ADFun<Base> {
     // ------------------------------------------------------------
@@ -77,18 +81,23 @@ public:
     template <typename VectorBase>
     void ReverseCodeGen(size_t p, const VectorBase &w, std::ostream& s_out);
 
-    void SparseJacobianCodeGen(std::ostream& s_out);
+    DiffMode SparseJacobianCodeGen(std::ostream& s_out);
+
+    void SparseJacobianCodeGen(std::ostream& s_out, DiffMode mode);
 
     template<class VectorSet>
-    void SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p);
+    DiffMode SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p);
+
+    template<class VectorSet>
+    DiffMode SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p, DiffMode mode);
 
 private:
 
     template<class VectorSet>
-    void SparseJacobianCaseCodeGen(std::ostream& s_out, const std::set<size_t>& set_type, const VectorSet& p);
+    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, const std::set<size_t>& set_type, const VectorSet& p);
 
     template <class VectorSet>
-    void SparseJacobianCaseCodeGen(std::ostream& s_out, bool set_type, const VectorSet& p);
+    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, bool set_type, const VectorSet& p);
 };
 
 CPPAD_END_NAMESPACE

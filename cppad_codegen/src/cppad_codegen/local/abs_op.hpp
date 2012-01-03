@@ -50,26 +50,30 @@ size_t i_x) {
 
     std::string aux;
 
-    if (d > 1) {
+    if (d > 0) {
         aux = n.tempBaseVarName();
+        std::string sx_0 = n.generateVarName(0, i_x);
+
         // order that decides positive, negative or zero
-        for (size_t j = 0; j < d - 1; j++) {
+        for (size_t j = 0; j <= d; j++) {
             std::string sx_j = n.generateVarName(j, i_x);
-            if (j > 0) s_out << "else ";
-            s_out << "if (" << sx_j << " == " << n.zero() << ") "
+            if (j > 0) s_out << "} else ";
+            s_out << "if (" << sx_j << " != " << n.zero() << ") {"
                     << aux << " = " << sx_j << n.endl();
         }
-
-        s_out << "else "
-                << aux << " = " << sx_d << n.endl();
+        s_out << "} else {"
+                << aux << " = " << sx_0 << n.endl()
+                << "}\n";
     } else {
         aux = sx_d;
     }
 
     s_out << "if(" << aux << " < " << n.zero() << ") "
             << sz_d << " = -" << sx_d << n.endl() <<
+            "else if(" << aux << " > " << n.zero() << ")"
+            << sz_d << " = " << sx_d << n.endl() <<
             "else "
-            << sz_d << " = " << sx_d << n.endl();
+            << sz_d << " = " << n.zero() << n.endl();
 }
 
 /*!
@@ -120,40 +124,60 @@ inline void reverse_code_gen_abs_op(
         CodeGenNameProvider<Base>& n,
         size_t d,
         size_t i_z,
-        size_t i_x,
-        size_t nc_partial,
-        Base* partial) {
-    //    size_t j, k;
-    //    Base zero(0.);
-    //
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(AbsOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(AbsOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(i_x < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Taylor coefficients and partials corresponding to argument
-    //    const Base* x = taylor + i_x * nc_taylor;
-    //    Base* px = partial + i_x * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to result
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // order that decides positive, negative or zero
-    //    k = 0;
-    //    while ((k < d) & (x[k] == zero))
-    //        k++;
-    //
-    //    if (GreaterThanZero(x[k])) { // partial of z w.r.t y is +1
-    //        for (j = k; j <= d; j++)
-    //            px[j] += pz[j];
-    //    } else if (LessThanZero(x[k])) { // partial of z w.r.t y is -1
-    //        for (j = k; j <= d; j++)
-    //            px[j] -= pz[j];
-    //    }
+        size_t i_x) {
+    size_t j;
 
-    throw "not implemented yet";
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(AbsOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(NumRes(AbsOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(i_x < i_z);
+
+    std::string aux, kk;
+
+    // order that decides positive, negative or zero
+    aux = n.tempBaseVarName();
+    kk = n.tempIntegerVarName();
+    std::string sx_0 = n.generateVarName(0, i_x);
+
+    // order that decides positive, negative or zero
+    for (size_t j = 0; j <= d; j++) {
+        std::string sx_j = n.generateVarName(j, i_x);
+        if (j > 0) s_out << "} else ";
+        s_out << "if (" << sx_j << " != " << n.zero() << ") {"
+                << aux << " = " << sx_j << n.endl()
+                << kk << " = " << j << n.endl();
+    }
+    s_out << "} else {"
+            << aux << " = " << sx_0 << n.endl()
+            << kk << " = 0" << n.endl()
+            << "}\n";
+
+
+    s_out << "if(" << aux << " > " << n.zero() << ") {";
+    {
+        for (j = 0; j <= d; j++) { // partial of z w.r.t y is +1
+            std::string px_j = n.generatePartialName(j, i_x);
+            std::string pz_j = n.generatePartialName(j, i_z);
+
+            if (j > 0) s_out << "} else ";
+            s_out << "if (" << j << " >= " << kk << ") {"
+                    << px_j << " += " << pz_j << n.endl();
+        }
+        s_out << "}\n";
+    }
+    s_out << "} else if (" << aux << " < " << n.zero() << ") {";
+    {
+        for (j = 0; j <= d; j++) { // partial of z w.r.t y is -1
+            std::string px_j = n.generatePartialName(j, i_x);
+            std::string pz_j = n.generatePartialName(j, i_z);
+
+            if (j > 0) s_out << "} else ";
+            s_out << "if (" << j << " >= " << kk << ") {"
+                    << px_j << " -= " << pz_j << n.endl();
+        }
+        s_out << "}\n";
+    }
+    s_out << "}\n";
 }
 
 CPPAD_END_NAMESPACE

@@ -203,36 +203,39 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-const addr_t* arg,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(CSumOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Taylor coefficients and partial derivative corresponding to result
-    //    Base* pz = partial + i_z * nc_partial;
-    //    Base* px;
-    //    size_t i, j, k;
-    //    size_t d1 = d + 1;
-    //    i = arg[0];
-    //    j = 2;
-    //    while (i--) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[j + 1]) < i_z);
-    //        px = partial + arg[++j] * nc_partial;
-    //        k = d1;
-    //        while (k--)
-    //            px[k] += pz[k];
-    //    }
-    //    i = arg[1];
-    //    while (i--) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[j + 1]) < i_z);
-    //        px = partial + arg[++j] * nc_partial;
-    //        k = d1;
-    //        while (k--)
-    //            px[k] -= pz[k];
-    //    }
-    throw "not implemented yet";
+const addr_t* arg) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumRes(CSumOp) == 1);
+
+    size_t i, j, k;
+    size_t d1 = d + 1;
+
+    i = arg[0];
+    j = 2;
+    while (i--) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[j + 1]) < i_z);
+        size_t i_x = arg[++j];
+        k = d1;
+        while (k--) {
+            std::string px_k = n.generatePartialName(k, i_x);
+            std::string pz_k = n.generatePartialName(k, i_z);
+
+            s_out << px_k << " += " << pz_k << n.endl();
+        }
+    }
+
+    i = arg[1];
+    while (i--) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[j + 1]) < i_z);
+        size_t i_x = arg[++j];
+        k = d1;
+        while (k--) {
+            std::string px_k = n.generatePartialName(k, i_x);
+            std::string pz_k = n.generatePartialName(k, i_z);
+
+            s_out << px_k << " -= " << pz_k << n.endl();
+        }
+    }
 }
 
 CPPAD_END_NAMESPACE

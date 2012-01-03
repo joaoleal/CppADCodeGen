@@ -210,13 +210,11 @@ player<Base>* Rec
 
         switch (op) {
 
-                //			case AbsOp:
-                //			reverse_code_gen_abs_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
+            case AbsOp:
+                reverse_code_gen_abs_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
             case AddvvOp:
                 reverse_code_gen_addvv_op(s_out, names, d, i_var, arg);
                 break;
@@ -228,78 +226,58 @@ player<Base>* Rec
                 break;
                 // --------------------------------------------------
 
-                //			case AcosOp:
-                //                        // sqrt(1 - x * x), acos(x)
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_acos_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
-                //			case AsinOp:
-                //                        // sqrt(1 - x * x), asin(x)
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_asin_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
-                //			case AtanOp:
-                //                        // 1 + x * x, atan(x)
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_atan_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// -------------------------------------------------
-                //
+            case AcosOp:
+                // sqrt(1 - x * x), acos(x)
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_acos_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
+            case AsinOp:
+                // sqrt(1 - x * x), asin(x)
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_asin_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
+            case AtanOp:
+                // 1 + x * x, atan(x)
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_atan_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // -------------------------------------------------
+
             case BeginOp:
                 CPPAD_ASSERT_UNKNOWN(NumArg(op) == 0);
                 CPPAD_ASSERT_UNKNOWN(NumRes(op) == 1);
                 break;
                 // --------------------------------------------------
 
-                //			case CSumOp:
-                //			// CSumOp has a variable number of arguments and
-                //			// next_reverse thinks it one has one argument.
-                //			// We must inform next_reverse of this special case.
-                //			Rec->reverse_csum(op, arg, i_op, i_var);
-                //			reverse_code_gen_csum_op(
-                //				d, i_var, arg, K, Partial
-                //			);
-                //			// end of a cummulative summation
-                //			break;
-                //			// -------------------------------------------------
-                //
-                //			case CExpOp:
-                //			reverse_code_gen_cond_op(
-                //				d, 
-                //				i_var, 
-                //				arg, 
-                //				num_par, 
-                //				parameter, 
-                //				J, 
-                //				Taylor,
-                //				K, 
-                //				Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
+            case CSumOp:
+                // CSumOp has a variable number of arguments and
+                // next_reverse thinks it one has one argument.
+                // We must inform next_reverse of this special case.
+                Rec->reverse_csum(op, arg, i_op, i_var);
+                reverse_code_gen_csum_op(s_out, names, d, i_var, arg);
+                // end of a cummulative summation
+                break;
+                // -------------------------------------------------
+
+            case CExpOp:
+                reverse_code_gen_cond_op(s_out, names, d, i_var, arg, num_par, parameter);
+                break;
+                // --------------------------------------------------
+
             case ComOp:
                 break;
                 // --------------------------------------------------
 
-                //			case CosOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_cos_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
+            case CosOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_cos_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
                 //			case CoshOp:
                 //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
                 //			reverse_code_gen_cosh_op(
@@ -390,19 +368,17 @@ player<Base>* Rec
                 break;
                 // --------------------------------------------------
 
-                //			case PriOp:
-                //			// no result so nothing to do
-                //			break;
-                //			// --------------------------------------------------
-                //
-                //			case SinOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_sin_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// -------------------------------------------------
-                //
+            case PriOp:
+                // no result so nothing to do
+                break;
+                // --------------------------------------------------
+
+            case SinOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_sin_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // -------------------------------------------------
+
                 //			case SinhOp:
                 //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
                 //			reverse_code_gen_sinh_op(
@@ -451,14 +427,12 @@ player<Base>* Rec
                 break;
                 // -------------------------------------------------
 
-                //			case TanOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_tan_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// -------------------------------------------------
-                //
+            case TanOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_tan_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // -------------------------------------------------
+
                 //			case TanhOp:
                 //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
                 //			reverse_code_gen_tanh_op(

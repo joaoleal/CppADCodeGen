@@ -177,6 +177,8 @@ void ADFunCodeGen<Base>::ReverseCodeGen(size_t p,
         }
     }
 
+    s_out << nameGen_->Comment("reverse sweep (order: " + nameGen_->toString(p) + ")");
+
     // evaluate the derivatives
     reverse_code_gen_sweep(s_out, *nameGen_, p - 1, n, total_num_var, &play);
 

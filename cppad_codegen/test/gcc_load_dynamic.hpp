@@ -15,15 +15,33 @@ void closeLibrary(void* libHandle);
 
 void compile(const std::string& source, const std::string& library) throw (CppAD::TestException);
 
-bool run0(CppAD::ADFunCodeGen<double>& f, const std::string& library, const std::string& function,
+bool run0(CppAD::ADFunCodeGen<double>& f,
+        const std::string& library, const std::string& function,
+        const std::vector<std::vector<double> >& ind,
+        int& comparisons,
+        double epsilonR = 1e-14, double epsilonA = 1e-14);
+
+bool runTest0(CppAD::ADFunCodeGen<double>& f,
+        const std::string& library,
+        const std::string& function,
+        const std::vector<std::vector<double> >& ind,
+        double epsilonR = 1e-14, double epsilonA = 1e-14);
+
+bool runTestSparseJac(CppAD::ADFunCodeGen<double>& f, const std::string& library,
+        const std::string& functionFor, const std::string& functionRev,
+        const std::vector<std::vector<double> >& ind,
+        double epsilonR = 1e-14, double epsilonA = 1e-14);
+
+bool test0nJac(const std::string& test,
+        CppAD::ADFunCodeGen<double>& f,
         const std::vector<double>& ind,
-        int& comparisons, std::vector<double>& depCGen);
+        CPPAD_TEST_VECTOR<CppAD::AD<double> > w,
+        double epsilonR = 1e-14, double epsilonA = 1e-14);
 
-bool runTest0(CppAD::ADFunCodeGen<double>& f, const std::string& library, const std::string& function, const std::vector<double>& ind, const CPPAD_TEST_VECTOR< CppAD::AD<double> >& U, double epsilonR = 1e-14, double epsilonA = 1e-14);
-
-bool runTestSparseJac(CppAD::ADFunCodeGen<double>& f, const std::string& library, const std::string& function, const std::vector<double>& ind, const std::vector<double>& jac, double epsilonR = 1e-14, double epsilonA = 1e-14);
-
-bool test0nJac(const std::string& test, CppAD::ADFunCodeGen<double>& f, const std::vector<double>& ind, const CPPAD_TEST_VECTOR< CppAD::AD<double> >& dep, double epsilonR = 1e-14, double epsilonA = 1e-14);
+bool test0nJac(const std::string& test,
+        CppAD::ADFunCodeGen<double>& f,
+        const std::vector<std::vector<double> >& ind,
+        double epsilonR = 1e-14, double epsilonA = 1e-14);
 
 template<class T>
 bool compareValues(std::vector<double> cgen, T orig,

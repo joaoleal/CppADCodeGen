@@ -88,24 +88,17 @@ void compile(const string& source, const string& library) throw (CppAD::TestExce
 }
 
 bool runTest0(ADFunCodeGen<double>& f, const string& library, const string& function,
-              const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
+              const std::vector<std::vector<double> >& ind,
               double epsilonR, double epsilonA) {
-
-    assert(dep.size() == f.Range());
-    std::vector<double> depCGen(dep.size());
 
     int comparisons;
 
-    if (!run0(f, library, function, ind, comparisons, depCGen)) {
-        return false;
-    }
-
-    return compareValues(depCGen, dep, "depCGEN", "depTape", epsilonR, epsilonA);
+    return run0(f, library, function, ind, comparisons, epsilonR, epsilonA);
 }
 
 bool run0(ADFunCodeGen<double>& f, const string& library, const string& function,
-          const std::vector<double>& ind,
-          int& comparisons, std::vector<double>& depCGen) {
+          const std::vector<std::vector<double> >& indV,
+          int& comparisons, double epsilonR, double epsilonA) {
 
     stringstream code;
     f.ForwardCodeGen(0, code);
@@ -128,7 +121,6 @@ bool run0(ADFunCodeGen<double>& f, const string& library, const string& function
     source += n->endl();
     // set independent variable values
     const CppAD::vector<size_t>& indepAdd = f.IndependentTapeAddr();
-    assert(ind.size() == indepAdd.size());
 
     for (size_t i = 0; i < indepAdd.size(); i++) {
         source += n->generateVarName(0, indepAdd[i]) + " = ind[" + n->toString(i) + "]" + n->endl();
@@ -166,24 +158,44 @@ bool run0(ADFunCodeGen<double>& f, const string& library, const string& function
         return false;
     }
 
-    comparisons = (*fn)(&ind[0], &depCGen[0]);
+    bool ok = true;
+
+    std::vector<double> depCGen(depAdd.size());
+    for (size_t i = 0; i < indV.size(); i++) {
+        const std::vector<double>& ind = indV[i];
+        assert(ind.size() == indepAdd.size());
+
+        std::vector<double> dep = f.Forward(0, ind);
+
+        comparisons = (*fn)(&ind[0], &depCGen[0]);
+
+        if (!compareValues(depCGen, dep, "depCGEN", "depTape", epsilonR, epsilonA)) {
+            ok = false;
+        }
+    }
 
     closeLibrary(libHandle);
 
-    return true;
+    return ok;
 }
 
-bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const string& function,
-                      const std::vector<double>& ind, const std::vector<double>& jac,
+bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library,
+                      const string& functionFor, const string& functionRev,
+                      const std::vector<std::vector<double> >& indV,
                       double epsilonR, double epsilonA) {
-
-    stringstream code;
-    f.SparseJacobianCodeGen(code);
 
     CodeGenNameProvider<double>* n = f.getCodeGenNameProvider();
 
-    string source = "#include <math.h>\n\n"
-            "int " + function + "(const double* ind, double* jac) {\n";
+    stringstream code;
+
+    string source = "#include <math.h>\n\n";
+
+    /**
+     * forward mode
+     */
+    f.SparseJacobianCodeGen(code, FORWARD);
+
+    source += "int " + functionFor + "(const double* ind, double* jac) {\n";
 
     // declare variables
     source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
@@ -198,8 +210,6 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const stri
     source += n->endl();
     // set independent variable values
     const CppAD::vector<size_t>& indepAdd = f.IndependentTapeAddr();
-    assert(ind.size() == indepAdd.size());
-
     for (size_t i = 0; i < indepAdd.size(); i++) {
         source += n->generateVarName(0, indepAdd[i]) + " = ind[" + n->toString(i) + "]" + n->endl();
     }
@@ -210,9 +220,57 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const stri
     //
     // currently the jacobian variable name is hardcoded
     source += "return " + n->compareChangeCounter() + n->endl();
-    source += "}";
+    source += "}\n\n";
 
+    /**
+     * reverse mode
+     */
+    code.str("");
 
+    n->clearUsedVariables();
+
+    f.SparseJacobianCodeGen(code, REVERSE);
+
+    source += "int " + functionRev + "(const double* ind, double* jac) {\n";
+
+    // declare variables
+    source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
+    source += "int " + n->tempIntegerVarName() + n->endl();
+    source += "int " + n->compareChangeCounter() + " = 0 " + n->endl();
+
+    // taylor
+    const std::vector<VarID>& tvars = n->getUsedVariables();
+    if (tvars.size() > 0) {
+        source += n->baseTypeName() + " " + n->generateVarName(tvars[0].order, tvars[0].taddr);
+        for (size_t i = 1; i < tvars.size(); i++) {
+            source += ", " + n->generateVarName(tvars[i].order, tvars[i].taddr);
+        }
+        source += n->endl();
+    }
+    // partials
+    const std::vector<VarID>& pvars = n->getUsedPartials();
+    source += n->baseTypeName() + " " + n->generatePartialName(pvars[0].order, pvars[0].taddr);
+    for (size_t i = 1; i < pvars.size(); i++) {
+        source += ", " + n->generatePartialName(pvars[i].order, pvars[i].taddr);
+    }
+    source += n->endl();
+
+    // set independent variable values
+    for (size_t i = 0; i < indepAdd.size(); i++) {
+        source += n->generateVarName(0, indepAdd[i]) + " = ind[" + n->toString(i) + "]" + n->endl();
+    }
+
+    source += code.str();
+
+    // get dependent variable values
+    //
+    // currently the jacobian variable name is hardcoded
+    source += "return " + n->compareChangeCounter() + n->endl();
+    source += "}\n";
+
+    /**
+     * Compile
+     */
     void* libHandle;
     try {
         compile(source, library);
@@ -223,26 +281,72 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library, const stri
         return false;
     }
 
-    int (*fn)(const double*, double*) = NULL;
+    int (*fnFor)(const double*, double*) = NULL;
+    int (*fnRev)(const double*, double*) = NULL;
 
     try {
-        *(void **) (&fn) = getFunction(libHandle, function);
+        *(void **) (&fnFor) = getFunction(libHandle, functionFor);
+        *(void **) (&fnRev) = getFunction(libHandle, functionRev);
     } catch (const exception& ex) {
         cerr << ex.what();
         closeLibrary(libHandle);
         return false;
     }
 
-    std::vector<double> jacOut(jac.size());
-    (*fn)(&ind[0], &jacOut[0]);
+    bool ok = true;
+    for (size_t i = 0; i < indV.size(); i++) {
+        const std::vector<double>& ind = indV[i];
+        assert(ind.size() == indepAdd.size());
+
+        /**
+         * Jacobian
+         */
+        CodeGenNameProvider<double>* n = f.getCodeGenNameProvider();
+        n->clearUsedVariables();
+
+        const std::vector<double> jac = f.SparseJacobian(ind);
+
+        /**
+         * test forward jacobian
+         */
+        std::vector<double> jacOut(jac.size());
+        (*fnFor)(&ind[0], &jacOut[0]);
+
+        if (!compareValues(jacOut, jac, "jacCGEN", "jacTape", epsilonR, epsilonA)) {
+            cerr << "Forward mode failed (dataset: " << i << ")" << endl;
+            ok = false;
+        }
+
+        /**
+         * test reverse jacobian
+         */
+        (*fnRev)(&ind[0], &jacOut[0]);
+
+        if (!compareValues(jacOut, jac, "jacCGEN", "jacTape", epsilonR, epsilonA)) {
+            cerr << "Reverse mode failed (dataset: " << i << ")" << endl;
+            ok = false;
+        }
+    }
 
     closeLibrary(libHandle);
 
-    return compareValues(jacOut, jac, "jacCGEN", "jacTape", epsilonR, epsilonA);
+    return ok;
+}
+
+bool test0nJac(const std::string& test,
+               CppAD::ADFunCodeGen<double>& f,
+               const std::vector<double>& ind,
+               CPPAD_TEST_VECTOR<CppAD::AD<double> > w,
+               double epsilonR, double epsilonA) {
+
+    std::vector<std::vector<double> > indV;
+    indV.push_back(ind);
+
+    return test0nJac(test, f, indV, epsilonR, epsilonA);
 }
 
 bool test0nJac(const string& test, ADFunCodeGen<double>& f,
-               const std::vector<double>& ind, const CPPAD_TEST_VECTOR< AD<double> >& dep,
+               const std::vector<std::vector<double> >& indV,
                double epsilonR, double epsilonA) {
 
     bool ok = true;
@@ -254,19 +358,12 @@ bool test0nJac(const string& test, ADFunCodeGen<double>& f,
     string library = "./tmp/test_" + test + ".so";
     string function = "test_" + test;
 
-    ok &= runTest0(f, library, function, ind, dep, epsilonR, epsilonA);
-
-    /**
-     * Jacobian
-     */
-    CodeGenNameProvider<double>* n = f.getCodeGenNameProvider();
-    n->clearUsedVariables();
-
-    std::vector<double> jac = f.SparseJacobian(ind);
+    ok &= runTest0(f, library, function, indV, epsilonR, epsilonA);
 
     library = "./tmp/test_" + test + "_jac.so";
-    function = "test_" + test + "_jac";
-    ok &= runTestSparseJac(f, library, function, ind, jac, epsilonR, epsilonA);
+    string functionFor = "test_" + test + "_jac_for";
+    string functionRev = "test_" + test + "_jac_rev";
+    ok &= runTestSparseJac(f, library, functionFor, functionRev, indV, epsilonR, epsilonA);
 
     return ok;
 }

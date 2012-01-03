@@ -186,6 +186,7 @@ On return, it will contain the Jacobian.
 template <class Base>
 template <class VectorSet>
 void ADFunCodeGen<Base>::SparseJacobianCaseCodeGen(std::ostream& s_out,
+DiffMode mode,
 bool set_type,
 const VectorSet& p) {
     typedef CppAD::vector<size_t> SizeVector;
@@ -200,7 +201,9 @@ const VectorSet& p) {
     const Base one(1);
 
     // check VectorSet is Simple Vector class with bool elements
-    CheckSimpleVector<bool, VectorSet> ();
+    CheckSimpleVector<bool, VectorSet > ();
+
+    s_out << nameGen_->Comment("\nzero order forward mode\n");
 
     CPPAD_ASSERT_KNOWN(
             p.size() == m * n,
@@ -211,16 +214,20 @@ const VectorSet& p) {
     // point at which we are evaluating the Jacobian
     ForwardCodeGen(0, s_out);
 
+    //
+    s_out << nameGen_->Comment(std::string("\njacobian: ")
+            + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
+
     // initialize the return value
     const std::string& si = nameGen_->tempIntegerVarName();
     s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
             "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
-            "}";
+            "}\n";
 
     const CppAD::vector<size_t>& dep_taddr = this->DependentTapeAddr();
     const CppAD::vector<size_t>& ind_taddr = this->IndependentTapeAddr();
 
-    if (n <= m) { // use forward mode ----------------------------------------
+    if (mode == FORWARD) { // use forward mode ----------------------------------------
 
         // initial coloring
         SizeVector color(n);
@@ -288,19 +295,23 @@ const VectorSet& p) {
         // Graph Coloring in Optimization Revisited by
         // Assefaw Gebremedhin, Fredrik Maane, Alex Pothen
         VectorBool forbidden(m);
-        for (i = 0; i < m; i++) { // initial all colors as ok for this row
+        for (i = 0; i < m; i++) {
+            // initial all colors as ok for this row
             for (k = 0; k < m; k++)
                 forbidden[k] = false;
             // for each column that is connected to row i
-            for (j = 0; j < n; j++) if (p[i * n + j]) { // for each row that is connected to column j
+            for (j = 0; j < n; j++) {
+                if (p[i * n + j]) {
+                    // for each row that is connected to column j
                     for (k = 0; k < m; k++)
                         if (p[k * n + j] & (i != k))
                             forbidden[ color[k] ] = true;
                 }
+            }
             k = 0;
             while (forbidden[k] && k < m) {
                 k++;
-                CPPAD_ASSERT_UNKNOWN(k < n);
+                //CPPAD_ASSERT_UNKNOWN(k < n);// ??????????
             }
             color[i] = k;
         }
@@ -330,7 +341,7 @@ const VectorSet& p) {
                 if (color[i] == c) {
                     for (j = 0; j < n; j++) {
                         if (p[ i * n + j ]) {
-                            std::string dw = nameGen_->generatePartialName(1, ind_taddr[j]);
+                            std::string dw = nameGen_->generatePartialName(0, ind_taddr[j]); // must be index zero
                             s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
                         }
                     }
@@ -367,6 +378,7 @@ On return, it will contain the Jacobian.
 template <class Base>
 template <class VectorSet>
 void ADFunCodeGen<Base>::SparseJacobianCaseCodeGen(std::ostream& s_out,
+DiffMode mode,
 const std::set<size_t>& set_type,
 const VectorSet& p) {
     typedef CppAD::vector<size_t> SizeVector;
@@ -391,14 +403,20 @@ const VectorSet& p) {
             "not equal range dimension for f"
             );
 
+    s_out << nameGen_->Comment("\nzero order forward mode\n");
+
     // point at which we are evaluating the Jacobian
     ForwardCodeGen(0, s_out);
+
+    //
+    s_out << nameGen_->Comment(std::string("\njacobian: ")
+            + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
 
     // initialize the return value
     const std::string& si = nameGen_->tempIntegerVarName();
     s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
             "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
-            "}";
+            "}\n";
 
     // create a copy of the transpose sparsity pattern
     VectorSet q(n);
@@ -414,7 +432,7 @@ const VectorSet& p) {
     const CppAD::vector<size_t>& dep_taddr = this->DependentTapeAddr();
     const CppAD::vector<size_t>& ind_taddr = this->IndependentTapeAddr();
 
-    if (n <= m) { // use forward mode ----------------------------------------
+    if (mode == FORWARD) { // use forward mode ----------------------------------------
 
         // initial coloring
         SizeVector color(n);
@@ -541,7 +559,7 @@ const VectorSet& p) {
                     itr_j = p[i].begin();
                     while (itr_j != p[i].end()) {
                         j = *itr_j++;
-                        std::string dw = nameGen_->generatePartialName(1, ind_taddr[j]);
+                        std::string dw = nameGen_->generatePartialName(0, ind_taddr[j]);
                         s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
                     }
                 }
@@ -582,9 +600,26 @@ specified point (in row major order).
  */
 template <class Base>
 template <class VectorSet>
-void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p) {
+DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p) {
+    // number of independent variables
+    size_t n = this->Domain();
+
+    // number of dependent variables
+    size_t m = this->Range();
+
+    // differentiation mode
+    DiffMode mode = (n <= m) ? FORWARD : REVERSE;
+
+    SparseJacobianCodeGen(s_out, p, mode);
+
+    return mode;
+}
+
+template <class Base>
+template<class VectorSet>
+DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p, DiffMode mode) {
     typedef typename VectorSet::value_type Set_type;
-    SparseJacobianCaseCodeGen(s_out, *this, Set_type(), p);
+    SparseJacobianCaseCodeGen(s_out, mode, *this, Set_type(), p);
 }
 
 /*!
@@ -610,7 +645,20 @@ Will be a vector of size \c m * n containing the Jacobian at the
 specified point (in row major order).
  */
 template <class Base>
-void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
+DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
+    size_t m = this->Range();
+
+    size_t n = this->Domain();
+
+    DiffMode mode = (n <= m) ? FORWARD : REVERSE;
+
+    SparseJacobianCaseCodeGen(s_out, mode);
+
+    return mode;
+}
+
+template <class Base>
+void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMode mode) {
     typedef CppAD::vectorBool VectorBool;
 
     size_t m = this->Range();
@@ -619,7 +667,7 @@ void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
     // sparsity pattern for Jacobian
     VectorBool p(m * n);
 
-    if (n <= m) {
+    if (mode == FORWARD) {
         size_t j, k;
 
         // use forward mode 
@@ -642,8 +690,10 @@ void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
         }
         p = this->RevSparseJac(m, s);
     }
+
     bool set_type = true; // only used to dispatch compiler to proper case
-    SparseJacobianCaseCodeGen(s_out, set_type, p);
+
+    SparseJacobianCaseCodeGen(s_out, mode, set_type, p);
 }
 
 

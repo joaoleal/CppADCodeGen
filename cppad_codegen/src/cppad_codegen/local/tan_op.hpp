@@ -40,11 +40,11 @@ and derivatives of z.
  */
 template <class Base>
 inline void forward_code_gen_tan_op(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t d,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t d,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(TanOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(TanOp) == 2);
@@ -100,10 +100,10 @@ The value of y is computed along with the value of z.
  */
 template <class Base>
 inline void forward_code_gen_tan_op_0(
-        std::ostream& s_out,
-        CodeGenNameProvider<Base>& n,
-        size_t i_z,
-        size_t i_x) {
+std::ostream& s_out,
+CodeGenNameProvider<Base>& n,
+size_t i_z,
+size_t i_x) {
     // check assumptions
     CPPAD_ASSERT_UNKNOWN(NumArg(TanOp) == 1);
     CPPAD_ASSERT_UNKNOWN(NumRes(TanOp) == 2);
@@ -142,48 +142,49 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-size_t i_x,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(TanOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(TanOp) == 2);
-    //    CPPAD_ASSERT_UNKNOWN(i_x + 1 < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Taylor coefficients and partials corresponding to argument
-    //    const Base* x = taylor + i_x * nc_taylor;
-    //    Base* px = partial + i_x * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to first result
-    //    const Base* z = taylor + i_z * nc_taylor; // called z in doc
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to auxillary result
-    //    const Base* y = z - nc_taylor; // called y in documentation
-    //    Base* py = pz - nc_partial;
-    //
-    //    size_t j = d;
-    //    size_t k;
-    //    Base base_two(2);
-    //    while (j) {
-    //        px[j] += pz[j];
-    //        pz[j] /= Base(j);
-    //        for (k = 1; k <= j; k++) {
-    //            px[k] += pz[j] * y[j - k] * Base(k);
-    //            py[j - k] += pz[j] * x[k] * Base(k);
-    //        }
-    //        for (k = 0; k < j; k++)
-    //            pz[k] += py[j - 1] * z[j - k - 1] * base_two;
-    //
-    //        --j;
-    //    }
-    //    px[0] += pz[0] * (Base(1) + y[0]);
+size_t i_x) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(TanOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(NumRes(TanOp) == 2);
+    CPPAD_ASSERT_UNKNOWN(i_x + 1 < i_z);
 
-    throw "not implemented yet";
+    size_t i_y = i_z - 1;
+
+    size_t j = d;
+    size_t k;
+    std::string base_two = n.CastToBase(2);
+    while (j) {
+        std::string px_j = n.generatePartialName(j, i_x);
+        std::string sy_jk = n.generateVarName(j - k, i_y);
+        std::string pz_j = n.generatePartialName(j, i_z);
+
+        s_out << px_j << " += " << pz_j << n.endl();
+        s_out << pz_j << " /= " << n.CastToBase(j) << n.endl();
+
+        for (k = 1; k <= j; k++) {
+            std::string sx_k = n.generateVarName(k, i_x);
+            std::string px_k = n.generatePartialName(k, i_x);
+            std::string py_jk = n.generatePartialName(j - k, i_y);
+
+            s_out << px_k << " += " << pz_j << " * " << sy_jk << " * " << k << n.endl();
+            s_out << py_jk << " += " << pz_j << " * " << sx_k << " * " << k << n.endl();
+        }
+
+        for (k = 0; k < j; k++) {
+            std::string py_j1 = n.generatePartialName(j - 1, i_y);
+            std::string z_jk1 = n.generateVarName(j - k - 1, i_z);
+            std::string pz_k = n.generatePartialName(k, i_z);
+            s_out << pz_k << " += " << py_j1 << " * " << z_jk1 << " * " << base_two << n.endl();
+        }
+
+        --j;
+    }
+
+    std::string px_0 = n.generatePartialName(0, i_x);
+    std::string sy_0 = n.generateVarName(0, i_y);
+    std::string pz_0 = n.generatePartialName(0, i_z);
+
+    s_out << px_0 << " += " << pz_0 << " * (" << n.CastToBase(1) << " + " << sy_0 << ")" << n.endl();
 }
 
 CPPAD_END_NAMESPACE

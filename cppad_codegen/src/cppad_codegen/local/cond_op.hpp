@@ -18,6 +18,31 @@ CPPAD_BEGIN_NAMESPACE
 Forward, reverse, and sparse operations for conditional expressions.
  */
 
+inline std::string getComparisonString(CompareOp op) {
+    switch (op) {
+        case CompareLt:
+            return "<";
+
+        case CompareLe:
+            return "<=";
+
+        case CompareEq:
+            return "==";
+
+        case CompareGe:
+            return ">=";
+
+        case CompareGt:
+            return ">";
+
+        case CompareNe:
+            return "!=";
+
+        default:
+            CPPAD_ASSERT_UNKNOWN(0);
+    }
+}
+
 /*!
 Compute forward mode Taylor coefficients for op = CExpOp.
 
@@ -106,36 +131,7 @@ const Base* parameter) {
         }
     }
 
-    std::string opCode;
-    switch (CompareOp( arg[0] )) {
-        case CompareLt:
-            opCode = "<";
-            break;
-
-        case CompareLe:
-            opCode = "<=";
-            break;
-
-        case CompareEq:
-            opCode = "==";
-            break;
-
-        case CompareGe:
-            opCode = ">=";
-            break;
-
-        case CompareGt:
-            opCode = ">";
-            break;
-
-        case CompareNe:
-            opCode = "!=";
-            break;
-
-        default:
-            CPPAD_ASSERT_UNKNOWN(0);
-    }
-
+    std::string opCode = getComparisonString(CompareOp(arg[0]));
     std::string sz_d = n.generateVarName(d, i_z);
 
     s_out << "if(" << y_0 << " " << opCode << " " << y_1 << ") "
@@ -203,36 +199,7 @@ const Base* parameter) {
         y_3 = n.PrintBase(parameter[ arg[5] ]);
     }
 
-    std::string opCode;
-    switch (CompareOp( arg[0] )) {
-        case CompareLt:
-            opCode = "<";
-            break;
-
-        case CompareLe:
-            opCode = "<=";
-            break;
-
-        case CompareEq:
-            opCode = "==";
-            break;
-
-        case CompareGe:
-            opCode = ">=";
-            break;
-
-        case CompareGt:
-            opCode = ">";
-            break;
-
-        case CompareNe:
-            opCode = "!=";
-            break;
-
-        default:
-            CPPAD_ASSERT_UNKNOWN(0);
-    }
-
+    std::string opCode = getComparisonString(CompareOp(arg[0]));
     std::string sz_0 = n.generateVarName(0, i_z);
 
     s_out << "if(" << y_0 << " " << opCode << " " << y_1 << ") "
@@ -300,67 +267,67 @@ size_t d,
 size_t i_z,
 const addr_t* arg,
 size_t num_par,
-const Base* parameter,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    Base y_0, y_1;
-    //    Base zero(0);
-    //    Base* pz;
-    //    Base* py_2;
-    //    Base* py_3;
-    //
-    //    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < static_cast<size_t> (CompareNe));
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(CExpOp) == 6);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(CExpOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(arg[1] != 0);
-    //
-    //    pz = partial + i_z * nc_partial + 0;
-    //    if (arg[1] & 1) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[2]) < i_z);
-    //        y_0 = taylor[ arg[2] * nc_taylor + 0 ];
-    //    } else {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[2]) < num_par);
-    //        y_0 = parameter[ arg[2] ];
-    //    }
-    //    if (arg[1] & 2) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[3]) < i_z);
-    //        y_1 = taylor[ arg[3] * nc_taylor + 0 ];
-    //    } else {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[3]) < num_par);
-    //        y_1 = parameter[ arg[3] ];
-    //    }
-    //    if (arg[1] & 4) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[4]) < i_z);
-    //        py_2 = partial + arg[4] * nc_partial;
-    //        size_t j = d + 1;
-    //        while (j--) {
-    //            py_2[j] += CondExpOp(
-    //                    CompareOp(arg[0]),
-    //                    y_0,
-    //                    y_1,
-    //                    pz[j],
-    //                    zero
-    //                    );
-    //        }
-    //    }
-    //    if (arg[1] & 8) {
-    //        CPPAD_ASSERT_UNKNOWN(size_t(arg[5]) < i_z);
-    //        py_3 = partial + arg[5] * nc_partial;
-    //        size_t j = d + 1;
-    //        while (j--) {
-    //            py_3[j] += CondExpOp(
-    //                    CompareOp(arg[0]),
-    //                    y_0,
-    //                    y_1,
-    //                    zero,
-    //                    pz[j]
-    //                    );
-    //        }
-    //    }
-    //    return;
-    throw "not implemented yet";
+const Base* parameter) {
+    CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) < static_cast<size_t> (CompareNe));
+    CPPAD_ASSERT_UNKNOWN(NumArg(CExpOp) == 6);
+    CPPAD_ASSERT_UNKNOWN(NumRes(CExpOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(arg[1] != 0);
+
+
+    std::string y_0, y_1;
+
+    std::string opCode = getComparisonString(CompareOp(arg[0]));
+    if (arg[1] & 1) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[2]) < i_z);
+        y_0 = n.generateVarName(0, arg[2]);
+    } else {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[2]) < num_par);
+        y_0 = n.PrintBase(parameter[ arg[2] ]);
+    }
+    if (arg[1] & 2) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[3]) < i_z);
+        y_1 = n.generateVarName(0, arg[3]);
+    } else {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[3]) < num_par);
+        y_1 = n.PrintBase(parameter[ arg[3] ]);
+    }
+    if (arg[1] & 4) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[4]) < i_z);
+        size_t i_y2 = arg[4];
+        s_out << "if(" << y_0 << " " << opCode << " " << y_1 << ") {\n";
+        size_t j = d + 1;
+        while (j--) {
+            std::string py2_j = n.generatePartialName(j, i_y2);
+            std::string pz_j = n.generatePartialName(j, i_z);
+            s_out << py2_j << " += " << pz_j << n.endl();
+        }
+        s_out << "} else {\n";
+        j = d + 1;
+        while (j--) {
+            std::string py2_j = n.generatePartialName(j, i_y2);
+            s_out << py2_j << " += " << n.zero() << n.endl();
+        }
+        s_out << "}\n";
+    }
+    if (arg[1] & 8) {
+        CPPAD_ASSERT_UNKNOWN(size_t(arg[5]) < i_z);
+        size_t i_y3 = arg[5];
+
+        s_out << "if(" << y_0 << " " << opCode << " " << y_1 << ") {\n";
+        size_t j = d + 1;
+        while (j--) {
+            std::string py3_j = n.generatePartialName(j, i_y3);
+            s_out << py3_j << " += " << n.zero() << n.endl();
+        }
+        s_out << "} else {\n";
+        j = d + 1;
+        while (j--) {
+            std::string py3_j = n.generatePartialName(j, i_y3);
+            std::string pz_j = n.generatePartialName(j, i_z);
+            s_out << py3_j << " += " << pz_j << n.endl();
+        }
+        s_out << "}\n";
+    }
 }
 
 CPPAD_END_NAMESPACE
