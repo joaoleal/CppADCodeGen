@@ -189,11 +189,12 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library,
     stringstream code;
 
     string source = "#include <math.h>\n\n";
-
+    DiffMode mode;
     /**
      * forward mode
      */
-    f.SparseJacobianCodeGen(code, FORWARD);
+    mode = FORWARD;
+    f.SparseJacobianCodeGen<std::vector<bool> >(code, mode);
 
     source += "int " + functionFor + "(const double* ind, double* jac) {\n";
 
@@ -225,11 +226,12 @@ bool runTestSparseJac(ADFunCodeGen<double>& f, const string& library,
     /**
      * reverse mode
      */
+    mode = REVERSE;
+    
     code.str("");
-
     n->clearUsedVariables();
 
-    f.SparseJacobianCodeGen(code, REVERSE);
+    f.SparseJacobianCodeGen<std::vector<bool> >(code, mode);
 
     source += "int " + functionRev + "(const double* ind, double* jac) {\n";
 

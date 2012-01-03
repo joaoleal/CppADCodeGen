@@ -21,6 +21,15 @@ CPPAD_BEGIN_NAMESPACE
 typedef struct VarID {
     size_t order;
     addr_t taddr;
+
+    VarID(size_t o, addr_t a) {
+        order = o;
+        taddr = a;
+    }
+
+    inline bool operator==(const VarID & other) const {
+        return order == other.order && taddr == other.taddr;
+    }
 } VarID;
 
 template<class Base>
@@ -167,10 +176,7 @@ public:
             const std::vector<bool>& v = it->second;
             for (size_t i = 0; i < v.size(); i++) {
                 if (v[i]) {
-                    VarID id;
-                    id.order = i;
-                    id.taddr = it->first;
-                    used.push_back(id);
+                    used.push_back(VarID(i, it->first));
                 }
             }
         }
@@ -185,10 +191,7 @@ public:
             const std::vector<bool>& v = it->second;
             for (size_t i = 0; i < v.size(); i++) {
                 if (v[i]) {
-                    VarID id;
-                    id.order = i;
-                    id.taddr = it->first;
-                    used.push_back(id);
+                    used.push_back(VarID(i, it->first));
                 }
             }
         }

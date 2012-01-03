@@ -599,26 +599,21 @@ Will be a vector if size \c m * n containing the Jacobian at the
 specified point (in row major order).
  */
 template <class Base>
-template <class VectorSet>
-DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p) {
-    // number of independent variables
-    size_t n = this->Domain();
+template <class VectorBool>
+void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorBool& p, DiffMode& mode) {
+    if (mode == AUTO) {
+        // number of independent variables
+        size_t n = this->Domain();
 
-    // number of dependent variables
-    size_t m = this->Range();
+        // number of dependent variables
+        size_t m = this->Range();
 
-    // differentiation mode
-    DiffMode mode = (n <= m) ? FORWARD : REVERSE;
+        // differentiation mode
+        mode = (n <= m) ? FORWARD : REVERSE;
+    }
 
-    SparseJacobianCodeGen(s_out, p, mode);
+    typedef typename VectorBool::value_type Set_type;
 
-    return mode;
-}
-
-template <class Base>
-template<class VectorSet>
-DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorSet& p, DiffMode mode) {
-    typedef typename VectorSet::value_type Set_type;
     SparseJacobianCaseCodeGen(s_out, mode, *this, Set_type(), p);
 }
 
@@ -645,24 +640,22 @@ Will be a vector of size \c m * n containing the Jacobian at the
 specified point (in row major order).
  */
 template <class Base>
-DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
-    size_t m = this->Range();
-
-    size_t n = this->Domain();
-
-    DiffMode mode = (n <= m) ? FORWARD : REVERSE;
-
-    SparseJacobianCodeGen(s_out, mode);
-
-    return mode;
-}
-
-template <class Base>
-void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMode mode) {
-    typedef CppAD::vectorBool VectorBool;
-
+template<class VectorBool>
+VectorBool ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMode& mode) {
     size_t m = this->Range();
     size_t n = this->Domain();
+
+    if (mode == AUTO) {
+        // number of independent variables
+        size_t n = this->Domain();
+
+        // number of dependent variables
+        size_t m = this->Range();
+
+        // differentiation mode
+        mode = (n <= m) ? FORWARD : REVERSE;
+    }
+
 
     // sparsity pattern for Jacobian
     VectorBool p(m * n);
@@ -694,6 +687,8 @@ void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMode mod
     bool set_type = true; // only used to dispatch compiler to proper case
 
     SparseJacobianCaseCodeGen(s_out, mode, set_type, p);
+
+    return p;
 }
 
 
