@@ -57,13 +57,13 @@ namespace {
             std::cout << "OK" << std::endl;
             Run_ok_count++;
         } else {
-            if( name == "Atan2" || name == "CompareChange" )
-            {    std::cout << "Warning: not working yet" << std::endl;
-                 Run_warn_count++;
-                 ok = true; // this test not working yet
+            if (name == "CompareChange") {
+                std::cout << "Warning: not working yet" << std::endl;
+                Run_warn_count++;
+                ok = true; // this test not working yet
             } else {
-                 std::cout << "Error" << std::endl;
-                 Run_error_count++;
+                std::cout << "Error" << std::endl;
+                Run_error_count++;
             }
         }
         return ok;
@@ -112,10 +112,10 @@ int main(void) {
         cout << "OK:    " << "No memory leak detected" << endl;
     }
     // convert int(size_t) to avoid warning on _MSC_VER systems
-    ok &= Run_warn_count == 2;
+    ok &= Run_warn_count == 1;
     if (ok) {
         cout << int(Run_ok_count) << " tests passed";
-        cout << "; i.e., All except 2." << endl;
+        cout << "; i.e., All except 1." << endl;
     } else cout << int(Run_error_count) << " tests failed." << endl;
 
     return static_cast<int> (!ok);
