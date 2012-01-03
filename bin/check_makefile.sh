@@ -22,11 +22,9 @@ ls \
 	cppad/*.h \
 	cppad/*.hpp \
 	cppad/local/*.hpp \
-	cppad/local/code_gen/*.hpp \
 	cppad/speed/*.hpp  | \
 	sed -e '/^cppad\/config\.h$/d' | \
 	sort > check_makefile1.$$
-#
 sed < makefile.am -n \
 	-e '/^nobase_myinclude_HEADERS *=/,/^# End nobase_myinclude_HEADERS/p' | \
 	sed \
@@ -43,8 +41,38 @@ then
 else
 	ok="no"
 fi
+#
 rm check_makefile1.$$
 rm check_makefile2.$$
+#
+cd cppad_codegen/src;
+ls \
+	cppad_codegen/*.hpp \
+	cppad_codegen/local/*.hpp  | \
+	sed -e '/^cppad\/config\.h$/d' | \
+	sort > check_makefile1.$$
+sed < makefile.am -n \
+	-e '/^nobase_cginclude_HEADERS *=/,/^# End nobase_cginclude_HEADERS/p' | \
+	sed \
+		-e '/nobase_cginclude_HEADERS/d' \
+		-e 's/^\t//' \
+		-e 's/ *\\$//' \
+		-e 's/ *$//' \
+		-e '/^$/d'  |
+	sort > check_makefile2.$$
+#
+if !(diff check_makefile1.$$ check_makefile2.$$)
+then
+	ok="no"
+else
+	ok="yes"
+fi
+#
+rm check_makefile1.$$
+rm check_makefile2.$$
+#
+cd ..;
+#
 echo "-------------------------------------------------------" 
 if [ "$ok" = "no" ]
 then
@@ -65,7 +93,7 @@ do
 		(multi_thread/makefile.am)
 		;;
 
-		(test_code_gen/makefile.am)
+		(cppad_codegen/src/test/makefile.am)
 		;;
 
 		(speed/example/makefile.am)
