@@ -652,7 +652,7 @@ DiffMode ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out) {
 
     DiffMode mode = (n <= m) ? FORWARD : REVERSE;
 
-    SparseJacobianCaseCodeGen(s_out, mode);
+    SparseJacobianCodeGen(s_out, mode);
 
     return mode;
 }
