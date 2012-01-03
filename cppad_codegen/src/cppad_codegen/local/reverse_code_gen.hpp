@@ -165,7 +165,7 @@ void ADFunCodeGen<Base>::ReverseCodeGen(size_t p,
         CPPAD_ASSERT_UNKNOWN(dep_taddr[i] < total_num_var);
         if (w.size() == m) {
             std::string partial = nameGen_->generatePartialName(p - 1, dep_taddr[i]);
-            s_out << partial << " = " << nameGen_->PrintBase(w[i]) << nameGen_->endl();
+            s_out << partial << " += " << nameGen_->PrintBase(w[i]) << nameGen_->endl();
             //Partial[dep_taddr[i] * p + p - 1] += w[i];
         } else {
             for (k = 0; k < p; k++) {

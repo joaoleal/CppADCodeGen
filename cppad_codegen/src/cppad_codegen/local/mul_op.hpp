@@ -132,15 +132,15 @@ const addr_t* arg) {
     size_t j = d + 1;
     while (j) {
         --j;
+        std::string pz_j = n.generatePartialName(j, i_z);
         for (size_t k = 0; k <= j; k++) {
+            std::string x_jk = n.generateVarName(j - k, i_x);
             std::string px_jk = n.generatePartialName(j - k, i_x);
-            std::string pz_j = n.generatePartialName(j, i_z);
-            std::string sy_k = n.generateVarName(k, i_y);
-            std::string sx_jk = n.generateVarName(j - k, i_x);
+            std::string y_k = n.generateVarName(k, i_y);
             std::string py_k = n.generatePartialName(k, i_y);
 
-            s_out << px_jk << " += " << pz_j << " * " << sy_k << n.endl();
-            s_out << py_k << " += " << pz_j << " * " << sx_jk << n.endl();
+            s_out << px_jk << " += " << pz_j << " * " << y_k << n.endl();
+            s_out << py_k << " += " << pz_j << " * " << x_jk << n.endl();
         }
     }
 }

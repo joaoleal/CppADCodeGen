@@ -51,7 +51,7 @@ namespace { // BEGIN empty namespace
         Z[u] = one * Z[z]; // multiplication by parameter equal to one
         Z[v] = zero * Z[z]; // multiplication by parameter equal to zero
 
-        // check multipilcation by zero results in a parameter
+        // check multiplication by zero results in a parameter
         ok &= Parameter(Z[v]);
 
         // create f: U -> Z and vectors used for derivative calculations
