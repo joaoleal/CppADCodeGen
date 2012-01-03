@@ -116,39 +116,40 @@ std::ostream& s_out,
 CodeGenNameProvider<Base>& n,
 size_t d,
 size_t i_z,
-size_t i_x,
-size_t nc_taylor,
-const Base* taylor,
-size_t nc_partial,
-Base* partial) {
-    //    // check assumptions
-    //    CPPAD_ASSERT_UNKNOWN(NumArg(SqrtOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(NumRes(SqrtOp) == 1);
-    //    CPPAD_ASSERT_UNKNOWN(i_x < i_z);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_taylor);
-    //    CPPAD_ASSERT_UNKNOWN(d < nc_partial);
-    //
-    //    // Taylor coefficients and partials corresponding to argument
-    //    Base* px = partial + i_x * nc_partial;
-    //
-    //    // Taylor coefficients and partials corresponding to result
-    //    const Base* z = taylor + i_z * nc_taylor;
-    //    Base* pz = partial + i_z * nc_partial;
-    //
-    //    // number of indices to access
-    //    size_t j = d;
-    //    size_t k;
-    //    while (j) { // scale partial w.r.t. z[j]
-    //        pz[j] /= z[0];
-    //
-    //        pz[0] -= pz[j] * z[j];
-    //        px[j] += pz[j] / Base(2);
-    //        for (k = 1; k < j; k++)
-    //            pz[k] -= pz[j] * z[j - k];
-    //        --j;
-    //    }
-    //    px[0] += pz[0] / (Base(2) * z[0]);
-    throw "not implemented yet";
+size_t i_x) {
+    // check assumptions
+    CPPAD_ASSERT_UNKNOWN(NumArg(SqrtOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(NumRes(SqrtOp) == 1);
+    CPPAD_ASSERT_UNKNOWN(i_x < i_z);
+
+    std::string px_0 = n.generatePartialName(0, i_x);
+    std::string z_0 = n.generateVarName(0, i_z);
+    std::string pz_0 = n.generatePartialName(0, i_z);
+
+    // number of indices to access
+    size_t j = d;
+    size_t k;
+    while (j) {
+        std::string px_j = n.generatePartialName(j, i_x);
+        std::string z_j = n.generateVarName(j, i_z);
+        std::string pz_j = n.generatePartialName(j, i_z);
+
+        // scale partial w.r.t. z[j]
+        s_out << pz_j << " /= " << z_0 << n.endl();
+
+        s_out << pz_0 << " -= " << pz_j << " * " << z_j << n.endl();
+        s_out << px_j << " += " << pz_j << " / " << n.CastToBase(2) << n.endl();
+        for (k = 1; k < j; k++) {
+            std::string z_jk = n.generateVarName(j - k, i_z);
+            std::string pz_k = n.generatePartialName(k, i_z);
+
+            s_out << pz_k << " -= " << pz_j << " * " << z_jk << n.endl();
+        }
+        --j;
+    }
+
+    s_out << px_0 << " += " << pz_0 << " / (" << n.CastToBase(2) << " * " << z_0 << ")" << n.endl();
+
 }
 
 CPPAD_END_NAMESPACE

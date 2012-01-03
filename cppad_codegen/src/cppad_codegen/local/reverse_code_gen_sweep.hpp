@@ -278,14 +278,12 @@ player<Base>* Rec
                 break;
                 // --------------------------------------------------
 
-                //			case CoshOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_cosh_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
+            case CoshOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_cosh_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
             case DisOp:
                 // Derivative of discrete operation is zero so no
                 // contribution passes through this operation. 
@@ -379,19 +377,15 @@ player<Base>* Rec
                 break;
                 // -------------------------------------------------
 
-                //			case SinhOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_sinh_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
-                //			case SqrtOp:
-                //			reverse_code_gen_sqrt_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
+            case SinhOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_sinh_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
+            case SqrtOp:
+                reverse_code_gen_sqrt_op(s_out, names, d, i_var, arg[0]);
+                break;
                 // --------------------------------------------------
 
             case StppOp:
@@ -433,14 +427,12 @@ player<Base>* Rec
                 break;
                 // -------------------------------------------------
 
-                //			case TanhOp:
-                //			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
-                //			reverse_code_gen_tanh_op(
-                //				d, i_var, arg[0], J, Taylor, K, Partial
-                //			);
-                //			break;
-                //			// --------------------------------------------------
-                //
+            case TanhOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_tanh_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // --------------------------------------------------
+
                 //			case UserOp:
                 //			// start or end an atomic operation sequence
                 //			CPPAD_ASSERT_UNKNOWN( NumRes( UserOp ) == 0 );
