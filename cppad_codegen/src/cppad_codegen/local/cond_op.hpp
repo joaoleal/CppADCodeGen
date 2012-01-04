@@ -18,31 +18,6 @@ CPPAD_BEGIN_NAMESPACE
 Forward, reverse, and sparse operations for conditional expressions.
  */
 
-inline std::string getComparisonString(CompareOp op) {
-    switch (op) {
-        case CompareLt:
-            return "<";
-
-        case CompareLe:
-            return "<=";
-
-        case CompareEq:
-            return "==";
-
-        case CompareGe:
-            return ">=";
-
-        case CompareGt:
-            return ">";
-
-        case CompareNe:
-            return "!=";
-
-        default:
-            CPPAD_ASSERT_UNKNOWN(0);
-    }
-}
-
 /*!
 Compute forward mode Taylor coefficients for op = CExpOp.
 

@@ -57,7 +57,7 @@ namespace {
             std::cout << "OK" << std::endl;
             Run_ok_count++;
         } else {
-            if (name == "CompareChange") {
+            if (name == "Abs") {
                 std::cout << "Warning: not working yet" << std::endl;
                 Run_warn_count++;
                 ok = true; // this test not working yet

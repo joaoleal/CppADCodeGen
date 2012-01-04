@@ -19,6 +19,31 @@ CPPAD_BEGIN_NAMESPACE
 Zero order forward mode check how man comparisons changed.
  */
 
+inline std::string getComparisonString(CompareOp op) {
+    switch (op) {
+        case CompareLt:
+            return "<";
+
+        case CompareLe:
+            return "<=";
+
+        case CompareEq:
+            return "==";
+
+        case CompareGe:
+            return ">=";
+
+        case CompareGt:
+            return ">";
+
+        case CompareNe:
+            return "!=";
+
+        default:
+            CPPAD_ASSERT_UNKNOWN(0);
+    }
+}
+
 /*!
 Zero order forward mode execution of op = CompOp.
 
@@ -108,15 +133,13 @@ CodeGenNameProvider<Base>& n,
 const addr_t* arg,
 size_t num_par,
 const Base* parameter) {
-    // bool result;
-
     CPPAD_ASSERT_UNKNOWN(NumArg(ComOp) == 4);
     CPPAD_ASSERT_UNKNOWN(NumRes(ComOp) == 0);
     CPPAD_ASSERT_UNKNOWN(size_t(arg[0]) <= static_cast<size_t> (CompareNe));
     CPPAD_ASSERT_UNKNOWN(arg[1] != 0);
 
     // result of comparison during recording
-    // result = (arg[1] & 1) == 1;
+    bool result = (arg[1] & 1) == 1;
 
     std::string left;
     std::string right;
@@ -136,41 +159,18 @@ const Base* parameter) {
         CPPAD_ASSERT_UNKNOWN(size_t(arg[3]) < num_par);
         right = n.PrintBase(parameter[ arg[3] ]);
     }
-    switch (CompareOp(arg[0])) {
-        case CompareLt:
-            s_out << "if(" << left << " >= " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
 
-        case CompareLe:
-            s_out << "if(" << left << " > " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
-
-        case CompareEq:
-            s_out << "if(" << left << " != " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
-
-        case CompareGe:
-            s_out << "if(" << left << " < " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
-
-        case CompareGt:
-            s_out << "if(" << left << " <= " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
-
-        case CompareNe:
-            s_out << "if(" << left << " == " << right << ") "
-                    << n.compareChangeCounter() << "++" << n.endl();
-            break;
-
-        default:
-            CPPAD_ASSERT_UNKNOWN(0);
+    std::string op = getComparisonString(CompareOp(arg[0]));
+    s_out << "if(";
+    if (result) {
+        s_out << "!(";
     }
-    return;
+    s_out << left << " " << op << " " << right;
+    if (result) {
+        s_out << ")";
+    }
+    s_out << ") "
+            << n.compareChangeCounter() << "++" << n.endl();
 }
 CPPAD_END_NAMESPACE
 #endif
