@@ -33,6 +33,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_codegen/local/parameter_op.hpp>
 #include <cppad_codegen/local/pow_op.hpp>
 #include <cppad_codegen/local/print_op.hpp>
+#include <cppad_codegen/local/sign_op.hpp>
 #include <cppad_codegen/local/sin_op.hpp>
 #include <cppad_codegen/local/sinh_op.hpp>
 #include <cppad_codegen/local/sqrt_op.hpp>

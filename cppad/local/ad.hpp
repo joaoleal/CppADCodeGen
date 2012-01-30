@@ -1,4 +1,4 @@
-/* $Id: ad.hpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: ad.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_AD_INCLUDED
 # define CPPAD_AD_INCLUDED
 
@@ -187,6 +187,7 @@ public:
 	inline AD exp(void) const;
 	inline AD log(void) const;
 	inline AD sin(void) const;
+	inline AD Sign(void) const;
 	inline AD sinh(void) const;
 	inline AD sqrt(void) const;
 	inline AD tan(void) const;

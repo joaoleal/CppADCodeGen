@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: check_include_def.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: check_include_def.sh 2236 2011-12-26 14:08:37Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 #
@@ -31,7 +31,7 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	| tr [a-zA-Z] [A-Za-z] \
 	| sort \
 	> bin/check_include_def.1.$$
-#
+ 
 ls \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \

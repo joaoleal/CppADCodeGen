@@ -1,4 +1,4 @@
-/* $Id: math_other.hpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: math_other.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_MATH_OTHER_INCLUDED
 # define CPPAD_MATH_OTHER_INCLUDED
 
@@ -26,6 +26,7 @@ $section Other AD Math Functions$$
 
 $childtable%
 	cppad/local/abs.hpp%
+	cppad/local/sign.hpp%
 	cppad/local/atan2.hpp%
 	cppad/local/epsilon.hpp%
 	cppad/local/erf.hpp%
@@ -36,6 +37,7 @@ $end
 */
 
 # include <cppad/local/abs.hpp>
+# include <cppad/local/sign.hpp>
 # include <cppad/local/atan2.hpp>
 # include <cppad/local/epsilon.hpp>
 # include <cppad/local/erf.hpp>

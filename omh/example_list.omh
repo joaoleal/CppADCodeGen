@@ -1,6 +1,6 @@
-$Id: example_list.omh 2214 2011-11-27 21:40:42Z bradbell $
+$Id: example_list.omh 2270 2012-01-20 15:15:06Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -94,6 +94,7 @@ $rref base_complex.hpp$$
 $rref BenderQuad.cpp$$
 $rref BoolFun.cpp$$
 $rref team_bthread.cpp$$
+$rref change_const.cpp$$
 $rref CheckNumericType.cpp$$
 $rref checkpoint.cpp$$
 $rref CheckSimpleVector.cpp$$

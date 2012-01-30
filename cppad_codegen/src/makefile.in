@@ -506,7 +506,7 @@ uninstall-am: uninstall-nobase_cgincludeHEADERS
 	uninstall-nobase_cgincludeHEADERS
 
 
-# End nobase_include_HEADERS (check_makefile.sh uses this comment)
+# End nobase_cginclude_HEADERS (check_makefile.sh uses this comment)
 # ---------------------------------------------------------------
 #
 # No objects or executables are required to install CppADCodeGen.

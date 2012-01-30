@@ -46,13 +46,14 @@ am__example_SOURCES_DIST = mul_level_adolc.cpp ode_taylor_adolc.cpp \
 	example.cpp abort_recording.cpp abs.cpp acos.cpp add.cpp \
 	add_eq.cpp ad_fun.cpp ad_in_c.cpp asin.cpp atan.cpp atan_2.cpp \
 	base_adolc.hpp bender_quad.cpp bool_fun.cpp vector_bool.cpp \
-	check_numeric_type.cpp check_simple_vector.cpp checkpoint.cpp \
-	compare.cpp compare_change.cpp complex_poly.cpp cond_exp.cpp \
-	conj_grad.cpp copy_ad.cpp copy_base.cpp cos.cpp cosh.cpp \
-	cppad_vector.cpp default.cpp div.cpp div_eq.cpp epsilon.cpp \
-	eq.cpp equal_op_seq.cpp erf.cpp error_handler.cpp exp.cpp \
-	for_one.cpp for_two.cpp forward.cpp for_sparse_jac.cpp \
-	fun_assign.cpp fun_check.cpp hes_lagrangian.cpp hes_lu_det.cpp \
+	change_const.cpp check_numeric_type.cpp \
+	check_simple_vector.cpp checkpoint.cpp compare.cpp \
+	compare_change.cpp complex_poly.cpp cond_exp.cpp conj_grad.cpp \
+	copy_ad.cpp copy_base.cpp cos.cpp cosh.cpp cppad_vector.cpp \
+	default.cpp div.cpp div_eq.cpp epsilon.cpp eq.cpp \
+	equal_op_seq.cpp erf.cpp error_handler.cpp exp.cpp for_one.cpp \
+	for_two.cpp forward.cpp for_sparse_jac.cpp fun_assign.cpp \
+	fun_check.cpp hes_lagrangian.cpp hes_lu_det.cpp \
 	hes_minor_det.cpp hessian.cpp hes_times_dir.cpp \
 	independent.cpp integer.cpp interface_2c.cpp \
 	interp_onetape.cpp interp_retape.cpp jac_lu_det.cpp \
@@ -69,7 +70,7 @@ am__example_SOURCES_DIST = mul_level_adolc.cpp ode_taylor_adolc.cpp \
 	reverse_two.cpp rev_one.cpp rev_sparse_hes.cpp \
 	rev_sparse_jac.cpp rev_two.cpp romberg_mul.cpp romberg_one.cpp \
 	rosen_34.cpp runge_45_1.cpp runge_45_2.cpp seq_property.cpp \
-	simple_vector.cpp sin.cpp sinh.cpp sparse_hessian.cpp \
+	simple_vector.cpp sign.cpp sin.cpp sinh.cpp sparse_hessian.cpp \
 	sparse_jacobian.cpp sqrt.cpp stack_machine.cpp sub.cpp \
 	sub_eq.cpp tan.cpp tanh.cpp tape_index.cpp thread_alloc.cpp \
 	unary_minus.cpp unary_plus.cpp user_tan.cpp value.cpp \
@@ -81,13 +82,14 @@ am_example_OBJECTS = $(am__objects_1) example.$(OBJEXT) \
 	add.$(OBJEXT) add_eq.$(OBJEXT) ad_fun.$(OBJEXT) \
 	ad_in_c.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
 	atan_2.$(OBJEXT) bender_quad.$(OBJEXT) bool_fun.$(OBJEXT) \
-	vector_bool.$(OBJEXT) check_numeric_type.$(OBJEXT) \
-	check_simple_vector.$(OBJEXT) checkpoint.$(OBJEXT) \
-	compare.$(OBJEXT) compare_change.$(OBJEXT) \
-	complex_poly.$(OBJEXT) cond_exp.$(OBJEXT) conj_grad.$(OBJEXT) \
-	copy_ad.$(OBJEXT) copy_base.$(OBJEXT) cos.$(OBJEXT) \
-	cosh.$(OBJEXT) cppad_vector.$(OBJEXT) default.$(OBJEXT) \
-	div.$(OBJEXT) div_eq.$(OBJEXT) epsilon.$(OBJEXT) eq.$(OBJEXT) \
+	vector_bool.$(OBJEXT) change_const.$(OBJEXT) \
+	check_numeric_type.$(OBJEXT) check_simple_vector.$(OBJEXT) \
+	checkpoint.$(OBJEXT) compare.$(OBJEXT) \
+	compare_change.$(OBJEXT) complex_poly.$(OBJEXT) \
+	cond_exp.$(OBJEXT) conj_grad.$(OBJEXT) copy_ad.$(OBJEXT) \
+	copy_base.$(OBJEXT) cos.$(OBJEXT) cosh.$(OBJEXT) \
+	cppad_vector.$(OBJEXT) default.$(OBJEXT) div.$(OBJEXT) \
+	div_eq.$(OBJEXT) epsilon.$(OBJEXT) eq.$(OBJEXT) \
 	equal_op_seq.$(OBJEXT) erf.$(OBJEXT) error_handler.$(OBJEXT) \
 	exp.$(OBJEXT) for_one.$(OBJEXT) for_two.$(OBJEXT) \
 	forward.$(OBJEXT) for_sparse_jac.$(OBJEXT) \
@@ -116,8 +118,8 @@ am_example_OBJECTS = $(am__objects_1) example.$(OBJEXT) \
 	rev_sparse_hes.$(OBJEXT) rev_sparse_jac.$(OBJEXT) \
 	rev_two.$(OBJEXT) romberg_mul.$(OBJEXT) romberg_one.$(OBJEXT) \
 	rosen_34.$(OBJEXT) runge_45_1.$(OBJEXT) runge_45_2.$(OBJEXT) \
-	seq_property.$(OBJEXT) simple_vector.$(OBJEXT) sin.$(OBJEXT) \
-	sinh.$(OBJEXT) sparse_hessian.$(OBJEXT) \
+	seq_property.$(OBJEXT) simple_vector.$(OBJEXT) sign.$(OBJEXT) \
+	sin.$(OBJEXT) sinh.$(OBJEXT) sparse_hessian.$(OBJEXT) \
 	sparse_jacobian.$(OBJEXT) sqrt.$(OBJEXT) \
 	stack_machine.$(OBJEXT) sub.$(OBJEXT) sub_eq.$(OBJEXT) \
 	tan.$(OBJEXT) tanh.$(OBJEXT) tape_index.$(OBJEXT) \
@@ -178,9 +180,9 @@ CXX_FLAGS = @CXX_FLAGS@
 CXX_FLAGS_FADBAD = @CXX_FLAGS_FADBAD@
 CYGPATH_W = @CYGPATH_W@
 
-# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# $Id: makefile.am 2270 2012-01-20 15:15:06Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -302,12 +304,15 @@ top_srcdir = @top_srcdir@
 @CppAD_BOOST_DIR_TRUE@BOOST_INCLUDE = -I$(BOOST_DIR)
 # 
 # Microsoft project files an script to run a single test
-EXTRA_DIST = example.sln example.vcproj test_one.sh.in \
+EXTRA_DIST = \
+	example.sln \
+	example.vcproj \
+	test_one.sh.in \
 	$(ADOLC_EXTRA_FILES)
 
-@CppAD_MS_COMPILER_FALSE@AM_CXXFLAGS = -g $(ADOLC_FLAGS) 
+@CppAD_MS_COMPILER_FALSE@AM_CXXFLAGS = -g $(ADOLC_FLAGS)
 #
-@CppAD_MS_COMPILER_TRUE@AM_CXXFLAGS = -EHsc -g $(ADOLC_FLAGS) 
+@CppAD_MS_COMPILER_TRUE@AM_CXXFLAGS = -EHsc -g $(ADOLC_FLAGS)
 #
 AM_CPPFLAGS = -I. \
                    -I$(top_srcdir) \
@@ -320,9 +325,6 @@ AM_LDFLAGS = $(ADOLC_LIB_DIRS)
 #
 example_SOURCES = \
 	$(ADOLC_SRC_FILES) \
-	$(BTHREAD_SRC_FILES) \
-	$(OPENMP_SRC_FILES) \
-	$(PTHREAD_SRC_FILES) \
 	\
 	example.cpp \
 	abort_recording.cpp \
@@ -339,6 +341,7 @@ example_SOURCES = \
 	bender_quad.cpp \
 	bool_fun.cpp \
 	vector_bool.cpp \
+	change_const.cpp \
 	check_numeric_type.cpp \
 	check_simple_vector.cpp \
 	checkpoint.cpp \
@@ -429,6 +432,7 @@ example_SOURCES = \
 	runge_45_2.cpp \
 	seq_property.cpp \
 	simple_vector.cpp \
+	sign.cpp \
 	sin.cpp \
 	sinh.cpp \
 	sparse_hessian.cpp \
@@ -509,6 +513,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bender_quad.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/bool_fun.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/change_const.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_numeric_type.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/check_simple_vector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/checkpoint.Po@am__quote@
@@ -599,6 +604,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/runge_45_1.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/runge_45_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/seq_property.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sign.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/simple_vector.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sinh.Po@am__quote@
@@ -831,13 +837,8 @@ uninstall-am:
 	uninstall-am
 
 
-test.sh: example$(EXEEXT)
-	echo "#! /bin/sh -e"  > test.sh
-	echo "./example "    >> test.sh 
-	chmod +x test.sh
-
-test: test.sh
-	./test.sh
+test: check
+	./example
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

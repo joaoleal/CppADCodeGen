@@ -1,6 +1,6 @@
-dnl $Id: configure.ac 2210 2011-11-24 21:56:53Z bradbell $
+dnl $Id: configure.ac 2277 2012-01-27 18:51:24Z bradbell $
 dnl ---------------------------------------------------------------------------
-dnl CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+dnl CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 dnl
 dnl CppAD is distributed under multiple licenses. This distribution is under
 dnl the terms of the
@@ -12,7 +12,7 @@ dnl ---------------------------------------------------------------------------
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl   package   version              bug-report
-AC_INIT(CppAD, 20111227, cppad@list.coin-or.org)
+AC_INIT(CppAD, 20120128, cppad@list.coin-or.org)
 AC_SUBST(PACKAGE_URL, "http://www.coin-or.org/CppAD")
 AC_SUBST(PACKAGE_DESCRIPTION, "Differentiation of C++ Algorithms")
 
@@ -397,12 +397,12 @@ AC_LANG_PUSH([C++])
 LDFLAGS_save=$LDFLAGS
 CXXFLAGS_save=$CXXFLAGS
 if test "$BOOST_DIR" != "" ; then
-	CXXFLAGS="-I$BOOST_DIR $CXXFLAGS"
+	CXXFLAGS="-I$BOOST_DIR/include $CXXFLAGS"
 	LDFLAGS_tmp="$LDFLAGS_save -L$BOOST_DIR/lib"
 else
 	LDFLAGS_tmp="$LDFLAGS_save"
 fi
-LDFLAGS="$LDFLAGS_tmp -lboost_thread-mt"
+LDFLAGS="$LDFLAGS_tmp -lboost_thread"
 AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM(
 		[# include <boost/thread.hpp>],
@@ -412,19 +412,19 @@ AC_LINK_IFELSE(
 	[boost_thread="no"]
 )
 if test "$boost_thread" == "yes" ; then
-	AC_SUBST(BTHREAD_LIB,"-lboost_thread-mt")
+	AC_SUBST(BTHREAD_LIB,"-lboost_thread")
 else
-	LDFLAGS="$LDFLAGS_tmp -lboost_thread"
+	LDFLAGS="$LDFLAGS_tmp -lboost_thread-mt"
 	AC_LINK_IFELSE(
 		[AC_LANG_PROGRAM(
 			[# include <boost/thread.hpp>],
-			[boost::thread mythread;]
+			[boost::barrier wait(1);]
 		)],
 		[boost_thread="yes"],
 		[boost_thread="no"]
 	)
 	if test "$boost_thread" == "yes" ; then
-		AC_SUBST(BTHREAD_LIB,"-lboost_thread")
+		AC_SUBST(BTHREAD_LIB,"-lboost_thread-mt")
 	fi
 fi
 if test "$boost_thread" == "yes" ; then
@@ -496,6 +496,9 @@ AC_CONFIG_FILES([
 	cppad/configure.hpp
 	doxyfile
 	doc.omh
+	cppad_ipopt/example/test.sh
+	cppad_ipopt/speed/test.sh
+	cppad_ipopt/test/test.sh
 	example/test_one.sh
 	omh/install_unix.omh
 	omh/install_windows.omh
@@ -529,6 +532,30 @@ AC_CONFIG_FILES([
 dnl END AC_CONFIG_FILES 
 dnl the comment line above is used by ./new_stable.sh
 
+AC_CONFIG_COMMANDS(
+	[cppad_ipopt_example_test.sh],
+	[chmod +x cppad_ipopt/example/test.sh],
+)	[]
+AC_CONFIG_COMMANDS(
+	[cppad_ipopt_speed_test.sh],
+	[chmod +x cppad_ipopt/speed/test.sh],
+	[]
+)
+AC_CONFIG_COMMANDS(
+	[cppad_ipopt_test_test.sh],
+	[chmod +x cppad_ipopt/test/test.sh],
+	[]
+)
+AC_CONFIG_COMMANDS(
+	[example_test_one.sh],
+	[chmod +x example/test_one.sh],
+	[]
+)
+AC_CONFIG_COMMANDS(
+	[test_more_test_one.sh],
+	[chmod +x test_more/test_one.sh],
+	[]
+)
 
 dnl create all the requested output files
 AC_OUTPUT

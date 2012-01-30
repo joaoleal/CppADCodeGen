@@ -1,4 +1,4 @@
-/* $Id: team_thread.hpp 2233 2011-12-20 19:34:24Z bradbell $ */
+/* $Id: team_thread.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
 # ifndef CPPAD_TEAM_THREAD_INCLUDED
 # define CPPAD_TEAM_THREAD_INCLUDED
 /* --------------------------------------------------------------------------

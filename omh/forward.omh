@@ -1,4 +1,4 @@
-$Id: forward.omh 2057 2011-08-11 14:07:11Z bradbell $
+$Id: forward.omh 2233 2011-12-20 19:34:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -621,7 +621,7 @@ it may not be worth re-taping a new AD operation sequence.
 $head Restrictions$$
 $index NDEBUG, CompareChange$$
 Computation of this function requires extra operations in the tape.
-If $code NDEBUG$$ is defined,
+If $cref/NDEBUG/Faq/Speed/NDEBUG/$$ is defined,
 of if a tape $cref/optimization/optimize/$$ has been preformed,
 these operations are not included in the tape and
 the value of $icode c$$ is always zero (and does not correspond

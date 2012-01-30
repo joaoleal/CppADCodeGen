@@ -1,4 +1,4 @@
-/* $Id: abs_op.hpp 1997 2011-07-09 04:17:47Z bradbell $ */
+/* $Id: abs_op.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_ABS_OP_INCLUDED
 # define CPPAD_ABS_OP_INCLUDED
 
@@ -20,7 +20,6 @@ CPPAD_BEGIN_NAMESPACE
 Forward and reverse mode calculations for z = abs(x).
 */
 
-
 /*!
 Compute forward mode Taylor coefficient for result of op = AbsOp.
 
@@ -39,9 +38,6 @@ inline void forward_abs_op(
 	size_t nc_taylor   , 
 	Base*  taylor      )
 {
-	size_t k;
-	Base zero(0.);
-
 	// check assumptions
 	CPPAD_ASSERT_UNKNOWN( NumArg(AbsOp) == 1 );
 	CPPAD_ASSERT_UNKNOWN( NumRes(AbsOp) == 1 );
@@ -52,16 +48,7 @@ inline void forward_abs_op(
 	Base* x = taylor + i_x * nc_taylor;
 	Base* z = taylor + i_z * nc_taylor;
 
-	// order that decides positive, negative or zero
-	k = 0;
-	while( (k < j) & (x[k] == zero) )
-		k++; 
-
-	if( GreaterThanZero(x[k]) )
-		z[j]  = x[j];
-	else if( LessThanZero(x[k]) )
-		z[j] = -x[j]; 
-	else	z[j] = zero;
+	z[j] = sign(x[0]) * x[j];
 }
 
 /*!
@@ -89,12 +76,10 @@ inline void forward_abs_op_0(
 	CPPAD_ASSERT_UNKNOWN( 0 < nc_taylor );
 
 	// Taylor coefficients corresponding to argument and result
-	Base y0 = *(taylor + i_x * nc_taylor);
+	Base x0 = *(taylor + i_x * nc_taylor);
 	Base* z = taylor + i_z * nc_taylor;
 
-	if( LessThanZero(y0) )
-		z[0]  = - y0;
-	else	z[0] = y0; 
+	z[0] = abs(x0);
 }
 /*!
 Compute reverse mode partial derivatives for result of op = AbsOp.
@@ -116,8 +101,7 @@ inline void reverse_abs_op(
 	const Base* taylor       ,
 	size_t      nc_partial   ,
 	Base*       partial      )
-{	size_t j, k;	
-	Base zero(0.);
+{	size_t j;	
 
 	// check assumptions
 	CPPAD_ASSERT_UNKNOWN( NumArg(AbsOp) == 1 );
@@ -133,21 +117,8 @@ inline void reverse_abs_op(
 	// Taylor coefficients and partials corresponding to result
 	Base* pz       = partial +    i_z * nc_partial;
 
-	// order that decides positive, negative or zero
-	k = 0;
-	while( (k < d) & (x[k] == zero) )
-		k++; 
-
-	if( GreaterThanZero(x[k]) )
-	{	// partial of z w.r.t y is +1
-		for(j = k; j <= d; j++)
-			px[j] += pz[j];
-	}
-	else if( LessThanZero(x[k]) )
-	{	// partial of z w.r.t y is -1
-		for(j = k; j <= d; j++)
-			px[j] -= pz[j];
-	}
+	for(j = 0; j <= d; j++)
+		px[j] += sign(x[0]) * pz[j];
 }
 
 CPPAD_END_NAMESPACE

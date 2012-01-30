@@ -1,6 +1,6 @@
-$Id: faq.omh 2210 2011-11-24 21:56:53Z bradbell $
+$Id: faq.omh 2273 2012-01-25 07:34:02Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -261,6 +261,11 @@ $subhead Optimize$$
 It is also possible that preforming a tape 
 $cref/optimization/optimize/$$ will improve the speed of evaluation
 more than the time required for the optimization.
+
+$subhead Memory Allocation$$
+You may also increase execution speed
+by calling $code hold_memory$$ with
+$cref/value/ta_hold_memory/value/$$ equal to true.
 
 $head Tape Storage: Disk or Memory$$
 $index storage, tape$$

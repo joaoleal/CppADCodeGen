@@ -1,4 +1,4 @@
-/* $Id: reverse_sweep.hpp 2037 2011-07-31 19:24:20Z bradbell $ */
+/* $Id: reverse_sweep.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_REVERSE_SWEEP_INCLUDED
 # define CPPAD_REVERSE_SWEEP_INCLUDED
 
@@ -422,6 +422,14 @@ void ReverseSweep(
 			// no result so nothing to do
 			break;
 			// --------------------------------------------------
+
+			case SignOp:
+			CPPAD_ASSERT_UNKNOWN( i_var < numvar );
+			reverse_sign_op(
+				d, i_var, arg[0], J, Taylor, K, Partial
+			);
+			break;
+			// -------------------------------------------------
 
 			case SinOp:
 			CPPAD_ASSERT_UNKNOWN( i_var < numvar );

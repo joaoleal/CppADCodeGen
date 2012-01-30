@@ -1,4 +1,4 @@
-/* $Id: cppad_assert.hpp 2233 2011-12-20 19:34:24Z bradbell $ */
+/* $Id: cppad_assert.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
 # ifndef CPPAD_CPPAD_ASSERT_INCLUDED
 # define CPPAD_CPPAD_ASSERT_INCLUDED
 

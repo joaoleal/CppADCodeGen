@@ -370,6 +370,12 @@ player<Base>* Rec
                 // no result so nothing to do
                 break;
                 // --------------------------------------------------
+                
+            case SignOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                reverse_code_gen_sign_op(s_out, names, d, i_var, arg[0]);
+                break;
+                // -------------------------------------------------
 
             case SinOp:
                 CPPAD_ASSERT_UNKNOWN(i_var < numvar);

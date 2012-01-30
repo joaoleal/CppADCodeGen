@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: new_release.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: new_release.sh 2247 2012-01-01 17:47:15Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 #
@@ -50,18 +50,9 @@ then
 	echo "then commit the changes."
 	exit 1
 fi
-echo "svn revert cppad/config.h"
-      svn revert cppad/config.h
-if ! grep "PACKAGE_STRING.*CppAD.*$release_version" cppad/config.h > /dev/null
-then
-	echo bin/"new_release.sh: Version in cppad/config.h not $release_version."
-	echo "	./build.sh version automake configure"
-	echo "should fix this."
-	exit 1
-fi
 echo "svn revert cppad/configure.hpp"
       svn revert cppad/configure.hpp
-if ! grep "PACKAGE_STRING.*CppAD.*$release_version" \
+if ! grep "PACKAGE_STRING *\"cppad-$release_version\"" \
 	cppad/configure.hpp > /dev/null
 then
 	echo bin/"new_release.sh: Version in cppad/configure.hpp not $release_version."

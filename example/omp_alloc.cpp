@@ -1,4 +1,4 @@
-/* $Id: omp_alloc.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: omp_alloc.cpp 2233 2011-12-20 19:34:24Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -22,6 +22,10 @@ $index openmp, memory allocation$$
 $index multi-thread, memory allocation$$
 $index example, memory allocation$$
 $index test, memory allocation$$
+
+$head Deprecated$$
+This example is only intended to help convert calls to $cref omp_alloc$$
+to calls to $cref thread_alloc$$.
 
 $code
 $verbatim%example/omp_alloc.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$

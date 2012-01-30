@@ -1,9 +1,9 @@
-/* $Id: sparse_evaluate.hpp 1537 2009-10-01 03:52:53Z bradbell $ */
+/* $Id: sparse_evaluate.hpp 2269 2012-01-19 15:42:47Z bradbell $ */
 # ifndef CPPAD_SPARSE_EVALUATE_INCLUDED
 # define CPPAD_SPARSE_EVALUATE_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -162,6 +162,9 @@ $end
 # include <cppad/local/cppad_assert.hpp>
 # include <cppad/check_numeric_type.hpp>
 # include <cppad/vector.hpp>
+
+// following needed by gcc under fedora 17 so that exp(double) is defined
+# include <cppad/base_require.hpp> 
 
 namespace CppAD {
 	template <class Float>

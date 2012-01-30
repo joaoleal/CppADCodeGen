@@ -1,4 +1,4 @@
-/* $Id: define.hpp 2092 2011-09-02 21:30:51Z bradbell $ */
+/* $Id: define.hpp 2234 2011-12-21 13:44:54Z bradbell $ */
 # ifndef CPPAD_DEFINE_INCLUDED
 # define CPPAD_DEFINE_INCLUDED
 
@@ -61,9 +61,8 @@ This preprocessor symbol makes it easier to compare these two options.
 Declares beginning of the CppAD namespace is a way not reconized by doxygen.
 
 \def CPPAD_END_NAMESPACE
-Used for end that matches the beginning of a CppAD namespace section
+Used for end that matches the beginning of a CppAD namespace section.
 */
-
 # define CPPAD_BEGIN_NAMESPACE namespace CppAD {
 # define CPPAD_END_NAMESPACE   }
 

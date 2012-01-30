@@ -1,4 +1,4 @@
-/* $Id: optimize.hpp 2121 2011-10-17 13:55:22Z bradbell $ */
+/* $Id: optimize.hpp 2233 2011-12-20 19:34:24Z bradbell $ */
 # ifndef CPPAD_OPTIMIZE_INCLUDED
 # define CPPAD_OPTIMIZE_INCLUDED
 
@@ -92,7 +92,7 @@ for an optimized tape (even if $code NDEBUG$$ is not defined).
 
 $head Checking Optimization$$
 $index NDEBUG$$
-If $code NDEBUG$$ is not defined
+If $cref/NDEBUG/Faq/Speed/NDEBUG/$$ is not defined,
 and $cref/f.size_taylor()/size_taylor/$$ is greater than zero,
 a $cref ForwardZero$$ calculation is done using the optimized version
 of $icode f$$ and the results are checked to see that they are

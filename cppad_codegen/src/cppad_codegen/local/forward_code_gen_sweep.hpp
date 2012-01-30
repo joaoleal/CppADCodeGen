@@ -316,7 +316,12 @@ player<Base> *Rec) {
 #endif
                 break;
                 // -------------------------------------------------
+            case SignOp:
+                CPPAD_ASSERT_UNKNOWN(i_var < numvar);
+                forward_code_gen_sign_op(s_out, names, d, i_var, arg[0]);
+                break;
 
+                // -------------------------------------------------
             case SinOp:
                 // cos(x), sin(x)
                 CPPAD_ASSERT_UNKNOWN(i_var < numvar);

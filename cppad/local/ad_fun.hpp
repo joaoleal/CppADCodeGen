@@ -263,7 +263,7 @@ public:
 	/// reverse mode sweep
 	template <typename VectorBase>
 	VectorBase Reverse(size_t p, const VectorBase &v);
-       
+
 	// forward mode Jacobian sparsity 
 	// (see doxygen documentation in for_sparse_jac.hpp)
 	template <typename VectorSet>

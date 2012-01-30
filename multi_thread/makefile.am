@@ -1,6 +1,6 @@
-# $Id: makefile.am 2214 2011-11-27 21:40:42Z bradbell $
+# $Id: makefile.am 2269 2012-01-19 15:42:47Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -52,7 +52,7 @@ endif
 #
 AM_CPPFLAGS       = -I. -I$(top_srcdir) $(BOOST_INCLUDE) $(OPENMP_FLAGS)
 #
-AM_LDFLAGS        = $(BOOST_LIB) $(PTHREAD_LIB) $(BTHREAD_LIB) $(OPENMP_FLAGS)
+AM_LDFLAGS        = $(BOOST_LIB) $(BTHREAD_LIB) $(PTHREAD_LIB) $(OPENMP_FLAGS)
 #
 SHARED_SRC = \
 	thread_test.cpp \
@@ -84,8 +84,5 @@ pthread_test_SOURCES = \
 #
 dist_noinst_SCRIPTS = test.sh
 #
-test.sh: $(OPENMP_TEST)$(EXEEXT) $(BTHREAD_TEST)$(EXEEXT) $(PTHREAD_TEST)$(EXEEXT)  
-	if [ ! -e 'test.sh' ]; then cp $(srcdir)/test.sh test.sh ; fi
-#
-test: test.sh
-	./test.sh
+test: check
+	$(srcdir)/test.sh

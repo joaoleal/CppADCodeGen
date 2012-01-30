@@ -1,4 +1,4 @@
-$Id: whats_new_05.omh 2178 2011-10-30 06:52:58Z bradbell $
+$Id: whats_new_05.omh 2235 2011-12-21 14:50:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 $begin whats_new_05$$
 $spell
+	html
 	Dir
 	cppad.hpp
 	acos
@@ -721,10 +722,7 @@ $head 06-25$$
 Some improvements were made to the 
 README, AUTHORS, COPYING, and INSTALL files.
 In addition, the file
-$href%
-	../UWCopy040507.html%
-	UWCopy040507.html
-%$$
+$code UWCopy040507.html$$
 which contains the University of Washington's copyright
 policy (see Section 2) was added to the distribution.
 

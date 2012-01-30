@@ -1,4 +1,4 @@
-$Id: whats_new_11.omh 2215 2011-11-29 14:02:53Z bradbell $
+$Id: whats_new_11.omh 2241 2011-12-31 05:38:05Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 $begin whats_new_11$$
 $spell
+	namespace
 	boostvector
 	mega
 	inv
@@ -73,6 +74,56 @@ This section contains a list of the changes to CppAD during 2011
 (in reverse order by date).
 The purpose of this section is to
 assist you in learning about changes between various versions of CppAD.
+
+$head 12-30$$
+$list number$$
+There was a bug when using $cref abs$$ with an $code AD< AD<double> >$$
+argument, whereby the corresponding $code AD<double>$$ operation sequence
+depended on the value of the argument to the $code abs$$ function.  
+$lnext
+Change the specifications for the derivative of the $cref abs$$
+function to be the $cref sign$$ function; see to 
+$cref%old derivative%abs%Old Derivative%$$ specifications.
+$lnext
+Add the $cref sign$$ function to the $codei%AD<%Base%>%$$ list of
+available functions. 
+In addition, add the 
+$cref%sign%base_std_math%sign%$$ function to the list of
+$cref%base type requirements%base_require%$$.
+$lend
+
+$head 12-28$$
+The file $cref/time_test.hpp/time_test/Include/$$
+was not being included by $code cppad/cppad.hpp$$.
+This has been fixed.
+
+$head 12-21$$
+The types 
+$code SizeVector$$,
+$code NumberVector$$,
+$code ADNumber$$, and
+$code ADVector$$,
+were in the global namespace and this was causing warnings 
+about the shadowing of these declarations. 
+The 
+$cref/cppad_ipopt namespace/cppad_ipopt_nlp/cppad_ipopt namespace/$$
+was created to avoid these problems.
+The simplest way to make old $cref cppad_ipopt_nlp$$ code work with this
+change is to use the command
+$codep
+	using namespace cppad_ipopt;
+$$
+
+$head 12-20$$
+$list number$$
+Change $code team_start$$ to $cref/team_create/team_thread.hpp/team_create/$$
+and $code team_stop$$ to $cref/team_destroy/team_thread.hpp/team_destroy/$$.
+$lnext
+Change $code NDEBUG$$ mentions to include link to 
+$cref/NDEBUG/Faq/Speed/NDEBUG/$$.
+$lnext
+Improve $cref memory_leak$$ documentation.
+$lend
 
 $head 11-29$$
 THe $cref time_test$$ routine was still executing the 

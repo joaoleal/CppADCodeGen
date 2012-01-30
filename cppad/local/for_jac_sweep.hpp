@@ -1,4 +1,4 @@
-/* $Id: for_jac_sweep.hpp 2114 2011-10-14 18:59:16Z bradbell $ */
+/* $Id: for_jac_sweep.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_FOR_JAC_SWEEP_INCLUDED
 # define CPPAD_FOR_JAC_SWEEP_INCLUDED
 /* --------------------------------------------------------------------------
@@ -385,6 +385,14 @@ void ForJacSweep(
 
 			case PriOp:
 			CPPAD_ASSERT_NARG_NRES(op, 5, 0);
+			break;
+			// -------------------------------------------------
+
+			case SignOp:
+			CPPAD_ASSERT_NARG_NRES(op, 1, 1);
+			forward_sparse_jacobian_unary_op(
+				i_var, arg[0], var_sparsity
+			);
 			break;
 			// -------------------------------------------------
 

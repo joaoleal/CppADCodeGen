@@ -1,4 +1,4 @@
-/* $Id: cond_exp.hpp 2120 2011-10-17 04:16:03Z bradbell $ */
+/* $Id: cond_exp.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_COND_EXP_INCLUDED
 # define CPPAD_COND_EXP_INCLUDED
 
@@ -59,7 +59,7 @@ The relational $icode Rel$$ and comparison operator $icode Cop$$
 above have the following correspondence: 
 $codei%
 	%Rel%   Lt   Le   Eq   Ge   Gt
-	%Cop%    <   <=   ==    >   >=
+	%Cop%    <   <=   ==   >=   >
 %$$
 If $icode f$$ is the $cref ADFun$$ object corresponding to the
 AD operation sequence,

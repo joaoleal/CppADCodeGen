@@ -102,7 +102,7 @@ DIST_SUBDIRS = cppad_codegen/src cppad_codegen/test cppad_ipopt/src \
 	speed/src speed/adolc speed/cppad speed/double speed/example \
 	speed/fadbad speed/profile speed/sacado example \
 	introduction/get_started introduction/exp_apx print_for \
-	test_more
+	multi_thread test_more
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -262,12 +262,12 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
-# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# $Id: makefile.am 2265 2012-01-15 18:07:32Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
-# the terms of the
+# the terms of the 
 #                     Common Public License Version 1.0.
 #
 # A copy of this license is included in the COPYING file of this distribution.
@@ -292,7 +292,7 @@ BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
 @CppAD_SACADO_TRUE@SPEED_SACADO_TESTS = speed/sacado
 @CppAD_IPOPT_CPPAD_FALSE@IPOPT_TESTS = 
 #
-# Did user specify a value for IPOPT_DIR in configure command line
+# Did user specify a value for IPOPT_DIR in configure command line 
 @CppAD_IPOPT_CPPAD_TRUE@IPOPT_TESTS = \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/example \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/speed \
@@ -302,7 +302,7 @@ BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
 #
 @CppAD_IPOPT_CPPAD_TRUE@IPOPT_DIRS = \
 @CppAD_IPOPT_CPPAD_TRUE@	cppad_ipopt/src \
-@CppAD_IPOPT_CPPAD_TRUE@	$(IPOPT_TESTS)
+@CppAD_IPOPT_CPPAD_TRUE@	$(IPOPT_TESTS) 
 
 @CppAD_IPOPT_CPPAD_FALSE@IPOPT_HEADER = 
 #
@@ -470,8 +470,10 @@ nobase_myinclude_HEADERS = \
 	cppad/local/rev_sparse_hes.hpp \
 	cppad/local/rev_sparse_jac.hpp \
 	cppad/local/rev_two.hpp \
-	cppad/local/sinh_op.hpp \
+	cppad/local/sign.hpp \
+	cppad/local/sign_op.hpp \
 	cppad/local/sin_op.hpp \
+	cppad/local/sinh_op.hpp \
 	cppad/local/sparse_binary_op.hpp \
 	cppad/local/sparse_hessian.hpp \
 	cppad/local/sparse.hpp \
@@ -498,7 +500,6 @@ nobase_myinclude_HEADERS = \
 	cppad/local/value.hpp \
 	cppad/local/var2par.hpp \
 	cppad/local/vec_ad.hpp \
-	\
 	cppad/lu_factor.hpp \
 	cppad/lu_invert.hpp \
 	cppad/lu_solve.hpp \
@@ -530,8 +531,7 @@ nobase_myinclude_HEADERS = \
 	cppad/track_new_del.hpp \
 	cppad/vector.hpp
 
-
-# End nobase_myinclude_HEADERS (check_makefile.sh uses this comment)
+# End nobase_myinclude_HEADERS (check_makefile.sh uses this comment) 
 # ---------------------------------------------------------------
 #
 # No objects or executables are required to install CppAD.
@@ -544,9 +544,9 @@ SUBDIRS = \
 	introduction/get_started \
 	introduction/exp_apx \
 	print_for \
-	test_more
+	multi_thread \
+	test_more 
 
-#	multi_thread \
 #
 # note that bin/gpl_license.sh is deleted by dist-hook
 EXTRA_DIST = \
@@ -571,7 +571,7 @@ test_directory_list = \
 	introduction/exp_apx \
 	multi_thread \
 	print_for \
-	test_more
+	test_more 
 
 #
 @CppAD_DOCUMENTATION_TRUE@doc_postfix = $(DESTDIR)$(datadir)/doc/$(postfix_dir)
@@ -1141,30 +1141,28 @@ uninstall-am: uninstall-myincludeHEADERS \
 	uninstall-pkgconfigDATA
 
 $(top_srcdir)/cppad/configure.hpp: cppad/configure.hpp
-	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp
+	cp cppad/configure.hpp $(top_srcdir)/cppad/configure.hpp 
 @CppAD_HAVE_AR_FALSE@	SPEED_DIRS =
 
-test: all
-	rm -f test.log
+test: all 
+	rm -f test.log 
 	touch test.log
-	rm -f test.sh
 	echo "#! /bin/sh -e"                               >  test.sh
 	for dir in $(test_directory_list) ; do (                        \
-		rm -f $$dir/test.sh                                        \
 		echo "#"                                      >> test.sh ; \
+		echo "echo \"Running make test in $$dir\""    >> test.sh ; \
 		echo "cd $$dir "                              >> test.sh ; \
-		echo "make test.sh"                           >> test.sh ; \
-		echo "echo \"Running test.sh in $$dir\""      >> test.sh ; \
-		echo "./test.sh"                              >> test.sh ; \
+		echo "make test"                              >> test.sh ; \
 		echo "cd $(ABS_TOP_BUILDDIR)"                 >> test.sh ; \
 	) done
 	echo "exit 0"                                      >> test.sh
 	chmod +x test.sh
 	./test.sh
 #
-#
 dist-hook:
+	rm -rf `find . -name .svn`
 	rm $(distdir)/doc/error.wrd
+	rm $(distdir)/bin/gpl_license.sh
 @CppAD_DOCUMENTATION_TRUE@install-data-hook:
 @CppAD_DOCUMENTATION_TRUE@	if [ ! -e $(doc_postfix) ] ; then mkdir -p $(doc_postfix) ; fi
 @CppAD_DOCUMENTATION_TRUE@	if [ -e $(doc_package) ] ; then rm -rf $(doc_package) ; fi

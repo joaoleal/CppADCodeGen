@@ -1,4 +1,4 @@
-/* $Id: test_more.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: test_more.cpp 2240 2011-12-31 05:33:55Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -17,7 +17,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad/memory_leak.hpp>
 
 // various examples / tests
-extern bool Abs(void);
+extern bool abs(void);
 extern bool Acos(void);
 extern bool Add(void);
 extern bool AddEq(void);
@@ -120,7 +120,7 @@ int main(void)
 
 	// This line is used by test_one.sh 
 
-	ok &= Run( Abs,             "Abs"            );
+	ok &= Run( abs,             "abs"            );
 	ok &= Run( Acos,            "Acos"           );
 	ok &= Run( Add,             "Add"            );
 	ok &= Run( AddEq,           "AddEq"          );

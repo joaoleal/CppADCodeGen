@@ -1,4 +1,4 @@
-/* $Id: rev_jac_sweep.hpp 2038 2011-07-31 23:56:44Z bradbell $ */
+/* $Id: rev_jac_sweep.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_REV_JAC_SWEEP_INCLUDED
 # define CPPAD_REV_JAC_SWEEP_INCLUDED
 
@@ -269,7 +269,7 @@ void RevJacSweep(
 
 			case DisOp:
 			CPPAD_ASSERT_NARG_NRES(op, 2, 1);
-
+			// derivative is identically zero
 			break;
 			// -------------------------------------------------
 
@@ -391,6 +391,12 @@ void RevJacSweep(
 
 			case PriOp:
  			CPPAD_ASSERT_NARG_NRES(op, 5, 0);
+			break;
+			// -------------------------------------------------
+
+			case SignOp:
+			CPPAD_ASSERT_NARG_NRES(op, 1, 1);
+			// derivative is identically zero
 			break;
 			// -------------------------------------------------
 

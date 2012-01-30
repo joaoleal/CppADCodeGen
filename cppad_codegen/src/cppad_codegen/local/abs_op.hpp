@@ -2,6 +2,7 @@
 #define CPPAD_CODEGEN_ABS_OP_INCLUDED
 
 #include <cppad_codegen/local/ad_code_gen_name_provider.hpp>
+#include <cppad_codegen/local/sign.hpp>
 
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis
@@ -48,32 +49,12 @@ size_t i_x) {
     std::string sx_d = n.generateVarName(d, i_x);
     std::string sz_d = n.generateVarName(d, i_z);
 
-    std::string aux;
-
     if (d > 0) {
-        aux = n.tempBaseVarName();
         std::string sx_0 = n.generateVarName(0, i_x);
-
-        // order that decides positive, negative or zero
-        for (size_t j = 0; j <= d; j++) {
-            std::string sx_j = n.generateVarName(j, i_x);
-            if (j > 0) s_out << "} else ";
-            s_out << "if (" << sx_j << " != " << n.zero() << ") {"
-                    << aux << " = " << sx_j << n.endl();
-        }
-        s_out << "} else {"
-                << aux << " = " << sx_0 << n.endl()
-                << "}\n";
+        s_out << sz_d << " = " << code_gen_sign(n, sx_0, sx_d) << n.endl();
     } else {
-        aux = sx_d;
+        s_out << sz_d << " = " << code_gen_sign(n, sx_d, sx_d) << n.endl();
     }
-
-    s_out << "if(" << aux << " < " << n.zero() << ") "
-            << sz_d << " = -" << sx_d << n.endl() <<
-            "else if(" << aux << " > " << n.zero() << ")"
-            << sz_d << " = " << sx_d << n.endl() <<
-            "else "
-            << sz_d << " = " << n.zero() << n.endl();
 }
 
 /*!
@@ -102,10 +83,7 @@ size_t i_x) {
     std::string sx = n.generateVarName(0, i_x);
     std::string sz = n.generateVarName(0, i_z);
 
-    s_out << "if(" << sx << " < " << n.zero() << ") "
-            << sz << " = -" << sx << n.endl() <<
-            "else "
-            << sz << " = " << sx << n.endl();
+    s_out << sz << " = " << code_gen_sign(n, sx, sx) << n.endl();
 }
 
 /*!
@@ -132,52 +110,18 @@ inline void reverse_code_gen_abs_op(
     CPPAD_ASSERT_UNKNOWN(NumRes(AbsOp) == 1);
     CPPAD_ASSERT_UNKNOWN(i_x < i_z);
 
-    std::string aux, kk;
-
     // order that decides positive, negative or zero
-    aux = n.tempBaseVarName();
-    kk = n.tempIntegerVarName();
+    const std::string& aux = n.tempBaseVarName();
     std::string sx_0 = n.generateVarName(0, i_x);
 
-    // order that decides positive, negative or zero
-    for (size_t j = 0; j <= d; j++) {
-        std::string sx_j = n.generateVarName(j, i_x);
-        if (j > 0) s_out << "} else ";
-        s_out << "if (" << sx_j << " != " << n.zero() << ") {"
-                << aux << " = " << sx_j << n.endl()
-                << kk << " = " << j << n.endl();
+    s_out << aux << " = " << code_gen_sign(n, sx_0) << n.endl();
+
+    for (j = 0; j <= d; j++) { // partial of z w.r.t y is -1
+        std::string px_j = n.generatePartialName(j, i_x);
+        std::string pz_j = n.generatePartialName(j, i_z);
+
+        s_out << px_j << " += " << aux << " * " << pz_j << n.endl();
     }
-    s_out << "} else {"
-            << aux << " = " << sx_0 << n.endl()
-            << kk << " = 0" << n.endl()
-            << "}\n";
-
-
-    s_out << "if(" << aux << " > " << n.zero() << ") {";
-    {
-        for (j = 0; j <= d; j++) { // partial of z w.r.t y is +1
-            std::string px_j = n.generatePartialName(j, i_x);
-            std::string pz_j = n.generatePartialName(j, i_z);
-
-            if (j > 0) s_out << "} else ";
-            s_out << "if (" << j << " >= " << kk << ") {"
-                    << px_j << " += " << pz_j << n.endl();
-        }
-        s_out << "}\n";
-    }
-    s_out << "} else if (" << aux << " < " << n.zero() << ") {";
-    {
-        for (j = 0; j <= d; j++) { // partial of z w.r.t y is -1
-            std::string px_j = n.generatePartialName(j, i_x);
-            std::string pz_j = n.generatePartialName(j, i_z);
-
-            if (j > 0) s_out << "} else ";
-            s_out << "if (" << j << " >= " << kk << ") {"
-                    << px_j << " -= " << pz_j << n.endl();
-        }
-        s_out << "}\n";
-    }
-    s_out << "}\n";
 }
 
 CPPAD_END_NAMESPACE

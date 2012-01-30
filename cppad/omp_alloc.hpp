@@ -1,9 +1,9 @@
-/* $Id: omp_alloc.hpp 2085 2011-09-01 14:54:04Z bradbell $ */
+/* $Id: omp_alloc.hpp 2273 2012-01-25 07:34:02Z bradbell $ */
 # ifndef CPPAD_OMP_ALLOC_INCLUDED
 # define CPPAD_OMP_ALLOC_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -80,6 +80,7 @@ $end
 	{	thread_alloc::parallel_setup(
 			number, omp_alloc::in_parallel, omp_alloc::get_thread_num
 		);
+		thread_alloc::hold_memory(number > 1);
 	}
 	/*!
 	Get the current maximum number of OpenMP threads that omp_alloc can use.

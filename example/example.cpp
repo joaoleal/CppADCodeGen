@@ -1,6 +1,6 @@
-/* $Id: example.cpp 2178 2011-10-30 06:52:58Z bradbell $ */
+/* $Id: example.cpp 2270 2012-01-20 15:15:06Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -53,7 +53,7 @@ $end
 
 // external complied tests
 extern bool abort_recording(void);
-extern bool Abs(void);
+extern bool abs(void);
 extern bool Acos(void);
 extern bool Add(void);
 extern bool AddEq(void);
@@ -65,6 +65,7 @@ extern bool Atan2(void);
 extern bool BenderQuad(void);
 extern bool BoolFun(void);
 extern bool vectorBool(void);
+extern bool change_const(void);
 extern bool CheckNumericType(void);
 extern bool checkpoint(void);
 extern bool CheckSimpleVector(void);
@@ -153,6 +154,7 @@ extern bool Rosen34(void);
 extern bool runge_45_1(void);
 extern bool runge_45_2(void);
 extern bool seq_property(void);
+extern bool sign(void);
 extern bool SimpleVector(void);
 extern bool Sin(void);
 extern bool Sinh(void);
@@ -206,7 +208,7 @@ int main(void)
 
 	// external compiled tests
 	ok &= Run( abort_recording,   "abort_recording"  );
-	ok &= Run( Abs,               "Abs"              );
+	ok &= Run( abs,               "abs"              );
 	ok &= Run( Acos,              "Acos"             );
 	ok &= Run( Add,               "Add"              );
 	ok &= Run( AddEq,             "AddEq"            );
@@ -218,6 +220,7 @@ int main(void)
 	ok &= Run( BenderQuad,        "BenderQuad"       );
 	ok &= Run( BoolFun,           "BoolFun"          );
 	ok &= Run( vectorBool,        "vectorBool"       );
+	ok &= Run( change_const,      "change_const"     );
 	ok &= Run( CheckNumericType,  "CheckNumericType" );
 	ok &= Run( checkpoint,        "checkpoint"       );
 	ok &= Run( CheckSimpleVector, "CheckSimpleVector");
@@ -303,6 +306,7 @@ int main(void)
 	ok &= Run( runge_45_1,        "runge_45_1"       );
 	ok &= Run( runge_45_2,        "runge_45_2"       );
 	ok &= Run( seq_property,      "seq_property"     );
+	ok &= Run( sign,              "sign"             );
 	ok &= Run( SimpleVector,      "SimpleVector"     );
 	ok &= Run( Sin,               "Sin"              );
 	ok &= Run( Sinh,              "Sinh"             );

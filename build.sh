@@ -1,7 +1,7 @@
 #! /bin/bash -e
-# $Id: build.sh 2200 2011-11-22 05:03:01Z bradbell $
+# $Id: build.sh 2265 2012-01-15 18:07:32Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -270,14 +270,6 @@ EOF
 	do
 		echo "cp $file ../$file"
 		cp $file ../$file
-		#
-		# change shell scripts to be executable
-		ext=`echo $file | sed -e 's/.*\.\([^.]*\)$/\1/'`
-		if [ "$ext" == "sh" ]
-		then
-			echo "chmod +x ../$file"
-			chmod +x ../$file
-		fi
 	done
 	#
 	echo "OK: ./build.sh configure"
@@ -307,12 +299,6 @@ then
 		      rm -r doc
 	fi
 	#
-	if [ -e bin/omhelp ]
-	then
-		dir=`pwd`
-		export PATH="$PATH:$dir/bin"
-	fi
-	#
 	echo "bin/run_omhelp.sh xml"
 	      bin/run_omhelp.sh xml
 	#
@@ -328,6 +314,7 @@ then
 		check_include_omh.sh
 		check_makefile.sh
 		check_op_code.sh
+		check_svn_id.sh
 		check_verbatim.sh
 	"
 	for check in $list 
@@ -426,9 +413,19 @@ then
 	exit 0
 fi
 # -----------------------------------------------------------------------------
+if [ "$1" = "gpl" ] 
+then
+	# create GPL licensed version
+	echo "bin/gpl_license.sh"
+	bin/gpl_license.sh
+	#
+	echo "OK: ./build.sh gpl"
+	exit 0
+fi
+# -----------------------------------------------------------------------------
 if [ "$1" = "copy2doc" ] 
 then
-	for ext in cpl
+	for ext in cpl gpl
 	do
 		echo "cp work/cppad-$version.$ext.tgz doc/cppad-$version.$ext.tgz"
 		cp work/cppad-$version.$ext.tgz doc/cppad-$version.$ext.tgz
@@ -449,6 +446,7 @@ then
 		dist
 		omhelp
 		doxygen
+		gpl
 		copy2doc
 	"
 	if [ "$version_type" != "trunk" ]
@@ -572,14 +570,9 @@ EOF
 	echo "cat make_test.log        >> $log_file"
 	      cat make_test.log        >> $log_dir/$log_file
 	#
-	# Remove warnings due to global declarations in cppad_ipopt_nlp.hpp
-	# this needs to be fixed !!
-	if ( sed  < make_test.log \
-		-e '/sparse_jacobian.hpp:[0-9]*:32:/d' \
-		-e '/cppad_ipopt_nlp.hpp:[0-9]*:40:/d' \
-		-e '/sparse_hessian.hpp:[0-9]*:32:/d' | grep ': *warning:' )
+	if grep ': *warning:' make_test.log
 	then 
-		echo "There are warnings in $dir/make.log"
+		echo "There are warnings in $dir/make_test.log"
 		exit 1
 	fi
 	# --------------------------------------------------------------------
@@ -618,7 +611,8 @@ configure: run the configure script in the work directory.            automake
 dist:      create the distribution file work/cppad-version.cpl.tgz.   configure
 omhelp:    build all formats of user documentation in doc/*.          configure
 doxygen:   build developer documentation in doxydoc/*.                configure
-copy2doc:  copy tarballs and doxygen output into doc directory.       doxygen
+gpl:       create work/*.gpl.zip and work/*.cpl.zip.                  dist
+copy2doc:  copy tarballs and doxygen output into doc directory.       gpl
 
 all:       $all_cases
 test:      use tarball to make test and put result in build_test.log. dist

@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: check_svn_dist.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: check_svn_dist.sh 2236 2011-12-26 14:08:37Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 #

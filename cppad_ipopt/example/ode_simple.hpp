@@ -1,4 +1,4 @@
-/* $Id: ode_simple.hpp 1771 2011-01-01 15:41:51Z bradbell $ */
+/* $Id: ode_simple.hpp 2234 2011-12-21 13:44:54Z bradbell $ */
 # ifndef CPPAD_ODE_SIMPLE_INCLUDED
 # define CPPAD_ODE_SIMPLE_INCLUDED
 
@@ -40,6 +40,8 @@ $end
 
 // define in the empty namespace
 namespace {
+	using namespace cppad_ipopt;
+
 	class FG_simple : public cppad_ipopt_fg_info
 	{
 	private:

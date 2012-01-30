@@ -1,4 +1,4 @@
-/* $Id: forward_sweep.hpp 2114 2011-10-14 18:59:16Z bradbell $ */
+/* $Id: forward_sweep.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_FORWARD_SWEEP_INCLUDED
 # define CPPAD_FORWARD_SWEEP_INCLUDED
 
@@ -424,6 +424,12 @@ size_t forward_sweep(
 # endif
 			break;
 			// -------------------------------------------------
+
+			case SignOp:
+			// cos(x), sin(x)
+			CPPAD_ASSERT_UNKNOWN( i_var < numvar  );
+			forward_sign_op(d, i_var, arg[0], J, Taylor);
+			break;
 
 			case SinOp:
 			// cos(x), sin(x)

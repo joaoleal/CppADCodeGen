@@ -1,7 +1,7 @@
 #! /bin/bash -e
-# $Id: new_stable.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: new_stable.sh 2257 2012-01-03 22:52:35Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the
@@ -17,13 +17,13 @@ then
 fi
 # -----------------------------------------------------------------------------
 copy_from_trunk="keep"     # do (frist time), keep (use current), redo
-trunk_revision="1773"      # trunk revision number that stable corresponds to
-yyyy_mm_dd="2011-01-01"    # Date corresponding to this trunk revision
+trunk_revision="2241"      # trunk revision number that stable corresponds to
+yyyy_mm_dd="2012-01-01"    # Date corresponding to this trunk revision
 # -----------------------------------------------------------------------------
 echo "copy_from_trunk=$copy_from_trunk"
 echo "trunk_revision=$trunk_revision"
 echo "yyyy_mm_dd=$yyyy_mm_dd"
-echo
+echo '------------------------------------------------------------------------'
 stable_revision=`expr $trunk_revision + 1`
 stable_version=`echo $yyyy_mm_dd | sed -e 's/-//g'`
 release_version="$stable_version.0"
@@ -38,6 +38,24 @@ then
 	echo bin/"new_stable.sh: must execute this script in the trunk"
 	exit 1
 fi
+# -----------------------------------------------------------------------------
+# check copyright date in bin/commit.sh is current
+cat << EOF > bin/new_stable.1.$$
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
+EOF
+yy=`echo $yyyy_mm_dd | sed -e 's|..\(..\).*|\1|'`
+cat << EOF > bin/new_stable.2.$$
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-$yy Bradley M. Bell
+EOF
+sed -i -f bin/commit.sed bin/new_stable.1.$$
+if ! diff bin/new_stable.1.$$ bin/new_stable.2.$$ 
+then
+	echo 'new_stable.sh: Copyright year in bin/commit.sed is out of date.'
+	echo 'Fix it and then rerun bin/new_stable.sh.'
+	rm bin/new_stable.*.$$ 
+	exit 1
+fi
+rm bin/new_stable.*.$$ 
 # -----------------------------------------------------------------------------
 echo "cd .."
 cd ..
@@ -83,14 +101,19 @@ echo "cp trunk/bin/new_stable.sh stable/$stable_version/bin/new_stable.sh"
 echo "cd stable/$stable_version"
       cd stable/$stable_version
 #
+# set the version number in configure.ac
+echo "automatic editing: $stable_version/configure.ac"
+sed -i configure.ac \
+	-e "s/AC_INIT(CppAD, [0-9]*,/AC_INIT(CppAD, $stable_version.0,/"
+#
 # set the value of stable version in corresponding new_release.sh
 echo "automatic editing: $stable_version/bin/new_release.sh"
 sed -i bin/new_release.sh \
 	-e "s/stable_version=.*/stable_version=\"$stable_version\"/"
 #
 # Inform build.sh that this is a stable version
-echo "automatic editing: $stable_version/bin/build.sh"
-sed -i bin/build.sh -e 's/^version_type=.*/version_type="stable"/'
+echo "automatic editing: $stable_version/build.sh"
+sed -i build.sh -e 's/^version_type=.*/version_type="stable"/'
 #
 # Set web for download of corresponding release version
 echo "automatic editing: $stable_version/omh/install_windows.omh.in"
@@ -110,9 +133,9 @@ cat << EOF
    All changed files should be present. Review the differences.
 2: If you find problems, fix trunk/bin/new_stable.sh, re-run it, and goto 1.
 3: In stable/$stable_version run the following command:
-      bin/build.sh all
+      ./build.sh all test
 4: If errors occur, fix trunk/bin/new_stable.sh, re-run it, and goto 1.
-5: Commit changes to trunk/bin/new_stable.sh.
+5: Commit changes to trunk/bin/new_stable.sh and trunk/bin/only_date.sh files.
 6: In stable/$stable_version commit changes using
 	bin/commit.sh edit
    then edit bin/commit.sh to change the comments and then run

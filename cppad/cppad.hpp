@@ -1,4 +1,4 @@
-/* $Id: cppad.hpp 2082 2011-08-31 17:50:58Z bradbell $ */
+/* $Id: cppad.hpp 2238 2011-12-28 15:09:38Z bradbell $ */
 # ifndef CPPAD_CPPAD_INCLUDED
 # define CPPAD_CPPAD_INCLUDED
 /* --------------------------------------------------------------------------
@@ -40,6 +40,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad/rosen_34.hpp>
 # include <cppad/runge_45.hpp>
 # include <cppad/speed_test.hpp>
+# include <cppad/time_test.hpp>
 # include <cppad/track_new_del.hpp>
 # include <cppad/thread_alloc.hpp>
 # include <cppad/vector.hpp>

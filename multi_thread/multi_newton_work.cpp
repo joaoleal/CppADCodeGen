@@ -1,6 +1,6 @@
-/* $Id: multi_newton_work.cpp 2207 2011-11-23 17:47:08Z bradbell $ */
+/* $Id: multi_newton_work.cpp 2259 2012-01-07 17:02:44Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -136,10 +136,14 @@ $codei%
 The input size and value of the elements of $icode xout$$ do not matter.
 Upon return from $code multi_newton_combine$$,
 the size of $icode xout$$ is less than or equal $latex n$$ and
-$latex \[
-	| f( xout[i] ) | \leq epsilon
-\] $$ 
-for each valid index $icode i$$.
+$codei%
+	| %f%( %xout%[%i%] ) | <= %epsilon%
+%$$ 
+for each valid index $icode i$$. 
+In addition, the elements of $icode xout$$ are in ascending order and
+$codei%
+	%xout%[i+1] - %xout%[%i%] >=  0.5 * (%xup% - %xlow%) / %num_sub%
+%$$
 
 
 $head Source$$
@@ -220,7 +224,8 @@ void multi_newton_worker(void)
 
 	// check for a zero on each sub-interval
 	size_t i;
-	double xlast = CppAD::nan(0.);
+	double xlast = xlow - 2 * sub_length_; // over sub_length_ away from x_low
+	double flast = 2 * epsilon_;           // any value > epsilon_ would do
 	for(i = 0; i < num_sub; i++)
 	{
 		// note that when i == 0, xlow_i == xlow (exactly)
@@ -240,7 +245,7 @@ void multi_newton_worker(void)
 		{	fun_(xcur, fcur, dfcur);
 
 			// check end of iterations
-			if( CppAD::abs(fcur) <= epsilon_ )
+			if( fabs(fcur) <= epsilon_ )
 				more_itr = false;
 			if( (xcur == xlow_i ) & (fcur * dfcur > 0.) )
 				more_itr = false; 
@@ -257,13 +262,19 @@ void multi_newton_worker(void)
 				more_itr = ++itr < max_itr_;
 			}
 		}
-		if( CppAD::abs( fcur ) <= epsilon_ )
+		if( fabs( fcur ) <= epsilon_ )
 		{	// check for case where xcur is lower bound for this 
 			// sub-interval and upper bound for previous sub-interval
-			if( xcur != xlast )
+			if( fabs(xcur - xlast) >= sub_length_ )
 			{	x.push_back( xcur );
 				xlast = xcur;
+				flast = fcur;
 			} 
+			else if( fabs(fcur) < fabs(flast) )
+			{	x[ x.size() - 1] = xcur;
+				xlast            = xcur;
+				flast            = fcur;
+			}
 		}
 	}
 	work_all_[thread_num].ok = ok;
@@ -338,8 +349,9 @@ bool multi_newton_combine(CppAD::vector<double>& xout)
 	// remove duplicates and points that are not solutions
 	xout.resize(0);
 	bool   ok = true;
-	double xlast = CppAD::nan(0.);
 	size_t thread_num;
+	// initialize as more that sub_lenght_ / 2 from any possible solution 
+	double xlast = - sub_length_; 
 	for(thread_num = 0; thread_num < num_threads; thread_num++)
 	{	vector<double>& x = work_all_[thread_num].x;
 
@@ -347,9 +359,18 @@ bool multi_newton_combine(CppAD::vector<double>& xout)
 		for(i = 0; i < x.size(); i++)
 		{	// check for case where this point is lower limit for this
 			// thread and upper limit for previous thread
-			 if( x[i] != xlast ) 
+			if( fabs(x[i] - xlast) >= sub_length_ )  
 			{	xout.push_back( x[i] );
 				xlast = x[i];
+			}
+			else
+			{	double fcur, flast, df;
+				fun_(x[i],   fcur, df);
+				fun_(xlast, flast, df);
+				if( fabs(fcur) < fabs(flast) )
+				{	xout[ xout.size() - 1] = x[i];
+					xlast                  = x[i];
+				}
 			}
 		}
 		ok &= work_all_[thread_num].ok;

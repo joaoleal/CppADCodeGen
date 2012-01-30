@@ -1,6 +1,6 @@
-# $Id: makefile.am 2200 2011-11-22 05:03:01Z bradbell $
+# $Id: makefile.am 2268 2012-01-19 13:29:05Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -34,7 +34,10 @@ BOOST_INCLUDE =
 endif
 #
 # Microsoft project files and script to run a single test
-EXTRA_DIST        = test_more.sln test_more.vcproj test_one.sh.in 
+EXTRA_DIST        =  \
+	test_more.sln \
+	test_more.vcproj \
+	test_one.sh.in 
 #
 check_PROGRAMS    = test_more
 #
@@ -125,10 +128,5 @@ ndebug.$(OBJEXT): ndebug.cpp
 	$(CXXCOMPILE) \
 	-DNDEBUG -c $(top_srcdir)/test_more/ndebug.cpp -o ndebug.$(OBJEXT)
 
-test.sh: test_more$(EXEEXT)
-	echo "#! /bin/sh -e"  > test.sh
-	echo "./test_more "  >> test.sh
-	chmod +x test.sh
-
-test: test.sh
-	./test.sh
+test: check
+	./test_more

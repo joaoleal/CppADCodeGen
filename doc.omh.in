@@ -1,4 +1,4 @@
-$Id: doc.omh.in 2210 2011-11-24 21:56:53Z bradbell $
+$Id: doc.omh.in 2235 2011-12-21 14:50:24Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -135,7 +135,7 @@ $cref/ode_taylor_adolc.cpp/$$.
 
 $lnext
 A set of programs for doing $cref/speed/$$ comparisons between
-$href%http://www.math.tu-dresden.de/~adol-c/%Adolc%$$,
+$href%https://projects.coin-or.org/ADOL-C%Adolc%$$,
 CppAD,
 $href%http://www.imm.dtu.dk/fadbad.html/%Fadbad%$$,
 and

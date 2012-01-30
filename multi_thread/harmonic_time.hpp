@@ -1,4 +1,4 @@
-/* $Id: harmonic_time.hpp 2197 2011-11-20 16:37:53Z bradbell $ */
+/* $Id: harmonic_time.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
 # ifndef CPPAD_HARMONIC_TIME_INCLUDED
 # define CPPAD_HARMONIC_TIME_INCLUDED
 /* --------------------------------------------------------------------------

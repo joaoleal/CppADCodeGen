@@ -1,4 +1,4 @@
-/* $Id: op.hpp 2031 2011-07-27 14:37:25Z bradbell $ */
+/* $Id: op.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
 # ifndef CPPAD_OP_INCLUDED
 # define CPPAD_OP_INCLUDED
 
@@ -38,6 +38,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad/local/parameter_op.hpp>
 # include <cppad/local/pow_op.hpp>
 # include <cppad/local/print_op.hpp>
+# include <cppad/local/sign_op.hpp>
 # include <cppad/local/sin_op.hpp>
 # include <cppad/local/sinh_op.hpp>
 # include <cppad/local/sqrt_op.hpp>
