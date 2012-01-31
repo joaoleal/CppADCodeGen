@@ -23,7 +23,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 //#include <cppad/local/ad_fun.hpp>
 
 // non-user interfaces
-//#include <cppad_codegen/local/matrix.hpp>
 #include <cppad_codegen/local/ad_code_gen_name_provider.hpp>
 #include <cppad_codegen/local/ad_fun_code_gen.hpp> 
 #include <cppad_codegen/local/op.hpp> // executes taped operations

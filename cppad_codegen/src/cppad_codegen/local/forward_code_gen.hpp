@@ -13,7 +13,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #define	CPPAD_CODEGEN_FORWARD_CODE_GEN_INCLUDED
 
 #include "ad_fun_code_gen.hpp"
-#include "matrix.hpp"
 
 CPPAD_BEGIN_NAMESPACE
 

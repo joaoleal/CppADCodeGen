@@ -528,6 +528,8 @@ AC_CONFIG_FILES([
 	test_more/makefile 
 	cppad_codegen/src/makefile
 	cppad_codegen/test/makefile
+	cppad_cgoo/src/makefile
+	cppad_cgoo/test/makefile
 ])
 dnl END AC_CONFIG_FILES 
 dnl the comment line above is used by ./new_stable.sh
