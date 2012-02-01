@@ -11,6 +11,10 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
+#include <cppad/local/define.hpp>
+#include <cppad/local/cppad_assert.hpp>
+#include <cppad/local/base_cond_exp.hpp>
+
 // forward declarations
 namespace CppAD {
 
@@ -19,6 +23,9 @@ namespace CppAD {
 
     template<class Base>
     class CG;
+
+    template<class Base>
+    class AD;
 
     // order determining functions, see ordered.hpp
     template<class Base>
@@ -62,13 +69,25 @@ namespace CppAD {
 
     // CondExp function
     template<class Base>
-    CG<Base> CondExpOp(
-    enum CompareOp cop,
-    const CG<Base> &left,
-    const CG<Base> &right,
-    const CG<Base> &trueCase,
-    const CG<Base> &falseCase
-    );
+    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpOp(enum CompareOp cop, const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpLt(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpLe(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpEq(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpGe(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+
+    template<class Base>
+    CG<Base> CondExpGt(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
 
     //    template<class Base>
     //    bool operator<(const CG<Base> &left, const CG<Base> &right);
@@ -100,43 +119,43 @@ namespace CppAD {
     inline CG<Base> pow(const CG<Base> &x, const CG<Base> &y);
 
     template<class Base>
-    inline CG<Base> abs(CG<Base> var);
+    inline CG<Base> abs(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> acos(CG<Base> var);
+    inline CG<Base> acos(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> asin(CG<Base> var);
+    inline CG<Base> asin(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> atan(CG<Base> var);
+    inline CG<Base> atan(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> cos(CG<Base> var);
+    inline CG<Base> cos(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> cosh(CG<Base> var);
+    inline CG<Base> cosh(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> exp(CG<Base> var);
+    inline CG<Base> exp(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> log(CG<Base> var);
+    inline CG<Base> log(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> sin(CG<Base> var);
+    inline CG<Base> sin(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> sinh(CG<Base> var);
+    inline CG<Base> sinh(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> sqrt(CG<Base> var);
+    inline CG<Base> sqrt(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> tan(CG<Base> var);
+    inline CG<Base> tan(const CG<Base>& var);
 
     template<class Base>
-    inline CG<Base> tanh(CG<Base> var);
+    inline CG<Base> tanh(const CG<Base>& var);
 
 }
 

@@ -58,7 +58,7 @@ void compile(const string& source, const string& library) throw (CppAD::TestExce
          * Call gcc
          * 
          * Arguments:
-         *   -O2                   Optimization level
+         *   -O0                   Optimization level
          *   -x c                  C source
          *   -pipe                 Use pipes between gcc stages
          *   -fPIC -shared         Make shared object
@@ -66,7 +66,7 @@ void compile(const string& source, const string& library) throw (CppAD::TestExce
          * 
          */
         string linker = "-Wl,-soname," + library;
-        execl("/usr/bin/gcc", "gcc", "-x", "c", "-O2", "-pipe", "-", "-fPIC", "-shared",
+        execl("/usr/bin/gcc", "gcc", "-x", "c", "-O0", "-pipe", "-", "-fPIC", "-shared",
               linker.c_str(), "-o", library.c_str(), (char *) NULL);
 
         exit(0);
@@ -124,7 +124,6 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
                                        const string& library, const string& function,
                                        const std::vector<std::vector<double> >& indV,
                                        int& comparisons) {
-
     using std::vector;
 
     ostringstream code;
@@ -135,48 +134,38 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
 
     vector<CG<double> > dep = f.Forward(0, indVars);
 
-
+    string spaces = "   ";
     string source = "#include <math.h>\n\n"
             "int " + function + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    //source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
-    //source += "int " + n->tempIntegerVarName() + n->endl();
-    //source += "int " + n->compareChangeCounter() + " = 0 " + n->endl();
-
-
-
     const size_t maxID = handler.getMaximumVariableID();
-    source += "double " + handler.createVariableName(1);
+    source += spaces + "double " + handler.createVariableName(1);
     for (size_t i = 2; i <= maxID; i++) {
         source += ", " + handler.createVariableName(i);
     }
     source += ";\n";
     // set independent variable values
     for (size_t i = 0; i < indVars.size(); i++) {
-        source += handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
     }
 
     source += code.str();
 
     // get dependent variable values
     for (size_t i = 0; i < dep.size(); i++) {
-        source += "dep[" + handler.toString(i) + "] = " + handler.createVariableName(dep[i].getVariableID()) + ";\n";
+        source += spaces + "dep[" + handler.toString(i) + "] = " + handler.createVariableName(dep[i].getVariableID()) + ";\n";
     }
 
     //source += "return " + n->compareChangeCounter() + n->endl();
-    source += "return 0;\n";
+    source += spaces + "return 0;\n";
     source += "}";
 
-    void* libHandle;
-
-    cout << "\n\n" << endl;
-    cout << source << endl;
-    cout << "\n\n" << endl;
+    cout << endl << source << endl;
 
     compile(source, library);
 
-    libHandle = loadLibrary(library);
+    void* libHandle = loadLibrary(library);
 
     int (*fn)(const double*, double*) = NULL;
 
@@ -197,6 +186,14 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
 
         // the compiled version
         comparisons = (*fn)(&ind[0], &depi[0]);
+
+        for (size_t j = 0; j < ind.size(); j++) {
+            cout << " ind[" << j << "] = " << ind[j] << "\n";
+        }
+
+        for (size_t j = 0; j < depi.size(); j++) {
+            cout << " dep[" << j << "] = " << depi[j] << "\n";
+        }
     }
 
     closeLibrary(libHandle);
@@ -235,18 +232,15 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
     handler.makeVariables(indVars);
 
     string source = "#include <math.h>\n\n";
+    string spaces = "   ";
 
     vector<CG<double> > jacCG = f.SparseJacobian(indVars);
 
     source += "int " + functionJac + "(const double* ind, double* jac) {\n";
 
     // declare variables
-    //source += n->baseTypeName() + " " + n->tempBaseVarName() + n->endl();
-    //source += "int " + n->tempIntegerVarName() + n->endl();
-    //source += "int " + n->compareChangeCounter() + " = 0 " + n->endl();
-
     const size_t maxID = handler.getMaximumVariableID();
-    source += "double " + handler.createVariableName(1);
+    source += spaces + "double " + handler.createVariableName(1);
     for (size_t i = 2; i <= maxID; i++) {
         source += ", " + handler.createVariableName(i);
     }
@@ -254,29 +248,25 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
 
     // set independent variable values
     for (size_t i = 0; i < indVars.size(); i++) {
-        source += handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
     }
 
     source += code.str();
 
     for (size_t i = 0; i < jacCG.size(); i++) {
-        source += "jac[" + handler.toString(i) + "] = " + handler.operations(jacCG[i]) + ";\n";
+        source += spaces + "jac[" + handler.toString(i) + "] = " + handler.operations(jacCG[i]) + ";\n";
     }
-
-
 
 
     // get dependent variable values
     //
     // currently the jacobian variable name is hardcoded
     //source += "return " + n->compareChangeCounter() + n->endl();
-    source += "return 0;\n";
+    source += spaces + "return 0;\n";
     source += "}\n\n";
 
+    cout << endl << source << endl;
 
-    cout << "\n\n" << endl;
-    cout << source << endl;
-    cout << "\n\n" << endl;
     /**
      * Compile
      */

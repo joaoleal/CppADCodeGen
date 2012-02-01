@@ -18,20 +18,15 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg.hpp>
 
 using namespace CppAD;
-
-void prepareADFun(const std::vector<double>& indep,
-                  ADFun<double> (*func1)(const std::vector<AD<double> >&),
-                  ADFun<CG<double> > (*func2)(const std::vector<AD<CG<double> > >&),
-                  ADFun<double>*& f1,
-                  ADFun<CG<double> >*& f2);
+using namespace std;
 
 // various examples / tests
-//extern bool Abs();
-//extern bool Acos();
+extern bool Abs();
+extern bool Acos();
 extern bool Add();
-//extern bool Asin();
-//extern bool Atan();
-//extern bool Atan2();
+extern bool Asin();
+extern bool Atan();
+extern bool Atan2();
 //extern bool CompareChange();
 //extern bool CondExp();
 //extern bool Cos();
@@ -74,38 +69,51 @@ namespace {
     }
 }
 
+template <class Base>
+inline Base Zoot(CppAD::AD<Base> x) {
+    Base result = CppAD::acos(CppAD::Value(x));
+    return result;
+}
+
+//namespace CppAD {
+//
+//    inline CppAD::CG<double> acos(const CppAD::CG<double>& x) {
+//        return x;
+//    }
+//}
+
 // main program that runs all the tests
 
 int main(void) {
-    bool ok = true;
-    using namespace std;
+    using std::cout;
+    using std::endl;
 
+    bool ok = true;
     // This line is used by test_one.sh 
-//    ok &= Run(Abs, "Abs");
-//    ok &= Run(Acos, "Acos");
+    ok &= Run(Abs, "Abs");
+    ok &= Run(Acos, "Acos");
     ok &= Run(Add, "Add");
-//    ok &= Run(Asin, "Asin");
-//    ok &= Run(Atan, "Atan");
-//    ok &= Run(Atan2, "Atan2");
-//    ok &= Run(CompareChange, "CompareChange");
-//    ok &= Run(CondExp, "CondExp");
-//    ok &= Run(Cos, "Cos");
-//    ok &= Run(Cosh, "Cosh");
-//    ok &= Run(Div, "Div");
-//    ok &= Run(Exp, "Exp");
-//    ok &= Run(Log, "Log");
-//    ok &= Run(Log10, "Log10");
-//    ok &= Run(Mul, "Mul");
-//    ok &= Run(Parameter, "Parameter");
-//    ok &= Run(Pow, "Pow");
-//    ok &= Run(Sin, "Sin");
-//    ok &= Run(Sub, "Sub");
-//    ok &= Run(Tan, "Tan");
+    ok &= Run(Asin, "Asin");
+    ok &= Run(Atan, "Atan");
+    ok &= Run(Atan2, "Atan2");
+    //    ok &= Run(CompareChange, "CompareChange");
+    //    ok &= Run(CondExp, "CondExp");
+    //    ok &= Run(Cos, "Cos");
+    //    ok &= Run(Cosh, "Cosh");
+    //    ok &= Run(Div, "Div");
+    //    ok &= Run(Exp, "Exp");
+    //    ok &= Run(Log, "Log");
+    //    ok &= Run(Log10, "Log10");
+    //    ok &= Run(Mul, "Mul");
+    //    ok &= Run(Parameter, "Parameter");
+    //    ok &= Run(Pow, "Pow");
+    //    ok &= Run(Sin, "Sin");
+    //    ok &= Run(Sub, "Sub");
+    //    ok &= Run(Tan, "Tan");
 
 
     // check for errors
-    using std::cout;
-    using std::endl;
+
     assert(ok || (Run_error_count > 0));
     if (CppAD::memory_leak()) {
         ok = false;

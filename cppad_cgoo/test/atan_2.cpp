@@ -1,5 +1,5 @@
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2011 Ciengis
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,20 +11,16 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <cppad_cgoo/cg.hpp>
 #include "gcc_load_dynamic.hpp"
-#include "add.hpp"
+#include "atan_2.hpp"
 
-bool Add() {
+bool Atan2() {
     using namespace CppAD;
-    using namespace std;
 
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    // independent variable vector
+    std::vector<double> u(1);
+    u[0] = 1.;
 
-    // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
+    bool ok = test0nJac("Atan2",&Atan2Func<double >, &Atan2Func<CG<double> >, u);
 
     return ok;
 }

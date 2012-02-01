@@ -18,8 +18,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <iomanip>
 #include <limits>
 
-#include <cppad/cppad.hpp>
-
 namespace CppAD {
 
     template<class Base>
@@ -30,11 +28,13 @@ namespace CppAD {
     protected:
         std::ostream* _out;
         size_t _idCount;
+        std::string _spaces;
     public:
 
-        CodeHandler(std::ostream& out) {
+        CodeHandler(std::ostream& out, size_t spaces = 3) {
             _out = &out;
             _idCount = 0;
+            _spaces = std::string(spaces, ' ');
         }
 
         std::ostream* getOutputStream() const {
@@ -70,23 +70,23 @@ namespace CppAD {
         }
 
         virtual void printOperationAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << var << " = " << operations << ";\n";
+            (*this->_out) << _spaces << var << " = " << operations << ";\n";
         }
 
         virtual void printOperationPlusAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << var << " += " << operations << ";\n";
+            (*this->_out) << _spaces << var << " += " << operations << ";\n";
         }
 
         virtual void printOperationMinusAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << var << " -= " << operations << ";\n";
+            (*this->_out) << _spaces << var << " -= " << operations << ";\n";
         }
 
         virtual void printOperationMultAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << var << " *= " << operations << ";\n";
+            (*this->_out) << _spaces << var << " *= " << operations << ";\n";
         }
 
         virtual void printOperationDivAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << var << " /= " << operations << ";\n";
+            (*this->_out) << _spaces << var << " /= " << operations << ";\n";
         }
 
         virtual std::string baseToString(const Base& value) const {

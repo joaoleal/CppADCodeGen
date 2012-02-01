@@ -1,3 +1,5 @@
+#ifndef CPPADCGOO_TEST_ABS_INCLUDED
+#define	CPPADCGOO_TEST_ABS_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -9,22 +11,20 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cg.hpp>
-#include "gcc_load_dynamic.hpp"
-#include "add.hpp"
+#include <assert.h>
 
-bool Add() {
+template<class T>
+CppAD::ADFun<T>* AbsFunc(const std::vector<CppAD::AD<T> >& u) {
     using namespace CppAD;
     using namespace std;
 
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    assert(u.size() == 1);
 
-    // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
+    std::vector<CppAD::AD<T> > w(1);
+    w[0] = CppAD::abs(u[0]);
 
-    return ok;
+    // f(v) = |w|
+    return new CppAD::ADFun<T>(u, w);
 }
+
+#endif

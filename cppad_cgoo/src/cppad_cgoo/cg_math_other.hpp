@@ -71,9 +71,9 @@ namespace CppAD {
 
         std::string name = x1->createVariableName();
         CodeHandler<Base>* h = x1->getCodeHandler();
-        std::string operations = "(" + name + " > " + h->baseToString(0.0) + "?:"
+        std::string operations = "(" + name + " > " + h->baseToString(0.0) + "?"
                 + h->baseToString(1.0) + ":("
-                + name + " == " + h->baseToString(0.0) + "?:"
+                + name + " == " + h->baseToString(0.0) + "?"
                 + h->baseToString(0.0) + ":"
                 + h->baseToString(-1.0)
                 + ")"

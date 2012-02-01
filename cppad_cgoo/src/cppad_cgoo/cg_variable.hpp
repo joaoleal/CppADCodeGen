@@ -38,7 +38,7 @@ namespace CppAD {
     template<class Base>
     inline const Base& CG<Base>::getParameterValue() const throw (CGException) {
         if (!isParameter()) {
-            throw CGException("Not a parameter");
+            throw CGException("getParameterValue() can only be used for parameters");
         }
 
         return *value_;
@@ -47,7 +47,7 @@ namespace CppAD {
     template<class Base>
     inline bool CG<Base>::IdenticalZero() const throw (CGException) {
         if (!isParameter()) {
-            throw CGException("Not a parameter");
+            throw CGException("IdenticalZero() can only be used for parameters");
         }
 
         return CppAD::IdenticalZero(*value_);
@@ -56,7 +56,7 @@ namespace CppAD {
     template<class Base>
     inline bool CG<Base>::IdenticalOne() const throw (CGException) {
         if (!isParameter()) {
-            throw CGException("Not a parameter");
+            throw CGException("IdenticalOne() can only be used for parameters");
         }
 
         return CppAD::IdenticalOne(*value_);

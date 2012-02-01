@@ -1,10 +1,3 @@
-/* 
- * File:   cg_ordered.hpp
- * Author: joao
- *
- * Created on 31 de Janeiro de 2012, 12:38
- */
-
 #ifndef CPPAD_CG_ORDERED_INCLUDED
 #define	CPPAD_CG_ORDERED_INCLUDED
 /* --------------------------------------------------------------------------

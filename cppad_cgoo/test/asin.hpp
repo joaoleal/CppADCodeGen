@@ -1,3 +1,5 @@
+#ifndef CPPADCGOO_TEST_ASIN_INCLUDED
+#define	CPPADCGOO_TEST_ASIN_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -9,22 +11,24 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cg.hpp>
-#include "gcc_load_dynamic.hpp"
-#include "add.hpp"
+#include <assert.h>
 
-bool Add() {
+template<class T>
+CppAD::ADFun<T>* AsinFunc(const std::vector<CppAD::AD<T> >& u) {
     using namespace CppAD;
     using namespace std;
+    using CppAD::asin;
+    using namespace CppAD;
 
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    // a temporary values
+    AD<T> x = sin(u[0]);
 
-    // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
+    // dependent variable vector 
+    std::vector< AD<T> > Z(1);
+    Z[0] = asin(x); // asin( sin(u) )
 
-    return ok;
+    // create f: U -> Z and vectors used for derivative calculations
+    return new ADFun<T>(u, Z);
 }
+
+#endif

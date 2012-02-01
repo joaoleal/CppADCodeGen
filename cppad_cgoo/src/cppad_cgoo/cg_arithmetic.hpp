@@ -1,5 +1,5 @@
-#ifndef CG_ARITHMETIC_INCLUDED
-#define	CG_ARITHMETIC_INCLUDED
+#ifndef CPPAD_CG_ARITHMETIC_INCLUDED
+#define	CPPAD_CG_ARITHMETIC_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 

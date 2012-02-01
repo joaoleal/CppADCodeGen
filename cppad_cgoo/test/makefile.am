@@ -10,7 +10,7 @@
 # -----------------------------------------------------------------------------
 # automake input file
 #
-# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+# CppAD puts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS          =
 #
 if CppAD_BOOST_DIR
@@ -37,15 +37,18 @@ testCGOO_SOURCES        = \
 	TestException.hpp \
 	\
 	test_code_gen.cpp \
+	abs.cpp \
+	acos.cpp \
 	add.cpp \
+	asin.cpp \
+	atan.cpp \
+	atan_2.cpp \
 	gcc_load_dynamic.cpp \
 	TestException.cpp
 
-#	abs.cpp \
-#	acos.cpp \
-#	asin.cpp \
-#	atan.cpp \
-#	atan_2.cpp \
+
+
+
 #	compare_change.cpp \
 #	cond_exp.cpp \
 #	cos.cpp \

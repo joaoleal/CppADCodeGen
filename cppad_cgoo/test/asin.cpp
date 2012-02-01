@@ -11,20 +11,18 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <cppad_cgoo/cg.hpp>
 #include "gcc_load_dynamic.hpp"
-#include "add.hpp"
+#include "asin.hpp"
 
-bool Add() {
+bool Asin() {
     using namespace CppAD;
     using namespace std;
 
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    // independent variable vector
+    std::vector<double> u(1);
+    u[0] = 0.5;
 
     // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
+    bool ok = test0nJac("asin", &AsinFunc<double >, &AsinFunc<CG<double> >, u);
 
     return ok;
 }

@@ -41,8 +41,10 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) add.$(OBJEXT) \
-	gcc_load_dynamic.$(OBJEXT) TestException.$(OBJEXT)
+am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
+	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
+	atan_2.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
+	TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
 testCGOO_DEPENDENCIES =
@@ -107,7 +109,7 @@ CYGPATH_W = @CYGPATH_W@
 # -----------------------------------------------------------------------------
 # automake input file
 #
-# CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
+# CppAD puts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS = 
 DEPDIR = @DEPDIR@
 DL_LIB = @DL_LIB@
@@ -221,7 +223,12 @@ testCGOO_SOURCES = \
 	TestException.hpp \
 	\
 	test_code_gen.cpp \
+	abs.cpp \
+	acos.cpp \
 	add.cpp \
+	asin.cpp \
+	atan.cpp \
+	atan_2.cpp \
 	gcc_load_dynamic.cpp \
 	TestException.cpp
 
@@ -273,7 +280,12 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/TestException.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/abs.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/add.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcc_load_dynamic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_code_gen.Po@am__quote@
 
@@ -488,11 +500,6 @@ uninstall-am:
 	uninstall-am
 
 
-#	abs.cpp \
-#	acos.cpp \
-#	asin.cpp \
-#	atan.cpp \
-#	atan_2.cpp \
 #	compare_change.cpp \
 #	cond_exp.cpp \
 #	cos.cpp \

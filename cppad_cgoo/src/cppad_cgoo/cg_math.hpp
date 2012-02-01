@@ -15,14 +15,12 @@ namespace CppAD {
 
 #define CPPAD_CG_CREATE_OPERATION(OpName)                                      \
     template<class Base>                                                       \
-    inline CG<Base> OpName(CG<Base> var) {                                     \
+    inline CG<Base> OpName(const CG<Base>& var) {                              \
         if (var.isParameter()) {                                               \
             return CG<Base > (OpName(var.getParameterValue()));                \
         } else {                                                               \
             std::string operations = #OpName"(" + var.operations() + ")";      \
-            CG<Base> result;                                                   \
-            result.makeTemporaryVariable(*var.getCodeHandler(), operations, FUNCTION);\
-            return result;                                                     \
+            return CG<Base>(*var.getCodeHandler(), operations, FUNCTION);      \
         }                                                                      \
     }
 

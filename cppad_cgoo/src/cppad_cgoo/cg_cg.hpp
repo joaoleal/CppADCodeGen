@@ -1,5 +1,5 @@
-#ifndef CPPAD_ADCG_INCLUDED
-#define	CPPAD_ADCG_INCLUDED
+#ifndef CPPAD_CG_CG_INCLUDED
+#define	CPPAD_CG_CG_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -34,8 +34,12 @@ namespace CppAD {
         CodeHandler<Base>* handler_;
 
     public:
-        // default constructor
+        // default constructor (creates a parameter with a zero value)
         inline CG();
+        
+        // creates a temporary variable
+        inline CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain);
+        
         // copy constructor
         inline CG(const CG<Base>& orig);
         //assignment operator
@@ -160,31 +164,31 @@ namespace CppAD {
         // power function
         friend CG<Base> pow<Base>(const CG<Base> &x, const CG<Base> &y);
 
-        friend CG<Base> abs<Base>(CG<Base> var);
+        friend CG<Base> abs<Base>(const CG<Base>& var);
 
-        friend CG<Base> acos<Base>(CG<Base> var);
+        friend CG<Base> acos<Base>(const CG<Base>& var);
 
-        friend CG<Base> asin<Base>(CG<Base> var);
+        friend CG<Base> asin<Base>(const CG<Base>& var);
 
-        friend CG<Base> atan<Base>(CG<Base> var);
+        friend CG<Base> atan<Base>(const CG<Base>& var);
 
-        friend CG<Base> cos<Base>(CG<Base> var);
+        friend CG<Base> cos<Base>(const CG<Base>& var);
 
-        friend CG<Base> cosh<Base>(CG<Base> var);
+        friend CG<Base> cosh<Base>(const CG<Base>& var);
 
-        friend CG<Base> exp<Base>(CG<Base> var);
+        friend CG<Base> exp<Base>(const CG<Base>& var);
 
-        friend CG<Base> log<Base>(CG<Base> var);
+        friend CG<Base> log<Base>(const CG<Base>& var);
 
-        friend CG<Base> sin<Base>(CG<Base> var);
+        friend CG<Base> sin<Base>(const CG<Base>& var);
 
-        friend CG<Base> sinh<Base>(CG<Base> var);
+        friend CG<Base> sinh<Base>(const CG<Base>& var);
 
-        friend CG<Base> sqrt<Base>(CG<Base> var);
+        friend CG<Base> sqrt<Base>(const CG<Base>& var);
 
-        friend CG<Base> tan<Base>(CG<Base> var);
+        friend CG<Base> tan<Base>(const CG<Base>& var);
 
-        friend CG<Base> tanh<Base>(CG<Base> var);
+        friend CG<Base> tanh<Base>(const CG<Base>& var);
     };
 
     template <class Base>

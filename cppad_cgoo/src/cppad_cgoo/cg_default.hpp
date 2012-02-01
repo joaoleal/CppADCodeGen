@@ -24,6 +24,15 @@ namespace CppAD {
     }
 
     template <class Base>
+    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain) {
+        opTypes_ = contain;
+        handler_ = &handler;
+        operations_ = ops;
+        value_ = NULL;
+        id_ = 0;
+    }
+
+    template <class Base>
     inline CG<Base>::CG(const CG<Base>& orig) {
         if (orig.value_ != NULL) {
             value_ = new Base(*orig.value_);

@@ -11,13 +11,12 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad/cppad.hpp>
-#include <cppad/local/cppad_assert.hpp>
-#include <cppad/local/base_cond_exp.hpp>
-
 #include <cppad_cgoo/CGException.hpp>
 #include <cppad_cgoo/cg_types.hpp>
 #include <cppad_cgoo/cg_declare_cg.hpp>
+
+#include <cppad/cppad.hpp>
+
 #include <cppad_cgoo/cg_cg.hpp>
 #include <cppad_cgoo/cg_default.hpp>
 #include <cppad_cgoo/cg_variable.hpp>
@@ -31,6 +30,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_compare.hpp>
 #include <cppad_cgoo/cg_ordered.hpp>
 #include <cppad_cgoo/cg_unary.hpp>
+#include <cppad_cgoo/cg_base_double.hpp>
 
 #endif
 
