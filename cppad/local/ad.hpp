@@ -29,6 +29,9 @@ CPPAD_BEGIN_NAMESPACE
 template<class Base>
 class CodeGenNameProvider;
 
+template<class Base>
+class ADBaseAccess;
+
 template <class Base>
 class AD {
 	// enable use of AD<Base> in parallel mode
@@ -103,6 +106,7 @@ class AD {
 	friend class VecAD<Base>;
 	friend class VecAD_reference<Base>;
         friend class CodeGenNameProvider<Base>;
+        friend class ADBaseAccess<Base>;
 
 	// arithematic binary operators
 	friend AD<Base> operator + <Base>

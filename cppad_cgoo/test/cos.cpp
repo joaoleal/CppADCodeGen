@@ -12,20 +12,23 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg.hpp>
 
 #include "gcc_load_dynamic.hpp"
-#include "abs.hpp"
+#include "cos.hpp"
 
-bool Abs() {
+bool Cos() {
     using namespace CppAD;
     using namespace std;
 
-    std::vector<std::vector<double> > uV;
+    bool ok = true;
+
+    // independent variable vector
     std::vector<double> u(1);
-    u[0] = 0;
+    std::vector<std::vector<double> > uV;
+    u[0] = 1.0;
     uV.push_back(u);
-    u[0] = 1;
-    uV.push_back(u);
-    u[0] = -1;
+    u[0] = 0.0;
     uV.push_back(u);
 
-    return test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
+    ok &= test0nJac("cos", &CosFunc<double >, &CosFunc<CG<double> >, uV);
+
+    return ok;
 }

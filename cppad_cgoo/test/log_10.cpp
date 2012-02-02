@@ -12,20 +12,15 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg.hpp>
 
 #include "gcc_load_dynamic.hpp"
-#include "abs.hpp"
+#include "log_10.hpp"
 
-bool Abs() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
-    std::vector<std::vector<double> > uV;
+bool Log10() {
+    // independent variable vector, indices, values, and declaration
     std::vector<double> u(1);
-    u[0] = 0;
-    uV.push_back(u);
-    u[0] = 1;
-    uV.push_back(u);
-    u[0] = -1;
-    uV.push_back(u);
+    size_t s = 0;
+    u[s] = 10.;
 
-    return test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
+    return test0nJac("log10", &Log10Func<double >, &Log10Func<CG<double> >, u, 1e-10, 1e-10);
 }

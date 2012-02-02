@@ -22,6 +22,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_variable.hpp>
 #include <cppad_cgoo/cg_identical.hpp>
 #include <cppad_cgoo/cg_code_handler.hpp>
+#include <cppad_cgoo/cg_ad_access.hpp>
 #include <cppad_cgoo/cg_arithmetic.hpp>
 #include <cppad_cgoo/cg_arithmetic_assign.hpp>
 #include <cppad_cgoo/cg_math.hpp>

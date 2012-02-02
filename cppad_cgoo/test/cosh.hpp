@@ -1,3 +1,5 @@
+#ifndef CPPADCGOO_TEST_COSH_INCLUDED
+#define	CPPADCGOO_TEST_COSH_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -9,23 +11,22 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cg.hpp>
+#include <assert.h>
 
-#include "gcc_load_dynamic.hpp"
-#include "abs.hpp"
+template<class T>
+CppAD::ADFun<T>* CoshFunc(const std::vector<CppAD::AD<T> >& u) {
+    bool ok = true;
 
-bool Abs() {
+    using CppAD::sinh;
+    using CppAD::cosh;
     using namespace CppAD;
-    using namespace std;
 
-    std::vector<std::vector<double> > uV;
-    std::vector<double> u(1);
-    u[0] = 0;
-    uV.push_back(u);
-    u[0] = 1;
-    uV.push_back(u);
-    u[0] = -1;
-    uV.push_back(u);
+    // dependent variable vector 
+    std::vector< AD<T> > Z(1);
+    Z[0] = cosh(u[0]);
 
-    return test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
+    // create f: U -> Z and vectors used for derivative calculations
+    return new ADFun<T> (u, Z);
 }
+
+#endif

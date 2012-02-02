@@ -13,43 +13,56 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <stddef.h>
 
+#define CPPAD_CG_CONSTRUCTION_CHECK() \
+           deleted_ = false;\
+           CPPAD_CG_CHECK_CG_THIS();
+
 namespace CppAD {
 
     template <class Base>
-    inline CG<Base>::CG() {
-        opTypes_ = NONE;
-        handler_ = NULL;
-        value_ = new Base(0.0);
-        id_ = 0;
+    inline CG<Base>::CG() :
+    opTypes_(NONE),
+    handler_(NULL),
+    value_(new Base(0.0)),
+    id_(0) {
+        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
-    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain) {
-        opTypes_ = contain;
-        handler_ = &handler;
-        operations_ = ops;
-        value_ = NULL;
-        id_ = 0;
+    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain) :
+    opTypes_(contain),
+    handler_(&handler),
+    operations_(ops),
+    value_(NULL),
+    id_(0) {
+        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
-    inline CG<Base>::CG(const CG<Base>& orig) {
+    inline CG<Base>::CG(const CG<Base>& orig) :
+    opTypes_(orig.opTypes_),
+    handler_(orig.handler_),
+    operations_(orig.operations_),
+    id_(orig.id_) {
         if (orig.value_ != NULL) {
             value_ = new Base(*orig.value_);
         } else {
             value_ = NULL;
         }
-        handler_ = orig.handler_;
-        id_ = orig.id_;
-        operations_ = orig.operations_;
-        opTypes_ = orig.opTypes_;
+
+        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
-    inline CG<Base>::CG(const Base &b) {
+    inline CG<Base>::CG(const Base &b) :
+    opTypes_(NONE),
+    handler_(NULL),
+    value_(NULL),
+    id_(0) {
         // make it a parameter
-        value_ = NULL;
         makeParameter(b);
+
+        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
@@ -75,6 +88,8 @@ namespace CppAD {
                 printOperationAssig(name, other.operations());
             }
         }
+
+        CPPAD_CG_CONSTRUCTION_CHECK();
         return *this;
     }
 
@@ -83,6 +98,7 @@ namespace CppAD {
         // make it a parameter
         makeParameter(b);
 
+        CPPAD_CG_CONSTRUCTION_CHECK();
         return *this;
     }
 
@@ -90,6 +106,7 @@ namespace CppAD {
     CG<Base>::~CG() {
         delete value_;
         value_ = NULL; // not really required
+        deleted_ = true;
     }
 
 }

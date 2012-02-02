@@ -43,7 +43,11 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
-	atan_2.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
+	atan_2.$(OBJEXT) compare_change.$(OBJEXT) cond_exp.$(OBJEXT) \
+	cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) exp.$(OBJEXT) \
+	log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
+	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
+	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
 	TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
@@ -229,6 +233,20 @@ testCGOO_SOURCES = \
 	asin.cpp \
 	atan.cpp \
 	atan_2.cpp \
+	compare_change.cpp \
+	cond_exp.cpp \
+	cos.cpp \
+	cosh.cpp \
+	div.cpp \
+	exp.cpp \
+	log.cpp \
+	log_10.cpp \
+	mul.cpp \
+	parameter.cpp \
+	pow.cpp \
+	sin.cpp \
+	sub.cpp \
+	tan.cpp \
 	gcc_load_dynamic.cpp \
 	TestException.cpp
 
@@ -286,7 +304,21 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asin.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan_2.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compare_change.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cond_exp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cos.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cosh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcc_load_dynamic.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log_10.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mul.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parameter.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_code_gen.Po@am__quote@
 
 .cpp.o:
@@ -499,22 +531,6 @@ uninstall-am:
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am
 
-
-#	compare_change.cpp \
-#	cond_exp.cpp \
-#	cos.cpp \
-#	cosh.cpp \
-#	div.cpp \
-#	exp.cpp \
-#	log.cpp \
-#	log_10.cpp \
-#	mul.cpp \
-#	parameter.cpp \
-#	pow.cpp \
-#	sin.cpp \
-#	sub.cpp \
-#	tan.cpp \
-#
 
 test.sh: testCGOO$(EXEEXT)
 	echo "#! /bin/sh -e"                          > test.sh

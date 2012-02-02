@@ -14,34 +14,32 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    inline bool IdenticalZero(const CG<Base>& x) throw (CGException) {
-        if (x.isParameter()) {
-            return IdenticalZero(x.getParameterValue());
-        } else {
-            throw CGException("Invalid call to IdenticalZero: argument is not a parameter");
+    inline bool IdenticalPar(const CG<Base>& x) throw (CGException) {
+        if (!x.isParameter()) {
+            throw CGException("Invalid call to IdenticalPar(): argument is not a parameter");
         }
+        return IdenticalPar(x.getParameterValue());
+    }
+
+    template<class Base>
+    inline bool IdenticalZero(const CG<Base>& x) throw (CGException) {
+        if (!x.isParameter()) {
+            throw CGException("Invalid call to IdenticalZero(): argument is not a parameter");
+        }
+        return IdenticalZero(x.getParameterValue());
     }
 
     template<class Base>
     inline bool IdenticalOne(const CG<Base>& x) throw (CGException) {
-        if (x.isParameter()) {
-            return IdenticalOne(x.getParameterValue());
-        } else {
-            throw CGException("Invalid call to IdenticalOne: argument is not a parameter");
+        if (!x.isParameter()) {
+            throw CGException("Invalid call to IdenticalOne(): argument is not a parameter");
         }
+        return IdenticalOne(x.getParameterValue());
     }
 
     template<class Base>
-    inline bool IdenticalEqualPar(const CG<Base>& x, const CG<Base>& y) throw (CGException) {
-        if (x.isParameter()) {
-            if (y.isParameter()) {
-                return IdenticalEqualPar(x.getParameterValue(), y.getParameterValue());
-            } else {
-                throw CGException("Invalid call to IdenticalEqualPar: 2nd argument is not a parameter");
-            }
-        } else {
-            throw CGException("Invalid call to IdenticalEqualPar: 1st argument is not a parameter");
-        }
+    inline bool IdenticalEqualPar(const CG<Base>& x, const CG<Base>& y) {
+        return x.isParameter() && y.isParameter() && IdenticalEqualPar(x.getParameterValue(), y.getParameterValue());
     }
 }
 

@@ -14,13 +14,12 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    inline CG<Base> CondExpOp(
-    enum CompareOp cop,
-    const CG<Base> &left,
-    const CG<Base> &right,
-    const CG<Base> &trueCase,
-    const CG<Base> &falseCase
-    ) {
+    inline CG<Base> CondExpOp(enum CompareOp cop,
+                              const CG<Base> &left,
+                              const CG<Base> &right,
+                              const CG<Base> &trueCase,
+                              const CG<Base> &falseCase) {
+
         if (left.isParameter() && right.isParameter()) {
             switch (cop) {
                 case CompareLt:
@@ -103,36 +102,40 @@ namespace CppAD {
 
     }
 
-    template<class Base>
-    inline AD<CG<Base> > CondExpOp(
-    enum CompareOp cop,
-    const AD<CG<Base> > &left,
-    const AD<CG<Base> > &right,
-    const AD<CG<Base> > &trueCase,
-    const AD<CG<Base> > &falseCase) {
-        CG<Base> result = CondExpOp(cop, Value(left), Value(right), Value(trueCase), Value(falseCase));
-        return AD<CG<Base> > (result);
-    }
+//    template<class Base>
+//    inline AD<CG<Base> > CondExpOp(enum CompareOp cop,
+//                                   const AD<CG<Base> > &left,
+//                                   const AD<CG<Base> > &right,
+//                                   const AD<CG<Base> > &trueCase,
+//                                   const AD<CG<Base> > &falseCase) {
+//        CG<Base> result(CondExpOp(cop,
+//                                  ADAccess<Base>::getValue(left),
+//                                  ADAccess<Base>::getValue(right),
+//                                  ADAccess<Base>::getValue(trueCase),
+//                                  ADAccess<Base>::getValue(falseCase))
+//                        );
+//        return AD<CG<Base> > (result);
+//    }
 
 
-#define CPPAD_CG_COND_EXP(Name)                                                \
-	template <class Base>                                                  \
-	inline AD<CG<Base> > CondExp##Name(                                    \
-		const AD<CG<Base> > &left      ,                               \
-		const AD<CG<Base> > &right     ,                               \
-		const AD<CG<Base> > &if_true   ,                               \
-		const AD<CG<Base> > &if_false  )                               \
-	{                                                                      \
-		return CondExpOp(Compare##Name,                                \
-			left, right, if_true, if_false);                       \
-	}
-
-
-    CPPAD_CG_COND_EXP(Lt)
-    CPPAD_CG_COND_EXP(Le)
-    CPPAD_CG_COND_EXP(Eq)
-    CPPAD_CG_COND_EXP(Ge)
-    CPPAD_CG_COND_EXP(Gt)
+//#define CPPAD_CG_COND_EXP(Name)                                                \
+//	template <class Base>                                                  \
+//	inline AD<CG<Base> > CondExp##Name(                                    \
+//		const AD<CG<Base> > &left      ,                               \
+//		const AD<CG<Base> > &right     ,                               \
+//		const AD<CG<Base> > &if_true   ,                               \
+//		const AD<CG<Base> > &if_false  )                               \
+//	{                                                                      \
+//		return CondExpOp(Compare##Name,                                \
+//			         left, right, if_true, if_false);              \
+//	}
+//
+//
+//    CPPAD_CG_COND_EXP(Lt)
+//    CPPAD_CG_COND_EXP(Le)
+//    CPPAD_CG_COND_EXP(Eq)
+//    CPPAD_CG_COND_EXP(Ge)
+//    CPPAD_CG_COND_EXP(Gt)
 
 }
 #endif

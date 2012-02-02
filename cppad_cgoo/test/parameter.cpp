@@ -12,20 +12,24 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg.hpp>
 
 #include "gcc_load_dynamic.hpp"
-#include "abs.hpp"
+#include "parameter.hpp"
 
-bool Abs() {
+bool Parameter() {
     using namespace CppAD;
-    using namespace std;
 
-    std::vector<std::vector<double> > uV;
-    std::vector<double> u(1);
-    u[0] = 0;
-    uV.push_back(u);
-    u[0] = 1;
-    uV.push_back(u);
-    u[0] = -1;
-    uV.push_back(u);
+    // number of different parameter values
+    size_t n_parameter = 7;
 
-    return test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
+    // number of parameter repeats
+    size_t n_repeat = 5;
+
+    // independent variable vector
+    size_t n = n_parameter * n_repeat;
+    std::vector<double> u(n);
+    for (size_t j = 0; j < n; j++) {
+        u[j] = double(j);
+    }
+
+    return test0nJac("parameter", &ParameterFunc<double >, &ParameterFunc<CG<double> >, u);
 }
+

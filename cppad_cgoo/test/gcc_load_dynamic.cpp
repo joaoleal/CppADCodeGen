@@ -378,6 +378,65 @@ bool test0nJac(const string& test,
     return ok;
 }
 
+bool test0(const string& test,
+           ADFun<double>* (*func1)(const std::vector<AD<double> >&),
+           ADFun<CG<double> >* (*func2)(const std::vector<AD<CG<double> > >&),
+           const std::vector<std::vector<double> >& indV,
+           int& comparisons,
+           double epsilonR, double epsilonA) {
+
+    using std::vector;
+
+    assert(!indV.empty());
+
+    /**
+     * Determine the values using the default CppAD
+     */
+    // independent variable vector, indices, values, and declaration
+    std::vector< AD<double> > U1(indV[0].size());
+    for (size_t i = 0; i < U1.size(); i++) {
+        U1[i] = indV[0][i];
+    }
+    Independent(U1);
+
+    // create f: U -> Z and vectors used for derivative calculations
+    CppAD::ADFun<double>* f1 = (*func1)(U1);
+
+    vector<vector<double> > depsDef = runDefault0(*f1, indV);
+
+    delete f1;
+
+    /**
+     * Determine the values using the compiled version
+     */
+    vector<AD<CG<double> > > u2(indV[0].size());
+    Independent(u2);
+
+    CppAD::ADFun<CG<double> >* f2 = (*func2)(u2);
+
+    vector<vector<double> > depsCG;
+    try {
+        string library = "./tmp/test_" + test + ".so";
+        string function = "test_" + test;
+        depsCG = run0(*f2, library, function, indV, comparisons);
+    } catch (const exception& ex) {
+        cerr << ex.what() << std::endl;
+        delete f2;
+        return false;
+    }
+
+    delete f2;
+
+    /**
+     * compare results
+     */
+    bool ok = true;
+
+    ok &= compareValues("Forward 0", depsCG, depsDef, epsilonR, epsilonA);
+
+    return ok;
+}
+
 bool compareValues(const std::string& testType,
                    const std::vector<std::vector<double> >& depCGen,
                    const std::vector<std::vector<double> >& dep,

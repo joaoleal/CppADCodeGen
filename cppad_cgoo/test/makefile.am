@@ -43,27 +43,23 @@ testCGOO_SOURCES        = \
 	asin.cpp \
 	atan.cpp \
 	atan_2.cpp \
+	compare_change.cpp \
+	cond_exp.cpp \
+	cos.cpp \
+	cosh.cpp \
+	div.cpp \
+	exp.cpp \
+	log.cpp \
+	log_10.cpp \
+	mul.cpp \
+	parameter.cpp \
+	pow.cpp \
+	sin.cpp \
+	sub.cpp \
+	tan.cpp \
 	gcc_load_dynamic.cpp \
 	TestException.cpp
 
-
-
-
-#	compare_change.cpp \
-#	cond_exp.cpp \
-#	cos.cpp \
-#	cosh.cpp \
-#	div.cpp \
-#	exp.cpp \
-#	log.cpp \
-#	log_10.cpp \
-#	mul.cpp \
-#	parameter.cpp \
-#	pow.cpp \
-#	sin.cpp \
-#	sub.cpp \
-#	tan.cpp \
-#
 
 test.sh: testCGOO$(EXEEXT)
 	echo "#! /bin/sh -e"                          > test.sh

@@ -14,7 +14,11 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    CodeHandler<Base>* getOperations(const CG<Base> &left, const CG<Base> &right, std::string& leftOps, std::string& rightOps) {
+    CodeHandler<Base>* getOperations(const CG<Base> &left,
+                                     const CG<Base> &right,
+                                     std::string& leftOps,
+                                     std::string& rightOps) {
+
         assert(!left.isParameter() || !right.isParameter());
 
         CodeHandler<Base>* handler;
@@ -38,24 +42,28 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline CG<Base> CG<Base>::operator+(const CG<Base> &right) const {
-        if (isParameter() && right.isParameter()) {
-            return CG<Base > (getParameterValue() + right.getParameterValue());
+    inline CG<Base> operator+(const CG<Base> &left, const CG<Base> &right) {
+
+        CPPAD_CG_CHECK_CG(left);
+        CPPAD_CG_CHECK_CG(right);
+
+        if (left.isParameter() && right.isParameter()) {
+            return CG<Base > (left.getParameterValue() + right.getParameterValue());
 
         } else {
-            if (isParameter()) {
-                if (IdenticalZero()) {
+            if (left.isParameter()) {
+                if (left.IdenticalZero()) {
                     return right;
                 }
             } else if (right.isParameter()) {
                 if (right.IdenticalZero()) {
-                    return *this;
+                    return left;
                 }
             }
 
             std::string leftOps;
             std::string rightOps;
-            CodeHandler<Base>* handler = getOperations(*this, right, leftOps, rightOps);
+            CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
 
             std::string operations = leftOps + " + " + rightOps;
 
@@ -66,8 +74,10 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline CG<Base> CG<Base>::operator-(const CG<Base> &right) const {
-        const CG<Base> &left = *this;
+    inline CG<Base> operator-(const CG<Base> &left, const CG<Base> &right) {
+
+        CPPAD_CG_CHECK_CG(left);
+        CPPAD_CG_CHECK_CG(right);
 
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() - right.getParameterValue());
@@ -100,8 +110,10 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline CG<Base> CG<Base>::operator*(const CG<Base> &right) const {
-        const CG<Base> &left = *this;
+    inline CG<Base> operator*(const CG<Base> &left, const CG<Base> &right) {
+
+        CPPAD_CG_CHECK_CG(left);
+        CPPAD_CG_CHECK_CG(right);
 
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() * right.getParameterValue());
@@ -146,8 +158,10 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline CG<Base> CG<Base>::operator/(const CG<Base> &right) const {
-        const CG<Base> &left = *this;
+    inline CG<Base> operator/(const CG<Base> &left, const CG<Base> &right) {
+
+        CPPAD_CG_CHECK_CG(left);
+        CPPAD_CG_CHECK_CG(right);
 
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() / right.getParameterValue());
@@ -223,45 +237,45 @@ namespace CppAD {
         return left * CG<Base > (right);
     }
 
-    template<class Base, class T>
-    inline CG<Base> operator+(const T &left, const CG<Base> &right) {
-        return CG<Base > (Base(left)) + right;
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator+(const CG<Base> &left, const T &right) {
-        return left + CG<Base > (Base(right));
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator-(const T &left, const CG<Base> &right) {
-        return CG<Base > (Base(left)) - right;
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator-(const CG<Base> &left, const T &right) {
-        return left - CG<Base > (Base(right));
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator/(const Base &left, const CG<Base> &right) {
-        return CG<Base > (Base(left)) / right;
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator/(const CG<Base> &left, const Base &right) {
-        return left / CG<Base > (Base(right));
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator*(const Base &left, const CG<Base> &right) {
-        return CG<Base > (Base(left)) * right;
-    }
-
-    template<class Base, class T>
-    inline CG<Base> operator*(const CG<Base> &left, const Base &right) {
-        return left * CG<Base > (Base(right));
-    }
+//    template<class Base, class T>
+//    inline CG<Base> operator+(const T &left, const CG<Base> &right) {
+//        return CG<Base > (Base(left)) + right;
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator+(const CG<Base> &left, const T &right) {
+//        return left + CG<Base > (Base(right));
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator-(const T &left, const CG<Base> &right) {
+//        return CG<Base > (Base(left)) - right;
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator-(const CG<Base> &left, const T &right) {
+//        return left - CG<Base > (Base(right));
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator/(const Base &left, const CG<Base> &right) {
+//        return CG<Base > (Base(left)) / right;
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator/(const CG<Base> &left, const Base &right) {
+//        return left / CG<Base > (Base(right));
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator*(const Base &left, const CG<Base> &right) {
+//        return CG<Base > (Base(left)) * right;
+//    }
+//
+//    template<class Base, class T>
+//    inline CG<Base> operator*(const CG<Base> &left, const Base &right) {
+//        return left * CG<Base > (Base(right));
+//    }
 
 }
 

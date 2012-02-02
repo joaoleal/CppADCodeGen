@@ -45,13 +45,16 @@ namespace CppAD {
 
     // The identical property functions, see identical.hpp
     template<class Base>
+    inline bool IdenticalPar(const CG<Base>& x) throw (CGException);
+
+    template<class Base>
     bool IdenticalZero(const CG<Base> &x) throw (CGException);
 
     template<class Base>
     bool IdenticalOne(const CG<Base> &x) throw (CGException);
 
     template<class Base>
-    bool IdenticalEqualPar(const CG<Base> &x, const CG<Base> &y) throw (CGException);
+    bool IdenticalEqualPar(const CG<Base> &x, const CG<Base> &y);
 
     // EqualOpSeq function
     template<class Base>
@@ -68,45 +71,47 @@ namespace CppAD {
     bool NearEqual(const CG<Base> &x, const Base &y, const Base &r, const Base &a);
 
     // CondExp function
-    template<class Base>
-    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);
+    //    template<class Base>
+    //    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);
 
     template<class Base>
     CG<Base> CondExpOp(enum CompareOp cop, const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
 
+    /**
+     * arithmetic
+     */
     template<class Base>
-    CG<Base> CondExpLt(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
-
-    template<class Base>
-    CG<Base> CondExpLe(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
-
-    template<class Base>
-    CG<Base> CondExpEq(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+    CG<Base> operator+(const CG<Base> &left, const CG<Base> &right);
 
     template<class Base>
-    CG<Base> CondExpGe(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+    CG<Base> operator-(const CG<Base> &left, const CG<Base> &right);
 
     template<class Base>
-    CG<Base> CondExpGt(const CG<Base> &left, const CG<Base> &right, const CG<Base> &trueCase, const CG<Base> &falseCase);
+    CG<Base> operator*(const CG<Base> &left, const CG<Base> &right);
 
-    //    template<class Base>
-    //    bool operator<(const CG<Base> &left, const CG<Base> &right);
-    //
-    //    template<class Base>
-    //    bool operator <=(const CG<Base> &left, const CG<Base> &right);
-    //
-    //    template<class Base>
-    //    bool operator>(const CG<Base> &left, const CG<Base> &right);
-    //
-    //    template<class Base>
-    //    bool operator >=(const CG<Base> &left, const CG<Base> &right);
+    template<class Base>
+    CG<Base> operator/(const CG<Base> &left, const CG<Base> &right);
 
+    /**
+     * comparisons
+     */
     template<class Base>
     bool operator ==(const CG<Base> &left, const CG<Base> &right);
 
     template<class Base>
     bool operator !=(const CG<Base> &left, const CG<Base> &right);
 
+    template<class Base>
+    bool operator<(const CG<Base> &left, const CG<Base> &right);
+
+    template<class Base>
+    bool operator <=(const CG<Base> &left, const CG<Base> &right);
+
+    template<class Base>
+    bool operator>(const CG<Base> &left, const CG<Base> &right);
+
+    template<class Base>
+    bool operator >=(const CG<Base> &left, const CG<Base> &right);
 
     /**
      * Math functions

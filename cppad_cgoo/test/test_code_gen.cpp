@@ -27,20 +27,20 @@ extern bool Add();
 extern bool Asin();
 extern bool Atan();
 extern bool Atan2();
-//extern bool CompareChange();
-//extern bool CondExp();
-//extern bool Cos();
-//extern bool Cosh();
-//extern bool Div();
-//extern bool Exp();
-//extern bool Log();
-//extern bool Log10();
-//extern bool Mul();
-//extern bool Parameter();
-//extern bool Pow();
-//extern bool Sin();
-//extern bool Sub();
-//extern bool Tan();
+extern bool CompareChange();
+extern bool CondExp();
+extern bool Cos();
+extern bool Cosh();
+extern bool Div();
+extern bool Exp();
+extern bool Log();
+extern bool Log10();
+extern bool Mul();
+extern bool Parameter();
+extern bool Pow();
+extern bool Sin();
+extern bool Sub();
+extern bool Tan();
 
 namespace {
     // function that runs one test
@@ -89,27 +89,27 @@ int main(void) {
     using std::endl;
 
     bool ok = true;
-    // This line is used by test_one.sh 
     ok &= Run(Abs, "Abs");
     ok &= Run(Acos, "Acos");
     ok &= Run(Add, "Add");
+    return 0;
     ok &= Run(Asin, "Asin");
     ok &= Run(Atan, "Atan");
     ok &= Run(Atan2, "Atan2");
-    //    ok &= Run(CompareChange, "CompareChange");
-    //    ok &= Run(CondExp, "CondExp");
-    //    ok &= Run(Cos, "Cos");
-    //    ok &= Run(Cosh, "Cosh");
-    //    ok &= Run(Div, "Div");
-    //    ok &= Run(Exp, "Exp");
-    //    ok &= Run(Log, "Log");
-    //    ok &= Run(Log10, "Log10");
-    //    ok &= Run(Mul, "Mul");
-    //    ok &= Run(Parameter, "Parameter");
-    //    ok &= Run(Pow, "Pow");
-    //    ok &= Run(Sin, "Sin");
-    //    ok &= Run(Sub, "Sub");
-    //    ok &= Run(Tan, "Tan");
+    ok &= Run(CompareChange, "CompareChange");
+    ok &= Run(CondExp, "CondExp");
+    ok &= Run(Cos, "Cos");
+    ok &= Run(Cosh, "Cosh");
+    ok &= Run(Div, "Div");
+    ok &= Run(Exp, "Exp");
+    ok &= Run(Log, "Log");
+    ok &= Run(Log10, "Log10");
+    ok &= Run(Mul, "Mul");
+    ok &= Run(Parameter, "Parameter");
+    ok &= Run(Pow, "Pow");
+    ok &= Run(Sin, "Sin");
+    ok &= Run(Sub, "Sub");
+    ok &= Run(Tan, "Tan");
 
 
     // check for errors

@@ -32,14 +32,15 @@ namespace CppAD {
         // status of the operations
         OpContainement opTypes_;
         CodeHandler<Base>* handler_;
+        bool deleted_;
 
     public:
         // default constructor (creates a parameter with a zero value)
         inline CG();
-        
+
         // creates a temporary variable
         inline CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain);
-        
+
         // copy constructor
         inline CG(const CG<Base>& orig);
         //assignment operator
@@ -77,6 +78,7 @@ namespace CppAD {
         inline CG<Base>& operator-=(const Base &right);
         inline CG<Base>& operator*=(const Base &right);
         inline CG<Base>& operator/=(const Base &right);
+
         template< class T>
         inline CG<Base>& operator+=(const T &right);
         template<class T>
@@ -89,12 +91,6 @@ namespace CppAD {
         // unary operators
         inline CG<Base> operator+() const;
         inline CG<Base> operator-() const;
-
-        // arithmetic binary operators
-        inline CG<Base> operator+(const CG<Base> &right) const;
-        inline CG<Base> operator-(const CG<Base> &right) const;
-        inline CG<Base> operator*(const CG<Base> &right) const;
-        inline CG<Base> operator/(const CG<Base> &right) const;
 
         //
         inline void makeParameter(const Base &b);
@@ -125,15 +121,27 @@ namespace CppAD {
 
     private:
 
-        // comparison operators are not used to create code
-        //        friend bool operator< <Base> (const CG<Base> &left, const CG<Base> &right);
-        //        friend bool operator <= <Base> (const CG<Base> &left, const CG<Base> &right);
-        //        friend bool operator> <Base> (const CG<Base> &left, const CG<Base> &right);
-        //        friend bool operator >= <Base> (const CG<Base> &left, const CG<Base> &right);
+        /**
+         * arithmetic binary operators
+         */
+        friend CG<Base> CppAD::operator+ <Base>(const CG<Base> &left, const CG<Base> &right);
+        friend CG<Base> CppAD::operator- <Base>(const CG<Base> &left, const CG<Base> &right);
+        friend CG<Base> CppAD::operator* <Base>(const CG<Base> &left, const CG<Base> &right);
+        friend CG<Base> CppAD::operator/ <Base>(const CG<Base> &left, const CG<Base> &right);
+
+        /**
+         * comparison operators are not used to create code
+         */
+        friend bool operator< <Base> (const CG<Base> &left, const CG<Base> &right);
+        friend bool operator <= <Base> (const CG<Base> &left, const CG<Base> &right);
+        friend bool operator> <Base> (const CG<Base> &left, const CG<Base> &right);
+        friend bool operator >= <Base> (const CG<Base> &left, const CG<Base> &right);
         friend bool operator == <Base> (const CG<Base> &left, const CG<Base> &right);
         friend bool operator != <Base> (const CG<Base> &left, const CG<Base> &right);
 
-        // order determining functions, see ordered.hpp
+        /**
+         * order determining functions
+         */
         friend bool GreaterThanZero <Base> (const CG<Base> &x);
         friend bool GreaterThanOrZero <Base> (const CG<Base> &x);
         friend bool LessThanZero <Base> (const CG<Base> &x);
@@ -151,17 +159,17 @@ namespace CppAD {
         friend bool NearEqual <Base> (const CG<Base> &x, const Base &y, const Base &r, const Base &a);
 
         // CondExp function
-        friend CG<Base> CondExpOp <Base> (
-                enum CompareOp cop,
+        friend CG<Base> CondExpOp <Base> (enum CompareOp cop,
                 const CG<Base> &left,
                 const CG<Base> &right,
                 const CG<Base> &trueCase,
-                const CG<Base> &falseCase
-                );
+                const CG<Base> &falseCase);
 
         friend CG<Base> sign<Base>(const CG<Base> &x);
 
-        // power function
+        /**
+         * math functions
+         */
         friend CG<Base> pow<Base>(const CG<Base> &x, const CG<Base> &y);
 
         friend CG<Base> abs<Base>(const CG<Base>& var);
@@ -202,10 +210,9 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(
-    /// stream to write to
-    std::ostream& os,
-    /// vector that is output
-    const CppAD::CG<Base>& v) {
+    std::ostream& os, //< stream to write to
+    const CppAD::CG<Base>& v//< vector that is output
+    ) {
         if (v.isParameter()) {
             os << v.getParameterValue();
         } else if (v.isVariable()) {
@@ -220,10 +227,9 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostringstream& operator <<(
-    /// steam to write the vector to
-    std::ostringstream& os,
-    /// vector that is output
-    const CppAD::CG<Base>& v) {
+    std::ostringstream& os, //< steam to write the vector to
+    const CppAD::CG<Base>& v//< vector that is output
+    ) {
         if (v.isParameter()) {
             os << v.getParameterValue();
         } else if (v.isVariable()) {
@@ -237,6 +243,12 @@ namespace CppAD {
     }
 
 }
+
+#define CPPAD_CG_CHECK_CG_THIS()  CPPAD_CG_CHECK_CG((*this));
+
+#define CPPAD_CG_CHECK_CG(var)                                  \
+        assert((var.handler_ == NULL) != (var.value_ == NULL)); \
+        assert(!var.deleted_);                                   \
 
 #endif	
 
