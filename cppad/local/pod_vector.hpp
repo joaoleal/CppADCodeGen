@@ -165,7 +165,7 @@ public:
 		{	v_ptr = reinterpret_cast<void*>( old_data );
 			if( ! is_pod<Type>() )
 			{	for(i = 0; i < old_capacity; i++)
-					(data_ + i)->~Type();
+					(old_data + i)->~Type();
 			} 
 			thread_alloc::return_memory(v_ptr); 
 		}
