@@ -42,6 +42,8 @@ extern bool Sin();
 extern bool Sub();
 extern bool Tan();
 
+bool test_verbose = false;
+
 namespace {
     // function that runs one test
     static size_t Run_ok_count = 0;
@@ -69,19 +71,6 @@ namespace {
     }
 }
 
-template <class Base>
-inline Base Zoot(CppAD::AD<Base> x) {
-    Base result = CppAD::acos(CppAD::Value(x));
-    return result;
-}
-
-//namespace CppAD {
-//
-//    inline CppAD::CG<double> acos(const CppAD::CG<double>& x) {
-//        return x;
-//    }
-//}
-
 // main program that runs all the tests
 
 int main(void) {
@@ -92,7 +81,6 @@ int main(void) {
     ok &= Run(Abs, "Abs");
     ok &= Run(Acos, "Acos");
     ok &= Run(Add, "Add");
-    return 0;
     ok &= Run(Asin, "Asin");
     ok &= Run(Atan, "Atan");
     ok &= Run(Atan2, "Atan2");
@@ -111,7 +99,7 @@ int main(void) {
     ok &= Run(Sub, "Sub");
     ok &= Run(Tan, "Tan");
 
-
+    
     // check for errors
 
     assert(ok || (Run_error_count > 0));

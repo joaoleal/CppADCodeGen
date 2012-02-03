@@ -43,10 +43,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> operator+(const CG<Base> &left, const CG<Base> &right) {
-
-        CPPAD_CG_CHECK_CG(left);
-        CPPAD_CG_CHECK_CG(right);
-
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() + right.getParameterValue());
 
@@ -75,10 +71,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> operator-(const CG<Base> &left, const CG<Base> &right) {
-
-        CPPAD_CG_CHECK_CG(left);
-        CPPAD_CG_CHECK_CG(right);
-
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() - right.getParameterValue());
 
@@ -111,23 +103,19 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> operator*(const CG<Base> &left, const CG<Base> &right) {
-
-        CPPAD_CG_CHECK_CG(left);
-        CPPAD_CG_CHECK_CG(right);
-
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() * right.getParameterValue());
 
         } else {
             if (left.isParameter()) {
                 if (left.IdenticalZero()) {
-                    return CG<Base > (Base(0.0));
+                    return CG<Base > (Base(0.0)); // does not consider the possibility of right being infinity
                 } else if (left.IdenticalOne()) {
                     return right;
                 }
             } else if (right.isParameter()) {
                 if (right.IdenticalZero()) {
-                    return CG<Base > (Base(0.0));
+                    return CG<Base > (Base(0.0)); // does not consider the possibility of left being infinity
                 } else if (right.IdenticalOne()) {
                     return left;
                 }
@@ -159,10 +147,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> operator/(const CG<Base> &left, const CG<Base> &right) {
-
-        CPPAD_CG_CHECK_CG(left);
-        CPPAD_CG_CHECK_CG(right);
-
         if (left.isParameter() && right.isParameter()) {
             return CG<Base > (left.getParameterValue() / right.getParameterValue());
 
@@ -236,46 +220,6 @@ namespace CppAD {
     inline CG<Base> operator*(const CG<Base> &left, const Base &right) {
         return left * CG<Base > (right);
     }
-
-//    template<class Base, class T>
-//    inline CG<Base> operator+(const T &left, const CG<Base> &right) {
-//        return CG<Base > (Base(left)) + right;
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator+(const CG<Base> &left, const T &right) {
-//        return left + CG<Base > (Base(right));
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator-(const T &left, const CG<Base> &right) {
-//        return CG<Base > (Base(left)) - right;
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator-(const CG<Base> &left, const T &right) {
-//        return left - CG<Base > (Base(right));
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator/(const Base &left, const CG<Base> &right) {
-//        return CG<Base > (Base(left)) / right;
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator/(const CG<Base> &left, const Base &right) {
-//        return left / CG<Base > (Base(right));
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator*(const Base &left, const CG<Base> &right) {
-//        return CG<Base > (Base(left)) * right;
-//    }
-//
-//    template<class Base, class T>
-//    inline CG<Base> operator*(const CG<Base> &left, const Base &right) {
-//        return left * CG<Base > (Base(right));
-//    }
 
 }
 

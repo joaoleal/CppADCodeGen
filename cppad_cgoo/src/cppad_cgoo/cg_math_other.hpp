@@ -15,9 +15,6 @@ namespace CppAD {
 
     template <class Base>
     inline CG<Base> pow(const CG<Base> &x, const CG<Base> &y) {
-        CPPAD_CG_CHECK_CG(x);
-        CPPAD_CG_CHECK_CG(y);
-
         if (x.isParameter() && y.isParameter()) {
             return CG<Base > (pow(x.getParameterValue(), y.getParameterValue()));
         }
@@ -52,8 +49,6 @@ namespace CppAD {
 
     template <class Base>
     inline CG<Base> sign(const CG<Base> &x) {
-        CPPAD_CG_CHECK_CG(x);
-
         if (x.isParameter()) {
             if (x.getParameterValue() > Base(1.0)) {
                 return CG<Base > (Base(1.0));

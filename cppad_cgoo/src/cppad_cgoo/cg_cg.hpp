@@ -32,7 +32,6 @@ namespace CppAD {
         // status of the operations
         OpContainement opTypes_;
         CodeHandler<Base>* handler_;
-        bool deleted_;
 
     public:
         // default constructor (creates a parameter with a zero value)
@@ -243,12 +242,6 @@ namespace CppAD {
     }
 
 }
-
-#define CPPAD_CG_CHECK_CG_THIS()  CPPAD_CG_CHECK_CG((*this));
-
-#define CPPAD_CG_CHECK_CG(var)                                  \
-        assert((var.handler_ == NULL) != (var.value_ == NULL)); \
-        assert(!var.deleted_);                                   \
 
 #endif	
 

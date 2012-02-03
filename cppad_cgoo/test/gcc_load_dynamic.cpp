@@ -13,6 +13,8 @@
 using namespace std;
 using namespace CppAD;
 
+extern bool test_verbose;
+
 void* loadLibrary(const string& library) throw (CppAD::TestException) {
     void * libHandle = dlopen(library.c_str(), RTLD_NOW);
     if (!libHandle) {
@@ -154,14 +156,16 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
 
     // get dependent variable values
     for (size_t i = 0; i < dep.size(); i++) {
-        source += spaces + "dep[" + handler.toString(i) + "] = " + handler.createVariableName(dep[i].getVariableID()) + ";\n";
+        source += spaces + "dep[" + handler.toString(i) + "] = " + handler.operations(dep[i]) + ";\n";
     }
 
     //source += "return " + n->compareChangeCounter() + n->endl();
     source += spaces + "return 0;\n";
     source += "}";
 
-    cout << endl << source << endl;
+    if (test_verbose) {
+        cout << endl << source << endl;
+    }
 
     compile(source, library);
 
@@ -187,12 +191,14 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
         // the compiled version
         comparisons = (*fn)(&ind[0], &depi[0]);
 
-        for (size_t j = 0; j < ind.size(); j++) {
-            cout << " ind[" << j << "] = " << ind[j] << "\n";
-        }
+        if (test_verbose) {
+            for (size_t j = 0; j < ind.size(); j++) {
+                cout << " ind[" << j << "] = " << ind[j] << "\n";
+            }
 
-        for (size_t j = 0; j < depi.size(); j++) {
-            cout << " dep[" << j << "] = " << depi[j] << "\n";
+            for (size_t j = 0; j < depi.size(); j++) {
+                cout << " dep[" << j << "] = " << depi[j] << "\n";
+            }
         }
     }
 
@@ -265,7 +271,9 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
     source += spaces + "return 0;\n";
     source += "}\n\n";
 
-    cout << endl << source << endl;
+    if (test_verbose) {
+        cout << endl << source << endl;
+    }
 
     /**
      * Compile
@@ -343,6 +351,10 @@ bool test0nJac(const string& test,
      * Determine the values using the compiled version
      */
     vector<AD<CG<double> > > u2(indV[0].size());
+    // values must be given during tapping in order to avoid NaN
+    for (size_t i = 0; i < u2.size(); i++) {
+        u2[i] = indV[0][i];
+    }
     Independent(u2);
 
     CppAD::ADFun<CG<double> >* f2 = (*func2)(u2);
@@ -410,6 +422,10 @@ bool test0(const string& test,
      * Determine the values using the compiled version
      */
     vector<AD<CG<double> > > u2(indV[0].size());
+    // values must be given during tapping in order to avoid NaN
+    for (size_t i = 0; i < u2.size(); i++) {
+        u2[i] = indV[0][i];
+    }
     Independent(u2);
 
     CppAD::ADFun<CG<double> >* f2 = (*func2)(u2);

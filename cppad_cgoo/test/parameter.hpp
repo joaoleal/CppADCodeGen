@@ -24,7 +24,7 @@ CppAD::ADFun<T>* ParameterFunc(const std::vector<CppAD::AD<T> >& ax) {
     size_t n_repeat = 5;
 
     // independent variable vector
-    size_t j, n = ax.size();
+    size_t n = ax.size();
     assert(n == n_parameter * n_repeat);
 
     // dependent variable vector and indices
@@ -33,8 +33,7 @@ CppAD::ADFun<T>* ParameterFunc(const std::vector<CppAD::AD<T> >& ax) {
     for (i = 0; i < m; i++) { // must avoid Float(k) = 0 because it would get optimized out	
         size_t k = (i % n_parameter);
         k = k * k * 10 + 1;
-        j = i;
-        ay[i] = ax[j] + T(k);
+        ay[i] = ax[i] + T(k);
     }
 
     // create f: ax -> ay 

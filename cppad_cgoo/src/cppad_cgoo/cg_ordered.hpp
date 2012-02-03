@@ -14,9 +14,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    bool GreaterThanZero(const CG<Base> &x) {
-        CPPAD_CG_CHECK_CG(x);
-        
+    bool GreaterThanZero(const CG<Base> &x) {      
         if (!x.isParameter()) {
             throw CGException("GreaterThanZero cannot be called for non-parameters");
         }
@@ -26,8 +24,6 @@ namespace CppAD {
 
     template<class Base>
     bool GreaterThanOrZero(const CG<Base> &x) {
-        CPPAD_CG_CHECK_CG(x);
-        
         if (!x.isParameter()) {
             throw CGException("GreaterThanOrZero cannot be called for non-parameters");
         }
@@ -37,8 +33,6 @@ namespace CppAD {
 
     template<class Base>
     bool LessThanZero(const CG<Base> &x) {
-        CPPAD_CG_CHECK_CG(x);
-        
         if (!x.isParameter()) {
             throw CGException("LessThanZero cannot be called for non-parameters");
         }
@@ -48,8 +42,6 @@ namespace CppAD {
 
     template<class Base>
     bool LessThanOrZero(const CG<Base> &x) {
-        CPPAD_CG_CHECK_CG(x);
-        
         if (!x.isParameter()) {
             throw CGException("LessThanOrZero cannot be called for non-parameters");
         }
@@ -59,9 +51,6 @@ namespace CppAD {
 
     template<class Base>
     bool abs_geq(const CG<Base>& x, const CG<Base>& y) {
-        CPPAD_CG_CHECK_CG(x);
-        CPPAD_CG_CHECK_CG(y);
-        
         if (!x.isParameter()) {
             throw CGException("abs_geq cannot be called for non-parameters (x)");
         } else if (!y.isParameter()) {

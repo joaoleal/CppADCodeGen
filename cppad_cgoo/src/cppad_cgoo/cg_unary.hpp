@@ -16,15 +16,11 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> CG<Base>::operator+() const {
-        CPPAD_CG_CHECK_CG_THIS();
-
         return CG<Base > (*this); // nothing to do
     }
 
     template<class Base>
     inline CG<Base> CG<Base>::operator-() const {
-        CPPAD_CG_CHECK_CG_THIS();
-
         if (isParameter()) {
             return CG<Base > (-getParameterValue());
 

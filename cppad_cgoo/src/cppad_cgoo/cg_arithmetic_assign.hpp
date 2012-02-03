@@ -16,9 +16,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
-        CPPAD_CG_CHECK_CG_THIS();
-        CPPAD_CG_CHECK_CG(right);
-
         if (isParameter() && right.isParameter()) {
             *value_ += *right.value_;
 
@@ -63,9 +60,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
-        CPPAD_CG_CHECK_CG_THIS();
-        CPPAD_CG_CHECK_CG(right);
-
         if (isParameter() && right.isParameter()) {
             *value_ -= *right.value_;
 
@@ -102,9 +96,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
-        CPPAD_CG_CHECK_CG_THIS();
-        CPPAD_CG_CHECK_CG(right);
-
         if (isParameter() && right.isParameter()) {
             * value_ *= *right.value_;
 
@@ -151,9 +142,6 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
-        CPPAD_CG_CHECK_CG_THIS();
-        CPPAD_CG_CHECK_CG(right);
-
         if (isParameter() && right.isParameter()) {
             * value_ /= *right.value_;
 

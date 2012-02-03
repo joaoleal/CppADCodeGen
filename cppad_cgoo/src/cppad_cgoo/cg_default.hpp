@@ -13,10 +13,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <stddef.h>
 
-#define CPPAD_CG_CONSTRUCTION_CHECK() \
-           deleted_ = false;\
-           CPPAD_CG_CHECK_CG_THIS();
-
 namespace CppAD {
 
     template <class Base>
@@ -25,7 +21,6 @@ namespace CppAD {
     handler_(NULL),
     value_(new Base(0.0)),
     id_(0) {
-        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
@@ -35,7 +30,6 @@ namespace CppAD {
     operations_(ops),
     value_(NULL),
     id_(0) {
-        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
@@ -49,8 +43,6 @@ namespace CppAD {
         } else {
             value_ = NULL;
         }
-
-        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
@@ -61,8 +53,6 @@ namespace CppAD {
     id_(0) {
         // make it a parameter
         makeParameter(b);
-
-        CPPAD_CG_CONSTRUCTION_CHECK();
     }
 
     template <class Base>
@@ -89,7 +79,6 @@ namespace CppAD {
             }
         }
 
-        CPPAD_CG_CONSTRUCTION_CHECK();
         return *this;
     }
 
@@ -98,7 +87,6 @@ namespace CppAD {
         // make it a parameter
         makeParameter(b);
 
-        CPPAD_CG_CONSTRUCTION_CHECK();
         return *this;
     }
 
@@ -106,7 +94,6 @@ namespace CppAD {
     CG<Base>::~CG() {
         delete value_;
         value_ = NULL; // not really required
-        deleted_ = true;
     }
 
 }

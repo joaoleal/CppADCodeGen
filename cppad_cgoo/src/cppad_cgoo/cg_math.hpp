@@ -16,7 +16,6 @@ namespace CppAD {
 #define CPPAD_CG_CREATE_OPERATION(OpName)                                      \
     template<class Base>                                                       \
     inline CG<Base> OpName(const CG<Base>& var) {                              \
-        CPPAD_CG_CHECK_CG(var);                                                \
         if (var.isParameter()) {                                               \
             return CG<Base > (OpName(var.getParameterValue()));                \
         } else {                                                               \
