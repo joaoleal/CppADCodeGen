@@ -29,6 +29,7 @@ nobase_cginclude_HEADERS =  \
 	cppad_cgoo/cg.hpp \
 	cppad_cgoo/cg_arithmetic.hpp \
 	cppad_cgoo/cg_arithmetic_assign.hpp \
+	cppad_cgoo/cg_base_double.hpp \
 	cppad_cgoo/cg_cg.hpp \
 	cppad_cgoo/cg_code_handler.hpp \
 	cppad_cgoo/cg_compare.hpp \

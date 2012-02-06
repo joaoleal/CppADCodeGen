@@ -47,7 +47,9 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            if (!isVariable()) {
+            if (isVariable()) {
+                variableValueWillChange();
+            } else {
                 makeVariable(*handler);
             }
 
@@ -83,7 +85,9 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            if (!isVariable()) {
+            if (isVariable()) {
+                variableValueWillChange();
+            } else {
                 makeVariable(*handler);
             }
 
@@ -118,6 +122,9 @@ namespace CppAD {
 
             } else if (right.isParameter()) {
                 if (right.IdenticalZero()) {
+                    if (isVariable()) {
+                        variableValueWillChange();
+                    }
                     makeParameter(Base(0.0)); // does not consider that left might be infinite
                     return *this;
                 } else if (right.IdenticalOne()) {
@@ -129,7 +136,9 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            if (!isVariable()) {
+            if (isVariable()) {
+                variableValueWillChange();
+            } else {
                 makeVariable(*handler);
             }
 
@@ -167,7 +176,9 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            if (!isVariable()) {
+            if (isVariable()) {
+                variableValueWillChange();
+            } else {
                 makeVariable(*handler);
             }
 

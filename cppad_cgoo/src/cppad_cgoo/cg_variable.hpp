@@ -31,6 +31,11 @@ namespace CppAD {
     }
 
     template<class Base>
+    inline bool CG<Base>::isReference() const {
+        return referenceTo_ != NULL;
+    }
+
+    template<class Base>
     inline size_t CG<Base>::getVariableID() const {
         return id_;
     }
@@ -64,6 +69,19 @@ namespace CppAD {
 
     template <class Base>
     inline void CG<Base>::makeParameter(const Base &b) {
+        if (isVariable()) {
+            if (isReference()) {
+                handler_->removeVariableReference(*this);
+            } else {
+                handler_->removePureVariable(*this);
+            }
+        }
+
+        makeParameterNoChecks(b);
+    }
+
+    template <class Base>
+    inline void CG<Base>::makeParameterNoChecks(const Base &b) {
         id_ = 0;
         handler_ = NULL;
         operations_.clear();
@@ -78,22 +96,55 @@ namespace CppAD {
 
     template <class Base>
     inline void CG<Base>::makeVariable(CodeHandler<Base>& handler) {
+        bool wasReference = isReference();
+        bool isNewHandler = &handler != handler_;
+
+        if (!isNewHandler && wasReference) {
+            handler_->removeVariableReference(*this);
+        }
+
         operations_.clear();
         opTypes_ = NONE;
         delete value_;
         value_ = NULL;
         handler_ = &handler;
-        id_ = handler.createID();
+        id_ = handler.createID(); // generate a new variable ID (even if it was already a variable)
+        referenceTo_ = NULL;
+
+        if (isNewHandler || wasReference) {
+            handler_->addPureVariable(*this);
+        }
     }
 
     template <class Base>
-    inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, size_t id) {
+    inline void CG<Base>::makeVariableProxy(const CG<Base>& referenceTo) {
+        assert(referenceTo.isVariable());
+        bool wasVariable = isVariable();
+        bool wasReference = isReference();
+
+        if (handler_ == referenceTo.getCodeHandler()) {
+            if (wasReference) {
+                handler_->removeVariableReference(*this);
+            } else if (wasVariable) {
+                handler_->removePureVariable(*this);
+            }
+        }
+
         operations_.clear();
         opTypes_ = NONE;
         delete value_;
         value_ = NULL;
-        handler_ = &handler;
-        id_ = id;
+
+        if (referenceTo.isReference()) {
+            referenceTo_ = referenceTo.referenceTo_; // there are no 2nd level proxies
+        } else {
+            referenceTo_ = &referenceTo;
+        }
+        assert(referenceTo_ != this);
+
+        id_ = referenceTo_->id_;
+        handler_ = referenceTo_->handler_;
+        handler_->putVariableReference(referenceTo, *this);
     }
 
     template <class Base>
@@ -104,6 +155,23 @@ namespace CppAD {
         opTypes_ = op;
         handler_ = &handler;
         id_ = 0;
+    }
+
+    template <class Base>
+    inline void CG<Base>::variableValueWillChange() {
+        assert(isVariable());
+
+        if (isReference()) {
+            const CG<Base>* oldRef = referenceTo_;
+            makeVariable(*handler_); // assign it a new variable ID
+
+            // variable :: print operation
+            std::string name = createVariableName();
+            printOperationAssig(name, handler_->operations(*oldRef));
+
+        } else {
+            handler_->releaseReferences(*this);
+        }
     }
 
     template<class Base>

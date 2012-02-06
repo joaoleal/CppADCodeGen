@@ -25,6 +25,7 @@ extern bool Abs();
 extern bool Acos();
 extern bool Add();
 extern bool Asin();
+extern bool Assign();
 extern bool Atan();
 extern bool Atan2();
 extern bool CompareChange();
@@ -78,6 +79,7 @@ int main(void) {
     using std::endl;
 
     bool ok = true;
+    ok &= Run(Assign, "Assign");
     ok &= Run(Abs, "Abs");
     ok &= Run(Acos, "Acos");
     ok &= Run(Add, "Add");
@@ -99,7 +101,7 @@ int main(void) {
     ok &= Run(Sub, "Sub");
     ok &= Run(Tan, "Tan");
 
-    
+
     // check for errors
 
     assert(ok || (Run_error_count > 0));

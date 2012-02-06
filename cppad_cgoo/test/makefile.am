@@ -41,6 +41,7 @@ testCGOO_SOURCES        = \
 	acos.cpp \
 	add.cpp \
 	asin.cpp \
+	assign.cpp \
 	atan.cpp \
 	atan_2.cpp \
 	compare_change.cpp \

@@ -27,6 +27,8 @@ namespace CppAD {
         Base* value_;
         // variable ID (zero means that it is either a temporary variable or a parameter)
         size_t id_;
+        // this variable can be a reference of another variable
+        const CG<Base>* referenceTo_;
         // the operations used to create this variable (temporary variables only)
         std::string operations_;
         // status of the operations
@@ -55,8 +57,9 @@ namespace CppAD {
             return handler_;
         }
 
-        //
+        // variable classification methods
         inline bool isVariable() const;
+        inline bool isReference() const;
         inline bool isTemporaryVariable() const;
         inline bool isParameter() const;
 
@@ -95,7 +98,6 @@ namespace CppAD {
         inline void makeParameter(const Base &b);
 
         inline void makeVariable(CodeHandler<Base>& handler);
-        inline void makeVariable(CodeHandler<Base>& handler, size_t id);
 
         inline std::string createVariableName() const {
             assert(handler_ != NULL);
@@ -105,6 +107,11 @@ namespace CppAD {
         // destructor
         virtual ~CG();
     protected:
+
+        inline void variableValueWillChange();
+
+        inline void makeParameterNoChecks(const Base &b);
+        inline void makeVariableProxy(const CG<Base>& referenceTo);
 
         inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op);
 
@@ -119,6 +126,8 @@ namespace CppAD {
         }
 
     private:
+
+        friend class CodeHandler<Base>;
 
         /**
          * arithmetic binary operators

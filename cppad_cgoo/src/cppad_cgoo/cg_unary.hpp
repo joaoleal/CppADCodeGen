@@ -32,9 +32,8 @@ namespace CppAD {
                 ops += "(" + operations() + ")";
             }
 
-            CG<Base> result;
-            result.makeTemporaryVariable(*handler_, ops, UNARY);
-            return result;
+            // return a temporary variable
+            return CG<Base > (*handler_, ops, UNARY);
         }
     }
 

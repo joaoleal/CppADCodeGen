@@ -17,6 +17,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <iostream>
 #include <iomanip>
 #include <limits>
+#include <map>
 
 namespace CppAD {
 
@@ -29,6 +30,10 @@ namespace CppAD {
         std::ostream* _out;
         size_t _idCount;
         std::string _spaces;
+        // references to existing variables
+        std::map<size_t, std::vector<CG<Base>* > > proxies_;
+        // pure variables (not references to other variables)
+        std::vector<CG<Base>* > variables_;
     public:
 
         CodeHandler(std::ostream& out, size_t spaces = 3) {
@@ -43,7 +48,7 @@ namespace CppAD {
 
         void makeVariables(std::vector<CG<Base> >& variables) {
             for (typename std::vector<CG<Base> >::iterator it = variables.begin(); it != variables.end(); ++it) {
-                it->makeVariable(*this, createID());
+                it->makeVariable(*this);
             }
         }
 
@@ -66,7 +71,7 @@ namespace CppAD {
         virtual std::string operations(const CG<Base>& val) const {
             assert(val.getCodeHandler() == NULL || val.getCodeHandler() == this);
 
-            return val.isParameter() ? this->baseToString(val.getParameterValue()) : val.operations();
+            return val.isParameter() ? baseToString(val.getParameterValue()) : val.operations();
         }
 
         virtual void printOperationAssign(const std::string& var, const std::string& operations) const {
@@ -148,11 +153,124 @@ namespace CppAD {
             return result;
         }
 
+        virtual ~CodeHandler() {
+            typename std::vector<CG<Base>* >::reverse_iterator rit;
+            typename std::map<size_t, std::vector<CG<Base>* > >::iterator it;
+            for (it = proxies_.begin(); it != proxies_.end(); ++it) {
+                std::vector<CG<Base>* >& p = it->second;
+                for (rit = p.rbegin(); rit != p.rend(); ++rit) {
+                    CG<Base>* ref = *rit;
+                    ref->makeParameterNoChecks(0);
+                }
+            }
+            for (rit = variables_.rbegin(); rit != variables_.rend(); ++rit) {
+                CG<Base>* ref = *rit;
+                ref->makeParameterNoChecks(0);
+            }
+        }
+
+    protected:
+
+        virtual void putVariableReference(const CG<Base>& variable, CG<Base>& reference) {
+            std::vector<CG<Base>* >& p = proxies_[variable.getVariableID()];
+            assert(std::find(p.begin(), p.end(), &reference) == p.end());
+            p.push_back(&reference);
+        }
+
+        virtual void removeVariableReference(const CG<Base>& reference) {
+            typename std::map<size_t, std::vector<CG<Base>* > >::iterator it = proxies_.find(reference.getVariableID());
+            assert(it != proxies_.end()); // must exist in the map
+            std::vector<CG<Base>* >& p = it->second;
+
+            if (p.size() == 1) {
+                assert(p[0] == &reference);
+                proxies_.erase(it);
+            } else {
+                typename std::vector<CG<Base>* >::iterator it2 = std::find(p.begin(), p.end(), &reference);
+                assert(it2 != p.end()); // must exist in the list
+                p.erase(it2);
+            }
+        }
+
+        virtual void releaseReferences(const CG<Base>& variable) {
+            typename std::map<size_t, std::vector<CG<Base>* > >::iterator it = proxies_.find(variable.getVariableID());
+            if (it == proxies_.end()) {
+                return;
+            }
+            const std::vector<CG<Base>* >& p = it->second;
+            assert(!p.empty());
+
+            const size_t refCount = p.size();
+            CG<Base>* newVar = p[0];
+            newVar->makeVariable(*this); // will reduce by 1 the number of references to variable (or delete p)
+
+            // variable :: print operation
+            std::string name = newVar->createVariableName();
+            newVar->printOperationAssig(name, operations(variable));
+
+            if (refCount > 1) {
+                size_t newID = newVar->getVariableID();
+                std::vector<CG<Base>* >& p2 = proxies_[newID];
+                p2 = p;
+
+                // make the other references to this variable a reference to the 
+                // 1st instead
+                for (size_t i = 0; i < p2.size(); i++) {
+                    p2[i]->referenceTo_ = newVar;
+                    p2[i]->id_ = newID;
+                }
+
+                proxies_.erase(it); // variable will no longer have any references
+            }
+        }
+
+        virtual void addPureVariable(CG<Base>& variable) {
+            assert(variable.isVariable());
+            variables_.push_back(&variable);
+        }
+
+        virtual void removePureVariable(const CG<Base>& variable) {
+            // remove the variable from the variables list
+            typename std::vector<CG<Base>* >::iterator it2 = std::find(variables_.begin(), variables_.end(), &variable);
+            assert(it2 != variables_.end());
+            variables_.erase(it2);
+
+            /**
+             * allow the references to this variable to keep using its ID
+             */
+            typename std::map<size_t, std::vector<CG<Base>* > >::iterator it = proxies_.find(variable.getVariableID());
+            if (it == proxies_.end()) {
+                return; // no references
+            }
+            std::vector<CG<Base>* >& p = it->second;
+            assert(!p.empty());
+
+            // make the 1st reference a variable
+            CG<Base>* newVar = p[0];
+            assert(newVar->getVariableID() == variable.getVariableID());
+            newVar->referenceTo_ = NULL; //make it a variable that can keep the current id
+            addPureVariable(*newVar);
+
+            if (p.size() == 1) {
+                proxies_.erase(it);
+                return;
+            } else {
+                p.erase(p.begin());
+
+                // make the other references a reference to the 1st instead
+                for (size_t i = 0; i < p.size(); i++) {
+                    p[i]->referenceTo_ = newVar;
+                }
+            }
+        }
+
     private:
 
         CodeHandler() {
             throw 1;
         }
+
+        friend class CG<Base>;
 
     };
 

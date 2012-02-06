@@ -42,10 +42,10 @@ mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
-	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) atan.$(OBJEXT) \
-	atan_2.$(OBJEXT) compare_change.$(OBJEXT) cond_exp.$(OBJEXT) \
-	cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) exp.$(OBJEXT) \
-	log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
+	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) assign.$(OBJEXT) \
+	atan.$(OBJEXT) atan_2.$(OBJEXT) compare_change.$(OBJEXT) \
+	cond_exp.$(OBJEXT) cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) \
+	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
 	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
 	TestException.$(OBJEXT)
@@ -231,6 +231,7 @@ testCGOO_SOURCES = \
 	acos.cpp \
 	add.cpp \
 	asin.cpp \
+	assign.cpp \
 	atan.cpp \
 	atan_2.cpp \
 	compare_change.cpp \
@@ -302,6 +303,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/acos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/add.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/asin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/assign.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/atan_2.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/compare_change.Po@am__quote@
