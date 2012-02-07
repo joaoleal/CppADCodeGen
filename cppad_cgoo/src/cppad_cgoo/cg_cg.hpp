@@ -27,12 +27,13 @@ namespace CppAD {
         Base* value_;
         // variable ID (zero means that it is either a temporary variable or a parameter)
         size_t id_;
+        // the source code that assigned the last value to this variable (only for pure variables)
+        SourceCodeBlock* sourceCode_;
         // this variable can be a reference of another variable
         const CG<Base>* referenceTo_;
         // the operations used to create this variable (temporary variables only)
-        std::string operations_;
-        // status of the operations
-        OpContainement opTypes_;
+        CodeFragment* codeFragment_;
+        // the source code handler
         CodeHandler<Base>* handler_;
 
     public:
@@ -40,7 +41,7 @@ namespace CppAD {
         inline CG();
 
         // creates a temporary variable
-        inline CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain);
+        inline CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain, const CG<Base>* depend = NULL);
 
         // copy constructor
         inline CG(const CG<Base>& orig);
@@ -70,6 +71,11 @@ namespace CppAD {
         inline bool IdenticalOne() const throw (CGException);
 
         inline std::string operations() const throw (CGException);
+
+        inline OpContainement getOperationContainment() const;
+
+        inline CodeBlock* getSourceCodeBlock() const;
+        inline CodeFragment* getSourceCodeFragment() const;
 
         // computed assignment operators
         inline CG<Base>& operator+=(const CG<Base> &right);
@@ -113,17 +119,8 @@ namespace CppAD {
         inline void makeParameterNoChecks(const Base &b);
         inline void makeVariableProxy(const CG<Base>& referenceTo);
 
-        inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op);
-
-        inline size_t createID() const {
-            assert(handler_ != NULL);
-            return handler_->createID();
-        }
-
-        inline void printOperationAssig(const std::string& var, const std::string& operations) const {
-            assert(handler_ != NULL);
-            return handler_->printOperationAssign(var, operations);
-        }
+        inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>& dep2);
+        inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>* dep2 = NULL);
 
     private:
 

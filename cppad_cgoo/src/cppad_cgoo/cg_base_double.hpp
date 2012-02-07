@@ -19,7 +19,7 @@ namespace CppAD {
             return CG<double> (fabs(var.getParameterValue()));
         } else {
             std::string operations = "fabs(" + var.operations() + ")";
-            return CG<double>(*var.getCodeHandler(), operations, FUNCTION);
+            return CG<double>(*var.getCodeHandler(), operations, FUNCTION, &var);
         }
     }
 

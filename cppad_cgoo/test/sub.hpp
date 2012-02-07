@@ -82,9 +82,7 @@ CppAD::ADFun<T>* FourFunc(const std::vector<CppAD::AD<T> >& X) {
     // variable index in result.
     size_t m = 1;
     std::vector< AD<T> > Y(m);
-    if (0. < X[0] && X[0] < 10.)
-        Y[0] = X[0] - 2.;
-    else Y[0] = X[0] - 2.;
+    Y[0] = X[0] - 2.;
 
     return new ADFun<T > (X, Y);
 }

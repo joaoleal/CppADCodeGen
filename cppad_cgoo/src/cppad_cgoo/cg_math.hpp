@@ -20,7 +20,7 @@ namespace CppAD {
             return CG<Base > (OpName(var.getParameterValue()));                \
         } else {                                                               \
             std::string operations = #OpName"(" + var.operations() + ")";      \
-            return CG<Base>(*var.getCodeHandler(), operations, FUNCTION);      \
+            return CG<Base>(*var.getCodeHandler(), operations, FUNCTION, &var);\
         }                                                                      \
     }
 

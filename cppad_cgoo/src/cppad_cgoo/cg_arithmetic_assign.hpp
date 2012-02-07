@@ -33,8 +33,7 @@ namespace CppAD {
                 // must print the assignment to the parameter value
                 const CG<Base> copy(*this); // make a copy
                 makeVariable(*handler);
-                std::string name = createVariableName();
-                handler->printOperationAssign(name, handler->baseToString(copy.getParameterValue()));
+                handler->printOperationAssign(*this, copy);
 
 
             } else if (right.isParameter()) {
@@ -53,8 +52,7 @@ namespace CppAD {
                 makeVariable(*handler);
             }
 
-            std::string name = createVariableName();
-            handler->printOperationPlusAssign(name, handler->operations(right));
+            handler->printOperationPlusAssign(*this, right);
         }
 
         return *this;
@@ -72,8 +70,7 @@ namespace CppAD {
                 // must print the assignment to the parameter value
                 const CG<Base> copy(*this); // make a copy
                 makeVariable(*handler);
-                std::string name = createVariableName();
-                handler->printOperationAssign(name, handler->baseToString(copy.getParameterValue()));
+                handler->printOperationAssign(*this, copy.getParameterValue());
 
             } else if (right.isParameter()) {
                 if (right.IdenticalZero()) {
@@ -91,8 +88,7 @@ namespace CppAD {
                 makeVariable(*handler);
             }
 
-            std::string name = createVariableName();
-            handler->printOperationMinusAssign(name, handler->operations(right));
+            handler->printOperationMinusAssign(*this, right);
         }
 
         return *this;
@@ -117,8 +113,7 @@ namespace CppAD {
                 // must print the assignment to the parameter value
                 const CG<Base> copy(*this); // make a copy
                 makeVariable(*handler);
-                std::string name = createVariableName();
-                handler->printOperationAssign(name, handler->baseToString(copy.getParameterValue()));
+                handler->printOperationAssign(*this, copy.getParameterValue());
 
             } else if (right.isParameter()) {
                 if (right.IdenticalZero()) {
@@ -142,8 +137,7 @@ namespace CppAD {
                 makeVariable(*handler);
             }
 
-            std::string name = createVariableName();
-            handler->printOperationMultAssign(name, handler->operations(right));
+            handler->printOperationMultAssign(*this, right);
         }
 
         return *this;
@@ -163,8 +157,7 @@ namespace CppAD {
                 // must print the assignment to the parameter value
                 const CG<Base> copy(*this); // make a copy
                 makeVariable(*handler);
-                std::string name = createVariableName();
-                handler->printOperationAssign(name, handler->baseToString(copy.getParameterValue()));
+                handler->printOperationAssign(*this, copy.getParameterValue());
 
             } else if (right.isParameter()) {
                 if (right.IdenticalOne()) {
@@ -182,8 +175,7 @@ namespace CppAD {
                 makeVariable(*handler);
             }
 
-            std::string name = createVariableName();
-            handler->printOperationDivAssign(name, handler->operations(right));
+            handler->printOperationDivAssign(*this, right);
         }
 
         return *this;

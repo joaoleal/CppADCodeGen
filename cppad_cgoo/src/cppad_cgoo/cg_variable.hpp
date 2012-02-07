@@ -83,9 +83,10 @@ namespace CppAD {
     template <class Base>
     inline void CG<Base>::makeParameterNoChecks(const Base &b) {
         id_ = 0;
+        sourceCode_ = NULL;
         handler_ = NULL;
-        operations_.clear();
-        opTypes_ = NONE;
+        delete codeFragment_;
+        codeFragment_ = NULL;
 
         if (value_ == NULL) {
             value_ = new Base(b);
@@ -103,12 +104,13 @@ namespace CppAD {
             handler_->removeVariableReference(*this);
         }
 
-        operations_.clear();
-        opTypes_ = NONE;
+        delete codeFragment_;
+        codeFragment_ = NULL;
         delete value_;
         value_ = NULL;
         handler_ = &handler;
-        id_ = handler.createID(); // generate a new variable ID (even if it was already a variable)
+        sourceCode_ = handler.createSourceCodeBlock(); // generate a new variable ID (even if it was already a variable)
+        id_ = sourceCode_->id;
         referenceTo_ = NULL;
 
         if (isNewHandler || wasReference) {
@@ -130,8 +132,8 @@ namespace CppAD {
             }
         }
 
-        operations_.clear();
-        opTypes_ = NONE;
+        delete codeFragment_;
+        codeFragment_ = NULL;
         delete value_;
         value_ = NULL;
 
@@ -143,18 +145,33 @@ namespace CppAD {
         assert(referenceTo_ != this);
 
         id_ = referenceTo_->id_;
+        sourceCode_ = NULL;
         handler_ = referenceTo_->handler_;
         handler_->putVariableReference(referenceTo, *this);
     }
 
     template <class Base>
-    inline void CG<Base>::makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op) {
+    inline void CG<Base>::makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>& dep2) {
+        makeTemporaryVariable(handler, operations, op, dep1, &dep2);
+    }
+
+    template <class Base>
+    inline void CG<Base>::makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>* dep2) {
         delete value_;
         value_ = NULL;
-        operations_ = operations;
-        opTypes_ = op;
+        delete codeFragment_;
+        codeFragment_ = new CodeFragment(operations, op);
         handler_ = &handler;
         id_ = 0;
+        sourceCode_ = NULL;
+
+        // add the code blocks that this code fragment depends upon
+        assert((dep1.isVariable() || dep1.isTemporaryVariable()) || (dep2 != NULL && (dep2->isVariable() || dep2->isTemporaryVariable())));
+
+        codeFragment_->addDependency(dep1);
+        if (dep2 != NULL) {
+            codeFragment_->addDependency(*dep2);
+        }
     }
 
     template <class Base>
@@ -165,9 +182,7 @@ namespace CppAD {
             const CG<Base>* oldRef = referenceTo_;
             makeVariable(*handler_); // assign it a new variable ID
 
-            // variable :: print operation
-            std::string name = createVariableName();
-            printOperationAssig(name, handler_->operations(*oldRef));
+            handler_->printOperationAssign(*this, *oldRef);
 
         } else {
             handler_->releaseReferences(*this);
@@ -181,13 +196,39 @@ namespace CppAD {
         }
 
         if (isTemporaryVariable()) {
-            return operations_;
+            return codeFragment_->operations;
         } else {
             // named variable
             return createVariableName();
         }
     }
 
+    template<class Base>
+    inline OpContainement CG<Base>::getOperationContainment() const {
+        if (isTemporaryVariable()) {
+            return codeFragment_->opTypes;
+        } else {
+            return CppAD::NONE;
+        }
+    }
+
+    template<class Base>
+    inline CodeBlock* CG<Base>::getSourceCodeBlock() const {
+        if (isVariable()) {
+            if (isReference()) {
+                return referenceTo_->sourceCode_;
+            } else {
+                return sourceCode_;
+            }
+        } else {
+            return NULL;
+        }
+    }
+
+    template<class Base>
+    inline CodeFragment* CG<Base>::getSourceCodeFragment() const {
+        return codeFragment_;
+    }
 }
 
 #endif

@@ -20,24 +20,29 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>::CG() :
-    opTypes_(NONE),
     handler_(NULL),
     value_(new Base(0.0)),
     id_(0),
-    referenceTo_(NULL) {
+    sourceCode_(NULL),
+    referenceTo_(NULL),
+    codeFragment_(NULL) {
     }
 
     /**
      * Creates a temporary variable
      */
     template <class Base>
-    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain) :
-    opTypes_(contain),
+    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain, const CG<Base>* depend) :
     handler_(&handler),
-    operations_(ops),
     value_(NULL),
     id_(0),
-    referenceTo_(NULL) {
+    sourceCode_(NULL),
+    referenceTo_(NULL),
+    codeFragment_(NULL) {
+        codeFragment_ = new CodeFragment(ops, contain);
+        if (depend != NULL) {
+            codeFragment_->addDependency(*depend);
+        }
     }
 
     /**
@@ -45,11 +50,12 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>::CG(const CG<Base>& orig) :
-    opTypes_(CppAD::NONE),
     handler_(NULL),
     id_(0),
     referenceTo_(NULL),
-    value_(NULL) {
+    sourceCode_(NULL),
+    value_(NULL),
+    codeFragment_(NULL) {
         if (orig.isParameter()) {
             // parameter
             makeParameter(*orig.value_);
@@ -58,7 +64,7 @@ namespace CppAD {
             makeVariableProxy(orig);
         } else {
             // the other is a temporary variable
-            makeTemporaryVariable(*orig.handler_, orig.operations_, orig.opTypes_);
+            makeTemporaryVariable(*orig.handler_, orig.codeFragment_->operations, orig.codeFragment_->opTypes, orig);
         }
     }
 
@@ -67,11 +73,12 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>::CG(const Base &b) :
-    opTypes_(NONE),
     handler_(NULL),
     value_(NULL),
     id_(0),
-    referenceTo_(NULL) {
+    sourceCode_(NULL),
+    referenceTo_(NULL),
+    codeFragment_(NULL) {
         // make it a parameter
         makeParameter(b);
     }
@@ -100,9 +107,7 @@ namespace CppAD {
                 makeVariable(*other.getCodeHandler());
             }
 
-            // variable :: print operation
-            std::string name = createVariableName();
-            printOperationAssig(name, handler_->operations(other));
+            handler_->printOperationAssign(*this, other);
         }
 
         return *this;
@@ -129,6 +134,9 @@ namespace CppAD {
                 handler_->removePureVariable(*this);
             }
         }
+
+        delete codeFragment_;
+        codeFragment_ = NULL; // not really required
 
         delete value_;
         value_ = NULL; // not really required

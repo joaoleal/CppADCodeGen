@@ -44,6 +44,7 @@ extern bool Sub();
 extern bool Tan();
 
 bool test_verbose = false;
+bool test_printvalues = false;
 
 namespace {
     // function that runs one test
@@ -77,6 +78,8 @@ namespace {
 int main(void) {
     using std::cout;
     using std::endl;
+
+    //test_verbose = true;
 
     bool ok = true;
     ok &= Run(Assign, "Assign");

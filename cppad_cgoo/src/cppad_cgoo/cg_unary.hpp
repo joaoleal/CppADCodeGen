@@ -26,14 +26,17 @@ namespace CppAD {
 
         } else {
             std::string ops = "-";
-            if (opTypes_ == NONE || opTypes_ == MULT_DIV || opTypes_ == FUNCTION) {
+            OpContainement opTypes = getOperationContainment();
+            if (opTypes == NONE || opTypes == MULT_DIV || opTypes == FUNCTION) {
                 ops += operations();
             } else {
                 ops += "(" + operations() + ")";
             }
 
             // return a temporary variable
-            return CG<Base > (*handler_, ops, UNARY);
+            CG<Base > result;
+            result.makeTemporaryVariable(*handler_, ops, UNARY, *this);
+            return result;
         }
     }
 

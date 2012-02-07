@@ -14,6 +14,7 @@ using namespace std;
 using namespace CppAD;
 
 extern bool test_verbose;
+extern bool test_printvalues;
 
 void* loadLibrary(const string& library) throw (CppAD::TestException) {
     void * libHandle = dlopen(library.c_str(), RTLD_NOW);
@@ -128,28 +129,37 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
                                        int& comparisons) {
     using std::vector;
 
-    ostringstream code;
-    CodeHandler<double> handler(code);
+    CodeHandler<double> handler(10 + indV.size() * indV.size());
 
     vector<CG<double> > indVars(indV.begin()->size());
     handler.makeVariables(indVars);
 
     vector<CG<double> > dep = f.Forward(0, indVars);
 
+    ostringstream code;
+    handler.generateCode(code, dep);
+
     string spaces = "   ";
     string source = "#include <math.h>\n\n"
             "int " + function + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    const size_t maxID = handler.getMaximumVariableID();
-    source += spaces + "double " + handler.createVariableName(1);
-    for (size_t i = 2; i <= maxID; i++) {
-        source += ", " + handler.createVariableName(i);
+    const set<size_t>& varIDs = handler.getUsedVariableIDs();
+    if (varIDs.size() > 0) {
+        source += spaces + "double " + handler.createVariableName(*varIDs.begin());
+        set<size_t>::const_iterator it = varIDs.begin();
+        for (it++; it != varIDs.end(); ++it) {
+            size_t id = *it;
+            source += ", " + handler.createVariableName(id);
+        }
+        source += ";\n";
     }
-    source += ";\n";
+
     // set independent variable values
     for (size_t i = 0; i < indVars.size(); i++) {
-        source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        if (varIDs.find(indVars[i].getVariableID()) != varIDs.end()) {
+            source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        }
     }
 
     source += code.str();
@@ -191,7 +201,7 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
         // the compiled version
         comparisons = (*fn)(&ind[0], &depi[0]);
 
-        if (test_verbose) {
+        if (test_verbose && test_printvalues) {
             for (size_t j = 0; j < ind.size(); j++) {
                 cout << " ind[" << j << "] = " << ind[j] << "\n";
             }
@@ -231,30 +241,37 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
 
     using std::vector;
 
-    ostringstream code;
-    CodeHandler<double> handler(code);
+    CodeHandler<double> handler(50 + indV.size() * indV.size());
 
     vector<CG<double> > indVars(indV[0].size());
     handler.makeVariables(indVars);
 
-    string source = "#include <math.h>\n\n";
-    string spaces = "   ";
-
     vector<CG<double> > jacCG = f.SparseJacobian(indVars);
 
-    source += "int " + functionJac + "(const double* ind, double* jac) {\n";
+    ostringstream code;
+    handler.generateCode(code, jacCG);
+
+    string spaces = "   ";
+    string source = "#include <math.h>\n\n"
+            "int " + functionJac + "(const double* ind, double* jac) {\n";
 
     // declare variables
-    const size_t maxID = handler.getMaximumVariableID();
-    source += spaces + "double " + handler.createVariableName(1);
-    for (size_t i = 2; i <= maxID; i++) {
-        source += ", " + handler.createVariableName(i);
+    const set<size_t>& varIDs = handler.getUsedVariableIDs();
+    if (varIDs.size() > 0) {
+        source += spaces + "double " + handler.createVariableName(*varIDs.begin());
+        set<size_t>::const_iterator it = varIDs.begin();
+        for (it++; it != varIDs.end(); ++it) {
+            size_t id = *it;
+            source += ", " + handler.createVariableName(id);
+        }
+        source += ";\n";
     }
-    source += ";\n";
 
     // set independent variable values
     for (size_t i = 0; i < indVars.size(); i++) {
-        source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        if (varIDs.find(indVars[i].getVariableID()) != varIDs.end()) {
+            source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
+        }
     }
 
     source += code.str();

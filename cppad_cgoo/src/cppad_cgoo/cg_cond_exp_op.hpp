@@ -79,23 +79,10 @@ namespace CppAD {
                 throw CGException("Attempting to use different source code generation handlers in the same source code generation");
             }
 
-            std::string leftStr = handler->operations(left);
-            std::string rightStr = handler->operations(right);
-            std::string trueCaseStr = handler->operations(trueCase);
-            std::string falseCaseStr = handler->operations(falseCase);
-
             CG<Base> result;
             result.makeVariable(*handler);
-            std::string resultStr = handler->createVariableName(result);
 
-            std::ostream* out = handler->getOutputStream();
-            (*out) << "if(";
-            handler->printComparison(leftStr, cop, rightStr);
-            (*out) << ") {\n";
-            handler->printOperationAssign(resultStr, trueCaseStr);
-            (*out) << "} else {\n";
-            handler->printOperationAssign(resultStr, falseCaseStr);
-            (*out) << "}\n";
+            handler->printConditionalAssignment(cop, result, left, right, trueCase, falseCase);
 
             return result;
         }

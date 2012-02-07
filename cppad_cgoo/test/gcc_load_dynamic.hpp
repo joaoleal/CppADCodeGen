@@ -1,5 +1,5 @@
-#ifndef GCC_LOAD_DYNAMIC_HPP
-#define	GCC_LOAD_DYNAMIC_HPP
+#ifndef CPPADCGOO_TEST_GCC_LOAD_DYNAMIC_INCLUDED
+#define	CPPADCGOO_TEST_GCC_LOAD_DYNAMIC_INCLUDED
 
 #include <string>
 #include <dlfcn.h>
@@ -86,5 +86,5 @@ bool compareValues(std::vector<double> cgen, T orig,
     return true;
 }
 
-#endif	/* GCC_LOAD_DYNAMIC_HPP */
+#endif
 

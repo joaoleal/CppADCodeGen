@@ -64,7 +64,7 @@ namespace CppAD {
             std::string operations = leftOps + " + " + rightOps;
 
             CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY);
+            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY, left, right);
             return result;
         }
     }
@@ -88,15 +88,16 @@ namespace CppAD {
             std::string rightOps;
             CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
 
+            OpContainement rOpTypes = right.getOperationContainment();
             std::string operations = leftOps + " - ";
-            if (right.opTypes_ == NONE || right.opTypes_ == MULT_DIV || right.opTypes_ == FUNCTION) {
+            if (rOpTypes == NONE || rOpTypes == MULT_DIV || rOpTypes == FUNCTION) {
                 operations += rightOps;
             } else {
                 operations += "(" + rightOps + ")";
             }
 
             CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY);
+            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY, left, right);
             return result;
         }
     }
@@ -125,7 +126,8 @@ namespace CppAD {
             CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
 
             std::string operations;
-            if (left.opTypes_ == NONE || left.opTypes_ == MULT_DIV || left.opTypes_ == FUNCTION) {
+            OpContainement lOpTypes = left.getOperationContainment();
+            if (lOpTypes == NONE || lOpTypes == MULT_DIV || lOpTypes == FUNCTION) {
                 operations += leftOps;
             } else {
                 operations += "(" + leftOps + ")";
@@ -133,14 +135,15 @@ namespace CppAD {
 
             operations += " * ";
 
-            if (right.opTypes_ == NONE || right.opTypes_ == MULT_DIV || right.opTypes_ == FUNCTION) {
+            OpContainement rOpTypes = right.getOperationContainment();
+            if (rOpTypes == NONE || rOpTypes == MULT_DIV || rOpTypes == FUNCTION) {
                 operations += rightOps;
             } else {
                 operations += "(" + rightOps + ")";
             }
 
             CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, MULT_DIV);
+            result.makeTemporaryVariable(*handler, operations, MULT_DIV, left, right);
             return result;
         }
     }
@@ -161,7 +164,8 @@ namespace CppAD {
             CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
 
             std::string operations;
-            if (left.opTypes_ == NONE || left.opTypes_ == FUNCTION) {
+            OpContainement lOpTypes = left.getOperationContainment();
+            if (lOpTypes == NONE || lOpTypes == FUNCTION) {
                 operations += leftOps;
             } else {
                 operations += "(" + leftOps + ")";
@@ -169,14 +173,15 @@ namespace CppAD {
 
             operations += " / ";
 
-            if (right.opTypes_ == NONE || right.opTypes_ == FUNCTION) {
+            OpContainement rOpTypes = right.getOperationContainment();
+            if (rOpTypes == NONE || rOpTypes == FUNCTION) {
                 operations += rightOps;
             } else {
                 operations += "(" + rightOps + ")";
             }
 
             CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, MULT_DIV);
+            result.makeTemporaryVariable(*handler, operations, MULT_DIV, left, right);
             return result;
         }
     }

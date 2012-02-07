@@ -17,6 +17,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <cppad/cppad.hpp>
 
+#include <cppad_cgoo/cg_source_code_block.hpp>
+#include <cppad_cgoo/cg_source_code_fragment.hpp>
 #include <cppad_cgoo/cg_cg.hpp>
 #include <cppad_cgoo/cg_default.hpp>
 #include <cppad_cgoo/cg_variable.hpp>

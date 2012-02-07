@@ -18,6 +18,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <iomanip>
 #include <limits>
 #include <map>
+#include <set>
 
 namespace CppAD {
 
@@ -27,8 +28,9 @@ namespace CppAD {
     template<class Base>
     class CodeHandler {
     protected:
-        std::ostream* _out;
         size_t _idCount;
+        std::set<size_t> _usedVariables;
+        std::vector<CodeBlock*> _codeBlocks;
         std::string _spaces;
         // references to existing variables
         std::map<size_t, std::vector<CG<Base>* > > proxies_;
@@ -36,14 +38,10 @@ namespace CppAD {
         std::vector<CG<Base>* > variables_;
     public:
 
-        CodeHandler(std::ostream& out, size_t spaces = 3) {
-            _out = &out;
+        CodeHandler(size_t varCount = 50, size_t spaces = 3) {
             _idCount = 0;
             _spaces = std::string(spaces, ' ');
-        }
-
-        std::ostream* getOutputStream() const {
-            return _out;
+            _codeBlocks.reserve(varCount);
         }
 
         void makeVariables(std::vector<CG<Base> >& variables) {
@@ -52,8 +50,18 @@ namespace CppAD {
             }
         }
 
-        virtual size_t createID() {
-            return ++_idCount;
+        virtual CodeBlock* createSourceCodeBlock() {
+            return createSourceCodeBlock(++_idCount);
+        }
+
+        virtual CodeBlock* createSourceCodeBlock(size_t varID) {
+            if (_codeBlocks.capacity() == _codeBlocks.size()) {
+                _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
+            }
+
+            _codeBlocks.push_back(new CodeBlock(varID));
+
+            return _codeBlocks.back();
         }
 
         virtual size_t getMaximumVariableID() const {
@@ -74,24 +82,81 @@ namespace CppAD {
             return val.isParameter() ? baseToString(val.getParameterValue()) : val.operations();
         }
 
-        virtual void printOperationAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << _spaces << var << " = " << operations << ";\n";
+        virtual void printOperationAssign(CG<Base>& var, const CG<Base> &right, bool newCodeBlock = true) {
+            std::string code = var.createVariableName() + " = " + operations(right) + ";\n";
+
+            changeSourceCode(var, code, newCodeBlock, right);
         }
 
-        virtual void printOperationPlusAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << _spaces << var << " += " << operations << ";\n";
+        virtual void printOperationPlusAssign(CG<Base>& var, const CG<Base> &right) {
+            std::string code = var.createVariableName() + " += " + operations(right) + ";\n";
+
+            changeSourceCode(var, code, true, var, right);
         }
 
-        virtual void printOperationMinusAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << _spaces << var << " -= " << operations << ";\n";
+        virtual void printOperationMinusAssign(CG<Base>& var, const CG<Base> &right) {
+            std::string code = var.createVariableName() + " -= " + operations(right) + ";\n";
+
+            changeSourceCode(var, code, true, var, right);
         }
 
-        virtual void printOperationMultAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << _spaces << var << " *= " << operations << ";\n";
+        virtual void printOperationMultAssign(CG<Base>& var, const CG<Base> &right) {
+            std::string code = var.createVariableName() + " *= " + operations(right) + ";\n";
+
+            changeSourceCode(var, code, true, var, right);
         }
 
-        virtual void printOperationDivAssign(const std::string& var, const std::string& operations) const {
-            (*this->_out) << _spaces << var << " /= " << operations << ";\n";
+        virtual void printOperationDivAssign(CG<Base>& var, const CG<Base> &right) {
+            std::string code = var.createVariableName() + " /= " + operations(right) + ";\n";
+
+            changeSourceCode(var, code, true, var, right);
+        }
+
+        virtual void printConditionalAssignment(enum CompareOp cop,
+                                                CG<Base> &result,
+                                                const CG<Base> &left,
+                                                const CG<Base> &right,
+                                                const CG<Base> &trueCase,
+                                                const CG<Base> &falseCase) {
+            assert(result.isVariable());
+            assert(!result.isReference());
+
+            SourceCodeBlock& sc = *result.sourceCode_;
+            std::string& code = result.sourceCode_->code;
+
+            std::string strOp = getComparison(cop);
+
+            code = "if(" + operations(left) + strOp + operations(right) + ") {\n";
+            printOperationAssign(result, trueCase, false);
+            code += "} else {\n";
+            printOperationAssign(result, falseCase, false);
+            code += "}\n";
+
+            sc.addDependency(left);
+            sc.addDependency(right);
+        }
+
+        virtual void generateCode(std::ostream& out, std::vector<CG<Base> >& dependent) {
+            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
+                CG<Base>& var = *it;
+                if (var.isVariable()) {
+                    SourceCodeBlock* code = var.getSourceCodeBlock();
+                    if (!code->print) {
+                        markPrintCodeBlock(out, *code);
+                    }
+                }
+            }
+
+            for (typename std::vector<CodeBlock*>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                CodeBlock* block = *it;
+                if (block->print && !block->code.empty()) {
+                    out << _spaces << block->code;
+                }
+            }
+        }
+
+        virtual const std::set<size_t>& getUsedVariableIDs() const {
+            return _usedVariables;
         }
 
         virtual std::string baseToString(const Base& value) const {
@@ -111,38 +176,29 @@ namespace CppAD {
             return result.substr(0, start + 1) + result.substr(end + 1);
         }
 
-        virtual void printComparison(std::string leftOps, enum CompareOp op, std::string rightOps) {
-            (*_out) << leftOps << " ";
+        virtual std::string getComparison(enum CompareOp op) {
             switch (op) {
                 case CompareLt:
-                    (*_out) << "<";
-                    break;
+                    return "<";
 
                 case CompareLe:
-                    (*_out) << "<=";
-                    break;
+                    return "<=";
 
                 case CompareEq:
-                    (*_out) << "==";
-                    break;
+                    return "==";
 
                 case CompareGe:
-                    (*_out) << ">=";
-                    break;
+                    return ">=";
 
                 case CompareGt:
-                    (*_out) << ">";
-                    break;
+                    return ">";
 
                 case CompareNe:
-                    (*_out) << "!=";
-                    break;
+                    return "!=";
 
                 default:
                     CPPAD_ASSERT_UNKNOWN(0);
             }
-
-            (*_out) << " " << rightOps;
         }
 
         inline std::string toString(size_t v) const {
@@ -167,9 +223,31 @@ namespace CppAD {
                 CG<Base>* ref = *rit;
                 ref->makeParameterNoChecks(0);
             }
+
+            typename std::vector<CodeBlock*>::iterator itc;
+            for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {
+                delete *itc;
+            }
+            _codeBlocks.clear(); // not really required
         }
 
     protected:
+
+        virtual void markPrintCodeBlock(std::ostream& out, CodeBlock& codeBlock) {
+            const std::set<SourceCodeBlock*>& deps = codeBlock.depends;
+            if (!deps.empty()) {
+                // take care of dependencies
+                for (std::set<SourceCodeBlock*>::const_iterator it = deps.begin(); it != deps.end(); ++it) {
+                    SourceCodeBlock* scb = *it;
+                    if (!scb->print) {
+                        markPrintCodeBlock(out, *scb);
+                    }
+                }
+            }
+
+            codeBlock.print = true;
+            _usedVariables.insert(codeBlock.id);
+        }
 
         virtual void putVariableReference(const CG<Base>& variable, CG<Base>& reference) {
             std::vector<CG<Base>* >& p = proxies_[variable.getVariableID()];
@@ -204,9 +282,7 @@ namespace CppAD {
             CG<Base>* newVar = p[0];
             newVar->makeVariable(*this); // will reduce by 1 the number of references to variable (or delete p)
 
-            // variable :: print operation
-            std::string name = newVar->createVariableName();
-            newVar->printOperationAssig(name, operations(variable));
+            printOperationAssign(*newVar, variable);
 
             if (refCount > 1) {
                 size_t newID = newVar->getVariableID();
@@ -249,6 +325,7 @@ namespace CppAD {
             CG<Base>* newVar = p[0];
             assert(newVar->getVariableID() == variable.getVariableID());
             newVar->referenceTo_ = NULL; //make it a variable that can keep the current id
+            newVar->sourceCode_ = variable.getSourceCodeBlock();
             addPureVariable(*newVar);
 
             if (p.size() == 1) {
@@ -261,6 +338,31 @@ namespace CppAD {
                 for (size_t i = 0; i < p.size(); i++) {
                     p[i]->referenceTo_ = newVar;
                 }
+            }
+        }
+
+        inline void changeSourceCode(CG<Base>& var, const std::string& code, bool newCodeBlock, const CG<Base>& depend1, const CG<Base>& depend2) {
+            changeSourceCode(var, code, newCodeBlock, depend1, &depend2);
+        }
+
+        inline void changeSourceCode(CG<Base>& var, const std::string& code, bool newCodeBlock, const CG<Base>& depend1, const CG<Base>* depend2 = NULL) {
+            SourceCodeBlock* sc;
+            if (newCodeBlock) {
+                sc = createSourceCodeBlock(var.id_);
+            } else {
+                sc = var.sourceCode_;
+            }
+
+            sc->code += code;
+
+            sc->addDependency(depend1);
+
+            if (depend2 != NULL) {
+                sc->addDependency(*depend2);
+            }
+
+            if (newCodeBlock) {
+                var.sourceCode_ = sc;
             }
         }
 

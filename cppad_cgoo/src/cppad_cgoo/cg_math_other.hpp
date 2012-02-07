@@ -33,7 +33,7 @@ namespace CppAD {
 
         std::string operations = "pow(" + handle->operations(x) + ", " + handle->operations(y) + ")";
         CG<Base> result;
-        result.makeTemporaryVariable(*handle, operations, FUNCTION);
+        result.makeTemporaryVariable(*handle, operations, FUNCTION, x, y);
         return result;
     }
 
@@ -79,7 +79,7 @@ namespace CppAD {
                 + ")"
                 ")";
         CG<Base> result;
-        result.makeTemporaryVariable(*x1->getCodeHandler(), operations, FUNCTION);
+        result.makeTemporaryVariable(*x1->getCodeHandler(), operations, FUNCTION, x);
         return result;
     }
 
