@@ -29,8 +29,13 @@ namespace CppAD {
     class CodeHandler {
     protected:
         size_t _idCount;
+        // the variable IDs that were used during source code generation
         std::set<size_t> _usedVariables;
+        // variable IDs no longer in use
+        std::set<size_t> _freedVariables;
+        // all the source code blocks created with the CG<Base> objects
         std::vector<CodeBlock*> _codeBlocks;
+        //
         std::string _spaces;
         // references to existing variables
         std::map<size_t, std::vector<CG<Base>* > > proxies_;
@@ -51,7 +56,16 @@ namespace CppAD {
         }
 
         virtual CodeBlock* createSourceCodeBlock() {
-            return createSourceCodeBlock(++_idCount);
+            size_t id;
+            if (!_freedVariables.empty()) {
+                // reuse an existing ID
+                id = *_freedVariables.begin();
+                _freedVariables.erase(_freedVariables.begin());
+            } else {
+                // create a new variable ID
+                id = ++_idCount;
+            }
+            return createSourceCodeBlock(id);
         }
 
         virtual CodeBlock* createSourceCodeBlock(size_t varID) {
@@ -316,6 +330,7 @@ namespace CppAD {
              */
             typename std::map<size_t, std::vector<CG<Base>* > >::iterator it = proxies_.find(variable.getVariableID());
             if (it == proxies_.end()) {
+                _freedVariables.insert(variable.getVariableID());
                 return; // no references
             }
             std::vector<CG<Base>* >& p = it->second;
