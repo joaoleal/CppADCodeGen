@@ -231,7 +231,7 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_identical.hpp \
 	cppad_cgoo/cg_math.hpp \
 	cppad_cgoo/cg_math_other.hpp \
-	cppad_cgoo/cg_orderer.hpp \
+	cppad_cgoo/cg_ordered.hpp \
 	cppad_cgoo/cg_source_code_block.hpp \
 	cppad_cgoo/cg_source_code_fragment.hpp \
 	cppad_cgoo/cg_types.hpp \

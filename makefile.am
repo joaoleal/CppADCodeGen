@@ -85,6 +85,13 @@ CODEGEN_DIRS = \
 	cppad_codegen/src \
 	$(CODEGEN_TESTS)
 #
+#
+CODEGENOO_TESTS = cppad_cgoo/test
+#
+CODEGENOO_DIRS = \
+	cppad_cgoo/src \
+	$(CODEGENOO_TESTS)
+#
 # ---------------------------------------------------------------------------
 myincludedir = $(includedir)/$(postfix_dir)
 #
@@ -287,6 +294,7 @@ nobase_myinclude_HEADERS =  \
 # See 'make test' below for building the tests.
 SUBDIRS =  \
 	$(CODEGEN_DIRS)\
+	$(CODEGENOO_DIRS)\
 	$(IPOPT_DIRS) \
 	$(SPEED_DIRS) \
 	example \
@@ -311,6 +319,7 @@ EXTRA_DIST = \
 # put test_code_gen at front of list so it is tested first
 test_directory_list = \
 	$(CODEGEN_TESTS) \
+	$(CODEGENOO_TESTS) \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \
 	example \

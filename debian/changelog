@@ -1,3 +1,10 @@
+cppadcodegen (20120129.0-1) unstable; urgency=low
+
+  * New strategy to generate source code
+
+ -- Development <development@ciengis.com>  Wed, 08 Feb 2012 10:30:00 +0000
+
+
 cppadcodegen (20111230.0-1) unstable; urgency=low
 
   * Initial packaging
