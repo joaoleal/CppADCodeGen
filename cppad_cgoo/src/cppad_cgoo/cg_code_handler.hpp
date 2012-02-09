@@ -41,12 +41,15 @@ namespace CppAD {
         std::map<size_t, std::vector<CG<Base>* > > proxies_;
         // pure variables (not references to other variables)
         std::vector<CG<Base>* > variables_;
+        // a flag indicating if this handler was previously used to generate code
+        bool _used;
     public:
 
         CodeHandler(size_t varCount = 50, size_t spaces = 3) {
             _idCount = 0;
             _spaces = std::string(spaces, ' ');
             _codeBlocks.reserve(varCount);
+            _used = false;
         }
 
         void makeVariables(std::vector<CG<Base> >& variables) {
@@ -151,6 +154,15 @@ namespace CppAD {
         }
 
         virtual void generateCode(std::ostream& out, std::vector<CG<Base> >& dependent) {
+
+            if (_used) {
+                for (typename std::vector<CodeBlock*>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                    CodeBlock* block = *it;
+                    block->print = false;
+                }
+            }
+            _used = true;
+
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 CG<Base>& var = *it;
                 if (var.isVariable()) {

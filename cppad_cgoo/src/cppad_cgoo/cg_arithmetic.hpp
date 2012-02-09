@@ -75,11 +75,7 @@ namespace CppAD {
             return CG<Base > (left.getParameterValue() - right.getParameterValue());
 
         } else {
-            if (left.isParameter()) {
-                if (left.IdenticalZero()) {
-                    return right;
-                }
-            } else if (right.isParameter()) {
+            if (right.isParameter()) {
                 if (right.IdenticalZero()) {
                     return left;
                 }

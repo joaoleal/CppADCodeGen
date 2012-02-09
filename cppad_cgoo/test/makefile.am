@@ -59,6 +59,7 @@ testCGOO_SOURCES        = \
 	sub.cpp \
 	tan.cpp \
 	gcc_load_dynamic.cpp \
+	unary.cpp \
 	TestException.cpp
 
 

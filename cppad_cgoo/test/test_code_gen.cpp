@@ -42,6 +42,7 @@ extern bool Pow();
 extern bool Sin();
 extern bool Sub();
 extern bool Tan();
+extern bool Unary();
 
 bool test_verbose = false;
 bool test_printvalues = false;
@@ -103,6 +104,7 @@ int main(void) {
     ok &= Run(Sin, "Sin");
     ok &= Run(Sub, "Sub");
     ok &= Run(Tan, "Tan");
+    ok &= Run(Unary, "Unary");
 
 
     // check for errors

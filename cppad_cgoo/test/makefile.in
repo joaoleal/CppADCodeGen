@@ -47,7 +47,7 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	cond_exp.$(OBJEXT) cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) \
 	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
-	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
+	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) unary.$(OBJEXT) \
 	TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
@@ -249,6 +249,7 @@ testCGOO_SOURCES = \
 	sub.cpp \
 	tan.cpp \
 	gcc_load_dynamic.cpp \
+	unary.cpp \
 	TestException.cpp
 
 all: all-am
@@ -322,6 +323,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sub.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_code_gen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unary.Po@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

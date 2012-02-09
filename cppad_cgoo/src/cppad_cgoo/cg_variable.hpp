@@ -100,8 +100,10 @@ namespace CppAD {
         bool wasReference = isReference();
         bool isNewHandler = &handler != handler_;
 
-        if (!isNewHandler && wasReference) {
+        if (isReference()) {
             handler_->removeVariableReference(*this);
+        } else if (isVariable() && isNewHandler) {
+            handler_->removePureVariable(*this);
         }
 
         delete codeFragment_;
@@ -124,10 +126,10 @@ namespace CppAD {
         bool wasVariable = isVariable();
         bool wasReference = isReference();
 
-        if (handler_ == referenceTo.getCodeHandler()) {
+        if (wasVariable) {
             if (wasReference) {
                 handler_->removeVariableReference(*this);
-            } else if (wasVariable) {
+            } else {
                 handler_->removePureVariable(*this);
             }
         }
@@ -157,6 +159,14 @@ namespace CppAD {
 
     template <class Base>
     inline void CG<Base>::makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>* dep2) {
+        if (isVariable()) {
+            if (isReference()) {
+                handler_->removeVariableReference(*this);
+            } else {
+                handler_->removePureVariable(*this);
+            }
+        }
+
         delete value_;
         value_ = NULL;
         delete codeFragment_;
