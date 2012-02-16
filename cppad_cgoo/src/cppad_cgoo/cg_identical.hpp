@@ -16,7 +16,7 @@ namespace CppAD {
     template<class Base>
     inline bool IdenticalPar(const CG<Base>& x) throw (CGException) {
         if (!x.isParameter()) {
-            throw CGException("Invalid call to IdenticalPar(): argument is not a parameter");
+            return false; // its value may change after tapping
         }
         return IdenticalPar(x.getParameterValue());
     }
@@ -24,7 +24,7 @@ namespace CppAD {
     template<class Base>
     inline bool IdenticalZero(const CG<Base>& x) throw (CGException) {
         if (!x.isParameter()) {
-            throw CGException("Invalid call to IdenticalZero(): argument is not a parameter");
+            return false;
         }
         return IdenticalZero(x.getParameterValue());
     }
@@ -32,7 +32,7 @@ namespace CppAD {
     template<class Base>
     inline bool IdenticalOne(const CG<Base>& x) throw (CGException) {
         if (!x.isParameter()) {
-            throw CGException("Invalid call to IdenticalOne(): argument is not a parameter");
+            return false;
         }
         return IdenticalOne(x.getParameterValue());
     }

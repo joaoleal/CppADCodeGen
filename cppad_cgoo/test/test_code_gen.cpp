@@ -43,6 +43,7 @@ extern bool Sin();
 extern bool Sub();
 extern bool Tan();
 extern bool Unary();
+//extern bool HandlerReset();
 
 bool test_verbose = false;
 bool test_printvalues = false;
@@ -105,8 +106,9 @@ int main(void) {
     ok &= Run(Sub, "Sub");
     ok &= Run(Tan, "Tan");
     ok &= Run(Unary, "Unary");
+    //ok &= Run(HandlerReset, "HandlerReset");
 
-
+    
     // check for errors
 
     assert(ok || (Run_error_count > 0));

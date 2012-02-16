@@ -97,13 +97,12 @@ namespace CppAD {
 
     template <class Base>
     inline void CG<Base>::makeVariable(CodeHandler<Base>& handler) {
-        bool wasReference = isReference();
-        bool isNewHandler = &handler != handler_;
-
-        if (isReference()) {
-            handler_->removeVariableReference(*this);
-        } else if (isVariable() && isNewHandler) {
-            handler_->removePureVariable(*this);
+        if (isVariable()) {
+            if (isReference()) {
+                handler_->removeVariableReference(*this);
+            } else {
+                handler_->removePureVariable(*this);
+            }
         }
 
         delete codeFragment_;
@@ -115,19 +114,15 @@ namespace CppAD {
         id_ = sourceCode_->id;
         referenceTo_ = NULL;
 
-        if (isNewHandler || wasReference) {
-            handler_->addPureVariable(*this);
-        }
+        handler_->addPureVariable(*this);
     }
 
     template <class Base>
     inline void CG<Base>::makeVariableProxy(const CG<Base>& referenceTo) {
         assert(referenceTo.isVariable());
-        bool wasVariable = isVariable();
-        bool wasReference = isReference();
 
-        if (wasVariable) {
-            if (wasReference) {
+        if (isVariable()) {
+            if (isReference()) {
                 handler_->removeVariableReference(*this);
             } else {
                 handler_->removePureVariable(*this);

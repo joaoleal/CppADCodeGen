@@ -5,6 +5,11 @@ cd cppad_codegen/test
 make test
 cd /home/joao/Development/CppADCodeGen
 #
+echo "Running make test in cppad_cgoo/test"
+cd cppad_cgoo/test 
+make test
+cd /home/joao/Development/CppADCodeGen
+#
 echo "Running make test in speed/cppad"
 cd speed/cppad 
 make test

@@ -100,11 +100,6 @@ namespace CppAD {
         inline CG<Base> operator+() const;
         inline CG<Base> operator-() const;
 
-        //
-        inline void makeParameter(const Base &b);
-
-        inline void makeVariable(CodeHandler<Base>& handler);
-
         inline std::string createVariableName() const {
             assert(handler_ != NULL);
             return handler_->createVariableName(*this);
@@ -116,6 +111,9 @@ namespace CppAD {
 
         inline void variableValueWillChange();
 
+        //
+        inline void makeParameter(const Base &b);
+        inline void makeVariable(CodeHandler<Base>& handler);
         inline void makeParameterNoChecks(const Base &b);
         inline void makeVariableProxy(const CG<Base>& referenceTo);
 

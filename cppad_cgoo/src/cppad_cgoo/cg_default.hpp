@@ -97,6 +97,8 @@ namespace CppAD {
             // parameter
             makeParameter(*other.value_);
         } else if (other.isVariable()) {
+            CPPADCG_DEBUG_VARIABLE_CHECKID(other.getVariableID());
+                    
             // make this variable a reference to other
             makeVariableProxy(other);
 
@@ -131,6 +133,7 @@ namespace CppAD {
             if (isReference()) {
                 handler_->removeVariableReference(*this);
             } else {
+                CPPADCG_DEBUG_VARIABLE_CHECKID(id_);
                 handler_->removePureVariable(*this);
             }
         }

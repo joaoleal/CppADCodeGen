@@ -40,16 +40,27 @@ namespace CppAD {
         // references to existing variables
         std::map<size_t, std::vector<CG<Base>* > > proxies_;
         // pure variables (not references to other variables)
-        std::vector<CG<Base>* > variables_;
+        std::map<size_t, CG<Base>* > variables_;
         // a flag indicating if this handler was previously used to generate code
         bool _used;
+        // a flag indicating whether or not to reuse the IDs of destroyed variables
+        bool _reuseIDs;
     public:
 
-        CodeHandler(size_t varCount = 50, size_t spaces = 3) {
-            _idCount = 0;
-            _spaces = std::string(spaces, ' ');
+        CodeHandler(size_t varCount = 50, size_t spaces = 3) :
+            _idCount(0),
+            _used(false),
+            _reuseIDs(true),
+            _spaces(spaces, ' ') {
             _codeBlocks.reserve(varCount);
-            _used = false;
+        }
+
+        void setReuseVariableIDs(bool reuse) {
+            _reuseIDs = reuse;
+        }
+
+        bool isReuseVariableIDs() const {
+            return _reuseIDs;
         }
 
         void makeVariables(std::vector<CG<Base> >& variables) {
@@ -60,7 +71,7 @@ namespace CppAD {
 
         virtual CodeBlock* createSourceCodeBlock() {
             size_t id;
-            if (!_freedVariables.empty()) {
+            if (_reuseIDs && !_freedVariables.empty()) {
                 // reuse an existing ID
                 id = *_freedVariables.begin();
                 _freedVariables.erase(_freedVariables.begin());
@@ -68,6 +79,8 @@ namespace CppAD {
                 // create a new variable ID
                 id = ++_idCount;
             }
+            CPPADCG_DEBUG_VARIABLE_CHECKID(id);
+
             return createSourceCodeBlock(id);
         }
 
@@ -153,9 +166,20 @@ namespace CppAD {
             sc.addDependency(right);
         }
 
+        /**
+         * Creates the source code from the operations registered so far.
+         * 
+         * \param out The output stream where the source code is to be printed.
+         * \param dependent The dependent variables for which the source code
+         *                  should be generated. By defining this vector the 
+         *                  number of operations in the source code can be 
+         *                  reduced and thus providing a more optimized code.
+         */
         virtual void generateCode(std::ostream& out, std::vector<CG<Base> >& dependent) {
 
             if (_used) {
+                _usedVariables.clear();
+
                 for (typename std::vector<CodeBlock*>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                     CodeBlock* block = *it;
                     block->print = false;
@@ -176,6 +200,21 @@ namespace CppAD {
             for (typename std::vector<CodeBlock*>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                 CodeBlock* block = *it;
                 if (block->print && !block->code.empty()) {
+                    out << _spaces << block->code;
+                }
+            }
+        }
+
+        virtual void generateCode(std::ostream& out) {
+            if (_used) {
+                _usedVariables.clear();
+            }
+            _used = true;
+
+            for (typename std::vector<CodeBlock*>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                CodeBlock* block = *it;
+                _usedVariables.insert(block->id);
+                if (!block->code.empty()) {
                     out << _spaces << block->code;
                 }
             }
@@ -235,7 +274,7 @@ namespace CppAD {
             return result;
         }
 
-        virtual ~CodeHandler() {
+        virtual void reset() {
             typename std::vector<CG<Base>* >::reverse_iterator rit;
             typename std::map<size_t, std::vector<CG<Base>* > >::iterator it;
             for (it = proxies_.begin(); it != proxies_.end(); ++it) {
@@ -245,16 +284,31 @@ namespace CppAD {
                     ref->makeParameterNoChecks(0);
                 }
             }
-            for (rit = variables_.rbegin(); rit != variables_.rend(); ++rit) {
-                CG<Base>* ref = *rit;
-                ref->makeParameterNoChecks(0);
+            proxies_.clear();
+
+            typename std::map<size_t, CG<Base>* >::reverse_iterator it2;
+            for (it2 = variables_.rbegin(); it2 != variables_.rend();) {
+                typename std::map<size_t, CG<Base>* >::reverse_iterator it3 = it2;
+                ++it2;
+                it3->second->makeParameterNoChecks(0);
             }
+            variables_.clear();
 
             typename std::vector<CodeBlock*>::iterator itc;
             for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {
                 delete *itc;
             }
-            _codeBlocks.clear(); // not really required
+            _codeBlocks.clear();
+
+            _usedVariables.clear();
+            _freedVariables.clear();
+
+            _idCount = 0;
+            _used = false;
+        }
+
+        virtual ~CodeHandler() {
+            reset();
         }
 
     protected:
@@ -328,21 +382,24 @@ namespace CppAD {
 
         virtual void addPureVariable(CG<Base>& variable) {
             assert(variable.isVariable());
-            variables_.push_back(&variable);
+            variables_[variable.getVariableID()] = &variable;
         }
 
         virtual void removePureVariable(const CG<Base>& variable) {
+            CPPADCG_DEBUG_VARIABLE_CHECKID(variable.getVariableID());
+
             // remove the variable from the variables list
-            typename std::vector<CG<Base>* >::iterator it2 = std::find(variables_.begin(), variables_.end(), &variable);
-            assert(it2 != variables_.end());
-            variables_.erase(it2);
+            size_t erased = variables_.erase(variable.getVariableID());
+            assert(erased > 0);
 
             /**
              * allow the references to this variable to keep using its ID
              */
             typename std::map<size_t, std::vector<CG<Base>* > >::iterator it = proxies_.find(variable.getVariableID());
             if (it == proxies_.end()) {
-                _freedVariables.insert(variable.getVariableID());
+                if (_reuseIDs) {
+                    _freedVariables.insert(variable.getVariableID());
+                }
                 return; // no references
             }
             std::vector<CG<Base>* >& p = it->second;

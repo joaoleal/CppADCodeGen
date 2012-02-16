@@ -47,7 +47,7 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	cond_exp.$(OBJEXT) cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) \
 	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
-	tan.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) unary.$(OBJEXT) \
+	tan.$(OBJEXT) unary.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
 	TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
@@ -248,8 +248,8 @@ testCGOO_SOURCES = \
 	sin.cpp \
 	sub.cpp \
 	tan.cpp \
-	gcc_load_dynamic.cpp \
 	unary.cpp \
+	gcc_load_dynamic.cpp \
 	TestException.cpp
 
 all: all-am
@@ -535,6 +535,8 @@ uninstall-am:
 	mostlyclean-generic pdf pdf-am ps ps-am tags uninstall \
 	uninstall-am
 
+
+#	handler_reset.cpp
 
 test.sh: testCGOO$(EXEEXT)
 	echo "#! /bin/sh -e"                          > test.sh

@@ -58,9 +58,11 @@ testCGOO_SOURCES        = \
 	sin.cpp \
 	sub.cpp \
 	tan.cpp \
-	gcc_load_dynamic.cpp \
 	unary.cpp \
+	gcc_load_dynamic.cpp \
 	TestException.cpp
+
+#	handler_reset.cpp
 
 
 test.sh: testCGOO$(EXEEXT)
