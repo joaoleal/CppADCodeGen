@@ -21,6 +21,8 @@ enum DiffMode {
     AUTO, FORWARD, REVERSE
 };
 
+static const std::set<size_t> CODEGEN_EMPTY_SET;
+
 template <class Base>
 class ADFunCodeGen : public ADFun<Base> {
     // ------------------------------------------------------------
@@ -32,7 +34,6 @@ private:
     CodeGenNameProvider<Base>* nameGen_;
     // Indicates which taylor coefficients are always zero in the current 
     // source code generation
-    //Matrix<bool> zeroTaylor_;
 public:
     /// copy constructor
 
@@ -82,18 +83,18 @@ public:
     void ReverseCodeGen(size_t p, const VectorBase &w, std::ostream& s_out);
 
     template<class VectorBool>
-    VectorBool SparseJacobianCodeGen(std::ostream& s_out, DiffMode& mode);
+    VectorBool SparseJacobianCodeGen(std::ostream& s_out, DiffMode& mode, bool compress = false, const std::set<size_t>& indepFilter = CODEGEN_EMPTY_SET);
 
     template<class VectorBool>
-    void SparseJacobianCodeGen(std::ostream& s_out, const VectorBool& p, DiffMode& mode);
+    void SparseJacobianCodeGen(std::ostream& s_out, const VectorBool& p, DiffMode& mode, bool compress = false, const std::set<size_t>& indepFilter = CODEGEN_EMPTY_SET);
 
 private:
 
     template<class VectorBool>
-    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, const std::set<size_t>& set_type, const VectorBool& p);
+    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, const std::set<size_t>& set_type, const VectorBool& p, bool compress, const std::set<size_t>& indepFilter);
 
     template <class VectorBool>
-    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, bool set_type, const VectorBool& p);
+    void SparseJacobianCaseCodeGen(std::ostream& s_out, DiffMode mode, bool set_type, const VectorBool& p, bool compress, const std::set<size_t>& indepFilter);
 };
 
 CPPAD_END_NAMESPACE

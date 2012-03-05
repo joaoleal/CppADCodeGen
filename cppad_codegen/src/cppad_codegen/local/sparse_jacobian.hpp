@@ -186,15 +186,17 @@ On return, it will contain the Jacobian.
 template <class Base>
 template <class VectorSet>
 void ADFunCodeGen<Base>::SparseJacobianCaseCodeGen(std::ostream& s_out,
-DiffMode mode,
-bool set_type,
-const VectorSet& p) {
+                                                   DiffMode mode,
+                                                   bool set_type,
+                                                   const VectorSet& p,
+                                                   bool compress,
+                                                   const std::set<size_t>& indepFilter) {
     typedef CppAD::vector<size_t> SizeVector;
     typedef CppAD::vectorBool VectorBool;
     size_t i, j, k;
 
-    size_t m = this->Range();
-    size_t n = this->Domain();
+    size_t m = this->Range(); // dependent
+    size_t n = this->Domain(); // independent
 
     // some values
     const Base zero(0);
@@ -206,21 +208,42 @@ const VectorSet& p) {
     s_out << nameGen_->Comment("\nzero order forward mode\n");
 
     CPPAD_ASSERT_KNOWN(
-            p.size() == m * n,
-            "SparseJacobian: using bool values and size of p "
-            " not equal range dimension times domain dimension for f"
-            );
+                       p.size() == m * n,
+                       "SparseJacobian: using bool values and size of p "
+                       " not equal range dimension times domain dimension for f"
+                       );
 
     // point at which we are evaluating the Jacobian
     ForwardCodeGen(0, s_out);
 
+
+    SizeVector jacIndex(n * m);
+    size_t jacSize;
+    if (compress) {
+        jacSize = 0;
+        for (i = 0; i < m; i++) {
+            for (j = 0; j < n; j++) {
+                if (indepFilter.empty() || indepFilter.find(j) != indepFilter.end()) {
+                    if (p[ i * n + j ]) {
+                        jacIndex[i * n + j] = jacSize++;
+                    }
+                }
+            }
+        }
+    } else {
+        jacSize = n * m;
+        for (size_t i = 0; i < jacIndex.size(); i++) {
+            jacIndex[i] = i;
+        }
+    }
+
     //
     s_out << nameGen_->Comment(std::string("\njacobian: ")
-            + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
+                               + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
 
     // initialize the return value
     const std::string& si = nameGen_->tempIntegerVarName();
-    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
+    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(jacSize) << "; " << si << "++) {"
             "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
             "}\n";
 
@@ -278,7 +301,7 @@ const VectorSet& p) {
                     for (i = 0; i < m; i++) {
                         if (p[ i * n + j ]) {
                             std::string dy = nameGen_->generateVarName(1, dep_taddr[i]);
-                            s_out << "jac[" << (i * n + j) << "] = " << dy << nameGen_->endl(); // location for return values from Reverse
+                            s_out << "jac[" << jacIndex[i * n + j] << "] = " << dy << nameGen_->endl(); // location for return values from Forward
                         }
                     }
                 }
@@ -342,7 +365,7 @@ const VectorSet& p) {
                     for (j = 0; j < n; j++) {
                         if (p[ i * n + j ]) {
                             std::string dw = nameGen_->generatePartialName(0, ind_taddr[j]); // must be index zero
-                            s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
+                            s_out << "jac[" << jacIndex[i * n + j] << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
                         }
                     }
                 }
@@ -378,15 +401,17 @@ On return, it will contain the Jacobian.
 template <class Base>
 template <class VectorSet>
 void ADFunCodeGen<Base>::SparseJacobianCaseCodeGen(std::ostream& s_out,
-DiffMode mode,
-const std::set<size_t>& set_type,
-const VectorSet& p) {
+                                                   DiffMode mode,
+                                                   const std::set<size_t>& set_type,
+                                                   const VectorSet& p,
+                                                   bool compress,
+                                                   const std::set<size_t>& indepFilter) {
     typedef CppAD::vector<size_t> SizeVector;
     typedef CppAD::vectorBool VectorBool;
     size_t i, j, k;
 
-    size_t m = this->Range();
-    size_t n = this->Domain();
+    size_t m = this->Range(); // dependent
+    size_t n = this->Domain(); // independent
 
     // some values
     const Base zero(0);
@@ -398,10 +423,10 @@ const VectorSet& p) {
             );
 
     CPPAD_ASSERT_KNOWN(
-            p.size() == m,
-            "SparseJacobian: using sets and size of p "
-            "not equal range dimension for f"
-            );
+                       p.size() == m,
+                       "SparseJacobian: using sets and size of p "
+                       "not equal range dimension for f"
+                       );
 
     s_out << nameGen_->Comment("\nzero order forward mode\n");
 
@@ -410,17 +435,38 @@ const VectorSet& p) {
 
     //
     s_out << nameGen_->Comment(std::string("\njacobian: ")
-            + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
+                               + ((mode == FORWARD) ? "forward" : "reverse") + " mode\n");
+
+    std::set<size_t>::const_iterator itr_j;
+    SizeVector jacIndex(n * m);
+    size_t jacSize;
+    if (compress) {
+        jacSize = 0;
+        for (i = 0; i < m; i++) {
+            for (itr_j = p[i].begin(); itr_j != p[i].end(); ++itr_j) {
+                j = *itr_j;
+                if (indepFilter.empty() || indepFilter.find(j) != indepFilter.end()) {
+                    jacIndex[i * n + j] = jacSize++;
+                }
+            }
+        }
+    } else {
+        jacSize = n * m;
+        for (size_t i = 0; i < jacIndex.size(); i++) {
+            jacIndex[i] = i;
+        }
+    }
+
 
     // initialize the return value
     const std::string& si = nameGen_->tempIntegerVarName();
-    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(m * n) << "; " << si << "++) {"
+    s_out << "for(" << si << " = 0; " << si << " < " << nameGen_->toString(jacSize) << "; " << si << "++) {"
             "jac[" << si << "] = " << nameGen_->zero() << nameGen_->endl() <<
             "}\n";
 
     // create a copy of the transpose sparsity pattern
     VectorSet q(n);
-    std::set<size_t>::const_iterator itr_i, itr_j;
+    std::set<size_t>::const_iterator itr_i;
     for (i = 0; i < m; i++) {
         itr_j = p[i].begin();
         while (itr_j != p[i].end()) {
@@ -492,7 +538,7 @@ const VectorSet& p) {
                     while (itr_i != q[j].end()) {
                         i = *itr_i++;
                         std::string dy = nameGen_->generateVarName(1, dep_taddr[i]);
-                        s_out << "jac[" << (i * n + j) << "] = " << dy << nameGen_->endl(); // location for return values from Reverse
+                        s_out << "jac[" << jacIndex[i * n + j] << "] = " << dy << nameGen_->endl(); // location for return values from Reverse
                     }
                 }
             }
@@ -560,7 +606,7 @@ const VectorSet& p) {
                     while (itr_j != p[i].end()) {
                         j = *itr_j++;
                         std::string dw = nameGen_->generatePartialName(0, ind_taddr[j]);
-                        s_out << "jac[" << (i * n + j) << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
+                        s_out << "jac[" << jacIndex[i * n + j] << "] = " << dw << nameGen_->endl(); // location for return values from Reverse
                     }
                 }
             }
@@ -600,7 +646,11 @@ specified point (in row major order).
  */
 template <class Base>
 template <class VectorBool>
-void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const VectorBool& p, DiffMode& mode) {
+void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out,
+                                               const VectorBool& p,
+                                               DiffMode& mode,
+                                               bool compress,
+                                               const std::set<size_t>& indepFilter) {
     if (mode == AUTO) {
         // number of independent variables
         size_t n = this->Domain();
@@ -614,7 +664,7 @@ void ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, const Vector
 
     typedef typename VectorBool::value_type Set_type;
 
-    SparseJacobianCaseCodeGen(s_out, mode, *this, Set_type(), p);
+    SparseJacobianCaseCodeGen(s_out, mode, *this, Set_type(), p, compress, indepFilter);
 }
 
 /*!
@@ -641,7 +691,10 @@ specified point (in row major order).
  */
 template <class Base>
 template<class VectorBool>
-VectorBool ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMode& mode) {
+VectorBool ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out,
+                                                     DiffMode& mode,
+                                                     bool compress,
+                                                     const std::set<size_t>& indepFilter) {
     size_t m = this->Range();
     size_t n = this->Domain();
 
@@ -686,7 +739,7 @@ VectorBool ADFunCodeGen<Base>::SparseJacobianCodeGen(std::ostream& s_out, DiffMo
 
     bool set_type = true; // only used to dispatch compiler to proper case
 
-    SparseJacobianCaseCodeGen(s_out, mode, set_type, p);
+    SparseJacobianCaseCodeGen(s_out, mode, set_type, p, compress, indepFilter);
 
     return p;
 }
