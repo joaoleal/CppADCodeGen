@@ -1,6 +1,6 @@
-$Id: whats_new_11.omh 2241 2011-12-31 05:38:05Z bradbell $
+$Id: whats_new_11.omh 2288 2012-03-03 04:13:05Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -240,7 +240,7 @@ Update the README file.
 $lnext
 Remove the $code bug/optimize.sh$$ file (no longer a bug).
 $lnext
-Make $cref arc_tan.cpp$$ 
+Make $code arc_tan.cpp$$ 
 utility that can be used by multiple multi-threading tests.
 $lnext
 Create $cref team_thread.hpp$$ specifications,
@@ -444,7 +444,7 @@ $lend
 $subhead 08-09$$
 $list number$$
 $cref/Warning:/base_require/Warning/$$
-Add $cref/epsilon/base_require/epsilon/$$ to the
+Add $cref/epsilon/base_std_math/epsilon/$$ to the
 $icode Base$$ type requirements.
 $lnext
 Extend $cref/epsilon/$$ to AD types.

@@ -69,6 +69,10 @@ namespace CppAD {
             }
         }
 
+        void makeVariable(CG<Base>& variable) {
+            variable.makeVariable(*this);
+        }
+
         virtual CodeBlock* createSourceCodeBlock() {
             size_t id;
             if (_reuseIDs && !_freedVariables.empty()) {

@@ -1,9 +1,9 @@
-/* $Id: base_cond_exp.hpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: base_cond_exp.hpp 2283 2012-02-11 05:08:59Z bradbell $ */
 # ifndef CPPAD_BASE_COND_EXP_INCLUDED
 # define CPPAD_BASE_COND_EXP_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -16,6 +16,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /* 
 $begin base_cond_exp$$
 $spell
+	alloc
 	Rel
 	hpp
 	enum
@@ -104,7 +105,7 @@ namespace CppAD {
 }
 %$$
 For example, see 
-$cref/double CondExpOp/base_float.hpp/CondExpOp/$$.
+$cref/double CondExpOp/base_alloc.hpp/CondExpOp/$$.
 For an example of and implementation of $code CondExpOp$$ with
 a more involved $icode Base$$ type see
 $cref/adolc CondExpOp/base_adolc.hpp/CondExpOp/$$.
@@ -148,9 +149,7 @@ $codei%
 where the arguments have type $icode Base$$.
 This should be done inside of the CppAD namespace.
 For example, see
-$cref/float/base_float.hpp/CondExpRel/$$,
-$cref/double/base_double.hpp/CondExpRel/$$, and
-$cref/complex/base_complex.hpp/CondExpRel/$$.
+$cref/base_alloc/base_alloc.hpp/CondExpRel/$$.
 
 $end
 */

@@ -1,4 +1,4 @@
-// $Id: team_bthread.cpp 2273 2012-01-25 07:34:02Z bradbell $
+// $Id: team_bthread.cpp 2290 2012-03-04 17:27:00Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -258,7 +258,7 @@ bool team_destroy(void)
 	// now inform CppAD that there is only one thread
 	num_threads_ = 1;
 	using CppAD::thread_alloc;
-	thread_alloc::parallel_setup(num_threads_, in_parallel, thread_number);
+	thread_alloc::parallel_setup(num_threads_, CPPAD_NULL, CPPAD_NULL);
 	thread_alloc::hold_memory(false);
 
 	return ok;

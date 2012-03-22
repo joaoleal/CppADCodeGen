@@ -1,4 +1,4 @@
-/* $Id: thread_alloc.cpp 2273 2012-01-25 07:34:02Z bradbell $ */
+/* $Id: thread_alloc.cpp 2291 2012-03-05 06:20:16Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -34,30 +34,22 @@ $end
 */
 // BEGIN PROGRAM
 # include <cppad/thread_alloc.hpp>
+# include <cppad/memory_leak.hpp>
 # include <vector>
 
-# define NUMBER_THREADS 2
-
-namespace {
-	// Setup for one thread in sequential execution mode
-	bool in_parallel_false(void)
-	{	return false; }
-	size_t thread_num_zero(void)
-	{	return 0; }
-}
 
 namespace { // Begin empty namespace
 
 bool raw_allocate(void)
 {	bool ok = true;
 	using CppAD::thread_alloc;
+	size_t thread;
 
 	// check that no memory is initilaly inuse or available
-	size_t thread;
-	for(thread = 0; thread < NUMBER_THREADS; thread++)
-	{	ok &= thread_alloc::inuse(thread) == 0;
-		ok &= thread_alloc::available(thread) == 0;
-	}
+	ok &= ! CppAD::memory_leak();
+
+	// amount of static memory used by thread zero
+	size_t static_inuse = thread_alloc::inuse(0);
 
 	// repeatedly allocate enough memory for at least two size_t values.
 	size_t min_size_t = 2;
@@ -85,23 +77,21 @@ bool raw_allocate(void)
 		}
 		// check that n_inner * cap_bytes are inuse and none are available
 		thread = thread_alloc::thread_num();
-		ok    &= thread_alloc::inuse(thread) == n_inner * cap_bytes;
-		ok    &= thread_alloc::available(thread) == 0;
+		ok &= thread_alloc::inuse(thread) == n_inner*cap_bytes + static_inuse;
+		ok &= thread_alloc::available(thread) == 0;
 		// return the memrory to thread_alloc
 		for(j = 0; j < n_inner; j++)
 			thread_alloc::return_memory(v_ptr[j]);
 		// check that now n_inner * cap_bytes are now available
 		// and none are in use
-		ok &= thread_alloc::inuse(thread) == 0;
+		ok &= thread_alloc::inuse(thread) == static_inuse;
 		ok &= thread_alloc::available(thread) == n_inner * cap_bytes;
 	}
 	thread_alloc::free_available(thread);
 	
 	// check that the tests have not held onto memory
-	for(thread = 0; thread < thread_alloc::num_threads(); thread++)
-	{	ok &= thread_alloc::inuse(thread) == 0;
-		ok &= thread_alloc::available(thread) == 0;
-	}
+	ok &= ! CppAD::memory_leak();
+
 	return ok;
 }
 
@@ -121,8 +111,9 @@ bool type_allocate(void)
 
 	// check initial memory values
 	size_t thread = thread_alloc::thread_num();
-	ok &= thread_alloc::inuse(thread) == 0;
-	ok &= thread_alloc::available(thread) == 0;
+	ok &= thread == 0;
+	ok &= ! CppAD::memory_leak();
+	size_t static_inuse = thread_alloc::inuse(0);
 
 	// initial allocation of an array
 	size_t  size_min  = 3;
@@ -151,24 +142,23 @@ bool type_allocate(void)
 
 	// check the amount of inuse and available memory
 	// (an extra size_t value is used for each memory block).
-	size_t check = sizeof(my_char)*(size_one + size_two);
+	size_t check = static_inuse + sizeof(my_char)*(size_one + size_two);
 	ok   &= thread_alloc::inuse(thread) - check < sizeof(my_char);
 	ok   &= thread_alloc::available(thread) == 0;
 
 	// delete the arrays 
 	thread_alloc::delete_array(array_one);
 	thread_alloc::delete_array(array_two);
-	ok   &= thread_alloc::inuse(thread) == 0;
+	ok   &= thread_alloc::inuse(thread) == static_inuse;
+	check = sizeof(my_char)*(size_one + size_two);
 	ok   &= thread_alloc::available(thread) - check < sizeof(my_char);
 
 	// free the memory for use by this thread
 	thread_alloc::free_available(thread);
 	
 	// check that the tests have not held onto memory
-	for(thread = 0; thread < thread_alloc::num_threads(); thread++)
-	{	ok &= thread_alloc::inuse(thread) == 0;
-		ok &= thread_alloc::available(thread) == 0;
-	}
+	ok &= ! CppAD::memory_leak();
+
 	return ok;
 }
 
@@ -179,18 +169,16 @@ bool thread_alloc(void)
 {	bool ok  = true;
 	using CppAD::thread_alloc;
 
-	// check initial state of allocator
+	// check that there is only on thread
 	ok  &= thread_alloc::num_threads() == 1;
-
-	// Tell thread_alloc that there are two threads so it starts holding
-	// onto memory (but actuall the there is only on thread with id zero).
-	thread_alloc::parallel_setup( NUMBER_THREADS, 
-		in_parallel_false, thread_num_zero
-	);
-	thread_alloc::hold_memory(true);
-	ok  &= thread_alloc::num_threads() == 2;
+	// so thread number must be zero
 	ok  &= thread_alloc::thread_num() == 0;
+	// and we are in sequential execution mode
 	ok  &= thread_alloc::in_parallel() == false;
+
+	// Instruct thread_alloc to hold onto memory.  This makes memory 
+	// allocation faster (especially when there are multiple threads).
+	thread_alloc::hold_memory(true);
 
 	// run raw allocation tests
 	ok &= raw_allocate();
@@ -198,8 +186,7 @@ bool thread_alloc(void)
 	// run typed allocation tests
 	ok &= type_allocate();
 	
-	// return allocator to single thread mode
-	thread_alloc::parallel_setup(1, in_parallel_false, thread_num_zero);
+	// return allocator to its default mode
 	thread_alloc::hold_memory(false);
 	return ok;
 }

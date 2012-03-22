@@ -1,4 +1,4 @@
-/* $Id: epsilon.hpp 2270 2012-01-20 15:15:06Z bradbell $ */
+/* $Id: epsilon.hpp 2307 2012-03-21 19:13:44Z bradbell $ */
 # ifndef CPPAD_EPSILON_INCLUDED
 # define CPPAD_EPSILON_INCLUDED
 /* --------------------------------------------------------------------------
@@ -16,6 +16,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 ------------------------------------------------------------------------------
 $begin epsilon$$
 $spell
+	std
 	eps
 	CppAD
 	namespace
@@ -35,8 +36,8 @@ to the type $icode%Float%$$.
 
 $head Float$$
 this type can either be $codei%AD<%Base%>%$$,
-or it can be $icode Base$$ for any $code%AD<%Base%>%$$ type;
-see $cref/base_require/base_require/epsilon/$$.
+or it can be $icode Base$$ for any $codei%AD<%Base%>%$$ type;
+see $cref/base_std_math/base_std_math/epsilon/$$.
 
 $head eps$$
 The result $icode eps$$ has prototype

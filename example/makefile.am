@@ -1,4 +1,4 @@
-# $Id: makefile.am 2270 2012-01-20 15:15:06Z bradbell $
+# $Id: makefile.am 2284 2012-02-11 16:21:31Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -74,6 +74,8 @@ example_SOURCES   = \
 	atan.cpp \
 	atan_2.cpp \
 	base_adolc.hpp \
+	base_alloc.hpp \
+	base_require.cpp \
 	bender_quad.cpp \
 	bool_fun.cpp \
 	vector_bool.cpp \

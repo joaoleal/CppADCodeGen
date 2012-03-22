@@ -1,8 +1,8 @@
-/* $Id: team_thread.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
+/* $Id: team_thread.hpp 2290 2012-03-04 17:27:00Z bradbell $ */
 # ifndef CPPAD_TEAM_THREAD_INCLUDED
 # define CPPAD_TEAM_THREAD_INCLUDED
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -97,21 +97,30 @@ It is $code false$$ if an error is detected during the
 corresponding call.
 Otherwise it is $code true$$.
 
-$head Example Use$$
-Example use of these specifications can be found in the file
-$cref simple_ad.cpp$$.
-
 $children%
 	multi_thread/openmp/team_openmp.cpp%
 	multi_thread/bthread/team_bthread.cpp%
 	multi_thread/pthread/team_pthread.cpp
 %$$
+
+$head Example Use$$
+Example use of these specifications can be found in the file
+$cref team_example.cpp$$.
+
 $head Example Implementation$$
 Example implementations of these specifications can be found in the files:
 $table
 $rref team_openmp.cpp$$
 $rref team_bthread.cpp$$
 $rref team_pthread.cpp$$
+$tend
+
+$head Speed Test of Implementation$$
+Speed tests of using CppAD with the team implementations above 
+can be found in:
+$table
+$rref harmonic.cpp$$
+$rref multi_newton.cpp$$
 $tend
 
 $head Source$$

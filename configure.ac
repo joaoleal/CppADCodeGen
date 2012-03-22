@@ -1,4 +1,4 @@
-dnl $Id: configure.ac 2277 2012-01-27 18:51:24Z bradbell $
+dnl $Id: configure.ac 2290 2012-03-04 17:27:00Z bradbell $
 dnl ---------------------------------------------------------------------------
 dnl CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 dnl
@@ -12,7 +12,7 @@ dnl ---------------------------------------------------------------------------
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl   package   version              bug-report
-AC_INIT(CppAD, 20120128, cppad@list.coin-or.org)
+AC_INIT(CppAD, 20120322, cppad@list.coin-or.org)
 AC_SUBST(PACKAGE_URL, "http://www.coin-or.org/CppAD")
 AC_SUBST(PACKAGE_DESCRIPTION, "Differentiation of C++ Algorithms")
 
@@ -392,48 +392,94 @@ AC_CHECK_LIB(
 	[DL_LIB=""]
 )
 dnl --------------------------------------------------------------------------
-dnl check for C++ libraries
+dnl check for boost thread library
 AC_LANG_PUSH([C++])
 LDFLAGS_save=$LDFLAGS
 CXXFLAGS_save=$CXXFLAGS
-if test "$BOOST_DIR" != "" ; then
+boost_thread_found='no'
+if test "$BOOST_DIR" != '' ; then
 	CXXFLAGS="-I$BOOST_DIR/include $CXXFLAGS"
-	LDFLAGS_tmp="$LDFLAGS_save -L$BOOST_DIR/lib"
-else
-	LDFLAGS_tmp="$LDFLAGS_save"
 fi
-LDFLAGS="$LDFLAGS_tmp -lboost_thread"
+if test "$BOOST_DIR" == '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib='-lboost_thread-mt'
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
 AC_LINK_IFELSE(
 	[AC_LANG_PROGRAM(
 		[# include <boost/thread.hpp>],
 		[boost::barrier wait(1);]
 	)],
-	[boost_thread="yes"],
-	[boost_thread="no"]
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
 )
-if test "$boost_thread" == "yes" ; then
-	AC_SUBST(BTHREAD_LIB,"-lboost_thread")
-else
-	LDFLAGS="$LDFLAGS_tmp -lboost_thread-mt"
+fi
+if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib="$BOOST_DIR/../lib/libboost_thread-mt.so"
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
 	AC_LINK_IFELSE(
 		[AC_LANG_PROGRAM(
 			[# include <boost/thread.hpp>],
 			[boost::barrier wait(1);]
 		)],
-		[boost_thread="yes"],
-		[boost_thread="no"]
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
 	)
-	if test "$boost_thread" == "yes" ; then
-		AC_SUBST(BTHREAD_LIB,"-lboost_thread-mt")
 	fi
+if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib="$BOOST_DIR/../lib/libboost_thread-mt.a"
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM(
+			[# include <boost/thread.hpp>],
+			[boost::barrier wait(1);]
+		)],
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
+	)
 fi
-if test "$boost_thread" == "yes" ; then
+if test "$BOOST_DIR" == '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib='-lboost_thread'
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM(
+			[# include <boost/thread.hpp>],
+			[boost::barrier wait(1);]
+		)],
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
+	)
+fi
+if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib="$BOOST_DIR/../lib/libboost_thread.so"
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM(
+			[# include <boost/thread.hpp>],
+			[boost::barrier wait(1);]
+		)],
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
+	)
+fi
+if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
+	bthread_lib="$BOOST_DIR/../lib/libboost_thread.a"
+	LDFLAGS="$LDFLAGS_save $bthread_lib"
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM(
+			[# include <boost/thread.hpp>],
+			[boost::barrier wait(1);]
+		)],
+		[boost_thread_found='yes'],
+		[boost_thread_found='no']
+	)
+fi
+AM_CONDITIONAL(CppAD_BTHREAD, test "$boost_thread_found" = 'yes')
+if test "$boost_thread_found" == 'yes' ; then
+	AC_SUBST(BTHREAD_LIB,"$bthread_lib")
 	AC_MSG_RESULT([boost::thread library... yes])
 else
-	AC_SUBST(BTHREAD_LIB,"")
+	AC_SUBST(BTHREAD_LIB,'')
 	AC_MSG_RESULT([boost::thread library... no])
 fi
-AM_CONDITIONAL(CppAD_BTHREAD, test "$boost_thread" = "yes")
 LDFLAGS=$LDFLAGS_save
 CXXFLAGS=$CXXFLAGS_save
 AC_LANG_POP([C++])

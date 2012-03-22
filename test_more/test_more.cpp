@@ -1,6 +1,6 @@
-/* $Id: test_more.cpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: test_more.cpp 2307 2012-03-21 19:13:44Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,10 +22,12 @@ extern bool Acos(void);
 extern bool Add(void);
 extern bool AddEq(void);
 extern bool AddZero(void);
+extern bool alloc_openmp(void);
 extern bool Asin(void);
 extern bool Atan(void);
 extern bool Atan2(void);
 extern bool base_adolc(void);
+extern bool base_alloc_test(void);
 extern bool check_simple_vector(void);
 extern bool Compare(void);
 extern bool CompareChange(void);
@@ -128,6 +130,7 @@ int main(void)
 	ok &= Run( Asin,            "Asin"           );
 	ok &= Run( Atan,            "Atan"           );
 	ok &= Run( Atan2,           "Atan2"          );
+	ok &= Run( base_alloc_test, "base_alloc"     );
 	ok &= Run( check_simple_vector, "check_simple_vector" );
 	ok &= Run( Compare,         "Compare"        );
 	ok &= Run( CompareChange,   "CompareChange"  );
@@ -192,6 +195,9 @@ int main(void)
 
 # ifdef CPPAD_ADOLC_TEST
 	ok &= Run( base_adolc,      "base_adolc"     );
+# endif
+# ifdef CPPAD_OPENMP_TEST
+	ok &= Run( alloc_openmp,    "alloc_openmp"   );
 # endif
 
 	// check for errors

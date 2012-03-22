@@ -18,13 +18,10 @@ fi
 # -----------------------------------------------------------------------------
 echo "Checking include files listed in makefile.am"
 echo "-------------------------------------------------------" 
-ls \
-	cppad/*.h \
-	cppad/*.hpp \
-	cppad/local/*.hpp \
-	cppad/speed/*.hpp  | \
+ls cppad/*.h cppad/*.hpp cppad/local/*.hpp cppad/speed/*.hpp  | \
 	sed -e '/^cppad\/config\.h$/d' | \
 	sort > check_makefile1.$$
+#
 sed < makefile.am -n \
 	-e '/^nobase_myinclude_HEADERS *=/,/^# End nobase_myinclude_HEADERS/p' | \
 	sed \

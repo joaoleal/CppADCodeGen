@@ -1,3 +1,9 @@
+cppadcodegen (20120322.0-1) unstable; urgency=low
+
+  * added a new method and updated to the CppAD version 20120322
+
+ -- Development <development@ciengis.com>  Mon, 16 Mar 2012 10:30:00 +0000
+
 cppadcodegen (20120129.1-1) unstable; urgency=low
 
   * It is now possible to get compressed jacobians in cppad_codegen

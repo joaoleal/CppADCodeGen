@@ -1,4 +1,4 @@
-$Id: example_list.omh 2270 2012-01-20 15:15:06Z bradbell $
+$Id: example_list.omh 2291 2012-03-05 06:20:16Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -85,12 +85,13 @@ $rref Add.cpp$$
 $rref AddEq.cpp$$
 $rref ad_fun.cpp$$
 $rref ad_in_c.cpp$$
-$rref arc_tan.cpp$$
 $rref Asin.cpp$$
 $rref Atan.cpp$$
 $rref Atan2.cpp$$
 $rref base_adolc.hpp$$
+$rref base_alloc.hpp$$
 $rref base_complex.hpp$$
+$rref base_require.cpp$$
 $rref BenderQuad.cpp$$
 $rref BoolFun.cpp$$
 $rref team_bthread.cpp$$
@@ -205,7 +206,10 @@ $rref Rosen34.cpp$$
 $rref runge_45_1.cpp$$
 $rref runge_45_2.cpp$$
 $rref seq_property.cpp$$
-$rref simple_ad.cpp$$
+$rref team_example.cpp$$
+$rref simple_ad_openmp.cpp$$
+$rref simple_ad_bthread.cpp$$
+$rref simple_ad_pthread.cpp$$
 $rref SimpleVector.cpp$$
 $rref Sin.cpp$$
 $rref Sinh.cpp$$

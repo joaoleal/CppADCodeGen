@@ -1,9 +1,9 @@
-/* $Id: pod_vector.hpp 2082 2011-08-31 17:50:58Z bradbell $ */
+/* $Id: pod_vector.hpp 2282 2012-02-09 15:29:05Z bradbell $ */
 # ifndef CPPAD_POD_VECTOR_INCLUDED
 # define CPPAD_POD_VECTOR_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 

@@ -1,4 +1,4 @@
-$Id: whats_new_12.omh 2276 2012-01-27 16:11:38Z bradbell $
+$Id: whats_new_12.omh 2307 2012-03-21 19:13:44Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -12,6 +12,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 $begin whats_new_12$$
 $spell
+	Debian
+	valgrind
 	num
 	alloc
 	makefile
@@ -33,6 +35,107 @@ This section contains a list of the changes to CppAD during 2012
 (in reverse order by date).
 The purpose of this section is to
 assist you in learning about changes between various versions of CppAD.
+
+$head 03-21$$
+Fix an incorrect error check in $code thread_alloc$$
+that did not allow $cref ta_return_memory$$ 
+to return memory in sequential execution mode that was allocated by a 
+different thread during parallel execution.
+
+$head 03-17$$
+Debian recently converted the default shell from $code bash$$ to $code dash$$
+(which caused $code multi_thread/test.sh$$ to fail).
+This has been fixed.
+In general, Debian's policy is that $code bin/sh$$ will be a 
+$href%
+http://pubs.opengroup.org/onlinepubs/009695399/utilities/xcu_chap02.html%
+Posix Shell
+%$$.
+
+$head 03-11$$
+There was a bug in $cref thread_alloc$$ where extra memory was held
+onto even if $cref/hold_memory/ta_hold_memory/$$ was never called
+and only one thread was used by the program.  This caused 
+$codei%
+	valgrind --leak-check=full --show-reachable=yes
+%$$
+to generate an error message.
+If $cref/multiple threads/multi_thread/$$ are used,
+one should free this 
+$cref/extra memory/ta_free_available/Purpose/Extra Memory/$$
+for threads other than thread zero.
+If $code hold_memory$$ is used,
+one should call $cref/free_available/ta_free_available/$$ for all threads. 
+
+
+$head 03-03$$
+$list number$$
+Add the examples 
+$cref simple_ad_openmp.cpp$$,
+$cref simple_ad_bthread.cpp$$
+and $cref simple_ad_pthread.cpp$$.
+$lnext
+Fix bug in finding boost multi-threading library
+(due to fact that $cref/BOOST_DIR/InstallUnix/BoostDir/$$ 
+is not the prefix during the boost installation).
+$lend
+
+$head 03-02$$
+$list number$$
+Change the name $code simple_ad.cpp$$ to $cref team_example.cpp$$
+$lnext
+The multi-threading $code team_example.cpp$$ example was changed to use 
+$latex f(x) = \sqrt{ x^2 }$$ instead of the function
+$latex {\rm atan2} [ \sin(x) , \cos (x) ]$$
+(both functions should behave like the identity function $latex f(x) = x$$).
+This enabled the removal of $code multi_thread/arc_tan.cpp$$.
+$lnext
+In $cref team_example.cpp$$ check that all of the threads
+pass their individual test; i.e. $codei%work_all_[%thread_num%]%.ok%$$
+is true for all $icode thread_num$$.
+$lend
+
+$head 02-11$$
+$list number$$
+The requirements in 
+$cref base_member$$ were missing from the $cref base_require$$ documentation.
+In addition,
+the $cref base_require.cpp$$ example has been added.
+$lend
+The specifications for $cref memory_leak$$ where changes so that
+calling routine specifies the amount of static memory to add.
+In addition,
+it is now possible to call 
+$code memory_leak$$ when $cref/num_threads/ta_num_threads/$$ 
+is greater than one
+(still can't be in parallel mode).
+
+$head 02-10$$
+$list number$$
+Add the missing Base class requirements in
+the entire $cref base_member$$ section
+and under the $cref/Output Operator/base_require/Output Operator/$$
+in the $cref base_require$$ section.
+$lnext
+Add the $cref base_alloc.hpp$$ example.
+$lend
+
+
+$head 02-09$$
+$list number$$
+Add the $icode set_static$$ to $cref memory_leak$$.
+This is necessary for testing base types that allocate memory
+for each element.
+$lnext
+Fix memory allocation bug in $code cppad/local/pod_vector.hpp$$
+when each element of the $cref/Base/base_require/$$ type allocated memory.
+$lend
+
+$head 01-30$$
+Make another attempt to fix linking with boost threads where the wrong
+version of the library is in the system include directory; i.e.,
+to have $cref/BOOST_DIR/InstallUnix/BoostDir/$$ override the default
+library.
 
 $head 01-27$$
 There were some problems with 
