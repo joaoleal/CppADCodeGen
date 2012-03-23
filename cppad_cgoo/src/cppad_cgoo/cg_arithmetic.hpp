@@ -150,7 +150,11 @@ namespace CppAD {
             return CG<Base > (left.getParameterValue() / right.getParameterValue());
 
         } else {
-            if (right.isParameter()) {
+            if (left.isParameter()) {
+                if (left.IdenticalZero()) {
+                    return CG<Base > (Base(0.0)); // does not consider the possibility of right being infinity or zero
+                }
+            } else if (right.isParameter()) {
                 if (right.IdenticalOne()) {
                     return left;
                 }
