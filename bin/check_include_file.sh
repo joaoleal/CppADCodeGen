@@ -36,13 +36,12 @@ files[cppad]="cppad/*.hpp\
 root[cppad]="cppad"
 rootInclude[cppad]=""
 #
-files[cppad_codegen]="cppad_codegen/src/cppad_codegen/*.hpp \
-	cppad_codegen/src/cppad_codegen/local/*.hpp"
-root[cppad_codegen]="cppad_codegen/src/"
-rootInclude[cppad_codegen]="cppad_codegen/src/"
+files[cppad_cgoo]="cppad_cgoo/src/cppad_cgoo/*.hpp"
+root[cppad_cgoo]="cppad_cgoo/src/"
+rootInclude[cppad_cgoo]="cppad_cgoo/src/"
 #
 different="no"
-for ff in cppad_codegen cppad
+for ff in cppad_cgoo cppad
 do
 	r=${root[$ff]}
 	for ext in .cpp .hpp

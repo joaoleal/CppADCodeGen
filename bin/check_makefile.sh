@@ -42,11 +42,9 @@ fi
 rm check_makefile1.$$
 rm check_makefile2.$$
 #
-cd cppad_codegen/src;
+cd cppad_cgoo/src;
 ls \
-	cppad_codegen/*.hpp \
-	cppad_codegen/local/*.hpp  | \
-	sed -e '/^cppad\/config\.h$/d' | \
+	cppad_cgoo/*.hpp \
 	sort > check_makefile1.$$
 sed < makefile.am -n \
 	-e '/^nobase_cginclude_HEADERS *=/,/^# End nobase_cginclude_HEADERS/p' | \

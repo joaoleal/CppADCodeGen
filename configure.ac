@@ -572,8 +572,6 @@ AC_CONFIG_FILES([
 	speed/sacado/makefile
 	speed/src/makefile
 	test_more/makefile 
-	cppad_codegen/src/makefile
-	cppad_codegen/test/makefile
 	cppad_cgoo/src/makefile
 	cppad_cgoo/test/makefile
 ])

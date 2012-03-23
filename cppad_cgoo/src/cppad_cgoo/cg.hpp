@@ -11,7 +11,7 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/CGException.hpp>
+#include <cppad_cgoo/cgexception.hpp>
 #include <cppad_cgoo/cg_types.hpp>
 #include <cppad_cgoo/cg_declare_cg.hpp>
 

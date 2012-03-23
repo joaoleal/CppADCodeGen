@@ -79,13 +79,6 @@ else
 endif
 #
 #
-CODEGEN_TESTS = cppad_codegen/test
-#
-CODEGEN_DIRS = \
-	cppad_codegen/src \
-	$(CODEGEN_TESTS)
-#
-#
 CODEGENOO_TESTS = cppad_cgoo/test
 #
 CODEGENOO_DIRS = \
@@ -293,7 +286,6 @@ nobase_myinclude_HEADERS =  \
 # No objects or executables are required to install CppAD.
 # See 'make test' below for building the tests.
 SUBDIRS =  \
-	$(CODEGEN_DIRS)\
 	$(CODEGENOO_DIRS)\
 	$(IPOPT_DIRS) \
 	$(SPEED_DIRS) \
@@ -318,7 +310,6 @@ EXTRA_DIST = \
 #
 # put test_code_gen at front of list so it is tested first
 test_directory_list = \
-	$(CODEGEN_TESTS) \
 	$(CODEGENOO_TESTS) \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \

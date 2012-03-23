@@ -1,3 +1,9 @@
+cppadcodegen (20120322.1-1) unstable; urgency=low
+
+  * removed cppad_codegen folder.
+
+ -- Development <development@ciengis.com>  Mon, 23 Mar 2012 10:30:00 +0000
+
 cppadcodegen (20120322.0-1) unstable; urgency=low
 
   * added a new method and updated to the CppAD version 20120322

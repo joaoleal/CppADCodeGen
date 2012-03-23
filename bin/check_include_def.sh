@@ -51,20 +51,18 @@ rm bin/check_include_def.2.$$
 #
 #          source code generation
 #
-cd cppad_codegen/src/;
+cd cppad_cgoo/src/;
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
-	cppad_codegen/*.hpp \
-	cppad_codegen/local/*.hpp \
+	cppad_cgoo/*.hpp \
 	| sed \
-	-e 's|.*# *ifndef *CPPAD_CODEGEN_\([0-9a-zA-Z_]*\)_INCLUDED$|\1.HPP|' \
+	-e 's|.*# *ifndef *CPPAD_\([0-9a-zA-Z_]*\)_INCLUDED$|\1.HPP|' \
 	| tr [a-zA-Z] [A-Za-z] \
 	| sort \
 	> ../../bin/check_include_def.1.$$
 #
 ls \
-	cppad_codegen/*.hpp \
-	cppad_codegen/local/*.hpp \
-	| sed -e 's|.*/||' -e 's|^cppad_codegen_||' \
+	cppad_cgoo/*.hpp \
+	| sed -e 's|.*/||' \
 	| sort -u \
 	> ../../bin/check_include_def.2.$$
 #

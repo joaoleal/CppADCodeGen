@@ -217,7 +217,6 @@ cgincludedir = $(includedir)/$(postfix_dir)
 #
 #
 nobase_cginclude_HEADERS = \
-	cppad_cgoo/CGException.hpp \
 	cppad_cgoo/cg.hpp \
 	cppad_cgoo/cg_arithmetic.hpp \
 	cppad_cgoo/cg_arithmetic_assign.hpp \
@@ -237,7 +236,8 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_source_code_fragment.hpp \
 	cppad_cgoo/cg_types.hpp \
 	cppad_cgoo/cg_unary.hpp \
-	cppad_cgoo/cg_variable.hpp
+	cppad_cgoo/cg_variable.hpp \
+	cppad_cgoo/cgexception.hpp 
 
 all: all-am
 
