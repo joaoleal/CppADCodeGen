@@ -1,6 +1,6 @@
-$Id: whats_new_05.omh 2235 2011-12-21 14:50:24Z bradbell $
+$Id: whats_new_05.omh 2333 2012-04-03 04:34:56Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -703,7 +703,7 @@ is no longer supported by CppAD.
 $pre
 
 $$
-The copy base section was split into the $xref/Default//default/$$ 
+The copy base section was split into the default
 constructor and the 
 construction for the base type.
 The construction from base type has been

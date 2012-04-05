@@ -1,6 +1,6 @@
-$Id: whats_new_04.omh 2235 2011-12-21 14:50:24Z bradbell $
+$Id: whats_new_04.omh 2333 2012-04-03 04:34:56Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -428,7 +428,7 @@ $code new$$ operations.
 
 $head 06-25$$
 A discussion of the order dependence of the
-$cref/assignment/ad_copy/Syntax/Assignment/$$ operator
+$cref/assignment/ad_assign/$$ operator
 and the 
 $xref/Independent//independent function/$$
 was added to the

@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: build.sh 2265 2012-01-15 18:07:32Z bradbell $
+# $Id: build.sh 2327 2012-03-31 18:15:59Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -72,7 +72,6 @@ fi
 configure_file_list="
 	cppad/configure.hpp
 	doc.omh
-	doxyfile
 	example/test_one.sh
 	omh/install_unix.omh
 	omh/install_windows.omh
@@ -215,6 +214,9 @@ fi
 # configure
 if [ "$1" == "configure" ]
 then
+	log_dir=`pwd`
+	log_file="$1.log"
+	#
 	echo "cd work"
 	cd work
 	#
@@ -400,6 +402,9 @@ then
 	#
 	echo "mkdir doxydoc"
 	mkdir doxydoc
+	#
+	echo "bin/doxyfile.sh $version"
+	bin/doxyfile.sh $version
 	#
 	echo "doxygen doxyfile"
 	doxygen doxyfile

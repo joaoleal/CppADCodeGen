@@ -1,4 +1,4 @@
-# $Id: makefile.am 2265 2012-01-15 18:07:32Z bradbell $
+# $Id: makefile.am 2333 2012-04-03 04:34:56Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -124,8 +124,9 @@ nobase_myinclude_HEADERS =  \
 	cppad/local/abs.hpp \
 	cppad/local/abs_op.hpp \
 	cppad/local/acos_op.hpp \
+	cppad/local/ad_assign.hpp \
 	cppad/local/ad_binary.hpp \
-	cppad/local/ad_copy.hpp \
+	cppad/local/ad_ctor.hpp \
 	cppad/local/add_eq.hpp \
 	cppad/local/add.hpp \
 	cppad/local/add_op.hpp \
@@ -157,7 +158,6 @@ nobase_myinclude_HEADERS =  \
 	cppad/local/cppad_assert.hpp \
 	cppad/local/csum_op.hpp \
 	cppad/local/declare_ad.hpp \
-	cppad/local/default.hpp \
 	cppad/local/define.hpp \
 	cppad/local/dependent.hpp \
 	cppad/local/discrete.hpp \
@@ -303,7 +303,6 @@ EXTRA_DIST = \
 	cpl1.0.txt \
 	doc \
 	doc.omh.in \
-	doxyfile.in \
 	omh \
 	uw_copy_040507.html
 

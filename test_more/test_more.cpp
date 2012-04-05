@@ -1,4 +1,4 @@
-/* $Id: test_more.cpp 2307 2012-03-21 19:13:44Z bradbell $ */
+/* $Id: test_more.cpp 2333 2012-04-03 04:34:56Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -24,6 +24,7 @@ extern bool AddEq(void);
 extern bool AddZero(void);
 extern bool alloc_openmp(void);
 extern bool Asin(void);
+extern bool assign(void);
 extern bool Atan(void);
 extern bool Atan2(void);
 extern bool base_adolc(void);
@@ -33,7 +34,7 @@ extern bool Compare(void);
 extern bool CompareChange(void);
 extern bool CondExp(void);
 extern bool CondExpAD(void);
-extern bool Copy(void);
+extern bool copy(void);
 extern bool Cos(void);
 extern bool Cosh(void);
 extern bool dbl_epsilon(void);
@@ -128,6 +129,7 @@ int main(void)
 	ok &= Run( AddEq,           "AddEq"          );
 	ok &= Run( AddZero,         "AddZero"        );
 	ok &= Run( Asin,            "Asin"           );
+	ok &= Run( assign,          "assign"         );
 	ok &= Run( Atan,            "Atan"           );
 	ok &= Run( Atan2,           "Atan2"          );
 	ok &= Run( base_alloc_test, "base_alloc"     );
@@ -136,7 +138,7 @@ int main(void)
 	ok &= Run( CompareChange,   "CompareChange"  );
 	ok &= Run( CondExp,         "CondExp"        );
 	ok &= Run( CondExpAD,       "CondExpAD"      );
-	ok &= Run( Copy,            "Copy"           );
+	ok &= Run( copy,            "copy"           );
 	ok &= Run( Cos,             "Cos"            );
 	ok &= Run( Cosh,            "Cosh"           );
 	ok &= Run( dbl_epsilon,     "dbl_epsilon"    );

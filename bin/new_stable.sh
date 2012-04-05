@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: new_stable.sh 2257 2012-01-03 22:52:35Z bradbell $
+# $Id: new_stable.sh 2329 2012-04-01 15:32:38Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -135,7 +135,7 @@ cat << EOF
 3: In stable/$stable_version run the following command:
       ./build.sh all test
 4: If errors occur, fix trunk/bin/new_stable.sh, re-run it, and goto 1.
-5: Commit changes to trunk/bin/new_stable.sh and trunk/bin/only_date.sh files.
+5: Commit changes to trunk/bin/new_stable.sh 
 6: In stable/$stable_version commit changes using
 	bin/commit.sh edit
    then edit bin/commit.sh to change the comments and then run

@@ -1,4 +1,4 @@
-/* $Id: example.cpp 2284 2012-02-11 16:21:31Z bradbell $ */
+/* $Id: example.cpp 2333 2012-04-03 04:34:56Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -53,6 +53,8 @@ $end
 
 // external complied tests
 extern bool abort_recording(void);
+extern bool ad_assign(void);
+extern bool ad_ctor(void);
 extern bool abs(void);
 extern bool Acos(void);
 extern bool Add(void);
@@ -65,7 +67,7 @@ extern bool Atan2(void);
 extern bool base_require(void);
 extern bool BenderQuad(void);
 extern bool BoolFun(void);
-extern bool vectorBool(void);
+extern bool capacity_taylor(void);
 extern bool change_const(void);
 extern bool CheckNumericType(void);
 extern bool checkpoint(void);
@@ -75,16 +77,12 @@ extern bool CompareChange(void);
 extern bool complex_poly(void);
 extern bool CondExp(void);
 extern bool conj_grad(void);
-extern bool CopyAD(void);
-extern bool CopyBase(void);
 extern bool Cos(void);
 extern bool Cosh(void);
 extern bool CppAD_vector(void);
-extern bool Default(void);
 extern bool Div(void);
 extern bool DivEq(void);
 extern bool epsilon(void);
-extern bool Eq(void);
 extern bool EqualOpSeq(void);
 extern bool Erf(void);
 extern bool ErrorHandler(void);
@@ -175,6 +173,7 @@ extern bool user_tan(void);
 extern bool Value(void);
 extern bool Var2Par(void);
 extern bool vec_ad(void);
+extern bool vectorBool(void);
 
 namespace {
 	// function that runs one test
@@ -209,6 +208,8 @@ int main(void)
 
 	// external compiled tests
 	ok &= Run( abort_recording,   "abort_recording"  );
+	ok &= Run( ad_assign,         "ad_assign"        );
+	ok &= Run( ad_ctor,           "ad_ctor"          );
 	ok &= Run( abs,               "abs"              );
 	ok &= Run( Acos,              "Acos"             );
 	ok &= Run( Add,               "Add"              );
@@ -221,7 +222,7 @@ int main(void)
 	ok &= Run( base_require,      "base_require"     );
 	ok &= Run( BenderQuad,        "BenderQuad"       );
 	ok &= Run( BoolFun,           "BoolFun"          );
-	ok &= Run( vectorBool,        "vectorBool"       );
+	ok &= Run( capacity_taylor,   "capacity_taylor"  );
 	ok &= Run( change_const,      "change_const"     );
 	ok &= Run( CheckNumericType,  "CheckNumericType" );
 	ok &= Run( checkpoint,        "checkpoint"       );
@@ -231,16 +232,12 @@ int main(void)
 	ok &= Run( complex_poly,      "complex_poly"     );
 	ok &= Run( CondExp,           "CondExp"          );
 	ok &= Run( conj_grad,         "conj_grad"        );
-	ok &= Run( CopyAD,            "CopyAD"           );
-	ok &= Run( CopyBase,          "CopyBase"         );
 	ok &= Run( Cos,               "Cos"              );
 	ok &= Run( Cosh,              "Cosh"             );
 	ok &= Run( CppAD_vector,      "CppAD_vector"     );
-	ok &= Run( Default,           "Default"          );
 	ok &= Run( Div,               "Div"              );
 	ok &= Run( DivEq,             "DivEq"            );
 	ok &= Run( epsilon,           "epsilon"          );
-	ok &= Run( Eq,                "Eq"               );
 	ok &= Run( EqualOpSeq,        "EqualOpSeq"       );
 	ok &= Run( Erf,               "Erf"              );
 	ok &= Run( ErrorHandler,      "ErrorHandler"     );
@@ -328,6 +325,7 @@ int main(void)
 	ok &= Run( Value,             "Value"            );
 	ok &= Run( Var2Par,           "Var2Par"          );
 	ok &= Run( vec_ad,            "vec_ad"           );
+	ok &= Run( vectorBool,        "vectorBool"       );
 # ifdef CPPAD_ADOLC_EXAMPLES
 	ok &= Run( mul_level_adolc,   "mul_level_adolc"  );
 	ok &= Run( ode_taylor_adolc,  "ode_taylor_adolc" );

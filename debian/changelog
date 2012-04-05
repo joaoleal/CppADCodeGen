@@ -1,3 +1,10 @@
+cppadcodegen (20120404.0-1) unstable; urgency=low
+
+  * zero divided by any variable or number is considered to always return zero.
+  * updated to CppAD version 20120404
+
+ -- Development <development@ciengis.com>  Mon, 4 Apr 2012 10:30:00 +0000
+
 cppadcodegen (20120322.1-1) unstable; urgency=low
 
   * removed cppad_codegen folder.

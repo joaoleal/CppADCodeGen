@@ -153,7 +153,9 @@ namespace CppAD {
 
             if (isParameter()) {
                 handler = right.getCodeHandler();
-
+                if (IdenticalZero()) {
+                    return *this; // does not consider the possibility of right being infinity or zero
+                }
                 // must print the assignment to the parameter value
                 const CG<Base> copy(*this); // make a copy
                 makeVariable(*handler);

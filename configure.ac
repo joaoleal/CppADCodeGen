@@ -1,4 +1,4 @@
-dnl $Id: configure.ac 2290 2012-03-04 17:27:00Z bradbell $
+dnl $Id: configure.ac 2327 2012-03-31 18:15:59Z bradbell $
 dnl ---------------------------------------------------------------------------
 dnl CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 dnl
@@ -12,7 +12,7 @@ dnl ---------------------------------------------------------------------------
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl   package   version              bug-report
-AC_INIT(CppAD, 20120322, cppad@list.coin-or.org)
+AC_INIT(CppAD, 20120404, cppad@list.coin-or.org)
 AC_SUBST(PACKAGE_URL, "http://www.coin-or.org/CppAD")
 AC_SUBST(PACKAGE_DESCRIPTION, "Differentiation of C++ Algorithms")
 
@@ -403,14 +403,14 @@ fi
 if test "$BOOST_DIR" == '' && test "$boost_thread_found" == 'no' ; then
 	bthread_lib='-lboost_thread-mt'
 	LDFLAGS="$LDFLAGS_save $bthread_lib"
-AC_LINK_IFELSE(
-	[AC_LANG_PROGRAM(
-		[# include <boost/thread.hpp>],
-		[boost::barrier wait(1);]
-	)],
+	AC_LINK_IFELSE(
+		[AC_LANG_PROGRAM(
+			[# include <boost/thread.hpp>],
+			[boost::barrier wait(1);]
+		)],
 		[boost_thread_found='yes'],
 		[boost_thread_found='no']
-)
+	)
 fi
 if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
 	bthread_lib="$BOOST_DIR/../lib/libboost_thread-mt.so"
@@ -423,7 +423,7 @@ if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
 		[boost_thread_found='yes'],
 		[boost_thread_found='no']
 	)
-	fi
+fi
 if test "$BOOST_DIR" != '' && test "$boost_thread_found" == 'no' ; then
 	bthread_lib="$BOOST_DIR/../lib/libboost_thread-mt.a"
 	LDFLAGS="$LDFLAGS_save $bthread_lib"
@@ -540,7 +540,6 @@ dnl AC_CONFIG_FILES(file-list) for each file in the list, configure will
 dnl read file.in, do its substitutions, and create file
 AC_CONFIG_FILES([ 
 	cppad/configure.hpp
-	doxyfile
 	doc.omh
 	cppad_ipopt/example/test.sh
 	cppad_ipopt/speed/test.sh

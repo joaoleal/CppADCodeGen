@@ -1,4 +1,4 @@
-$Id: wish_list.omh 2287 2012-02-16 20:29:08Z bradbell $
+$Id: wish_list.omh 2333 2012-04-03 04:34:56Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -233,7 +233,7 @@ Add operation sequence tracing to the user API and documentation.
 $head VecAD$$
 $index VecAD, improve assignment$$
 Make assignment operation in $cref/VecAD/$$ like
-assignment in $cref/ad_copy/$$.
+assignment in $cref ad_ctor$$ and $cref ad_assign$$.
 This will fix slicing to $code int$$ when assigning
 from $code double$$ to 
 $code VecAD< AD<double> >::reference$$ object.
