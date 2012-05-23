@@ -3,6 +3,8 @@ cppadcodegen (20120523.0-1) unstable; urgency=low
   * significant improvements in the source code generation strategy
   * updated to the CppAD version 20120523
 
+ -- Development <development@ciengis.com>  Tue, 23 May 2012 10:30:00 +0000
+
 cppadcodegen (20120424.0-1) unstable; urgency=low
 
   * updated to the CppAD version 20120424

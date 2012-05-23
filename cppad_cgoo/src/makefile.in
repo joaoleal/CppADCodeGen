@@ -247,7 +247,6 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_operation.hpp \
 	cppad_cgoo/cg_ordered.hpp \
 	cppad_cgoo/cg_source_code_fragment.hpp \
-	cppad_cgoo/cg_types.hpp \
 	cppad_cgoo/cg_unary.hpp \
 	cppad_cgoo/cg_variable.hpp \
 	cppad_cgoo/cg_variable_name_generator.hpp \
