@@ -1,8 +1,8 @@
-/* $Id: parallel_ad.hpp 2197 2011-11-20 16:37:53Z bradbell $ */
+/* $Id: parallel_ad.hpp 2344 2012-04-07 19:29:16Z bradbell $ */
 # ifndef CPPAD_PARALLEL_AD_INCLUDED
 # define CPPAD_PARALLEL_AD_INCLUDED
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -26,16 +26,23 @@ $head Syntax$$
 $codei%parallel_ad<%Base%>()%$$
 
 $head Purpose$$
+The function
+$codei%parallel_ad<%Base%>()%$$
+must be called before any $codei%AD<%Base>%$$ objects are used
+in $cref/parallel/ta_in_parallel/$$ mode.
+In addition, if this routine is called after one is done using 
+parallel mode, it will free extra memory used to keep track of 
+the multiple $codei%AD<%Base%>%$$ tapes required for parallel execution.
+
+$head Discussion$$
 By default, for each $codei%AD<%Base%>%$$ class there is only one 
 tape that records $cref/AD of Base/glossary/AD of Base/$$ operations.
 This tape is a global variable and hence it cannot be used
 by multiple threads at the same time. 
 The $cref/parallel_setup/ta_parallel_setup/$$ function informs CppAD of the
 maximum number of threads that can be active in parallel mode.
-The function
-$codei%parallel_ad<%Base%>()%$$
-must be called before any $codei%AD<%Base>%$$ objects are used
-in $cref/parallel/ta_in_parallel/$$ mode.
+This routine does extra setup 
+(and teardown) for the particular $icode Base$$ type.
 
 $head isnan$$
 This routine has the side effect of calling
@@ -45,12 +52,23 @@ $codei%
 where $icode s$$ has type $icode%Base%$$, $codei%AD<%Base%>%$$, and
 $codei%std::complex<double>%$$.
 
+$head CheckSimpleVector$$
+This routine has the side effect of calling the routines
+$codei%
+	CheckSimpleVector< %Type%, CppAD::vector<%Type%> >()
+%$$
+where $icode Type$$ is $icode Base$$ and $codei%AD<%Base%>%$$.
+
 $head Example$$
 The files 
 $cref team_openmp.cpp$$, 
 $cref team_bthread.cpp$$, and
 $cref team_pthread.cpp$$, 
 contain examples and tests that implement this function.   
+
+$head Restriction$$
+This routine cannot be called in parallel mode or while
+there is a tape recording $codei%AD<%Base%>%$$ operations.
 
 $end
 -----------------------------------------------------------------------------
@@ -72,6 +90,10 @@ void parallel_ad(void)
 		! thread_alloc::in_parallel() ,
 		"parallel_ad must be called before entering parallel execution mode."
 	);
+	CPPAD_ASSERT_KNOWN(
+		AD<Base>::tape_ptr() == CPPAD_NULL ,
+		"parallel_ad cannot be called while a tape recording is in progress"
+	);
 
 	// ensure statics in following functions are initialized
 	elapsed_seconds();
@@ -91,13 +113,14 @@ void parallel_ad(void)
 
 
 	// statics that depend on the value of Base
-	AD<Base>::id_handle(0);
+	AD<Base>::tape_id_handle(0);
 	AD<Base>::tape_handle(0);	
+	AD<Base>::tape_manage(tape_manage_clear);
 	discrete<Base>::List();
-	erf_template( Base(0.) );
-	erf_template( AD<Base>(0.) );
 	isnan( Base(0.) );
 	isnan( AD<Base>(0.) );
+	CheckSimpleVector< Base, CppAD::vector<Base> >();
+	CheckSimpleVector< AD<Base>, CppAD::vector< AD<Base> > >();
 
 }
 

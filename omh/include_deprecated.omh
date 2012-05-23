@@ -1,6 +1,6 @@
-$Id: include_deprecated.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: include_deprecated.omh 2345 2012-04-10 15:36:40Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -52,12 +52,12 @@ $syntax%
 will refer to the older versions of CppAD unless you preform the 
 following steps (this only needs to be done once, not for every install):
 $syntax%
-	cp %PrefixDir%/include
+	cp %prefix_dir%/include
 	sudo mv CppAD CppAD.old
 	sudo ln -s cppad CppAD
 %$$
 where 
-$cref/PrefixDir/InstallUnix/PrefixDir/$$
+$cref/prefix_dir/InstallUnix/prefix_dir/$$
 is the prefix directory corresponding to your
 $cref/Unix installation/InstallUnix/$$.
 This will link form the deprecated commands

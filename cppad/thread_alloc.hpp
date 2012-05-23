@@ -1,4 +1,4 @@
-/* $Id: thread_alloc.hpp 2307 2012-03-21 19:13:44Z bradbell $ */
+/* $Id: thread_alloc.hpp 2353 2012-04-18 13:23:08Z bradbell $ */
 # ifndef CPPAD_THREAD_ALLOC_INCLUDED
 # define CPPAD_THREAD_ALLOC_INCLUDED
 
@@ -173,6 +173,8 @@ private:
 	\param clear
 	If \a clear is true, then the information pointer for this thread
 	is deleted and the \c CPPAD_NULL pointer is returned.
+	There must be no memory currently in either the inuse or avaialble
+	lists when this routine is called.
 
 	\return
 	is the current informaiton pointer for this thread.
@@ -199,7 +201,20 @@ private:
 		thread_alloc_info* info = all_info[thread];
 		if( clear )
 		{	if( info != CPPAD_NULL )
-			{	if( thread != 0 )
+			{
+# ifndef NDEBUG
+				CPPAD_ASSERT_UNKNOWN(
+					info->count_inuse_     == 0 &&
+					info->count_available_ == 0
+				);
+				for(size_t c = 0; c < CPPAD_MAX_NUM_CAPACITY; c++)
+				{	CPPAD_ASSERT_UNKNOWN(
+						info->root_inuse_[c].next_     == CPPAD_NULL &&
+						info->root_available_[c].next_ == CPPAD_NULL
+					);
+				}
+# endif
+				if( thread != 0 )
 					::operator delete( reinterpret_cast<void*>(info) );
 				info             = CPPAD_NULL;
 				all_info[thread] = info;
@@ -788,7 +803,7 @@ $end
 	The actual number of bytes of memory obtained for use.
 
 	\return
-	pointer to the beginning of the memory allocted for use.
+	pointer to the beginning of the memory allocated for use.
  	*/
 	static void* get_memory(size_t min_bytes, size_t& cap_bytes)
 	{	// see first_trace below	
@@ -1476,6 +1491,66 @@ $end
 
 		// return the memory to the available pool for this thread
 		thread_alloc::return_memory( reinterpret_cast<void*>(array) );
+	}
+/* -----------------------------------------------------------------------
+$begin ta_free_all$$
+$spell
+	alloc
+	bool
+	inuse
+$$
+
+$section Free All Memory That Was Allocated for Use by thread_alloc$$ 
+
+$index free, all thread_alloc$$
+$index thread_alloc, free all$$
+
+$head Syntax$$
+$icode%ok% = thread_alloc::free_all()%$$.
+
+$head Purpose$$
+Returns all memory that was used by $code thread_alloc$$ to the system.
+
+$head ok$$
+The return value $icode ok$$ has prototype
+$codei%
+	bool %ok%
+%$$
+Its value will be $code true$$ if all the memory can be freed.
+This requires that for all $icode thread$$ indices, there is no memory 
+$cref/inuse/ta_inuse/$$; i.e.,
+$codei%
+	0 == thread_alloc::inuse(%thread%)
+%$$
+Otherwise, the return value will be false.
+
+$head Restrictions$$
+This function cannot be called while in parallel mode.
+
+$head Example$$
+$cref/thread_alloc.cpp/$$
+$end 
+*/
+	/*!
+	Return to the system all thread_alloc memory that is not currently inuse.
+
+	\return
+	If no \c thread_alloc memory is currently inuse, 
+	all memory is returned to the system and the return value is true.
+	Otherwise the return value is false.
+	*/
+	static bool free_all(void)
+	{	CPPAD_ASSERT_KNOWN(
+			! in_parallel(),
+			"free_all cannot be used while in parallel execution"
+		);
+		bool ok = true;
+		size_t thread = CPPAD_MAX_NUM_THREADS;
+		while(thread--)
+		{	ok &= inuse(thread) == 0;
+			free_available(thread);
+		}
+		return ok;
 	}
 };
 

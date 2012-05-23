@@ -1,4 +1,4 @@
-# $Id: makefile.am 2333 2012-04-03 04:34:56Z bradbell $
+# $Id: makefile.am 2354 2012-04-19 14:25:37Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -29,7 +29,7 @@ ADOLC_INCLUDE     =
 ADOLC_LIB         =
 endif
 if CppAD_BOOST_DIR
-BOOST_INCLUDE = -I$(BOOST_DIR)
+BOOST_INCLUDE = -I$(BOOST_DIR)/include
 else
 BOOST_INCLUDE =
 endif

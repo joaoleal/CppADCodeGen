@@ -1,4 +1,4 @@
-/* $Id: memory_leak.hpp 2284 2012-02-11 16:21:31Z bradbell $ */
+/* $Id: memory_leak.hpp 2341 2012-04-06 18:42:00Z bradbell $ */
 # ifndef CPPAD_MEMORY_LEAK_INCLUDED
 # define CPPAD_MEMORY_LEAK_INCLUDED
 
@@ -27,6 +27,11 @@ $index memory_leak$$
 $index leak, memory$$
 $index check, memory leak$$
 $index static, memory leak check$$
+
+$head Deprecated$$
+$index deprecated, memory leak$$
+This routine has been deprecated.
+You should instead use the routine $cref ta_free_all$$.
 
 $head Syntax$$
 $icode%flag% = %memory_leak()
@@ -157,7 +162,7 @@ inline bool memory_leak(size_t add_static = 0)
 		"memory_leak: in_parallel() is true."
 	);
 	CPPAD_ASSERT_KNOWN(
-		! thread_alloc::thread_num() != 0,
+		thread_alloc::thread_num() == 0,
 		"memory_leak: thread_num() is not zero."
 	);
 	if( add_static != 0 )

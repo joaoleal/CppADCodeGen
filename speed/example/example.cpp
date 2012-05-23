@@ -1,6 +1,6 @@
-/* $Id: example.cpp 2192 2011-11-18 00:15:16Z bradbell $ */
+/* $Id: example.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -108,12 +108,14 @@ int main(void)
 	ok &= Run(sparse_evaluate,   "sparse_evaluate"    );
 	ok &= Run(speed_test,             "speed_test"    );
 	ok &= Run(time_test,               "time_test"    );
+	assert( ok || (Run_error_count > 0) );
 
 	// check for memory leak in previous calculations
-	if( CppAD::memory_leak() )
+	if( ! CppAD::thread_alloc::free_all() )
+	{	ok = false;
 		cout << "Error: memroy leak detected" << endl;
+	}
 
-	assert( ok || (Run_error_count > 0) );
 	if( ok )
 	{	cout << "All " << int(Run_ok_count) << " tests passed ";
 		cout << "(possibly excepting elapsed_seconds).";

@@ -1,4 +1,4 @@
-/* $Id: base_require.cpp 2284 2012-02-11 16:21:31Z bradbell $ */
+/* $Id: base_require.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -47,17 +47,6 @@ bool base_require(void)
 	size_t thread = thread_alloc::thread_num();
 	ok &= thread == 0;
 	size_t inuse_before = thread_alloc::inuse(thread);
-
-	// Make sure static memory correspoding to isnan is allocated
-	// (which may be used by CppAD forward mode for error checking).
-	CppAD::isnan( base_alloc(0.) );
-	CppAD::isnan( ad_base_alloc(0.) );
-
-	// now determine if we need to inform memory_leak of this memory
-	// (or if it had been previously allocated)
-	size_t inuse_after = thread_alloc::inuse(thread);
-	if( inuse_after > inuse_before )
-		CppAD::memory_leak( inuse_after - inuse_before );
 
 	// y = x^2
 	size_t n = 1, m = 2;

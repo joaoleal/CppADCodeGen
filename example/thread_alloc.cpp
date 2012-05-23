@@ -1,4 +1,4 @@
-/* $Id: thread_alloc.cpp 2291 2012-03-05 06:20:16Z bradbell $ */
+/* $Id: thread_alloc.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -45,11 +45,11 @@ bool raw_allocate(void)
 	using CppAD::thread_alloc;
 	size_t thread;
 
-	// check that no memory is initilaly inuse or available
-	ok &= ! CppAD::memory_leak();
+	// check that no memory is initilaly inuse 
+	ok &= thread_alloc::free_all();
 
 	// amount of static memory used by thread zero
-	size_t static_inuse = thread_alloc::inuse(0);
+	size_t static_inuse = 0;
 
 	// repeatedly allocate enough memory for at least two size_t values.
 	size_t min_size_t = 2;
@@ -112,8 +112,8 @@ bool type_allocate(void)
 	// check initial memory values
 	size_t thread = thread_alloc::thread_num();
 	ok &= thread == 0;
-	ok &= ! CppAD::memory_leak();
-	size_t static_inuse = thread_alloc::inuse(0);
+	ok &= thread_alloc::free_all();
+	size_t static_inuse = 0;
 
 	// initial allocation of an array
 	size_t  size_min  = 3;

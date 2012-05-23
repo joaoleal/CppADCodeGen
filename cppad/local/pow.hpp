@@ -1,9 +1,9 @@
-/* $Id: pow.hpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: pow.hpp 2331 2012-04-02 03:24:33Z bradbell $ */
 # ifndef CPPAD_POW_INCLUDED
 # define CPPAD_POW_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -110,26 +110,22 @@ namespace CppAD {
 // case where x and y are AD<Base> -----------------------------------------
 template <class Base> AD<Base> 
 pow(const AD<Base> &x, const AD<Base> &y)
-{	ADTape<Base> *tape = AD<Base>::tape_ptr();
-	size_t tape_id = 0;
-	if( tape != CPPAD_NULL )
-		tape_id = tape->id_;
-
-	// id_ setting for parameters cannot match 0
-	bool var_x = x.id_  == tape_id;
-	bool var_y = y.id_ == tape_id;
-	CPPAD_ASSERT_KNOWN(
-		Parameter(x) || var_x ,
-		"pow: first argument is a variable for a different thread"
-	);
-	CPPAD_ASSERT_KNOWN(
-		Parameter(y) || var_y ,
-		"pow: second argument is a variable for a different thread"
-	);
-
+{
+	// compute the Base part
 	AD<Base> result;
 	result.value_  = pow(x.value_, y.value_);
 	CPPAD_ASSERT_UNKNOWN( Parameter(result) );
+
+	// check if there is a recording in progress
+	ADTape<Base>* tape = AD<Base>::tape_ptr();
+	if( tape == CPPAD_NULL )
+		return result;
+	size_t tape_id = tape->id_;
+
+	// tape_id cannot match the default value for tape_id_; i.e., 0
+	CPPAD_ASSERT_UNKNOWN( tape_id > 0 );
+	bool var_x = x.tape_id_ == tape_id;
+	bool var_y = y.tape_id_ == tape_id;
 
 	if( var_x )
 	{	if( var_y )
@@ -144,7 +140,7 @@ pow(const AD<Base> &x, const AD<Base> &y)
 			result.taddr_ = tape->Rec_.PutOp(PowvvOp);
 
 			// make result a variable
-			result.id_ = tape_id;
+			result.tape_id_ = tape_id;
 		}
 		else if( IdenticalZero( y.value_ ) )
 		{	// result = variable^0
@@ -162,7 +158,7 @@ pow(const AD<Base> &x, const AD<Base> &y)
 			result.taddr_ = tape->Rec_.PutOp(PowvpOp);
 
 			// make result a variable
-			result.id_ = tape_id;
+			result.tape_id_ = tape_id;
 		}
 	}
 	else if( var_y )
@@ -182,7 +178,7 @@ pow(const AD<Base> &x, const AD<Base> &y)
 			result.taddr_ = tape->Rec_.PutOp(PowpvOp);
 
 			// make result a variable
-			result.id_ = tape_id;
+			result.tape_id_ = tape_id;
 		}
 	}
 	return result;

@@ -1,6 +1,6 @@
-/* $Id: main.cpp 2233 2011-12-20 19:34:24Z bradbell $ */
+/* $Id: main.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,7 +22,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad/speed/uniform_01.hpp>
 # include <cppad/poly.hpp>
 # include <cppad/track_new_del.hpp>
-# include <cppad/memory_leak.hpp>
+# include <cppad/thread_alloc.hpp>
 
 # ifdef SPEED_ADOLC
 # define AD_PACKAGE "adolc"
@@ -542,14 +542,14 @@ int main(int argc, char *argv[])
 	size_sparse_hessian.resize(0);
 	size_sparse_jacobian.resize(0);
 	// check for memory leak
-	if( CppAD::memory_leak() )
+	if( CppAD::thread_alloc::free_all() )
+	{	Run_ok_count++;
+		cout << "No memory leak detected" << endl;
+	}
+	else
 	{	ok = false;
 		Run_error_count++;
 		cout << "Memory leak detected" << endl;
-	}
-	else
-	{	Run_ok_count++;
-		cout << "No memory leak detected" << endl;
 	}
 # endif
 	return static_cast<int>( ! ok );

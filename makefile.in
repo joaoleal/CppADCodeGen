@@ -36,9 +36,9 @@ POST_UNINSTALL = :
 subdir = .
 DIST_COMMON = README $(am__configure_deps) \
 	$(am__myinclude_HEADERS_DIST) $(nobase_myinclude_HEADERS) \
-	$(srcdir)/doc.omh.in $(srcdir)/doxyfile.in \
-	$(srcdir)/makefile.am $(srcdir)/makefile.in \
-	$(top_srcdir)/configure $(top_srcdir)/cppad/configure.hpp.in \
+	$(srcdir)/doc.omh.in $(srcdir)/makefile.am \
+	$(srcdir)/makefile.in $(top_srcdir)/configure \
+	$(top_srcdir)/cppad/configure.hpp.in \
 	$(top_srcdir)/omh/install_unix.omh.in \
 	$(top_srcdir)/omh/install_windows.omh.in \
 	$(top_srcdir)/pkgconfig/cppad-uninstalled.pc.in \
@@ -51,9 +51,9 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 am__CONFIG_DISTCLEAN_FILES = config.status config.cache config.log \
  configure.lineno config.status.lineno
 mkinstalldirs = $(install_sh) -d
-CONFIG_CLEAN_FILES = cppad/configure.hpp doxyfile doc.omh \
-	omh/install_unix.omh omh/install_windows.omh \
-	pkgconfig/cppad.pc pkgconfig/cppad-uninstalled.pc
+CONFIG_CLEAN_FILES = cppad/configure.hpp doc.omh omh/install_unix.omh \
+	omh/install_windows.omh pkgconfig/cppad.pc \
+	pkgconfig/cppad-uninstalled.pc
 CONFIG_CLEAN_VPATH_FILES =
 SOURCES =
 DIST_SOURCES =
@@ -159,6 +159,7 @@ CPPAD_CPPADVECTOR = @CPPAD_CPPADVECTOR@
 CPPAD_GETTIMEOFDAY = @CPPAD_GETTIMEOFDAY@
 CPPAD_IPOPT_LD_PATH = @CPPAD_IPOPT_LD_PATH@
 CPPAD_IPOPT_LIBS = @CPPAD_IPOPT_LIBS@
+CPPAD_MAX_NUM_THREADS = @CPPAD_MAX_NUM_THREADS@
 CPPAD_SIZE_T_SAME_UNSIGNED_INT = @CPPAD_SIZE_T_SAME_UNSIGNED_INT@
 CPPAD_STDVECTOR = @CPPAD_STDVECTOR@
 CPPAD_TAPE_ADDR_TYPE = @CPPAD_TAPE_ADDR_TYPE@
@@ -194,6 +195,7 @@ LIBS = @LIBS@
 LTLIBOBJS = @LTLIBOBJS@
 MAINT = @MAINT@
 MAKEINFO = @MAKEINFO@
+MAX_NUM_THREADS = @MAX_NUM_THREADS@
 MKDIR_P = @MKDIR_P@
 OBJEXT = @OBJEXT@
 OPENMP_FLAGS = @OPENMP_FLAGS@
@@ -262,7 +264,7 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 
-# $Id: makefile.am 2265 2012-01-15 18:07:32Z bradbell $
+# $Id: makefile.am 2350 2012-04-18 06:31:44Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -374,8 +376,9 @@ nobase_myinclude_HEADERS = \
 	cppad/local/abs.hpp \
 	cppad/local/abs_op.hpp \
 	cppad/local/acos_op.hpp \
+	cppad/local/ad_assign.hpp \
 	cppad/local/ad_binary.hpp \
-	cppad/local/ad_copy.hpp \
+	cppad/local/ad_ctor.hpp \
 	cppad/local/add_eq.hpp \
 	cppad/local/add.hpp \
 	cppad/local/add_op.hpp \
@@ -407,7 +410,6 @@ nobase_myinclude_HEADERS = \
 	cppad/local/cppad_assert.hpp \
 	cppad/local/csum_op.hpp \
 	cppad/local/declare_ad.hpp \
-	cppad/local/default.hpp \
 	cppad/local/define.hpp \
 	cppad/local/dependent.hpp \
 	cppad/local/discrete.hpp \
@@ -555,7 +557,6 @@ EXTRA_DIST = \
 	cpl1.0.txt \
 	doc \
 	doc.omh.in \
-	doxyfile.in \
 	omh \
 	uw_copy_040507.html
 
@@ -570,6 +571,7 @@ test_directory_list = \
 	introduction/get_started \
 	introduction/exp_apx \
 	multi_thread \
+	multi_thread/test_multi \
 	print_for \
 	test_more 
 
@@ -618,8 +620,6 @@ $(ACLOCAL_M4): @MAINTAINER_MODE_TRUE@ $(am__aclocal_m4_deps)
 	$(am__cd) $(srcdir) && $(ACLOCAL) $(ACLOCAL_AMFLAGS)
 $(am__aclocal_m4_deps):
 cppad/configure.hpp: $(top_builddir)/config.status $(top_srcdir)/cppad/configure.hpp.in
-	cd $(top_builddir) && $(SHELL) ./config.status $@
-doxyfile: $(top_builddir)/config.status $(srcdir)/doxyfile.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@
 doc.omh: $(top_builddir)/config.status $(srcdir)/doc.omh.in
 	cd $(top_builddir) && $(SHELL) ./config.status $@

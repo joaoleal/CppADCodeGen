@@ -1,4 +1,4 @@
-/* $Id: dependent.hpp 2281 2012-02-09 14:26:59Z bradbell $ */
+/* $Id: dependent.hpp 2336 2012-04-05 11:38:59Z bradbell $ */
 # ifndef CPPAD_DEPENDENT_INCLUDED
 # define CPPAD_DEPENDENT_INCLUDED
 
@@ -152,7 +152,7 @@ The dependent variable vector for the corresponding function.
 template <typename Base>
 template <typename ADvector>
 void ADFun<Base>::Dependent(const ADvector &y)
-{	ADTape<Base> *tape = AD<Base>::tape_ptr();
+{	ADTape<Base>* tape = AD<Base>::tape_ptr();
 	CPPAD_ASSERT_KNOWN(
 		tape != CPPAD_NULL,
 		"Can't store current operation sequence in this ADFun object"
@@ -188,7 +188,7 @@ void ADFun<Base>::Dependent(const ADvector &x, const ADvector &y)
 		Variable(x[0]),
 		"Dependent: independent variable vector has been changed."
 	);
-	ADTape<Base> *tape = AD<Base>::tape_ptr(x[0].id_);
+	ADTape<Base> *tape = AD<Base>::tape_ptr(x[0].tape_id_);
 	CPPAD_ASSERT_KNOWN(
 		tape->size_independent_ == x.size(),
 		"Dependent: independent variable vector has been changed."
@@ -201,13 +201,13 @@ void ADFun<Base>::Dependent(const ADvector &x, const ADvector &y)
 		"ADFun<Base>: independent variable vector has been changed."
 		);
 		CPPAD_ASSERT_KNOWN(
-		x[j].id_ == x[0].id_,
+		x[j].tape_id_ == x[0].tape_id_,
 		"ADFun<Base>: independent variable vector has been changed."
 		);
 	}
 	for(i = 0; i < y.size(); i++)
 	{	CPPAD_ASSERT_KNOWN(
-		CppAD::Parameter( y[i] ) | (y[i].id_ == x[0].id_) ,
+		CppAD::Parameter( y[i] ) | (y[i].tape_id_ == x[0].tape_id_) ,
 		"ADFun<Base>: dependent vector contains a variable for"
 		"\na different tape (thread) than the independent variables."
 		);
@@ -270,12 +270,12 @@ void ADFun<Base>::Dependent(ADTape<Base> *tape, const ADvector &y)
 	total_num_var_ = tape->Rec_.num_rec_var();
 
 	// now that each dependent variable has a place in the tape,
-	// and there is a EndOp at the end of the tape,
-	// we can make a copy for this function and erase the tape.
-	play_ = tape->Rec_;
+	// and there is a EndOp at the end of the tape, we can transfer the 
+	// recording to the player and and erase the tape.
+	play_.get(tape->Rec_);
 
 	// now we can delete the tape
-	AD<Base>::tape_delete( tape->id_ );
+	AD<Base>::tape_manage(tape_manage_delete);
 
 	// total number of varables in this recording 
 	CPPAD_ASSERT_UNKNOWN( total_num_var_ == play_.num_rec_var() );

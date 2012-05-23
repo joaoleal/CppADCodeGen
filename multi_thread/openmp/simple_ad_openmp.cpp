@@ -1,4 +1,4 @@
-// $Id: simple_ad_openmp.cpp 2310 2012-03-23 16:23:38Z bradbell $
+// $Id: simple_ad_openmp.cpp 2343 2012-04-07 15:18:48Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -75,8 +75,8 @@ namespace {
 	{	bool ok = true;
 
 		// initialize thread_all_ 
-		size_t thread_num;
-		for(thread_num = 0; thread_num < num_threads; thread_num++)
+		int thread_num, int_num_threads = int(num_threads);
+		for(thread_num = 0; thread_num < int_num_threads; thread_num++)
 		{	// initialize as false to make sure gets called for all threads
 			thread_all_[thread_num].ok         = false;
 		}
@@ -85,7 +85,7 @@ namespace {
 		omp_set_dynamic(0);
 
 		// set the number of OpenMP threads
-		omp_set_num_threads( int(num_threads) );
+		omp_set_num_threads( int_num_threads );
 
 		// setup for using CppAD::AD<double> in parallel
 		thread_alloc::parallel_setup(
@@ -96,16 +96,20 @@ namespace {
 
 		// execute worker in parallel
 # pragma omp parallel for
-	for(thread_num = 0; thread_num < num_threads; thread_num++)
+	for(thread_num = 0; thread_num < int_num_threads; thread_num++)
 		thread_all_[thread_num].ok = worker(info_all[thread_num]);
 // end omp parallel for
+
+		// set the number of OpenMP threads to one
+		omp_set_num_threads(1);
 
 		// now inform CppAD that there is only one thread
 		thread_alloc::parallel_setup(1, CPPAD_NULL, CPPAD_NULL);
 		thread_alloc::hold_memory(false);
+		CppAD::parallel_ad<double>();
 
 		// check to ok flag returned by during calls to work by other threads
-		for(thread_num = 1; thread_num < num_threads; thread_num++)
+		for(thread_num = 1; thread_num < int_num_threads; thread_num++)
 			ok &= thread_all_[thread_num].ok;
 
 		return ok;

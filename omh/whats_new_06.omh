@@ -1,4 +1,4 @@
-$Id: whats_new_06.omh 2333 2012-04-03 04:34:56Z bradbell $
+$Id: whats_new_06.omh 2345 2012-04-10 15:36:40Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -272,7 +272,7 @@ $head 12-05$$
 Add the unix installation
 $cref/--with-Documentation/InstallUnix/--with-Documentation/$$ option
 and remove the 
-$italic PostfixDir$$ option.
+$icode postfix_dir$$ option.
 $pre
 
 $$

@@ -1,4 +1,4 @@
-$Id: whats_new_03.omh 2333 2012-04-03 04:34:56Z bradbell $
+$Id: whats_new_03.omh 2345 2012-04-10 15:36:40Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 $begin whats_new_03$$
 $spell
+	dir
 	Eq.cpp
 	cppad.hpp
 	Hess

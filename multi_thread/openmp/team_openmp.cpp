@@ -1,4 +1,4 @@
-// $Id: team_openmp.cpp 2291 2012-03-05 06:20:16Z bradbell $
+// $Id: team_openmp.cpp 2343 2012-04-07 15:18:48Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -34,6 +34,8 @@ $end
 # include "../team_thread.hpp"
 
 namespace {
+	using CppAD::thread_alloc;
+
 	// number of threads in this team
 	size_t num_threads_;
 
@@ -59,8 +61,8 @@ bool team_create(size_t num_threads)
 	omp_set_num_threads( int(num_threads) );
 
 	// setup for using CppAD::AD<double> in parallel 
-	CppAD::thread_alloc::parallel_setup(num_threads, in_parallel, thread_num);
-	CppAD::thread_alloc::hold_memory(true);
+	thread_alloc::parallel_setup(num_threads, in_parallel, thread_num);
+	thread_alloc::hold_memory(true);
 	CppAD::parallel_ad<double>();
 
 	// inform team_work of number of threads
@@ -96,9 +98,9 @@ bool team_destroy(void)
 	omp_set_num_threads(num_threads_);
 
 	// inform CppAD no longer in multi-threading mode
-	using CppAD::thread_alloc;
 	thread_alloc::parallel_setup(num_threads_, CPPAD_NULL, CPPAD_NULL);
 	thread_alloc::hold_memory(false);
+	CppAD::parallel_ad<double>();
 
 	return ok;
 }

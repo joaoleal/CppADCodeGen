@@ -1,9 +1,9 @@
-/* $Id: cppad_assert.hpp 2236 2011-12-26 14:08:37Z bradbell $ */
+/* $Id: cppad_assert.hpp 2309 2012-03-23 11:32:05Z bradbell $ */
 # ifndef CPPAD_CPPAD_ASSERT_INCLUDED
 # define CPPAD_CPPAD_ASSERT_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -188,11 +188,13 @@ execution is terminated and the source code line number is reported.
 # else
 # define CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL                           \
 	static bool assert_first_call = true;                              \
-	CPPAD_ASSERT_KNOWN(                                                \
-		! (CppAD::thread_alloc::in_parallel() && assert_first_call ), \
+	if( assert_first_call )                                            \
+	{	CPPAD_ASSERT_KNOWN(                                           \
+		! (CppAD::thread_alloc::in_parallel() ),                      \
 		"In parallel mode and parallel_setup has not been called."    \
-	);                                                                 \
-	assert_first_call = false;
+		);                                                            \
+		assert_first_call = false;                                    \
+	}
 # endif
 
 # endif

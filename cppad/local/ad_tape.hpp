@@ -1,9 +1,9 @@
-/* $Id: ad_tape.hpp 2038 2011-07-31 23:56:44Z bradbell $ */
+/* $Id: ad_tape.hpp 2337 2012-04-05 12:47:06Z bradbell $ */
 # ifndef CPPAD_AD_TAPE_INCLUDED
 # define CPPAD_AD_TAPE_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -133,13 +133,7 @@ private:
 	);
 
 public:
-	// constructor
-	ADTape(size_t id) : id_(id)
-	{ }
-
-	// destructor
-	~ADTape(void)
-	{	Rec_.Erase(); }
+	// default constructor and destructor
 
 	// public function only used by CppAD::Independent
 	template <typename VectorADBase>

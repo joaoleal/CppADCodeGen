@@ -1,5 +1,5 @@
 #! /bin/sh -e
-# $Id: test.sh 2303 2012-03-17 22:56:07Z bradbell $
+# $Id: test.sh 2343 2012-04-07 15:18:48Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -75,6 +75,8 @@ do
 		./$program a11c
 		echo
 		./$program simple_ad
+		echo
+		./$program team_example
 		echo
 	fi
 done

@@ -1,7 +1,7 @@
 #! /bin/bash -e
-# $Id: run_omhelp.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: run_omhelp.sh 2355 2012-04-23 13:32:24Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the

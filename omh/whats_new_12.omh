@@ -1,4 +1,4 @@
-$Id: whats_new_12.omh 2332 2012-04-02 04:06:23Z bradbell $
+$Id: whats_new_12.omh 2354 2012-04-19 14:25:37Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -13,6 +13,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 $begin whats_new_12$$
 $dollar @$$
 $spell
+	dir
+	-lteuchos
+	trilinos
+	inorder
 	pthread
 	helgrind
 	Taylor
@@ -39,6 +43,56 @@ This section contains a list of the changes to CppAD during 2012
 (in reverse order by date).
 The purpose of this section is to
 assist you in learning about changes between various versions of CppAD.
+
+$head 04-19$$
+The $cref/BOOST_DIR/InstallUnix/boost_dir/$$ 
+configure command line value has been changed to be the corresponding
+prefix during the installation of boost.
+To be specific, it used to be that
+$codei%boost_dir%/boost%$$ was the boost include directory,
+now $codei%boost_dir%/include%$$ is the boost include directory.
+This make it the same as the other directory arguments on the configure
+command line.
+In addition, it fixes some bugs in the detection of the boost
+multi-threading library.
+
+
+$head 04-18$$
+Add documentation and testing for not using $cref/free_all/ta_free_all/$$ and 
+$cref/user_atomic clear/user_atomic/clear/$$ while in
+$cref/parallel/ta_in_parallel/$$ mode.
+
+$head 04-17$$
+Fix bug when using $cref user_atomic$$ functions with 
+$cref/multi_threading/multi_thread/$$.
+
+$head 04-10$$
+Add control of the 
+$cref/max_num_threads/InstallUnix/max_num_threads/$$ argument
+to the unix 
+$cref/configure/InstallUnix/Configure/$$ command.
+
+$head 04-06$$
+$list number$$
+A change was made to the way that the tapes were managed to reduce 
+false sharing during $cref/multi-threading/multi_thread/$$.
+Because of this change, it is now suggest that the user call 
+$cref parallel_ad$$ after the multi-threading section of the program.
+$lnext
+The routine $cref ta_free_all$$ was created to make it easier 
+to manage memory and the routine $cref memory_leak$$ 
+was deprecated.
+$lnext
+Add the $code -lteuchos$$ flag to the link line for the
+$cref speed_sacado$$ tests.
+(This was not necessary for $code trilinos-10.8.3$$
+but is necessary for $code trilinos-10.10.1$$)
+$lend
+
+$head 04-05$$
+The restriction was added that
+$cref parallel_ad$$ cannot be called while a tape is being recorded.
+This was necessary inorder to initialize some new statics in the tape.
 
 $head 04-01$$
 Fixed a race condition when using CppAD with 
@@ -144,7 +198,7 @@ Calling $code taylor_capacity$$, with to with capacity equal to zero,
 	   and $cref simple_ad_pthread.cpp$$.
 	   $lnext
 	   Fix bug in finding boost multi-threading library
-	   (due to fact that $cref/BOOST_DIR/InstallUnix/BoostDir/$$ 
+	   (due to fact that $cref/boost_dir/InstallUnix/boost_dir/$$ 
 	    is not the prefix during the boost installation).
 	   $lend
 
@@ -202,7 +256,7 @@ Calling $code taylor_capacity$$, with to with capacity equal to zero,
 	   $head 01-30$$
 	   Make another attempt to fix linking with boost threads where the wrong
 	   version of the library is in the system include directory; i.e.,
-	   to have $cref/BOOST_DIR/InstallUnix/BoostDir/$$ override the default
+	   to have $cref/boost_dir/InstallUnix/boost_dir/$$ override the default
 	   library.
 
 	   $head 01-27$$
@@ -259,7 +313,7 @@ Calling $code taylor_capacity$$, with to with capacity equal to zero,
 
 	   $head 01-16$$
 	   The test program $code multi_thread/test.sh$$ failed if the 
-	   $cref/OpenmpFlags/InstallUnix/OpenmpFlags/$$ not present in the
+	   $cref/openmp_flags/InstallUnix/openmp_flags/$$ not present in the
 	   $code configure$$ command.
 	   This has been fixed.
 	   In addition, this $code test.sh$$ has been made faster by cycling through

@@ -1,6 +1,6 @@
-$Id: speed_sacado.omh 2178 2011-10-30 06:52:58Z bradbell $
+$Id: speed_sacado.omh 2345 2012-04-10 15:36:40Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -29,12 +29,12 @@ Sacado with other AD packages.
 This section links to the source code the Sacado speed tests
 (any suggestions to make the Sacado results faster are welcome).
 
-$head SacadoDir$$
+$head sacado_dir$$
 To run these tests, you must include the $code configure$$ command line option
 $syntax%
-	SACADO_DIR=%SacadoDir%
+	SACADO_DIR=%sacado_dir%
 %$$
-during $cref/installation/InstallUnix/SacadoDir/$$.
+during $cref/installation/InstallUnix/sacado_dir/$$.
 
 
 $head Running Tests$$

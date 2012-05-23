@@ -452,17 +452,6 @@ public:
 	//VecAD<Base>::reference operands
 	bool use_VecAD(void) const
 	{	return play_.num_rec_vecad_ind() > 0; }
-    
-        const CppAD::vector<size_t>& IndependentTapeAddr() const
-        {        return ind_taddr_;    }
-    
-        const CppAD::vector<size_t>& DependentTapeAddr(void) const
-        {	return dep_taddr_; }
-    
-protected:
-    player<Base>& Play() 
-    {        return play_;    }
-    
 };
 // ---------------------------------------------------------------------------
 

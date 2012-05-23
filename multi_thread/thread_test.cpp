@@ -1,4 +1,4 @@
-/* $Id: thread_test.cpp 2302 2012-03-13 16:49:18Z bradbell $ */
+/* $Id: thread_test.cpp 2345 2012-04-10 15:36:40Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -55,7 +55,7 @@ $subhead threading$$
 $index openmp, run tests$$
 $index pthread, run tests$$
 $index bthread, run tests$$
-If $cref/OpenmpFlags/InstallUnix/OpenmpFlags/$$ 
+If $cref/openmp_flags/InstallUnix/openmp_flags/$$ 
 are specified during configuration,
 you can execute the syntax above with
 $icode threading$$ equal to $code openmp$$.
@@ -297,19 +297,16 @@ int main(int argc, char *argv[])
 		else if( run_simple_ad )
 			ok        = simple_ad();
 		else	ok        = team_example();
-		if( CppAD::memory_leak() )
-		{	ok = false;
-			cout << "memory_leak   = true;"  << endl;
-		}
-		else cout << "memory_leak   = false;" << endl;
-		if( ok )
-		{	cout << "OK            = true;"  << endl;
-			exit(0);
-		}
+		if( thread_alloc::free_all() )
+			cout << "free_all      = true;"  << endl;
 		else
-		{	cout << "OK            = false;" << endl;
-			exit(1);
+		{	ok = false;
+			cout << "free_all      = false;" << endl;
 		}
+		if( ok )
+			cout << "OK            = true;"  << endl;
+		else cout << "OK            = false;" << endl;
+		return ! ok;
 	}
 
 	// test_time 
@@ -407,12 +404,12 @@ int main(int argc, char *argv[])
 	}
 	cout << "];" << endl;
 	//
-	if( CppAD::memory_leak() )
+	if( thread_alloc::free_all() )
+		cout << "free_all      = true;"  << endl;
+	else
 	{	ok = false;
-		cout << "memory_leak   = true;"  << endl;
+		cout << "free_all      = false;" << endl;
 	}
-	else cout << "memory_leak   = false;" << endl;
-	//
 	if( ok )
 		cout << "OK            = true;"  << endl;
 	else cout << "OK            = false;" << endl;

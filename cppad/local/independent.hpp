@@ -1,9 +1,9 @@
-/* $Id: independent.hpp 2085 2011-09-01 14:54:04Z bradbell $ */
+/* $Id: independent.hpp 2336 2012-04-05 11:38:59Z bradbell $ */
 # ifndef CPPAD_INDEPENDENT_INCLUDED
 # define CPPAD_INDEPENDENT_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -144,7 +144,7 @@ void ADTape<Base>::Independent(VectorAD &x)
 	for(j = 0; j < n; j++)
 	{	// tape address for this independent variable
 		x[j].taddr_ = Rec_.PutOp(InvOp);
-		x[j].id_    = id_;
+		x[j].tape_id_    = id_;
 		CPPAD_ASSERT_UNKNOWN( size_t(x[j].taddr_) == j+1 );
 		CPPAD_ASSERT_UNKNOWN( Variable(x[j] ) );
 	}
@@ -163,9 +163,8 @@ inline void Independent(VectorAD &x)
 		"a previous tape is still active (for this thread).\n"
 		"AD<Base>::abort_recording() would abort this previous recording."
 	);
-	size_t id = ADBase::tape_new();
-
-	ADBase::tape_ptr(id)->Independent(x); 
+	ADTape<Base>* tape = ADBase::tape_manage(tape_manage_new);
+	tape->Independent(x); 
 }
 
 

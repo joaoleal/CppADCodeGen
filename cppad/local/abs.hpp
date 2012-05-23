@@ -1,9 +1,9 @@
-/* $Id: abs.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: abs.hpp 2314 2012-03-27 17:31:13Z bradbell $ */
 # ifndef CPPAD_ABS_INCLUDED
 # define CPPAD_ABS_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -158,7 +158,7 @@ AD<Base> AD<Base>::Abs (void) const
 		// put operator in the tape
 		result.taddr_ = tape->Rec_.PutOp(AbsOp);
 		// make result a variable
-		result.id_    = tape->id_;
+		result.tape_id_    = tape->id_;
 	}
 	return result;
 }

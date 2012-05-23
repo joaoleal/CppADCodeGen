@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: build.sh 2327 2012-03-31 18:15:59Z bradbell $
+# $Id: build.sh 2354 2012-04-19 14:25:37Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -11,7 +11,7 @@
 # Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # -----------------------------------------------------------------------------
 # prefix directories for the corresponding packages
-BOOST_DIR=/usr/include
+BOOST_DIR=$HOME/prefix/boost
 CPPAD_DIR=$HOME/prefix/cppad  
 ADOLC_DIR=$HOME/prefix/adolc
 FADBAD_DIR=$HOME/prefix/fadbad
@@ -223,7 +223,7 @@ then
 	dir_list="
 		--prefix=$CPPAD_DIR
 	"
-	if [ -e $BOOST_DIR/boost ]
+	if [ -e $BOOST_DIR/include/boost ]
 	then
 		dir_list="$dir_list
 			--with-boostvector BOOST_DIR=$BOOST_DIR"

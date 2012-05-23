@@ -1,4 +1,4 @@
-// $Id: simple_ad_bthread.cpp 2310 2012-03-23 16:23:38Z bradbell $
+// $Id: simple_ad_bthread.cpp 2339 2012-04-06 12:54:04Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -172,6 +172,7 @@ namespace {
 		// now inform CppAD that there is only one thread
 		thread_alloc::parallel_setup(1, CPPAD_NULL, CPPAD_NULL);
 		thread_alloc::hold_memory(false);
+		CppAD::parallel_ad<double>();
 
 		// check to ok flag returned by during calls to work by other threads
 		for(thread_num = 1; thread_num < num_threads; thread_num++)

@@ -1,9 +1,9 @@
-/* $Id: ad.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: ad.hpp 2339 2012-04-06 12:54:04Z bradbell $ */
 # ifndef CPPAD_AD_INCLUDED
 # define CPPAD_AD_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -25,9 +25,11 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 CPPAD_BEGIN_NAMESPACE
 
-
-template<class Base>
-class CodeGenNameProvider;
+typedef enum {
+	tape_manage_new, 
+	tape_manage_delete, 
+	tape_manage_clear
+} tape_manage_job;
 
 template <class Base>
 class AD {
@@ -102,7 +104,6 @@ class AD {
 	friend class user_atomic<Base>;
 	friend class VecAD<Base>;
 	friend class VecAD_reference<Base>;
-        friend class CodeGenNameProvider<Base>;
 
 	// arithematic binary operators
 	friend AD<Base> operator + <Base>
@@ -220,10 +221,7 @@ private:
 	Base value_;
 
 	// Tape identifier corresponding to taddr
-	// This is a variable if and only if id_ == *id_handle()
-	// For parameters id_ is CPPAD_MAX_NUM_THREADS, so that following hold
-	// id_ != 0 , id_ % CPPAD_MAX_NUM_THREADS == 0, id_ != *id_handle().
-	CPPAD_TAPE_ID_TYPE id_;
+	CPPAD_TAPE_ID_TYPE tape_id_;
 
 	// taddr_ in tape for this variable 
 	addr_t taddr_;
@@ -232,7 +230,7 @@ private:
 	//
 	void make_parameter(void)
 	{	CPPAD_ASSERT_UNKNOWN( Variable(*this) );  // currently a var
-		id_ = CPPAD_MAX_NUM_THREADS;
+		tape_id_ = 0;
 	}
 	//
 	// Make this parameter a new variable 
@@ -241,22 +239,22 @@ private:
 	{	CPPAD_ASSERT_UNKNOWN( Parameter(*this) ); // currently a par
 		CPPAD_ASSERT_UNKNOWN( taddr > 0 );        // sure valid taddr
 
-		taddr_ = taddr;
-		id_    = id;
+		taddr_   = taddr;
+		tape_id_ = id;
 	}
 	// ---------------------------------------------------------------
 	// tape linking functions
 	// 
 	// not static
-	inline ADTape<Base> *tape_this(void) const;
+	inline ADTape<Base>* tape_this(void) const;
 	//
 	// static 
-	inline static size_t        *id_handle (size_t thread);
-	inline static ADTape<Base> **tape_handle(size_t thread);
-	static size_t                tape_new(void);
-	static void                  tape_delete(size_t id);
-	inline static ADTape<Base>  *tape_ptr(void);
-	inline static ADTape<Base>  *tape_ptr(size_t id);
+	inline static size_t**       tape_id_handle(size_t thread);
+	inline static size_t*        tape_id_ptr(size_t thread);
+	inline static ADTape<Base>** tape_handle(size_t thread);
+	static ADTape<Base>*         tape_manage(tape_manage_job job);
+	inline static ADTape<Base>*  tape_ptr(void);
+	inline static ADTape<Base>*  tape_ptr(size_t tape_id);
 }; 
 // ---------------------------------------------------------------------------
 

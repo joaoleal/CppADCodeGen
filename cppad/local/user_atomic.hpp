@@ -1,4 +1,4 @@
-/* $Id: user_atomic.hpp 2290 2012-03-04 17:27:00Z bradbell $ */
+/* $Id: user_atomic.hpp 2353 2012-04-18 13:23:08Z bradbell $ */
 # ifndef CPPAD_USER_ATOMIC_INCLUDED
 # define CPPAD_USER_ATOMIC_INCLUDED
 
@@ -275,6 +275,9 @@ $codei%
 	%afun%(%id%, %ax%, %ay%)
 %$$
 must not be in $cref/parallel/ta_in_parallel/$$ mode.
+In addition, the
+$cref/user_atomic clear/user_atomic/clear/$$
+routine cannot be called while in parallel mode.
 
 $head forward$$
 The macro argument $icode forward$$ is a
@@ -655,6 +658,10 @@ for other uses by the same thread.
 This should be called when you are done using the 
 user atomic functions for a specific value of $icode Base$$.
 
+$subhead Restriction$$
+The user atomic $code clear$$ routine cannot be called
+while in $cref/parallel/ta_in_parallel/$$ execution mode.
+
 $children%
 	example/user_tan.cpp%
 	example/mat_mul.cpp
@@ -832,10 +839,10 @@ private:
 
 	/// temporary work space used to avoid memory allocation/deallocation
 	/// extra information to be passed to the functions
-	vector<bool>            vx_;
-	vector<bool>            vy_;
-	vector<Base>             x_;
-	vector<Base>             y_;
+	vector<bool>            vx_[CPPAD_MAX_NUM_THREADS];
+	vector<bool>            vy_[CPPAD_MAX_NUM_THREADS];
+	vector<Base>             x_[CPPAD_MAX_NUM_THREADS];
+	vector<Base>             y_[CPPAD_MAX_NUM_THREADS];
 
 	/// List of all objects in this class.
 	static std::vector<user_atomic *>& List(void)
@@ -914,32 +921,38 @@ public:
 	{	size_t i, j, k;
 		size_t n = ax.size();
 		size_t m = ay.size();
+		size_t thread = thread_alloc::thread_num();
 # ifndef NDEBUG
 		bool ok;
 		std::string msg = "user_atomoc: ";
 # endif
+		vector <Base>& x  = x_[thread];
+		vector <Base>& y  = y_[thread];
+		vector <bool>& vx = vx_[thread];
+		vector <bool>& vy = vy_[thread];
 		//
-		if( x_.size() < n )
-		{	x_.resize(n);
-			vx_.resize(n);
+		if( x.size() < n )
+		{	x.resize(n);
+			vx.resize(n);
 		}
-		if( y_.size() < m )
-		{	y_.resize(m);
-			vy_.resize(m);
+		if( y.size() < m )
+		{	y.resize(m);
+			vy.resize(m);
 		}
 		// 
 		// Determine if we are going to have to tape this operation
 		size_t tape_id     = 0;
 		ADTape<Base>* tape = CPPAD_NULL;
 		for(j = 0; j < n; j++)
-		{	x_[j]   = ax[j].value_;
-			vx_[j]  = Variable( ax[j] );
-			if ( (tape == CPPAD_NULL) & vx_[j] )
+		{	x[j]   = ax[j].value_;
+			vx[j]  = Variable( ax[j] );
+			if ( (tape == CPPAD_NULL) & vx[j] )
 			{	tape    = ax[j].tape_this();
-				tape_id = ax[j].id_;
+				tape_id = ax[j].tape_id_;
 			}
 # ifndef NDEBUG
-			ok = (tape_id == 0) | Parameter(ax[j]) | (tape_id == ax[j].id_);
+			ok  = (tape_id == 0) | Parameter(ax[j]);
+			ok |= (tape_id == ax[j].tape_id_);
 			if( ! ok )
 			{	msg = msg + name_ + 
 				": ax contains variables from different threads.";
@@ -950,9 +963,9 @@ public:
 		// Use zero order forward mode to compute values
 		k  = 0;
 # if NDEBUG
-		f_(id, k, n, m, vx_, vy_, x_, y_);  
+		f_(id, k, n, m, vx, vy, x, y);  
 # else
-		ok = f_(id, k, n, m, vx_, vy_, x_, y_);  
+		ok = f_(id, k, n, m, vx, vy, x, y);  
 		if( ! ok )
 		{	msg = msg + name_ + ": ok returned false from "
 				"zero order forward mode calculation.";
@@ -961,11 +974,11 @@ public:
 # endif
 		// pass back values
 		for(i = 0; i < m; i++)
-		{	ay[i].value_ = y_[i];
+		{	ay[i].value_ = y[i];
 
 			// initialize entire vector as a constant (not on tape)
-			ay[i].id_    = CPPAD_MAX_NUM_THREADS;
-			ay[i].taddr_ = 0;
+			ay[i].tape_id_ = CPPAD_MAX_NUM_THREADS;
+			ay[i].taddr_   = 0;
 		}
 		// if tape is not null, ay is on the tape
 		if( tape != CPPAD_NULL )
@@ -986,7 +999,7 @@ public:
 			CPPAD_ASSERT_UNKNOWN( NumArg(UsravOp) == 1 );
 			CPPAD_ASSERT_UNKNOWN( NumArg(UsrapOp) == 1 );
 			for(j = 0; j < n; j++)
-			{	if( vx_[j] )
+			{	if( vx[j] )
 				{	// information for an argument that is a variable
 					tape->Rec_.PutArg(ax[j].taddr_);
 					tape->Rec_.PutOp(UsravOp);
@@ -1005,9 +1018,9 @@ public:
 			CPPAD_ASSERT_UNKNOWN( NumArg(UsrrvOp) == 0 );
 			CPPAD_ASSERT_UNKNOWN( NumRes(UsrrvOp) == 1 );
 			for(i = 0; i < m; i++)
-			{	if( vy_[i] )
-				{	ay[i].taddr_ = tape->Rec_.PutOp(UsrrvOp);
-					ay[i].id_    = tape_id;
+			{	if( vy[i] )
+				{	ay[i].taddr_    = tape->Rec_.PutOp(UsrrvOp);
+					ay[i].tape_id_  = tape_id;
 				}
 				else
 				{	addr_t p = tape->Rec_.PutPar(ay[i].value_);
@@ -1314,13 +1327,21 @@ public:
 
 	/// Free static CppAD::vector memory used by this class (work space)
 	static void clear(void)
-	{	size_t i = List().size();
+	{	CPPAD_ASSERT_KNOWN(
+			! thread_alloc::in_parallel() ,
+			"cannot use user_atomic clear during parallel execution"
+		);
+		size_t i = List().size();
 		while(i--)
-		{	user_atomic* op = List()[i];
-			op->vx_.resize(0);
-			op->vy_.resize(0);
-			op->x_.resize(0);
-			op->y_.resize(0);
+		{	size_t thread = CPPAD_MAX_NUM_THREADS;
+			while(thread--)
+			{
+				user_atomic* op = List()[i];
+				op->vx_[thread].resize(0);
+				op->vy_[thread].resize(0);
+				op->x_[thread].resize(0);
+				op->y_[thread].resize(0);
+			}
 		}
 		return;
 	}
