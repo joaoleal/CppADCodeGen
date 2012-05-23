@@ -117,12 +117,12 @@ bool CompareChange() {
 
     bool ok = true;
 
-    ok &= CompareChange1(xV);
-    ok &= CompareChange2(xV);
-    ok &= CompareChange3(xV);
-    ok &= CompareChange4(xV);
-    ok &= CompareChange5(xV);
-    ok &= CompareChange6(xV);
+    ok &= !CompareChange1(xV);
+    ok &= !CompareChange2(xV);
+    ok &= !CompareChange3(xV);
+    ok &= !CompareChange4(xV);
+    ok &= !CompareChange5(xV);
+    ok &= !CompareChange6(xV);
 
     return ok;
 }
