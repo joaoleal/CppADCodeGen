@@ -1,14 +1,26 @@
 #! /bin/bash -e
-# $Id: test.sh.in 2265 2012-01-15 18:07:32Z bradbell $
+# $Id: gprof.sed.in 2014 2011-07-15 11:45:03Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
-# the terms of the 
+# the terms of the
 #                     Common Public License Version 1.0.
 #
 # A copy of this license is included in the COPYING file of this distribution.
 # Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # -----------------------------------------------------------------------------
-export LD_LIBRARY_PATH=/lib
-./test_more
+# remove template information
+s/<[^<>]*>//g
+s/<[^<>]*>//g
+s/<[^<>]*>//g
+s/<[^<>]*>//g
+s/<[^<>]*>//g
+# remove argument information
+s/([^()]*)//g
+s/([^()]*)//g
+# remove names space information
+s/[a-zA-Z0-9_]*:://g
+s/[a-zA-Z0-9_]*:://g
+s/[a-zA-Z0-9_]*:://g
+s/[a-zA-Z0-9_]*:://g
