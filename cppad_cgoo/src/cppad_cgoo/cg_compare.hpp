@@ -20,7 +20,7 @@ namespace CppAD {
         } else if (left.isParameter() || right.isParameter()) {
             return false;
         } else {
-            return left.getVariableID() == right.getVariableID();
+            return left.getSourceCodeFragment() == right.getSourceCodeFragment();
         }
     }
 
@@ -31,7 +31,7 @@ namespace CppAD {
         } else if (left.isParameter() || right.isParameter()) {
             return true;
         } else {
-            return left.getVariableID() != right.getVariableID();
+            return left.getSourceCodeFragment() != right.getSourceCodeFragment();
         }
     }
 

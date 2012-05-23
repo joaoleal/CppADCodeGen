@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_BASE_DOUBLE_INCLUDED
-#define	CPPAD_CG_BASE_DOUBLE_INCLUDED
+#ifndef CPPAD_CG_VARIABLE_NAME_GENERATOR_INCLUDED
+#define	CPPAD_CG_VARIABLE_NAME_GENERATOR_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -11,24 +11,24 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
+#include <string>
+
 namespace CppAD {
 
     /**
-     * Specialization of the abs operation for doubles
+     * Creates variables names for the source code.
      * 
      * \author Joao Leal
      */
-    template<>
-    inline CG<double> abs(const CG<double>& var) {
-        if (var.isParameter()) {
-            return CG<double> (fabs(var.getParameterValue()));
-        } else {
-            return CG<double>(*var.getCodeHandler(), new SourceCodeFragment<double>(CGAbsOp, var.argument()));
-        }
-    }
+    template<class Base>
+    class VariableNameGenerator {
+    public:
+        virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
+        virtual std::string generateIndependent(const SourceCodeFragment<Base>& variable) = 0;
 
+        virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
+    };
 }
 
 #endif
-

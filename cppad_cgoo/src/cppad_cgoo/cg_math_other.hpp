@@ -19,22 +19,19 @@ namespace CppAD {
             return CG<Base > (pow(x.getParameterValue(), y.getParameterValue()));
         }
 
-        CodeHandler<Base>* handle;
+        CodeHandler<Base>* handler;
         if (y.isParameter()) {
             if (y.IdenticalZero()) {
                 return CG<Base > (Base(1.0)); // does not consider that x could be infinity
             } else if (y.IdenticalOne()) {
                 return CG<Base > (x);
             }
-            handle = x.getCodeHandler();
+            handler = x.getCodeHandler();
         } else {
-            handle = y.getCodeHandler();
+            handler = y.getCodeHandler();
         }
 
-        std::string operations = "pow(" + handle->operations(x) + ", " + handle->operations(y) + ")";
-        CG<Base> result;
-        result.makeTemporaryVariable(*handle, operations, FUNCTION, x, y);
-        return result;
+        return CG<Base>(*handler, new SourceCodeFragment<Base>(CGPowOp, x.argument(), y.argument()));
     }
 
     template <class Base>
@@ -59,28 +56,7 @@ namespace CppAD {
             }
         }
 
-        const CG<Base>* x1;
-        CG<Base> y;
-        if (x.isTemporaryVariable()) {
-            // make it a variable
-            y = x;
-            x1 = &y;
-        } else {
-            x1 = &x;
-        }
-
-        std::string name = x1->createVariableName();
-        CodeHandler<Base>* h = x1->getCodeHandler();
-        std::string operations = "(" + name + " > " + h->baseToString(0.0) + "?"
-                + h->baseToString(1.0) + ":("
-                + name + " == " + h->baseToString(0.0) + "?"
-                + h->baseToString(0.0) + ":"
-                + h->baseToString(-1.0)
-                + ")"
-                ")";
-        CG<Base> result;
-        result.makeTemporaryVariable(*x1->getCodeHandler(), operations, FUNCTION, x);
-        return result;
+        return CG<Base>(*x.getCodeHandler(), new SourceCodeFragment<Base>(CGSignOp, x.argument()));
     }
 
 }

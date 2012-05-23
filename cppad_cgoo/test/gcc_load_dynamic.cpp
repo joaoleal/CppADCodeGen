@@ -8,7 +8,6 @@
 #include "gcc_load_dynamic.hpp"
 #include "cppad/local/ad_fun.hpp"
 #include "cppad/vector.hpp"
-#include "cppad_cgoo/cg.hpp"
 
 using namespace std;
 using namespace CppAD;
@@ -136,38 +135,20 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
 
     vector<CG<double> > dep = f.Forward(0, indVars);
 
+    CLanguage<double> langC;
+    DefaultCVariableNameGenerator<double> nameGen;
+
     ostringstream code;
-    handler.generateCode(code, dep);
+    handler.generateCode(code, langC, dep, nameGen);
 
     string spaces = "   ";
     string source = "#include <math.h>\n\n"
             "int " + function + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    const set<size_t>& varIDs = handler.getUsedVariableIDs();
-    if (varIDs.size() > 0) {
-        source += spaces + "double " + handler.createVariableName(*varIDs.begin());
-        set<size_t>::const_iterator it = varIDs.begin();
-        for (it++; it != varIDs.end(); ++it) {
-            size_t id = *it;
-            source += ", " + handler.createVariableName(id);
-        }
-        source += ";\n";
-    }
-
-    // set independent variable values
-    for (size_t i = 0; i < indVars.size(); i++) {
-        if (varIDs.find(indVars[i].getVariableID()) != varIDs.end()) {
-            source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
-        }
-    }
+    source += langC.generateTemporaryVariableDeclaration("double");
 
     source += code.str();
-
-    // get dependent variable values
-    for (size_t i = 0; i < dep.size(); i++) {
-        source += spaces + "dep[" + handler.toString(i) + "] = " + handler.operations(dep[i]) + ";\n";
-    }
 
     //source += "return " + n->compareChangeCounter() + n->endl();
     source += spaces + "return 0;\n";
@@ -248,42 +229,21 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
 
     vector<CG<double> > jacCG = f.SparseJacobian(indVars);
 
+    CLanguage<double> langC;
+    DefaultCVariableNameGenerator<double> nameGen;
+
     ostringstream code;
-    handler.generateCode(code, jacCG);
+    handler.generateCode(code, langC, jacCG, nameGen);
 
     string spaces = "   ";
     string source = "#include <math.h>\n\n"
-            "int " + functionJac + "(const double* ind, double* jac) {\n";
+            "int " + functionJac + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    const set<size_t>& varIDs = handler.getUsedVariableIDs();
-    if (varIDs.size() > 0) {
-        source += spaces + "double " + handler.createVariableName(*varIDs.begin());
-        set<size_t>::const_iterator it = varIDs.begin();
-        for (it++; it != varIDs.end(); ++it) {
-            size_t id = *it;
-            source += ", " + handler.createVariableName(id);
-        }
-        source += ";\n";
-    }
-
-    // set independent variable values
-    for (size_t i = 0; i < indVars.size(); i++) {
-        if (varIDs.find(indVars[i].getVariableID()) != varIDs.end()) {
-            source += spaces + handler.createVariableName(indVars[i]) + " = ind[" + handler.toString(i) + "];\n";
-        }
-    }
+    source += langC.generateTemporaryVariableDeclaration("double");
 
     source += code.str();
 
-    for (size_t i = 0; i < jacCG.size(); i++) {
-        source += spaces + "jac[" + handler.toString(i) + "] = " + handler.operations(jacCG[i]) + ";\n";
-    }
-
-
-    // get dependent variable values
-    //
-    // currently the jacobian variable name is hardcoded
     //source += "return " + n->compareChangeCounter() + n->endl();
     source += spaces + "return 0;\n";
     source += "}\n\n";

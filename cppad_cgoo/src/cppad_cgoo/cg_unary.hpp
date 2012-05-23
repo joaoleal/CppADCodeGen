@@ -25,18 +25,7 @@ namespace CppAD {
             return CG<Base > (-getParameterValue());
 
         } else {
-            std::string ops = "-";
-            OpContainement opTypes = getOperationContainment();
-            if (opTypes == NONE || opTypes == MULT_DIV || opTypes == FUNCTION) {
-                ops += operations();
-            } else {
-                ops += "(" + operations() + ")";
-            }
-
-            // return a temporary variable
-            CG<Base > result;
-            result.makeTemporaryVariable(*handler_, ops, UNARY, *this);
-            return result;
+            return CG<Base>(*getCodeHandler(), new SourceCodeFragment<Base>(CGUnMinusOp, this->argument()));
         }
     }
 

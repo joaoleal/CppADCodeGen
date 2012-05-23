@@ -18,35 +18,28 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     /**
+     * A node in the operation graph
      * 
+     * \author Joao Leal
      */
     template<class Base>
     class CG {
     private:
-        // value for parameter
-        Base* value_;
-        // variable ID (zero means that it is either a temporary variable or a parameter)
-        size_t id_;
-        // the source code that assigned the last value to this variable (only for pure variables)
-        SourceCodeBlock* sourceCode_;
-        // this variable can be a reference of another variable
-        const CG<Base>* referenceTo_;
-        // the operations used to create this variable (temporary variables only)
-        CodeFragment* codeFragment_;
-        // the source code handler
+        // the source code handler (NULL for parameters)
         CodeHandler<Base>* handler_;
+        // the source code that generated this variable (NULL for parameters)
+        SourceCodeFragment<Base>* sourceCode_;
+        // value (constant parameters only)
+        Base * value_;
 
     public:
         // default constructor (creates a parameter with a zero value)
         inline CG();
 
-        // creates a temporary variable
-        inline CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain, const CG<Base>* depend = NULL);
-
         // copy constructor
         inline CG(const CG<Base>& orig);
         //assignment operator
-        inline CG& operator =(const CG<Base> &x);
+        inline CG& operator =(const CG<Base> &rhs);
 
         // construction and assignment from base type
         inline CG(const Base& orig);
@@ -60,22 +53,14 @@ namespace CppAD {
 
         // variable classification methods
         inline bool isVariable() const;
-        inline bool isReference() const;
-        inline bool isTemporaryVariable() const;
         inline bool isParameter() const;
 
-        inline size_t getVariableID() const;
         inline const Base& getParameterValue() const throw (CGException);
 
         inline bool IdenticalZero() const throw (CGException);
         inline bool IdenticalOne() const throw (CGException);
 
-        inline std::string operations() const throw (CGException);
-
-        inline OpContainement getOperationContainment() const;
-
-        inline CodeBlock* getSourceCodeBlock() const;
-        inline CodeFragment* getSourceCodeFragment() const;
+        inline SourceCodeFragment<Base>* getSourceCodeFragment() const;
 
         // computed assignment operators
         inline CG<Base>& operator+=(const CG<Base> &right);
@@ -100,26 +85,17 @@ namespace CppAD {
         inline CG<Base> operator+() const;
         inline CG<Base> operator-() const;
 
-        inline std::string createVariableName() const {
-            assert(handler_ != NULL);
-            return handler_->createVariableName(*this);
-        }
-
         // destructor
         virtual ~CG();
     protected:
-
-        inline void variableValueWillChange();
+        // creates a temporary variable
+        inline CG(CodeHandler<Base>& handler, SourceCodeFragment<Base>* sourceCode);
 
         //
         inline void makeParameter(const Base &b);
-        inline void makeVariable(CodeHandler<Base>& handler);
-        inline void makeParameterNoChecks(const Base &b);
-        inline void makeVariableProxy(const CG<Base>& referenceTo);
+        inline void makeVariable(CodeHandler<Base>& handler, SourceCodeFragment<Base>* operation);
 
-        inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>& dep2);
-        inline void makeTemporaryVariable(CodeHandler<Base>& handler, const std::string& operations, OpContainement op, const CG<Base>& dep1, const CG<Base>* dep2 = NULL);
-
+        inline Argument<Base> argument() const;
     private:
 
         friend class CodeHandler<Base>;
@@ -218,12 +194,8 @@ namespace CppAD {
     ) {
         if (v.isParameter()) {
             os << v.getParameterValue();
-        } else if (v.isVariable()) {
-            os << v.getCodeHandler()->createVariableName(v);
-        } else if (v.isTemporaryVariable()) {
-            os << v.operations();
         } else {
-            assert(0);
+            os << *v.getSourceCodeFragment();
         }
         return os;
     }
@@ -235,12 +207,8 @@ namespace CppAD {
     ) {
         if (v.isParameter()) {
             os << v.getParameterValue();
-        } else if (v.isVariable()) {
-            os << v.getCodeHandler()->createVariableName(v);
-        } else if (v.isTemporaryVariable()) {
-            os << v.operations();
         } else {
-            assert(0);
+            os << *v.getSourceCodeFragment();
         }
         return os;
     }

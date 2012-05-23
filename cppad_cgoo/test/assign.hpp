@@ -21,7 +21,7 @@ CppAD::ADFun<T>* AssignFunc(const std::vector<CppAD::AD<T> >& u) {
     assert(u.size() == 2);
 
     std::vector<AD<T> > w(2);
-    AD<T> a = u[0] + 1.0;
+    AD<T> a = u[0] + 2.0;
     AD<T> b = u[1] + 1.0;
     b = a;
     a += 5.0;

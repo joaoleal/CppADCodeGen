@@ -14,29 +14,21 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    CodeHandler<Base>* getOperations(const CG<Base> &left,
-                                     const CG<Base> &right,
-                                     std::string& leftOps,
-                                     std::string& rightOps) {
+    CodeHandler<Base>* getHandler(const CG<Base> &left,
+                                  const CG<Base> &right) {
 
         assert(!left.isParameter() || !right.isParameter());
 
         CodeHandler<Base>* handler;
         if (left.isParameter()) {
             handler = right.getCodeHandler();
-            leftOps = handler->baseToString(left.getParameterValue());
-            rightOps = right.operations();
         } else if (right.isParameter()) {
             handler = left.getCodeHandler();
-            leftOps = left.operations();
-            rightOps = handler->baseToString(right.getParameterValue());
         } else {
             if (left.getCodeHandler() != right.getCodeHandler()) {
                 throw CGException("Attempting to use several source code generation handlers in the same source code generation");
             }
             handler = left.getCodeHandler();
-            leftOps = left.operations();
-            rightOps = right.operations();
         }
         return handler;
     }
@@ -57,15 +49,9 @@ namespace CppAD {
                 }
             }
 
-            std::string leftOps;
-            std::string rightOps;
-            CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
+            CodeHandler<Base>* handler = getHandler(left, right);
 
-            std::string operations = leftOps + " + " + rightOps;
-
-            CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY, left, right);
-            return result;
+            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGAddOp, left.argument(), right.argument()));
         }
     }
 
@@ -80,21 +66,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            std::string leftOps;
-            std::string rightOps;
-            CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
+            
+            CodeHandler<Base>* handler = getHandler(left, right);
 
-            OpContainement rOpTypes = right.getOperationContainment();
-            std::string operations = leftOps + " - ";
-            if (rOpTypes == NONE || rOpTypes == MULT_DIV || rOpTypes == FUNCTION) {
-                operations += rightOps;
-            } else {
-                operations += "(" + rightOps + ")";
-            }
-
-            CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, PLUS_MINUS_BINARY, left, right);
-            return result;
+            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGSubOp, left.argument(), right.argument()));
         }
     }
 
@@ -117,30 +92,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            std::string leftOps;
-            std::string rightOps;
-            CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
+            
+            CodeHandler<Base>* handler = getHandler(left, right);
 
-            std::string operations;
-            OpContainement lOpTypes = left.getOperationContainment();
-            if (lOpTypes == NONE || lOpTypes == MULT_DIV || lOpTypes == FUNCTION) {
-                operations += leftOps;
-            } else {
-                operations += "(" + leftOps + ")";
-            }
-
-            operations += " * ";
-
-            OpContainement rOpTypes = right.getOperationContainment();
-            if (rOpTypes == NONE || rOpTypes == MULT_DIV || rOpTypes == FUNCTION) {
-                operations += rightOps;
-            } else {
-                operations += "(" + rightOps + ")";
-            }
-
-            CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, MULT_DIV, left, right);
-            return result;
+            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGMulOp, left.argument(), right.argument()));
         }
     }
 
@@ -159,30 +114,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            std::string leftOps;
-            std::string rightOps;
-            CodeHandler<Base>* handler = getOperations(left, right, leftOps, rightOps);
+            
+            CodeHandler<Base>* handler = getHandler(left, right);
 
-            std::string operations;
-            OpContainement lOpTypes = left.getOperationContainment();
-            if (lOpTypes == NONE || lOpTypes == FUNCTION) {
-                operations += leftOps;
-            } else {
-                operations += "(" + leftOps + ")";
-            }
-
-            operations += " / ";
-
-            OpContainement rOpTypes = right.getOperationContainment();
-            if (rOpTypes == NONE || rOpTypes == FUNCTION) {
-                operations += rightOps;
-            } else {
-                operations += "(" + rightOps + ")";
-            }
-
-            CG<Base> result;
-            result.makeTemporaryVariable(*handler, operations, MULT_DIV, left, right);
-            return result;
+            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGDivOp, left.argument(), right.argument()));
         }
     }
 

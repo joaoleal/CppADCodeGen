@@ -81,7 +81,7 @@ int main(void) {
     using std::cout;
     using std::endl;
 
-    //test_verbose = true;
+    test_verbose = true;
 
     bool ok = true;
     ok &= Run(Assign, "Assign");
@@ -108,7 +108,7 @@ int main(void) {
     ok &= Run(Unary, "Unary");
     //ok &= Run(HandlerReset, "HandlerReset");
 
-    
+
     // check for errors
 
     assert(ok || (Run_error_count > 0));

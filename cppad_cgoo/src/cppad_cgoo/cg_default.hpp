@@ -13,6 +13,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <stddef.h>
 
+#include "cg_cg.hpp"
+
 namespace CppAD {
 
     /**
@@ -21,51 +23,17 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG() :
     handler_(NULL),
-    value_(new Base(0.0)),
-    id_(0),
     sourceCode_(NULL),
-    referenceTo_(NULL),
-    codeFragment_(NULL) {
+    value_(new Base(0.0)) {
     }
 
-    /**
-     * Creates a temporary variable
-     */
     template <class Base>
-    inline CG<Base>::CG(CodeHandler<Base>& handler, const std::string& ops, OpContainement contain, const CG<Base>* depend) :
+    inline CG<Base>::CG(CodeHandler<Base>& handler, SourceCodeFragment<Base>* sourceCode) :
     handler_(&handler),
-    value_(NULL),
-    id_(0),
-    sourceCode_(NULL),
-    referenceTo_(NULL),
-    codeFragment_(NULL) {
-        codeFragment_ = new CodeFragment(ops, contain);
-        if (depend != NULL) {
-            codeFragment_->addDependency(*depend);
-        }
-    }
-
-    /**
-     * Default copy constructor
-     */
-    template <class Base>
-    inline CG<Base>::CG(const CG<Base>& orig) :
-    handler_(NULL),
-    id_(0),
-    referenceTo_(NULL),
-    sourceCode_(NULL),
-    value_(NULL),
-    codeFragment_(NULL) {
-        if (orig.isParameter()) {
-            // parameter
-            makeParameter(*orig.value_);
-        } else if (orig.isVariable()) {
-            // make this variable a reference to orig
-            makeVariableProxy(orig);
-        } else {
-            // the other is a temporary variable
-            makeTemporaryVariable(*orig.handler_, orig.codeFragment_->operations, orig.codeFragment_->opTypes, orig);
-        }
+    sourceCode_(sourceCode),
+    value_(NULL) {
+        assert(sourceCode != NULL);
+        handler.manageSourceCodeBlock(sourceCode);
     }
 
     /**
@@ -74,75 +42,59 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG(const Base &b) :
     handler_(NULL),
-    value_(NULL),
-    id_(0),
     sourceCode_(NULL),
-    referenceTo_(NULL),
-    codeFragment_(NULL) {
-        // make it a parameter
-        makeParameter(b);
+    value_(new Base(b)) {
     }
 
+    /**
+     * Copy constructor
+     */
     template <class Base>
-    inline CG<Base>& CG<Base>::operator =(const CG<Base> &other) {
-        if (this == &other) {
-            return *this;
-        }
+    inline CG<Base>::CG(const CG<Base>& orig) :
+    handler_(orig.handler_),
+    sourceCode_(orig.sourceCode_),
+    value_(orig.value_ != NULL ? new Base(*orig.value_) : NULL) {
+    }
 
-        if (isVariable() && other.getCodeHandler() == handler_) {
-            variableValueWillChange();
-        }
-
-        if (other.isParameter()) {
-            // parameter
-            makeParameter(*other.value_);
-        } else if (other.isVariable()) {
-            CPPADCG_DEBUG_VARIABLE_CHECKID(other.getVariableID());
-                    
-            // make this variable a reference to other
-            makeVariableProxy(other);
-
+    /**
+     * Creates a parameter with the given value
+     */
+    template <class Base>
+    inline CG<Base>& CG<Base>::operator=(const Base &b) {
+        handler_ = NULL;
+        sourceCode_ = NULL;
+        if (value_ != NULL) {
+            *value_ = b;
         } else {
-            // the other is a temporary variable
-            if (!isVariable() || other.getCodeHandler() != getCodeHandler()) {
-                // this can be used to switch between source code handlers
-                makeVariable(*other.getCodeHandler());
-            }
-
-            handler_->printOperationAssign(*this, other);
+            value_ = new Base(b);
         }
-
         return *this;
     }
 
     template <class Base>
-    inline CG<Base>& CG<Base>::operator=(const Base &b) {
-        if (isVariable()) {
-            variableValueWillChange();
+    inline CG<Base>& CG<Base>::operator=(const CG<Base> &rhs) {
+        if (&rhs == this) {
+            return *this;
         }
-
-        // make it a parameter
-        makeParameter(b);
+        handler_ = rhs.handler_;
+        sourceCode_ = rhs.sourceCode_;
+        if (rhs.value_ != NULL) {
+            if (value_ != NULL) {
+                *value_ = *rhs.value_;
+            } else {
+                value_ = new Base(*rhs.value_);
+            }
+        } else {
+            delete value_;
+            value_ = NULL;
+        }
 
         return *this;
     }
 
     template <class Base>
     CG<Base>::~CG() {
-        if (isVariable()) {
-            if (isReference()) {
-                handler_->removeVariableReference(*this);
-            } else {
-                CPPADCG_DEBUG_VARIABLE_CHECKID(id_);
-                handler_->removePureVariable(*this);
-            }
-        }
-
-        delete codeFragment_;
-        codeFragment_ = NULL; // not really required
-
         delete value_;
-        value_ = NULL; // not really required
     }
 
 }

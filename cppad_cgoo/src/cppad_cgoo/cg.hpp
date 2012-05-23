@@ -12,18 +12,20 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 #include <cppad_cgoo/cgexception.hpp>
-#include <cppad_cgoo/cg_types.hpp>
 #include <cppad_cgoo/cg_declare_cg.hpp>
 
 #include <cppad/cppad.hpp>
 
 #include <cppad_cgoo/cg_debug.hpp>
-#include <cppad_cgoo/cg_source_code_block.hpp>
+#include <cppad_cgoo/cg_operation.hpp>
+#include <cppad_cgoo/cg_argument.hpp>
 #include <cppad_cgoo/cg_source_code_fragment.hpp>
 #include <cppad_cgoo/cg_cg.hpp>
 #include <cppad_cgoo/cg_default.hpp>
 #include <cppad_cgoo/cg_variable.hpp>
 #include <cppad_cgoo/cg_identical.hpp>
+#include <cppad_cgoo/cg_variable_name_generator.hpp>
+#include <cppad_cgoo/cg_language.hpp>
 #include <cppad_cgoo/cg_code_handler.hpp>
 #include <cppad_cgoo/cg_arithmetic.hpp>
 #include <cppad_cgoo/cg_arithmetic_assign.hpp>
@@ -34,6 +36,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_ordered.hpp>
 #include <cppad_cgoo/cg_unary.hpp>
 #include <cppad_cgoo/cg_base_double.hpp>
+
+#include <cppad_cgoo/cg_c_language.hpp>
+#include <cppad_cgoo/cg_c_language_double.hpp>
+#include <cppad_cgoo/cg_c_lang_default_c_var_name_gen.hpp>
 
 #endif
 

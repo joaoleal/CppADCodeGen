@@ -15,10 +15,10 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> CondExpOp(enum CompareOp cop,
-                              const CG<Base> &left,
-                              const CG<Base> &right,
-                              const CG<Base> &trueCase,
-                              const CG<Base> &falseCase) {
+    const CG<Base> &left,
+    const CG<Base> &right,
+    const CG<Base> &trueCase,
+    const CG<Base> &falseCase) {
 
         if (left.isParameter() && right.isParameter()) {
             switch (cop) {
@@ -79,12 +79,32 @@ namespace CppAD {
                 throw CGException("Attempting to use different source code generation handlers in the same source code generation");
             }
 
-            CG<Base> result;
-            result.makeVariable(*handler);
+            CGOpCode op;
+            switch (cop) {
+                case CompareLt:
+                    op = CGComOpLt;
+                    break;
+                case CompareLe:
+                    op = CGComOpLe;
+                    break;
+                case CompareEq:
+                    op = CGComOpEq;
+                    break;
+                case CompareGe:
+                    op = CGComOpGe;
+                    break;
+                case CompareGt:
+                    op = CGComOpGt;
+                    break;
+                case CompareNe:
+                    op = CGComOpNe;
+                    break;
 
-            handler->printConditionalAssignment(cop, result, left, right, trueCase, falseCase);
+                default:
+                    CPPAD_ASSERT_UNKNOWN(0);
+            }
 
-            return result;
+            return CG<Base > (*handler, new SourceCodeFragment<Base > (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
         }
 
     }
