@@ -15,6 +15,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <iosfwd>
 #include <map>
 
+#include "cg_cg.hpp"
+
 #define CPPAD_CG_C_LANG_FUNCNAME(fn) \
 inline virtual const std::string& fn ## FuncName() {\
     static const std::string name(#fn);\
@@ -56,6 +58,10 @@ namespace CppAD {
         std::vector<CG<Base> >* _dependent;
         // the temporary variables
         std::set<SourceCodeFragment<Base>*> _temporary;
+        // the operator used for assignment of dependent variables
+        std::string _depAssignOperation;
+        // whether or not to ignore assignment of constant zero values to dependent variables
+        bool _ignoreZeroDepAssign;
     public:
 
         CLanguage(size_t spaces = 3) :
@@ -63,7 +69,25 @@ namespace CppAD {
             _out(NULL),
             _nameGen(NULL),
             _independentSize(0),
-            _dependent(NULL) {
+            _dependent(NULL),
+            _depAssignOperation("="),
+            _ignoreZeroDepAssign(false) {
+        }
+
+        inline const std::string& getDependentAssignOperation() const {
+            return _depAssignOperation;
+        }
+
+        inline void setDependentAssignOperation(const std::string& depAssignOperation) {
+            _depAssignOperation = depAssignOperation;
+        }
+        
+        inline bool isIgnoreZeroDepAssign() const {
+            return _depAssignOperation;
+        }
+
+        inline void setIgnoreZeroDepAssign(bool ignore) {
+            _ignoreZeroDepAssign = ignore;
         }
 
         virtual std::string generateTemporaryVariableDeclaration(const std::string& varTypeName) {
@@ -148,7 +172,9 @@ namespace CppAD {
 
                     std::string varName;
                     std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(op.variableID());
-                    if (it != _dependentIDs.end()) {
+
+                    bool isDep = it != _dependentIDs.end();
+                    if (isDep) {
                         size_t index = it->second;
                         const CG<Base>& dep = (*_dependent)[index];
                         varName = _nameGen->generateDependent(dep, index);
@@ -159,7 +185,8 @@ namespace CppAD {
 
                     bool condAssign = isCondAssign(op.operation());
                     if (!condAssign) {
-                        *_out << _spaces << varName << " = ";
+                        *_out << _spaces << varName << " ";
+                        *_out << (isDep ? _depAssignOperation : "=") << " ";
                     }
                     printExpressionNoVarCheck(op);
                     if (!condAssign) {
@@ -180,22 +207,24 @@ namespace CppAD {
                     const CG<Base>& origDep = (*_dependent)[origIndex];
                     std::string origVarName = _nameGen->generateDependent(origDep, origIndex);
 
-                    *_out << _spaces << varName << " = " << origVarName << ";\n";
+                    *_out << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
                 }
             }
 
-            // constant depedent variables 
+            // constant dependent variables 
             *_out << _spaces << "// dependent variables without operations\n";
             for (size_t i = 0; i < dependent.size(); i++) {
                 if (dependent[i].isParameter()) {
-                    std::string varName = _nameGen->generateDependent(dependent[i], i);
-                    *_out << _spaces << varName << " = ";
-                    printParameter(dependent[i].getParameterValue());
-                    *_out << ";\n";
+                    if (!_ignoreZeroDepAssign || !dependent[i].IdenticalZero()) {
+                        std::string varName = _nameGen->generateDependent(dependent[i], i);
+                        *_out << _spaces << varName << " " << _depAssignOperation << " ";
+                        printParameter(dependent[i].getParameterValue());
+                        *_out << ";\n";
+                    }
                 } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
                     std::string indepName = _nameGen->generateIndependent(*dependent[i].getSourceCodeFragment());
-                    *_out << _spaces << varName << " = " << indepName << ";\n";
+                    *_out << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
             }
         }
@@ -219,13 +248,19 @@ namespace CppAD {
         }
 
         virtual std::string createVariableName(SourceCodeFragment<Base>& var) {
+            bool isDep;
+            return createVariableName(var, isDep);
+        }
+
+        virtual std::string createVariableName(SourceCodeFragment<Base>& var, bool& isDep) {
             assert(var.variableID() > 0);
 
             if (var.variableID() <= _independentSize) {
                 return _nameGen->generateIndependent(var);
             } else {
                 std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
-                if (it != _dependentIDs.end()) {
+                isDep = it != _dependentIDs.end();
+                if (isDep) {
                     size_t index = it->second;
                     const CG<Base>& dep = (*_dependent)[index];
                     return _nameGen->generateDependent(dep, index);
@@ -534,18 +569,21 @@ namespace CppAD {
             const Argument<Base> &trueCase = args[2];
             const Argument<Base> &falseCase = args[3];
 
-            std::string varName = createVariableName(op);
+            bool isDep;
+            std::string varName = createVariableName(op, isDep);
 
             out() << _spaces << "if( ";
             print(left);
             out() << " " << getComparison(op.operation()) << " ";
             print(right);
             out() << " ) {\n";
-            out() << _spaces << _spaces << varName << " = ";
+            out() << _spaces << _spaces << varName << " ";
+            out() << (isDep ? _depAssignOperation : "=") << " ";
             print(trueCase);
             out() << ";\n";
             out() << _spaces << "} else {\n";
-            out() << _spaces << _spaces << varName << " = ";
+            out() << _spaces << _spaces << varName << " ";
+            out() << (isDep ? _depAssignOperation : "=") << " ";
             print(falseCase);
             out() << ";\n";
             out() << _spaces << "}\n";

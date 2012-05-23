@@ -32,23 +32,23 @@ namespace CppAD {
     public:
 
         inline Argument() :
-        operation_(NULL),
-        parameter_(NULL) {
+            operation_(NULL),
+            parameter_(NULL) {
         }
 
         inline Argument(SourceCodeFragment<Base>& operation) :
-        operation_(&operation),
-        parameter_(NULL) {
+            operation_(&operation),
+            parameter_(NULL) {
         }
 
         inline Argument(const Base& parameter) :
-        operation_(NULL),
-        parameter_(new Base(parameter)) {
+            operation_(NULL),
+            parameter_(new Base(parameter)) {
         }
 
         inline Argument(const Argument& orig) :
-        operation_(orig.operation_),
-        parameter_(orig.parameter_ != NULL ? new Base(*orig.parameter_) : NULL) {
+            operation_(orig.operation_),
+            parameter_(orig.parameter_ != NULL ? new Base(*orig.parameter_) : NULL) {
         }
 
         inline Argument& operator=(const Argument& rhs) {

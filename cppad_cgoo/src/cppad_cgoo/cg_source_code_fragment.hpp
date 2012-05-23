@@ -37,44 +37,44 @@ namespace CppAD {
     public:
 
         inline SourceCodeFragment(CGOpCode op) :
-        operation_(op),
-        var_id_(0),
-        use_count_(0) {
+            operation_(op),
+            var_id_(0),
+            use_count_(0) {
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                const Argument<Base>& arg) :
-        operation_(op),
-        arguments_(1),
-        var_id_(0),
-        use_count_(0) {
+                                  const Argument<Base>& arg) :
+            operation_(op),
+            arguments_(1),
+            var_id_(0),
+            use_count_(0) {
             assert(arg.operation() != NULL);
             arguments_[0] = arg;
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                const Argument<Base>& arg1,
-                const Argument<Base>& arg2) :
-        operation_(op),
-        arguments_(2),
-        var_id_(0),
-        use_count_(0) {
+                                  const Argument<Base>& arg1,
+                                  const Argument<Base>& arg2) :
+            operation_(op),
+            arguments_(2),
+            var_id_(0),
+            use_count_(0) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                const Argument<Base>& arg1,
-                const Argument<Base>& arg2,
-                const Argument<Base>& arg3,
-                const Argument<Base>& arg4) :
-        operation_(op),
-        arguments_(4),
-        var_id_(0),
-        use_count_(0) {
+                                  const Argument<Base>& arg1,
+                                  const Argument<Base>& arg2,
+                                  const Argument<Base>& arg3,
+                                  const Argument<Base>& arg4) :
+            operation_(op),
+            arguments_(4),
+            var_id_(0),
+            use_count_(0) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL ||
-                    arg3.operation() != NULL || arg4.operation() != NULL);
+                   arg3.operation() != NULL || arg4.operation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
             arguments_[2] = arg3;
@@ -82,10 +82,10 @@ namespace CppAD {
         }
 
         SourceCodeFragment(const SourceCodeFragment& orig) :
-        operation_(orig.operation_),
-        arguments_(orig.arguments_),
-        var_id_(0),
-        use_count_(0) {
+            operation_(orig.operation_),
+            arguments_(orig.arguments_),
+            var_id_(0),
+            use_count_(0) {
         }
 
         inline CGOpCode operation() const {

@@ -57,11 +57,11 @@ namespace CppAD {
     public:
 
         CodeHandler(size_t varCount = 50) :
-        _idCount(0),
-        _used(false),
-        _reuseIDs(true),
-        _maxCodeBlockVisit(2),
-        _lang(NULL) {
+            _idCount(0),
+            _used(false),
+            _reuseIDs(true),
+            _maxCodeBlockVisit(2),
+            _lang(NULL) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -146,7 +146,7 @@ namespace CppAD {
                     }
                 }
             }
-            
+
             assert(_idCount == _variableOrder.size() + _independentVariables.size());
 
             /**

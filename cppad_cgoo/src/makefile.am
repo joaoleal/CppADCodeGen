@@ -30,7 +30,8 @@ nobase_cginclude_HEADERS =  \
 	cppad_cgoo/cg_arithmetic.hpp \
 	cppad_cgoo/cg_arithmetic_assign.hpp \
 	cppad_cgoo/cg_base_double.hpp \
-	cppad_cgoo/cg_c_lang_default_c_var_name_gen.hpp \
+	cppad_cgoo/cg_c_lang_default_var_name_gen.hpp \
+	cppad_cgoo/cg_c_lang_default_hessian_var_name_gen.hpp \
 	cppad_cgoo/cg_c_language.hpp \
 	cppad_cgoo/cg_c_language_double.hpp \
 	cppad_cgoo/cg_cg.hpp \

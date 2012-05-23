@@ -51,7 +51,7 @@ namespace CppAD {
 
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGAddOp, left.argument(), right.argument()));
+            return CG<Base > (*handler, new SourceCodeFragment<Base > (CGAddOp, left.argument(), right.argument()));
         }
     }
 
@@ -66,10 +66,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            
+
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGSubOp, left.argument(), right.argument()));
+            return CG<Base > (*handler, new SourceCodeFragment<Base > (CGSubOp, left.argument(), right.argument()));
         }
     }
 
@@ -92,10 +92,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            
+
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGMulOp, left.argument(), right.argument()));
+            return CG<Base > (*handler, new SourceCodeFragment<Base > (CGMulOp, left.argument(), right.argument()));
         }
     }
 
@@ -114,10 +114,10 @@ namespace CppAD {
                     return left;
                 }
             }
-            
+
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            return CG<Base>(*handler, new SourceCodeFragment<Base>(CGDivOp, left.argument(), right.argument()));
+            return CG<Base > (*handler, new SourceCodeFragment<Base > (CGDivOp, left.argument(), right.argument()));
         }
     }
 
