@@ -139,8 +139,9 @@ namespace CppAD {
                 CG<Base>& var = *it;
                 if (var.getSourceCodeFragment() != NULL) {
                     SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
-                    checkVariableCreation(code);
                     if (code.variableID() == 0) {
+                        checkVariableCreation(code); // dependencies not visited yet
+
                         code.setVariableID(++_idCount);
                         _variableOrder.push_back(&code);
                     }
@@ -153,14 +154,6 @@ namespace CppAD {
              * Creates the source code for a specific language
              */
             lang.generateSourceCode(out, _independentVariables, dependent, _variableOrder, nameGen);
-        }
-
-        inline std::string toString(size_t v) const {
-            std::stringstream str;
-            str << v;
-            std::string result;
-            str >> result;
-            return result;
         }
 
         virtual void reset() {
@@ -219,16 +212,18 @@ namespace CppAD {
                 if (it->operation() != NULL) {
                     SourceCodeFragment<Base>& arg2 = *it->operation();
 
-                    checkVariableCreation(arg2);
+                    if (arg2.variableID() == 0) {
+                        checkVariableCreation(arg2); // dependencies not visited yet
 
-                    size_t argIndex = it - args.begin();
-                    if (arg2.variableID() == 0 && (_lang->createsNewVariable(arg2) ||
-                            _lang->requiresVariableArgument(code.operation(), argIndex))) {
-                        _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
-                        arg2.setVariableID(++_idCount);
-                        _variableOrder.push_back(&arg2);
+                        size_t argIndex = it - args.begin();
+
+                        if (_lang->createsNewVariable(arg2) ||
+                                _lang->requiresVariableArgument(code.operation(), argIndex)) {
+                            _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
+                            arg2.setVariableID(++_idCount);
+                            _variableOrder.push_back(&arg2);
+                        }
                     }
-
                 }
             }
         }
