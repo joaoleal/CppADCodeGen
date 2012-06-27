@@ -230,8 +230,6 @@ namespace CppAD {
 
     private:
 
-        CodeHandler(); // not implemented
-
         CodeHandler(const CodeHandler&); // not implemented
 
         CodeHandler& operator=(const CodeHandler&); // not implemented

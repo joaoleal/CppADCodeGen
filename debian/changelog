@@ -1,3 +1,9 @@
+cppadcodegen (20120523.1-1) unstable; urgency=low
+
+  * performance improvements
+
+ -- Development <development@ciengis.com>  Fri, 25 May 2012 10:30:00 +0000
+
 cppadcodegen (20120523.0-1) unstable; urgency=low
 
   * significant improvements in the source code generation strategy
