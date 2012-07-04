@@ -1,3 +1,9 @@
+cppadcodegen (20120523.2-1) unstable; urgency=low
+
+  * added some useful classes to create a dynamic library from the generated source code
+
+ -- Development <development@ciengis.com>  Wed, 4 Jul 2012 10:30:00 +0000
+
 cppadcodegen (20120523.1-1) unstable; urgency=low
 
   * performance improvements

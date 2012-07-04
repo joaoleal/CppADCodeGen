@@ -241,6 +241,7 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_debug.hpp \
 	cppad_cgoo/cg_declare_cg.hpp \
 	cppad_cgoo/cg_default.hpp \
+	cppad_cgoo/cg_exception.hpp \
 	cppad_cgoo/cg_identical.hpp \
 	cppad_cgoo/cg_language.hpp \
 	cppad_cgoo/cg_math.hpp \
@@ -251,7 +252,14 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_unary.hpp \
 	cppad_cgoo/cg_variable.hpp \
 	cppad_cgoo/cg_variable_name_generator.hpp \
-	cppad_cgoo/cgexception.hpp 
+	cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper.hpp \
+	cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper_impl.hpp \
+	cppad_cgoo/dynamic_lib/cg_c_lang_compiler.hpp \
+	cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp \
+	cppad_cgoo/dynamic_lib/cg_gcc_compiler.hpp \
+	cppad_cgoo/dynamic_lib/linux/cg_c_lang_compile_helper_linux.hpp \
+	cppad_cgoo/dynamic_lib/linux/cg_c_lang_compiler_linux.hpp \
+	cppad_cgoo/dynamic_lib/linux/cg_dynamiclib_linux.hpp
 
 all: all-am
 
