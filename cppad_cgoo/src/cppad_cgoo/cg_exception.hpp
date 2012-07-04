@@ -27,7 +27,7 @@ namespace CppAD {
 
     public:
 
-        CGException(const std::string& message) throw () {
+        inline CGException(const std::string& message) throw () {
             _message = message;
         }
 
@@ -39,7 +39,7 @@ namespace CppAD {
         }
 
     protected:
-        CGException() throw ();
+        CGException() throw (); // not implemented
     };
 
 }

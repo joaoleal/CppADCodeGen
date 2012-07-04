@@ -150,7 +150,8 @@ namespace CppAD {
             std::set<size_t> dependentDuplicates;
 
             for (size_t i = 0; i < dependent.size(); i++) {
-                if (dependent[i].getSourceCodeFragment() != NULL) {
+                SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
+                if (op != NULL && op->operation() != CGInvOp) {
                     size_t varID = dependent[i].getSourceCodeFragment()->variableID();
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(varID);

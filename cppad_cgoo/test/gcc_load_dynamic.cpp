@@ -431,6 +431,20 @@ bool test0(const string& test,
 }
 
 bool compareValues(const std::string& testType,
+                   const std::vector<double>& depCGen,
+                   const std::vector<double>& dep,
+                   double epsilonR, double epsilonA) {
+    
+    std::vector<std::vector<double> > depCGen2D(1);
+    depCGen2D[0] = depCGen;
+
+    std::vector<std::vector<double> > dep2D(1);
+    dep2D[0] = dep;
+
+    return compareValues(testType, depCGen2D, dep2D, epsilonR, epsilonA);
+}
+
+bool compareValues(const std::string& testType,
                    const std::vector<std::vector<double> >& depCGen,
                    const std::vector<std::vector<double> >& dep,
                    double epsilonR, double epsilonA) {

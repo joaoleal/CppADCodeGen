@@ -49,3 +49,8 @@ junk.sh
 /debian/*/
 /debian/files
 /debian/*.stamp
+
+# automatically generated directories
+/cppad_cgoo/test/cppadcg_sources
+/cppad_cgoo/test/temp
+/cppad_cgoo/test/tmp

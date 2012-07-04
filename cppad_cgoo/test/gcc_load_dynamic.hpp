@@ -66,6 +66,11 @@ void prepareADFun(const std::vector<double>& indep,
                   CppAD::ADFun<CppAD::CG<double> >*& f2);
 
 bool compareValues(const std::string& testType,
+                   const std::vector<double>& depCGen,
+                   const std::vector<double>& dep,
+                   double epsilonR = 1e-14, double epsilonA = 1e-14);
+
+bool compareValues(const std::string& testType,
                    const std::vector<std::vector<double> >& depCGen,
                    const std::vector<std::vector<double> >& dep,
                    double epsilonR = 1e-14, double epsilonA = 1e-14);

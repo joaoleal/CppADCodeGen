@@ -11,7 +11,9 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cgexception.hpp>
+#include <cppad_cgoo/cg_cppadcg_assert.hpp>
+
+#include <cppad_cgoo/cg_exception.hpp>
 #include <cppad_cgoo/cg_declare_cg.hpp>
 
 #include <cppad/cppad.hpp>
@@ -41,6 +43,16 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_c_language_double.hpp>
 #include <cppad_cgoo/cg_c_lang_default_var_name_gen.hpp>
 #include <cppad_cgoo/cg_c_lang_default_hessian_var_name_gen.hpp>
+
+#include <cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compiler.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper_impl.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_gcc_compiler.hpp>
+
+#include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compiler_linux.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_dynamiclib_linux.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compile_helper_linux.hpp>
 
 #endif
 

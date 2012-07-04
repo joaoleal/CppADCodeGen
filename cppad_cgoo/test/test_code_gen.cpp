@@ -43,6 +43,7 @@ extern bool Sin();
 extern bool Sub();
 extern bool Tan();
 extern bool Unary();
+extern bool Dynamic();
 //extern bool HandlerReset();
 
 bool test_verbose = false;
@@ -108,7 +109,7 @@ int main(void) {
     ok &= Run(Unary, "Unary");
     //ok &= Run(HandlerReset, "HandlerReset");
 
-
+    ok &= Run(Dynamic, "Dynamic");
     // check for errors
 
     assert(ok || (Run_error_count > 0));
@@ -125,8 +126,10 @@ int main(void) {
     if (ok) {
         cout << int(Run_ok_count) << " tests passed";
     } else {
-        cout << int(Run_error_count) << " tests failed." << endl;
+        cout << int(Run_error_count) << " tests failed.";
     }
+
+    cout << endl;
 
     return static_cast<int> (!ok);
 }
