@@ -15,6 +15,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <iosfwd>
 #include <map>
 
+#include "cg_source_code_fragment.hpp"
 #include "cg_cg.hpp"
 
 #define CPPAD_CG_C_LANG_FUNCNAME(fn) \
@@ -51,13 +52,15 @@ namespace CppAD {
         std::stringstream _ss;
         //
         size_t _independentSize;
+        //
+        size_t _minTemporaryVarID;
         // maps the variable IDs to the their position in the dependent vector
         // (some IDs may be the same as the independent variables when dep = indep)
         std::map<size_t, size_t> _dependentIDs;
         // the dependent variable vector
-        std::vector<CG<Base> >* _dependent;
-        // the temporary variables
-        std::set<SourceCodeFragment<Base>*> _temporary;
+        const std::vector<CG<Base> >* _dependent;
+        // the temporary variables that may require a declaration
+        std::map<size_t, SourceCodeFragment<Base>*> _temporary;
         // the operator used for assignment of dependent variables
         std::string _depAssignOperation;
         // whether or not to ignore assignment of constant zero values to dependent variables
@@ -81,7 +84,7 @@ namespace CppAD {
         inline void setDependentAssignOperation(const std::string& depAssignOperation) {
             _depAssignOperation = depAssignOperation;
         }
-        
+
         inline bool isIgnoreZeroDepAssign() const {
             return _depAssignOperation;
         }
@@ -97,15 +100,25 @@ namespace CppAD {
 
             // declare variables
             if (_temporary.size() > 0) {
-                std::string var1 = _nameGen->generateTemporary(**_temporary.begin());
-                code = _spaces + varTypeName + " " + var1;
+                typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
+
+                for (it = _temporary.begin(); it != _temporary.end(); ++it) {
+                    SourceCodeFragment<Base>* var = it->second;
+                    if (var->getName() == NULL) {
+                        var->setName(_nameGen->generateTemporary(*var));
+                    }
+                }
+
+                SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
+                const std::string& varName1 = *var1->getName();
+                code = _spaces + varTypeName + " " + varName1;
 
                 // use a crude estimate of the string size to reserve space
-                code.reserve(varTypeName.size() + 3 + _temporary.size() *(var1.size() + 3));
+                code.reserve(varTypeName.size() + 3 + _temporary.size() *(varName1.size() + 3));
 
-                typename std::set<SourceCodeFragment<Base>*>::const_iterator it = _temporary.begin();
+                it = _temporary.begin();
                 for (it++; it != _temporary.end(); ++it) {
-                    code += ", " + _nameGen->generateTemporary(**it);
+                    code += ", " + *it->second->getName();
                 }
                 code += ";\n";
             }
@@ -134,17 +147,42 @@ namespace CppAD {
             return *_out;
         }
 
-        virtual void generateSourceCode(std::ostream& out,
-                                        std::vector<SourceCodeFragment<Base> *>& independent,
-                                        std::vector<CG<Base> >& dependent,
-                                        const std::vector<SourceCodeFragment<Base>*>& variableOrder,
-                                        VariableNameGenerator<Base>& nameGen) {
+        virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) {
             _out = &out;
-            _independentSize = independent.size();
-            _dependent = &dependent;
-            _nameGen = &nameGen;
+            _independentSize = info.independent.size();
+            _dependent = &info.dependent;
+            _nameGen = &info.nameGen;
+            _minTemporaryVarID = info.minTemporaryVarID;
+
+            const std::vector<CG<Base> >& dependent = info.dependent;
+            const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
 
             _temporary.clear();
+
+            //generate names for the independent variables
+            for (std::vector<SourceCodeFragment<Base> *> it = info.independent.begin(); it != info.independent.end(); ++it) {
+                SourceCodeFragment<Base>& op = *it;
+                if (op.getName() == NULL) {
+                    op.setName(_nameGen->generateIndependent(op));
+                }
+            }
+
+            // generate names for the dependent variables (must be after naming the independent)
+            for (std::vector<CG<Base> > it = _dependent->begin(); it != _dependent->end(); ++it) {
+                CG<Base>& dep = *it;
+                if (dep.getSourceCodeFragment() != NULL) {
+                    SourceCodeFragment<Base>& op = dep.getSourceCodeFragment();
+                    if (op.getName() == NULL) {
+                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(op.variableID());
+
+                        assert(it != _dependentIDs.end());
+
+                        size_t index = it->second;
+                        const CG<Base>& dep = (*_dependent)[index];
+                        op.setName(_nameGen->generateDependent(dep, index));
+                    }
+                }
+            }
 
             // dependent variables indexes that are copies of other dependent variables
             std::set<size_t> dependentDuplicates;
@@ -166,27 +204,31 @@ namespace CppAD {
             }
 
             if (variableOrder.size() > 0) {
-                *_out << _spaces << "// variables: " << variableOrder.size() << "\n";
                 // non-constant variables
-                for (typename std::vector<SourceCodeFragment<Base>*>::const_iterator it = variableOrder.begin(); it != variableOrder.end(); ++it) {
+                *_out << _spaces << "// expressions: " << variableOrder.size() << "\n";
+                typename std::vector<SourceCodeFragment<Base>*>::const_iterator it;
+
+                // generate names for temporary variables
+                for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
+                    SourceCodeFragment<Base>& op = **it;
+                    if (op.getName() == NULL) {
+                        if (!isDependent(op)) {
+                            op.setName(_nameGen->generateTemporary(op));
+                        }
+                    }
+                }
+
+                for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     SourceCodeFragment<Base>& op = **it;
 
-                    std::string varName;
-                    std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(op.variableID());
-
-                    bool isDep = it != _dependentIDs.end();
-                    if (isDep) {
-                        size_t index = it->second;
-                        const CG<Base>& dep = (*_dependent)[index];
-                        varName = _nameGen->generateDependent(dep, index);
-                    } else {
-                        varName = _nameGen->generateTemporary(op);
-                        _temporary.insert(&op);
+                    bool isDep = isDependent(op);
+                    if (!isDep) {
+                        _temporary[op.variableID()] = &op;
                     }
 
                     bool condAssign = isCondAssign(op.operation());
                     if (!condAssign) {
-                        *_out << _spaces << varName << " ";
+                        *_out << _spaces << op->getName() << " ";
                         *_out << (isDep ? _depAssignOperation : "=") << " ";
                     }
                     printExpressionNoVarCheck(op);
@@ -203,10 +245,7 @@ namespace CppAD {
                     size_t index = *it;
                     const CG<Base>& dep = (*_dependent)[index];
                     std::string varName = _nameGen->generateDependent(dep, index);
-
-                    size_t origIndex = _dependentIDs[dep.getSourceCodeFragment()->variableID()];
-                    const CG<Base>& origDep = (*_dependent)[origIndex];
-                    std::string origVarName = _nameGen->generateDependent(origDep, origIndex);
+                    const std::string& origVarName = dep.getSourceCodeFragment()->getName(); // _nameGen->generateDependent(origDep, origIndex);
 
                     *_out << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
                 }
@@ -224,18 +263,14 @@ namespace CppAD {
                     }
                 } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
-                    std::string indepName = _nameGen->generateIndependent(*dependent[i].getSourceCodeFragment());
+                    const std::string& indepName = dependent[i].getSourceCodeFragment()->getName();
                     *_out << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
             }
         }
 
-        virtual size_t getMaximumCodeBlockVisit() {
-            return 2;
-        }
-
         virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) {
-            return op.usageCount() > 1 ||
+            return op.totalUsageCount() > 1 ||
                     op.operation() == CGComOpLt ||
                     op.operation() == CGComOpLe ||
                     op.operation() == CGComOpEq ||
@@ -248,27 +283,27 @@ namespace CppAD {
             return op == CGSignOp;
         }
 
-        virtual std::string createVariableName(SourceCodeFragment<Base>& var) {
-            bool isDep;
-            return createVariableName(var, isDep);
-        }
-
-        virtual std::string createVariableName(SourceCodeFragment<Base>& var, bool& isDep) {
+        inline const std::string& createVariableName(SourceCodeFragment<Base>& var) {
             assert(var.variableID() > 0);
 
-            if (var.variableID() <= _independentSize) {
-                return _nameGen->generateIndependent(var);
-            } else {
-                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
-                isDep = it != _dependentIDs.end();
-                if (isDep) {
+            if (var.getName() == NULL) {
+                if (var.variableID() <= _independentSize) {
+                    var.setName(_nameGen->generateIndependent(var));
+
+                } else if (var.variableID() < _minTemporaryVarID) {
+                    std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
+                    assert(it != _dependentIDs.end());
+
                     size_t index = it->second;
                     const CG<Base>& dep = (*_dependent)[index];
-                    return _nameGen->generateDependent(dep, index);
+                    var.setName(_nameGen->generateDependent(dep, index));
+
                 } else {
-                    return _nameGen->generateTemporary(var);
+                    var.setName(_nameGen->generateTemporary(var));
                 }
             }
+
+            return var.getName();
         }
 
         virtual void printIndependentVariableName(SourceCodeFragment<Base>& op) {
@@ -424,7 +459,7 @@ namespace CppAD {
 
             SourceCodeFragment<Base>& arg = *op.arguments()[0].operation();
 
-            std::string argName = createVariableName(arg);
+            const std::string& argName = createVariableName(arg);
 
             out() << "(" << argName << " " << _C_COMP_OP_GT << " ";
             printParameter(Base(0.0));
@@ -570,8 +605,8 @@ namespace CppAD {
             const Argument<Base> &trueCase = args[2];
             const Argument<Base> &falseCase = args[3];
 
-            bool isDep;
-            std::string varName = createVariableName(op, isDep);
+            bool isDep = isDependent(op);
+            const std::string& varName = createVariableName(op, isDep);
 
             out() << _spaces << "if( ";
             print(left);
@@ -588,6 +623,11 @@ namespace CppAD {
             print(falseCase);
             out() << ";\n";
             out() << _spaces << "}\n";
+        }
+
+        inline bool isDependent(const SourceCodeFragment<Base>& arg) const {
+            size_t id = arg.variableID();
+            return id > _independentSize && id <= _minTemporaryVarID;
         }
 
         virtual void printParameter(const Base& value) {

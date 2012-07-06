@@ -31,15 +31,27 @@ namespace CppAD {
         // variable ID that was altered/assigned in this source code
         // (zero means that no variable is assigned)
         size_t var_id_;
-        // the number of times the result of this operation is used
+        //
+        size_t evaluation_order_;
+        // the total number of times the result of this operation is used
+        size_t total_use_count_;
+        // the number of times the result of this operation has been used
         size_t use_count_;
-
+        // the last source code order in the call graph that uses the result of
+        // this operations as an argument
+        size_t last_usage_order_;
+        // generated variable name
+        std::string* name_;
     public:
 
         inline SourceCodeFragment(CGOpCode op) :
             operation_(op),
             var_id_(0),
-            use_count_(0) {
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            name_(NULL) {
         }
 
         inline SourceCodeFragment(CGOpCode op,
@@ -47,7 +59,11 @@ namespace CppAD {
             operation_(op),
             arguments_(1),
             var_id_(0),
-            use_count_(0) {
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            name_(NULL) {
             assert(arg.operation() != NULL);
             arguments_[0] = arg;
         }
@@ -58,7 +74,11 @@ namespace CppAD {
             operation_(op),
             arguments_(2),
             var_id_(0),
-            use_count_(0) {
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            name_(NULL) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
@@ -72,7 +92,11 @@ namespace CppAD {
             operation_(op),
             arguments_(4),
             var_id_(0),
-            use_count_(0) {
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            name_(NULL) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL ||
                    arg3.operation() != NULL || arg4.operation() != NULL);
             arguments_[0] = arg1;
@@ -85,7 +109,11 @@ namespace CppAD {
             operation_(orig.operation_),
             arguments_(orig.arguments_),
             var_id_(0),
-            use_count_(0) {
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(orig.last_usage_order_),
+            name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
         }
 
         inline CGOpCode operation() const {
@@ -118,16 +146,51 @@ namespace CppAD {
             var_id_ = var_id;
         }
 
+        inline size_t getEvaluationOrder() const {
+            return evaluation_order_;
+        }
+
+        inline void setEvaluationOrder(size_t evaluation_order) {
+            evaluation_order_ = evaluation_order;
+        }
+        
         /**
-         * Provides the number of times this code fragement is marked as being 
-         * used as an argument of another code fragement.
-         * \return the usage count
+         * Provides the total number of times the result of this operation is being 
+         * used as an argument for another operation.
+         * \return the total usage count
+         */
+        inline size_t totalUsageCount() const {
+            return total_use_count_;
+        }
+
+        /**
+         * Provides the number of times the result of this operation has been 
+         * used as an argument for another operation.
+         * \return the current usage count
          */
         inline size_t usageCount() const {
             return use_count_;
         }
 
+        inline size_t getLastUsageEvaluationOrder() const {
+            return last_usage_order_;
+        }
+
+        inline void setLastUsageEvaluationOrder(size_t last) {
+            last_usage_order_ = last;
+        }
+
+        inline const std::string* getName() const {
+            return name_;
+        }
+
+        inline void setName(const std::string& name) {
+            assert(name_ == NULL);
+            name_ = new std::string(name);
+        }
+
         virtual ~SourceCodeFragment() {
+            delete name_;
         }
 
 

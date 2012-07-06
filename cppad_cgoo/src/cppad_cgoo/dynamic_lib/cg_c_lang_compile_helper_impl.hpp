@@ -16,7 +16,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
     
     template<class Base>
-    const unsigned long int CLangCompileHelper<Base>::VERSION = 0;
+    const unsigned long int CLangCompileHelper<Base>::API_VERSION = 0;
 
     template<class Base>
     const std::string CLangCompileHelper<Base>::FUNCTION_FORWAD_ZERO = "cppad_cg_forward_zero";
@@ -90,7 +90,7 @@ namespace CppAD {
     template<class Base>
     void CLangCompileHelper<Base>::generateVerionSource() {
         _cache << "unsigned long int " << FUNCTION_VERSION << "() {\n";
-        _cache << "return " << VERSION << "u;\n";
+        _cache << "return " << API_VERSION << "u;\n";
         _cache << "}\n\n";
     }
     

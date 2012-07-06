@@ -37,8 +37,6 @@ namespace CppAD {
     protected:
         // counter used to generate variable IDs
         size_t _idCount;
-        // variable IDs no longer in use
-        std::set<size_t> _freedVariables;
         // the independent variables
         std::vector<SourceCodeFragment<Base> *> _independentVariables;
         // all the source code blocks created with the CG<Base> objects
@@ -49,19 +47,18 @@ namespace CppAD {
         bool _used;
         // a flag indicating whether or not to reuse the IDs of destroyed variables
         bool _reuseIDs;
-        // the maximum number of times a code fragment can be visited during the
-        // usage count
-        size_t _maxCodeBlockVisit;
         // the language used for source code generation
         Language<Base>* _lang;
+        // the lowest ID used for temporary variables
+        size_t _minTemporaryVarID;
     public:
 
         CodeHandler(size_t varCount = 50) :
             _idCount(0),
             _used(false),
             _reuseIDs(true),
-            _maxCodeBlockVisit(2),
-            _lang(NULL) {
+            _lang(NULL),
+            _minTemporaryVarID(0) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -98,6 +95,7 @@ namespace CppAD {
          *                  should be generated. By defining this vector the 
          *                  number of operations in the source code can be 
          *                  reduced and thus providing a more optimized code.
+         * \param nameGen Provides the rules for variable name creation.
          */
         virtual void generateCode(std::ostream& out, CppAD::Language<Base>& lang, std::vector<CG<Base> >& dependent, VariableNameGenerator<Base>& nameGen) {
             _lang = &lang;
@@ -108,13 +106,11 @@ namespace CppAD {
 
                 for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                     SourceCodeFragment<Base>* block = *it;
-                    block->use_count_ = 0;
+                    block->total_use_count_ = 0;
                     block->var_id_ = 0;
                 }
             }
             _used = true;
-
-            _maxCodeBlockVisit = lang.getMaximumCodeBlockVisit();
 
             /**
              * the first variable IDs are for the independent variables
@@ -123,14 +119,20 @@ namespace CppAD {
                 (*it)->setVariableID(++_idCount);
             }
 
+            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
+                if (it->getSourceCodeFragment() != NULL && it->getSourceCodeFragment()->variableID() == 0) {
+                    it->getSourceCodeFragment()->setVariableID(++_idCount);
+                }
+            }
+
+            _minTemporaryVarID = _idCount + 1;
+
             // determine the number of times each variable is used
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 CG<Base>& var = *it;
                 if (var.getSourceCodeFragment() != NULL) {
                     SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
-                    if (code.use_count_ < _maxCodeBlockVisit) {
-                        markCodeBlockUsed(code);
-                    }
+                    markCodeBlockUsed(code);
                 }
             }
 
@@ -139,21 +141,34 @@ namespace CppAD {
                 CG<Base>& var = *it;
                 if (var.getSourceCodeFragment() != NULL) {
                     SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
-                    if (code.variableID() == 0) {
-                        checkVariableCreation(code); // dependencies not visited yet
+                    if (code.use_count_ == 0) {
+                        // dependencies not visited yet
+                        checkVariableCreation(code);
 
-                        code.setVariableID(++_idCount);
-                        _variableOrder.push_back(&code);
+                        // make sure new temporary variables are NOT created for
+                        // the independent variables and that a dependency did
+                        // not use it first
+                        if ((code.variableID() == 0 || !isIndependent(code)) && code.use_count_ == 0) {
+                            addToEvaluationQueue(code);
+                        }
                     }
+                    code.use_count_++;
                 }
             }
 
             assert(_idCount == _variableOrder.size() + _independentVariables.size());
 
+            if (_reuseIDs) {
+                reduceTemporaryVariables(dependent);
+            }
+
             /**
              * Creates the source code for a specific language
              */
-            lang.generateSourceCode(out, _independentVariables, dependent, _variableOrder, nameGen);
+            LanguageGenerationData<Base> info(_independentVariables, dependent,
+                                              _minTemporaryVarID, _variableOrder,
+                                              nameGen, _reuseIDs);
+            lang.generateSourceCode(out, info);
         }
 
         virtual void reset() {
@@ -163,7 +178,6 @@ namespace CppAD {
             }
             _codeBlocks.clear();
             _independentVariables.clear();
-            _freedVariables.clear();
             _idCount = 0;
             _used = false;
         }
@@ -185,20 +199,18 @@ namespace CppAD {
         }
 
         virtual void markCodeBlockUsed(SourceCodeFragment<Base>& code) {
-            code.use_count_++;
+            code.total_use_count_++;
 
-            if (code.use_count_ == _maxCodeBlockVisit) {
-                return;
-            }
+            if (code.total_use_count_ == 1) {
+                // first time this operation is visited
 
-            const std::vector<Argument<Base> >& args = code.arguments_;
+                const std::vector<Argument<Base> >& args = code.arguments_;
 
-            typename std::vector<Argument<Base> >::const_iterator it;
-            for (it = args.begin(); it != args.end(); ++it) {
-                if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg2 = *it->operation();
-                    if (arg2.use_count_ < _maxCodeBlockVisit) {
-                        markCodeBlockUsed(arg2);
+                typename std::vector<Argument<Base> >::const_iterator it;
+                for (it = args.begin(); it != args.end(); ++it) {
+                    if (it->operation() != NULL) {
+                        SourceCodeFragment<Base>& arg = *it->operation();
+                        markCodeBlockUsed(arg);
                     }
                 }
             }
@@ -208,24 +220,166 @@ namespace CppAD {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
             typename std::vector<Argument<Base> >::const_iterator it;
+
             for (it = args.begin(); it != args.end(); ++it) {
                 if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg2 = *it->operation();
+                    SourceCodeFragment<Base>& arg = *it->operation();
 
-                    if (arg2.variableID() == 0) {
-                        checkVariableCreation(arg2); // dependencies not visited yet
+                    if (arg.use_count_ == 0) {
+                        // dependencies not visited yet
+                        checkVariableCreation(arg);
 
-                        size_t argIndex = it - args.begin();
+                        // make sure new temporary variables are NOT created for
+                        // the independent variables and that a dependency did
+                        // not use it first
+                        if ((arg.variableID() == 0 || !isIndependent(arg)) && arg.use_count_ == 0) {
 
-                        if (_lang->createsNewVariable(arg2) ||
-                                _lang->requiresVariableArgument(code.operation(), argIndex)) {
-                            _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
-                            arg2.setVariableID(++_idCount);
-                            _variableOrder.push_back(&arg2);
+                            size_t argIndex = it - args.begin();
+                            if (_lang->createsNewVariable(arg) ||
+                                    _lang->requiresVariableArgument(code.operation(), argIndex)) {
+                                addToEvaluationQueue(arg);
+                                if (arg.variableID() == 0) {
+                                    arg.setVariableID(++_idCount);
+                                }
+                            }
                         }
+                    }
+
+                    arg.use_count_++;
+                }
+            }
+
+        }
+
+        inline void addToEvaluationQueue(SourceCodeFragment<Base>& arg) {
+            if (_variableOrder.size() == _variableOrder.capacity()) {
+                _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
+            }
+
+            _variableOrder.push_back(&arg);
+            arg.setEvaluationOrder(_variableOrder.size());
+
+            dependentAdded2EvaluationQueue(arg);
+        }
+
+        inline void reduceTemporaryVariables(std::vector<CG<Base> >& dependent) {
+
+            /**
+             * determine the last line where each temporary variable is used
+             */
+            resetUsageCount();
+
+            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
+                CG<Base>& var = *it;
+                if (var.getSourceCodeFragment() != NULL) {
+                    SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
+                    if (code.use_count_ == 0) {
+                        // dependencies not visited yet
+                        determineLastTempVarUsage(code);
+                    }
+                    code.use_count_++;
+                }
+            }
+
+            // location of where temporary variables can be released
+            std::vector<std::vector<SourceCodeFragment<Base>* > > tempVarRelease(_variableOrder.size());
+            for (size_t i = 0; i < _variableOrder.size(); i++) {
+                SourceCodeFragment<Base>* var = _variableOrder[i];
+                if (isTemporary(*var)) {
+                    tempVarRelease[var->getLastUsageEvaluationOrder() - 1].push_back(var);
+                }
+            }
+
+
+            /**
+             * Redefine temporary variable IDs
+             */
+            std::vector<size_t> freedVariables; // variable IDs no longer in use
+            _idCount = _minTemporaryVarID - 1;
+
+            for (size_t i = 0; i < _variableOrder.size(); i++) {
+                SourceCodeFragment<Base>& var = *_variableOrder[i];
+
+                const std::vector<SourceCodeFragment<Base>* >& released = tempVarRelease[i];
+                for (size_t r = 0; r < released.size(); r++) {
+                    freedVariables.push_back(released[r]->variableID());
+                }
+
+                if (isTemporary(var)) {
+                    if (freedVariables.empty()) {
+                        var.setVariableID(++_idCount);
+                    } else {
+                        size_t id = freedVariables.back();
+                        freedVariables.pop_back();
+                        var.setVariableID(id);
                     }
                 }
             }
+        }
+
+        inline void determineLastTempVarUsage(SourceCodeFragment<Base>& code) {
+            const std::vector<Argument<Base> >& args = code.arguments_;
+
+            typename std::vector<Argument<Base> >::const_iterator it;
+
+            /**
+             * count variable usage
+             */
+            for (it = args.begin(); it != args.end(); ++it) {
+                if (it->operation() != NULL) {
+                    SourceCodeFragment<Base>& arg = *it->operation();
+
+                    if (arg.use_count_ == 0) {
+                        // dependencies not visited yet
+                        determineLastTempVarUsage(arg);
+                    }
+
+                    arg.use_count_++;
+
+                    if (arg.getLastUsageEvaluationOrder() < code.getEvaluationOrder()) {
+                        arg.setLastUsageEvaluationOrder(code.getEvaluationOrder());
+                    }
+                }
+            }
+        }
+
+        inline void resetUsageCount() {
+            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
+            for (it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                SourceCodeFragment<Base>* block = *it;
+                block->use_count_ = 0;
+
+            }
+        }
+
+        /**
+         * Defines the evaluation order for the code fragments that do not
+         * create variables
+         * \param code The operation just added to the evaluation order
+         */
+        inline void dependentAdded2EvaluationQueue(SourceCodeFragment<Base>& code) {
+            const std::vector<Argument<Base> >& args = code.arguments_;
+
+            typename std::vector<Argument<Base> >::const_iterator it;
+
+            for (it = args.begin(); it != args.end(); ++it) {
+                if (it->operation() != NULL) {
+                    SourceCodeFragment<Base>& arg = *it->operation();
+                    if (arg.getEvaluationOrder() == 0) {
+                        arg.setEvaluationOrder(code.getEvaluationOrder());
+                        dependentAdded2EvaluationQueue(arg);
+                    }
+                }
+            }
+        }
+
+        inline bool isIndependent(const SourceCodeFragment<Base>& arg) const {
+            size_t id = arg.variableID();
+            return id > 0 && id <= _independentVariables.size();
+        }
+
+        inline bool isTemporary(const SourceCodeFragment<Base>& arg) const {
+            return arg.variableID() >= _minTemporaryVarID;
         }
 
     private:

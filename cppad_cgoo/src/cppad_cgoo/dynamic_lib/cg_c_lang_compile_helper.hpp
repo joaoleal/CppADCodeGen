@@ -33,7 +33,7 @@ namespace CppAD {
         static const std::string FUNCTION_HESSIAN_SPARSITY;
         static const std::string FUNCTION_INFO;
         static const std::string FUNCTION_VERSION;
-        static const unsigned long int VERSION;
+        static const unsigned long int API_VERSION;
     protected:
         ADFun<CppAD::CG<Base> >* _fun;
         bool _zero;

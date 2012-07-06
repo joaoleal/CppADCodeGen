@@ -342,7 +342,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(error.empty(), error.c_str());
             
             unsigned long int version = (*versionFunc)();
-            CPPADCG_ASSERT_KNOWN(CLangCompileHelper<Base>::VERSION == version,
+            CPPADCG_ASSERT_KNOWN(CLangCompileHelper<Base>::API_VERSION == version,
                     "The version of the dynamic library is incompatible with the current version");
             
             /**

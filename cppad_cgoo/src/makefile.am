@@ -38,6 +38,7 @@ nobase_cginclude_HEADERS =  \
 	cppad_cgoo/cg_code_handler.hpp \
 	cppad_cgoo/cg_compare.hpp \
 	cppad_cgoo/cg_cond_exp_op.hpp \
+	cppad_cgoo/cg_cppadcg_assert.hpp \
 	cppad_cgoo/cg_debug.hpp \
 	cppad_cgoo/cg_declare_cg.hpp \
 	cppad_cgoo/cg_default.hpp \

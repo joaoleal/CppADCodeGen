@@ -82,8 +82,6 @@ int main(void) {
     using std::cout;
     using std::endl;
 
-    test_verbose = false;
-
     bool ok = true;
     ok &= Run(Assign, "Assign");
     ok &= Run(Abs, "Abs");
