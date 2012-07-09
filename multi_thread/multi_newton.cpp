@@ -1,4 +1,4 @@
-/* $Id: multi_newton.cpp 2251 2012-01-02 14:24:11Z bradbell $ */
+/* $Id: multi_newton.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -151,13 +151,13 @@ $childtable%
 
 $head Source$$
 $code
-$verbatim%multi_thread/multi_newton.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/multi_newton.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 ---------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 // general purpose multi-threading interface 
 # include "team_thread.hpp"
 // special utilities for the multi_newton problem
@@ -192,4 +192,4 @@ bool multi_newton(
 
 	return ok;
 }
-// END PROGRAM
+// END C++

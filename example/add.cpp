@@ -1,6 +1,6 @@
-/* $Id: add.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: add.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Add.cpp$$
+$begin add.cpp$$
 
 $section AD Binary Addition: Example and Test$$
 
@@ -22,12 +22,12 @@ $index example, AD add$$
 $index test, AD add$$
 
 $code
-$verbatim%example/add.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/add.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 
 bool Add(void)
@@ -38,7 +38,7 @@ bool Add(void)
 	// domain space vector
 	size_t n  = 1;
 	double x0 = 0.5;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0]      = x0; 
 
 	// declare independent variables and start tape recording
@@ -52,7 +52,7 @@ bool Add(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = d + x[0];          // AD<double> + AD<double> 
 
 	// create f: x -> y and stop tape recording
@@ -62,15 +62,15 @@ bool Add(void)
 	ok &= NearEqual(y[0] , 2. * x0 + 10,  1e-10 , 1e-10);
 
 	// forward computation of partials w.r.t. x[0]
-	CPPAD_TEST_VECTOR<double> dx(n);
-	CPPAD_TEST_VECTOR<double> dy(m);
+	CPPAD_TESTVECTOR(double) dx(n);
+	CPPAD_TESTVECTOR(double) dy(m);
 	dx[0] = 1.;
 	dy    = f.Forward(1, dx);
 	ok   &= NearEqual(dy[0], 2., 1e-10, 1e-10);
 
 	// reverse computation of derivative of y[0]
-	CPPAD_TEST_VECTOR<double>  w(m);
-	CPPAD_TEST_VECTOR<double> dw(n);
+	CPPAD_TESTVECTOR(double)  w(m);
+	CPPAD_TESTVECTOR(double) dw(n);
 	w[0]  = 1.;
 	dw    = f.Reverse(1, w);
 	ok   &= NearEqual(dw[0], 2., 1e-10, 1e-10);
@@ -85,4 +85,4 @@ bool Add(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

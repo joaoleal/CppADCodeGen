@@ -1,6 +1,6 @@
-/* $Id: interp_onetape.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: interp_onetape.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -25,17 +25,17 @@ $index tape, interpolate$$
 $index retape, interpolate$$
 
 $head See Also$$
-$cref/interp_retape.cpp/$$
+$cref interp_retape.cpp$$
 $pre
 
 $$
 $code
-$verbatim%example/interp_onetape.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/interp_onetape.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include <cassert>
 # include <cmath>
@@ -99,7 +99,7 @@ bool interp_onetape(void)
 
 	// domain space vector
 	size_t n = 1;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = .4 * ArgumentValue[1] + .6 * ArgumentValue[2];
 
 	// declare independent variables and start tape recording
@@ -113,17 +113,17 @@ bool interp_onetape(void)
 
 	// range space vector
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = I;
 
 	// create f: X -> Y and stop tape recording
 	CppAD::ADFun<double> f(X, Y);
 
 	// vectors for arguments to the function object f
-	CPPAD_TEST_VECTOR<double> x(n);   // argument values
-	CPPAD_TEST_VECTOR<double> y(m);   // function values 
-	CPPAD_TEST_VECTOR<double> dx(n);  // differentials in x space
-	CPPAD_TEST_VECTOR<double> dy(m);  // differentials in y space
+	CPPAD_TESTVECTOR(double) x(n);   // argument values
+	CPPAD_TESTVECTOR(double) y(m);   // function values 
+	CPPAD_TESTVECTOR(double) dx(n);  // differentials in x space
+	CPPAD_TESTVECTOR(double) dy(m);  // differentials in y space
 
 	// to check function value we use the fact that X[0] is between 
 	// ArgumentValue[1] and ArgumentValue[2]
@@ -155,4 +155,4 @@ bool interp_onetape(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

@@ -41,9 +41,10 @@ am__configure_deps = $(am__aclocal_m4_deps) $(CONFIGURE_DEPENDENCIES) \
 mkinstalldirs = $(install_sh) -d
 CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
-am_cppad_OBJECTS = main.$(OBJEXT) det_lu.$(OBJEXT) det_minor.$(OBJEXT) \
-	mat_mul.$(OBJEXT) ode.$(OBJEXT) poly.$(OBJEXT) \
-	sparse_hessian.$(OBJEXT) sparse_jacobian.$(OBJEXT)
+am_cppad_OBJECTS = print_optimize.$(OBJEXT) main.$(OBJEXT) \
+	det_lu.$(OBJEXT) det_minor.$(OBJEXT) mat_mul.$(OBJEXT) \
+	ode.$(OBJEXT) poly.$(OBJEXT) sparse_hessian.$(OBJEXT) \
+	sparse_jacobian.$(OBJEXT)
 cppad_OBJECTS = $(am_cppad_OBJECTS)
 cppad_LDADD = $(LDADD)
 cppad_DEPENDENCIES =
@@ -56,6 +57,10 @@ CXXCOMPILE = $(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) \
 CXXLD = $(CXX)
 CXXLINK = $(CXXLD) $(AM_CXXFLAGS) $(CXXFLAGS) $(AM_LDFLAGS) $(LDFLAGS) \
 	-o $@
+COMPILE = $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) \
+	$(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS)
+CCLD = $(CC)
+LINK = $(CCLD) $(AM_CFLAGS) $(CFLAGS) $(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(cppad_SOURCES)
 DIST_SOURCES = $(cppad_SOURCES)
 ETAGS = etags
@@ -71,6 +76,7 @@ AUTOHEADER = @AUTOHEADER@
 AUTOMAKE = @AUTOMAKE@
 AWK = @AWK@
 BOOST_DIR = @BOOST_DIR@
+BOOST_INCLUDE = @BOOST_INCLUDE@
 BTHREAD_LIB = @BTHREAD_LIB@
 CC = @CC@
 CCDEPMODE = @CCDEPMODE@
@@ -78,6 +84,7 @@ CFLAGS = @CFLAGS@
 CPP = @CPP@
 CPPAD_BOOSTVECTOR = @CPPAD_BOOSTVECTOR@
 CPPAD_CPPADVECTOR = @CPPAD_CPPADVECTOR@
+CPPAD_EIGENVECTOR = @CPPAD_EIGENVECTOR@
 CPPAD_GETTIMEOFDAY = @CPPAD_GETTIMEOFDAY@
 CPPAD_IPOPT_LD_PATH = @CPPAD_IPOPT_LD_PATH@
 CPPAD_IPOPT_LIBS = @CPPAD_IPOPT_LIBS@
@@ -85,15 +92,17 @@ CPPAD_MAX_NUM_THREADS = @CPPAD_MAX_NUM_THREADS@
 CPPAD_SIZE_T_SAME_UNSIGNED_INT = @CPPAD_SIZE_T_SAME_UNSIGNED_INT@
 CPPAD_STDVECTOR = @CPPAD_STDVECTOR@
 CPPAD_TAPE_ADDR_TYPE = @CPPAD_TAPE_ADDR_TYPE@
+CPPAD_TAPE_ID_TYPE = @CPPAD_TAPE_ID_TYPE@
 CPPFLAGS = @CPPFLAGS@
 CXX = @CXX@
 CXXDEPMODE = @CXXDEPMODE@
 CXXFLAGS = @CXXFLAGS@
 CXX_FLAGS = @CXX_FLAGS@
+CXX_FLAGS_EIGEN = @CXX_FLAGS_EIGEN@
 CXX_FLAGS_FADBAD = @CXX_FLAGS_FADBAD@
 CYGPATH_W = @CYGPATH_W@
 
-# $Id: makefile.am 2354 2012-04-19 14:25:37Z bradbell $
+# $Id: makefile.am 2453 2012-07-05 02:52:41Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -115,6 +124,8 @@ ECHO_C = @ECHO_C@
 ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
+EIGEN_DIR = @EIGEN_DIR@
+EIGEN_INCLUDE = @EIGEN_INCLUDE@
 EXEEXT = @EXEEXT@
 FADBAD_DIR = @FADBAD_DIR@
 FC = @FC@
@@ -154,6 +165,7 @@ SET_MAKE = @SET_MAKE@
 SHELL = @SHELL@
 STRIP = @STRIP@
 TAPE_ADDR_TYPE = @TAPE_ADDR_TYPE@
+TAPE_ID_TYPE = @TAPE_ID_TYPE@
 VERSION = @VERSION@
 abs_builddir = @abs_builddir@
 abs_srcdir = @abs_srcdir@
@@ -201,16 +213,13 @@ target_alias = @target_alias@
 top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
-@CppAD_BOOST_DIR_FALSE@BOOST_INCLUDE = 
-#
-@CppAD_BOOST_DIR_TRUE@BOOST_INCLUDE = -I$(BOOST_DIR)/include
 #
 EXTRA_DIST = \
 	cppad.sln \
 	cppad.vcproj
 
 #
-AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_INCLUDE)
+AM_CPPFLAGS = -I$(top_srcdir) $(BOOST_INCLUDE) $(EIGEN_INCLUDE)
 #
 # BEGIN OPTIMIZE
 AM_CXXFLAGS = -O2 -DNDEBUG -DSPEED_CPPAD $(CXX_FLAGS)
@@ -224,6 +233,8 @@ LDADD = -lspeed
 AM_LDFLAGS = -L../src
 #
 cppad_SOURCES = \
+	print_optimize.hpp \
+	print_optimize.cpp \
 	../main.cpp \
 	det_lu.cpp  \
 	det_minor.cpp \
@@ -286,6 +297,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mat_mul.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/ode.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/poly.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/print_optimize.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparse_hessian.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sparse_jacobian.Po@am__quote@
 
@@ -523,6 +535,8 @@ test: check
 	./cppad correct 123
 	./cppad correct 123 retape
 	./cppad correct 123 optimize
+	./cppad correct 123 atomic
+	./cppad correct 123 hold_memory
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

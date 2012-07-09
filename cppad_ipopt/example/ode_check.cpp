@@ -1,6 +1,6 @@
-/* $Id: ode_check.cpp 2178 2011-10-30 06:52:58Z bradbell $ */
+/* $Id: ode_check.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -15,12 +15,12 @@ $begin ipopt_ode_check.cpp$$
 $section Correctness Check for Both Simple and Fast Representations$$
 
 $code
-$verbatim%cppad_ipopt/example/ode_check.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%cppad_ipopt/example/ode_check.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include "ode_run.hpp"
 
 bool ode_check(const SizeVector& N, const NumberVector& x)
@@ -102,4 +102,4 @@ bool ode_check(const SizeVector& N, const NumberVector& x)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

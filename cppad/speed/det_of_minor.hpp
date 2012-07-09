@@ -1,9 +1,9 @@
-/* $Id: det_of_minor.hpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: det_of_minor.hpp 2439 2012-06-18 02:28:36Z bradbell $ */
 # ifndef CPPAD_DET_OF_MINOR_INCLUDED
 # define CPPAD_DET_OF_MINOR_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -15,12 +15,12 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin det_of_minor$$
 $spell
+	CppAD
 	cppad.hpp
 	hpp
 	std
 	Det
 	const
-	CppADvector
 	namespace
 $$
 
@@ -32,9 +32,9 @@ $index minor, matrix determinant$$
 $section Determinant of a Minor$$
 
 $head Syntax$$
-$syntax%# include <cppad/speed/det_of_minor.hpp>
+$codei%# include <cppad/speed/det_of_minor.hpp>
 %$$ 
-$syntax%%d% = det_of_minor(%a%, %m%, %n%, %r%, %c%)%$$ 
+$icode%d% = det_of_minor(%a%, %m%, %n%, %r%, %c%)%$$ 
 
 
 $head Inclusion$$
@@ -66,7 +66,7 @@ This template function
 is for example and testing purposes only.
 Expansion by minors is chosen as an example because it uses
 a lot of floating point operations yet does not require much source code
-(on the order of $italic m$$ factorial floating point operations and 
+(on the order of $icode m$$ factorial floating point operations and 
 about 70 lines of source code including comments).
 This is not an efficient method for computing a determinant;
 for example, using an LU factorization would be better.
@@ -87,8 +87,8 @@ and $latex c[m] = 0$$.
 $lend
 
 $head a$$
-The argument $italic a$$ has prototype
-$syntax%
+The argument $icode a$$ has prototype
+$codei%
 	const std::vector<%Scalar%>& %a%
 %$$ 
 and is a vector with size $latex m * m$$
@@ -100,22 +100,22 @@ $latex \[
 \] $$
 
 $head m$$
-The argument $italic m$$ has prototype
-$syntax%
+The argument $icode m$$ has prototype
+$codei%
 	size_t %m%
 %$$
 and is the size of the square matrix $latex A$$.
 
 $head n$$
-The argument $italic n$$ has prototype
-$syntax%
+The argument $icode n$$ has prototype
+$codei%
 	size_t %n%
 %$$
 and is the size of the square minor $latex M$$.
 
 $head r$$
-The argument $italic r$$ has prototype
-$syntax%
+The argument $icode r$$ has prototype
+$codei%
 	std::vector<size_t>& %r%
 %$$
 and is a vector with $latex m + 1$$ elements.
@@ -130,15 +130,15 @@ $latex \[
 	R(i+1) & = & r[ R(i) ]
 \end{array}
 \] $$
-All the elements of $italic r$$ must have value
-less than or equal $italic m$$.
-The elements of vector $italic r$$ are modified during the computation, 
+All the elements of $icode r$$ must have value
+less than or equal $icode m$$.
+The elements of vector $icode r$$ are modified during the computation, 
 and restored to their original value before the return from
 $code det_of_minor$$.
 
 $head c$$
-The argument $italic c$$ has prototype
-$syntax%
+The argument $icode c$$ has prototype
+$codei%
 	std::vector<size_t>& %c%
 %$$
 and is a vector with $latex m + 1$$ elements
@@ -153,48 +153,48 @@ $latex \[
 	C(j+1) & = & c[ C(j) ]
 \end{array}
 \] $$
-All the elements of $italic c$$ must have value
-less than or equal $italic m$$.
-The elements of vector $italic c$$ are modified during the computation, 
+All the elements of $icode c$$ must have value
+less than or equal $icode m$$.
+The elements of vector $icode c$$ are modified during the computation, 
 and restored to their original value before the return from
 $code det_of_minor$$.
 
 $head d$$
-The result $italic d$$ has prototype
-$syntax%
+The result $icode d$$ has prototype
+$codei%
 	%Scalar% %d%
 %$$
 and is equal to the determinant of the minor $latex M$$.
 
 $head Scalar$$
-If $italic x$$ and $italic y$$ are objects of type $italic Scalar$$
-and $italic i$$ is an object of type $code int$$,
-the $italic Scalar$$ must support the following operations:
+If $icode x$$ and $icode y$$ are objects of type $icode Scalar$$
+and $icode i$$ is an object of type $code int$$,
+the $icode Scalar$$ must support the following operations:
 $table
 $bold Syntax$$ 
 	$cnext $bold Description$$
 	$cnext $bold Result Type$$
 $rnext
-$syntax%%Scalar% %x%$$
-	$cnext default constructor for $italic Scalar$$ object.
+$icode%Scalar% %x%$$
+	$cnext default constructor for $icode Scalar$$ object.
 $rnext
-$syntax%%x% = %i%$$
-	$cnext set value of $italic x$$ to current value of $italic i$$
+$icode%x% = %i%$$
+	$cnext set value of $icode x$$ to current value of $icode i$$
 $rnext
-$syntax%%x% = %y%$$
-	$cnext set value of $italic x$$ to current value of $italic y$$
+$icode%x% = %y%$$
+	$cnext set value of $icode x$$ to current value of $icode y$$
 $rnext
-$syntax%%x% + %y%$$
-	$cnext value of $italic x$$ plus $italic y$$
-	$cnext $italic Scalar$$
+$icode%x% + %y%$$
+	$cnext value of $icode x$$ plus $icode y$$
+	$cnext $icode Scalar$$
 $rnext
-$syntax%%x% - %y%$$
-	$cnext value of $italic x$$ minus $italic y$$
-	$cnext $italic Scalar$$
+$icode%x% - %y%$$
+	$cnext value of $icode x$$ minus $icode y$$
+	$cnext $icode Scalar$$
 $rnext
-$syntax%%x% * %y%$$
-	$cnext value of $italic x$$ times value of $italic y$$
-	$cnext $italic Scalar$$
+$icode%x% * %y%$$
+	$cnext value of $icode x$$ times value of $icode y$$
+	$cnext $icode Scalar$$
 $tend
 
 $children%
@@ -204,20 +204,20 @@ $children%
 
 $head Example$$
 The file
-$cref/det_of_minor.cpp/$$ 
+$cref det_of_minor.cpp$$ 
 contains an example and test of $code det_of_minor.hpp$$.
 It returns true if it succeeds and false otherwise.
 
 $head Source Code$$
 The file
-$xref/det_of_minor.hpp/$$ 
+$cref det_of_minor.hpp$$ 
 contains the source for this template function.
 
 
 $end
 ---------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 namespace CppAD { // BEGIN CppAD namespace
 template <class Scalar> 
 Scalar det_of_minor( 
@@ -276,5 +276,5 @@ Scalar det_of_minor(
 	return detM;
 }
 } // END CppAD namespace
-// END PROGRAM
+// END C++
 # endif

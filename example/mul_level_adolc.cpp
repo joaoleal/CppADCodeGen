@@ -1,4 +1,4 @@
-/* $Id: mul_level_adolc.cpp 2345 2012-04-10 15:36:40Z bradbell $ */
+/* $Id: mul_level_adolc.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -25,7 +25,7 @@ $index Adolc, multiple level$$
 
 $head Purpose$$
 In this example, we use $code AD< adouble> >$$ (level two taping),
-the compute values of the function $latex f : \R^n \rightarrow \R$$ where 
+the compute values of the function $latex f : \B{R}^n \rightarrow \B{R}$$ where 
 $latex \[
 	f(x) = \frac{1}{2} \left( x_0^2 + \cdots + x_{n-1}^2 \right)
 \] $$
@@ -34,24 +34,24 @@ the directional derivative
 $latex \[
 f^{(1)} (x) * v  = x_0 v_0 + \cdots + x_{n-1} v_{n-1}
 \] $$.
-where $latex v \in \R^n$$.
+where $latex v \in \B{R}^n$$.
 We then use $code double$$ (no taping) to compute
 $latex \[
 \frac{d}{dx} \left[ f^{(1)} (x) * v \right] = v
 \] $$
 This is only meant as an example of multiple levels of taping.
-The example $xref/HesTimesDir.cpp/$$ computes the same value more
+The example $cref hes_times_dir.cpp$$ computes the same value more
 efficiently by using the identity:
 $latex \[
 	\frac{d}{dx} \left[ f^{(1)} (x) * v \right] = f^{(2)} (x) * v
 \] $$
-The example $cref/mul_level.cpp/$$ computes the same values using
+The example $cref mul_level.cpp$$ computes the same values using
 $code AD< AD<double> >$$ and $code AD<double>$$.
 
 $head Memory Management$$
 Adolc uses raw memory arrays that depend on the number of 
 dependent and independent variables.
-The memory management utility $cref/omp_alloc/$$ 
+The memory management utility $cref omp_alloc$$ 
 is used to manage this memory allocation.
 
 $head Configuration Requirement$$
@@ -60,31 +60,31 @@ the value $cref/adolc_dir/InstallUnix/adolc_dir/$$ is specified on the
 $cref/configure/InstallUnix/Configure/$$ command line.
 
 $code
-$verbatim%example/mul_level_adolc.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/mul_level_adolc.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <adolc/adouble.h>
 # include <adolc/taping.h>
 # include <adolc/interfaces.h>
 
 // adouble definitions not in Adolc distribution and 
 // required in order to use CppAD::AD<adouble>
-# include "base_adolc.hpp"
+# include <cppad/example/base_adolc.hpp>
 
 # include <cppad/cppad.hpp>
 
 namespace { 
 	// f(x) = |x|^2 / 2 = .5 * ( x[0]^2 + ... + x[n-1]^2 )
 	template <class Type>
-	Type f(CPPAD_TEST_VECTOR<Type> &x)
+	Type f(CPPAD_TESTVECTOR(Type) &x)
 	{	Type sum;
 
 		sum  = 0.;
-		size_t i = x.size();
-		for(i = 0; i < x.size(); i++)
+		size_t i = size_t(x.size());
+		for(i = 0; i < size_t(x.size()); i++)
 			sum += x[i] * x[i];
 
 		return .5 * sum;
@@ -100,9 +100,9 @@ bool mul_level_adolc(void)
 	size_t n = 5;                          // number independent variables
 	size_t j;
 
-	CPPAD_TEST_VECTOR<double>       x(n);
-	CPPAD_TEST_VECTOR<ADdouble>   a_x(n);
-	CPPAD_TEST_VECTOR<ADDdouble> aa_x(n);
+	CPPAD_TESTVECTOR(double)       x(n);
+	CPPAD_TESTVECTOR(ADdouble)   a_x(n);
+	CPPAD_TESTVECTOR(ADDdouble) aa_x(n);
 
 	// Values for the independent variables while taping the function f(x)
 	for(j = 0; j < n; j++)
@@ -111,7 +111,7 @@ bool mul_level_adolc(void)
 	CppAD::Independent(aa_x); 
 
 	// Use AD<adouble> to tape the evaluation of f(x)
-	CPPAD_TEST_VECTOR<ADDdouble> aa_f(1); 
+	CPPAD_TESTVECTOR(ADDdouble) aa_f(1); 
 	aa_f[0] = f(aa_x); 
 
 	// Declare a_F as the corresponding ADFun<adouble> function f(x)
@@ -130,8 +130,8 @@ bool mul_level_adolc(void)
 	a_F.Forward(0, a_x);
 
 	// compute f'(x) * v
-	CPPAD_TEST_VECTOR<ADdouble> a_v(n);
-	CPPAD_TEST_VECTOR<ADdouble> a_df(1);
+	CPPAD_TESTVECTOR(ADdouble) a_v(n);
+	CPPAD_TESTVECTOR(ADdouble) a_df(1);
 	for(j = 0; j < n; j++)
 		a_v[j] = double(n - j);
 	a_df = a_F.Forward(1, a_v); 
@@ -163,4 +163,4 @@ bool mul_level_adolc(void)
 	omp_alloc::delete_array(dw);
 	return ok;
 }
-// END PROGRAM
+// END C++

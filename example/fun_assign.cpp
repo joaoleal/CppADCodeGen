@@ -1,6 +1,6 @@
-/* $Id: fun_assign.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: fun_assign.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -20,12 +20,12 @@ $index example, ADFun assignment$$
 $index assignment, ADFun example$$
 
 $code
-$verbatim%example/fun_assign.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/fun_assign.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include <limits>
 
@@ -36,14 +36,14 @@ bool fun_assign(void)
 	size_t i, j;
 
 	// ten times machine percision
-	double eps = 10. * CppAD::epsilon<double>();
+	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 	// two ADFun<double> objects
 	CppAD::ADFun<double> g;
 
 	// domain space vector
 	size_t n  = 3;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	for(j = 0; j < n; j++)
 		x[j] = AD<double>(j + 2);
 
@@ -52,7 +52,7 @@ bool fun_assign(void)
 
 	// range space vector 
 	size_t m = 2;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = x[0] + x[0] * x[1];
 	y[1] = x[1] * x[2] + x[2];
 
@@ -60,7 +60,7 @@ bool fun_assign(void)
 	CppAD::ADFun<double> f(x, y);
 
 	// sparsity pattern for the identity matrix
-	CPPAD_TEST_VECTOR< std::set<size_t> > r(n);
+	CPPAD_TESTVECTOR(std::set<size_t>) r(n);
 	for(j = 0; j < n; j++)
 		r[j].insert(j);
 
@@ -77,7 +77,7 @@ bool fun_assign(void)
 
 	// Use zero order Taylor coefficient from f for first order
 	// calculation using g.
-	CPPAD_TEST_VECTOR<double> dx(n), dy(m);
+	CPPAD_TESTVECTOR(double) dx(n), dy(m);
 	for(i = 0; i < n; i++)
 		dx[i] = 0.;
 	dx[1] = 1;
@@ -87,7 +87,7 @@ bool fun_assign(void)
 
 	// Use forward Jacobian sparsity pattern from f to calculate
 	// Hessian sparsity pattern using g.
-	CPPAD_TEST_VECTOR< std::set<size_t> > s(1), h(n);
+	CPPAD_TESTVECTOR(std::set<size_t>) s(1), h(n);
 	s[0].insert(0); // Compute sparsity pattern for Hessian of y[0]
 	h =  f.RevSparseHes(n, s);
 
@@ -107,4 +107,4 @@ bool fun_assign(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

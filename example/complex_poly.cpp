@@ -1,6 +1,6 @@
-/* $Id: complex_poly.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: complex_poly.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin ComplexPoly.cpp$$
+$begin complex_poly.cpp$$
 $spell
 	Cpp
 $$
@@ -24,18 +24,18 @@ $index example, complex polynomial$$
 $index test, complex polynomial$$
 
 $head See Also$$
-$cref/not_complex_ad.cpp/$$
+$cref not_complex_ad.cpp$$
 
 $head Poly$$
-Select this link to view specifications for $xref/Poly/$$:
+Select this link to view specifications for $cref Poly$$:
 
 $code
-$verbatim%example/complex_poly.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/complex_poly.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <complex>
@@ -49,28 +49,28 @@ bool complex_poly(void)
 	typedef std::complex<double> Complex; 
 
 	// polynomial coefficients
-	CPPAD_TEST_VECTOR< Complex >     a   (deg + 1); // coefficients for p(z)
-	CPPAD_TEST_VECTOR< AD<Complex> > A   (deg + 1); 
+	CPPAD_TESTVECTOR( Complex )     a   (deg + 1); // coefficients for p(z)
+	CPPAD_TESTVECTOR(AD<Complex>) A   (deg + 1); 
 	size_t i;
 	for(i = 0; i <= deg; i++)
 		A[i] = a[i] = Complex(i, i);
 
 	// independent variable vector
-	CPPAD_TEST_VECTOR< AD<Complex> > Z(1);
+	CPPAD_TESTVECTOR(AD<Complex>) Z(1);
 	Complex z = Complex(1., 2.);
  	Z[0]      = z;
 	Independent(Z);
 
 	// dependent variable vector and indices
-	CPPAD_TEST_VECTOR< AD<Complex> > P(1);
+	CPPAD_TESTVECTOR(AD<Complex>) P(1);
 
 	// dependent variable values
 	P[0] = Poly(0, A, Z[0]);
 
 	// create f: Z -> P and vectors used for derivative calculations
 	CppAD::ADFun<Complex> f(Z, P);
-	CPPAD_TEST_VECTOR<Complex> v( f.Domain() );
-	CPPAD_TEST_VECTOR<Complex> w( f.Range() );
+	CPPAD_TESTVECTOR(Complex) v( f.Domain() );
+	CPPAD_TESTVECTOR(Complex) w( f.Range() );
 
 	// check first derivative w.r.t z
 	v[0]      = 1.;
@@ -87,4 +87,4 @@ bool complex_poly(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

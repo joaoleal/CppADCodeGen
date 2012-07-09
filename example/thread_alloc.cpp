@@ -1,4 +1,4 @@
-/* $Id: thread_alloc.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: thread_alloc.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -27,12 +27,12 @@ $index example, memory allocation$$
 $index test, memory allocation$$
 
 $code
-$verbatim%example/thread_alloc.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/thread_alloc.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/thread_alloc.hpp>
 # include <cppad/memory_leak.hpp>
 # include <vector>
@@ -192,4 +192,4 @@ bool thread_alloc(void)
 }
 
 
-// END PROGRAM
+// END C++

@@ -1,6 +1,6 @@
-$Id: speed_cppad.omh 2178 2011-10-30 06:52:58Z bradbell $
+$Id: speed_cppad.omh 2411 2012-05-31 15:58:32Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -50,7 +50,7 @@ $codei%
 	./cppad speed %seed%
 %$$
 where $icode seed$$ is a positive integer.
-See $cref/speed_main/$$ for more options.
+See $cref speed_main$$ for more options.
 
 $head C++ Compiler Flags$$
 The C++ compiler flags used to build the CppAD speed tests are
@@ -67,7 +67,8 @@ $contents%
 	speed/cppad/ode.cpp%
 	speed/cppad/poly.cpp%
 	speed/cppad/sparse_hessian.cpp%
-	speed/cppad/sparse_jacobian.cpp
+	speed/cppad/sparse_jacobian.cpp%
+	speed/cppad/print_optimize.cpp
 %$$
 
 $end

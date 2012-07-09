@@ -1,6 +1,6 @@
-/* $Id: poly.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: poly.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -13,7 +13,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 // Old GetStarted example now used just for validation testing
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 // directory where cppad/cppad.hpp is stored must be searched by compiler
 # include <cppad/cppad.hpp>
@@ -28,8 +28,8 @@ bool Poly(void)
 	size_t deg = 4;
 
 	// vector that will hold polynomial coefficients for p(z)
-	CPPAD_TEST_VECTOR< AD<double> > A(deg + 1);  // AD<double> elements
-	CPPAD_TEST_VECTOR<double>       a(deg + 1);  //    double  elements
+	CPPAD_TESTVECTOR(AD<double>) A(deg + 1);  // AD<double> elements
+	CPPAD_TESTVECTOR(double)       a(deg + 1);  //    double  elements
 
 	// set the polynomial coefficients
 	A[0] = 1.;
@@ -38,20 +38,20 @@ bool Poly(void)
 		A[k] = a[k] = 1.;
 
 	// independent variables
-	CPPAD_TEST_VECTOR< AD<double> > Z(1); // one independent variable
+	CPPAD_TESTVECTOR(AD<double>) Z(1); // one independent variable
 	Z[0]     = 3.;                        // value of independent variable
 	Independent(Z);                       // declare independent variable
 
 	// dependent variables 
-	CPPAD_TEST_VECTOR< AD<double> > P(1); // one dependent variable
+	CPPAD_TESTVECTOR(AD<double>) P(1); // one dependent variable
 	P[0]     = Poly(0, A, Z[0]);    // value of polynomial at Z[0]
 
 	// define f : Z -> P as a function mapping independent to dependent 
 	ADFun<double> f(Z, P);          // ADFun corresponding to polynomial
 
 	// compute derivative of polynomial
-	CPPAD_TEST_VECTOR<double> z(1);  // vector length f.Domain()
-	CPPAD_TEST_VECTOR<double> J(1);  // vector length f.Range * f.Domain()
+	CPPAD_TESTVECTOR(double) z(1);  // vector length f.Domain()
+	CPPAD_TESTVECTOR(double) J(1);  // vector length f.Range * f.Domain()
 	z[0] = 3.;                 // point at which to compute derivative
 	J    = f.Jacobian(z);      // value of derivative
 
@@ -61,4 +61,4 @@ bool Poly(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

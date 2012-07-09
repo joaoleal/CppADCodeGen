@@ -1,7 +1,7 @@
 #! /bin/bash -e
-# $Id: check_include_def.sh 2236 2011-12-26 14:08:37Z bradbell $
+# $Id: check_include_def.sh 2433 2012-06-15 14:11:26Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the
@@ -22,6 +22,7 @@ echo "-------------------------------------------------------------------"
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \
+	cppad/example/*.hpp \
 	cppad/local/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
@@ -35,11 +36,12 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 ls \
 	cppad_ipopt/*/*.hpp \
 	cppad/*.hpp \
+	cppad/example/*.hpp \
 	cppad/local/*.hpp \
 	cppad/speed/*.hpp \
 	example/*.hpp \
 	multi_thread/*.hpp \
-	| sed -e 's|.*/||' -e 's|^cppad_||' \
+	| sed -e 's|.*/||' \
 	| sort -u \
 	> bin/check_include_def.2.$$
 if !(diff bin/check_include_def.1.$$ bin/check_include_def.2.$$)

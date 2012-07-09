@@ -1,0 +1,36 @@
+$Id: sparse_hes_fun.omh 2406 2012-05-28 04:36:23Z bradbell $
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+
+$begin sparse_hes_fun.hpp$$
+$spell
+	hes
+	ifndef
+	endif
+$$
+
+$section Source: sparse_hes_fun$$
+
+$index sparse_hes_fun, source$$
+$index source, sparse_hes_fun$$
+
+$code
+# ifndef CPPAD_SPARSE_HES_FUN_INCLUDED 
+$pre
+$$
+# define CPPAD_SPARSE_HES_FUN_INCLUDED 
+
+$verbatim%cppad/speed/sparse_hes_fun.hpp%0%// BEGIN C++%// END C++%$$
+
+# endif
+$$
+
+$end

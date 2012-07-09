@@ -1,6 +1,6 @@
-/* $Id: seq_property.cpp 1986 2011-06-18 20:33:17Z bradbell $ */
+/* $Id: seq_property.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -50,12 +50,12 @@ $index test, size_op_arg$$
 $index test, size_VecAD$$
 
 $code
-$verbatim%example/seq_property.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/seq_property.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -91,7 +91,7 @@ bool seq_property(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0]     = 0.;
 	x[1]     = 1.;
 
@@ -120,7 +120,7 @@ bool seq_property(void)
 
 	// range space vector
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 
 	// operations that do not add to the operation sequence
 	y[0]   = 1.;  // re-use the parameter 1   
@@ -163,4 +163,4 @@ bool seq_property(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

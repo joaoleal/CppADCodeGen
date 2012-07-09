@@ -1,9 +1,9 @@
-/* $Id: exp_2.hpp 1896 2011-03-10 15:28:11Z bradbell $ */
+/* $Id: exp_2.hpp 2439 2012-06-18 02:28:36Z bradbell $ */
 # ifndef CPPAD_EXP_2_INCLUDED
 # define CPPAD_EXP_2_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -81,7 +81,7 @@ It is the value of the exponential function
 approximation defined above.
 
 $head Type$$
-If $icode u$$ and $italic v$$ are $italic Type$$ objects and $italic i$$
+If $icode u$$ and $icode v$$ are $icode Type$$ objects and $icode i$$
 is an $code int$$: 
 
 $table
@@ -115,11 +115,11 @@ $childtable%
 
 
 $head Implementation$$
-The file $cref/exp_2.hpp/$$
+The file $cref exp_2.hpp$$
 contains a C++ implementation of this function.
 
 $head Test$$
-The file $cref/exp_2.cpp/$$ 
+The file $cref exp_2.cpp$$ 
 contains a test of this implementation.
 It returns true for success and false for failure.
 
@@ -132,7 +132,7 @@ $codep
 	double y = exp_2(x);
 $$
 What is the value assigned to 
-$code v1$$, $code v2$$, ... ,$code v5$$ in $cref/exp_2.hpp/$$ ?
+$code v1$$, $code v2$$, ... ,$code v5$$ in $cref exp_2.hpp$$ ?
 $lnext
 Extend the routine $code exp_2.hpp$$ to
 a routine $code exp_3.hpp$$ that computes
@@ -155,7 +155,7 @@ $lend
 $end
 ------------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 template <class Type>
 Type exp_2(const Type &x) 
 {       Type v1  = x;                // v1 = x
@@ -165,6 +165,6 @@ Type exp_2(const Type &x)
         Type v5  = v2 + v4;          // v5 = 1 + x + x^2 / 2
         return v5;                   // exp_2(x) = 1 + x + x^2 / 2
 }
-// END PROGRAM
+// END C++
 
 # endif

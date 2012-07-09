@@ -1,6 +1,6 @@
-/* $Id: value.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: value.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Value.cpp$$
+$begin value.cpp$$
 $spell
 	Cpp
 	cstddef
@@ -25,12 +25,12 @@ $index test, Value$$
 $index record, example$$
 
 $code
-$verbatim%example/value.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/value.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -41,7 +41,7 @@ bool Value(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0] = 3.;
 	x[1] = 4.;
 
@@ -54,7 +54,7 @@ bool Value(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = - x[1];
 
 	// cannot call Value(x[j]) or Value(y[0]) here (currently variables)
@@ -71,4 +71,4 @@ bool Value(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,7 +1,7 @@
 #! /bin/bash -e
-# $Id: check_include_file.sh 2082 2011-08-31 17:50:58Z bradbell $
+# $Id: check_include_file.sh 2446 2012-07-02 16:40:49Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the
@@ -31,14 +31,15 @@ declare -A root;
 declare -A rootInclude;
 #
 files[cppad]="cppad/*.hpp\
-	cppad/local/*.hpp\
-	cppad/speed/*.hpp"
+              cppad/example/*.hpp\
+              cppad/local/*.hpp\
+              cppad/speed/*.hpp"
 root[cppad]="cppad"
 rootInclude[cppad]=""
 #
 files[cppad_cgoo]="cppad_cgoo/src/cppad_cgoo/*.hpp\
-    cppad_cgoo/src/cppad_cgoo/dynamic_lib/*.hpp\
-    cppad_cgoo/src/cppad_cgoo/dynamic_lib/linux/*.hpp"
+                   cppad_cgoo/src/cppad_cgoo/dynamic_lib/*.hpp\
+                   cppad_cgoo/src/cppad_cgoo/dynamic_lib/linux/*.hpp"
 root[cppad_cgoo]="cppad_cgoo/src/"
 rootInclude[cppad_cgoo]="cppad_cgoo/src/"
 #
@@ -71,11 +72,11 @@ do
 	if [ "${rootInclude[$ff]}" = "" ]
  	then
  	 	ls	${files[$ff]} | \
-			sed -e '/cppad\/local\/prototype_op.hpp/d' | \
 			sort > bin/check_include_file.3.$$ 
  	else
  	 	ls	${files[$ff]} | \
 			sed -e '/cppad\/local\/prototype_op.hpp/d' | \
+			sed -e '/cppad\/example\/eigen_plugin.hpp/d' | \
  	 	 	sed -e "s|${rootInclude[$ff]}||" | \
 			sort > bin/check_include_file.3.$$ 
         fi

@@ -1,6 +1,6 @@
-/* $Id: ode.cpp 1497 2009-08-13 16:57:34Z bradbell $ */
+/* $Id: ode.cpp 2424 2012-06-07 13:54:21Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -25,12 +25,17 @@ $$
 
 $section Double Speed: Ode Solution$$
 
-$index double, speed ode$$
-$index speed, double ode$$
+$index link_ode, double$$
+$index double, link_ode$$
+$index speed, double$$
+$index double, speed$$
 $index ode, speed double$$
 
-$head link_ode$$
-$index link_ode$$
+$head Specifications$$
+See $cref link_ode$$.
+
+$head Implementation$$
+
 $codep */
 # include <cstring>
 # include <cppad/vector.hpp>
@@ -43,11 +48,13 @@ bool link_ode(
 	CppAD::vector<double>      &x         ,
 	CppAD::vector<double>      &jacobian
 )
-{	// -------------------------------------------------------------
+{
+	assert( x.size() == size );
+
+	// -------------------------------------------------------------
 	// setup
 
 	size_t n = size;
-	assert( x.size() == n );
 
 	size_t m = 0;
 	CppAD::vector<double> f(n);

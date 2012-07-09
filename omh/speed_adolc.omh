@@ -1,4 +1,4 @@
-$Id: speed_adolc.omh 2345 2012-04-10 15:36:40Z bradbell $
+$Id: speed_adolc.omh 2425 2012-06-07 15:37:41Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -31,7 +31,7 @@ This section links to the source code the Adolc speed tests
 
 $head adolc_dir$$
 To run these tests, you must include the $code configure$$ command line option
-$syntax%
+$codei%
 	ADOLC_DIR=%adolc_dir%
 %$$
 during $cref/installation/InstallUnix/adolc_dir/$$.
@@ -50,7 +50,7 @@ $codei%
 	./adolc speed %seed%
 %$$
 where $icode seed$$ is a positive integer.
-See $cref/speed_main/$$ for more options.
+See $cref speed_main$$ for more options.
 
 $head C++ Compiler Flags$$
 The C++ compiler flags used to build the Adolc speed tests are
@@ -67,7 +67,8 @@ $contents%
 	speed/adolc/ode.cpp%
 	speed/adolc/poly.cpp%
 	speed/adolc/sparse_hessian.cpp%
-	speed/adolc/sparse_jacobian.cpp
+	speed/adolc/sparse_jacobian.cpp%
+	speed/adolc/alloc_mat.cpp
 %$$
 
 $end

@@ -1,6 +1,6 @@
-/* $Id: for_sparse_jac.cpp 1614 2009-12-23 16:37:00Z bradbell $ */
+/* $Id: for_sparse_jac.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin ForSparseJac.cpp$$
+$begin for_sparse_jac.cpp$$
 $spell
 	Jacobian
 	Jac
@@ -27,12 +27,12 @@ $index test, sparsity forward$$
 $index sparsity, forward example$$
 
 $code
-$verbatim%example/for_sparse_jac.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/for_sparse_jac.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <set>
 # include <cppad/cppad.hpp>
@@ -46,7 +46,7 @@ bool BoolCases(void)
 
 	// domain space vector
 	size_t n = 2; 
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 0.; 
 	X[1] = 1.;
 
@@ -55,7 +55,7 @@ bool BoolCases(void)
 
 	// range space vector
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = X[0];
 	Y[1] = X[0] * X[1];
 	Y[2] = X[1];
@@ -100,7 +100,7 @@ bool SetCases(void)
 
 	// domain space vector
 	size_t n = 2; 
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 0.; 
 	X[1] = 1.;
 
@@ -109,7 +109,7 @@ bool SetCases(void)
 
 	// range space vector
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = X[0];
 	Y[1] = X[0] * X[1];
 	Y[2] = X[1];
@@ -178,4 +178,4 @@ bool ForSparseJac(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

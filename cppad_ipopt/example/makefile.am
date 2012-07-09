@@ -1,4 +1,4 @@
-# $Id: makefile.am 2354 2012-04-19 14:25:37Z bradbell $
+# $Id: makefile.am 2453 2012-07-05 02:52:41Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -14,12 +14,6 @@
 # CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS          =
 #
-if CppAD_BOOST_DIR
-BOOST_INCLUDE = -I$(BOOST_DIR)/include
-else
-BOOST_INCLUDE =
-endif
-# 
 # Microsoft project files (and ipopt install utility for Visual Studio)
 EXTRA_DIST        =  test.sh \
 	\
@@ -32,10 +26,11 @@ check_PROGRAMS    = example
 AM_CXXFLAGS       = -g $(CXX_FLAGS) 
 #
 AM_CPPFLAGS       = -I. \
-                   -I$(top_srcdir) \
-                   -I$(top_srcdir)/cppad_ipopt/src \
-                     $(BOOST_INCLUDE) \
-                     -I$(IPOPT_DIR)/include
+	-I$(top_srcdir) \
+	-I$(top_srcdir)/cppad_ipopt/src \
+	$(BOOST_INCLUDE) \
+	$(EIGEN_INCLUDE) \
+	-I$(IPOPT_DIR)/include
 #
 LDADD             = \
                     -lcppad_ipopt \

@@ -1,6 +1,6 @@
-/* $Id: mul_level.cpp 2237 2011-12-28 11:47:15Z bradbell $ */
+/* $Id: mul_level.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -17,7 +17,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <adolc/interfaces.h>
 // adouble definitions not in Adolc distribution and 
 // required in order to use CppAD::AD<adouble>
-# include "../example/base_adolc.hpp"
+# include <cppad/example/base_adolc.hpp>
 # endif
 
 # include <cppad/cppad.hpp>
@@ -35,8 +35,8 @@ bool One(void)
 	typedef CppAD::AD<ADdouble> ADDdouble;   // for two levels of taping
 	size_t n = 2;                            // dimension for example
 
-	CPPAD_TEST_VECTOR<ADdouble>   a_x(n);
-	CPPAD_TEST_VECTOR<ADDdouble> aa_x(n);
+	CPPAD_TESTVECTOR(ADdouble)   a_x(n);
+	CPPAD_TESTVECTOR(ADDdouble) aa_x(n);
 
 	// value of the independent variables
 	a_x[0] = 2.; a_x[1] = 3.;
@@ -45,26 +45,26 @@ bool One(void)
 	CppAD::Independent(aa_x);
 
 	// compute the function f(x) = 2 * x[0] * x[1]
-	CPPAD_TEST_VECTOR<ADDdouble> aa_f(1);
+	CPPAD_TESTVECTOR(ADDdouble) aa_f(1);
 	aa_f[0] = 2. * aa_x[0] * aa_x[1];
 	CppAD::ADFun<ADdouble> F(aa_x, aa_f);
 
 	// re-evaluate f(2, 3) (must get proper deepedence on a_x).
 	size_t p = 0;
-	CPPAD_TEST_VECTOR<ADdouble> a_fp(1);
+	CPPAD_TESTVECTOR(ADdouble) a_fp(1);
 	a_fp    = F.Forward(p, a_x);
 	ok     &= NearEqual(a_fp[0], 2. * a_x[0] * a_x[1], eps, eps);
 
 	// compute the function g(x) = 2 * partial_x[0] f(x) = 4 * x[1]
 	p = 1;
-	CPPAD_TEST_VECTOR<ADdouble> a_dx(n), a_g(1);
+	CPPAD_TESTVECTOR(ADdouble) a_dx(n), a_g(1);
 	a_dx[0] = 1.; a_dx[1] = 0.;
 	a_fp    = F.Forward(p, a_dx);
 	a_g[0]  = 2. * a_fp[0];
 	CppAD::ADFun<double> G(a_x, a_g);
 
 	// compute partial_x[1] g(x)
-	CPPAD_TEST_VECTOR<double>  xp(n), gp(1);
+	CPPAD_TESTVECTOR(double)  xp(n), gp(1);
 	p = 0;
 	xp[0] = 4.; xp[1] = 5.;
 	gp    = G.Forward(p, xp);
@@ -80,7 +80,7 @@ bool One(void)
 
 // f(x) = |x|^2 = .5 * ( x[0]^2 + ... + x[n-1]^2 )
 template <class Type>
-Type f_Two(CPPAD_TEST_VECTOR<Type> &x)
+Type f_Two(CPPAD_TESTVECTOR(Type) &x)
 {	Type sum;
 
 	// check assignment of AD< AD<double> > = double
@@ -106,9 +106,9 @@ bool Two(void)
 	size_t n = 5;                            // dimension for example
 	size_t j;                                // a temporary index variable
 
-	CPPAD_TEST_VECTOR<double>       x(n);
-	CPPAD_TEST_VECTOR<ADdouble>   a_x(n);
-	CPPAD_TEST_VECTOR<ADDdouble> aa_x(n);
+	CPPAD_TESTVECTOR(double)       x(n);
+	CPPAD_TESTVECTOR(ADdouble)   a_x(n);
+	CPPAD_TESTVECTOR(ADDdouble) aa_x(n);
 
 	// value of the independent variables
 	for(j = 0; j < n; j++)
@@ -119,7 +119,7 @@ bool Two(void)
 	CppAD::Independent(aa_x);          // aa_x is independent for ADDdouble
 
 	// compute function
-	CPPAD_TEST_VECTOR<ADDdouble> aa_f(1);    // scalar valued function
+	CPPAD_TESTVECTOR(ADDdouble) aa_f(1);    // scalar valued function
 	aa_f[0] = f_Two(aa_x);                   // has only one component
 
 	// declare inner function (corresponding to ADDdouble calculation)
@@ -127,8 +127,8 @@ bool Two(void)
 
 	// compute f'(x) 
 	size_t p = 1;                        // order of derivative of a_F
-	CPPAD_TEST_VECTOR<ADdouble> a_w(1);  // weight vector for a_F
-	CPPAD_TEST_VECTOR<ADdouble> a_df(n); // value of derivative
+	CPPAD_TESTVECTOR(ADdouble) a_w(1);  // weight vector for a_F
+	CPPAD_TESTVECTOR(ADdouble) a_df(n); // value of derivative
 	a_w[0] = 1;                          // weighted function same as a_F
 	a_df   = a_F.Reverse(p, a_w);        // gradient of f
 
@@ -136,8 +136,8 @@ bool Two(void)
 	CppAD::ADFun<double> df(a_x, a_df);
 
 	// compute the d/dx of f'(x) * v = f''(x) * v
-	CPPAD_TEST_VECTOR<double> v(n);
-	CPPAD_TEST_VECTOR<double> ddf_v(n);
+	CPPAD_TESTVECTOR(double) v(n);
+	CPPAD_TESTVECTOR(double) ddf_v(n);
 	for(j = 0; j < n; j++)
 		v[j] = double(n - j);
 	ddf_v = df.Reverse(p, v);
@@ -160,9 +160,9 @@ bool adolc(void)
 	typedef CppAD::AD<ADdouble> ADDdouble; // for second level of taping
 	size_t n = 5;                          // number independent variables
 
-	CPPAD_TEST_VECTOR<double>       x(n);
-	CPPAD_TEST_VECTOR<ADdouble>   a_x(n);
-	CPPAD_TEST_VECTOR<ADDdouble> aa_x(n);
+	CPPAD_TESTVECTOR(double)       x(n);
+	CPPAD_TESTVECTOR(ADdouble)   a_x(n);
+	CPPAD_TESTVECTOR(ADDdouble) aa_x(n);
 
 	// value of the independent variables
 	int tag = 0;                         // Adolc setup
@@ -178,7 +178,7 @@ bool adolc(void)
 	CppAD::Independent(aa_x);          // aa_x is independent for ADDdouble
 
 	// compute function
-	CPPAD_TEST_VECTOR<ADDdouble> aa_f(1);    // scalar valued function
+	CPPAD_TESTVECTOR(ADDdouble) aa_f(1);    // scalar valued function
 	aa_f[0] = f_Two(aa_x);                   // has only one component
 
 	// declare inner function (corresponding to ADDdouble calculation)
@@ -186,8 +186,8 @@ bool adolc(void)
 
 	// compute f'(x) 
 	size_t p = 1;                        // order of derivative of a_F
-	CPPAD_TEST_VECTOR<ADdouble> a_w(1);  // weight vector for a_F
-	CPPAD_TEST_VECTOR<ADdouble> a_df(n); // value of derivative
+	CPPAD_TESTVECTOR(ADdouble) a_w(1);  // weight vector for a_F
+	CPPAD_TESTVECTOR(ADdouble) a_df(n); // value of derivative
 	a_w[0] = 1;                          // weighted function same as a_F
 	a_df   = a_F.Reverse(p, a_w);        // gradient of f
 
@@ -233,9 +233,9 @@ bool std_math(void)
 	size_t n = 1;         // number independent variables
 	size_t m = 1;         // number dependent and independent variables
 
-	CPPAD_TEST_VECTOR<double>       x(n),   y(m);
-	CPPAD_TEST_VECTOR<ADdouble>    ax(n),  ay(m);
-	CPPAD_TEST_VECTOR<ADDdouble>  aax(n), aay(m);
+	CPPAD_TESTVECTOR(double)       x(n),   y(m);
+	CPPAD_TESTVECTOR(ADdouble)    ax(n),  ay(m);
+	CPPAD_TESTVECTOR(ADDdouble)  aax(n), aay(m);
 
 	// create af(x) = tanh(x)
 	aax[0] = 1.;
@@ -275,9 +275,9 @@ bool abs(void)
 	size_t n = 1;         // number independent variables
 	size_t m = 1;         // number dependent and independent variables
 
-	CPPAD_TEST_VECTOR<double>       x(n),   y(m);
-	CPPAD_TEST_VECTOR<ADdouble>    ax(n),  ay(m);
-	CPPAD_TEST_VECTOR<ADDdouble>  aax(n), aay(m);
+	CPPAD_TESTVECTOR(double)       x(n),   y(m);
+	CPPAD_TESTVECTOR(ADdouble)    ax(n),  ay(m);
+	CPPAD_TESTVECTOR(ADDdouble)  aax(n), aay(m);
 
 	// create af(x) = abs(x)
 	aax[0] = 1.;

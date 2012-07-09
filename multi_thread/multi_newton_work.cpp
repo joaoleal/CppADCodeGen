@@ -1,4 +1,4 @@
-/* $Id: multi_newton_work.cpp 2352 2012-04-18 06:52:11Z bradbell $ */
+/* $Id: multi_newton_work.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -148,13 +148,13 @@ $codei%
 
 $head Source$$
 $code
-$verbatim%multi_thread/multi_newton_work.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/multi_newton_work.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include "multi_newton_work.hpp"
 
@@ -425,4 +425,4 @@ bool multi_newton_combine(CppAD::vector<double>& xout)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

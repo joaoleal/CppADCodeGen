@@ -1,6 +1,6 @@
-/* $Id: var_2par.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: var2par.cpp 2461 2012-07-08 20:08:27Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Var2Par.cpp$$
+$begin var2par.cpp$$
 $spell
 	Var
 	Cpp
@@ -26,12 +26,12 @@ $index Value, during taping$$
 $index taping, Value during$$
 
 $code
-$verbatim%example/var_2par.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/var2par.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -44,7 +44,7 @@ bool Var2Par(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0] = 3.;
 	x[1] = 4.;
 
@@ -53,7 +53,7 @@ bool Var2Par(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = - x[1] * Var2Par(x[0]);    // same as y[0] = -x[1] * 3.;
 
 	// cannot call Value(x[j]) or Value(y[0]) here (currently variables)
@@ -70,8 +70,8 @@ bool Var2Par(void)
 	ok &= (Value(y[0]) == -12.);
 
 	// evaluate derivative of y w.r.t x
-	CPPAD_TEST_VECTOR<double> w(m);
-	CPPAD_TEST_VECTOR<double> dw(n);
+	CPPAD_TESTVECTOR(double) w(m);
+	CPPAD_TESTVECTOR(double) dw(n);
 	w[0] = 1.;
 	dw   = f.Reverse(1, w);
 	ok  &= (dw[0] == 0.);  // derivative of y[0] w.r.t x[0] is zero
@@ -79,4 +79,4 @@ bool Var2Par(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,4 +1,4 @@
-/* $Id: user_atomic.hpp 2353 2012-04-18 13:23:08Z bradbell $ */
+/* $Id: user_atomic.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_USER_ATOMIC_INCLUDED
 # define CPPAD_USER_ATOMIC_INCLUDED
 
@@ -455,7 +455,7 @@ Given a $cref/sparsity pattern/glossary/Sparsity Pattern/$$ for $latex R$$,
 $icode for_jac_sparse$$ computes a sparsity pattern for $latex S(x)$$.
 
 $subhead Usage$$
-This routine is used by calls to $cref/ForSparseJac/$$.
+This routine is used by calls to $cref ForSparseJac$$.
 
 $subhead q$$
 The $icode for_jac_sparse$$ argument $icode q$$ has prototype
@@ -505,8 +505,8 @@ Given a $cref/sparsity pattern/glossary/Sparsity Pattern/$$ for $latex S$$,
 $icode rev_jac_sparse$$ computes a sparsity pattern for $latex R(x)$$.
 
 $subhead Usage$$
-This routine is used by calls to $cref/RevSparseJac/$$
-and to $cref/optimize/$$.
+This routine is used by calls to $cref RevSparseJac$$
+and to $cref optimize$$.
 
 
 $subhead q$$
@@ -527,7 +527,7 @@ and $icode%s%.size() >= %m%$$.
 For $latex i = 0 , \ldots , m-1$$, 
 all the elements of $icode%s%[%i%}%$$
 are between zero and $icode%q%-1%$$ inclusive.
-This specifies a sparsity pattern for the matrix $latex S^\T$$.
+This specifies a sparsity pattern for the matrix $latex S^\R{T}$$.
 
 $subhead r$$
 The $icode rev_jac_sparse$$ return value $icode r$$ has prototype
@@ -539,7 +539,7 @@ The input values of its sets do not matter.
 Upon return for $latex j = 0 , \ldots , n-1$$,
 all the elements of $icode%r%[%j%]%$$
 are between zero and $icode%q%-1%$$ inclusive.
-This represents a sparsity pattern for the matrix $latex R(x)^\T$$.
+This represents a sparsity pattern for the matrix $latex R(x)^\R{T}$$.
 
 $head rev_hes_sparse$$
 The macro argument $icode rev_hes_sparse$$
@@ -557,7 +557,7 @@ $latex \[
 \] $$
 
 $subhead Usage$$
-This routine is used by calls to $cref/RevSparseHes/$$.
+This routine is used by calls to $cref RevSparseHes$$.
 
 $subhead q$$
 The $icode rev_hes_sparse$$ argument $icode q$$ has prototype
@@ -669,11 +669,11 @@ $children%
 $head Example$$
 
 $subhead Tangent Function$$
-The file $cref/user_tan.cpp/$$ contains an example and test
+The file $cref user_tan.cpp$$ contains an example and test
 implementation of the tangent function as a user atomic operation.
 
 $subhead Matrix Multiplication$$
-The file  $cref/mat_mul.cpp/$$ contains an example and test
+The file  $cref mat_mul.cpp$$ contains an example and test
 implementation of matrix multiplication a a user atomic operation.
 
 $end
@@ -941,7 +941,7 @@ public:
 		}
 		// 
 		// Determine if we are going to have to tape this operation
-		size_t tape_id     = 0;
+		tape_id_t tape_id     = 0;
 		ADTape<Base>* tape = CPPAD_NULL;
 		for(j = 0; j < n; j++)
 		{	x[j]   = ax[j].value_;
@@ -977,7 +977,7 @@ public:
 		{	ay[i].value_ = y[i];
 
 			// initialize entire vector as a constant (not on tape)
-			ay[i].tape_id_ = CPPAD_MAX_NUM_THREADS;
+			ay[i].tape_id_ = 0;
 			ay[i].taddr_   = 0;
 		}
 		// if tape is not null, ay is on the tape

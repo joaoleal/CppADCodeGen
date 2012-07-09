@@ -1,6 +1,6 @@
-/* $Id: checkpoint.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: checkpoint.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -28,9 +28,9 @@ interface of the pieces.
 In actual applications, there may be many functions, but 
 for this example there are only two.
 The functions 
-$latex F : \R^2 \rightarrow \R^2$$ 
+$latex F : \B{R}^2 \rightarrow \B{R}^2$$ 
 and
-$latex G : \R^2 \rightarrow \R^2$$ 
+$latex G : \B{R}^2 \rightarrow \B{R}^2$$ 
 defined by
 $latex \[
 	F(x) = \left( \begin{array}{c} x_0 x_1   \\ x_1 - x_0 \end{array} \right) 
@@ -40,7 +40,7 @@ $latex \[
 
 $head Processing Steps$$
 We apply reverse mode to compute the derivative of
-$latex H : \R^2 \rightarrow \R$$
+$latex H : \B{R}^2 \rightarrow \B{R}$$
 is defined by
 $latex \[
 \begin{array}{rcl}
@@ -116,13 +116,13 @@ where $latex \partial_{x(0)}$$ denotes the partial with respect
 to $latex x^{(0)}$$.
 
 $code
-$verbatim%example/checkpoint.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/checkpoint.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -146,7 +146,7 @@ namespace {
 namespace {
 	bool checkpoint_case(bool free_all)
 	{	bool ok = true;
-     	double eps = 10. * CppAD::epsilon<double>();
+     	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 		using CppAD::AD;
 		using CppAD::NearEqual;
@@ -154,12 +154,12 @@ namespace {
 
 		// specify the Taylor coefficients for X(t)
 		size_t n    = 2;
-		CPPAD_TEST_VECTOR<double> x0(n), x1(n);
+		CPPAD_TESTVECTOR(double) x0(n), x1(n);
 		x0[0] = 1.; x0[1] = 2.;
 		x1[0] = 3.; x1[1] = 4.;
 
 		// record the function F(x)
-		CPPAD_TEST_VECTOR< AD<double> > X(n), Y(n);
+		CPPAD_TESTVECTOR(AD<double>) X(n), Y(n);
 		size_t i;
 		for(i = 0; i < n; i++)
 			X[i] = x0[i];
@@ -172,7 +172,7 @@ namespace {
 		empty.Dependent(X, X);
 
 		// compute the Taylor coefficients for Y(t)
-		CPPAD_TEST_VECTOR<double> y0(n), y1(n);
+		CPPAD_TESTVECTOR(double) y0(n), y1(n);
 		y0 = f.Forward(0, x0);
 		y1 = f.Forward(1, x1);
 		if( free_all )
@@ -183,13 +183,13 @@ namespace {
 		}
 
 		// record the function G(x)
-		CPPAD_TEST_VECTOR< AD<double> > Z(n);
+		CPPAD_TESTVECTOR(AD<double>) Z(n);
 		CppAD::Independent(Y);
 		Z = G(Y);
 		g.Dependent(Y, Z);
 
 		// compute the Taylor coefficients for Z(t)
-		CPPAD_TEST_VECTOR<double> z0(n), z1(n);
+		CPPAD_TESTVECTOR(double) z0(n), z1(n);
 		z0 = g.Forward(0, y0);
 		z1 = g.Forward(1, y1);
 
@@ -207,7 +207,7 @@ namespace {
 	
 		// compute the derivative with respect to y^0 and y^0 of h^1
 		size_t p = 2;
-		CPPAD_TEST_VECTOR<double> w(n*p), dw(n*p);
+		CPPAD_TESTVECTOR(double) w(n*p), dw(n*p);
 		w[0*p+0] = 0.; // coefficient for z_0^0
 		w[0*p+1] = 1.; // coefficient for z_0^1
 		w[1*p+0] = 0.; // coefficient for z_1^0
@@ -230,7 +230,7 @@ namespace {
 
 		// compute the derivative with respect to x^0 and x^0 of
 		//	h^1 = z_0^1 + z_1^1
-		CPPAD_TEST_VECTOR<double> dv(n*p);
+		CPPAD_TESTVECTOR(double) dv(n*p);
 		dv   = f.Reverse(p, dw); 
 
 		// check partial of h^1 w.r.t x^0_0
@@ -265,4 +265,4 @@ bool checkpoint(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

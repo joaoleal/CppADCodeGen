@@ -1,4 +1,4 @@
-/* $Id: get_started.cpp 2345 2012-04-10 15:36:40Z bradbell $ */
+/* $Id: get_started.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -46,12 +46,12 @@ the value $cref/ipopt_dir/InstallUnix/ipopt_dir/$$ is specified on the
 $cref/configure/InstallUnix/Configure/$$ command line.
 
 $code
-$verbatim%cppad_ipopt/example/get_started.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%cppad_ipopt/example/get_started.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad_ipopt_nlp.hpp>
 
@@ -190,4 +190,4 @@ bool ipopt_get_started(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

@@ -1,6 +1,6 @@
-/* $Id: par_var.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: par_var.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin ParVar.cpp$$
+$begin par_var.cpp$$
 
 $section AD Parameter and Variable Functions: Example and Test$$
 
@@ -25,12 +25,12 @@ $index test, Parameter$$
 $index test, Variable$$
 
 $code
-$verbatim%example/par_var.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/par_var.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -44,7 +44,7 @@ bool ParVar(void)
 
 	// declare independent variables and start tape recording
 	size_t n = 1;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0]     = 0.;
 	ok &= Parameter(x[0]);     // x[0] is a paraemter here
 	CppAD::Independent(x);
@@ -52,7 +52,7 @@ bool ParVar(void)
 
 	// dependent variable vector
 	size_t m = 2;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = 2.;
 	ok  &= Parameter(y[0]);    // y[0] does not depend on x[0]
 	y[1] = abs(x[0]);
@@ -81,4 +81,4 @@ bool ParVar(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

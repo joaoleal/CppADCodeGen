@@ -1,4 +1,4 @@
-/* $Id: independent.hpp 2336 2012-04-05 11:38:59Z bradbell $ */
+/* $Id: independent.hpp 2460 2012-07-08 17:17:37Z bradbell $ */
 # ifndef CPPAD_INDEPENDENT_INCLUDED
 # define CPPAD_INDEPENDENT_INCLUDED
 
@@ -62,7 +62,7 @@ $codei%
 	%f%.Dependent( %x%, %y%)
 %$$
 The only other way to stop a recording is using
-$cref/abort_recording/$$.
+$cref abort_recording$$.
 Between when the recording is started and when it stopped,
 we refer to the elements of $icode x$$, 
 and the values that depend on the elements of $icode x$$,
@@ -79,10 +79,10 @@ and is the number of independent variables for this
 AD operation sequence.
 
 $head VectorAD$$
-The type $icode VectorAD$$ must be a $cref/SimpleVector/$$ class with
+The type $icode VectorAD$$ must be a $cref SimpleVector$$ class with
 $cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $codei%AD<%Base%>%$$.
-The routine $cref/CheckSimpleVector/$$ will generate an error message
+The routine $cref CheckSimpleVector$$ will generate an error message
 if this is not the case.
 
 $head Parallel Mode$$
@@ -106,7 +106,7 @@ $children%
 	example/independent.cpp
 %$$
 The file
-$cref/Independent.cpp/$$
+$cref independent.cpp$$
 contains an example and test of this operation.
 It returns true if it succeeds and false otherwise.
 

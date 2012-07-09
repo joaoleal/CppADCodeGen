@@ -1,4 +1,4 @@
-// $Id: base_require.hpp 2283 2012-02-11 05:08:59Z bradbell $
+// $Id: base_require.hpp 2436 2012-06-17 23:38:47Z bradbell $
 # ifndef CPPAD_BASE_REQUIRE_INCLUDED
 # define CPPAD_BASE_REQUIRE_INCLUDED
 
@@ -84,7 +84,7 @@ and then include the file $code cppad/cppad.hpp$$.
 
 $head Numeric Type$$
 The type $icode Base$$ must support all the operations for a 
-$cref/NumericType/$$.
+$cref NumericType$$.
 
 $head Output Operator$$
 $index output, base operator$$
@@ -146,13 +146,15 @@ $end
 # include <cppad/error_handler.hpp>
 # include <cppad/local/define.hpp>
 # include <cppad/local/cppad_assert.hpp>
+# include <cppad/local/declare_ad.hpp>
 
 // grouping documentation by feature
 # include <cppad/local/base_cond_exp.hpp>
 # include <cppad/local/base_std_math.hpp>
 
-// must define template AD version of epsilon before the base cases
-# include <cppad/local/epsilon.hpp>
+// must define template class numeric_limits before the base cases
+# include <cppad/local/limits.hpp>
+# include <cppad/local/epsilon.hpp> // deprecated
 
 // base cases that come with CppAD
 # include <cppad/local/base_float.hpp>

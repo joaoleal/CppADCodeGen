@@ -1,4 +1,4 @@
-/* $Id: example.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: example.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -33,12 +33,12 @@ $codei%
 
 
 $code
-$verbatim%speed/example/example.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%speed/example/example.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -49,7 +49,8 @@ extern bool det_by_minor(void);
 extern bool elapsed_seconds(void);
 extern bool mat_sum_sq(void);
 extern bool ode_evaluate(void);
-extern bool sparse_evaluate(void);
+extern bool sparse_hes_fun(void);
+extern bool sparse_jac_fun(void);
 extern bool speed_test(void);
 extern bool time_test(void);
 
@@ -105,7 +106,8 @@ int main(void)
 	ok &= Run(elapsed_seconds,   "elapsed_seconds"    );
 	ok &= Run(mat_sum_sq,             "mat_sum_sq"    );
 	ok &= Run(ode_evaluate,         "ode_evaluate"    );
-	ok &= Run(sparse_evaluate,   "sparse_evaluate"    );
+	ok &= Run(sparse_hes_fun,    "sparse_hes_fun"     );
+	ok &= Run(sparse_jac_fun,    "sparse_jac_fun"     );
 	ok &= Run(speed_test,             "speed_test"    );
 	ok &= Run(time_test,               "time_test"    );
 	assert( ok || (Run_error_count > 0) );
@@ -127,4 +129,4 @@ int main(void)
 	return static_cast<int>( ! ok );
 }
 
-// END PROGRAM
+// END C++

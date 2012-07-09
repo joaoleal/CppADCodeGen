@@ -1,4 +1,4 @@
-$Id: install_unix.omh.in 2354 2012-04-19 14:25:37Z bradbell $
+$Id: install_unix.omh.in 2458 2012-07-07 17:34:40Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -14,6 +14,9 @@ $begin InstallUnix$$
 $escape $$
 $dollar ^$$
 $spell
+	testvector
+	Eigen
+	colpack
 	num
 	cxx
 	boostvector
@@ -160,24 +163,25 @@ $head Configure$$
 Execute the following command in the work directory:
 $index configure$$
 $codei%
-	./configure                             \
+./configure                                  \
 	--prefix=%prefix_dir%                     \
 	--with-Documentation                    \
-	--with-stdvector                        \  
-	--with-boostvector                      \  
+	--with-%test%vector                       \  
 	MAX_NUM_THREADS=%max_num_threads%         \
 	CXX_FLAGS=%cxx_flags%                     \
 	OPENMP_FLAGS=%openmp_flags%               \
 	POSTFIX_DIR=%postfix_dir%                 \
 	ADOLC_DIR=%adolc_dir%                     \
+	BOOST_DIR=%boost_dir%                     \
+	EIGEN_DIR=%eigen_dir%                     \
 	FADBAD_DIR=%fadbad_dir%                   \
 	SADADO_DIR=%sacado_dir%                   \
-	BOOST_DIR=%boost_dir%                     \
 	IPOPT_DIR=%ipopt_dir%                     \
-	TAPE_ADDR_TYPE=%tape_addr_type%
+	TAPE_ADDR_TYPE=%tape_addr_type%           \
+	TAPE_ID_TYPE=%tape_id_type%
 %$$
 where only the $code configure$$ line need appear; i.e.,
-the entries one each of the other lines are optional.
+the entries in all of the other lines are optional.
 The text in italic is replaced values that you choose;
 see discussion below.
 
@@ -332,32 +336,31 @@ $codei%
 	%prefix_dir%/share/doc/%postfix_dir%/cppad-@VERSION@/cppad.xml
 %$$
 
-$head --with-stdvector$$
-$index std::vector, unix$$
-$index vector, std$$
-The 
-$small $cref/CPPAD_TEST_VECTOR/test_vector/$$ $$
-template class is used for extensive examples and testing of CppAD.
-If the command line argument $code --with-stdvector$$ is specified,
-the default definition this template class is replaced by
+$head --with-testvector$$
+$index std, test vector$$
+$index boost, test vector$$
+$index eigen, test vector$$
+$index test, vector$$
+$index vector, test$$
+The $cref/CPPAD_TESTVECTOR/testvector/$$
+template class is used for many of the CppAD examples and tests.
+The default for this template class is $codei%CppAD::vector<%Scalar%>%$$.
+If one, and only one, of the following command line arguments is specified:
 $codep
-	std::vector
+	--with-stdvector
+	--with-boostvector
+	--with-eigenvector
 $$
-In this case $code --with-boostvector$$ must not also be specified.
-
-$head --with-boostvector$$
-$index boost, vector$$
-$index vector, boost$$
-The 
-$small $cref/CPPAD_TEST_VECTOR/test_vector/$$ $$
-template class is used for extensive examples and testing of CppAD.
-If the command line argument $code --with-boostvector$$ is specified,
-the default definition this template class is replaced by
-$codep
-	boost::numeric::ublas::vector
-$$
-In this case $code --with-stdvector$$ must not also be specified.
-See also, $cref/boost_dir/InstallUnix/boost_dir/$$
+the corresponding of the following template classes is used 
+$codei%
+	std::vector<%Scalar%>
+	boost::numeric::ublas::vector<%Scalar%>
+	Eigen::matrix<%Scalar%, Eigen::Dynamic, 1>
+%$$
+See also, 
+$cref/boost_dir/InstallUnix/boost_dir/$$
+and
+$cref/eigen_dir/InstallUnix/eigen_dir/$$.
 
 $head max_num_threads$$
 this specifies the value for the default value for the preprocessor symbol
@@ -446,6 +449,11 @@ After executing $code make test$$, you can run an Adolc speed tests
 by executing the command $code ./adolc$$;
 see $cref speed_main$$ for the meaning of the command line
 options to this program.
+Note that these speed tests assume Adolc has been configure with
+its sparse matrix computations enabled using
+$codei
+	--with-colpack=%colpack_dir%
+%$$
 
 $subhead Linux$$
 If you are using Linux, 
@@ -472,6 +480,36 @@ For example,
 if $code d:/adolc_base$$ is the proper directory,
 $code /cygdrive/d/adolc_base$$ should be used for $icode adolc_dir$$.
 
+$head boost_dir$$
+$index boost, unix$$
+If the command line argument
+$codei%
+	BOOST_DIR=%boost_dir%
+%$$
+is present, it must be such that files
+$codei%
+	%boost_dir%/include/boost/numeric/ublas/vector.hpp
+	%boost_dir%/include/boost/thread.hpp
+%$$
+are present.
+In this case, these files will be used by CppAD.
+See also, $cref/--with-boostvector/InstallUnix/--with-testvector/$$
+
+$head eigen_dir$$
+$index Eigen, unix$$
+If you have
+$href%http://eigen.tuxfamily.org%Eigen%$$
+installed on your system, you can 
+specify a value for $icode eigen_dir$$.
+It must be such that
+$codei%
+	%eigen_dir%/Eigen/Core
+%$$
+is a valid include file.
+In this case CppAD will compile and test the Eigen examples; e.g.,
+$cref eigen_array.cpp$$.
+See also, $cref/--with-eigenvector/InstallUnix/--with-testvector/$$
+
 $head fadbad_dir$$
 $index Fadbad, unix$$
 If you have
@@ -496,48 +534,6 @@ After executing $code make test$$, you can run a Fadbad speed tests
 by executing the command $code ./fadbad$$;
 see $cref speed_main$$ for the meaning of the command line
 options to this program.
-
-
-$head sacado_dir$$
-$index Sacado, unix$$
-If you have
-$href%
-	http://trilinos.sandia.gov/packages/sacado/%
-	Sacado
-%$$
-installed on your system, you can 
-specify a value for $icode sacado_dir$$.
-It must be such that
-$codei%
-	%sacado_dir%/include/Sacado.hpp
-%$$
-is a valid reference to $code Sacado.hpp$$.
-In this case, you can run the Sacado speed correctness tests
-by executing the following commands starting in the work directory:
-$codei%
-	cd speed/sacado
-	make test
-%$$
-After executing $code make test$$, you can run a Sacado speed tests 
-by executing the command $code ./sacado$$;
-see $cref speed_main$$ for the meaning of the command line
-options to this program.
-
-
-$head boost_dir$$
-$index boost, unix$$
-If the command line argument
-$codei%
-	BOOST_DIR=%boost_dir%
-%$$
-is present, it must be such that files
-$codei%
-	%boost_dir%/include/boost/numeric/ublas/vector.hpp
-	%boost_dir%/include/boost/thread.hpp
-%$$
-are present.
-In this case, these files will be used by CppAD.
-See also, $cref/--with-boostvector/InstallUnix/--with-boostvector/$$
 
 $head ipopt_dir$$
 $index Ipopt, unix$$
@@ -572,6 +568,32 @@ Once this has been done, you can execute the program
 $code ./speed$$ in the $code work/cppad_ipopt/speed$$ directory;
 see $cref ipopt_ode_speed.cpp$$.
 
+$head sacado_dir$$
+$index Sacado, unix$$
+If you have
+$href%
+	http://trilinos.sandia.gov/packages/sacado/%
+	Sacado
+%$$
+installed on your system, you can 
+specify a value for $icode sacado_dir$$.
+It must be such that
+$codei%
+	%sacado_dir%/include/Sacado.hpp
+%$$
+is a valid reference to $code Sacado.hpp$$.
+In this case, you can run the Sacado speed correctness tests
+by executing the following commands starting in the work directory:
+$codei%
+	cd speed/sacado
+	make test
+%$$
+After executing $code make test$$, you can run a Sacado speed tests 
+by executing the command $code ./sacado$$;
+see $cref speed_main$$ for the meaning of the command line
+options to this program.
+
+
 $head tape_addr_type$$
 $index memory, usage$$
 $index memory, tape$$
@@ -595,6 +617,25 @@ $cref/size_par/seq_property/size_text/$$,
 $cref/size_par/seq_property/size_par/$$,
 $cref/size_par/seq_property/size_VecAD/$$.
 
+
+$head tape_id_type$$
+$index memory, usage$$
+$index memory, tape$$
+$index tape, memory$$
+If the command line argument $icode tape_id_type$$ is present,
+it specifies the type used for identifying tapes.
+The valid values for this argument are
+$code unsigned short int$$,
+$code unsigned int$$,
+$code size_t$$.
+The smaller the value of $icode%sizeof(%tape_id_type%)%$$,
+the less memory is used.
+On the other hand, the value
+$codei%
+	std::numeric_limits<%tape_id_type%>::max()
+%$$
+must be larger than the maximum number of tapes per thread
+times $cref/max_num_threads/InstallUnix/max_num_threads/$$.
 
 $head make install$$
 Once you are satisfied that the tests are giving correct results,

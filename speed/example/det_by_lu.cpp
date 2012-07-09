@@ -1,6 +1,6 @@
-/* $Id: det_by_lu.cpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: det_by_lu.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-08 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -23,12 +23,12 @@ $index example, determinant by minors$$
 $index test, determinant by minors$$
 
 $code
-$verbatim%speed/example/det_by_lu.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%speed/example/det_by_lu.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cppad/speed/det_by_lu.hpp>
@@ -47,7 +47,7 @@ bool det_by_lu()
 		3., 2., 1.,  // a[3] a[4] a[5]
 		2., 1., 2.   // a[6] a[7] a[8]
 	};
-	CPPAD_TEST_VECTOR<double> A(9);
+	CPPAD_TESTVECTOR(double) A(9);
 	size_t i;
 	for(i = 0; i < 9; i++)
 		A[i] = a[i];
@@ -66,4 +66,4 @@ bool det_by_lu()
 	return ok;
 }
 
-// END PROGRAM
+// END C++

@@ -1,4 +1,4 @@
-# $Id: makefile.am 2354 2012-04-19 14:25:37Z bradbell $
+# $Id: makefile.am 2453 2012-07-05 02:52:41Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -15,19 +15,13 @@
 # CppAD pusts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS          =
 #
-if CppAD_BOOST_DIR
-BOOST_INCLUDE = -I$(BOOST_DIR)/include
-else
-BOOST_INCLUDE =
-endif
-#
 EXTRA_DIST       =  \
 	double.sln \
 	double.vcproj
 #
 check_PROGRAMS   = double 
 #
-AM_CPPFLAGS   = -I$(top_srcdir) $(BOOST_INCLUDE)
+AM_CPPFLAGS   = -I$(top_srcdir) $(BOOST_INCLUDE) $(EIGEN_INCLUDE)
 #
 # BEGIN OPTIMIZE
 AM_CXXFLAGS   = -O2 -DNDEBUG -DSPEED_DOUBLE $(CXX_FLAGS)

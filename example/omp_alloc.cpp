@@ -1,4 +1,4 @@
-/* $Id: omp_alloc.cpp 2284 2012-02-11 16:21:31Z bradbell $ */
+/* $Id: omp_alloc.cpp 2444 2012-07-01 13:14:13Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -28,12 +28,12 @@ This example is only intended to help convert calls to $cref omp_alloc$$
 to calls to $cref thread_alloc$$.
 
 $code
-$verbatim%example/omp_alloc.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/omp_alloc.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/omp_alloc.hpp>
 # include <cppad/memory_leak.hpp>
 # include <vector>
@@ -166,7 +166,6 @@ bool omp_alloc_array(void)
 bool omp_alloc(void)
 {	bool ok  = true;
 	using CppAD::omp_alloc;
-	size_t thread;
 
 	// check initial state of allocator
 	ok  &= omp_alloc::get_max_num_threads() == 1;
@@ -192,4 +191,4 @@ bool omp_alloc(void)
 }
 
 
-// END PROGRAM
+// END C++

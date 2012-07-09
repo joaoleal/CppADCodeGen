@@ -1,4 +1,4 @@
-/* $Id: ad_tape.hpp 2337 2012-04-05 12:47:06Z bradbell $ */
+/* $Id: ad_tape.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_AD_TAPE_INCLUDED
 # define CPPAD_AD_TAPE_INCLUDED
 
@@ -96,7 +96,7 @@ private:
 	been deleted). In addition, id_ % CPPAD_MAX_NUM_THREADS is the thread 
 	number for this tape. Set by Independent and effectively const
 	*/
-	size_t                       id_;
+	tape_id_t                    id_;
 	/// Number of independent variables in this tapes reconding.
 	/// Set by Independent and effectively const
 	size_t         size_independent_;

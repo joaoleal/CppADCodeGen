@@ -1,9 +1,9 @@
-/* $Id: for_sparse_jac.hpp 2006 2011-07-12 17:35:39Z bradbell $ */
+/* $Id: for_sparse_jac.hpp 2460 2012-07-08 17:17:37Z bradbell $ */
 # ifndef CPPAD_FOR_SPARSE_JAC_INCLUDED
 # define CPPAD_FOR_SPARSE_JAC_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -38,7 +38,7 @@ $icode%s% = %f%.ForSparseJac(%q%, %r%)%$$
 
 $head Purpose$$
 We use $latex F : B^n \rightarrow B^m$$ to denote the
-$xref/glossary/AD Function/AD function/$$ corresponding to $icode f$$.
+$cref/AD function/glossary/AD Function/$$ corresponding to $icode f$$.
 For a fixed $latex n \times q$$ matrix $latex R$$,
 the Jacobian of $latex F[ x + R * u ]$$
 with respect to $latex u$$ at $latex u = 0$$ is
@@ -46,7 +46,7 @@ $latex \[
 	S(x) = F^{(1)} ( x ) * R
 \] $$
 Given a
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for $latex R$$,
 $code ForSparseJac$$ returns a sparsity pattern for the $latex S(x)$$.
 
@@ -55,13 +55,13 @@ The object $icode f$$ has prototype
 $codei%
 	ADFun<%Base%> %f%
 %$$
-Note that the $xref/ADFun/$$ object $icode f$$ is not $code const$$.
+Note that the $cref ADFun$$ object $icode f$$ is not $code const$$.
 After a call to $code ForSparseJac$$, the sparsity pattern
 for each of the variables in the operation sequence
-is held in $icode f$$ (for possible later use by $cref/RevSparseHes/$$).
+is held in $icode f$$ (for possible later use by $cref RevSparseHes$$).
 These sparsity patterns are stored with elements of type $code bool$$
 or elements of type $code std::set<size_t>$$
-(see $xref/ForSparseJac/VectorSet/VectorSet/$$ below).
+(see $cref/VectorSet/ForSparseJac/VectorSet/$$ below).
  
 $subhead size_forward_bool$$
 After $code ForSparseJac$$, if $icode k$$ is a $code size_t$$ object, 
@@ -75,7 +75,7 @@ If the sparsity patterns for the previous $code ForSparseJac$$ used
 elements of type $code bool$$,
 the return value for $code size_forward_bool$$ will be non-zero.
 Otherwise, its return value will be zero.
-This sparsity pattern is stored for use by $cref/RevSparseHes/$$ and
+This sparsity pattern is stored for use by $cref RevSparseHes$$ and
 when it is not longer needed, it can be deleted 
 (and the corresponding memory freed) using 
 $codei%
@@ -94,7 +94,7 @@ If the sparsity patterns for this operation use elements of type $code bool$$,
 the return value for $code size_forward_set$$ will be zero.
 Otherwise, its return value will be non-zero
 (unless the entire sparsity pattern is false).
-This sparsity pattern is stored for use by $cref/RevSparseHes/$$ and
+This sparsity pattern is stored for use by $cref RevSparseHes$$ and
 when it is not longer needed, it can be deleted 
 (and the corresponding memory freed) using
 $codei%
@@ -105,7 +105,7 @@ After this call, $icode%f%.size_forward_set()%$$ will return zero.
 $head x$$
 the sparsity pattern is valid for all values of the independent 
 variables in $latex x \in B^n$$
-(even if it has $cref/CondExp/$$ or $cref/VecAD/$$ operations).
+(even if it has $cref CondExp$$ or $cref VecAD$$ operations).
 
 $head q$$
 The argument $icode q$$ has prototype
@@ -121,14 +121,14 @@ The argument $icode r$$ has prototype
 $codei%
 	const %VectorSet%& %r%
 %$$
-(see $xref/ForSparseJac/VectorSet/VectorSet/$$ below).
+(see $cref/VectorSet/ForSparseJac/VectorSet/$$ below).
 If it has elements of type $code bool$$,
 its size is $latex n * q$$.
 If it has elements of type $code std::set<size_t>$$,
 its size is $latex n$$ and all the set elements must be between
 zero and $icode%q%-1%$$ inclusive.
 It specifies a 
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for the matrix $icode R$$.
 
 $head s$$
@@ -136,19 +136,19 @@ The return value $icode s$$ has prototype
 $codei%
 	%VectorSet% %s%
 %$$
-(see $xref/ForSparseJac/VectorSet/VectorSet/$$ below).
+(see $cref/VectorSet/ForSparseJac/VectorSet/$$ below).
 If it has elements of type $code bool$$,
 its size is $latex m * q$$.
 If it has elements of type $code std::set<size_t>$$,
 its size is $latex m$$ and all its set elements are between
 zero and $icode%q%-1%$$ inclusive.
 It specifies a 
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for the matrix $latex S(x)$$.
 
 $head VectorSet$$
-The type $icode VectorSet$$ must be a $xref/SimpleVector/$$ class with
-$xref/SimpleVector/Elements of Specified Type/elements of type/$$
+The type $icode VectorSet$$ must be a $cref SimpleVector$$ class with
+$cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $code bool$$ or $code std::set<size_t>$$;
 see $cref/sparsity pattern/glossary/Sparsity Pattern/$$ for a discussion
 of the difference.
@@ -165,7 +165,7 @@ $children%
 	example/for_sparse_jac.cpp
 %$$
 The file
-$xref/ForSparseJac.cpp/$$
+$cref for_sparse_jac.cpp$$
 contains an example and test of this operation.
 It returns true if it succeeds and false otherwise.
 
@@ -265,7 +265,7 @@ void ForSparseJacBool(
 	);
 
 	CPPAD_ASSERT_KNOWN(
-		r.size() == n * q,
+		size_t(r.size()) == n * q,
 		"ForSparseJac: r (second argument) length is not equal to\n"
 		"q (first argument) times domain dimension for ADFun object."
 	);
@@ -293,7 +293,7 @@ void ForSparseJacBool(
 	);
 
 	// return values corresponding to dependent variables
-	CPPAD_ASSERT_UNKNOWN( s.size() == m * q );
+	CPPAD_ASSERT_UNKNOWN( size_t(s.size()) == m * q );
 	for(i = 0; i < m; i++)
 	{	CPPAD_ASSERT_UNKNOWN( dep_taddr[i] < total_num_var );
 
@@ -398,7 +398,7 @@ void ForSparseJacSet(
 	);
 
 	CPPAD_ASSERT_KNOWN(
-		r.size() == n,
+		size_t(r.size()) == n,
 		"ForSparseJac: r (second argument) length is not equal to\n"
 		"the domain dimension for ADFun object."
 	);
@@ -434,7 +434,7 @@ void ForSparseJacSet(
 	);
 
 	// return values corresponding to dependent variables
-	CPPAD_ASSERT_UNKNOWN( s.size() == m );
+	CPPAD_ASSERT_UNKNOWN( size_t(s.size()) == m );
 	for(i = 0; i < m; i++)
 	{	CPPAD_ASSERT_UNKNOWN( dep_taddr[i] < total_num_var );
 		CPPAD_ASSERT_UNKNOWN( s[i].empty() );

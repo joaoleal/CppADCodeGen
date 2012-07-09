@@ -1,6 +1,6 @@
-/* $Id: ode_err_control.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: ode_err_control.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin OdeErrControl.cpp$$
+$begin ode_err_control.cpp$$
 $spell
 $$
 
@@ -22,7 +22,7 @@ $index example, OdeErrControl$$
 $index test, OdeErrControl$$
 
 Define 
-$latex X : \R \rightarrow \R^2$$ by
+$latex X : \B{R} \rightarrow \B{R}^2$$ by
 $latex \[
 \begin{array}{rcl}
 	X_0 (0)       & = & 1  \\
@@ -50,12 +50,12 @@ $code OdeErrControl$$ that its is taking to large a step.
 
 
 $code
-$verbatim%example/ode_err_control.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/ode_err_control.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cstddef>                     // for size_t
 # include <cmath>                       // for exp
@@ -153,4 +153,4 @@ bool OdeErrControl(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

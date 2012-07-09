@@ -1,4 +1,4 @@
-/* $Id: ad_assign.cpp 2333 2012-04-03 04:34:56Z bradbell $ */
+/* $Id: ad_assign.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -23,11 +23,11 @@ $index example, assign AD object$$
 $index test, assign AD object$$
 
 $code
-$verbatim%example/ad_assign.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/ad_assign.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -57,4 +57,4 @@ bool ad_assign(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

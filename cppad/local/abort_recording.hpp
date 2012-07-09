@@ -1,4 +1,4 @@
-/* $Id: abort_recording.hpp 2336 2012-04-05 11:38:59Z bradbell $ */
+/* $Id: abort_recording.hpp 2403 2012-05-25 13:46:02Z bradbell $ */
 # ifndef CPPAD_ABORT_RECORDING_INCLUDED
 # define CPPAD_ABORT_RECORDING_INCLUDED
 
@@ -44,7 +44,7 @@ $children%
 %$$
 $head Example$$
 The file
-$cref/abort_recording.cpp/$$ 
+$cref abort_recording.cpp$$ 
 contains an example and test of this operation.
 It returns true if it succeeds and false otherwise.
 

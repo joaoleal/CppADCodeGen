@@ -1,4 +1,4 @@
-/* $Id: sub_eq.hpp 2331 2012-04-02 03:24:33Z bradbell $ */
+/* $Id: sub_eq.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_SUB_EQ_INCLUDED
 # define CPPAD_SUB_EQ_INCLUDED
 
@@ -28,7 +28,7 @@ AD<Base>& AD<Base>::operator -= (const AD<Base> &right)
 	ADTape<Base>* tape = AD<Base>::tape_ptr();
 	if( tape == CPPAD_NULL )
 		return *this;
-	size_t tape_id = tape->id_;
+	tape_id_t tape_id = tape->id_;
 
 	// tape_id cannot match the default value for tape_id_; i.e., 0
 	CPPAD_ASSERT_UNKNOWN( tape_id > 0 );

@@ -1,9 +1,9 @@
-/* $Id: var2par.hpp 2091 2011-09-02 19:47:24Z bradbell $ */
+/* $Id: var2par.hpp 2461 2012-07-08 20:08:27Z bradbell $ */
 # ifndef CPPAD_VAR2PAR_INCLUDED
 # define CPPAD_VAR2PAR_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -30,37 +30,37 @@ $index value_, obtain during taping$$
 $section Convert an AD Variable to a Parameter$$
 
 $head Syntax$$
-$syntax%%y% = Var2Par(%x%)%$$
+$icode%y% = Var2Par(%x%)%$$
 
 
 $head Purpose$$
 Returns a 
-$cref/parameter/glossary/Parameter/$$ $italic y$$
+$cref/parameter/glossary/Parameter/$$ $icode y$$
 with the same value as the 
-$cref/variable/glossary/Variable/$$ $italic x$$.
+$cref/variable/glossary/Variable/$$ $icode x$$.
 
 $head x$$
-The argument $italic x$$ has prototype
-$syntax%
+The argument $icode x$$ has prototype
+$codei%
 	const AD<%Base%> &x
 %$$ 
-The argument $italic x$$ may be a variable or parameter.
+The argument $icode x$$ may be a variable or parameter.
 
 
 $head y$$
-The result $italic y$$ has prototype
-$syntax%
+The result $icode y$$ has prototype
+$codei%
 	AD<%Base%> &y
 %$$ 
-The return value $italic y$$ will be a parameter. 
+The return value $icode y$$ will be a parameter. 
 
 
 $head Example$$
 $children%
-	example/var_2par.cpp
+	example/var2par.cpp
 %$$
 The file
-$xref/Var2Par.cpp/$$
+$cref var2par.cpp$$
 contains an example and test of this operation.
 It returns true if it succeeds and false otherwise.
 

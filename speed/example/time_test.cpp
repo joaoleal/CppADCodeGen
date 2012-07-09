@@ -1,6 +1,6 @@
-/* $Id: time_test.cpp 2192 2011-11-18 00:15:16Z bradbell $ */
+/* $Id: time_test.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -32,12 +32,12 @@ $index test, time$$
 $section time_test: Example and test$$
 
 $code
-$verbatim%speed/example/time_test.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%speed/example/time_test.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/time_test.hpp>
 # include <vector>
 
@@ -96,4 +96,4 @@ bool time_test(void)
  
 	return ok;
 }
-// END PROGRAM
+// END C++

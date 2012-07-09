@@ -1,4 +1,4 @@
-/* $Id: exp_eps_cppad.cpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: exp_eps_cppad.cpp 2403 2012-05-25 13:46:02Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
 
@@ -41,10 +41,10 @@ Use CppAD forward and reverse modes to compute the
 partial derivative with respect to $latex x$$,
 at the point $latex x = .5$$ and $latex \varepsilon = .2$$,
 of the function 
-$syntax%
+$codei%
 	exp_eps(%x%, %epsilon%)
 %$$
-as defined by the $cref/exp_eps.hpp/$$ include file.
+as defined by the $cref exp_eps.hpp$$ include file.
 
 $head Exercises$$
 $list number$$
@@ -52,7 +52,7 @@ Create and test a modified version of the routine below that computes
 the same order derivatives with respect to $latex x$$,
 at the point $latex x = .1$$ and $latex \varepsilon = .2$$,
 of the function 
-$syntax%
+$codei%
 	exp_eps(%x%, %epsilon%)
 %$$
 $lnext
@@ -62,12 +62,12 @@ at the point $latex x = .1$$ and $latex \varepsilon = .2$$,
 of the function corresponding to the operation sequence 
 for $latex x = .5$$ and $latex \varepsilon = .2$$.
 Hint: you could define a vector u with two components and use
-$syntax%
+$codei%
 	%f%.Forward(0, %u%)
 %$$
 to run zero order forward mode at a point different
 form the point where the operation sequence corresponding to
-$italic f$$ was recorded.
+$icode f$$ was recorded.
 $lend
 $codep */
 # include <cppad/cppad.hpp>  // http://www.coin-or.org/CppAD/ 

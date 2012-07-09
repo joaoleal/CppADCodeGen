@@ -1,4 +1,4 @@
-# $Id: makefile.am 2354 2012-04-19 14:25:37Z bradbell $
+# $Id: makefile.am 2461 2012-07-08 20:08:27Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -13,51 +13,58 @@
 #
 # CppAD puts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS          =
-#
+# -------------------------------------------------------------------------
 if CppAD_ADOLC
 ADOLC_SRC_FILES    =  mul_level_adolc.cpp ode_taylor_adolc.cpp
 ADOLC_EXTRA_FILES  =
-ADOLC_INCLUDE      = -I$(ADOLC_DIR)/include 
-ADOLC_LIB          = -ladolc
-ADOLC_LIB_DIRS     = -L$(ADOLC_DIR)/lib -L$(ADOLC_DIR)/lib64
-ADOLC_FLAGS        = -DCPPAD_ADOLC_EXAMPLES
+ADOLC_LIB          = -ladolc -L$(ADOLC_DIR)/lib -L$(ADOLC_DIR)/lib64
+ADOLC_FLAGS        = -DCPPAD_ADOLC_EXAMPLES -I$(ADOLC_DIR)/include 
 else
-ADOLC_SRC_FILES   =
 ADOLC_EXTRA_FILES =  mul_level_adolc.cpp ode_taylor_adolc.cpp
-ADOLC_INCLUDE     =
+ADOLC_SRC_FILES   =
 ADOLC_LIB         =
-ADOLC_LIB_DIRS    =
 ADOLC_FLAGS       =
 endif
-#
-if CppAD_BOOST_DIR
-BOOST_INCLUDE = -I$(BOOST_DIR)/include
+# -------------------------------------------------------------------------
+if CppAD_EIGEN_DIR
+# make a special library so can have it's own compile flags (see configure.ac)
+EIGEN_EXTRA_FILES   =
+noinst_LIBRARIES    = libeigen.a
+libeigen_a_SOURCES  =  eigen_det.cpp eigen_array.cpp
+EIGEN_LIB           = -L. -leigen
+libeigen_a_CXXFLAGS = \
+	-g $(CXX_FLAGS_EIGEN) \
+	-DCPPAD_EIGEN_EXAMPLES \
+	-I$(EIGEN_DIR)/include 
 else
-BOOST_INCLUDE =
+EIGEN_EXTRA_FILES   = eigen_det.cpp eigen_array.cpp
+EIGEN_LIB           =
 endif
-# 
+# -------------------------------------------------------------------------
 # Microsoft project files an script to run a single test
 EXTRA_DIST        =  \
 	example.sln \
 	example.vcproj \
 	test_one.sh.in \
-	$(ADOLC_EXTRA_FILES)
+	$(ADOLC_EXTRA_FILES) \
+	$(EIGEN_EXTRA_FILES)
 #
 check_PROGRAMS    = example 
 #
 if CppAD_MS_COMPILER
-AM_CXXFLAGS       = -EHsc -g $(ADOLC_FLAGS)
+AM_CXXFLAGS       = -EHsc -g $(ADOLC_FLAGS) $(CXX_FLAGS)
 else
-AM_CXXFLAGS       = -g $(ADOLC_FLAGS)
+AM_CXXFLAGS       = -g $(ADOLC_FLAGS) $(CXX_FLAGS)
 endif
 #
-AM_CPPFLAGS       = -I. \
-                   -I$(top_srcdir) \
-                    $(BOOST_INCLUDE) \
-                    $(ADOLC_INCLUDE)
+AM_CPPFLAGS       = \
+	-I. \
+	-I$(top_srcdir) \
+	$(BOOST_INCLUDE) \
+	$(EIGEN_INCLUDE) \
+	$(ADOLC_FLAGS)
 #
-LDADD             =  $(ADOLC_LIB)  $(BTHREAD_LIB) $(PTHREAD_LIB)
-AM_LDFLAGS        = $(ADOLC_LIB_DIRS) 
+AM_LDFLAGS        =  $(ADOLC_LIB)  $(BTHREAD_LIB) $(EIGEN_LIB) $(PTHREAD_LIB)
 #
 example_SOURCES   = \
 	$(ADOLC_SRC_FILES) \
@@ -74,8 +81,7 @@ example_SOURCES   = \
 	ad_in_c.cpp \
 	asin.cpp \
 	atan.cpp \
-	atan_2.cpp \
-	base_adolc.hpp \
+	atan2.cpp \
 	base_alloc.hpp \
 	base_require.cpp \
 	bender_quad.cpp \
@@ -95,7 +101,6 @@ example_SOURCES   = \
 	cppad_vector.cpp \
 	div.cpp \
 	div_eq.cpp \
-	epsilon.cpp \
 	equal_op_seq.cpp \
 	erf.cpp \
 	error_handler.cpp \
@@ -112,15 +117,17 @@ example_SOURCES   = \
 	hessian.cpp \
 	hes_times_dir.cpp \
 	independent.cpp \
+	index_sort.cpp \
 	integer.cpp \
-	interface_2c.cpp\
+	interface2c.cpp\
 	interp_onetape.cpp\
 	interp_retape.cpp\
 	jac_lu_det.cpp \
 	jac_minor_det.cpp \
 	jacobian.cpp \
+	limits.cpp \
 	log.cpp \
-	log_10.cpp \
+	log10.cpp \
 	lu_factor.cpp \
 	lu_invert.cpp \
 	lu_ratio.cpp \
@@ -164,8 +171,8 @@ example_SOURCES   = \
 	romberg_mul.cpp \
 	romberg_one.cpp \
 	rosen_34.cpp \
-	runge_45_1.cpp \
-	runge_45_2.cpp \
+	runge45_1.cpp \
+	runge45_2.cpp \
 	seq_property.cpp \
 	simple_vector.cpp \
 	sign.cpp \
@@ -185,7 +192,7 @@ example_SOURCES   = \
 	unary_plus.cpp \
 	user_tan.cpp \
 	value.cpp \
-	var_2par.cpp \
+	var2par.cpp \
 	vec_ad.cpp  \
 	vector_bool.cpp 
 

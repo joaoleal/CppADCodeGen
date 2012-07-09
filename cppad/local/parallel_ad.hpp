@@ -1,4 +1,4 @@
-/* $Id: parallel_ad.hpp 2344 2012-04-07 19:29:16Z bradbell $ */
+/* $Id: parallel_ad.hpp 2401 2012-05-24 16:30:25Z bradbell $ */
 # ifndef CPPAD_PARALLEL_AD_INCLUDED
 # define CPPAD_PARALLEL_AD_INCLUDED
 /* --------------------------------------------------------------------------
@@ -110,7 +110,7 @@ void parallel_ad(void)
 	sp.begin(0);           // so can call next_element
 	sp.next_element();     // has static data
 	sp.clear(0);           // has static data
-
+	sp.is_element(0, 0);   // has static data
 
 	// statics that depend on the value of Base
 	AD<Base>::tape_id_handle(0);

@@ -1,6 +1,6 @@
-$Id: doc.omh.in 2235 2011-12-21 14:50:24Z bradbell $
+$Id: doc.omh.in 2455 2012-07-06 10:36:56Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -147,7 +147,7 @@ $lnext
 Includes a C++ $xref/library/$$ that is useful
 for general operator overloaded numerical method.
 Allows for replacement of the
-$cref/test_vector/$$ 
+$cref/testvector/$$ 
 template vector class which is used for extensive testing; 
 for example, you can do your testing with the
 $href%http://www.boost.org/libs/numeric/ublas/doc/index.htm%uBlas%$$ 
@@ -217,20 +217,21 @@ $childtable%
 	omh/introduction.omh%
 	cppad/local/user_ad.hpp%
 	cppad/local/ad_fun.hpp%
+	omh/preprocessor.omh%
 	omh/multi_thread.omh%
 	omh/library.omh%
 	cppad_ipopt/src/cppad_ipopt_nlp.hpp%
 	omh/example.omh%
-	omh/preprocessor.omh%
+	omh/speed.omh%
 	omh/appendix.omh
 %$$
 
 $latex
 % --------------------------------------------------------------------
 % Latex macros defined here and used throughout the CppAD documentation
-\newcommand{\T}{ {\rm T} }
-\newcommand{\R}{ {\bf R} }
-\newcommand{\C}{ {\bf C} }
+\newcommand{\W}[1]{ \; #1 \; }
+\newcommand{\R}[1]{ {\rm #1} }
+\newcommand{\B}[1]{ {\bf #1} }
 \newcommand{\D}[2]{ \frac{\partial #1}{\partial #2} }
 \newcommand{\DD}[3]{ \frac{\partial^2 #1}{\partial #2 \partial #3} }
 \newcommand{\Dpow}[2]{ \frac{\partial^{#1}}{\partial  {#2}^{#1}} }
@@ -251,7 +252,7 @@ $hiliteseq%
 %CppAD::%ADFun%<%             FunConstruct
 %       %ADFun%<%             FunConstruct
 
-%       %CPPAD_TEST_VECTOR%<% test_vector
+%       %CPPAD_TESTVECTOR%(% testvector
 
       %.%Forward%(%           Forward
 

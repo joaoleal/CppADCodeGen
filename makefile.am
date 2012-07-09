@@ -1,4 +1,4 @@
-# $Id: makefile.am 2350 2012-04-18 06:31:44Z bradbell $
+# $Id: makefile.am 2455 2012-07-06 10:36:56Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -119,7 +119,11 @@ nobase_myinclude_HEADERS =  \
 	cppad/configure.hpp \
 	cppad/cppad.hpp \
 	cppad/elapsed_seconds.hpp \
+	cppad/example/base_adolc.hpp \
+	cppad/example/cppad_eigen.hpp \
+	cppad/example/eigen_plugin.hpp \
 	cppad/error_handler.hpp \
+	cppad/index_sort.hpp \
 	cppad/local/abort_recording.hpp \
 	cppad/local/abs.hpp \
 	cppad/local/abs_op.hpp \
@@ -186,6 +190,7 @@ nobase_myinclude_HEADERS =  \
 	cppad/local/independent.hpp \
 	cppad/local/integer.hpp \
 	cppad/local/jacobian.hpp \
+	cppad/local/limits.hpp \
 	cppad/local/load_op.hpp \
 	cppad/local/log_op.hpp \
 	cppad/local/lu_ratio.hpp \
@@ -242,6 +247,7 @@ nobase_myinclude_HEADERS =  \
 	cppad/local/tan_op.hpp \
 	cppad/local/tape_link.hpp \
 	cppad/local/test_vector.hpp \
+	cppad/local/testvector.hpp \
 	cppad/local/unary_minus.hpp \
 	cppad/local/unary_plus.hpp \
 	cppad/local/undef.hpp \
@@ -273,7 +279,8 @@ nobase_myinclude_HEADERS =  \
 	cppad/speed/det_of_minor.hpp \
 	cppad/speed/mat_sum_sq.hpp \
 	cppad/speed/ode_evaluate.hpp \
-	cppad/speed/sparse_evaluate.hpp \
+	cppad/speed/sparse_hes_fun.hpp \
+	cppad/speed/sparse_jac_fun.hpp \
 	cppad/speed_test.hpp \
 	cppad/speed/uniform_01.hpp \
 	cppad/thread_alloc.hpp \
@@ -294,6 +301,7 @@ SUBDIRS =  \
 	introduction/exp_apx \
 	print_for \
 	multi_thread \
+	multi_thread/test_multi \
 	test_more 
 #
 # note that bin/gpl_license.sh is deleted by dist-hook

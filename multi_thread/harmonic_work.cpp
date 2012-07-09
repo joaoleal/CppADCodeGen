@@ -1,4 +1,4 @@
-/* $Id: harmonic_work.cpp 2343 2012-04-07 15:18:48Z bradbell $ */
+/* $Id: harmonic_work.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -75,13 +75,13 @@ this function call will combine the results and return the final summation.
 
 $head Source$$
 $code
-$verbatim%multi_thread/harmonic_work.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/harmonic_work.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include "harmonic_work.hpp"
 # define MAX_NUMBER_THREADS 48
@@ -183,4 +183,4 @@ bool harmonic_combine(double& sum)
 	}
 	return ok;
 }
-// END PROGRAM
+// END C++

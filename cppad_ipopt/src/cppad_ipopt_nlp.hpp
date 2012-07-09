@@ -1,4 +1,4 @@
-/* $Id: cppad_ipopt_nlp.hpp 2345 2012-04-10 15:36:40Z bradbell $ */
+/* $Id: cppad_ipopt_nlp.hpp 2404 2012-05-25 14:32:42Z bradbell $ */
 # ifndef CPPAD_CPPAD_IPOPT_NLP_INCLUDED
 # define CPPAD_CPPAD_IPOPT_NLP_INCLUDED
 /* --------------------------------------------------------------------------
@@ -96,7 +96,7 @@ $codei%
 see $cref/ipopt_dir/InstallUnix/ipopt_dir/$$.
 
 $head fg(x)$$
-The function $latex fg : \R^n \rightarrow \R^{m+1}$$ is defined by
+The function $latex fg : \B{R}^n \rightarrow \B{R}^{m+1}$$ is defined by
 $latex \[
 \begin{array}{rcl}
 	fg_0 (x)     & = & f(x)         \\
@@ -107,7 +107,7 @@ $latex \[
 \] $$
 
 $subhead Index Vector$$
-We define an $italic index vector$$ as a vector of non-negative integers
+We define an $icode index vector$$ as a vector of non-negative integers
 for which none of the values are equal; i.e.,
 it is both a vector and a set.
 If $latex I$$ is an index vector $latex |I|$$ is used to denote the
@@ -117,7 +117,7 @@ to denote the value of the maximum element in $latex I$$.
 $subhead Projection$$
 Given an index vector $latex J$$ and a positive integer $latex n$$
 where $latex n > \| J \|$$, we use $latex J \otimes n $$ for
-the mapping $latex ( J \otimes n ) : \R^n \rightarrow \R^{|J|}$$ defined by
+the mapping $latex ( J \otimes n ) : \B{R}^n \rightarrow \B{R}^{|J|}$$ defined by
 $latex \[
 	[ J \otimes n ] (x)_j = x_{J(j)}
 \] $$
@@ -126,7 +126,7 @@ for $latex j = 0 , \ldots |J| - 1$$.
 $subhead Injection$$
 Given an index vector $latex I$$ and a positive integer $latex m$$
 where $latex m > \| I \|$$, we use $latex m \otimes I$$ for
-the mapping $latex ( m \otimes I ): \R^{|I|} \rightarrow \R^m$$ defined by
+the mapping $latex ( m \otimes I ): \B{R}^{|I|} \rightarrow \B{R}^m$$ defined by
 $latex \[
 [ m \otimes I ] (y)_i = \left\{ \begin{array}{ll}
 y_k & {\rm if} \; i = I(k) \; {\rm for \; some} \; 
@@ -146,7 +146,7 @@ $pre
 
 $$
 We use the functions
-$latex r_k : \R^{q(k)} \rightarrow \R^{p(k)}$$ 
+$latex r_k : \B{R}^{q(k)} \rightarrow \B{R}^{p(k)}$$ 
 for $latex k = 0 , \ldots , K$$ to express our
 representation of $latex fg(x)$$ in terms of simpler functions
 as follows
@@ -176,13 +176,13 @@ and $latex J_{0,0} = (0 , \ldots , n-1)$$.
 $head SizeVector$$
 The type $codei SizeVector$$ is defined by the 
 $codei cppad_ipopt_nlp.hpp$$ include file to be a 
-$cref/SimpleVector/$$ class with elements of type
+$cref SimpleVector$$ class with elements of type
 $code size_t$$.
 
 $head NumberVector$$
 The type $codei NumberVector$$ is defined by the 
 $codei cppad_ipopt_nlp.hpp$$ include file to be a 
-$cref/SimpleVector/$$ class with elements of type
+$cref SimpleVector$$ class with elements of type
 $code Ipopt::Number$$.
 
 $head ADNumber$$
@@ -193,7 +193,7 @@ an AD type that can be used to compute derivatives.
 $head ADVector$$
 The type $codei ADVector$$ is defined by the 
 $codei cppad_ipopt_nlp.hpp$$ include file to be a 
-$cref/SimpleVector/$$ class with elements of type
+$cref SimpleVector$$ class with elements of type
 $code ADNumber$$. 
 
 $head n$$
@@ -202,7 +202,7 @@ $codei%
 	size_t %n%
 %$$
 It specifies the dimension of the argument space; 
-i.e., $latex x \in \R^n$$.
+i.e., $latex x \in \B{R}^n$$.
 
 $head m$$
 The argument $icode m$$ has prototype
@@ -210,7 +210,7 @@ $codei%
 	size_t %m%
 %$$
 It specifies the dimension of the range space for $latex g$$; 
-i.e., $latex g : \R^n \rightarrow \R^m$$.
+i.e., $latex g : \B{R}^n \rightarrow \B{R}^m$$.
 
 $head x_i$$
 The argument $icode x_i$$ has prototype
@@ -419,7 +419,7 @@ and is a value between zero and $latex L(k)-1$$ inclusive.
 The argument 
 $icode%
 	I
-%$$ is a $cref/SimpleVector/$$ with elements
+%$$ is a $cref SimpleVector$$ with elements
 of type $code size_t$$ and size greater than or equal to $latex p(k)$$.
 The input value of the elements of $icode I$$ does not matter.
 The output value of
@@ -429,7 +429,7 @@ in the $cref/representation/cppad_ipopt_nlp/fg(x)/Representation/$$ above.
 The argument 
 $icode%
 	J
-%$$ is a $cref/SimpleVector/$$ with elements
+%$$ is a $cref SimpleVector$$ with elements
 of type $code size_t$$ and size greater than or equal to $latex q(k)$$.
 The input value of the elements of $icode J$$ does not matter.
 The output value of 
@@ -572,15 +572,15 @@ $children%
 
 $head Visual Studio$$
 If you are using Visual Studio, see the special
-$cref/cppad_ipopt_windows/$$ instructions.
+$cref cppad_ipopt_windows$$ instructions.
 
 $head Example$$
 The file 
-$cref/ipopt_get_started.cpp/$$ is an example and test of 
+$cref ipopt_get_started.cpp$$ is an example and test of 
 $code cppad_ipopt_nlp$$  that uses the 
 $cref/simple representation/cppad_ipopt_nlp/Simple Representation/$$.
 It returns true if it succeeds and false otherwise.
-The section $cref/cppad_ipopt_ode/$$ discusses an example that
+The section $cref cppad_ipopt_ode$$ discusses an example that
 uses a more complex representation.
 
 $head Wish List$$
@@ -594,7 +594,7 @@ $codei%fg_info.retape(%k%)%$$ is true and $latex L(k) > 1$$).
 It could be an option for the user to provide this as well as
 the necessary $code ADVector$$ definition.
 $lnext
-There should a $cref/Discrete/$$ routine that the user can call
+There should a $cref Discrete$$ routine that the user can call
 to determine the value of $latex \ell$$ during the evaluation of
 $codei%fg_info.eval_r(%k%, %u%)%$$.
 This way data, which does not affect the derivative values,

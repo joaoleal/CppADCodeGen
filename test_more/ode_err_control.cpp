@@ -1,4 +1,4 @@
-/* $Id: ode_err_control.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: ode_err_control.cpp 2404 2012-05-25 14:32:42Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
 
@@ -112,7 +112,7 @@ bool OdeErrControl_one(void)
 /*
 Old example now just a test
 Define 
-$latex X : \R \rightarrow \R^2$$ by
+$latex X : \B{R} \rightarrow \B{R}^2$$ by
 $latex \[
 \begin{array}{rcl}
 X_0 (t) & = &  - \exp ( - w_0 t )  \\
@@ -215,7 +215,7 @@ bool OdeErrControl_two(void)
 }
 /*
 Define 
-$latex X : \R \rightarrow \R^2$$ by
+$latex X : \B{R} \rightarrow \B{R}^2$$ by
 $latex \[
 \begin{array}{rcl}
 	X_0 (0)       & = & 1  \\

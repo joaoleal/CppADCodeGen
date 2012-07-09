@@ -1,7 +1,6 @@
-/* $Id: simple_vector.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
-// BEGIN SHORT COPYRIGHT
+/* $Id: simple_vector.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -10,9 +9,8 @@ the terms of the
 A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
-// END SHORT COPYRIGHT
 /*
-$begin SimpleVector.cpp$$
+$begin simple_vector.cpp$$
 $spell
 	Cpp
 $$
@@ -24,15 +22,14 @@ $index simple, vector example$$
 $index example, simple vector$$
 $index test, simple vector$$
 
-$comment This file is in the Example subdirectory$$
 $code
-$verbatim%example/simple_vector.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/simple_vector.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 --------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <iostream>                   // std::cout and std::endl
 
 # include <vector>                     // std::vector
@@ -93,4 +90,4 @@ bool SimpleVector (void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

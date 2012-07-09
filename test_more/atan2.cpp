@@ -1,6 +1,6 @@
-/* $Id: atan_2.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: atan2.cpp 2461 2012-07-08 20:08:27Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -26,7 +26,7 @@ bool Atan2(void)
 	using namespace CppAD;
 
 	// independent variable vector
-	CPPAD_TEST_VECTOR< AD<double> > U(1);
+	CPPAD_TESTVECTOR(AD<double>) U(1);
 	U[0]     = 1.;
 	Independent(U);
 
@@ -35,13 +35,13 @@ bool Atan2(void)
 	AD<double> y = sin(U[0]); 
 
 	// dependent variable vector 
-	CPPAD_TEST_VECTOR< AD<double> > Z(1);
+	CPPAD_TESTVECTOR(AD<double>) Z(1);
 	Z[0] = atan2(y, x); 
 
 	// create f: U -> Z and vectors used for derivative calculations
 	ADFun<double> f(U, Z); 
-	CPPAD_TEST_VECTOR<double> v(1);
-	CPPAD_TEST_VECTOR<double> w(1);
+	CPPAD_TESTVECTOR(double) v(1);
+	CPPAD_TESTVECTOR(double) w(1);
 
 	// check original value (u in first quadrant)
 	ok &= NearEqual(U[0] , Z[0],  1e-10 , 1e-10);
@@ -76,7 +76,7 @@ bool Atan2(void)
 	}
 
 	// reverse computation of partials of Taylor coefficients
-	CPPAD_TEST_VECTOR<double> r(p); 
+	CPPAD_TESTVECTOR(double) r(p); 
 	w[0]  = 1.;
 	r     = f.Reverse(p, w);
 	jfac  = 1.;

@@ -1,4 +1,4 @@
-/* $Id: ad.hpp 2339 2012-04-06 12:54:04Z bradbell $ */
+/* $Id: ad.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_AD_INCLUDED
 # define CPPAD_AD_INCLUDED
 
@@ -186,6 +186,7 @@ public:
 	inline AD cos(void) const;
 	inline AD cosh(void) const;
 	inline AD exp(void) const;
+	inline AD fabs(void) const;
 	inline AD log(void) const;
 	inline AD sin(void) const;
 	inline AD Sign(void) const;
@@ -221,7 +222,7 @@ private:
 	Base value_;
 
 	// Tape identifier corresponding to taddr
-	CPPAD_TAPE_ID_TYPE tape_id_;
+	tape_id_t tape_id_;
 
 	// taddr_ in tape for this variable 
 	addr_t taddr_;
@@ -249,12 +250,12 @@ private:
 	inline ADTape<Base>* tape_this(void) const;
 	//
 	// static 
-	inline static size_t**       tape_id_handle(size_t thread);
-	inline static size_t*        tape_id_ptr(size_t thread);
+	inline static tape_id_t**    tape_id_handle(size_t thread);
+	inline static tape_id_t*     tape_id_ptr(size_t thread);
 	inline static ADTape<Base>** tape_handle(size_t thread);
 	static ADTape<Base>*         tape_manage(tape_manage_job job);
 	inline static ADTape<Base>*  tape_ptr(void);
-	inline static ADTape<Base>*  tape_ptr(size_t tape_id);
+	inline static ADTape<Base>*  tape_ptr(tape_id_t tape_id);
 }; 
 // ---------------------------------------------------------------------------
 

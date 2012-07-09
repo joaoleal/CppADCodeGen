@@ -1,6 +1,6 @@
-/* $Id: runge_45_2.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: runge45_2.cpp 2461 2012-07-08 20:08:27Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin runge_45_2.cpp$$
+$begin runge45_2.cpp$$
 $spell
 	Runge
 $$
@@ -23,7 +23,7 @@ $index example, Runge45$$
 $index test, Runge45$$
 
 Define 
-$latex X : \R \times \R \rightarrow \R^n$$ by
+$latex X : \B{R} \times \B{R} \rightarrow \B{R}^n$$ by
 $latex \[
 	X_j (b, t) =  b \left( \sum_{k=0}^j t^k / k ! \right)
 \] $$ 
@@ -40,8 +40,8 @@ X_j  (b, 0)   & = & b                                                     \\
 \end{array}
 \] $$
 For a fixed $latex t_f$$,
-we can use $cref/Runge45/$$ to define 
-$latex f : \R \rightarrow \R^n$$ as an approximation for
+we can use $cref Runge45$$ to define 
+$latex f : \B{R} \rightarrow \B{R}^n$$ as an approximation for
 $latex f(b) = X(b, t_f )$$.
 We can then compute $latex f^{(1)} (b)$$ which is an approximation for
 $latex \[
@@ -49,12 +49,12 @@ $latex \[
 \] $$
 
 $code
-$verbatim%example/runge_45_2.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/runge45_2.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cstddef>              // for size_t
 # include <limits>               // for machine epsilon
@@ -72,8 +72,8 @@ namespace {
 		// set return value to X'(t)
 		void Ode(
 			const Scalar                    &t, 
-			const CPPAD_TEST_VECTOR<Scalar> &x, 
-			CPPAD_TEST_VECTOR<Scalar>       &f)
+			const CPPAD_TESTVECTOR(Scalar) &x, 
+			CPPAD_TESTVECTOR(Scalar)       &f)
 		{	size_t n  = x.size();	
 			f[0]      = 0.;
 			for(size_t k = 1; k < n; k++)
@@ -95,7 +95,7 @@ bool runge_45_2(void)
 	Scalar ad_tf = 2.;  // final time 
 
 	// value of independent variable at which to record operations
-	CPPAD_TEST_VECTOR<Scalar> ad_b(1);
+	CPPAD_TESTVECTOR(Scalar) ad_b(1);
 	ad_b[0] = 1.;
 
 	// declare b to be the independent variable
@@ -105,20 +105,20 @@ bool runge_45_2(void)
 	Fun<Scalar> ad_F; 
 
 	// xi = X(0)
-	CPPAD_TEST_VECTOR<Scalar> ad_xi(n); 
+	CPPAD_TESTVECTOR(Scalar) ad_xi(n); 
 	for(j = 0; j < n; j++)
 		ad_xi[j] = ad_b[0];
 
 	// compute Runge45 approximation for X(tf)
-	CPPAD_TEST_VECTOR<Scalar> ad_xf(n), ad_e(n); 
+	CPPAD_TESTVECTOR(Scalar) ad_xf(n), ad_e(n); 
 	ad_xf = CppAD::Runge45(ad_F, M, ad_ti, ad_tf, ad_xi, ad_e);
 
 	// stop recording and use it to create f : b -> xf
 	CppAD::ADFun<double> f(ad_b, ad_xf);
 
 	// evaluate f(b)
-	CPPAD_TEST_VECTOR<double>  b(1);
-	CPPAD_TEST_VECTOR<double> xf(n);
+	CPPAD_TESTVECTOR(double)  b(1);
+	CPPAD_TESTVECTOR(double) xf(n);
 	b[0] = 1.;
 	xf   = f.Forward(0, b);
 
@@ -126,7 +126,7 @@ bool runge_45_2(void)
 	double tf    = Value(ad_tf);
 	double term  = 1;
 	double sum   = 0;
-	double eps   = 10. * CppAD::epsilon<double>();
+	double eps   = 10. * CppAD::numeric_limits<double>::epsilon();
 	for(j = 0; j < n; j++)
 	{	sum += term;
 		ok &= NearEqual(xf[j], b[0] * sum, eps, eps);
@@ -135,7 +135,7 @@ bool runge_45_2(void)
 	}
 
 	// evalute f'(b)
-	CPPAD_TEST_VECTOR<double> d_xf(n);
+	CPPAD_TESTVECTOR(double) d_xf(n);
 	d_xf = f.Jacobian(b);
 
 	// check that f'(b) = partial of X(b, tf) w.r.t b
@@ -151,4 +151,4 @@ bool runge_45_2(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

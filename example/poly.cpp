@@ -1,6 +1,6 @@
-/* $Id: poly.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: poly.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Poly.cpp$$
+$begin poly.cpp$$
 
 $section Polynomial Evaluation: Example and Test$$
 
@@ -20,12 +20,12 @@ $index example, polynomial$$
 $index test, polynomial$$
 
 $code
-$verbatim%example/poly.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/poly.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cmath>
@@ -37,7 +37,7 @@ bool Poly(void)
 	size_t deg = 3;
 
 	// set the polynomial coefficients 
-	CPPAD_TEST_VECTOR<double>   a(deg + 1);
+	CPPAD_TESTVECTOR(double)   a(deg + 1);
 	size_t i;
 	for(i = 0; i <= deg; i++)
 		a[i] = 1.;
@@ -56,4 +56,4 @@ bool Poly(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

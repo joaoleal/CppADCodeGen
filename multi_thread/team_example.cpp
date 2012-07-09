@@ -1,4 +1,4 @@
-// $Id: team_example.cpp 2343 2012-04-07 15:18:48Z bradbell $
+// $Id: team_example.cpp 2439 2012-06-18 02:28:36Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -36,13 +36,13 @@ $tend
 
 $head Source Code$$
 $code
-$verbatim%multi_thread/team_example.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/team_example.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 ------------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include "team_thread.hpp"
 # define NUMBER_THREADS  4
@@ -76,7 +76,7 @@ namespace {
 		CppAD::ADFun<double> f(ax, ay); 
 
 		// Check function value corresponds to the identity 
-		double eps = 10. * CppAD::epsilon<double>();
+		double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 		ok        &= NearEqual(ay[0], ax[0], eps, eps);
 
 		// Check derivative value corresponds to the identity.
@@ -136,4 +136,4 @@ bool team_example(void)
 	}
 	return ok;
 }
-// END PROGRAM
+// END C++

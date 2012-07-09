@@ -1,4 +1,4 @@
-/* $Id: std_math_ad.hpp 2314 2012-03-27 17:31:13Z bradbell $ */
+/* $Id: std_math_ad.hpp 2461 2012-07-08 20:08:27Z bradbell $ */
 # ifndef CPPAD_STD_MATH_AD_INCLUDED
 # define CPPAD_STD_MATH_AD_INCLUDED
 
@@ -25,6 +25,7 @@ $spell
 	atan
 	cos
 	exp
+	fabs
 	sqrt
 	CppAD
 	namespace
@@ -41,6 +42,7 @@ $index atan, AD$$
 $index cos, AD$$
 $index cosh, AD$$
 $index exp, AD$$
+$index fabs, AD$$
 $index log, AD$$
 $index log10, AD$$
 $index sin, AD$$
@@ -52,39 +54,39 @@ $index tanh, AD$$
 $section AD Standard Math Unary Functions$$
 
 $head Syntax$$
-$syntax%%y% = %fun%(%x%)%$$
+$icode%y% = %fun%(%x%)%$$
 
 
 $head Purpose$$
 Evaluates the one argument standard math function 
-$italic fun$$ where its argument is an 
-$xref/glossary/AD of Base/AD of/$$ $italic Base$$ object.
+$icode fun$$ where its argument is an 
+$cref/AD of/glossary/AD of Base/$$ $icode Base$$ object.
 
 $head x$$
-The argument $italic x$$ has one of the following prototypes
-$syntax%
+The argument $icode x$$ has one of the following prototypes
+$codei%
 	const AD<%Base%>               &%x%
 	const VecAD<%Base%>::reference &%x%
 %$$
 
 $head y$$
-The result $italic y$$ has prototype
-$syntax%
+The result $icode y$$ has prototype
+$codei%
 	AD<%Base%> %y%
 %$$
 
 
 $head Operation Sequence$$
-Most of these functions are AD of $italic Base$$
-$xref/glossary/Operation/Atomic/atomic operations/1/$$.
+Most of these functions are AD of $icode Base$$
+$cref/atomic operations/glossary/Operation/Atomic/$$.
 In all cases,
-The AD of $italic Base$$
-operation sequence used to calculate $italic y$$ is 
-$xref/glossary/Operation/Independent/independent/1/$$
-of $italic x$$.
+The AD of $icode Base$$
+operation sequence used to calculate $icode y$$ is 
+$cref/independent/glossary/Operation/Independent/$$
+of $icode x$$.
 
 $head fun$$ 
-A definition of $italic fun$$ is included 
+A definition of $icode fun$$ is included 
 for each of the following functions:
 $code acos$$,
 $code asin$$,
@@ -92,6 +94,7 @@ $code atan$$,
 $code cos$$,
 $code cosh$$,
 $code exp$$,
+$code fabs$$,
 $code log$$,
 $code log10$$,
 $code sin$$,
@@ -113,7 +116,7 @@ $children%
 	example/cosh.cpp%
 	example/exp.cpp%
 	example/log.cpp%
-	example/log_10.cpp%
+	example/log10.cpp%
 	example/sin.cpp%
 	example/sinh.cpp%
 	example/sqrt.cpp%
@@ -121,19 +124,20 @@ $children%
 	example/tanh.cpp
 %$$
 $table
+$rref abs.cpp$$
 $rref Acos.cpp$$
 $rref Asin.cpp$$
-$rref Atan.cpp$$
-$rref Cos.cpp$$
-$rref Cosh.cpp$$
-$rref Exp.cpp$$
-$rref Log.cpp$$
-$rref Log10.cpp$$
-$rref Sin.cpp$$
-$rref Sinh.cpp$$
-$rref Sqrt.cpp$$
-$rref Tan.cpp$$
-$rref Tanh.cpp$$
+$rref atan.cpp$$
+$rref cos.cpp$$
+$rref cosh.cpp$$
+$rref exp.cpp$$
+$rref log.cpp$$
+$rref log10.cpp$$
+$rref sin.cpp$$
+$rref sinh.cpp$$
+$rref sqrt.cpp$$
+$rref tan.cpp$$
+$rref tanh.cpp$$
 $tend
 
 
@@ -141,8 +145,8 @@ $head Derivatives$$
 Each of these functions satisfy a standard math function differential equation.
 Calculating derivatives using this differential equation 
 is discussed for 
-both $xref/ForwardTheory/Standard Math Functions/forward/$$
-and $xref/ReverseTheory/Standard Math Functions/reverse/$$ mode.
+both $cref/forward/ForwardTheory/Standard Math Functions/$$
+and $cref/reverse/ReverseTheory/Standard Math Functions/$$ mode.
 The exact form of the differential equation
 for each of these functions is listed below:
 
@@ -281,6 +285,7 @@ namespace CppAD {
      CPPAD_STANDARD_MATH_UNARY_AD(cos, CosOp)
      CPPAD_STANDARD_MATH_UNARY_AD(cosh, CoshOp)
      CPPAD_STANDARD_MATH_UNARY_AD(exp, ExpOp)
+     CPPAD_STANDARD_MATH_UNARY_AD(fabs, AbsOp)
      CPPAD_STANDARD_MATH_UNARY_AD(log, LogOp)
      CPPAD_STANDARD_MATH_UNARY_AD(sin, SinOp)
      CPPAD_STANDARD_MATH_UNARY_AD(sinh, SinhOp)

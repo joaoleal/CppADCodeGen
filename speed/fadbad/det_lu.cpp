@@ -1,6 +1,6 @@
-/* $Id: det_lu.cpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: det_lu.cpp 2424 2012-06-07 13:54:21Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-08 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin fadbad_det_lu.cpp$$
 $spell
+	retape
 	cppad
 	std
 	Lu
@@ -28,16 +29,18 @@ $$
 
 $section Fadbad Speed: Gradient of Determinant Using Lu Factorization$$
 
-$index fadbad, speed lu$$
-$index speed, fadbad lu$$
+$index link_det_lu, fadbad$$
+$index fadbad, link_det_lu$$
+$index speed, fadbad$$
+$index fadbad, speed$$
 $index lu, speed fadbad$$
+$index matrix, factor speed fadbad$$
+$index factor, matrix speed fadbad$$
 
 $head Specifications$$
-See $cref/link_det_lu/$$.
+See $cref link_det_lu$$.
 
 $head Implementation$$
-$index fadbad, link_det_lu$$
-$index link_det_lu, fadbad$$
 $codep */
 # include <FADBAD++/badiff.h>
 # include <cppad/speed/det_by_lu.hpp>
@@ -50,6 +53,11 @@ bool link_det_lu(
 	CppAD::vector<double>      &matrix   ,
 	CppAD::vector<double>      &gradient )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_optimize || global_atomic )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 

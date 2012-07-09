@@ -1,6 +1,6 @@
-/* $Id: jac_minor_det.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: jac_minor_det.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin JacMinorDet.cpp$$
+$begin jac_minor_det.cpp$$
 $spell
 	Cpp
 $$
@@ -24,12 +24,12 @@ $index example, minors expansion$$
 $index test, minors expansion$$
 
 $code
-$verbatim%example/jac_minor_det.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/jac_minor_det.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cppad/speed/det_by_minor.hpp>
@@ -38,7 +38,7 @@ $end
 
 typedef std::complex<double>     Complex;
 typedef CppAD::AD<Complex>       ADComplex;
-typedef CPPAD_TEST_VECTOR<ADComplex>   ADVector;
+typedef CPPAD_TESTVECTOR(ADComplex)   ADVector;
 
 // ----------------------------------------------------------------------------
 
@@ -53,8 +53,8 @@ bool JacMinorDet(void)
 	det_by_minor<ADComplex> Det(n);
 
 	// independent and dependent variable vectors
-	CPPAD_TEST_VECTOR<ADComplex>  X(n * n);
-	CPPAD_TEST_VECTOR<ADComplex>  D(1);
+	CPPAD_TESTVECTOR(ADComplex)  X(n * n);
+	CPPAD_TESTVECTOR(ADComplex)  D(1);
 
 	// value of the independent variable
 	size_t i;
@@ -71,12 +71,12 @@ bool JacMinorDet(void)
 	ADFun<Complex> f(X, D);
 
 	// argument value
-	CPPAD_TEST_VECTOR<Complex>     x( n * n );
+	CPPAD_TESTVECTOR(Complex)     x( n * n );
 	for(i = 0; i < n * n; i++)
 		x[i] = Complex(2 * i, i);
 
 	// first derivative of the determinant
-	CPPAD_TEST_VECTOR<Complex> J( n * n );
+	CPPAD_TESTVECTOR(Complex) J( n * n );
 	J = f.Jacobian(x);
 
 	/*
@@ -91,4 +91,4 @@ bool JacMinorDet(void)
 
 }
 
-// END PROGRAM
+// END C++

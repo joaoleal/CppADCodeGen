@@ -1,6 +1,6 @@
-/* $Id: link_poly.cpp 1878 2011-02-17 01:05:50Z bradbell $ */
+/* $Id: link_poly.cpp 2416 2012-06-02 17:38:45Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -39,8 +39,12 @@ $codei%extern bool link_poly(
 $head Purpose$$
 Each $cref/package/speed_main/package/$$
 must define a version of this routine as specified below.
-This is used by the $cref/speed_main/$$ program 
+This is used by the $cref speed_main$$ program 
 to run the corresponding speed and correctness tests.
+
+$head Method$$
+The same template routine $cref Poly$$ is used
+by the different AD packages.
 
 $head Return Value$$
 If this speed test is not yet

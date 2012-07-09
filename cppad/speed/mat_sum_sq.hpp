@@ -1,9 +1,9 @@
-/* $Id: mat_sum_sq.hpp 1891 2011-02-21 17:10:14Z bradbell $ */
+/* $Id: mat_sum_sq.hpp 2439 2012-06-18 02:28:36Z bradbell $ */
 # ifndef CPPAD_MAT_SUM_SQ_INCLUDED
 # define CPPAD_MAT_SUM_SQ_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -45,7 +45,7 @@ $latex \[
 	z_0     & = & \sum_{i=0}^{n-1} \sum_{j=0}^{n-1} y_{i,j}
 \end{array}
 \] $$
-see $cref/link_mat_mul/$$.
+see $cref link_mat_mul$$.
 
 $head Inclusion$$
 The template function $code mat_sum_sq$$ is defined in the $code CppAD$$
@@ -108,7 +108,7 @@ $latex \[
 
 $head Vector$$
 The type $icode Vector$$ is any
-$cref/SimpleVector/$$ calls with a fixed element type.
+$cref SimpleVector$$, or it can be a raw pointer to the vector elements.
 The element type must support
 addition, multiplication, and assignment to both its own type 
 and to a double value.
@@ -121,19 +121,21 @@ $children%
 
 $head Example$$
 The file
-$cref/mat_sum_sq.cpp/$$ 
+$cref mat_sum_sq.cpp$$ 
 contains an example and test of $code mat_sum_sq.hpp$$.
 It returns true if it succeeds and false otherwise.
 
 $head Source Code$$
 The file
-$xref/mat_sum_sq.hpp/$$ 
+$cref mat_sum_sq.hpp$$ 
 contains the source for this template function.
 
 $end
 ------------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
+# include <cstddef>
+//
 namespace CppAD {
 	template <class Vector>
 	void mat_sum_sq(size_t n, Vector& x , Vector& y , Vector& z)
@@ -155,5 +157,5 @@ namespace CppAD {
 	}
 
 }
-// END PROGRAM
+// END C++
 # endif

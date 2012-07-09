@@ -1,6 +1,6 @@
-/* $Id: sparse_hessian.cpp 1644 2010-02-06 19:56:43Z bradbell $ */
+/* $Id: sparse_hessian.cpp 2429 2012-06-10 02:25:05Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,12 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin cppad_sparse_hessian.cpp$$
 $spell
+	namespace
+	Jac
+	retape
+	work work
+	const
+	hes
 	CppAD
 	cppad
 	hpp
@@ -27,115 +33,189 @@ $$
 
 $section CppAD Speed: Sparse Hessian$$
 
-$index cppad, speed sparse Hessian$$
-$index speed, cppad sparse Hessian$$
-$index Hessian, sparse speed cppad$$
-$index sparse, Hessian speed cppad$$
+$index link_sparse_hessian, cppad$$
+$index cppad, link_sparse_hessian$$
+$index speed, cppad$$
+$index cppad, speed$$
+$index sparse, speed cppad$$
+$index hessian, speed cppad$$
 
-$head Operation Sequence$$
-Note that the 
-$cref/operation sequence/glossary/Operation/Sequence/$$
-depends on the vectors $italic i$$ and $italic j$$.
-Hence we use a different $cref/ADFun/$$ object for 
-each choice of $italic i$$ and $italic j$$.
+$head Specifications$$
+See $cref link_sparse_hessian$$.
 
-$head Sparse Hessian$$
-If the preprocessor symbol $code CPPAD_USE_SPARSE_HESSIAN$$ is 
-true, the routine $cref/SparseHessian/sparse_hessian/$$ 
-is used for the calculation.
-Otherwise, the routine $cref/Hessian/$$ is used.
+$head Implementation$$
 
-$head link_sparse_hessian$$
-$index link_sparse_hessian$$
 $codep */
 # include <cppad/cppad.hpp>
 # include <cppad/speed/uniform_01.hpp>
-# include <cppad/speed/sparse_evaluate.hpp>
+# include <cppad/speed/sparse_hes_fun.hpp>
+# include "print_optimize.hpp"
 
-// value can be true or false
-# define CPPAD_USE_SPARSE_HESSIAN  1
+// determines if we are using bool or set sparsity patterns
+# define USE_SET_SPARSITY 0
+
+namespace {
+	using CppAD::vector;
+	typedef vector< std::set<size_t> >  SetVector;
+	typedef vector<bool>                BoolVector;
+
+	void calc_sparsity(SetVector& sparsity_set, CppAD::ADFun<double>& f)
+	{	size_t n = f.Domain();
+		size_t m = f.Range();
+		CPPAD_ASSERT_UNKNOWN( m == 1 );
+		SetVector r_set(n);
+		for(size_t i = 0; i < n; i++)
+			r_set[i].insert(i);
+		f.ForSparseJac(n, r_set);
+		//
+		SetVector s_set(m);
+		s_set[0].insert(0);
+		//
+		sparsity_set = f.RevSparseHes(n, s_set);
+	}
+	void calc_sparsity(BoolVector& sparsity_bool, CppAD::ADFun<double>& f)
+	{	size_t n = f.Domain();
+		size_t m = f.Range();
+		CPPAD_ASSERT_UNKNOWN( m == 1 );
+		BoolVector r_bool(n * n);
+		size_t i, j;
+		for(i = 0; i < n; i++)
+		{	for(j = 0; j < n; j++)
+				r_bool[ i * n + j] = false;
+			r_bool[ i * n + i] = true;
+		}
+		f.ForSparseJac(n, r_bool);
+		//
+		BoolVector s_bool(m);
+		s_bool[0] = true;
+		//
+		sparsity_bool = f.RevSparseHes(n, s_bool);
+	}
+
+}
 
 bool link_sparse_hessian(
-	size_t                     repeat   , 
-	CppAD::vector<double>     &x        ,
-	CppAD::vector<size_t>     &i        ,
-	CppAD::vector<size_t>     &j        ,
-	CppAD::vector<double>     &hessian  )
+	size_t                           size     , 
+	size_t                           repeat   , 
+	CppAD::vector<double>&           x        ,
+	const CppAD::vector<size_t>&     row      ,
+	const CppAD::vector<size_t>&     col      ,
+	CppAD::vector<double>&           hessian  )
 {
 	// -----------------------------------------------------
 	// setup
-	using CppAD::AD;
-	typedef CppAD::vector<double>       DblVector;
-	typedef CppAD::vector< AD<double> > ADVector;
-	typedef CppAD::vector<size_t>       SizeVector;
+	typedef vector<size_t>              SizeVector;
+	typedef vector<double>              DblVector;
+	typedef vector< std::set<size_t> >  SetVector;
+	typedef vector<bool>                BoolVector;
+	typedef CppAD::AD<double>           ADScalar;
+	typedef vector<ADScalar>            ADVector;
 
+	size_t i, j, k;
 	size_t order = 0;         // derivative order corresponding to function
 	size_t m = 1;             // number of dependent variables
-	size_t n = x.size();      // number of independent variables
-	size_t ell = i.size();    // number of indices in i and j
-	ADVector   X(n);          // AD domain space vector
-	ADVector   Y(m);          // AD range space vector
+	size_t n = size;          // number of independent variables
+	size_t K = row.size();    // number of non-zeros in lower triangle
+	ADVector   a_x(n);        // AD domain space vector
+	ADVector   a_y(m);        // AD range space vector
 	DblVector  w(m);          // double range space vector
-	DblVector tmp(2 * ell);   // double temporary vector
+	DblVector hes(K);         // non-zeros in lower triangle
 	CppAD::ADFun<double> f;   // AD function object
-
-	
-	// choose a value for x 
-	CppAD::uniform_01(n, x);
-	size_t k;
-	for(k = 0; k < n; k++)
-		X[k] = x[k];
 
 	// weights for hessian calculation (only one component of f)
 	w[0] = 1.;
 
-	// used to display results of optimizing the operation sequence
-        static bool printed = false;
-        bool print_this_time = (! printed) & (repeat > 1) & (n >= 30);
+	// use the unspecified fact that size is non-decreasing between calls
+	static size_t previous_size = 0;
+	bool print    = (repeat > 1) & (previous_size != size);
+	previous_size = size;
 
+	// declare sparsity pattern
+# if USE_SET_SPARSITY
+	SetVector sparsity(n);
+# else
+	BoolVector sparsity(n * n);
+# endif
+	// initialize all entries as zero
+	for(i = 0; i < n; i++)
+	{	for(j = 0; j < n; j++)
+			hessian[ i * n + j] = 0.;
+	}
 	// ------------------------------------------------------
-	while(repeat--)
-	{
-		// get the next set of indices
-		CppAD::uniform_01(2 * ell, tmp);
-		for(k = 0; k < ell; k++)
-		{	i[k] = size_t( n * tmp[k] );
-			i[k] = std::min(n-1, i[k]);
-			//
-			j[k] = size_t( n * tmp[k + ell] );
-			j[k] = std::min(n-1, j[k]);
-		}
+	extern bool global_retape;
+	if( global_retape) while(repeat--)
+	{	// choose a value for x 
+		CppAD::uniform_01(n, x);
+		for(j = 0; j < n; j++)
+			a_x[j] = x[j];
 
 		// declare independent variables
-		Independent(X);	
+		Independent(a_x);	
 
 		// AD computation of f(x)
-		CppAD::sparse_evaluate< AD<double> >(X, i, j, order, Y);
+		CppAD::sparse_hes_fun<ADScalar>(n, a_x, row, col, order, a_y);
 
 		// create function object f : X -> Y
-		f.Dependent(X, Y);
+		f.Dependent(a_x, a_y);
 
 		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "cppad_sparse_hessian_optimize_size_"
-				          << int(n) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_sparse_hessian_optimize", size);
+			print = false;
 		}
 
-		// evaluate and return the hessian of f
-# if CPPAD_USE_SPARSE_HESSIAN
-		hessian = f.SparseHessian(x, w);
-# else
-		hessian = f.Hessian(x, w);
-# endif
+		// calculate the Hessian sparsity pattern for this function
+		calc_sparsity(sparsity, f);
+
+		// structure that holds some of work done by SparseHessian
+		CppAD::sparse_hessian_work work;
+
+		// calculate this Hessian at this x
+		f.SparseHessian(x, w, sparsity, row, col, hes, work);
+		for(k = 0; k < K; k++)
+		{	hessian[ row[k] * n + col[k] ] = hes[k];
+			hessian[ col[k] * n + row[k] ] = hes[k];
+		}
+	}
+	else
+	{	// choose a value for x 
+		CppAD::uniform_01(n, x);
+		for(j = 0; j < n; j++)
+			a_x[j] = x[j];
+
+		// declare independent variables
+		Independent(a_x);	
+
+		// AD computation of f(x)
+		CppAD::sparse_hes_fun<ADScalar>(n, a_x, row, col, order, a_y);
+
+		// create function object f : X -> Y
+		f.Dependent(a_x, a_y);
+
+		extern bool global_optimize;
+		if( global_optimize )
+		{	print_optimize(f, print, "cppad_sparse_hessian_optimize", size);
+			print = false;
+		}
+
+		// calculate the Hessian sparsity pattern for this function
+		calc_sparsity(sparsity, f);
+
+		// declare structure that holds some of work done by SparseHessian
+		CppAD::sparse_hessian_work work;
+
+		while(repeat--)
+		{	// choose a value for x
+			CppAD::uniform_01(n, x);
+
+			// calculate sparsity at this x
+			f.SparseHessian(x, w, sparsity, row, col, hes, work);
+
+			for(k = 0; k < K; k++)
+			{	hessian[ row[k] * n + col[k] ] = hes[k];
+				hessian[ col[k] * n + row[k] ] = hes[k];
+			}
+		}
 	}
 	return true;
 }

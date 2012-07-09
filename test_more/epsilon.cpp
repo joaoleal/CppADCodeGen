@@ -1,6 +1,6 @@
-/* $Id: epsilon.cpp 2101 2011-09-24 15:00:00Z bradbell $ */
+/* $Id: epsilon.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -20,13 +20,9 @@ $index epsilon$$
 $index example, epsilon$$
 $index test, epsilon$$
 
-$code
-$verbatim%example/epsilon.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
-$$
-
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # ifdef _MSC_VER
 // Supress Microsoft compiler warning about possible loss of precision,
@@ -81,4 +77,4 @@ bool epsilon(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

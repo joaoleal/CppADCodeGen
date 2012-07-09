@@ -1,6 +1,6 @@
-/* $Id: opt_val_hes.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: opt_val_hes.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,9 +22,9 @@ $index opt_val_hes, example$$
 $index example, opt_val_hes$$
 $index test, opt_val_hes$$
 
-Fix $latex z \in \R^\ell$$ and define the functions
-$latex S_k : \R \times \R \rightarrow \R^\ell$$ by and
-$latex F : \R \times \R \rightarrow \R$$ by
+Fix $latex z \in \B{R}^\ell$$ and define the functions
+$latex S_k : \B{R} \times \B{R} \rightarrow \B{R}^\ell$$ by and
+$latex F : \B{R} \times \B{R} \rightarrow \B{R}$$ by
 $latex \[
 \begin{array}{rcl}
 S_k (x, y) & = & \frac{1}{2} [ y * \sin ( x * t_k ) - z_k ]^2
@@ -63,20 +63,20 @@ Y(x) & = & \frac{
 \] $$
 
 $code
-$verbatim%example/opt_val_hes.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/opt_val_hes.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <limits>
 # include <cppad/cppad.hpp>
 
 namespace {
 	using CppAD::AD;
-	typedef CPPAD_TEST_VECTOR<double>       BaseVector;
-	typedef CPPAD_TEST_VECTOR< AD<double> > ADVector;
+	typedef CPPAD_TESTVECTOR(double)       BaseVector;
+	typedef CPPAD_TESTVECTOR(AD<double>) ADVector;
 
 	class Fun {
 	private:
@@ -116,7 +116,7 @@ namespace {
 		AD<double> numerator = 0.;
 		AD<double> denominator = 0.;
 		size_t k;
-		for(k = 0; k < t.size(); k++)
+		for(k = 0; k < size_t(t.size()); k++)
 		{	numerator   += sin( x[0] * t[k] ) * z[k];
 			denominator += sin( x[0] * t[k] ) * sin( x[0] * t[k] ); 	
 		}
@@ -124,7 +124,7 @@ namespace {
 
 		// V(x) = F[x, Y(x)]
 		AD<double> sum = 0;
-		for(k = 0; k < t.size(); k++)
+		for(k = 0; k < size_t(t.size()); k++)
 		{	AD<double> residual = y * sin( x[0] * t[k] ) - z[k];
 			sum += .5 * residual * residual;
 		}
@@ -178,7 +178,7 @@ bool opt_val_hes(void)
 	CppAD::ADFun<double> g(a_x, a_v);
 
 	// accuracy for checks
-	double eps = 10. * CppAD::epsilon<double>();
+	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 	// check Jacobian
 	BaseVector check_jac = g.Jacobian(x);
@@ -193,4 +193,4 @@ bool opt_val_hes(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

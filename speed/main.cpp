@@ -1,4 +1,4 @@
-/* $Id: main.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: main.cpp 2431 2012-06-12 15:49:48Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -46,6 +46,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin speed_main$$
 $spell
+	alloc
 	mat_mul
 	retaped
 	retape
@@ -106,6 +107,7 @@ $cref/correct/speed_main/test/correct/$$,
 $cref/speed/speed_main/test/speed/$$,
 $cref/det_minor/link_det_minor/$$,
 $cref/det_lu/link_det_lu/$$,
+$cref/mat_mul/link_mat_mul/$$,
 $cref/ode/link_ode/$$,
 $cref/poly/link_poly/$$,
 $cref/sparse_hessian/link_sparse_hessian/$$,
@@ -122,7 +124,7 @@ all of the speed tests are run.
 $head seed$$
 $index uniform_01$$
 The command line argument $icode seed$$ is a positive integer.
-The random number simulator $cref/uniform_01/$$ is initialized with
+The random number simulator $cref uniform_01$$ is initialized with
 the call
 $codei%
 	uniform_01(%seed%)
@@ -142,13 +144,24 @@ $codep
 $$
 is true and otherwise it is false.
 If this external symbol is true,
-every test must retape the AD operation sequence for each test repetition.
+every test must retape the 
+$cref/operation sequence/glossary/Operation/Sequence/$$
+for each test repetition.
 If it is false,
-and the particular test has a fixed operation sequence,
 the AD package is allowed to use one taping of the operation
 sequence for all the repetitions of that speed test.
-The following tests have a fixed operation sequence:
-$code det_minor$$, $code mat_mul$$, $code ode$$, $code poly$$.
+$pre
+
+$$
+All of the tests, except $cref/det_lu/link_det_lu/$$,
+have a fixed operations sequence.
+The operation sequence for $code det_lu$$ 
+may be different for each repetition of the test because it
+depends on the matrix for which the determinant is being calculated. 
+For this reason,
+$cref cppad_det_lu.cpp$$ returns false 
+(for test not implemented)
+when $code global_retape$$ is false.
 
 $subhead optimize$$
 If the option $code optimize$$ is present, the symbol
@@ -174,6 +187,13 @@ and the AD package has a way to speed up the processing
 by adding $cref user_atomic$$ operations,
 this should be included in computations.
 If it is false, user defined atomic operations should not be done.
+
+$subhead hold_memory$$
+If the option $code hold_memory$$ is present, the 
+$cref/hold_memory/ta_hold_memory/$$ routine will be called.
+This should make the CppAD $code thread_alloc$$ allocator faster.
+This is done by the main program and there is no global variable
+corresponding to this option.
 
 $head Correctness Results$$
 An output line is generated for each correctness test
@@ -205,6 +225,7 @@ functions that link the speed test to the main program described above:
 $table
 $rref link_det_lu$$
 $rref link_det_minor$$
+$rref link_mat_mul$$
 $rref link_ode$$
 $rref link_poly$$
 $rref link_sparse_hessian$$
@@ -236,6 +257,16 @@ bool   global_atomic;
 namespace {
 	using std::cout;
 	using std::endl;
+	// ----------------------------------------------------------------
+	// not available test message
+	void not_available_message(const char* test_name)
+	{	cout << AD_PACKAGE << ": " << test_name;
+		cout << " is not availabe with " << endl;
+		cout << "global_retape = " << global_retape;
+		cout << ", global_optimize = " << global_optimize;
+		cout << ", global_atomic = " << global_atomic;
+		cout << endl;
+	}
 
 	// ------------------------------------------------------
 	// output vector in form readable by octave or matlab
@@ -296,6 +327,7 @@ namespace {
 // main program that runs all the tests
 int main(int argc, char *argv[])
 {	bool ok = true;
+	bool hold_memory;
 	enum test_enum {
 		test_correct,
 		test_speed,
@@ -339,6 +371,7 @@ int main(int argc, char *argv[])
 		global_retape   = false;
 		global_optimize = false;
 		global_atomic   = false;
+		hold_memory     = false;
 		for(i = 3; i < size_t(argc); i++)
 		{	if( strcmp(argv[i], "retape") == 0 )
 				global_retape = true;
@@ -346,6 +379,8 @@ int main(int argc, char *argv[])
 				global_optimize = true;
 			else if( strcmp(argv[i], "atomic") == 0 )
 				global_atomic = true;
+			else if( strcmp(argv[i], "hold_memory") == 0 )
+				hold_memory = true;
 			else
 				error = true;
 		}
@@ -359,9 +394,14 @@ int main(int argc, char *argv[])
 		cout << "seed choices: ";
 		cout << "a positive integer used as a random seed." << endl;
 		cout << "option choices: ";
-		cout << " \"retape\", \"optimize\"." << endl << endl;
+		cout << " \"retape\",";
+		cout << " \"optimize\",";
+		cout << " \"atomic\",";
+		cout << " \"hold_memory\"." << endl << endl;
 		return 1;
 	}
+	if( hold_memory )
+		CppAD::thread_alloc::hold_memory(true);
 
 	// initialize the random number simulator
 	CppAD::uniform_01(size_t(iseed));
@@ -379,10 +419,10 @@ int main(int argc, char *argv[])
 	{	size_det_lu[i]      = 3 * i + 1;
 		size_det_minor[i]   = i + 1;
 		size_mat_mul[i]     = 10 * (i + 1);
-		size_ode[i]         = i + 1;
+		size_ode[i]         = 3 * i + 1;
 		size_poly[i]        = 8 * i + 1;
-		size_sparse_hessian[i]  = 30 * (i + 1);
-		size_sparse_jacobian[i] = 30 * (i + 1);
+		size_sparse_hessian[i]  = 100 * (i + 1) * (i + 1);
+		size_sparse_jacobian[i] = 100 * (i + 1) * (i + 1);
 	}
 
 	switch(match)
@@ -431,7 +471,7 @@ int main(int argc, char *argv[])
 		speed_det_minor,       size_det_minor,       "det_minor"
 		);
 		if( available_mat_mul() ) run_speed(
-		speed_mat_mul,           size_mat_mul,       "det_minor"
+		speed_mat_mul,           size_mat_mul,       "mat_mul"
 		);
 		if( available_ode() ) run_speed(
 		speed_ode,             size_ode,             "ode"
@@ -451,8 +491,7 @@ int main(int argc, char *argv[])
 
 		case test_det_lu:
 		if( ! available_det_lu() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_det_lu,           "det_lu");
@@ -462,8 +501,7 @@ int main(int argc, char *argv[])
 
 		case test_det_minor:
 		if( ! available_det_minor() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_det_minor,       "det_minor");
@@ -473,8 +511,7 @@ int main(int argc, char *argv[])
 
 		case test_mat_mul:
 		if( ! available_mat_mul() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_mat_mul,     "mat_mul");
@@ -484,8 +521,7 @@ int main(int argc, char *argv[])
 
 		case test_ode:
 		if( ! available_ode() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_ode,           "ode");
@@ -495,8 +531,7 @@ int main(int argc, char *argv[])
 
 		case test_poly:
 		if( ! available_poly() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_poly,            "poly");
@@ -506,8 +541,7 @@ int main(int argc, char *argv[])
 
 		case test_sparse_hessian:
 		if( ! available_sparse_hessian() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_sparse_hessian, "sparse_hessian");
@@ -518,8 +552,7 @@ int main(int argc, char *argv[])
 
 		case test_sparse_jacobian:
 		if( ! available_sparse_jacobian() )
-		{	cout << AD_PACKAGE << ": test " << argv[1] 
-			     << " not available" << endl; 
+		{	not_available_message( argv[1] ); 
 			exit(1);
 		}
 		ok &= run_correct(correct_sparse_jacobian, "sparse_jacobian");

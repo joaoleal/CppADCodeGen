@@ -1,6 +1,6 @@
-// $Id: mat_mul.cpp 2016 2011-07-17 14:43:33Z bradbell $
+// $Id: mat_mul.cpp 2448 2012-07-03 12:50:29Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -28,15 +28,15 @@ $children%
 	example/mat_mul.hpp
 %$$
 $head Include File$$
-This routine uses the include file $cref/mat_mul.hpp/$$.
+This routine uses the include file $cref mat_mul.hpp$$.
 
 $code
-$verbatim%example/mat_mul.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/mat_mul.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include "mat_mul.hpp"
 
@@ -52,7 +52,7 @@ bool mat_mul(void)
 	// declare the AD<double> vectors ax and ay and X 
 	size_t n = nr_result * n_middle + n_middle * nc_result;
 	size_t m = nr_result * nc_result;
-	CPPAD_TEST_VECTOR< AD<double> > X(4), ax(n), ay(m);
+	CppAD::vector< AD<double> > X(4), ax(n), ay(m);
 	size_t i, j;
 	for(j = 0; j < X.size(); j++)
 		X[j] = (j + 1);
@@ -99,7 +99,7 @@ bool mat_mul(void)
 	// g(x) = [ x0*x2 + x1*x3 , x0*7 + x1*8 , 5*x2  + 6*x3  , 5*7 + 6*8 ]^T
 	//----------------------------------------------------------------------
 	// Test zero order forward mode evaluation of g(x)
-	CPPAD_TEST_VECTOR<double> x( X.size() ), y(m);
+	CppAD::vector<double> x( X.size() ), y(m);
 	for(j = 0; j <  X.size() ; j++)
 		x[j] = j + 2;
 	y = G.Forward(0, x);
@@ -114,7 +114,7 @@ bool mat_mul(void)
 	//         [ 7 ,  8,  0, 0  ]
 	//         [ 0 ,  0,  5, 6  ]
 	//         [ 0 ,  0,  0, 0  ] 
-	CPPAD_TEST_VECTOR<double> dx( X.size() ), dy(m);
+	CppAD::vector<double> dx( X.size() ), dy(m);
 	for(j = 0; j <  X.size() ; j++)
 		dx[j] = j + 1;
 	dy = G.Forward(1, dx);
@@ -129,7 +129,7 @@ bool mat_mul(void)
 	//             [ 0, 0, 0, 1 ]              [2]   [4]
 	//             [ 1, 0, 0, 0 ]              [3]   [1]
 	//             [ 0, 1, 0, 0 ]              [4]   [2]
-	CPPAD_TEST_VECTOR<double> ddx( X.size() ), ddy(m);
+	CppAD::vector<double> ddx( X.size() ), ddy(m);
 	for(j = 0; j <  X.size() ; j++)
 		ddx[j] = 0.;
 	ddy = G.Forward(2, ddx);
@@ -142,7 +142,7 @@ bool mat_mul(void)
 
 	//----------------------------------------------------------------------
 	// Test second order reverse mode 
-	CPPAD_TEST_VECTOR<double> w(m), dw(2 *  X.size() );
+	CppAD::vector<double> w(m), dw(2 *  X.size() );
 	for(i = 0; i < m; i++)
 		w[i] = 0.;
 	w[0] = 1.;
@@ -170,7 +170,7 @@ bool mat_mul(void)
 	s[2] = {2, 3}
 	s[3] = {}
 	*/
-	CPPAD_TEST_VECTOR< std::set<size_t> > r( X.size() ), s(m);
+	CppAD::vector< std::set<size_t> > r( X.size() ), s(m);
 	for(j = 0; j <  X.size() ; j++)
 	{	assert( r[j].empty() );
 		r[j].insert(j);
@@ -234,7 +234,7 @@ bool mat_mul(void)
 	h[2] = {0}
 	h[3] = {1}
 	*/
-	CPPAD_TEST_VECTOR< std::set<size_t> > h( X.size() ), t(1);
+	CppAD::vector< std::set<size_t> > h( X.size() ), t(1);
 	t[0].clear();
 	t[0].insert(0);
 	h = G.RevSparseHes(X.size() , t);
@@ -265,4 +265,4 @@ bool mat_mul(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

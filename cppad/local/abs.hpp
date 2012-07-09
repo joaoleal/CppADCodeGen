@@ -1,4 +1,4 @@
-/* $Id: abs.hpp 2314 2012-03-27 17:31:13Z bradbell $ */
+/* $Id: abs.hpp 2421 2012-06-04 12:35:01Z bradbell $ */
 # ifndef CPPAD_ABS_INCLUDED
 # define CPPAD_ABS_INCLUDED
 
@@ -17,6 +17,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------------
 $begin abs$$
 $spell
+	fabs
 	Vec
 	std
 	faq
@@ -28,13 +29,16 @@ $spell
 $$
 
 $index abs, AD$$
+$index fabs, AD$$
 $index absolute, AD value$$
 $index value, AD absolute$$
 
 $section AD Absolute Value Function$$
 
 $head Syntax$$
-$icode%y% = abs(%x%)%$$
+$icode%y% = abs(%x%)
+%$$
+$icode%y% = fabs(%x%)%$$
 
 
 $head Purpose$$
@@ -111,7 +115,7 @@ $latex \[
 Note that $latex x^{(0)} = X(0)$$ is the value of $icode x$$ and
 $latex y^{(0)} = Y(0)$$ is the value of $icode y$$.
 In the equations above, the order $latex p$$ is specified
-by a call to $cref Forward$$ or $xref/Reverse/$$ as follows:
+by a call to $cref Forward$$ or $cref Reverse$$ as follows:
 $codei%
 	%f%.Forward(%p%, %dx%)
 	%f%.Reverse(%p%+1, %w%)

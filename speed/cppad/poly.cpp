@@ -1,6 +1,6 @@
-/* $Id: poly.cpp 1644 2010-02-06 19:56:43Z bradbell $ */
+/* $Id: poly.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -27,7 +27,7 @@ $spell
 	det
 	hpp
 	const
-	CPPAD_TEST_VECTOR
+	CPPAD_TESTVECTOR
 	bool
 	var
 	std
@@ -37,15 +37,21 @@ $$
 
 $section CppAD Speed: Second Derivative of a Polynomial$$
 
-$index cppad, speed polynomial$$
-$index speed, cppad polynomial$$
+$index link_poly, cppad$$
+$index cppad, link_poly$$
+$index speed, cppad$$
+$index cppad, speed$$
 $index polynomial, speed cppad$$
 
-$head link_poly$$
-$index link_poly$$
+$head Specifications$$
+See $cref link_poly$$.
+
+$head Implementation$$
+
 $codep */
 # include <cppad/cppad.hpp>
 # include <cppad/speed/uniform_01.hpp>
+# include "print_optimize.hpp"
 
 bool link_poly(
 	size_t                     size     , 
@@ -54,6 +60,11 @@ bool link_poly(
 	CppAD::vector<double>     &z        ,  // polynomial argument value
 	CppAD::vector<double>     &ddp      )  // second derivative w.r.t z  
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( global_atomic )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 	typedef CppAD::AD<double>     ADScalar; 
@@ -81,10 +92,12 @@ bool link_poly(
 	// AD function object
 	CppAD::ADFun<double> f;
 
-	static bool printed = false;
-	bool print_this_time = (! printed) & (repeat > 1) & (size >= 10);
+	// use the unspecified fact that size is non-decreasing between calls
+	static size_t previous_size = 0;
+	bool print    = (repeat > 1) & (previous_size != size);
+	previous_size = size;
 
-	extern bool global_retape;
+	// --------------------------------------------------------------------
 	if( global_retape ) while(repeat--)
 	{
 		// choose an argument value
@@ -100,28 +113,15 @@ bool link_poly(
 		// create function object f : A -> detA
 		f.Dependent(Z, P);
 
-		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "cppad_poly_optimize_size_" 
-				          << int(size) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_poly_optimize", size);
+			print = false;
 		}
 
 		// pre-allocate memory for three forward mode calculations
 		f.capacity_taylor(3);
 
-		// get the next argument value
-		CppAD::uniform_01(1, z);
-
-		// evaluate the polynomial at the new argument value
+		// evaluate the polynomial 
 		p = f.Forward(0, z);
 
 		// evaluate first order Taylor coefficient
@@ -148,19 +148,8 @@ bool link_poly(
 
 		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "optimize: size = " << size
-				          << ": size_var() = "
-				          << before << "(before) " 
-				          << after << "(after) " 
-				          << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_poly_optimize", size);
+			print = false;
 		}
 
 		while(repeat--)

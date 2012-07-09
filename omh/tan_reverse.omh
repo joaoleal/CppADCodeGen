@@ -1,4 +1,4 @@
-$Id: tan_reverse.omh 2031 2011-07-27 14:37:25Z bradbell $
+$Id: tan_reverse.omh 2403 2012-05-25 13:46:02Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -25,7 +25,7 @@ $head Notation$$
 We use the reverse theory
 $cref/standard math function/ReverseTheory/Standard Math Functions/$$
 definition for the functions $latex H$$ and $latex G$$.
-In addition, we use the forward mode notation in $cref/tan_forward/$$ for
+In addition, we use the forward mode notation in $cref tan_forward$$ for
 $latex X(t)$$, $latex Y(t)$$ and $latex Z(t)$$.
 
 $head Eliminating Y(t)$$

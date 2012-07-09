@@ -1,6 +1,6 @@
-/* $Id: independent.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: independent.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,7 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 WARNING: This file is used an an example by omh/FunConstruct.omh.
 
-$begin Independent.cpp$$
+$begin independent.cpp$$
 
 $comment ! NOTE the title states that this example is used two places !$$
 $section Independent and ADFun Constructor: Example and Test$$
@@ -22,12 +22,12 @@ $index example, Independent$$
 $index test, Independent$$
 
 $code
-$verbatim%example/independent.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/independent.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 
 namespace { // --------------------------------------------------------
@@ -66,8 +66,8 @@ bool Test(void)
 	ok &= NearEqual(Y[1] , 0.,  1e-10 , 1e-10);
 
 	// compute f(1, 2)
-	CPPAD_TEST_VECTOR<double> x(n);
-	CPPAD_TEST_VECTOR<double> y(m);
+	CPPAD_TESTVECTOR(double) x(n);
+	CPPAD_TESTVECTOR(double) y(m);
 	x[0] = 1.;
 	x[1] = 2.;
 	y    = f.Forward(0, x);
@@ -75,8 +75,8 @@ bool Test(void)
 	ok &= NearEqual(y[1] , 2.,  1e-10 , 1e-10);
 
 	// compute partial of f w.r.t x[0] at (1, 2)
-	CPPAD_TEST_VECTOR<double> dx(n);
-	CPPAD_TEST_VECTOR<double> dy(m);
+	CPPAD_TESTVECTOR(double) dx(n);
+	CPPAD_TESTVECTOR(double) dy(m);
 	dx[0] = 1.;
 	dx[1] = 0.;
 	dy    = f.Forward(1, dx);
@@ -107,4 +107,4 @@ bool Independent(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

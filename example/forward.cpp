@@ -1,4 +1,4 @@
-/* $Id: forward.cpp 2312 2012-03-26 14:57:09Z bradbell $ */
+/* $Id: forward.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Forward.cpp$$
+$begin forward.cpp$$
 $spell
 	Cpp
 $$
@@ -22,12 +22,12 @@ $index example, Forward$$
 $index test, Forward$$
 
 $code
-$verbatim%example/forward.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/forward.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 namespace { // --------------------------------------------------------
 // define the template function ForwardCases<Vector> in empty namespace
@@ -39,7 +39,7 @@ bool ForwardCases(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 0.; 
 	X[1] = 1.;
 
@@ -48,7 +48,7 @@ bool ForwardCases(void)
 
 	// range space vector
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = X[0] * X[0] * X[1];
 
 	// create f: X -> Y and stop tape recording
@@ -104,4 +104,4 @@ bool Forward(void)
 	ok &= ForwardCases< std::valarray  <double> >();
 	return ok;
 }
-// END PROGRAM
+// END C++

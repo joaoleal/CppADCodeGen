@@ -1,4 +1,4 @@
-// $Id: simple_ad_pthread.cpp 2339 2012-04-06 12:54:04Z bradbell $
+// $Id: simple_ad_pthread.cpp 2439 2012-06-18 02:28:36Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -29,13 +29,13 @@ pthread multi-threading environment.
 
 $head Source Code$$
 $code
-$verbatim%multi_thread/pthread/simple_ad_pthread.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/pthread/simple_ad_pthread.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 ------------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include <pthread.h>
 # define NUMBER_THREADS  4
@@ -240,7 +240,7 @@ namespace {
 		CppAD::ADFun<double> f(ax, ay); 
 
 		// Check function value corresponds to the identity 
-		double eps = 10. * CppAD::epsilon<double>();
+		double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 		ok        &= CppAD::NearEqual(ay[0], ax[0], eps, eps);
 
 		// Check derivative value corresponds to the identity.
@@ -291,4 +291,4 @@ bool simple_ad(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

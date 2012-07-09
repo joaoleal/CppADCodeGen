@@ -300,10 +300,6 @@
 				>
 			</File>
 			<File
-				RelativePath=".\epsilon.cpp"
-				>
-			</File>
-			<File
 				RelativePath=".\equal_op_seq.cpp"
 				>
 			</File>
@@ -372,6 +368,10 @@
 				>
 			</File>
 			<File
+				RelativePath=".\index_sort.cpp"
+				>
+			</File>
+			<File
 				RelativePath=".\integer.cpp"
 				>
 			</File>
@@ -397,6 +397,10 @@
 			</File>
 			<File
 				RelativePath=".\jacobian.cpp"
+				>
+			</File>
+			<File
+				RelativePath=".\limits.cpp"
 				>
 			</File>
 			<File

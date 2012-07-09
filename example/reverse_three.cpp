@@ -1,6 +1,6 @@
-/* $Id: reverse_three.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: reverse_three.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -38,25 +38,25 @@ $latex X^{(2)} (0) = 2 x^{(2)}$$
 (and similarly $latex Y^{(2)} (0) = 2 y^{(2)}$$).
 
 $code
-$verbatim%example/reverse_three.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/reverse_three.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 namespace { // ----------------------------------------------------------
 // define the template function cases<Vector> in empty namespace
 template <typename Vector> 
 bool cases(void)
 {	bool ok    = true;
-	double eps = 10. * CppAD::epsilon<double>();
+	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 	using CppAD::AD;
 	using CppAD::NearEqual;
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 0.; 
 	X[1] = 1.;
 
@@ -65,7 +65,7 @@ bool cases(void)
 
 	// range space vector
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = X[0] * X[1];
 
 	// create f : X -> Y and stop recording
@@ -148,4 +148,4 @@ bool reverse_three(void)
 	ok &= cases< std::valarray  <double> >();
 	return ok;
 }
-// END PROGRAM
+// END C++

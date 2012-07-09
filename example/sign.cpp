@@ -1,6 +1,6 @@
-/* $Id: sign.cpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: sign.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,12 +22,12 @@ $index example, sign$$
 $index test, sign$$
 
 $code
-$verbatim%example/sign.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/sign.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -40,7 +40,7 @@ bool sign(void)
 	// create f: x -> y where f(x) = sign(x)
 	size_t n = 1;
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > ax(n), ay(m);
+	CPPAD_TESTVECTOR(AD<double>) ax(n), ay(m);
 	ax[0]     = 0.;
 	CppAD::Independent(ax);
 	ay[0]     = sign(ax[0]);
@@ -50,7 +50,7 @@ bool sign(void)
 	ok &= (ay[0] == 0.);
 
 	// use f(x) to evaluate the sign function and its derivatives
-	CPPAD_TEST_VECTOR<double> x(n), y(m), dx(n), dy(m), w(m), dw(n);
+	CPPAD_TESTVECTOR(double) x(n), y(m), dx(n), dy(m), w(m), dw(n);
 	dx[0] = 1.;
 	w[0] = 1.; 
 	//
@@ -88,4 +88,4 @@ bool sign(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

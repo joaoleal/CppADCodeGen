@@ -1,9 +1,9 @@
-/* $Id: cond_exp.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: cond_exp.hpp 2460 2012-07-08 17:17:37Z bradbell $ */
 # ifndef CPPAD_COND_EXP_INCLUDED
 # define CPPAD_COND_EXP_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -42,13 +42,13 @@ $index assign, conditional$$
 $section AD Conditional Expressions$$
 
 $head Syntax$$
-$codei%%result% = CondExp%Rel%(%left%, %right%, %if_true%, %if_false%)%$$
+$icode%result% = CondExp%Rel%(%left%, %right%, %if_true%, %if_false%)%$$
 
 
 $head Purpose$$
 Record, 
 as part of an AD of $icode Base$$
-$xref/glossary/Operation/Sequence/operation sequence/1/$$,
+$cref/operation sequence/glossary/Operation/Sequence/$$,
 the conditional result 
 $codei%
 	if( %left% %Cop% %right% )
@@ -132,10 +132,10 @@ Use of $code CondExp$$ is deprecated, but continues to be supported.
 
 $head Operation Sequence$$
 This is an AD of $icode Base$$
-$xref/glossary/Operation/Atomic/atomic operation/1/$$
+$cref/atomic operation/glossary/Operation/Atomic/$$
 and hence is part of the current
 AD of $icode Base$$
-$xref/glossary/Operation/Sequence/operation sequence/1/$$.
+$cref/operation sequence/glossary/Operation/Sequence/$$.
 
 
 $head Example$$
@@ -145,7 +145,7 @@ $children%
 	example/cond_exp.cpp
 %$$
 The file
-$cref CondExp.cpp$$
+$cref cond_exp.cpp$$
 contains an example and test of this function.   
 It returns true if it succeeds and false otherwise.
 

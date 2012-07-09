@@ -1,6 +1,6 @@
-/* $Id: sparse_jacobian.cpp 1644 2010-02-06 19:56:43Z bradbell $ */
+/* $Id: sparse_jacobian.cpp 2430 2012-06-11 06:10:30Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin cppad_sparse_jacobian.cpp$$
 $spell
+	namespace
+	retape
+	work work
+	jac
 	CppAD
 	cppad
 	hpp
@@ -29,113 +33,168 @@ $$
 
 $section CppAD Speed: Sparse Jacobian$$
 
-$index cppad, speed sparse Jacobian$$
-$index speed, cppad sparse Jacobian$$
-$index Jacobian, sparse speed cppad$$
-$index sparse, Jacobian speed cppad$$
+$index link_sparse_jacobian, cppad$$
+$index cppad, link_sparse_jacobian$$
+$index speed, cppad$$
+$index cppad, speed$$
+$index sparse, speed cppad$$
+$index jacobian, speed cppad$$
 
-$head Operation Sequence$$
-Note that the 
-$cref/operation sequence/glossary/Operation/Sequence/$$
-depends on the vectors $italic i$$ and $italic j$$.
-Hence we use a different $cref/ADFun/$$ object for 
-each choice of $italic i$$ and $italic j$$.
+$head Specifications$$
+See $cref link_sparse_jacobian$$.
 
-$head Sparse Jacobian$$
-If the preprocessor symbol $code CPPAD_USE_SPARSE_JACOBIAN$$ is 
-true, the routine $cref/SparseJacobian/sparse_jacobian/$$ 
-is used for the calculation.
-Otherwise, the routine $cref/Jacobian/$$ is used.
+$head Implementation$$
 
-$head link_sparse_jacobian$$
-$index link_sparse_jacobian$$
 $codep */
 # include <cppad/cppad.hpp>
 # include <cppad/speed/uniform_01.hpp>
-# include <cppad/speed/sparse_evaluate.hpp>
+# include <cppad/speed/sparse_jac_fun.hpp>
+# include "print_optimize.hpp"
 
-// value can be true or false
-# define CPPAD_USE_SPARSE_JACOBIAN  1
+// determines if we are using bool or set sparsity patterns
+# define USE_BOOL_SPARSITY 0
+
+namespace {
+	using CppAD::vector;
+	typedef vector< std::set<size_t> >  SetVector;
+	typedef vector<bool>                BoolVector;
+
+	void calc_sparsity(SetVector& sparsity_set, CppAD::ADFun<double>& f)
+	{	size_t n = f.Domain();
+		SetVector r_set(n);
+		for(size_t j = 0; j < n; j++)
+			r_set[j].insert(j);
+		sparsity_set = f.ForSparseJac(n, r_set);
+	}
+	void calc_sparsity(BoolVector& sparsity_bool, CppAD::ADFun<double>& f)
+	{	size_t n = f.Domain();
+		BoolVector r_bool(n * n);
+		size_t i, j;
+		for(i = 0; i < n; i++)
+		{	for(j = 0; j < n; j++)
+				r_bool[ i * n + j] = false;
+			r_bool[ i * n + i] = true;
+		}
+		sparsity_bool = f.ForSparseJac(n, r_bool);
+	}
+
+}
 
 bool link_sparse_jacobian(
+	size_t                     size     , 
 	size_t                     repeat   , 
+	size_t                     m        ,
 	CppAD::vector<double>     &x        ,
-	CppAD::vector<size_t>     &i        ,
-	CppAD::vector<size_t>     &j        ,
+	CppAD::vector<size_t>     &row      ,
+	CppAD::vector<size_t>     &col      ,
 	CppAD::vector<double>     &jacobian )
 {
 	// -----------------------------------------------------
 	// setup
-	using CppAD::AD;
-	typedef CppAD::vector<double>       DblVector;
-	typedef CppAD::vector< AD<double> > ADVector;
 	typedef CppAD::vector<size_t>       SizeVector;
+	typedef vector< std::set<size_t> >  SetVector;
+	typedef vector<bool>                BoolVector;
+	typedef CppAD::vector<double>       DblVector;
+	typedef CppAD::AD<double>           ADScalar;
+	typedef CppAD::vector<ADScalar>     ADVector;
 
-	size_t order = 1;         // derivative order for f'(x)
-	size_t ell   = i.size();  // number of indices in i and j
-	size_t m     = ell;       // number of dependent variables
-	size_t n     = x.size();  // number of independent variables
-	ADVector   X(n);          // AD domain space vector
-	ADVector   Fp(n);         // AD vector to hold f'(x)
-	ADVector   Y(m);          // AD range space vector y = g(x)
-	DblVector tmp(2 * ell);   // double temporary vector
-	CppAD::ADFun<double> g;   // AD function object
+	size_t i, j, k;
+	size_t order = 0;         // derivative order corresponding to function 
+	size_t K     = row.size();// number of row and column indices 
+	size_t n     = size;      // number of independent variables
+	ADVector   a_x(n);        // AD domain space vector
+	ADVector   a_y(m);        // AD range space vector y = g(x)
+	DblVector  jac(K);        // non-zeros in Jacobian
+	CppAD::ADFun<double> f;   // AD function object
 
-	// choose a value for x 
-	CppAD::uniform_01(n, x);
-	size_t k;
-	for(k = 0; k < n; k++)
-		X[k] = x[k];
+	// use the unspecified fact that size is non-decreasing between calls
+	static size_t previous_size = 0;
+	bool print    = (repeat > 1) & (previous_size != size);
+	previous_size = size;
 
-	// used to display results of optimizing the operation sequence
-        static bool printed = false;
-        bool print_this_time = (! printed) & (repeat > 1) & (n >= 30);
-
+	// declare sparsity pattern
+# if USE_BOOL_SPARSITY
+	BoolVector sparsity(m * n);
+# else
+	SetVector sparsity(m);
+# endif
+	// initialize all entries as zero
+	for(i = 0; i < m; i++)
+	{	for(j = 0; j < n; j++)
+			jacobian[ i * n + j ] = 0.;
+	}
 	// ------------------------------------------------------
-	while(repeat--)
-	{
-		// get the next set of indices
-		CppAD::uniform_01(2 * ell, tmp);
-		for(k = 0; k < ell; k++)
-		{	i[k] = size_t( n * tmp[k] );
-			i[k] = std::min(n-1, i[k]);
-			//
-			j[k] = size_t( n * tmp[k + ell] );
-			j[k] = std::min(n-1, j[k]);
-		}
+	extern bool global_retape;
+	if( global_retape ) while(repeat--)
+	{	// choose a value for x 
+		CppAD::uniform_01(n, x);
+		for(k = 0; k < n; k++)
+			a_x[k] = x[k];
 
 		// declare independent variables
-		Independent(X);	
+		Independent(a_x);	
 
-		// AD computation of g_k (x) = f'_{i[k]} (x)
-		CppAD::sparse_evaluate< AD<double> >(X, i, j, order, Fp);
-		for(k = 0; k < ell; k++)
-			Y[k] = Fp[ i[k] ];
+		// AD computation of f (x) 
+		CppAD::sparse_jac_fun<ADScalar>(m, n, a_x, row, col, order, a_y);
 
-		// create function object g : X -> Y
-		g.Dependent(X, Y);
+		// create function object f : X -> Y
+		f.Dependent(a_x, a_y);
 
 		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = g.size_var();
-			g.optimize();
-			if( print_this_time ) 
-			{	after = g.size_var();
-				std::cout << "cppad_sparse_jacobian_optimize_size_" 
-				          << int(n) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_sparse_jacobian_optimize", size);
+			print = false;
 		}
 
-		// evaluate and return the jacobian of f
-# if CPPAD_USE_SPARSE_JACOBIAN
-		jacobian = g.SparseJacobian(x);
-# else
-		jacobian = g.Jacobian(x);
-# endif
+		// calculate the Jacobian sparsity pattern for this function
+		calc_sparsity(sparsity, f);
+
+		// structure that holds some of the work done by SparseJacobian
+		CppAD::sparse_jacobian_work work;
+
+		// calculate the Jacobian at this x
+		// (use forward mode because m > n ?)
+		f.SparseJacobianForward(x, sparsity, row, col, jac, work);
+		for(k = 0; k < K; k++)
+			jacobian[ row[k] * n + col[k] ] = jac[k];
+	}
+	else
+	{	// choose a value for x 
+		CppAD::uniform_01(n, x);
+		for(k = 0; k < n; k++)
+			a_x[k] = x[k];
+
+		// declare independent variables
+		Independent(a_x);	
+
+		// AD computation of f (x) 
+		CppAD::sparse_jac_fun<ADScalar>(m, n, a_x, row, col, order, a_y);
+
+		// create function object f : X -> Y
+		f.Dependent(a_x, a_y);
+
+		extern bool global_optimize;
+		if( global_optimize )
+		{	print_optimize(f, print, "cppad_sparse_jacobian_optimize", size);
+			print = false;
+		}
+
+		// calculate the Jacobian sparsity pattern for this function
+		calc_sparsity(sparsity, f);
+
+		// structure that holds some of the work done by SparseJacobian
+		CppAD::sparse_jacobian_work work;
+
+		while(repeat--)
+		{	// choose a value for x 
+			CppAD::uniform_01(n, x);
+
+			// calculate the Jacobian at this x
+			// (use forward mode because m > n ?)
+			f.SparseJacobianForward(x, sparsity, row, col, jac, work);
+			for(k = 0; k < K; k++)
+				jacobian[ row[k] * n + col[k] ] = jac[k];
+		}
 	}
 	return true;
 }

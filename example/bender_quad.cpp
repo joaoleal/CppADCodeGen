@@ -1,6 +1,6 @@
-/* $Id: bender_quad.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: bender_quad.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin BenderQuad.cpp$$
+$begin bender_quad.cpp$$
 $spell
 	argmin
 $$
@@ -23,13 +23,13 @@ $index example, BenderQuad$$
 $index test, BenderQuad$$
 
 Define 
-$latex F : \R \times \R \rightarrow \R$$ by
+$latex F : \B{R} \times \B{R} \rightarrow \B{R}$$ by
 $latex \[
 F(x, y) 
 = 
 \frac{1}{2} \sum_{i=1}^N [ y * \sin ( x * t_i ) - z_i ]^2
 \] $$ 
-where $latex z \in \R^N$$ is a fixed vector.
+where $latex z \in \B{R}^N$$ is a fixed vector.
 It follows that
 $latex \[
 \begin{array}{rcl}
@@ -61,19 +61,19 @@ y - [ \partial_y \partial_y F(x, y) ]^{-1} \partial_y F[x,  y]
 
 
 $code
-$verbatim%example/bender_quad.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/bender_quad.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
 namespace {
 	using CppAD::AD;
-	typedef CPPAD_TEST_VECTOR<double>         BAvector;
-	typedef CPPAD_TEST_VECTOR< AD<double> >   ADvector;
+	typedef CPPAD_TESTVECTOR(double)         BAvector;
+	typedef CPPAD_TESTVECTOR(AD<double>)   ADvector;
 
 	class Fun {
 	private:
@@ -87,7 +87,7 @@ namespace {
 		// Fun.f(x, y) = F(x, y)
 		ADvector f(const ADvector &x, const ADvector &y)
 		{	size_t i;
-			size_t N = z_.size();
+			size_t N = size_t(z_.size());
 
 			ADvector F(1);
 			F[0] = 0.;
@@ -102,7 +102,7 @@ namespace {
 		// Fun.h(x, y) = H(x, y) = F_y (x, y)
 		ADvector h(const ADvector &x, const BAvector &y)
 		{	size_t i;
-			size_t N = z_.size();
+			size_t N = size_t(z_.size());
 
 			ADvector fy(1);
 			fy[0] = 0.;
@@ -121,7 +121,7 @@ namespace {
 			const BAvector &y , 
 			const ADvector &H )
 		{	size_t i;
-			size_t N = z_.size();
+			size_t N = size_t(z_.size());
 
 			ADvector Dy(1);
 			AD<double> fyy = 0.;
@@ -141,7 +141,7 @@ namespace {
 		AD<double> numerator = 0.;
 		AD<double> denominator = 0.;
 		size_t k;
-		for(k = 0; k < t.size(); k++)
+		for(k = 0; k < size_t(t.size()); k++)
 		{	numerator   += sin( x[0] * t[k] ) * z[k];
 			denominator += sin( x[0] * t[k] ) * sin( x[0] * t[k] ); 	
 		}
@@ -149,7 +149,7 @@ namespace {
 
 		// V(x) = F[x, Y(x)]
 		AD<double> sum = 0;
-		for(k = 0; k < t.size(); k++)
+		for(k = 0; k < size_t(t.size()); k++)
 		{	AD<double> residual = y * sin( x[0] * t[k] ) - z[k];
 			sum += .5 * residual * residual;
 		}
@@ -201,7 +201,7 @@ bool BenderQuad(void)
 	CppAD::ADFun<double> Gfun(a_x, a_g);
 
 	// accuracy for checks
-	double eps = 10. * CppAD::epsilon<double>();
+	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 	// check Jacobian
 	BAvector check_gx = Gfun.Jacobian(x);
@@ -216,4 +216,4 @@ bool BenderQuad(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

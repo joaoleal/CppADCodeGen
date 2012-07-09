@@ -1,6 +1,6 @@
-/* $Id: neg.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: neg.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -13,7 +13,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 old example and test now only used for testing
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -23,7 +23,7 @@ bool Neg(void)
 	using namespace CppAD;
 
 	// independent variable vector, indices, values, and declaration
-	CPPAD_TEST_VECTOR< AD<double> > U(2);
+	CPPAD_TESTVECTOR(AD<double>) U(2);
 	size_t s = 0;
 	size_t t = 1;
 	U[s]     = 3.;
@@ -31,7 +31,7 @@ bool Neg(void)
 	Independent(U);
 
 	// dependent variable vector and indices
-	CPPAD_TEST_VECTOR< AD<double> > Z(1);
+	CPPAD_TESTVECTOR(AD<double>) Z(1);
 	size_t x = 0;
 
 	// dependent variable values
@@ -39,8 +39,8 @@ bool Neg(void)
 
 	// create f: U -> Z and vectors used for derivative calculations
 	ADFun<double> f(U, Z);
-	CPPAD_TEST_VECTOR<double> v( f.Domain() );
-	CPPAD_TEST_VECTOR<double> w( f.Range() );
+	CPPAD_TESTVECTOR(double) v( f.Domain() );
+	CPPAD_TESTVECTOR(double) w( f.Range() );
 
 	// check values
 	ok &= ( Z[x] == -4. );
@@ -58,7 +58,7 @@ bool Neg(void)
 	ok &= ( w[x] == -1. );   // dx/dt
 
 	// reverse computation of second partials of z
-	CPPAD_TEST_VECTOR<double> r( f.Domain() * 2 );
+	CPPAD_TESTVECTOR(double) r( f.Domain() * 2 );
 	w[x] = 1.;
 	r    = f.Reverse(2, w);
 	ok &= ( r[2 * s + 1] == 0. );  // d^2 x / (ds ds)
@@ -66,4 +66,4 @@ bool Neg(void)
 	 
 	return ok;
 }
-// END PROGRAM
+// END C++

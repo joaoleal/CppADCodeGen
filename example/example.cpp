@@ -1,4 +1,4 @@
-/* $Id: example.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: example.cpp 2445 2012-07-01 21:51:56Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -32,12 +32,12 @@ There are a lot of tests, so this may take a while to compile.
 
 
 $code
-$verbatim%example/example.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/example.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 // system include files used for I/O
 # include <iostream>
@@ -51,7 +51,7 @@ $end
 // memory utility
 # include <cppad/thread_alloc.hpp>
 
-// external complied tests
+// prototype external compiled tests (this line expected by bin/new_test.sh)
 extern bool abort_recording(void);
 extern bool ad_assign(void);
 extern bool ad_ctor(void);
@@ -82,7 +82,8 @@ extern bool Cosh(void);
 extern bool CppAD_vector(void);
 extern bool Div(void);
 extern bool DivEq(void);
-extern bool epsilon(void);
+extern bool eigen_array(void);
+extern bool eigen_det(void);
 extern bool EqualOpSeq(void);
 extern bool Erf(void);
 extern bool ErrorHandler(void);
@@ -99,6 +100,7 @@ extern bool HesMinorDet(void);
 extern bool Hessian(void);
 extern bool HesTimesDir(void);
 extern bool Independent(void);
+extern bool index_sort(void);
 extern bool Integer(void);
 extern bool Interface2C(void);
 extern bool interp_onetape(void);
@@ -106,6 +108,7 @@ extern bool interp_retape(void);
 extern bool JacLuDet(void);
 extern bool JacMinorDet(void);
 extern bool Jacobian(void);
+extern bool limits(void);
 extern bool Log(void);
 extern bool Log10(void);
 extern bool LuFactor(void);
@@ -206,7 +209,7 @@ int main(void)
 
 	// This line is used by test_one.sh
 
-	// external compiled tests
+	// run external compiled tests (this line expected by bin/new_test.sh)
 	ok &= Run( abort_recording,   "abort_recording"  );
 	ok &= Run( ad_assign,         "ad_assign"        );
 	ok &= Run( ad_ctor,           "ad_ctor"          );
@@ -236,7 +239,6 @@ int main(void)
 	ok &= Run( CppAD_vector,      "CppAD_vector"     );
 	ok &= Run( Div,               "Div"              );
 	ok &= Run( DivEq,             "DivEq"            );
-	ok &= Run( epsilon,           "epsilon"          );
 	ok &= Run( EqualOpSeq,        "EqualOpSeq"       );
 	ok &= Run( Erf,               "Erf"              );
 	ok &= Run( ErrorHandler,      "ErrorHandler"     );
@@ -253,6 +255,7 @@ int main(void)
 	ok &= Run( Hessian,           "Hessian"          );
 	ok &= Run( HesTimesDir,       "HesTimesDir"      );
 	ok &= Run( Independent,       "Independent"      );
+	ok &= Run( index_sort,        "index_sort"       );
 	ok &= Run( Integer,           "Integer"          );
 	ok &= Run( Interface2C,       "Interface2C"      );
 	ok &= Run( interp_onetape,    "interp_onetape"   );
@@ -260,6 +263,7 @@ int main(void)
 	ok &= Run( JacLuDet,          "JacLuDet"         );
 	ok &= Run( JacMinorDet,       "JacMinorDet"      );
 	ok &= Run( Jacobian,          "Jacobian"         );
+	ok &= Run( limits,            "limits"           );
 	ok &= Run( Log,               "Log"              );
 	ok &= Run( Log10,             "Log10"            );
 	ok &= Run( LuFactor,          "LuFactor"         );
@@ -329,6 +333,10 @@ int main(void)
 	ok &= Run( mul_level_adolc,   "mul_level_adolc"  );
 	ok &= Run( ode_taylor_adolc,  "ode_taylor_adolc" );
 # endif
+# ifdef CPPAD_EIGEN_EXAMPLES
+	ok &= Run( eigen_array,       "eigen_array"      );
+	ok &= Run( eigen_det,         "eigen_det"        );
+# endif
 
 	// check for errors
 	using std::cout;
@@ -353,4 +361,4 @@ int main(void)
 
 	return static_cast<int>( ! ok );
 }
-// END PROGRAM
+// END C++

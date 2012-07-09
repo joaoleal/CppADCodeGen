@@ -1,6 +1,6 @@
-/* $Id: conj_grad.cpp 1986 2011-06-18 20:33:17Z bradbell $ */
+/* $Id: conj_grad.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -31,10 +31,10 @@ This example is a preliminary version of a new library routine
 for the conjugate gradient algorithm.
 
 $head Algorithm$$
-Given a positive definite matrix $latex A \in \R^{n \times n}$$,
-a vector $latex b \in \R^n$$,
+Given a positive definite matrix $latex A \in \B{R}^{n \times n}$$,
+a vector $latex b \in \B{R}^n$$,
 and tolerance $latex \varepsilon$$,
-the conjugate gradient algorithm finds an $latex x \in \R^n$$ 
+the conjugate gradient algorithm finds an $latex x \in \B{R}^n$$ 
 such that $latex \| A x - b \|^2 / n \leq \varepsilon^2$$
 (or it terminates at a specified maximum number of iterations).
 
@@ -42,11 +42,11 @@ $list number$$
 Input: 
 $pre
 $$
-The matrix $latex A \in \R^{n \times n}$$, 
-the vector $latex b \in \R^n$$,
+The matrix $latex A \in \B{R}^{n \times n}$$, 
+the vector $latex b \in \B{R}^n$$,
 a tolerance $latex \varepsilon \geq 0$$,
 a maximum number of iterations $latex m$$,
-and the initial approximate solution $latex x^0 \in \R^n$$
+and the initial approximate solution $latex x^0 \in \B{R}^n$$
 (can use zero for $latex x^0$$).
 
 $lnext
@@ -55,7 +55,7 @@ $pre
 $$
 $latex g^0 = A * x^0 - b$$,
 $latex d^0 = - g^0$$,
-$latex s_0 = ( g^0 )^\T g^0$$,
+$latex s_0 = ( g^0 )^\R{T} g^0$$,
 $latex k = 0$$.
 
 $lnext
@@ -70,7 +70,7 @@ $lnext
 Next $latex x$$:
 $pre
 $$
-$latex \mu_{k+1} = s_k / [ ( d^k )^\T A d^k ]$$,
+$latex \mu_{k+1} = s_k / [ ( d^k )^\R{T} A d^k ]$$,
 $latex x^{k+1} = x^k + \mu_{k+1} d^k$$.
 
 $lnext
@@ -78,7 +78,7 @@ Next $latex g$$:
 $pre
 $$
 $latex g^{k+1} = g^k + \mu_{k+1} A d^k$$,
-$latex s_{k+1} = ( g^{k+1} )^\T g^{k+1}$$.
+$latex s_{k+1} = ( g^{k+1} )^\R{T} g^{k+1}$$.
 
 $lnext
 Next $latex d$$:
@@ -95,12 +95,12 @@ goto Convergence Check.
 $lend
 
 $code
-$verbatim%example/conj_grad.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/conj_grad.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include <cstdlib>
 # include <cmath>
@@ -293,4 +293,4 @@ bool conj_grad(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

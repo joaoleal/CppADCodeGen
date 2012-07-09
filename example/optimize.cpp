@@ -1,6 +1,6 @@
-/* $Id: optimize.cpp 1609 2009-12-12 22:33:47Z bradbell $ */
+/* $Id: optimize.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,12 +22,12 @@ $index test, optimize$$
 $index example, optimize$$
 
 $code
-$verbatim%example/optimize.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/optimize.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 namespace {
 	template <class Float>
@@ -73,7 +73,7 @@ bool optimize(void)
 
 	// domain space vector
 	size_t n  = 1;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0]      = .5; 
 
 	// declare independent variables and start tape recording
@@ -83,7 +83,7 @@ bool optimize(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	fun(X[0], Y[0], n_var, n_opt);
 
 	// create f: X -> Y and stop tape recording
@@ -91,7 +91,7 @@ bool optimize(void)
 	ok &= (F.size_var() == n_var);
 
 	// Check zero order forward mode on the original operation sequence
-	CPPAD_TEST_VECTOR<double> x(n), y(m);
+	CPPAD_TESTVECTOR(double) x(n), y(m);
 	x[0] = Value(X[0]);
 	size_t i = 0; // temporary variable (we do not use value)
 	double check;
@@ -111,4 +111,4 @@ bool optimize(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

@@ -1,6 +1,6 @@
-/* $Id: reverse_one.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: reverse_one.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -23,12 +23,12 @@ $index example, first order reverse$$
 $index test, first order reverse$$
 
 $code
-$verbatim%example/reverse_one.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/reverse_one.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 namespace { // ----------------------------------------------------------
 // define the template function reverse_one_cases<Vector> in empty namespace
@@ -40,7 +40,7 @@ bool reverse_one_cases(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 0.; 
 	X[1] = 1.;
 
@@ -49,7 +49,7 @@ bool reverse_one_cases(void)
 
 	// range space vector
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = X[0] * X[0] * X[1];
 
 	// create f : X -> Y and stop recording
@@ -57,7 +57,7 @@ bool reverse_one_cases(void)
 
 	// use first order reverse mode to evaluate derivative of y[0]
 	// and use the values in X for the independent variables.
-	CPPAD_TEST_VECTOR<double> w(m), dw(n);
+	CPPAD_TESTVECTOR(double) w(m), dw(n);
 	w[0] = 1.;
 	dw   = f.Reverse(1, w);
 	ok  &= NearEqual(dw[0] , 2.*X[0]*X[1], 1e-10, 1e-10);
@@ -92,4 +92,4 @@ bool reverse_one(void)
 	ok &= reverse_one_cases< std::valarray  <double> >();
 	return ok;
 }
-// END PROGRAM
+// END C++

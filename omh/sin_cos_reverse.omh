@@ -1,4 +1,4 @@
-$Id: sin_cos_reverse.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: sin_cos_reverse.omh 2403 2012-05-25 13:46:02Z bradbell $
 // BEGIN SHORT COPYRIGHT
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
@@ -70,7 +70,7 @@ $latex \[
 \] $$ 
 in the definition for $latex G$$ and $latex H$$.
 The forward mode formulas for the
-$xref/SinCosForward//sine and cosine/$$ functions are
+$cref/sine and cosine/SinCosForward/$$ functions are
 $latex \[
 \begin{array}{rcl}
 s^{(j)}  & = & \frac{1 + \ell}{2} \sin ( x^{(0)} ) 

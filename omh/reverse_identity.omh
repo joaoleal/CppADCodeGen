@@ -1,4 +1,4 @@
-$Id: reverse_identity.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: reverse_identity.omh 2403 2012-05-25 13:46:02Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
 
@@ -22,7 +22,7 @@ $$
 $section An Important Reverse Mode Identity$$
 The theorem and the proof below is a restatement
 of the results on page 236 of
-$xref/Bib/Evaluating Derivatives/Evaluating Derivatives/$$.
+$cref/Evaluating Derivatives/Bib/Evaluating Derivatives/$$.
 
 $head Notation$$
 Given a function $latex f(u, v)$$ where $latex u \in B^n$$

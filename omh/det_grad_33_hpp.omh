@@ -1,6 +1,6 @@
-$Id: det_grad_33_hpp.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: det_grad_33_hpp.omh 2439 2012-06-18 02:28:36Z bradbell $
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -28,7 +28,7 @@ $pre
 $$
 # define CPPAD_DET_GRAD_33_INCLUDED
 
-$verbatim%cppad/speed/det_grad_33.hpp%0%// BEGIN PROGRAM%// END PROGRAM%$$
+$verbatim%cppad/speed/det_grad_33.hpp%0%// BEGIN C++%// END C++%$$
 
 # endif
 $$

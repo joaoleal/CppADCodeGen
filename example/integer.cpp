@@ -1,6 +1,6 @@
-/* $Id: integer.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: integer.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Integer.cpp$$
+$begin integer.cpp$$
 $spell
 	Cpp
 	cstddef
@@ -24,12 +24,12 @@ $index example, Integer$$
 $index test, Integer$$
 
 $code
-$verbatim%example/integer.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/integer.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -40,7 +40,7 @@ bool Integer(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0] = 3.5;
 	x[1] = 4.5;
 
@@ -65,7 +65,7 @@ bool Integer(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = - x[1];
 
 	// create f: x -> y and stop recording
@@ -78,4 +78,4 @@ bool Integer(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

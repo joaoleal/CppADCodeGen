@@ -1,6 +1,6 @@
-/* $Id: vec_unary.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: vec_unary.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -32,9 +32,9 @@ bool VecUnary(void)
 	size_t n = 8;
 	size_t i;
 
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	VecAD<double>             Y(n);
-	CPPAD_TEST_VECTOR< AD<double> > Z(n);
+	CPPAD_TESTVECTOR(AD<double>) Z(n);
 
 
 	for(i = 0; i < n; i++)
@@ -77,8 +77,8 @@ bool VecUnary(void)
 
 	
 	ADFun<double> f(X, Z);
-	CPPAD_TEST_VECTOR<double> x(n);
-	CPPAD_TEST_VECTOR<double> z(n);
+	CPPAD_TESTVECTOR(double) x(n);
+	CPPAD_TESTVECTOR(double) z(n);
 
 	for(i = 0; i < n; i++)
 		x[i] = 2. / double(i + 1);

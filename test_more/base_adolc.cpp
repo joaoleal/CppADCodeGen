@@ -1,6 +1,6 @@
-/* $Id: base_adolc.cpp 1613 2009-12-23 06:33:11Z bradbell $ */
+/* $Id: base_adolc.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the
@@ -15,7 +15,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 // adouble definitions not in Adolc distribution and 
 // required in order to use CppAD::AD<adouble>
-# include "../example/base_adolc.hpp"
+# include <cppad/example/base_adolc.hpp>
 
 # include <cppad/cppad.hpp>
 
@@ -26,8 +26,8 @@ bool base_adolc(void)
 	typedef CppAD::AD<ADdouble> ADDdouble; // for second level of taping
 	size_t n = 4;                          // number independent variables
 
-	CPPAD_TEST_VECTOR<ADdouble>   a_x(n);
-	CPPAD_TEST_VECTOR<ADDdouble> aa_x(n);
+	CPPAD_TESTVECTOR(ADdouble)   a_x(n);
+	CPPAD_TESTVECTOR(ADDdouble) aa_x(n);
 
 	// value of the independent variables
 	int tag = 0;                         // Adolc setup
@@ -43,7 +43,7 @@ bool base_adolc(void)
 
 	// compute function
 	size_t m = 5;
-	CPPAD_TEST_VECTOR<ADDdouble> aa_f(m);    // dependent variables
+	CPPAD_TESTVECTOR(ADDdouble) aa_f(m);    // dependent variables
 
 	// different cases of conditional expressions
 	aa_f[0] = CondExpLt(aa_x[0], aa_x[1], aa_x[2], aa_x[3]);

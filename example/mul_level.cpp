@@ -1,4 +1,4 @@
-/* $Id: mul_level.cpp 2272 2012-01-24 07:24:34Z bradbell $ */
+/* $Id: mul_level.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -26,7 +26,7 @@ $index AD, multiple level$$
 
 $head Purpose$$
 In this example, we use $code AD< AD<double> >$$ (level two taping),
-the compute values of the function $latex f : \R^n \rightarrow \R$$ where 
+the compute values of the function $latex f : \B{R}^n \rightarrow \B{R}$$ where 
 $latex \[
 	f(x) = \frac{1}{2} \left( x_0^2 + \cdots + x_{n-1}^2 \right)
 \] $$
@@ -35,39 +35,39 @@ the directional derivative
 $latex \[
 f^{(1)} (x) * v  = x_0 v_0 + \cdots + x_{n-1} v_{n-1}
 \] $$.
-where $latex v \in \R^n$$.
+where $latex v \in \B{R}^n$$.
 We then use $code double$$ (no taping) to compute
 $latex \[
 \frac{d}{dx} \left[ f^{(1)} (x) * v \right] = v
 \] $$
 This is only meant as an example of multiple levels of taping.
-The example $xref/HesTimesDir.cpp/$$ computes the same value more
+The example $cref hes_times_dir.cpp$$ computes the same value more
 efficiently by using the identity:
 $latex \[
 	\frac{d}{dx} \left[ f^{(1)} (x) * v \right] = f^{(2)} (x) * v
 \] $$
-The example $cref/mul_level_adolc.cpp/$$ computes the same values using
+The example $cref mul_level_adolc.cpp$$ computes the same values using
 Adolc's type $code adouble$$ and CppAD's type $code AD<adouble>$$.
 
 $code
-$verbatim%example/mul_level.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/mul_level.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
 namespace { 
 	// f(x) = |x|^2 / 2 = .5 * ( x[0]^2 + ... + x[n-1]^2 )
 	template <class Type>
-	Type f(CPPAD_TEST_VECTOR<Type> &x)
+	Type f(CPPAD_TESTVECTOR(Type) &x)
 	{	Type sum;
 
 		sum  = 0.;
-		size_t i = x.size();
-		for(i = 0; i < x.size(); i++)
+		size_t i = size_t(x.size());
+		for(i = 0; i < size_t(x.size()); i++)
 			sum += x[i] * x[i];
 
 		return .5 * sum;
@@ -82,9 +82,9 @@ bool mul_level(void)
 	size_t n = 5;                            // dimension for example
 	size_t j;                                // a temporary index variable
 
-	CPPAD_TEST_VECTOR<double>       x(n);
-	CPPAD_TEST_VECTOR<A1_double>  a1_x(n), a1_v(n), a1_dy(1) ;
-	CPPAD_TEST_VECTOR<A2_double>  a2_x(n), a2_y(1);
+	CPPAD_TESTVECTOR(double)       x(n);
+	CPPAD_TESTVECTOR(A1_double)  a1_x(n), a1_v(n), a1_dy(1) ;
+	CPPAD_TESTVECTOR(A2_double)  a2_x(n), a2_y(1);
 
 	// Values for the independent variables while taping the function f(x)
 	for(j = 0; j < n; j++)
@@ -121,8 +121,8 @@ bool mul_level(void)
 	dF.Forward(0, x);
 
 	// compute the d/dx of f'(x) * v = f''(x) * v = v
-	CPPAD_TEST_VECTOR<double> w(1);
-	CPPAD_TEST_VECTOR<double> dw(n);
+	CPPAD_TESTVECTOR(double) w(1);
+	CPPAD_TESTVECTOR(double) dw(n);
 	w[0] = 1.;
 	dw   = dF.Reverse(1, w);
 
@@ -131,4 +131,4 @@ bool mul_level(void)
 
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,6 +1,6 @@
-/* $Id: ad_in_c.cpp 1889 2011-02-21 04:11:04Z bradbell $ */
+/* $Id: ad_in_c.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -29,12 +29,12 @@ $index link, CppAD to language$$
 $index language, link CppAD$$
 
 $code
-$verbatim%example/ad_in_c.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/ad_in_c.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cstdio>
 # include <cppad/cppad.hpp>
 # include <list>
@@ -483,4 +483,4 @@ bool ad_in_c(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

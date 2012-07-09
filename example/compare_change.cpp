@@ -1,6 +1,6 @@
-/* $Id: compare_change.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: compare_change.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin CompareChange.cpp$$
+$begin compare_change.cpp$$
 $spell
 	Cpp
 $$
@@ -26,12 +26,12 @@ $index example, re-tape$$
 $index test, re-tape$$
 
 $code
-$verbatim%example/compare_change.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/compare_change.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -54,7 +54,7 @@ bool CompareChange(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	X[0] = 3.;
 	X[1] = 4.;
 
@@ -63,7 +63,7 @@ bool CompareChange(void)
 
 	// range space vector
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = Minimum(X[0], X[1]);
 
 	// create f: x -> y and stop tape recording
@@ -71,8 +71,8 @@ bool CompareChange(void)
 
 	// evaluate zero mode Forward where conditional has the same result
 	// note that f.CompareChange is not defined when NDEBUG is true
-	CPPAD_TEST_VECTOR<double> x(n);
-	CPPAD_TEST_VECTOR<double> y(m);
+	CPPAD_TESTVECTOR(double) x(n);
+	CPPAD_TESTVECTOR(double) y(m);
 	x[0] = 3.5;
 	x[1] = 4.;  
 	y    = f.Forward(0, x);
@@ -107,4 +107,4 @@ bool CompareChange(void)
 }
 
 
-// END PROGRAM
+// END C++

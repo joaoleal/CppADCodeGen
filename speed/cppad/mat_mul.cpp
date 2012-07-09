@@ -1,6 +1,6 @@
-/* $Id: mat_mul.cpp 1890 2011-02-21 14:31:36Z bradbell $ */
+/* $Id: mat_mul.cpp 2448 2012-07-03 12:50:29Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin cppad_mat_mul.cpp$$
 $spell
+	resize
 	info info
 	nr
 	nc
@@ -31,22 +32,24 @@ $$
 
 $section CppAD Speed: Matrix Multiplication$$
 
-$index cppad, speed matrix multiply$$
-$index speed, cppad matrix multiply$$
-$index matrix, multiply speed cppad$$
-$index multiply, matrix speed cppad$$
+$index link_mat_mul, cppad$$
+$index cppad, link_mat_mul$$
+$index speed, cppad$$
+$index cppad, speed$$
+$index matrix, speed cppad$$
+$index multiply, speed cppad$$
 
 $head Specifications$$
-See $cref/link_mat_mul/$$.
+See $cref link_mat_mul$$.
 
 $head Implementation$$
-$index cppad, link_mat_mul$$
-$index link_mat_mul, cppad$$
+
 $codep */
 # include <cppad/cppad.hpp>
 # include <cppad/speed/mat_sum_sq.hpp>
 # include <cppad/speed/uniform_01.hpp>
 # include "../../example/mat_mul.hpp"
+# include "print_optimize.hpp"
 
 bool link_mat_mul(
 	size_t                           size     , 
@@ -56,6 +59,9 @@ bool link_mat_mul(
 	CppAD::vector<double>&           dz
 )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+
 	// -----------------------------------------------------
 	// setup
 	typedef CppAD::AD<double>           ADScalar; 
@@ -65,6 +71,7 @@ bool link_mat_mul(
 	size_t m = 1;           // number of dependent variables
 	size_t n = size * size; // number of independent variables
 	ADVector   X(n);        // AD domain space vector
+	ADVector   Y(n);        // Store product matrix
 	ADVector   Z(m);        // AD range space vector
 	CppAD::ADFun<double> f; // AD function object
 	
@@ -72,22 +79,23 @@ bool link_mat_mul(
 	CppAD::vector<double> w(1);
 	w[0] = 1.;
 
-	// ------------------------------------------------------
-	ADVector Y(n);          // Store product matrix
-	static bool printed = false;
-	bool print_this_time = (! printed) & (repeat > 1) & (size >= 10);
-
 	// user atomic information
-	extern bool global_atomic;
-	CPPAD_TEST_VECTOR<ADScalar> ax(2 * n), ay(n);
-	call_info info;
-	info.nr_result = size;
-	info.n_middle  = size;
-	info.nc_result = size;
 	size_t   info_id = info_.size();  
+	CppAD::vector<ADScalar> ax(2 * n), ay(n);
+	call_info info;
+	if( global_atomic )
+	{	info.nr_result = size;
+		info.n_middle  = size;
+		info.nc_result = size;
+		info_.push_back(info);
+	}
 	
+	// use the unspecified fact that size is non-decreasing between calls
+	static size_t previous_size = 0;
+	bool print    = (repeat > 1) & (previous_size != size);
+	previous_size = size;
 
-	extern bool global_retape;
+	// ------------------------------------------------------
 	if( global_retape ) while(repeat--)
 	{	// get the next matrix
 		CppAD::uniform_01(n, x);
@@ -101,8 +109,7 @@ bool link_mat_mul(
 		if( ! global_atomic )
 			mat_sum_sq(size, X, Y, Z);
 		else
-		{	info_.push_back(info);
-			for(j = 0; j < n; j++)
+		{	for(j = 0; j < n; j++)
 			{	ax[j]   = X[j];
 				ax[j+n] = X[j];
 			}
@@ -115,19 +122,9 @@ bool link_mat_mul(
 		// create function object f : X -> Z
 		f.Dependent(X, Z);
 
-		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "cppad_mat_mul_optimize_size_" 
-				          << int(size) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_mat_mul_optimize", size);
+			print = false;
 		}
 
 		// evaluate and return gradient using reverse mode
@@ -147,8 +144,7 @@ bool link_mat_mul(
 		if( ! global_atomic )
 			mat_sum_sq(size, X, Y, Z);
 		else
-		{	info_.push_back(info);
-			for(j = 0; j < n; j++)
+		{	for(j = 0; j < n; j++)
 			{	ax[j]   = X[j];
 				ax[j+n] = X[j];
 			}
@@ -162,19 +158,9 @@ bool link_mat_mul(
 		// create function object f : X -> Z
 		f.Dependent(X, Z);
 
-		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "cppad_mat_mul_optimize_size_" 
-				          << int(size) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_mat_mul_optimize", size);
+			print = false;
 		}
 		while(repeat--)
 		{	// get a next matrix
@@ -185,6 +171,12 @@ bool link_mat_mul(
 			dz = f.Reverse(1, w);
 		}
 	}
+	// --------------------------------------------------------------------
+	// Free temporary work space. (If there are future calls to 
+	// mat_mul they would create new temporary work space.)
+	CppAD::user_atomic<double>::clear();
+	info_.resize(0);
+
 	return true;
 }
 /* $$

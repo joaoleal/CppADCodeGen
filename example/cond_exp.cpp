@@ -1,6 +1,6 @@
-/* $Id: cond_exp.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: cond_exp.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin CondExp.cpp$$
+$begin cond_exp.cpp$$
 $spell
 	Cpp
 	cstddef
@@ -32,19 +32,19 @@ $latex \[
 and its derivative at various argument values
 ( where $latex x_j \geq 0$$ )
 with out having to re-tape; i.e.,
-using only one $xref/ADFun/$$ object.
+using only one $cref ADFun$$ object.
 Note that $latex x_j \log ( x_j ) \rightarrow 0 $$
 as $latex x_j \downarrow 0$$ and
 we need to handle the case $latex x_j = 0$$
 in a special way to avoid multiplying zero by infinity.
 
 $code
-$verbatim%example/cond_exp.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/cond_exp.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <limits>
@@ -57,12 +57,12 @@ bool CondExp(void)
 	using CppAD::NearEqual;
 	using CppAD::log; 
 	using CppAD::abs;
-	double eps  = 100. * CppAD::epsilon<double>();
+	double eps  = 100. * CppAD::numeric_limits<double>::epsilon();
 	double fmax = std::numeric_limits<double>::max();
 
 	// domain space vector
 	size_t n = 5;
-	CPPAD_TEST_VECTOR< AD<double> > X(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n);
 	size_t j;
 	for(j = 0; j < n; j++)
 		X[j] = 1.;
@@ -79,17 +79,17 @@ bool CondExp(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > Y(m);
+	CPPAD_TESTVECTOR(AD<double>) Y(m);
 	Y[0] = Sum;
 
 	// create f: X -> Y and stop tape recording
 	CppAD::ADFun<double> f(X, Y);
 
 	// vectors for arguments to the function object f
-	CPPAD_TEST_VECTOR<double> x(n);   // argument values
-	CPPAD_TEST_VECTOR<double> y(m);   // function values 
-	CPPAD_TEST_VECTOR<double> w(m);   // function weights 
-	CPPAD_TEST_VECTOR<double> dw(n);  // derivative of weighted function
+	CPPAD_TESTVECTOR(double) x(n);   // argument values
+	CPPAD_TESTVECTOR(double) y(m);   // function values 
+	CPPAD_TESTVECTOR(double) w(m);   // function weights 
+	CPPAD_TESTVECTOR(double) dw(n);  // derivative of weighted function
 
 	// a case where x[j] > 0 for all j
 	double check  = 0.;
@@ -132,4 +132,4 @@ bool CondExp(void)
 	
 	return ok;
 }
-// END PROGRAM
+// END C++

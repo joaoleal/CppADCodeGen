@@ -1,6 +1,6 @@
-/* $Id: link_det_minor.cpp 1655 2010-02-11 19:59:43Z bradbell $ */
+/* $Id: link_det_minor.cpp 2416 2012-06-02 17:38:45Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -37,8 +37,12 @@ $codei%extern bool link_det_minor(
 $head Purpose$$
 Each $cref/package/speed_main/package/$$
 must define a version of this routine as specified below.
-This is used by the $cref/speed_main/$$ program 
+This is used by the $cref speed_main$$ program 
 to run the corresponding speed and correctness tests.
+
+$head Method$$
+The same template class $cref det_by_minor$$
+is used by the different AD packages.
 
 $head Return Value$$
 If this speed test is not yet
@@ -56,14 +60,14 @@ that the gradient (or determinant) is computed for.
 
 $head matrix$$
 The argument $icode matrix$$ is a vector with 
-$syntax%%size%*%size%$$ elements.
+$icode%size%*%size%$$ elements.
 The input value of its elements does not matter. 
 The output value of its elements is the last matrix that the
 gradient (or determinant) is computed for.
 
 $head gradient$$
 The argument $icode gradient$$ is a vector with 
-$syntax%%size%*%size%$$ elements.
+$icode%size%*%size%$$ elements.
 The input value of its elements does not matter. 
 The output value of its elements is the gradient of the
 determinant of $icode matrix$$ with respect to its elements.

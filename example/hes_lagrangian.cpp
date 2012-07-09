@@ -1,6 +1,6 @@
-/* $Id: hes_lagrangian.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: hes_lagrangian.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin HesLagrangian.cpp$$
+$begin hes_lagrangian.cpp$$
 $spell
 	Cpp
 	HesLagrangian
@@ -27,12 +27,12 @@ $index example, ADFun default constructor$$
 $index test, ADFun default constructor$$
 
 $code
-$verbatim%example/hes_lagrangian.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/hes_lagrangian.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cassert>
@@ -239,4 +239,4 @@ bool HesLagrangian(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

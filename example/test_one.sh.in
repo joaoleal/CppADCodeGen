@@ -1,6 +1,6 @@
-# $Id: test_one.sh.in 2233 2011-12-20 19:34:24Z bradbell $
+# $Id: test_one.sh.in 2443 2012-07-01 10:57:06Z bradbell $
 # -----------------------------------------------------------------------------
-# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+# CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
 # CppAD is distributed under multiple licenses. This distribution is under
 # the terms of the 
@@ -38,19 +38,29 @@ sed < example.cpp > test_one.cpp \
 -e '/ok *\&= *Run( /d' \
 -e "s/.*This line is used by test_one.sh.*/	ok \&= Run( $fun, \"$fun\");/"  
 #
+if echo "$fun" | grep 'eigen' > /dev/null
+then
+	cxxflags='-g -Wall -ansi -pedantic-errors -Wno-long-long'
+else
+	cxxflags='-g -Wall -ansi -pedantic-errors -Wshadow'
+fi
 cmd="g++ test_one.cpp $*
 	-o test_one.exe
-	-Wall -ansi -pedantic-errors -Wshadow
+	$cxxflags
 	-g
 	-fopenmp
 	-lboost_thread-mt
 	-lpthread
-	-std=c++98 -DCPPAD_ADOLC_EXAMPLES
+	-std=c++98 -DCPPAD_ADOLC_EXAMPLES -DCPPAD_EIGEN_EXAMPLES
 	-I.. 
 "
 if [ -e @ADOLC_DIR@/include ]
 then
 	cmd="$cmd -I@ADOLC_DIR@/include"
+fi
+if [ -e @EIGEN_DIR@/include ]
+then
+	cmd="$cmd -I@EIGEN_DIR@/include"
 fi
 if [ -e @IPOPT_DIR@/include ]
 then

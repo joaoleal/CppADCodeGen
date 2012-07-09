@@ -1,4 +1,4 @@
-/* $Id: memory_leak.hpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: memory_leak.hpp 2403 2012-05-25 13:46:02Z bradbell $ */
 # ifndef CPPAD_MEMORY_LEAK_INCLUDED
 # define CPPAD_MEMORY_LEAK_INCLUDED
 
@@ -41,7 +41,7 @@ $icode%flag% = %memory_leak(%add_static%)%$$
 $head Purpose$$
 This routine checks that the are no memory leaks 
 caused by improper use of $cref thread_alloc$$ memory allocator.
-The deprecated memory allocator $cref/TrackNewDel/$$ is also checked.
+The deprecated memory allocator $cref TrackNewDel$$ is also checked.
 Memory errors in the deprecated $cref omp_alloc$$ allocator are
 reported as being in $code thread_alloc$$.
 

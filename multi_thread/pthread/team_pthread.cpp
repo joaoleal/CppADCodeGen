@@ -1,4 +1,4 @@
-// $Id: team_pthread.cpp 2343 2012-04-07 15:18:48Z bradbell $
+// $Id: team_pthread.cpp 2439 2012-06-18 02:28:36Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -38,12 +38,12 @@ $codep */
 # define DEMONSTRATE_BUG_IN_CYGWIN 0
 /* $$
 $code
-$verbatim%multi_thread/pthread/team_pthread.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%multi_thread/pthread/team_pthread.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <pthread.h>
 # include <cppad/cppad.hpp>
 # include "../team_thread.hpp"
@@ -344,4 +344,4 @@ bool team_destroy(void)
 
 const char* team_name(void)
 {	return "pthread"; }
-// END PROGRAM
+// END C++

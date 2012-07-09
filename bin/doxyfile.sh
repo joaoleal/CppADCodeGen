@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: doxyfile.sh 2333 2012-04-03 04:34:56Z bradbell $
+# $Id: doxyfile.sh 2409 2012-05-30 15:09:31Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -37,7 +37,7 @@ GENERATE_LATEX          = NO
 GENERATE_TREEVIEW       = YES
 INHERIT_DOCS            = NO
 INLINE_INHERITED_MEMB   = YES
-INPUT                   = ./cppad  ./cppad/local ./cppad_ipopt/src
+INPUT                   = ./cppad  ./cppad/local ./cppad_ipopt/src ./speed/src
 MULTILINE_CPP_IS_BRIEF  = YES
 OUTPUT_DIRECTORY        = doxydoc
 PROJECT_NAME            = "CppAD: A C++ Algorithmic Differentiation Package"

@@ -1,9 +1,9 @@
-/* $Id: det_grad_33.hpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: det_grad_33.hpp 2439 2012-06-18 02:28:36Z bradbell $ */
 # ifndef CPPAD_DET_GRAD_33_INCLUDED
 # define CPPAD_DET_GRAD_33_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -32,9 +32,9 @@ $index correct, determinant check$$
 $index check, determinant correct$$
 
 $head Syntax$$
-$syntax%# include <cppad/speed/det_grad_33.hpp>
+$codei%# include <cppad/speed/det_grad_33.hpp>
 %$$
-$syntax%%ok% = det_grad_33(%x%, %g%)%$$
+$icode%ok% = det_grad_33(%x%, %g%)%$$
 
 $head Purpose$$
 This routine can be used to check a method for computing the 
@@ -50,8 +50,8 @@ so it is not automatically included by
 $cref/cppad.hpp/cppad/$$.
 
 $head x$$
-The argument $italic x$$ has prototype
-$syntax%
+The argument $icode x$$ has prototype
+$codei%
 	const %Vector% &%x%
 %$$.
 It contains the elements of the matrix $latex X$$ in row major order; i.e.,
@@ -60,8 +60,8 @@ $latex \[
 \] $$
 
 $head g$$
-The argument $italic g$$ has prototype
-$syntax%
+The argument $icode g$$ has prototype
+$codei%
 	const %Vector% &%g%
 %$$.
 It contains the elements of the gradient of
@@ -71,22 +71,22 @@ $latex \[
 \] $$
 
 $head Vector$$
-If $italic y$$ is a $italic Vector$$ object, 
+If $icode y$$ is a $icode Vector$$ object, 
 it must support the syntax
-$syntax%
+$codei%
 	%y%[%i%]
 %$$
-where $italic i$$ has type $code size_t$$ with value less than 9.
+where $icode i$$ has type $code size_t$$ with value less than 9.
 This must return a $code double$$ value corresponding to the $th i$$
-element of the vector $italic y$$.
-This is the only requirement of the type $italic Vector$$.
+element of the vector $icode y$$.
+This is the only requirement of the type $icode Vector$$.
 
 $head ok$$
-The return value $italic ok$$ has prototype
-$syntax%
+The return value $icode ok$$ has prototype
+$codei%
 	bool %ok%
 %$$
-It is true, if the gradient $italic g$$ 
+It is true, if the gradient $icode g$$ 
 passes the test and false otherwise.
 
 $children%
@@ -95,13 +95,13 @@ $children%
 
 $head Source Code$$
 The file 
-$cref/det_grad_33.hpp/$$
+$cref det_grad_33.hpp$$
 contains the source code for this template function.
 
 $end
 ------------------------------------------------------------------------------
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/near_equal.hpp>
 namespace CppAD {
 template <class Vector>
@@ -129,5 +129,5 @@ template <class Vector>
 		return ok;
 	}
 }
-// END PROGRAM
+// END C++
 # endif

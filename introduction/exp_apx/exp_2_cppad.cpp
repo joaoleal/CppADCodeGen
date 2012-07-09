@@ -1,4 +1,4 @@
-/* $Id: exp_2_cppad.cpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: exp_2_cppad.cpp 2403 2012-05-25 13:46:02Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
 
@@ -40,10 +40,10 @@ Use CppAD forward and reverse modes to compute the
 partial derivative with respect to $latex x$$,
 at the point $latex x = .5$$,
 of the function 
-$syntax%
+$codei%
 	exp_2(%x%)
 %$$
-as defined by the $cref/exp_2.hpp/$$ include file.
+as defined by the $cref exp_2.hpp$$ include file.
 
 $head Exercises$$
 $list number$$
@@ -51,12 +51,12 @@ Create and test a modified version of the routine below that computes
 the same order derivatives with respect to $latex x$$,
 at the point $latex x = .1$$ 
 of the function 
-$syntax%
+$codei%
 	exp_2(%x%)
 %$$
 $lnext
 Create a routine called
-$syntax%
+$codei%
 	exp_3(%x%)
 %$$ 
 that evaluates the function

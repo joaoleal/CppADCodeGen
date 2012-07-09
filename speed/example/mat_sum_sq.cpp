@@ -1,6 +1,6 @@
-/* $Id: mat_sum_sq.cpp 1891 2011-02-21 17:10:14Z bradbell $ */
+/* $Id: mat_sum_sq.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -23,12 +23,12 @@ $index example, mat_sum_sq$$
 $index test, mat_sum_sq$$
 
 $code
-$verbatim%speed/example/mat_sum_sq.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%speed/example/mat_sum_sq.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <vector>
 # include <cstddef>
 # include <cppad/vector.hpp>
@@ -73,4 +73,4 @@ bool mat_sum_sq()
 	
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,6 +1,6 @@
-/* $Id: det_lu.cpp 1644 2010-02-06 19:56:43Z bradbell $ */
+/* $Id: det_lu.cpp 2424 2012-06-07 13:54:21Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin cppad_det_lu.cpp$$
 $spell
+	retape
 	bool
 	CppAD
 	vector Vector
@@ -30,20 +31,23 @@ $$
 
 $section CppAD Speed: Gradient of Determinant Using Lu Factorization$$
 
-$index cppad, speed lu$$
-$index speed, cppad lu$$
+$index link_det_lu, cppad$$
+$index cppad, link_det_lu$$
+$index speed, cppad$$
+$index cppad, speed$$
 $index lu, speed cppad$$
+$index matrix, factor speed cppad$$
+$index factor, matrix speed cppad$$
 
 $head Specifications$$
-See $cref/link_det_lu/$$.
+See $cref link_det_lu$$.
 
 $head Implementation$$
-$index cppad, link_det_lu$$
-$index link_det_lu, cppad$$
 $codep */
 # include <cppad/vector.hpp>
 # include <cppad/speed/det_by_lu.hpp>
 # include <cppad/speed/uniform_01.hpp>
+# include "print_optimize.hpp"
 
 bool link_det_lu(
 	size_t                           size     , 
@@ -51,6 +55,11 @@ bool link_det_lu(
 	CppAD::vector<double>           &matrix   ,
 	CppAD::vector<double>           &gradient )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_atomic )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 	typedef CppAD::AD<double>           ADScalar; 
@@ -68,9 +77,13 @@ bool link_det_lu(
 	CppAD::vector<double> w(1);
 	w[0] = 1.;
 
+	// use the unspecified fact that size is non-decreasing between calls
+	static size_t previous_size = 0;
+	bool print    = (repeat > 1) & (previous_size != size);
+	previous_size = size;
+
+
 	// ------------------------------------------------------
-	static bool printed = false;
-	bool print_this_time = (! printed) & (repeat > 1) & (size >= 10);
 	while(repeat--)
 	{	// get the next matrix
 		CppAD::uniform_01(n, matrix);
@@ -86,19 +99,9 @@ bool link_det_lu(
 		// create function object f : A -> detA
 		f.Dependent(A, detA);
 
-		extern bool global_optimize;
 		if( global_optimize )
-		{	size_t before, after;
-			before = f.size_var();
-			f.optimize();
-			if( print_this_time ) 
-			{	after = f.size_var();
-				std::cout << "cppad_det_lu_optimize_size_" 
-				          << int(size) << " = [ " << int(before) 
-				          << ", " << int(after) << "]" << std::endl;
-				printed         = true;
-				print_this_time = false;
-			}
+		{	print_optimize(f, print, "cppad_det_lu_optimize", size);
+			print = false;
 		}
 
 		// evaluate and return gradient using reverse mode

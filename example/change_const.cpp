@@ -1,4 +1,4 @@
-/* $Id: change_const.cpp 2271 2012-01-20 16:21:32Z bradbell $ */
+/* $Id: change_const.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -27,14 +27,14 @@ $index change, constant$$
 $head Purpose$$
 In this example we use two levels of taping so that a derivative
 can have constant parameters that can be changed. To be specific,
-we consider the function $latex f : \R^2 \rightarrow \R^2$$
+we consider the function $latex f : \B{R}^2 \rightarrow \B{R}^2$$
 $latex \[
 f(x) = p \left( \begin{array}{c} 
 	\sin( x_0 ) \\
 	\sin( x_1 ) 
 \end{array} \right)
 \]$$
-were $latex p \in \R$$ is a parameter.
+were $latex p \in \B{R}$$ is a parameter.
 The Jacobian of this function is
 $latex \[
 g(x,p) = p \left( \begin{array}{cc}
@@ -66,7 +66,7 @@ bool change_const(void)
 	size_t j;
 
 	// declare first level of independent variables
-	CPPAD_TEST_VECTOR<A1_double> a1_u(nu); 
+	CPPAD_TESTVECTOR(A1_double) a1_u(nu); 
 	for(j = 0; j < nu; j++)
 		a1_u[j] = 0.;
 	CppAD::Independent(a1_u); 
@@ -75,13 +75,13 @@ bool change_const(void)
 	A1_double a1_p = a1_u[2];
 
 	// declare second level of independent variables
-	CPPAD_TEST_VECTOR<A2_double> a2_x(nx); 
+	CPPAD_TESTVECTOR(A2_double) a2_x(nx); 
 	for(j = 0; j < nx; j++)
 		a2_x[j] = 0.;
 	CppAD::Independent(a2_x); 
 
 	// compute dependent variables at second level
-	CPPAD_TEST_VECTOR<A2_double> a2_y(ny);
+	CPPAD_TESTVECTOR(A2_double) a2_y(ny);
 	a2_y[0] = sin( a2_x[0] ) * a1_p;
 	a2_y[1] = sin( a2_x[1] ) * a1_p;
 
@@ -91,10 +91,10 @@ bool change_const(void)
 	a1_f.Dependent(a2_x, a2_y); 
 
 	// compute the Jacobian of a1_f at a1_u[0], a1_u[1]
-	CPPAD_TEST_VECTOR<A1_double> a1_x(nx);
+	CPPAD_TESTVECTOR(A1_double) a1_x(nx);
 	a1_x[0] = a1_u[0];
 	a1_x[1] = a1_u[1];
-	CPPAD_TEST_VECTOR<A1_double> a1_J(nJ);
+	CPPAD_TESTVECTOR(A1_double) a1_J(nJ);
 	a1_J = a1_f.Jacobian( a1_x );
 	
 	// declare function object that maps u = (x, p) to Jacobian of f
@@ -108,17 +108,17 @@ bool change_const(void)
 
 	// compute the Jacobian of f using zero order forward
 	// sweep with double values
-	CPPAD_TEST_VECTOR<double> J(nJ), u(nu);
+	CPPAD_TESTVECTOR(double) J(nJ), u(nu);
 	for(j = 0; j < nu; j++)
 		u[j] = double(j+1);
 	J = g.Forward(0, u);
 
 	// accuracy for tests
-	double eps = 100. * CppAD::epsilon<double>();
+	double eps = 100. * CppAD::numeric_limits<double>::epsilon();
 
 	// y[0] = sin( x[0] ) * p
 	// y[1] = sin( x[1] ) * p
-	CPPAD_TEST_VECTOR<double> x(nx);
+	CPPAD_TESTVECTOR(double) x(nx);
 	x[0]     = u[0];
 	x[1]     = u[1];
 	double p = u[2];

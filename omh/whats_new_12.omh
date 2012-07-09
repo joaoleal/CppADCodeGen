@@ -1,4 +1,4 @@
-$Id: whats_new_12.omh 2354 2012-04-19 14:25:37Z bradbell $
+$Id: whats_new_12.omh 2460 2012-07-08 17:17:37Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -13,6 +13,18 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 $begin whats_new_12$$
 $dollar @$$
 $spell
+	bool
+	taddr
+	eigen
+	fabs
+	mul
+	det_lu
+	adolc
+	fadbad
+	sacado
+	CppADvector
+	retape
+	Jacobian
 	dir
 	-lteuchos
 	trilinos
@@ -43,6 +55,249 @@ This section contains a list of the changes to CppAD during 2012
 (in reverse order by date).
 The purpose of this section is to
 assist you in learning about changes between various versions of CppAD.
+
+$head 07-08$$
+$list number$$
+Improve the documentation for $cref pow$$ and $cref pow_int$$.
+$lnext
+Change all the example section names to be same as corresponding file names;
+e.g. change $code vectorBool.cpp$$ to $cref vector_bool.cpp$$
+for the example $code example/vector_bool.cpp$$.
+$lend
+
+$head 07-07$$
+Add the $code CPPAD_TAPE_ID_TYPE$$ argument to the 
+$cref/configure/InstallUnix/Configure/$$ command line.
+
+$head 07-05$$
+Deprecate $cref/CPPAD_TEST_VECTOR/test_vector/$$ and use
+$cref/CPPAD_TESTVECTOR/testvector/$$ in its place.
+This fixes a problem introduced by changes on 07-03 whereby code that
+used $code CPPAD_TEST_VECTOR$$ would no longer work.
+
+$head 07-04$$
+$list number$$
+Replace the requirement that the $cref SimpleVector$$ 
+$cref/size/SimpleVector/Size/$$ function return a $code size_t$$ value to
+the requirement that it can be converted to a $code size_t$$ value.
+$lnext
+The $cref/--with-eigenvector/InstallUnix/Configure/$$ option was
+added to the $code configure$$ command line.
+$lend
+
+$head 07-03$$
+Fix bug in $cref user_atomic$$ functions identification of variables
+that caused $cref user_tan.cpp$$ to fail with error message
+$codep
+Error detected by false result for
+    y_taddr > 0
+at line 262 in the file cppad/local/dependent.hpp
+$$
+
+$head 07-02$$
+Add  $cref eigen_plugin.hpp$$ so that 
+an Eigen vector can be used as a
+$cref/SimpleVector/$$.
+
+$head 07-01$$
+$list number$$
+Change $cref cppad_eigen.hpp$$ 
+to match new specifications and example in eigen help files on 
+$href%
+	http://eigen.tuxfamily.org/dox/TopicCustomizingEigen.html%
+	customizing and extending eigen.
+%$$
+$lnext
+Fix bug whereby a newly constructed $cref VecAD$$ object was a
+$cref/variable/ParVar/$$ (instead of a parameter) directly after construction
+(when no previous $cref/ADFun/FunConstruct/$$ object had been created).
+$lnext
+Change a $code ok != a == 0.$$ to $code ok &= a == 0.$$ in
+the example $cref ad_ctor.cpp$$.
+$lnext
+Add the $cref eigen_array.cpp$$ example.
+$lend
+
+$head 06-17$$
+$list number$$
+Move $cref epsilon$$ to $cref/numeric_limits/limits/$$ 
+and add the functions $code min$$ and $code max$$
+in $icode%CppAD::numeric_limits<%Type%>%$$.
+$lnext
+Convert use of the deprecated $cref epsilon$$ in examples
+to use of $cref/numeric_limits/limits/$$ $code epsilon$$.
+$lnext
+Complete $cref cppad_eigen.hpp$$ interface to 
+$code lowest$$ and $code highest$$ functions for
+all non-complex AD types.
+$lend
+
+
+$head 06-16$$
+Add the example $cref eigen_det.cpp$$ that uses the 
+$href%http://eigen.tuxfamily.org%Eigen%$$
+linear algebra package.
+
+$head 06-15$$
+Include the $cref base_adolc.hpp$$ as
+$code <cppad/example/base_adolc.hpp>$$ under the 
+$cref/prefix_dir/InstallUnix/prefix_dir/$$ directory.
+
+$head 06-12$$
+Increase the size and of the 
+$cref/sparse Jacobian speed tests/link_sparse_jacobian/$$.
+
+$head 06-10$$
+$list number$$
+Add the $cref/hold_memory/speed_main/option_list/hold_memory/$$ option
+to the speed test main program.
+$lnext
+In $cref cppad_sparse_jacobian.cpp$$,
+change $code USE_BOOL_SPARSITY$$ from true to false.
+In addition, change the number of non-zeros per row from about approximately 
+three to approximately ten.
+$lend
+
+$head 06-09$$
+Change $cref adolc_sparse_jacobian.cpp$$ to use the sparse adolc
+Jacobian (instead of the full Jacobian) driver.
+This was also done for $cref adolc_sparse_hessian.cpp$$,
+but there is a problem with the test that is being investigated.
+
+$head 06-08$$
+Implement the matrix multiply speed test $cref link_mat_mul$$ for all packages
+(there is a problem with the $cref fadbad_mat_mul.cpp$$
+implementation and it is being looked into).
+
+$head 06-07$$
+Make all the speed tests implementations (for the specific packages)
+uniform by having a Specification and Implementation heading and similar
+indexing. For example, see
+$cref adolc_det_minor.cpp$$,
+$cref cppad_det_minor.cpp$$,
+$cref double_det_minor.cpp$$,
+$cref fadbad_det_minor.cpp$$, and
+$cref sacado_det_minor.cpp$$.
+
+$head 06-05$$
+Add the $cref sacado_ode.cpp$$ speed test.
+
+$head 06-04$$
+$list number$$
+The specifications for $cref Runge45$$ where changes so that
+it uses the $code fabs$$ function instead of the $code <$$ operation.
+This enabled the a more precise statement about its
+$cref/operation sequence/Runge45/Operation Sequence/$$.
+$lnext
+The $code fabs$$ function as added to the CppAD standard math library
+(see $cref abs$$)
+and the $cref/base type requirements/base_std_math/$$.
+This enables one to write code that works with $code AD<double>$$ as
+well as $code double$$ without having to define $code abs$$ for
+$code double$$ arguments
+(and similarly for $code float$$).
+$lnext
+Add the $cref adolc_ode.cpp$$ and $cref fadbad_ode.cpp$$ speed tests
+(and edit the $cref cppad_ode.cpp$$ test). 
+$lend
+
+$head 06-03$$
+$list number$$
+The $code CppAD::vector$$ class was extended to allow assignment
+with the target of size zero and the source of non-zero size;
+see $cref/check size/CppAD_vector/Assignment/Check Size/$$.
+$lnext
+A memory leak and a bug in $code cppad_mat_mul.cpp$$ were fixed
+(the bug was related to the change to $code CppAD::vector$$ above).
+$lend
+
+$head 06-02$$
+$list number$$
+Remove the deprecated symbol
+$cref/CppADvector/test_vector/Deprecated/$$ from the
+$cref det_by_lu$$ speed test source code $cref det_by_lu.hpp$$.
+$lnext
+Include $cref memory_leak$$ in the list of 
+$cref deprecated$$ features.
+$lnext
+Change the $cref ode_evaluate$$ speed test utility so that its 
+$cref/operation sequence/glossary/Operation/Sequence/$$
+does not depend on the repetition; see
+$cref/p == 0/ode_evaluate/p/p == 0/$$ in its documentation.
+$lnext
+Use same argument for taping and derivative evaluation when
+$cref/retape/speed_main/option_list/retape/$$ is true.
+$lnext
+Implement the $icode%retape% == false%$$ option
+in $cref cppad_ode.cpp$$.
+$lnext
+Have 
+$cref cppad_det_lu.cpp$$, 
+$cref cppad_det_minor.cpp$$,
+and $cref cppad_poly.cpp$$,
+return false when one of the specified options is not supported.
+Do the same for
+$icode%package%_%test%.cpp%$$ for $icode package$$ equal to 
+$code adolc$$, $code fadbad$$, and $code sacado$$ and 
+for $icode test$$ equal to 
+$code det_lu$$, $code det_minor$$, $code poly$$.
+$lend
+
+$head 06-01$$
+Change 
+$cref cppad_sparse_hessian.cpp$$ and
+$cref cppad_sparse_jacobian.cpp$$ 
+to use
+the $icode row$$, $icode col$$ interface to $cref sparse_hessian$$.
+In addition, implement the speed test 
+$cref/retape/speed_main/option_list/retape/$$ option for these tests.
+
+$head 05-31$$
+Add the $cref cppad_print_optimize$$ routine to so that the corresponding
+code does not need to be reproduced for all the 
+$cref speed_cppad$$ tests.
+In addition, during CppAD speed tests, 
+print out the optimization results for each test size.
+
+$head 05-30$$
+Change specifications for 
+$cref link_sparse_hessian$$ so that the row and column indices are 
+inputs (instead of being chosen randomly by the test for each repetition).
+This enables use of the 
+$cref/retape/speed_main/option_list/retape/$$ option
+during sparse Hessian speed tests.
+
+$head 05-29$$
+Add $cref index_sort$$ to the general purpose template $cref library$$
+so that it can be used by the implementations of
+$cref link_sparse_jacobian$$ and $cref link_sparse_hessian$$.
+
+$head 05-27$$
+Split the sparse Jacobian and Hessian test function the separate function
+$cref sparse_jac_fun$$ and $cref sparse_hes_fun$$
+(do not use sparse Hessian for both).
+In addition, change row and column indices from $icode i$$
+and $icode j$$ to $icode row$$ and $icode col$$.
+
+$head 05-24$$
+Merged in changes from $code branches/sparse$$:
+$list number$$
+A new interface was added to
+$cref sparse_jacobian$$ and $cref sparse_hessian$$.
+This interface
+returns a sparse representation of the corresponding matrices
+using row and column index vectors.
+$lnext
+The examples
+$cref sparse_jacobian.cpp$$ and
+$cref sparse_hessian.cpp$$  were improved 
+and extended to include the new interface.
+$lnext
+The definition of an 
+$cref/AD function/glossary/AD Function/$$ was improved
+to include definition of the corresponding $icode n$$ and $icode m$$.
+$lend
+
 
 $head 04-19$$
 The $cref/BOOST_DIR/InstallUnix/boost_dir/$$ 

@@ -1,6 +1,6 @@
-/* $Id: reverse_any.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: reverse_any.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -33,9 +33,9 @@ interface of the pieces.
 In actual applications, there may be many functions, but 
 for this example there are only two.
 The functions 
-$latex F : \R^2 \rightarrow \R^2$$ 
+$latex F : \B{R}^2 \rightarrow \B{R}^2$$ 
 and
-$latex G : \R^2 \rightarrow \R^2$$ 
+$latex G : \B{R}^2 \rightarrow \B{R}^2$$ 
 defined by
 $latex \[
 	F(x) = \left( \begin{array}{c} x_0 x_1   \\ x_1 - x_0 \end{array} \right) 
@@ -44,11 +44,11 @@ $latex \[
 \] $$
 Another difference is that in actual applications,
 the memory corresponding to function objects not currently being used
-is sometimes returned to the system (see $cref/checkpoint.cpp/$$).
+is sometimes returned to the system (see $cref checkpoint.cpp$$).
 
 $head Processing Steps$$
 We apply reverse mode to compute the derivative of
-$latex H : \R^2 \rightarrow \R$$
+$latex H : \B{R}^2 \rightarrow \B{R}$$
 is defined by
 $latex \[
 \begin{array}{rcl}
@@ -119,13 +119,13 @@ where $latex \partial_{x(0)}$$ denotes the partial with respect
 to $latex x^{(0)}$$.
 
 $code
-$verbatim%example/reverse_any.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/reverse_any.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -148,7 +148,7 @@ namespace {
 
 bool reverse_any(void)
 {	bool ok = true;
-     double eps = 10. * CppAD::epsilon<double>();
+     double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 	using CppAD::AD;
 	using CppAD::NearEqual;
@@ -156,21 +156,21 @@ bool reverse_any(void)
 
 	// Record the function F(x)
 	size_t n    = 2;
-	CPPAD_TEST_VECTOR< AD<double> > X(n), Y(n);
+	CPPAD_TESTVECTOR(AD<double>) X(n), Y(n);
 	X[0] = X[1] = 0.;
 	CppAD::Independent(X);
 	Y = F(X);
 	f.Dependent(X, Y);
 
 	// Record the function G(x)
-	CPPAD_TEST_VECTOR< AD<double> > Z(n);
+	CPPAD_TESTVECTOR(AD<double>) Z(n);
 	Y[0] = Y[1] = 0.;
 	CppAD::Independent(Y);
 	Z = G(Y);
 	g.Dependent(Y, Z);
 
 	// argument and function values
-	CPPAD_TEST_VECTOR<double> x0(n), y0(n), z0(n);
+	CPPAD_TESTVECTOR(double) x0(n), y0(n), z0(n);
 	x0[0] = 1.;
 	x0[1] = 2.;
 	y0    = f.Forward(0, x0);
@@ -182,7 +182,7 @@ bool reverse_any(void)
 	ok          &= NearEqual(h0, check, eps, eps);
 
 	// first order Taylor coefficients
-	CPPAD_TEST_VECTOR<double> x1(n), y1(n), z1(n);
+	CPPAD_TESTVECTOR(double) x1(n), y1(n), z1(n);
 	x1[0] = 3.;
 	x1[1] = 4.;
 	y1    = f.Forward(1, x1);
@@ -199,7 +199,7 @@ bool reverse_any(void)
 	// dw^0 (y) = \partial_y^0 h^0 (y)
 	// dw^1 (y) = \partial_y^1 h^0 (y)
 	size_t p = 2;
-	CPPAD_TEST_VECTOR<double> w(n*p), dw(n*p);
+	CPPAD_TESTVECTOR(double) w(n*p), dw(n*p);
 	w[0*p+0] = 1.; // coefficient for z^0_0
 	w[1*p+0] = 1.; // coefficient for z^0_1
 	w[0*p+1] = 0.; // coefficient for z^1_0
@@ -208,7 +208,7 @@ bool reverse_any(void)
 
 	// dv^0 = dw^0 * \partial_x^0 y^0 (x) + dw^1 * \partial_x^0 y^1 (x)  
 	// dv^1 = dw^0 * \partial_x^1 y^0 (x) + dw^1 * \partial_x^1 y^1 (x)  
-	CPPAD_TEST_VECTOR<double> dv(n*p);
+	CPPAD_TESTVECTOR(double) dv(n*p);
 	dv   = f.Reverse(p, dw); 
 
 	// check partial of h^0 w.r.t x^0_0
@@ -266,4 +266,4 @@ bool reverse_any(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

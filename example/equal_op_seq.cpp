@@ -1,6 +1,6 @@
-/* $Id: equal_op_seq.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: equal_op_seq.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin EqualOpSeq.cpp$$
+$begin equal_op_seq.cpp$$
 $spell
 	Op
 $$
@@ -23,12 +23,12 @@ $index example, EqualOpSeq$$
 $index test, EqualOpSeq$$
 
 $code
-$verbatim%example/equal_op_seq.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/equal_op_seq.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 
 bool EqualOpSeq(void)
@@ -39,7 +39,7 @@ bool EqualOpSeq(void)
 	// domain space vector
 	size_t n  = 1;
 	double x0 = 1.;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0]      = x0; 
 
 	// declare independent variables and start tape recording
@@ -54,7 +54,7 @@ bool EqualOpSeq(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = a;
 
 	// both y[0] and a are variables
@@ -69,4 +69,4 @@ bool EqualOpSeq(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

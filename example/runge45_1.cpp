@@ -1,6 +1,6 @@
-/* $Id: runge_45_1.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: runge45_1.cpp 2461 2012-07-08 20:08:27Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin runge_45_1.cpp$$
+$begin runge45_1.cpp$$
 $spell
 	Runge
 $$
@@ -23,7 +23,7 @@ $index example, Runge45$$
 $index test, Runge45$$
 
 Define 
-$latex X : \R \rightarrow \R^n$$ by
+$latex X : \B{R} \rightarrow \B{R}^n$$ by
 $latex \[
 	X_i (t) =  t^{i+1}
 \] $$ 
@@ -39,12 +39,12 @@ X_i '(t)   & = & (i+1) t^i = (i+1) X_{i-1} (t) & {\rm if \;} i > 0
 The example tests Runge45 using the relations above:
 
 $code
-$verbatim%example/runge_45_1.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/runge45_1.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cstddef>                 // for size_t
 # include <cppad/runge_45.hpp>      // for CppAD::Runge45
@@ -121,4 +121,4 @@ bool runge_45_1(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

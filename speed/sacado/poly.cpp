@@ -1,6 +1,6 @@
-/* $Id: poly.cpp 1497 2009-08-13 16:57:34Z bradbell $ */
+/* $Id: poly.cpp 2424 2012-06-07 13:54:21Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -37,12 +37,18 @@ $$
 
 $section Sacado Speed: Second Derivative of a Polynomial$$
 
-$index sacado, speed polynomial$$
-$index speed, sacado polynomial$$
+$index link_poly, sacado$$
+$index sacado, link_poly$$
+$index speed, sacado$$
+$index sacado, speed$$
 $index polynomial, speed sacado$$
 
-$head link_poly$$
-$index link_poly$$
+$head Specifications$$
+See $cref link_poly$$.
+
+$head Implementation$$
+
+
 $codep */
 # include <cppad/vector.hpp>
 # include <cppad/poly.hpp>
@@ -56,6 +62,11 @@ bool link_poly(
 	CppAD::vector<double>     &z        ,  // polynomial argument value
 	CppAD::vector<double>     &ddp      )  // second derivative w.r.t z  
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_atomic || global_optimize )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 	typedef Sacado::Tay::Taylor<double>  ADScalar;

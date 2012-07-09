@@ -1,6 +1,6 @@
-/* $Id: lu_ratio.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: lu_ratio.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin LuRatio.cpp$$
+$begin lu_ratio.cpp$$
 $spell
 	Geq
 	Cpp
@@ -24,13 +24,13 @@ $index example, LuRatio$$
 $index test, LuRatio$$
 
 $code
-$verbatim%example/lu_ratio.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/lu_ratio.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
 
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cstdlib>               // for rand function
 # include <cassert>
 # include <cppad/cppad.hpp>
@@ -39,19 +39,19 @@ namespace { // Begin empty namespace
 
 CppAD::ADFun<double> *NewFactor(
 	size_t                           n ,
-	const CPPAD_TEST_VECTOR<double> &x , 
+	const CPPAD_TESTVECTOR(double) &x , 
 	bool                           &ok ,
-	CPPAD_TEST_VECTOR<size_t>      &ip , 
-	CPPAD_TEST_VECTOR<size_t>      &jp )
+	CPPAD_TESTVECTOR(size_t)      &ip , 
+	CPPAD_TESTVECTOR(size_t)      &jp )
 {	using CppAD::AD;
 	using CppAD::ADFun;
 	size_t i, j, k;
 
 	// values for independent and dependent variables
-	CPPAD_TEST_VECTOR< AD<double> > Y(n*n+1), X(n*n);
+	CPPAD_TESTVECTOR(AD<double>) Y(n*n+1), X(n*n);
 
 	// values for the LU factor
-	CPPAD_TEST_VECTOR< AD<double> > LU(n*n);
+	CPPAD_TESTVECTOR(AD<double>) LU(n*n);
 
 	// record the LU factorization corresponding to this value of x
 	AD<double> Ratio;
@@ -86,10 +86,10 @@ CppAD::ADFun<double> *NewFactor(
 }
 bool CheckLuFactor(
 	size_t                           n  ,
-	const CPPAD_TEST_VECTOR<double> &x  ,
-	const CPPAD_TEST_VECTOR<double> &y  ,
-	const CPPAD_TEST_VECTOR<size_t> &ip ,
-	const CPPAD_TEST_VECTOR<size_t> &jp )
+	const CPPAD_TESTVECTOR(double) &x  ,
+	const CPPAD_TESTVECTOR(double) &y  ,
+	const CPPAD_TESTVECTOR(size_t) &ip ,
+	const CPPAD_TESTVECTOR(size_t) &jp )
 {	bool     ok = true;	
 
 	double  sum;                          // element of L * U
@@ -97,7 +97,7 @@ bool CheckLuFactor(
 	size_t  i, j, k;                      // temporary indices
 
 	// L and U factors
-	CPPAD_TEST_VECTOR<double>  L(n*n), U(n*n);
+	CPPAD_TESTVECTOR(double)  L(n*n), U(n*n);
 
 	// Extract L from LU factorization
 	for(i = 0; i < n; i++)
@@ -146,10 +146,10 @@ bool LuRatio(void)
 	double  ratio;
 
 	// values for independent and dependent variables
-	CPPAD_TEST_VECTOR<double>  x(n*n), y(n*n+1);
+	CPPAD_TESTVECTOR(double)  x(n*n), y(n*n+1);
 
 	// pivot vectors
-	CPPAD_TEST_VECTOR<size_t> ip(n), jp(n);
+	CPPAD_TESTVECTOR(size_t) ip(n), jp(n);
 
 	// set x equal to the identity matrix
 	x[0] = 1.; x[1] = 0;
@@ -188,4 +188,4 @@ bool LuRatio(void)
 	delete FunPtr;  // avoid memory leak
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: build.sh 2354 2012-04-19 14:25:37Z bradbell $
+# $Id: build.sh 2458 2012-07-07 17:34:40Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 #
@@ -11,12 +11,13 @@
 # Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # -----------------------------------------------------------------------------
 # prefix directories for the corresponding packages
-BOOST_DIR=$HOME/prefix/boost
-CPPAD_DIR=$HOME/prefix/cppad  
 ADOLC_DIR=$HOME/prefix/adolc
+BOOST_DIR=/usr
+CPPAD_DIR=$HOME/prefix/cppad  
+EIGEN_DIR=$HOME/prefix/eigen
 FADBAD_DIR=$HOME/prefix/fadbad
-SACADO_DIR=$HOME/prefix/sacado
 IPOPT_DIR=$HOME/prefix/ipopt
+SACADO_DIR=$HOME/prefix/sacado
 # version type is one of "trunk" or "stable"
 version_type="trunk"
 # -----------------------------------------------------------------------------
@@ -223,51 +224,62 @@ then
 	dir_list="
 		--prefix=$CPPAD_DIR
 	"
-	if [ -e $BOOST_DIR/include/boost ]
-	then
-		dir_list="$dir_list
-			--with-boostvector BOOST_DIR=$BOOST_DIR"
-#_build_test_only:		dir_list="$dir_list 
-#_build_test_only:			--with-boostvector"
-	fi
 	if [ -e $ADOLC_DIR/include/adolc ]
 	then
 		dir_list="$dir_list 
 			ADOLC_DIR=$ADOLC_DIR"
+	fi
+	if [ -e $BOOST_DIR/include/boost ]
+	then
+		dir_list="$dir_list BOOST_DIR=$BOOST_DIR"
+#_build_test_only:	if [ ! -e $EIGEN_DIR/include/Eigen ]
+#_build_test_only:	then
+#_build_test_only:		dir_list="$dir_list --with-boostvector"
+#_build_test_only:	fi
+	fi
+	if [ -e $EIGEN_DIR/include/Eigen ]
+	then
+		dir_list="$dir_list 
+			EIGEN_DIR=$EIGEN_DIR"
+#_build_test_only:	dir_list="$dir_list --with-eigenvector"
 	fi
 	if [ -e $FADBAD_DIR/FADBAD++ ]
 	then
 		dir_list="$dir_list 
 			FADBAD_DIR=$FADBAD_DIR"
 	fi
-	if [ -e $SACADO_DIR/include/Sacado.hpp ]
-	then
-		dir_list="$dir_list 
-			SACADO_DIR=$SACADO_DIR"
-	fi
 	if [ -e $IPOPT_DIR/include/coin/IpIpoptApplication.hpp ]
 	then
 		dir_list="$dir_list 
 		IPOPT_DIR=$IPOPT_DIR"
 	fi
-	# Use TAPE_ADDR_TYPE=int (a signed type) to do more checking for 
+	if [ -e $SACADO_DIR/include/Sacado.hpp ]
+	then
+		dir_list="$dir_list 
+			SACADO_DIR=$SACADO_DIR"
+	fi
+	# Use =int (a signed type) to do more checking for 
 	# slicing from size_t to addr_t.
-	tape_addr_type=""
-#_build_test_only:	tape_addr_type="TAPE_ADDR_TYPE=int"
+	special_types=""
+#_build_test_only:	special_types="TAPE_ADDR_TYPE=int TAPE_ID_TYPE=int"
 	#
 	dir_list=`echo $dir_list | sed -e 's|\t\t*| |g'`
 	cxx_flags="-Wall -ansi -pedantic-errors -std=c++98 -Wshadow"
+#_build_test_only:	if [ -e $EIGEN_DIR/include/Eigen ]
+#_build_test_only:	then
+#_build_test_only:	cxx_flags="-Wall -ansi -pedantic-errors -std=c++98 -Wno-long-long"
+#_build_test_only:	fi
 cat << EOF
 ../configure > $log_file \\
 $dir_list \\
 CXX_FLAGS=\"$cxx_flags\" \\
-$tape_addr_type --with-Documentation OPENMP_FLAGS=-fopenmp
+$special_types --with-Documentation OPENMP_FLAGS=-fopenmp
 EOF
 	#
 	../configure > $log_dir/$log_file \
 		$dir_list \
 		CXX_FLAGS="$cxx_flags" \
-		$tape_addr_type --with-Documentation OPENMP_FLAGS=-fopenmp
+		$special_types --with-Documentation OPENMP_FLAGS=-fopenmp
 	#
 	for file in $configure_file_list
 	do

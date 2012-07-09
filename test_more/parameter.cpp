@@ -1,6 +1,6 @@
-/* $Id: parameter.cpp 2005 2011-07-12 15:00:51Z bradbell $ */
+/* $Id: parameter.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -29,14 +29,14 @@ bool test(void)
 
 	// independent variable vector
 	size_t j, n = n_parameter * n_repeat;
-	CPPAD_TEST_VECTOR< AD<Float> > ax(n);
+	CPPAD_TESTVECTOR(AD<Float>) ax(n);
 	for(j = 0; j < n; j++)
 		ax[j] = Float(j); 
 	Independent(ax);
 
 	// dependent variable vector and indices
 	size_t i, m = n;
-	CPPAD_TEST_VECTOR< AD<Float> > ay(m);
+	CPPAD_TESTVECTOR(AD<Float>) ay(m);
 	for(i = 0; i < m; i++)
 	{	// must avoid Float(k) = 0 because it would get optimized out	
 		size_t k = (i % n_parameter); 

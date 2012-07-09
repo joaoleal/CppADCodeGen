@@ -1,5 +1,5 @@
 #! /bin/bash -e
-# $Id: commit.sh 2239 2011-12-31 00:40:19Z bradbell $
+# $Id: commit.sh 2405 2012-05-27 15:53:18Z bradbell $
 # -----------------------------------------------------------------------------
 # CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-10 Bradley M. Bell
 #
@@ -105,8 +105,8 @@ then
 fi
 # -------------------------------------------------
 # list of files that changed
-svn status | sed -n -e '/^[ADMRC] /p' | \
-	sed -e 's/^[ADMRC] [+ ]*//' \
+svn status | sed -n -e '/^[ADMRC][ADMRC]* /p' | \
+	sed -e 's/^[ADMRC][ADMRC]* [+ ]*//' \
 		-e '/^bin\/commit.sh$/d' -e '/^bin\/commit.sed$/d' | \
 	sort -u > bin/commit.list.$$
 # -------------------------------------------------

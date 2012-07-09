@@ -1,6 +1,6 @@
-/* $Id: ad_fun.cpp 1505 2009-08-25 15:36:49Z bradbell $ */
+/* $Id: ad_fun.cpp 2455 2012-07-06 10:36:56Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -22,12 +22,12 @@ $index example, ADFun$$
 $index test, ADFun$$
 
 $code
-$verbatim%example/ad_fun.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/ad_fun.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -83,7 +83,7 @@ bool ad_fun(void)
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> >  X(n);
+	CPPAD_TESTVECTOR(AD<double>)  X(n);
 	X[0] = 1.;
 	X[1] = 2.;
 
@@ -95,7 +95,7 @@ bool ad_fun(void)
 
 	// range space vector
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> >  Y(m);
+	CPPAD_TESTVECTOR(AD<double>)  Y(m);
 	Y[0] = Square * exp( X[1] );
 	Y[1] = Square * sin( X[1] );
 	Y[2] = Square * cos( X[1] );
@@ -104,12 +104,12 @@ bool ad_fun(void)
 	my_ad_fun<double> f(X, Y);
 
 	// new value for the independent variable vector
-	CPPAD_TEST_VECTOR<double> x(n);
+	CPPAD_TESTVECTOR(double) x(n);
 	x[0] = 2.;
 	x[1] = 1.;
 
 	// compute the derivative at this x
-	CPPAD_TEST_VECTOR<double> jac( m * n );
+	CPPAD_TESTVECTOR(double) jac( m * n );
 	jac = f.jacobian(x);
 
 	/*
@@ -129,4 +129,4 @@ bool ad_fun(void)
 }
 
 
-// END PROGRAM
+// END C++

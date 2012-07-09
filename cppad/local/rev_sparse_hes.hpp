@@ -1,9 +1,9 @@
-/* $Id: rev_sparse_hes.hpp 2023 2011-07-25 17:44:12Z bradbell $ */
+/* $Id: rev_sparse_hes.hpp 2460 2012-07-08 17:17:37Z bradbell $ */
 # ifndef CPPAD_REV_SPARSE_HES_INCLUDED
 # define CPPAD_REV_SPARSE_HES_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -41,18 +41,18 @@ $icode%h% = %f%.RevSparseHes(%q%, %s%)%$$
 
 
 $head Purpose$$
-We use $latex F : \R^n \rightarrow \R^m$$ to denote the
-$xref/glossary/AD Function/AD function/$$ corresponding to $icode f$$.
-We define the matrix $latex H(x) \in \R^{q \times n}$$
+We use $latex F : \B{R}^n \rightarrow \B{R}^m$$ to denote the
+$cref/AD function/glossary/AD Function/$$ corresponding to $icode f$$.
+We define the matrix $latex H(x) \in \B{R}^{q \times n}$$
 as the partial with respect to $latex x$$,
 of the partial with respect to $latex u$$ (at $latex u = 0$$),
 of $latex S * F[ x + R * u ]$$ where
-$latex R \in \R^{n \times q}$$ and $latex S \in \R^{1 \times m}$$; i.e.,
+$latex R \in \B{R}^{n \times q}$$ and $latex S \in \B{R}^{1 \times m}$$; i.e.,
 $latex \[
-	H(x)  =  R^\T (S * F)^{(2)} ( x )
+	H(x)  =  R^\R{T} (S * F)^{(2)} ( x )
 \] $$
 Given a
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for the matrix $latex R$$ and the vector $latex S$$,
 $code RevSparseHes$$ returns a sparsity pattern for the $latex H(x)$$.
 
@@ -64,18 +64,18 @@ $codei%
 
 $head x$$
 the sparsity pattern is valid for all values of the independent
-variables in $latex x \in \R^n$$
-(even if it has $cref/CondExp/$$ or $cref/VecAD/$$ operations).
+variables in $latex x \in \B{R}^n$$
+(even if it has $cref CondExp$$ or $cref VecAD$$ operations).
 
 $head q$$
 The argument $icode q$$ has prototype
 $codei%
 	size_t %q%
 %$$
-It specifies the number of columns in $latex R \in \R^{n \times q}$$
+It specifies the number of columns in $latex R \in \B{R}^{n \times q}$$
 and the number of rows in 
-$latex H(x) \in \R^{q \times n}$$.
-It must be the same value as in the previous $xref/ForSparseJac/$$ call 
+$latex H(x) \in \B{R}^{q \times n}$$.
+It must be the same value as in the previous $cref ForSparseJac$$ call 
 $codei%
 	%f%.ForSparseJac(%q%, %r%)
 %$$
@@ -85,7 +85,7 @@ The argument $icode r$$ in the previous call
 $codei%
 	%f%.ForSparseJac(%q%, %r%)
 %$$
-is a $xref/glossary/Sparsity Pattern/sparsity pattern/$$
+is a $cref/sparsity pattern/glossary/Sparsity Pattern/$$
 for the matrix $latex R$$ above.
 The type of the elements of
 $cref/VectorSet/RevSparseHes/VectorSet/$$ must be the 
@@ -96,14 +96,14 @@ The argument $icode s$$ has prototype
 $codei%
 	const %VectorSet%& %s%
 %$$
-(see $xref/RevSparseHes/VectorSet/VectorSet/$$ below)
+(see $cref/VectorSet/RevSparseHes/VectorSet/$$ below)
 If it has elements of type $code bool$$,
 its size is $latex m$$.
 If it has elements of type $code std::set<size_t>$$,
 its size is one and all the elements of $icode%s%[0]%$$
 are between zero and $latex m - 1$$.
 It specifies a 
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for the vector $icode S$$.
 
 $head h$$
@@ -111,18 +111,18 @@ The result $icode h$$ has prototype
 $codei%
 	%VectorSet%& %h%
 %$$
-(see $xref/RevSparseHes/VectorSet/VectorSet/$$ below).
+(see $cref/VectorSet/RevSparseHes/VectorSet/$$ below).
 If it has elements of type $code bool$$,
 its size is $latex q * n$$.
 If it has elements of type $code std::set<size_t>$$,
 its size is $latex q$$.
 It specifies a 
-$xref/glossary/Sparsity Pattern/sparsity pattern/$$ 
+$cref/sparsity pattern/glossary/Sparsity Pattern/$$ 
 for the matrix $latex H(x)$$.
 
 $head VectorSet$$
-The type $icode VectorSet$$ must be a $cref/SimpleVector/$$ class with
-$xref/SimpleVector/Elements of Specified Type/elements of type/$$
+The type $icode VectorSet$$ must be a $cref SimpleVector$$ class with
+$cref/elements of type/SimpleVector/Elements of Specified Type/$$
 $code bool$$ or $code std::set<size_t>$$;
 see $cref/sparsity pattern/glossary/Sparsity Pattern/$$ for a discussion
 of the difference.
@@ -132,9 +132,9 @@ same as the type of the elements of $icode r$$.
 
 $head Entire Sparsity Pattern$$
 Suppose that $latex q = n$$ and
-$latex R \in \R^{n \times n}$$ is the $latex n \times n$$ identity matrix.
+$latex R \in \B{R}^{n \times n}$$ is the $latex n \times n$$ identity matrix.
 Further suppose that the $latex S$$ is the $th k$$
-$xref/glossary/Elementary Vector/elementary vector/$$; i.e.
+$cref/elementary vector/glossary/Elementary Vector/$$; i.e.
 $latex \[
 S_j = \left\{ \begin{array}{ll}
 	1  & {\rm if} \; j = k 
@@ -145,14 +145,14 @@ S_j = \left\{ \begin{array}{ll}
 In this case,
 the corresponding value $icode h$$ is a 
 sparsity pattern for the Hessian matrix
-$latex F_k^{(2)} (x) \in \R^{n \times n}$$.
+$latex F_k^{(2)} (x) \in \B{R}^{n \times n}$$.
 
 $head Example$$
 $children%
 	example/rev_sparse_hes.cpp
 %$$
 The file
-$xref/RevSparseHes.cpp/$$
+$cref rev_sparse_hes.cpp$$
 contains an example and test of this operation.
 It returns true if it succeeds and false otherwise.
 
@@ -258,7 +258,7 @@ void RevSparseHesBool(
 		"in the previous call to ForSparseJac with this ADFun object."
 	);
 	CPPAD_ASSERT_KNOWN(
-		s.size() == m,
+		size_t(s.size()) == m,
 		"RevSparseHes: s (second argument) length is not equal to\n"
 		"range dimension for ADFun object."
 	);
@@ -290,7 +290,7 @@ void RevSparseHesBool(
 	);
 
 	// return values corresponding to independent variables
-	CPPAD_ASSERT_UNKNOWN( h.size() == n * q );
+	CPPAD_ASSERT_UNKNOWN( size_t(h.size()) == n * q );
 
 	// j is index corresponding to reverse mode partial
 	for(j = 0; j < n; j++)
@@ -449,7 +449,7 @@ void RevSparseHesSet(
 
 	// return values corresponding to independent variables
 	// j is index corresponding to reverse mode partial
-	CPPAD_ASSERT_UNKNOWN( h.size() == q );
+	CPPAD_ASSERT_UNKNOWN( size_t(h.size()) == q );
 	for(j = 0; j < n; j++)
 	{	CPPAD_ASSERT_UNKNOWN( ind_taddr[j] < total_num_var );
 		CPPAD_ASSERT_UNKNOWN( ind_taddr[j] == j + 1 );

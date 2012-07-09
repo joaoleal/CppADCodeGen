@@ -1,6 +1,6 @@
-/* $Id: pow.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: pow.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Pow.cpp$$
+$begin pow.cpp$$
 $spell
 $$
 
@@ -22,12 +22,12 @@ $index example, AD pow$$
 $index test, AD pow$$
 
 $code
-$verbatim%example/pow.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/pow.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cmath>
@@ -42,7 +42,7 @@ bool Pow(void)
 	size_t n  = 2;
 	double x = 0.5;
 	double y = 2.;
-	CPPAD_TEST_VECTOR< AD<double> > XY(n);
+	CPPAD_TESTVECTOR(AD<double>) XY(n);
 	XY[0]      = x;
 	XY[1]      = y;
 
@@ -51,7 +51,7 @@ bool Pow(void)
 
 	// range space vector 
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> > Z(m);
+	CPPAD_TESTVECTOR(AD<double>) Z(m);
 	Z[0] = CppAD::pow(XY[0], XY[1]);  // pow(variable, variable)
 	Z[1] = CppAD::pow(XY[0], y);      // pow(variable, parameter)
 	Z[2] = CppAD::pow(x,     XY[1]);  // pow(parameter, variable)
@@ -66,8 +66,8 @@ bool Pow(void)
 		ok &= NearEqual(Z[i] , check,  1e-10 , 1e-10);
 
 	// forward computation of first partial w.r.t. x
-	CPPAD_TEST_VECTOR<double> dxy(n);
-	CPPAD_TEST_VECTOR<double> dz(m);
+	CPPAD_TESTVECTOR(double) dxy(n);
+	CPPAD_TESTVECTOR(double) dz(m);
 	dxy[0] = 1.;
 	dxy[1] = 0.;
 	dz    = f.Forward(1, dxy);
@@ -86,8 +86,8 @@ bool Pow(void)
 	ok   &= NearEqual(dz[2], check, 1e-10, 1e-10);
 
 	// reverse computation of derivative of z[0] + z[1] + z[2]
-	CPPAD_TEST_VECTOR<double>  w(m);
-	CPPAD_TEST_VECTOR<double> dw(n);
+	CPPAD_TESTVECTOR(double)  w(m);
+	CPPAD_TESTVECTOR(double) dw(n);
 	w[0]  = 1.;
 	w[1]  = 1.;
 	w[2]  = 1.;
@@ -109,4 +109,4 @@ bool Pow(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

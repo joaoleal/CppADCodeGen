@@ -1,6 +1,6 @@
-/* $Id: erf.cpp 2057 2011-08-11 14:07:11Z bradbell $ */
+/* $Id: erf.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin Erf.cpp$$
+$begin erf.cpp$$
 $spell
 	tan
 	erf
@@ -24,12 +24,12 @@ $index example, erf$$
 $index test, erf$$
 
 $code
-$verbatim%example/erf.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/erf.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cmath>
@@ -40,12 +40,12 @@ bool Erf(void)
 
 	using CppAD::AD;
 	using CppAD::NearEqual;
-	double eps = 10. * CppAD::epsilon<double>();
+	double eps = 10. * CppAD::numeric_limits<double>::epsilon();
 
 	// domain space vector
 	size_t n  = 1;
 	double x0 = 0.5;
-	CPPAD_TEST_VECTOR< AD<double> > x(n);
+	CPPAD_TESTVECTOR(AD<double>) x(n);
 	x[0]      = x0;
 
 	// declare independent variables and start tape recording
@@ -55,7 +55,7 @@ bool Erf(void)
 
 	// range space vector 
 	size_t m = 1;
-	CPPAD_TEST_VECTOR< AD<double> > y(m);
+	CPPAD_TESTVECTOR(AD<double>) y(m);
 	y[0] = CppAD::erf(x[0]);
 
 	// create f: x -> y and stop tape recording
@@ -71,15 +71,15 @@ bool Erf(void)
 	double check  = factor * std::exp(-x0 * x0);
 
 	// forward computation of first partial w.r.t. x[0]
-	CPPAD_TEST_VECTOR<double> dx(n);
-	CPPAD_TEST_VECTOR<double> dy(m);
+	CPPAD_TESTVECTOR(double) dx(n);
+	CPPAD_TESTVECTOR(double) dy(m);
 	dx[0] = 1.;
 	dy    = f.Forward(1, dx);
 	ok   &= NearEqual(dy[0], check, 4e-4, 0.);
 
 	// reverse computation of derivative of y[0]
-	CPPAD_TEST_VECTOR<double>  w(m);
-	CPPAD_TEST_VECTOR<double> dw(n);
+	CPPAD_TESTVECTOR(double)  w(m);
+	CPPAD_TESTVECTOR(double) dw(n);
 	w[0]  = 1.;
 	dw    = f.Reverse(1, w);
 	ok   &= NearEqual(dw[0], check, 4e-4, 0.);
@@ -97,4 +97,4 @@ bool Erf(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

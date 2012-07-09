@@ -1,6 +1,6 @@
-/* $Id: near_equal_ext.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: near_equal_ext.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin NearEqualExt.cpp$$
+$begin near_equal_ext.cpp$$
 $spell
 	cpp
 	abs
@@ -24,12 +24,12 @@ $index example, NearEqualExt$$
 $index test, NearEqualExt$$
 
 $code
-$verbatim%example/near_equal_ext.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/near_equal_ext.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <complex>
@@ -71,4 +71,4 @@ bool NearEqualExt(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

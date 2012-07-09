@@ -1,6 +1,6 @@
-/* $Id: det_lu.cpp 1369 2009-05-31 01:31:48Z bradbell $ */
+/* $Id: det_lu.cpp 2424 2012-06-07 13:54:21Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-08 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin sacado_det_lu.cpp$$
 $spell
+	retape
 	cppad
 	Lu
 	det
@@ -30,16 +31,18 @@ $$
 
 $section Sacado Speed: Gradient of Determinant Using Lu Factorization$$
 
-$index sacado, speed lu$$
-$index speed, sacado lu$$
+$index link_det_lu, sacado$$
+$index sacado, link_det_lu$$
+$index speed, sacado$$
+$index sacado, speed$$
 $index lu, speed sacado$$
+$index matrix, factor speed sacado$$
+$index factor, matrix speed sacado$$
 
 $head Specifications$$
-See $cref/link_det_lu/$$.
+See $cref link_det_lu$$.
 
 $head Implementation$$
-$index sacado, link_det_lu$$
-$index link_det_lu, sacado$$
 $codep */
 # include <Sacado.hpp>
 # include <cppad/speed/det_by_lu.hpp>
@@ -52,13 +55,18 @@ bool link_det_lu(
 	CppAD::vector<double>     &matrix   ,
 	CppAD::vector<double>     &gradient )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_optimize || global_atomic )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 
 	// object for computing determinant
-	typedef Sacado::Rad::ADvar<double> ADScalar; 
+	typedef Sacado::Rad::ADvar<double>   ADScalar; 
 	typedef CppAD::vector<ADScalar>      ADVector; 
-	CppAD::det_by_lu<ADScalar>         Det(size);
+	CppAD::det_by_lu<ADScalar>           Det(size);
 
 	size_t i;                // temporary index
 	size_t n = size * size;  // number of independent variables

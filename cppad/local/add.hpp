@@ -1,4 +1,4 @@
-/* $Id: add.hpp 2331 2012-04-02 03:24:33Z bradbell $ */
+/* $Id: add.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_ADD_INCLUDED
 # define CPPAD_ADD_INCLUDED
 
@@ -28,7 +28,7 @@ AD<Base> operator + (const AD<Base> &left , const AD<Base> &right)
 	ADTape<Base>* tape = AD<Base>::tape_ptr();
 	if( tape == CPPAD_NULL )
 		return result;
-	size_t tape_id = tape->id_;
+	tape_id_t tape_id = tape->id_;
 
 	// tape_id cannot match the default value for tape_id_; i.e., 0
 	CPPAD_ASSERT_UNKNOWN( tape_id > 0 );

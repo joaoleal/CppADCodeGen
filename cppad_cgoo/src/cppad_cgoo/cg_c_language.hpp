@@ -160,27 +160,19 @@ namespace CppAD {
             _temporary.clear();
 
             //generate names for the independent variables
-            for (std::vector<SourceCodeFragment<Base> *> it = info.independent.begin(); it != info.independent.end(); ++it) {
-                SourceCodeFragment<Base>& op = *it;
+            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
+            for (it = info.independent.begin(); it != info.independent.end(); ++it) {
+                SourceCodeFragment<Base>& op = **it;
                 if (op.getName() == NULL) {
                     op.setName(_nameGen->generateIndependent(op));
                 }
             }
 
             // generate names for the dependent variables (must be after naming the independent)
-            for (std::vector<CG<Base> > it = _dependent->begin(); it != _dependent->end(); ++it) {
-                CG<Base>& dep = *it;
-                if (dep.getSourceCodeFragment() != NULL) {
-                    SourceCodeFragment<Base>& op = dep.getSourceCodeFragment();
-                    if (op.getName() == NULL) {
-                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(op.variableID());
-
-                        assert(it != _dependentIDs.end());
-
-                        size_t index = it->second;
-                        const CG<Base>& dep = (*_dependent)[index];
-                        op.setName(_nameGen->generateDependent(dep, index));
-                    }
+            for (size_t i = 0; i < dependent.size(); i++) {
+                SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
+                if (op != NULL && op->getName() == NULL) {
+                    op->setName(_nameGen->generateDependent(dependent[i], i));
                 }
             }
 
@@ -190,11 +182,11 @@ namespace CppAD {
             for (size_t i = 0; i < dependent.size(); i++) {
                 SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
                 if (op != NULL && op->operation() != CGInvOp) {
-                    size_t varID = dependent[i].getSourceCodeFragment()->variableID();
+                    size_t varID = op->variableID();
                     if (varID > 0) {
-                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(varID);
-                        if (it == _dependentIDs.end()) {
-                            _dependentIDs[dependent[i].getSourceCodeFragment()->variableID()] = i;
+                        std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
+                        if (it2 == _dependentIDs.end()) {
+                            _dependentIDs[op->variableID()] = i;
                         } else {
                             // there can be several dependent variables with the same ID
                             dependentDuplicates.insert(i);
@@ -206,7 +198,6 @@ namespace CppAD {
             if (variableOrder.size() > 0) {
                 // non-constant variables
                 *_out << _spaces << "// expressions: " << variableOrder.size() << "\n";
-                typename std::vector<SourceCodeFragment<Base>*>::const_iterator it;
 
                 // generate names for temporary variables
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
@@ -228,7 +219,7 @@ namespace CppAD {
 
                     bool condAssign = isCondAssign(op.operation());
                     if (!condAssign) {
-                        *_out << _spaces << op->getName() << " ";
+                        *_out << _spaces << createVariableName(op) << " ";
                         *_out << (isDep ? _depAssignOperation : "=") << " ";
                     }
                     printExpressionNoVarCheck(op);
@@ -245,7 +236,7 @@ namespace CppAD {
                     size_t index = *it;
                     const CG<Base>& dep = (*_dependent)[index];
                     std::string varName = _nameGen->generateDependent(dep, index);
-                    const std::string& origVarName = dep.getSourceCodeFragment()->getName(); // _nameGen->generateDependent(origDep, origIndex);
+                    const std::string& origVarName = *dep.getSourceCodeFragment()->getName();
 
                     *_out << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
                 }
@@ -263,7 +254,7 @@ namespace CppAD {
                     }
                 } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
-                    const std::string& indepName = dependent[i].getSourceCodeFragment()->getName();
+                    const std::string& indepName = *dependent[i].getSourceCodeFragment()->getName();
                     *_out << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
             }
@@ -303,7 +294,7 @@ namespace CppAD {
                 }
             }
 
-            return var.getName();
+            return *var.getName();
         }
 
         virtual void printIndependentVariableName(SourceCodeFragment<Base>& op) {
@@ -606,7 +597,7 @@ namespace CppAD {
             const Argument<Base> &falseCase = args[3];
 
             bool isDep = isDependent(op);
-            const std::string& varName = createVariableName(op, isDep);
+            const std::string& varName = createVariableName(op);
 
             out() << _spaces << "if( ";
             print(left);
@@ -627,7 +618,7 @@ namespace CppAD {
 
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {
             size_t id = arg.variableID();
-            return id > _independentSize && id <= _minTemporaryVarID;
+            return id > _independentSize && id < _minTemporaryVarID;
         }
 
         virtual void printParameter(const Base& value) {

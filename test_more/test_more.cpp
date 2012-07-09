@@ -1,4 +1,4 @@
-/* $Id: test_more.cpp 2341 2012-04-06 18:42:00Z bradbell $ */
+/* $Id: test_more.cpp 2456 2012-07-06 12:04:23Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -16,7 +16,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 // memory leak checker
 # include <cppad/thread_alloc.hpp>
 
-// various examples / tests
+// prototype external compiled tests (this line expected by bin/new_test.sh)
 extern bool abs(void);
 extern bool Acos(void);
 extern bool Add(void);
@@ -37,11 +37,13 @@ extern bool CondExpAD(void);
 extern bool copy(void);
 extern bool Cos(void);
 extern bool Cosh(void);
+extern bool cppad_eigen(void);
 extern bool dbl_epsilon(void);
 extern bool Div(void);
 extern bool DivEq(void);
 extern bool DivZeroOne(void);
 extern bool Erf(void);
+extern bool epsilon(void);
 extern bool Exp(void);
 extern bool ForHess(void);
 extern bool for_sparse_jac(void);
@@ -85,6 +87,7 @@ extern bool Sub(void);
 extern bool SubEq(void);
 extern bool SubZero(void);
 extern bool tan(void);
+extern bool test_vector(void);
 extern bool track_new_del(void);
 extern bool Value(void);
 extern bool VecAD(void);
@@ -123,6 +126,7 @@ int main(void)
 
 	// This line is used by test_one.sh 
 
+	// run external compiled tests (this line expected by bin/new_test.sh)
 	ok &= Run( abs,             "abs"            );
 	ok &= Run( Acos,            "Acos"           );
 	ok &= Run( Add,             "Add"            );
@@ -145,6 +149,7 @@ int main(void)
 	ok &= Run( DivEq,           "DivEq"          );
 	ok &= Run( DivZeroOne,      "DivZeroOne"     );
 	ok &= Run( Erf,             "Erf"            );
+	ok &= Run( epsilon,         "epsilon"        );
 	ok &= Run( Exp,             "Exp"            );
 	ok &= Run( ForHess,         "ForHess"        );
 	ok &= Run( for_sparse_jac,  "for_sparse_jac" );
@@ -199,6 +204,12 @@ int main(void)
 # endif
 # ifdef CPPAD_OPENMP_TEST
 	ok &= Run( alloc_openmp,    "alloc_openmp"   );
+# endif
+# ifdef CPPAD_EIGEN_TEST
+	ok &= Run( cppad_eigen, "cppad_eigen" );
+# endif
+# if ! CPPAD_EIGENVECTOR
+	ok &= Run( test_vector, "test_vector" );
 # endif
 
 	// check for errors

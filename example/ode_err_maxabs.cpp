@@ -1,6 +1,6 @@
-/* $Id: ode_err_maxabs.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: ode_err_maxabs.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin OdeErrMaxabs.cpp$$
+$begin ode_err_maxabs.cpp$$
 $spell
 	Runge
 	Maxabs
@@ -26,7 +26,7 @@ $index test, OdeErrControl$$
 $index maxabs, OdeErrControl$$
 
 Define 
-$latex X : \R \rightarrow \R^2$$ by
+$latex X : \B{R} \rightarrow \B{R}^2$$ by
 $latex \[
 \begin{array}{rcl}
 X_0 (t) & = &  - \exp ( - w_0 t )  \\
@@ -42,15 +42,15 @@ $latex \[
 \] $$
 Note that $latex X_1 (0)$$ is zero an if $latex w_0 t$$ is large,
 $latex X_0 (t)$$ is near zero.
-This example tests OdeErrControl using the $italic maxabs$$ argument.
+This example tests OdeErrControl using the $icode maxabs$$ argument.
 
 $code
-$verbatim%example/ode_err_maxabs.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/ode_err_maxabs.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cstddef>              // for size_t
 # include <cmath>                // for exp
@@ -150,4 +150,4 @@ bool OdeErrMaxabs(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

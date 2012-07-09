@@ -1,6 +1,6 @@
-/* $Id: romberg_one.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: romberg_one.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin RombergOne.cpp$$
+$begin romberg_one.cpp$$
 $spell
 	Romberg
 $$
@@ -23,12 +23,12 @@ $index example, Romberg$$
 $index test, Romberg$$
 
 $code
-$verbatim%example/romberg_one.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/romberg_one.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 
@@ -108,4 +108,4 @@ bool RombergOne(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

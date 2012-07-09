@@ -1,4 +1,4 @@
-$Id: asin_reverse.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: asin_reverse.omh 2403 2012-05-25 13:46:02Z bradbell $
 // BEGIN SHORT COPYRIGHT
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
@@ -50,7 +50,7 @@ $latex \[
 \] $$ 
 in the definition for $latex G$$ and $latex H$$.
 The forward mode formulas for the
-$xref/AsinForward//asin/$$ 
+$cref/asin/AsinForward/$$ 
 function are
 $latex \[
 \begin{array}{rcl}

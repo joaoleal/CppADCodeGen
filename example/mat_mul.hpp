@@ -1,9 +1,9 @@
-// $Id: mat_mul.hpp 2016 2011-07-17 14:43:33Z bradbell $
+// $Id: mat_mul.hpp 2448 2012-07-03 12:50:29Z bradbell $
 # ifndef CPPAD_MAT_MUL_INCLUDED
 # define CPPAD_MAT_MUL_INCLUDED
 
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -63,7 +63,7 @@ $codei%
 %$$
 
 $head Example$$
-The file $cref/mat_mul.cpp/$$ contains an example use of 
+The file $cref mat_mul.cpp$$ contains an example use of 
 $code mat_mul.hpp$$.
 It returns true if it succeeds and false otherwise.
 
@@ -423,11 +423,13 @@ $codep */
 
 $head Declare mat_mul Function$$
 Declare the $code AD<double>$$ routine $codei%mat_mul(%id%, %ax%, %ay%)%$$
-and end empty namespace:
+and end empty namespace
+(we could use any $cref/simple vector template class/SimpleVector/$$
+instead of $code CppAD::vector$$):
 $codep */
 	CPPAD_USER_ATOMIC(
 		mat_mul                 , 
-		CPPAD_TEST_VECTOR       ,
+		CppAD::vector           ,
 		double                  , 
 		mat_mul_forward         , 
 		mat_mul_reverse         ,

@@ -1,4 +1,4 @@
-$Id: mul_level.omh 2270 2012-01-20 15:15:06Z bradbell $
+$Id: mul_level.omh 2455 2012-07-06 10:36:56Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -101,7 +101,7 @@ $codei%
 %$$
 where $icode X$$ is 
 a $cref SimpleVector$$ with elements of type 
-$codei%CPPAD_TEST_VECTOR< AD< AD<double> > >%$$.
+$codei%CPPAD_TESTVECTOR(AD< AD<double>) >%$$.
 This will start recording a new tape of 
 operations performed using $codei%AD< AD<double> >%$$ class objects.
 

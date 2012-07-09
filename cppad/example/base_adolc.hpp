@@ -1,8 +1,8 @@
-/* $Id: base_adolc.hpp 2240 2011-12-31 05:33:55Z bradbell $ */
+/* $Id: base_adolc.hpp 2436 2012-06-17 23:38:47Z bradbell $ */
 # ifndef CPPAD_BASE_ADOLC_INCLUDED
 # define CPPAD_BASE_ADOLC_INCLUDED
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -14,6 +14,9 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 /*
 $begin base_adolc.hpp$$
 $spell
+	ifndef
+	define
+	endif
 	Rel
 	codassign
 	eps
@@ -56,50 +59,43 @@ $index adouble, as Base$$
 $section Enable use of AD<Base> where Base is Adolc's adouble Type$$
 
 $head Syntax$$
-This file is located in the $code example$$ directory. 
-It can be copied into the current working directory and
-included with the command:
-$syntax%
-	# include "base_adolc.hpp"
+$codei%# include <cppad/example/base_adolc.hpp>
 %$$
-
 $children%
 	example/mul_level_adolc.cpp
 %$$
 
 $head Example$$
-The file $cref/mul_level_adolc.cpp/$$ contains an example use of
-Adolc's $code adouble$$ type for a CppAD $italic Base$$ type.
+The file $cref mul_level_adolc.cpp$$ contains an example use of
+Adolc's $code adouble$$ type for a CppAD $icode Base$$ type.
 It returns true if it succeeds and false otherwise.
-The file $cref/ode_taylor_adolc.cpp/$$ contains a more realistic
+The file $cref ode_taylor_adolc.cpp$$ contains a more realistic
 (and complex) example.
 
-
-$head Include File$$
+$head Include Files$$
 This file $code base_adolc.hpp$$ requires $code adouble$$ to be defined.
-In addition it is included before $code <cppad/cppad.hpp>$$,
-but it is to include parts of CppAD that are used by this file.
-This is done with the following include command:
+In addition, it is included before $code <cppad/cppad.hpp>$$,
+but it needs to include parts of CppAD that are used by this file.
+This is done with the following include commands:
 $codep */
-# include <adolc/adouble.h>
+# include <adolc/adolc.h>
 # include <cppad/base_require.hpp>
-
 /* $$
 
 $head CondExpOp$$
 The type $code adouble$$ supports a conditional assignment function
 with the syntax
-$syntax%
+$codei%
 	condassign(%a%, %b%, %c%, %d%)
 %$$
 which evaluates to
-$syntax%
+$codei%
 	%a% = (%b% > 0) ? %c% : %d%;
 %$$
 This enables one to include conditionals in the recording of
 $code adouble$$ operations and later evaluation for different
 values of the independent variables 
-(in the same spirit as the CppAD $cref/CondExp/$$ function).
+(in the same spirit as the CppAD $cref CondExp$$ function).
 $codep */
 namespace CppAD {
 	inline adouble CondExpOp(
@@ -182,17 +178,6 @@ $head Integer$$
 $codep */
 	inline int Integer(const adouble &x)
 	{    return static_cast<int>( x.getValue() ); }
-/*$$
-
-$head epsilon$$
-$codep */
-namespace CppAD {
-	template <>
-	inline adouble epsilon<adouble>(void)
-	{	double eps = std::numeric_limits<double>::epsilon(); 
-		return adouble( eps );
-	}
-}
 /* $$
 
 $head Ordered$$
@@ -222,6 +207,7 @@ $code atan$$,
 $code cos$$,
 $code cosh$$,
 $code exp$$,
+$code fabs$$,
 $code log$$,
 $code sin$$,
 $code sinh$$,
@@ -260,6 +246,31 @@ $head pow$$
 This $cref/required/base_require/$$ function 
 is defined by the Adolc package for the $code adouble$$ base case.
 
+$head limits$$
+The following defines the numeric limits functions
+$code epsilon$$, $code min$$, and $code max$$ for the type
+$code adouble$$.
+It also defines the deprecated $code epsilon$$ function:
+$codep */
+namespace CppAD {
+	template <>
+	class numeric_limits<adouble> {
+	public:
+		// machine epsilon
+		static adouble epsilon(void)
+		{	return adouble( std::numeric_limits<double>::epsilon() ); }
+		// minimum positive normalized value
+		static adouble min(void)
+		{	return adouble( std::numeric_limits<float>::min() ); }
+		// maximum finite value
+		static adouble max(void)
+		{	return adouble( std::numeric_limits<float>::max() ); }
+	};
+	// deprecated machine epsilon
+	template <> inline adouble epsilon<adouble>(void)
+	{	return numeric_limits<adouble>::epsilon(); }
+}
+/* $$
 $end
 */
 # endif

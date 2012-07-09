@@ -1,4 +1,4 @@
-/* $Id: test_vector.hpp 2345 2012-04-10 15:36:40Z bradbell $ */
+/* $Id: test_vector.hpp 2457 2012-07-06 16:48:30Z bradbell $ */
 # ifndef CPPAD_TEST_VECTOR_INCLUDED
 # define CPPAD_TEST_VECTOR_INCLUDED
 
@@ -35,15 +35,20 @@ $index test, vector$$
 
 $section Choosing The Vector Testing Template Class$$
 
+$head Deprecated$$
+$index deprecated, test vector$$
+The $code CPPAD_TEST_VECTOR$$ macro has been deprecated,
+use $cref/CPPAD_TESTVECTOR/testvector/$$ instead.
+
 $head Syntax$$
-$syntax%CPPAD_TEST_VECTOR<%Scalar%>
+$codei%CPPAD_TEST_VECTOR<%Scalar%>
 %$$
 
 $head Introduction$$
-Many of the CppAD $xref/example//examples/$$ and tests use 
+Many of the CppAD $cref/examples/example/$$ and tests use 
 the $code CPPAD_TEST_VECTOR$$ template class to pass information.
 The default definition for this template class is
-$xref/CppAD_vector//CppAD::vector/$$.
+$cref/CppAD::vector/CppAD_vector/$$.
 
 $head MS Windows$$
 The include path for boost is not defined in the Windows project files.
@@ -70,9 +75,19 @@ $codep */
 # define CPPAD_TEST_VECTOR CppAD::vector
 # endif
 /* $$
-You can replace this definition of the preprocessor symbol
-$code CPPAD_TEST_VECTOR$$ by any other $xref/SimpleVector/$$ template class.
-This will test using your replacement template vector class with CppAD.
+If you specify $code --with-eigenvector$$ on the 
+$cref/configure/InstallUnix/Configure/$$ command line,
+$code CPPAD_EIGENVECTOR$$ is true.
+This vector type cannot be supported by $code CPPAD_TEST_VECTOR$$
+(use $cref/CPPAD_TESTVECTOR/testvector/$$ for this support)
+so $code CppAD::vector$$ is used in this case
+$codep */
+// The next 3 line are C++ source code.
+# if CPPAD_EIGENVECTOR
+# define CPPAD_TEST_VECTOR CppAD::vector
+# endif
+/* $$
+
 
 $head std::vector$$
 If you specify $code --with-stdvector$$ on the 
@@ -111,11 +126,9 @@ and $code std::valarray$$ with CppAD is always tested to some degree.
 Specifying $icode boost_dir$$ will increase the amount of
 Ublas vector testing. 
 
-$head Deprecated$$
-$index CppADvector, deprecated$$
-$index deprecated, CppADvector$$
+$head CppADvector$$
 The preprocessor symbol $code CppADvector$$ is defined to
-have the same value as $code CPPAD_TEST_VECTOR$$ but its use is deprecated
+have the same value as $code CPPAD_TEST_VECTOR$$ but its use is deprecated:
 $codep */
 # define CppADvector CPPAD_TEST_VECTOR
 /* $$

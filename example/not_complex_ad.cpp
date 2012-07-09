@@ -1,6 +1,6 @@
-/* $Id: not_complex_ad.cpp 1380 2009-06-06 21:14:06Z bradbell $ */
+/* $Id: not_complex_ad.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -27,26 +27,26 @@ $index example, not complex differentiable$$
 $index test, not complex differentiable$$
 
 $head Not Complex Differentiable$$
-If $italic x$$ is complex, the functions 
-$syntax%real(%x%)%$$,
-$syntax%imag(%x%)%$$,
-$syntax%conj(%x%)%$$, and
-$syntax%abs(%x%)%$$
+If $icode x$$ is complex, the functions 
+$codei%real(%x%)%$$,
+$codei%imag(%x%)%$$,
+$codei%conj(%x%)%$$, and
+$codei%abs(%x%)%$$
 are examples of functions that are not complex differentiable.
 
 $head See Also$$
-$cref/ComplexPoly.cpp/$$
+$cref complex_poly.cpp$$
 
 $head Poly$$
-Select this link to view specifications for $xref/Poly/$$:
+Select this link to view specifications for $cref Poly$$:
 
 $code
-$verbatim%example/not_complex_ad.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/not_complex_ad.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <complex>
@@ -68,8 +68,8 @@ bool not_complex_ad(void)
 	ok                &= cad_two == ComplexAD(ad_two, ad_zero); 
 
 	// polynomial coefficients
-	CPPAD_TEST_VECTOR< Complex >   a   (deg + 1); // coefficients for p(z)
-	CPPAD_TEST_VECTOR< ComplexAD > A   (deg + 1); 
+	CPPAD_TESTVECTOR( Complex )   a   (deg + 1); // coefficients for p(z)
+	CPPAD_TESTVECTOR( ComplexAD ) A   (deg + 1); 
 	size_t i;
 	for(i = 0; i <= deg; i++)
 	{	a[i] = Complex(i, i);
@@ -77,7 +77,7 @@ bool not_complex_ad(void)
 	}
 
 	// declare independent variables and start taping
-	CPPAD_TEST_VECTOR< AD<double> > Z_real(1);
+	CPPAD_TESTVECTOR(AD<double>) Z_real(1);
 	double z_real = 1.;
  	Z_real[0]     = z_real;
 	Independent(Z_real);
@@ -88,15 +88,15 @@ bool not_complex_ad(void)
 	ComplexAD P = Poly(0, A, Z);
 
 	// range space vector
-	CPPAD_TEST_VECTOR< AD<double> > P_real(1);
+	CPPAD_TESTVECTOR(AD<double>) P_real(1);
 	P_real[0] = P.real();   // real() is not complex differentiable
 
 	// create f: Z_real -> P_real  and stop taping
 	CppAD::ADFun<double> f(Z_real, P_real);
 
 	// check first derivative w.r.t z
-	CPPAD_TEST_VECTOR<double> v( f.Domain() );
-	CPPAD_TEST_VECTOR<double> w( f.Range() );
+	CPPAD_TESTVECTOR(double) v( f.Domain() );
+	CPPAD_TESTVECTOR(double) w( f.Range() );
 	v[0]      = 1.;
 	w         = f.Forward(1, v);
 	Complex z = Complex(z_real, z_imag);
@@ -112,4 +112,4 @@ bool not_complex_ad(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

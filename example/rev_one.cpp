@@ -1,6 +1,6 @@
-/* $Id: rev_one.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: rev_one.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin RevOne.cpp$$
+$begin rev_one.cpp$$
 $spell
 	Cpp
 $$
@@ -23,12 +23,12 @@ $index example, derivative$$
 $index test, derivative$$
 
 $code
-$verbatim%example/rev_one.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/rev_one.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 namespace { // -------------------------------------------------------
 // define the template function RevOneCases<Vector> in empty namespace
@@ -43,7 +43,7 @@ bool RevOneCases()
 
 	// domain space vector
 	size_t n = 2;
-	CPPAD_TEST_VECTOR< AD<double> >  X(n);
+	CPPAD_TESTVECTOR(AD<double>)  X(n);
 	X[0] = 1.;
 	X[1] = 2.;
 
@@ -52,7 +52,7 @@ bool RevOneCases()
 
 	// range space vector
 	size_t m = 3;
-	CPPAD_TEST_VECTOR< AD<double> >  Y(m);
+	CPPAD_TESTVECTOR(AD<double>)  Y(m);
 	Y[0] = X[0] * exp( X[1] );
 	Y[1] = X[0] * sin( X[1] );
 	Y[2] = X[0] * cos( X[1] );
@@ -95,4 +95,4 @@ bool RevOne(void)
 	ok &= RevOneCases< std::valarray  <double> >();
 	return ok;
 }
-// END PROGRAM
+// END C++

@@ -1,4 +1,4 @@
-$Id: speed_double.omh 2178 2011-10-30 06:52:58Z bradbell $
+$Id: speed_double.omh 2403 2012-05-25 13:46:02Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -48,7 +48,7 @@ $codei%
 	./double speed %seed%
 %$$
 where $icode seed$$ is a positive integer.
-See $cref/speed_main/$$ for more options.
+See $cref speed_main$$ for more options.
 
 $head C++ Compiler Flags$$
 The C++ compiler flags used to build the $code double$$ program are

@@ -1,6 +1,6 @@
-/* $Id: hes_lu_det.cpp 1370 2009-05-31 05:31:50Z bradbell $ */
+/* $Id: hes_lu_det.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin HesLuDet.cpp$$
+$begin hes_lu_det.cpp$$
 $spell
 	Lu
 	Cpp
@@ -25,12 +25,12 @@ $index example, LU$$
 $index test, LU$$
 
 $code
-$verbatim%example/hes_lu_det.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/hes_lu_det.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/cppad.hpp>
 # include <cppad/speed/det_by_lu.hpp>
@@ -48,8 +48,8 @@ bool HesLuDet(void)
 	det_by_lu< AD<Complex> > Det(n);
 
 	// independent and dependent variable vectors
-	CPPAD_TEST_VECTOR< AD<Complex> >  X(n * n);
-	CPPAD_TEST_VECTOR< AD<Complex> >  D(1);
+	CPPAD_TESTVECTOR(AD<Complex>)  X(n * n);
+	CPPAD_TESTVECTOR(AD<Complex>)  D(1);
 
 	// value of the independent variable
 	size_t i;
@@ -65,12 +65,12 @@ bool HesLuDet(void)
 	ADFun<Complex> f(X, D);
 
 	// argument value
-	CPPAD_TEST_VECTOR<Complex>     x( n * n );
+	CPPAD_TESTVECTOR(Complex)     x( n * n );
 	for(i = 0; i < n * n; i++)
 		x[i] = Complex(2 * i, i);
 
 	// first derivative of the determinant
-	CPPAD_TEST_VECTOR<Complex> H( n * n * n * n );
+	CPPAD_TESTVECTOR(Complex) H( n * n * n * n );
 	H = f.Hessian(x, 0);
 
 	/*
@@ -91,4 +91,4 @@ bool HesLuDet(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

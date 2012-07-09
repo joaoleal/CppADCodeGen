@@ -1,4 +1,4 @@
-/* $Id: alloc_openmp.cpp 2307 2012-03-21 19:13:44Z bradbell $ */
+/* $Id: alloc_openmp.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
@@ -9,7 +9,7 @@ the terms of the
 A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/cppad.hpp>
 # include <omp.h>
 # define NUMBER_THREADS  2

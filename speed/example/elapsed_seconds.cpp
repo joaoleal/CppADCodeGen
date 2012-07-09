@@ -1,6 +1,6 @@
-/* $Id: elapsed_seconds.cpp 1914 2011-05-08 16:13:30Z bradbell $ */
+/* $Id: elapsed_seconds.cpp 2439 2012-06-18 02:28:36Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -25,12 +25,12 @@ $index example, timer$$
 $index test, timer$$
 
 $code
-$verbatim%speed/example/elapsed_seconds.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%speed/example/elapsed_seconds.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 # include <cppad/elapsed_seconds.hpp>
 
 # include <iostream>
@@ -59,4 +59,4 @@ bool elapsed_seconds(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

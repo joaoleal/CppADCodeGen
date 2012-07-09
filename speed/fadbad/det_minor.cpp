@@ -1,6 +1,6 @@
-/* $Id: det_minor.cpp 1497 2009-08-13 16:57:34Z bradbell $ */
+/* $Id: det_minor.cpp 2426 2012-06-08 06:13:01Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -28,24 +28,34 @@ $$
 
 $section Fadbad Speed: Gradient of Determinant by Minor Expansion$$
 
-$index fadbad, speed minor$$
-$index speed, fadbad minor$$
+$index link_det_minor, fadbad$$
+$index fadbad, link_det_minor$$
+$index speed, fadbad$$
+$index fadbad, speed$$
 $index minor, speed fadbad$$
+$index determinant, speed fadbad$$
 
-$head link_det_minor$$
-$index link_det_minor$$
+$head Specifications$$
+See $cref link_det_minor$$.
+
+$head Implementation$$
+
 $codep */
 # include <FADBAD++/badiff.h>
 # include <cppad/speed/det_by_minor.hpp>
 # include <cppad/speed/uniform_01.hpp>
 # include <cppad/vector.hpp>
-
 bool link_det_minor(
 	size_t                     size     , 
 	size_t                     repeat   , 
 	CppAD::vector<double>     &matrix   ,
 	CppAD::vector<double>     &gradient )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_atomic || global_optimize )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 

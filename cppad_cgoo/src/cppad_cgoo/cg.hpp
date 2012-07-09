@@ -11,12 +11,41 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cg_cppadcg_assert.hpp>
+#include <cppad/base_require.hpp> // all base type requirements
 
+// --------------------------------------------------------------------------
+// System routines that can be used by rest of CppAD with out including 
+
+# include <cstddef>
+# include <iostream>
+
+// ---------------------------------------------------------------------------
+// definitions needed by rest of includes
+
+// definitions that come from the installation
+# include <cppad/configure.hpp>
+
+// definitions that are local to the CppAD include files
+# include <cppad/local/define.hpp>
+
+// vectors used with CppAD
+#include <cppad/local/testvector.hpp>
+
+// deprecated vectors used with CppAD
+#include <cppad/local/test_vector.hpp>
+
+// Declare classes and fucntions that are used before defined
+#include <cppad/local/declare_ad.hpp>
+
+// ---------------------------------------------------------------------------
+#include <cppad_cgoo/cg_cppadcg_assert.hpp>
 #include <cppad_cgoo/cg_exception.hpp>
 #include <cppad_cgoo/cg_declare_cg.hpp>
 
+// ---------------------------------------------------------------------------
 #include <cppad/cppad.hpp>
+
+// ---------------------------------------------------------------------------
 
 #include <cppad_cgoo/cg_debug.hpp>
 #include <cppad_cgoo/cg_operation.hpp>
@@ -39,17 +68,22 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_unary.hpp>
 #include <cppad_cgoo/cg_base_double.hpp>
 
+// ---------------------------------------------------------------------------
+// C source code generation
 #include <cppad_cgoo/cg_c_language.hpp>
 #include <cppad_cgoo/cg_c_language_double.hpp>
 #include <cppad_cgoo/cg_c_lang_default_var_name_gen.hpp>
 #include <cppad_cgoo/cg_c_lang_default_hessian_var_name_gen.hpp>
 
+// automated dynamic library creation
 #include <cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_c_lang_compiler.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper_impl.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_gcc_compiler.hpp>
 
+// ---------------------------------------------------------------------------
+// automated dynamic library creation for linux
 #include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compiler_linux.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_dynamiclib_linux.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compile_helper_linux.hpp>

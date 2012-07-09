@@ -1,6 +1,6 @@
-/* $Id: cppad_vector.cpp 1948 2011-05-24 03:33:43Z bradbell $ */
+/* $Id: cppad_vector.cpp 2460 2012-07-08 17:17:37Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -11,7 +11,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 /*
-$begin CppAD_vector.cpp$$
+$begin cppad_vector.cpp$$
 $spell
 	Cpp
 $$
@@ -24,12 +24,12 @@ $index example, CppAD::vector$$
 $index test, CppAD::vector$$
 
 $code
-$verbatim%example/cppad_vector.cpp%0%// BEGIN PROGRAM%// END PROGRAM%1%$$
+$verbatim%example/cppad_vector.cpp%0%// BEGIN C++%// END C++%1%$$
 $$
 
 $end
 */
-// BEGIN PROGRAM
+// BEGIN C++
 
 # include <cppad/vector.hpp>
 # include <cppad/check_simple_vector.hpp>
@@ -101,4 +101,4 @@ bool CppAD_vector(void)
 	return ok;
 }
 
-// END PROGRAM
+// END C++

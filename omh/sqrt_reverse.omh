@@ -1,4 +1,4 @@
-$Id: sqrt_reverse.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: sqrt_reverse.omh 2403 2012-05-25 13:46:02Z bradbell $
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-07 Bradley M. Bell
 
@@ -32,7 +32,7 @@ $xref%
 definition for the functions $latex H$$ and $latex G$$.
 
 The forward mode formulas for the
-$xref/SqrtForward//square root/$$
+$cref/square root/SqrtForward/$$
 function are
 $latex \[
 	z^{(j)}  =  \sqrt { x^{(0)} } 

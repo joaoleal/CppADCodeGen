@@ -1,6 +1,6 @@
-/* $Id: det_minor.cpp 1497 2009-08-13 16:57:34Z bradbell $ */
+/* $Id: det_minor.cpp 2427 2012-06-08 14:12:45Z bradbell $ */
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-09 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the 
@@ -28,30 +28,40 @@ $$
 
 $section Sacado Speed: Gradient of Determinant by Minor Expansion$$
 
-$index sacado, speed minor$$
-$index speed, sacado minor$$
+$index link_det_minor, sacado$$
+$index sacado, link_det_minor$$
+$index speed, sacado$$
+$index sacado, speed$$
 $index minor, speed sacado$$
+$index determinant, speed sacado$$
 
-$head link_det_minor$$
-$index link_det_minor$$
+$head Specifications$$
+See $cref link_det_minor$$.
+
+$head Implementation$$
+
 $codep */
-# include <vector>
 # include <Sacado.hpp>
 # include <cppad/speed/det_by_minor.hpp>
 # include <cppad/speed/uniform_01.hpp>
-
+# include <cppad/vector.hpp>
 bool link_det_minor(
 	size_t                     size     , 
 	size_t                     repeat   , 
 	CppAD::vector<double>     &matrix   ,
 	CppAD::vector<double>     &gradient )
 {
+	// speed test global option values
+	extern bool global_retape, global_atomic, global_optimize;
+	if( ! global_retape || global_optimize || global_atomic )
+		return false;
+
 	// -----------------------------------------------------
 	// setup
 
 	// object for computing determinant
 	typedef Sacado::Rad::ADvar<double>    ADScalar; 
-	typedef CppAD::vector<ADScalar>        ADVector; 
+	typedef CppAD::vector<ADScalar>       ADVector; 
 	CppAD::det_by_minor<ADScalar>         Det(size);
 
 	size_t i;                // temporary index
@@ -61,7 +71,7 @@ bool link_det_minor(
 	
 	// ------------------------------------------------------
 	while(repeat--)
-       {	// get the next matrix
+	{	// get the next matrix
 		CppAD::uniform_01(n, matrix);
 
 		// set independent variable values
@@ -71,10 +81,10 @@ bool link_det_minor(
 		// compute the determinant
 		detA = Det(A);
 
-		// Compute the gradient of detA
+		// reverse mode compute gradient of last computed value; i.e., detA
 		ADScalar::Gradcomp();
 
-		// return gradient using reverse mode
+		// return gradient 
 		for(i =0; i < n; i++)
 			gradient[i] = A[i].adj(); // partial detA w.r.t A[i]
 	}

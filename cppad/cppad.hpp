@@ -1,8 +1,8 @@
-/* $Id: cppad.hpp 2238 2011-12-28 15:09:38Z bradbell $ */
+/* $Id: cppad.hpp 2455 2012-07-06 10:36:56Z bradbell $ */
 # ifndef CPPAD_CPPAD_INCLUDED
 # define CPPAD_CPPAD_INCLUDED
 /* --------------------------------------------------------------------------
-CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 
 CppAD is distributed under multiple licenses. This distribution is under
 the terms of the
@@ -25,6 +25,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 # include <cppad/check_numeric_type.hpp>
 # include <cppad/check_simple_vector.hpp>
+# include <cppad/index_sort.hpp>
 # include <cppad/local/cppad_assert.hpp>
 # include <cppad/lu_solve.hpp>
 # include <cppad/memory_leak.hpp>
@@ -63,6 +64,9 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # include <cppad/local/define.hpp>
 
 // vectors used with CppAD
+# include <cppad/local/testvector.hpp>
+
+// deprecated vectors used with CppAD
 # include <cppad/local/test_vector.hpp>
 
 // Declare classes and fucntions that are used before defined

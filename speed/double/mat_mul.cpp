@@ -1,4 +1,4 @@
-/* $Id: mat_mul.cpp 1881 2011-02-17 14:15:02Z bradbell $ */
+/* $Id: mat_mul.cpp 2403 2012-05-25 13:46:02Z bradbell $ */
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-11 Bradley M. Bell
 
@@ -30,7 +30,7 @@ $index matrix, multiply speed cppad$$
 $index multiply, matrix speed cppad$$
 
 $head Specifications$$
-See $cref/link_mat_mul/$$.
+See $cref link_mat_mul$$.
 
 $head Implementation$$
 $index cppad, link_mat_mul$$

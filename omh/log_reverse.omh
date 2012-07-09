@@ -1,4 +1,4 @@
-$Id: log_reverse.omh 1370 2009-05-31 05:31:50Z bradbell $
+$Id: log_reverse.omh 2403 2012-05-25 13:46:02Z bradbell $
 // BEGIN SHORT COPYRIGHT
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-06 Bradley M. Bell
@@ -33,7 +33,7 @@ $xref%
 definition for the functions $latex H$$ and $latex G$$.
 
 The forward mode formulas for the
-$xref/LogForward//logarithm/$$
+$cref/logarithm/LogForward/$$
 function are
 $latex \[
 	z^{(j)}  =  \log ( x^{(0)} ) 

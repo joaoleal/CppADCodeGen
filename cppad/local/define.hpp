@@ -1,4 +1,4 @@
-/* $Id: define.hpp 2346 2012-04-10 17:04:25Z bradbell $ */
+/* $Id: define.hpp 2458 2012-07-07 17:34:40Z bradbell $ */
 # ifndef CPPAD_DEFINE_INCLUDED
 # define CPPAD_DEFINE_INCLUDED
 
@@ -30,17 +30,6 @@ Make sure that the type chosen returns true for is_pod<CPPAD_OP_CODE_TYPE>
 in pod_vector.hpp.
 */
 # define CPPAD_OP_CODE_TYPE unsigned char
-
-/*!
-\def CPPAD_TAPE_ID_TYPE
-Is the type used to store tape identifies on the tape. If not size_t, then 
-<code>sizeof(CPPAD_TAPE_ID_TYPE) <= sizeof( size_t )</code>
-to conserve memory.
-This type must support \c std::numeric_limits,
-the \c <= operator,
-and conversion to \c size_t.
-*/
-# define CPPAD_TAPE_ID_TYPE unsigned int
 
 /*!
 \def CPPAD_USE_FORWARD0SWEEP

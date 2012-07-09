@@ -1,4 +1,4 @@
-dnl $Id: configure.ac 2355 2012-04-23 13:32:24Z bradbell $
+dnl $Id: configure.ac 2458 2012-07-07 17:34:40Z bradbell $
 dnl ---------------------------------------------------------------------------
 dnl CppAD: C++ Algorithmic Differentiation: Copyright (C) 2003-12 Bradley M. Bell
 dnl
@@ -12,7 +12,7 @@ dnl ---------------------------------------------------------------------------
 dnl
 dnl Process this file with autoconf to produce a configure script.
 dnl   package   version              bug-report
-AC_INIT(CppAD, 20120424, cppad@list.coin-or.org)
+AC_INIT(CppAD, 20120709, cppad@list.coin-or.org)
 AC_SUBST(PACKAGE_URL, "http://www.coin-or.org/CppAD")
 AC_SUBST(PACKAGE_DESCRIPTION, "Differentiation of C++ Algorithms")
 
@@ -149,13 +149,33 @@ AC_ARG_WITH(boostvector,
 	[boostvector="no"]
 )
 AC_MSG_RESULT([$boostvector])
-if test "$boostvector$stdvector" = "yesyes" ; then
-	AC_MSG_ERROR([cannot have both --with-stdvector and --with-boostvector])
-fi
 if test "$boostvector" = "yes" ; then
+	if test "$stdvector" != "no" ; then
+		AC_MSG_ERROR([cannot --with both stdvector and boostvector])
+	fi
 	AC_SUBST(CPPAD_BOOSTVECTOR, 1)
 else
 	AC_SUBST(CPPAD_BOOSTVECTOR, 0)
+fi
+
+dnl Are we using eigen vectors ----------------------------------------
+AC_MSG_CHECKING([--with-eigenvector])
+AC_ARG_WITH(eigenvector, 
+	AC_HELP_STRING([--with-eigenvector], [default is no]),
+	[eigenvector="yes"],
+	[eigenvector="no"]
+)
+AC_MSG_RESULT([$eigenvector])
+if test "$eigenvector" = "yes" ; then
+	if test "$stdvector" != "no" ; then
+		AC_MSG_ERROR([cannot --with both stdvector and eigenvector])
+	fi
+	if test "$boostvector" != "no" ; then
+		AC_MSG_ERROR([cannot --with both boostvector and eigenvector])
+	fi
+	AC_SUBST(CPPAD_EIGENVECTOR, 1)
+else
+	AC_SUBST(CPPAD_EIGENVECTOR, 0)
 fi
 
 dnl The postfix directiory corresponding to CppAD ------------------------
@@ -183,6 +203,20 @@ if test "$ADOLC_DIR" != "" ; then
 	fi
 else
 	AC_MSG_RESULT([no])
+fi
+
+dnl The prefix corresponding to the installation of Eigen ---------------
+AC_MSG_CHECKING([EIGEN_DIR])
+AC_ARG_VAR(EIGEN_DIR, 
+	[value of configure prefix directory during Eigen install]
+)
+AM_CONDITIONAL(CppAD_EIGEN_DIR, test "$EIGEN_DIR" != "")
+if test "$EIGEN_DIR" != "" ; then
+	AC_MSG_RESULT([$EIGEN_DIR])
+	AC_SUBST(EIGEN_INCLUDE, [-I$EIGEN_DIR/include])
+else
+	AC_MSG_RESULT([no])
+	AC_SUBST(EIGEN_INCLUDE, [])
 fi
 
 dnl The directory corresponding to the installation of FADBAD -----------
@@ -238,8 +272,10 @@ AC_ARG_VAR(BOOST_DIR,
 AM_CONDITIONAL(CppAD_BOOST_DIR, test "$BOOST_DIR" != "")
 if test "$BOOST_DIR" != "" ; then
 	AC_MSG_RESULT([$BOOST_DIR])
+	AC_SUBST(BOOST_INCLUDE, [-I$BOOST_DIR/include])
 else
 	AC_MSG_RESULT([no])
+	AC_SUBST(BOOST_INCLUDE,[])
 fi
 
 dnl The C++ compiler flags CXX_FLAGS -------------------------------------
@@ -249,14 +285,18 @@ AC_MSG_CHECKING([CXX_FLAGS])
 AC_ARG_VAR(CXX_FLAGS,
 	[ CXXFLAGS is ignored, use CXX_FLAGS for compiler flags]
 )
+# cxx_flags for fadbad and eigen
 if test "$CXX_FLAGS" != "" ; then
 	AC_MSG_RESULT([$CXX_FLAGS]) 
 	cxx_flags_fadbad=`echo "$CXX_FLAGS" | sed -e 's|-Wshadow||'`
+	cxx_flags_eigen="$cxx_flags_fadbda -Wno-long-long" 
 else
 	AC_MSG_RESULT([no])
 	cxx_flags_fadbad=""
+	cxx_flags_eigen=""
 fi 
 AC_SUBST(CXX_FLAGS_FADBAD, "$cxx_flags_fadbad")
+AC_SUBST(CXX_FLAGS_EIGEN,  "$cxx_flags_eigen")
 
 dnl The compiler OpenMP flags OPENMP_FLAGS ----------------------------------
 AC_MSG_CHECKING([OPENMP_FLAGS])
@@ -289,7 +329,7 @@ else
 fi 
 AC_SUBST(CPPAD_MAX_NUM_THREADS, [$max_num_threads])
 
-dnl The type used for addresses in AD tapes [ default = unsigned int ] ---
+dnl type used for addresses in AD tapes [ default = unsigned int ] -----------
 AC_MSG_CHECKING([TAPE_ADDR_TYPE])
 AC_ARG_VAR(TAPE_ADDR_TYPE, [type used for addresses in AD tapes])
 if test "$TAPE_ADDR_TYPE" == "" ; then
@@ -320,6 +360,38 @@ if test "$ok" == "no" ; then
 		[$addr_t is not a valid choice for TAPE_ADDR_TYPE]
 	)
 fi
+
+dnl type used for tape identifier [ default = unsigned int ] -----------
+AC_MSG_CHECKING([TAPE_ID_TYPE])
+AC_ARG_VAR(TAPE_ID_TYPE, [type used for addresses in AD tapes])
+if test "$TAPE_ID_TYPE" == "" ; then
+	tape_id_t="unsigned int"
+else
+	tape_id_t="$TAPE_ID_TYPE"
+fi
+AC_SUBST(CPPAD_TAPE_ID_TYPE, [$tape_id_t])
+AC_MSG_RESULT([$tape_id_t])
+ok="no"
+if test "$tape_id_t" == "size_t" ; then
+	ok="yes"
+fi
+if test "$tape_id_t" == "int" ; then
+	AC_MSG_WARN(
+		[TAPE_ID_TYPE=int is for CppAD developers (not users)]
+	)
+	ok="yes"
+fi
+if test "$tape_id_t" == "unsigned int" ; then
+	ok="yes"
+fi
+if test "$tape_id_t" == "unsigned short int" ; then
+	ok="yes"
+fi
+if test "$ok" == "no" ; then
+  	AC_MSG_ERROR(
+		[$tape_id_t is not a valid choice for TAPE_ID_TYPE]
+	)
+fi
 AC_MSG_NOTICE([********** End Checking Command Line arguments ***************])
 
 dnl Determine if size_t has same size as unsigned int 
@@ -331,8 +403,8 @@ else
 	AC_SUBST(CPPAD_SIZE_T_SAME_UNSIGNED_INT, 0)
 fi
 
-dnl Determine which definition we are using for CPPAD_TEST_VECTOR
-if test "$stdvector$boostvector" = "nono" ; then
+dnl Determine which definition we are using for CPPAD_TESTVECTOR
+if test "$stdvector$boostvector$eigenvector" = "nonono" ; then
 	AC_SUBST(CPPAD_CPPADVECTOR, 1)
 else 
 	AC_SUBST(CPPAD_CPPADVECTOR, 0)
