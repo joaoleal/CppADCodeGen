@@ -11,13 +11,6 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <limits>
-#include <iosfwd>
-#include <map>
-
-#include "cg_source_code_fragment.hpp"
-#include "cg_cg.hpp"
-
 #define CPPAD_CG_C_LANG_FUNCNAME(fn) \
 inline virtual const std::string& fn ## FuncName() {\
     static const std::string name(#fn);\

@@ -13,9 +13,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #ifdef __linux__
 
 #include <typeinfo>
-#include <assert.h>
-#include <algorithm>
-#include <string>
 #include <dlfcn.h>
 
 namespace CppAD {

@@ -16,17 +16,34 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 // --------------------------------------------------------------------------
 // System routines that can be used by rest of CppAD with out including 
 
-# include <cstddef>
-# include <iostream>
+#include <algorithm>
+#include <assert.h>
+#include <cstddef>
+#include <errno.h>
+#include <fstream>
+#include <iomanip>
+#include <iosfwd>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <vector>
+#include <set>
+#include <stddef.h>
+#include <stdexcept>
+#include <stdio.h>
+#include <stdlib.h>
+#include <sstream>
+#include <string>
+#include <string.h>
 
 // ---------------------------------------------------------------------------
 // definitions needed by rest of includes
 
 // definitions that come from the installation
-# include <cppad/configure.hpp>
+#include <cppad/configure.hpp>
 
 // definitions that are local to the CppAD include files
-# include <cppad/local/define.hpp>
+#include <cppad/local/define.hpp>
 
 // vectors used with CppAD
 #include <cppad/local/testvector.hpp>
@@ -43,10 +60,11 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_declare_cg.hpp>
 
 // ---------------------------------------------------------------------------
+// CppAD
 #include <cppad/cppad.hpp>
 
 // ---------------------------------------------------------------------------
-
+// core files
 #include <cppad_cgoo/cg_debug.hpp>
 #include <cppad_cgoo/cg_operation.hpp>
 #include <cppad_cgoo/cg_argument.hpp>
