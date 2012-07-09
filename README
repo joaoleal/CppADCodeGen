@@ -1,7 +1,8 @@
 CppADCodeGen is available with both the CPL and GPL licenses; see the CppAD home
 page.
 
-CppADCodeGen is based upon the source code of CppAD:
+CppADCodeGen is a source code generation library that is used as an
+extension to the CppAD library:
 
 http://www.coin-or.org/CppAD
 is the CppAD home page.
@@ -25,6 +26,7 @@ Directories    Description
 bin            Helper shell and sed scripts used for CppAD development.
 bug            Directory containing demonstration of known bugs (may be empty)
 cppad          CppAD include directory (will be copied to prefix/include)
+cppad_cgoo     The CppADCodeGen extension.
 cppad_ipopt    The CppAD interface to the Ipopt optimizer.
 doc            Directory containing the CppAD user documentation.
 example        Most all the CppAD example files are here.
@@ -35,7 +37,6 @@ pkgconfig      pkg-config support files.
 print_for      Example printing during forward mode, pkg-config support files.
 speed          Speed comparison tests for CppAD and other AD packages.
 test_more      Extra tests that are not intended as examples.
-test_code_gen  Tests for the source code generation.
 uw_copy*.html  UW policy on intellectual property.
 
 
