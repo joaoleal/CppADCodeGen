@@ -67,7 +67,7 @@ namespace CppAD {
          * 
          * \param tmpFolder path to a temporary folder.
          */
-        inline void setTemporaryFolder_(const std::string& tmpFolder) {
+        inline void setTemporaryFolder(const std::string& tmpFolder) {
             _tmpFolder = tmpFolder;
         }
 

@@ -30,7 +30,7 @@ bool compareValues(const std::string& testType,
     return compareValues(testType, depCGen, depd, epsilonR, epsilonA);
 }
 
-bool Dynamic() {
+bool Dynamic1() {
     // use a special object for source code generation
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
@@ -133,6 +133,120 @@ bool Dynamic() {
     ok &= compareValues("sparse Hessian", hessCGenDense, hess);
 
     delete dynamicLib;
+
+    return ok;
+}
+
+bool Dynamic2() {
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variables
+    std::vector<ADCG> u(3);
+    u[0] = 1;
+    u[1] = 1;
+    u[2] = 1;
+
+    CppAD::Independent(u);
+
+    // dependent variable vector 
+    std::vector<ADCG> Z(2);
+
+    /**
+     * create the CppAD tape as usual
+     */
+    Z[0] = cos(u[0]);
+    Z[1] = u[1] * u[2] + sin(u[0]);
+
+    // create f: U -> Z and vectors used for derivative calculations
+    ADFun<CGD> fun(u, Z);
+
+    /**
+     * Create the dynamic library
+     * (generate and compile source code)
+     */
+    CLangCompileHelper<double> compHelp(&fun);
+    compHelp.setLibraryName("cppad_cg_model_2.so");
+
+    compHelp.setCreateSparseJacobian(true);
+    std::vector<size_t> row(3), col(3); // all elements except 1
+    row[0] = 0;
+    col[0] = 0;
+    row[1] = 1;
+    col[1] = 0;
+    row[2] = 1;
+    col[2] = 2;
+    compHelp.setCustomSparseJacobianElements(row, col);
+
+    compHelp.setCreateSparseHessian(true);
+    row.resize(2);
+    col.resize(2); // all elements except 1
+    row[0] = 0;
+    col[0] = 0;
+    row[1] = 2;
+    col[1] = 1;
+    compHelp.setCustomSparseHessianElements(row, col);
+
+    GccCompiler<double> compiler;
+    compiler.setSourcesFolder("cppadcg_sources_2");
+    DynamicLib<double>* dynamicLib = compHelp.createDynamicLibrary(compiler);
+
+    /**
+     * test the library
+     */
+    bool ok = true;
+
+    // dimensions
+    ok &= dynamicLib->Domain() == fun.Domain();
+    ok &= dynamicLib->Range() == fun.Range();
+
+    /**
+     */
+    std::vector<double> x(u.size());
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 1;
+
+    std::vector<CGD> x2(x.size());
+    for (size_t i = 0; i < x.size(); i++) {
+        x2[i] = x[i];
+    }
+
+    // sparse Jacobian
+    std::vector<double> jacCGen;
+    dynamicLib->SparseJacobian(x, jacCGen, row, col);
+    std::vector<CG<double> > jacSparse(row.size());
+    
+    std::vector<CGD> jac = fun.Jacobian(x2);
+    for (size_t i = 0; i < row.size(); i++) {
+        jacSparse[i] = jac[row[i] * x.size() + col[i]];
+    }
+
+    ok &= compareValues("sparse Jacobian", jacCGen, jacSparse);
+
+    // sparse Hessian
+    std::vector<double> w(Z.size(), 1.0);
+    std::vector<double> hessCGen;
+    dynamicLib->SparseHessian(x, w, hessCGen, row, col);
+    std::vector<CG<double> > hessSparse(row.size());
+    
+    std::vector<CGD> w2(Z.size(), 1.0);
+    std::vector<CGD> hess = fun.Hessian(x2, w2);
+    for (size_t i = 0; i < row.size(); i++) {
+        hessSparse[i] = hess[row[i] * x.size() + col[i]];
+    }
+
+    ok &= compareValues("sparse Hessian", hessCGen, hessSparse);
+
+    delete dynamicLib;
+
+    return ok;
+}
+
+bool Dynamic() {
+    bool ok = Dynamic1();
+    ok &= Dynamic2();
 
     return ok;
 }

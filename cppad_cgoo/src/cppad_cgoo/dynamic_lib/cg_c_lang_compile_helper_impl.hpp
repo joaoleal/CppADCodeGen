@@ -14,7 +14,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <typeinfo>
 
 namespace CppAD {
-    
+
     template<class Base>
     const unsigned long int CLangCompileHelper<Base>::API_VERSION = 0;
 
@@ -41,7 +41,7 @@ namespace CppAD {
 
     template<class Base>
     const std::string CLangCompileHelper<Base>::FUNCTION_INFO = "cppad_cg_info";
-    
+
     template<class Base>
     const std::string CLangCompileHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";
 
@@ -77,7 +77,7 @@ namespace CppAD {
         generateVerionSource();
         sources[FUNCTION_VERSION + ".c"] = _cache.str();
         _cache.str("");
-        
+
         generateInfoSource();
         sources[FUNCTION_INFO + ".c"] = _cache.str();
         _cache.str("");
@@ -93,7 +93,7 @@ namespace CppAD {
         _cache << "return " << API_VERSION << "u;\n";
         _cache << "}\n\n";
     }
-    
+
     template<class Base>
     void CLangCompileHelper<Base>::generateInfoSource() {
         const char* localBaseName = typeid (Base).name();
@@ -114,7 +114,7 @@ namespace CppAD {
 
         std::vector<CGD> indVars(_fun->Domain());
         handler.makeVariables(indVars);
-       
+
         std::vector<CGD> dep = _fun->Forward(0, indVars);
 
         CLanguage<Base> langC;
@@ -210,6 +210,8 @@ namespace CppAD {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
+        std::vector<size_t> rows, cols;
+
         /**
          * Determine the sparsity pattern
          */
@@ -234,9 +236,14 @@ namespace CppAD {
             sparsity = _fun->RevSparseJac(m, s);
         }
 
-        /**
-         * 
-         */
+        if (_custom_jac_row.empty()) {
+            generateSparsityIndexes(sparsity, m, n, rows, cols);
+
+        } else {
+            rows = _custom_jac_row;
+            cols = _custom_jac_col;
+        }
+
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -245,26 +252,19 @@ namespace CppAD {
         std::vector<CGD> indVars(n);
         handler.makeVariables(indVars);
 
-        std::vector<CGD> jac = _fun->SparseJacobian(indVars, sparsity);
-
-        size_t nnz = 0;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            if (sparsity[i])
-                nnz++;
-        }
-
-        std::vector<CGD> compressed(nnz); // compressed Jacobian
-        size_t pos = 0;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            if (sparsity[i])
-                compressed[pos++] = jac[i];
+        std::vector<CGD> jac(rows.size());
+        CppAD::sparse_jacobian_work work;
+        if (n <= m) {
+            _fun->SparseJacobianForward(indVars, sparsity, rows, cols, jac, work);
+        } else {
+            _fun->SparseJacobianReverse(indVars, sparsity, rows, cols, jac, work);
         }
 
         CLanguage<Base> langC;
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
-        handler.generateCode(code, langC, compressed, nameGen);
+        handler.generateCode(code, langC, jac, nameGen);
 
         std::string basename = baseTypeName();
 
@@ -279,7 +279,7 @@ namespace CppAD {
         sources[FUNCTION_SPARSE_JACOBIAN + ".c"] = _cache.str();
         _cache.str("");
 
-        generateSparsitySource(FUNCTION_JACOBIAN_SPARSITY, sparsity, m, n);
+        generateSparsitySource(FUNCTION_JACOBIAN_SPARSITY, rows, cols);
         sources[FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
     }
@@ -302,6 +302,15 @@ namespace CppAD {
         _fun->ForSparseJac(n, r);
         std::vector<bool> sparsity = _fun->RevSparseHes(n, s);
 
+        std::vector<size_t> rows, cols;
+        if (_custom_hess_row.empty()) {
+            generateSparsityIndexes(sparsity, n, n, rows, cols);
+
+        } else {
+            rows = _custom_hess_row;
+            cols = _custom_hess_col;
+        }
+
         /**
          * 
          */
@@ -317,26 +326,15 @@ namespace CppAD {
         std::vector<CGD> w(m);
         handler.makeVariables(w);
 
-        std::vector<CGD> hess = _fun->SparseHessian(indVars, w, sparsity);
-
-        size_t nnz = 0;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            if (sparsity[i])
-                nnz++;
-        }
-
-        std::vector<CGD> compressed(nnz); // compressed Hessian
-        size_t pos = 0;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            if (sparsity[i])
-                compressed[pos++] = hess[i];
-        }
+        CppAD::sparse_hessian_work work;
+        std::vector<CGD> hess(rows.size());
+        _fun->SparseHessian(indVars, w, sparsity, rows, cols, hess, work);
 
         CLanguage<Base> langC;
-        CLangDefaultHessianVarNameGenerator<Base> nameGen(_fun->Domain());
+        CLangDefaultHessianVarNameGenerator<Base> nameGen(n);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, compressed, nameGen);
+        handler.generateCode(code, langC, hess, nameGen);
 
         std::string basename = baseTypeName();
 
@@ -351,67 +349,85 @@ namespace CppAD {
         sources[FUNCTION_SPARSE_HESSIAN + ".c"] = _cache.str();
         _cache.str("");
 
-        generateSparsitySource(FUNCTION_HESSIAN_SPARSITY, sparsity, n, n);
+        generateSparsitySource(FUNCTION_HESSIAN_SPARSITY, rows, cols);
         sources[FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparsitySource(const std::string& function, const std::vector<bool>& sparsityBool, size_t rowCount, size_t colCount) {
-        assert(rowCount * colCount == sparsityBool.size());
+    void CLangCompileHelper<Base>::generateSparsitySource(const std::string& function,
+                                                          const std::vector<bool>& sparsity,
+                                                          size_t m, size_t n) {
+        std::vector<size_t> rows, cols;
+
+        generateSparsityIndexes(sparsity, m, n, rows, cols);
+
+        generateSparsitySource(function, rows, cols);
+    }
+
+    template<class Base>
+    void CLangCompileHelper<Base>::generateSparsitySource(const std::string& function,
+                                                          const std::vector<size_t>& rows,
+                                                          const std::vector<size_t>& cols) {
+        assert(rows.size() == cols.size());
 
         _cache << "void " << function << "("
                 "unsigned long int const** row,"
                 " unsigned long int const** col,"
                 " unsigned long int* nnz) {\n";
 
-        size_t nnz = 0; //number of non-zeros
-        std::vector<std::set<size_t> > sparsity(rowCount);
-        size_t rowStart = 0;
-        for (size_t i = 0; i < rowCount; i++) {
-            for (size_t j = 0; j < colCount; j++) {
-                if (sparsityBool[rowStart + j]) {
-                    sparsity[i].insert(j);
-                }
-            }
-            rowStart += colCount;
-            nnz += sparsity[i].size();
-        }
-
         // the size of each sparsity row
-        _cache << "static unsigned long int const rows[" << nnz << "] = {";
-        bool empty = true;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            for (size_t j = 0; j < sparsity[i].size(); j++) {
-                if (empty) {
-                    empty = false;
-                } else {
-                    _cache << ",";
-                }
-                _cache << i;
+        _cache << "static unsigned long int const rows[" << rows.size() << "] = {";
+        if (!rows.empty()) {
+            _cache << rows[0];
+            for (size_t i = 1; i < rows.size(); i++) {
+                _cache << "," << rows[i];
             }
         }
         _cache << "};\n";
 
-        _cache << "static unsigned long int const cols[" << nnz << "] = {";
-        empty = true;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            const std::set<size_t> & sparRow = sparsity[i];
-            for (std::set<size_t>::const_iterator it = sparRow.begin(); it != sparRow.end(); ++it) {
-                if (empty) {
-                    empty = false;
-                } else {
-                    _cache << ",";
-                }
-                _cache << *it;
+        _cache << "static unsigned long int const cols[" << cols.size() << "] = {";
+        if (!cols.empty()) {
+            _cache << cols[0];
+            for (size_t i = 1; i < cols.size(); i++) {
+                _cache << "," << cols[i];
             }
         }
         _cache << "};\n";
 
         _cache << "*row = rows;\n"
                 "*col = cols;\n"
-                "*nnz = " << nnz << ";\n"
+                "*nnz = " << rows.size() << ";\n"
                 "}\n";
+    }
+
+    template<class Base>
+    void CLangCompileHelper<Base>::generateSparsityIndexes(const std::vector<bool>& sparsity,
+                                                           size_t m, size_t n,
+                                                           std::vector<size_t>& rows,
+                                                           std::vector<size_t>& cols) {
+        size_t K = 0;
+        for (size_t i = 0; i < sparsity.size(); i++) {
+            if (sparsity[i]) {
+                K++;
+            }
+        }
+
+        rows.resize(K);
+        cols.resize(K);
+
+        size_t k = 0;
+        for (size_t i = 0; i < m; i++) {
+            for (size_t j = 0; j < n; j++) {
+                if (sparsity[i * n + j]) {
+                    rows[k] = i;
+                    cols[k] = j;
+                    k++;
+                }
+            }
+        }
+
+        assert(k == K);
     }
 
     /**

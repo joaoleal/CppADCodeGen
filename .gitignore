@@ -52,5 +52,6 @@ junk.sh
 
 # automatically generated directories
 /cppad_cgoo/test/cppadcg_sources
+/cppad_cgoo/test/cppadcg_sources_2
 /cppad_cgoo/test/temp
 /cppad_cgoo/test/tmp

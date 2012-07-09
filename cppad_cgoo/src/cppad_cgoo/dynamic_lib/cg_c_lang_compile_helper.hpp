@@ -39,6 +39,10 @@ namespace CppAD {
         bool _hessian;
         bool _sparseJacobian;
         bool _sparseHessian;
+        std::vector<size_t> _custom_jac_row;
+        std::vector<size_t> _custom_jac_col;
+        std::vector<size_t> _custom_hess_row;
+        std::vector<size_t> _custom_hess_col;
         std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
     public:
@@ -95,14 +99,34 @@ namespace CppAD {
             _zero = createFunction;
         }
 
+        inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
+                                                    const std::vector<size_t>& col) {
+            _custom_jac_row = row;
+            _custom_jac_col = col;
+        }
+
+        inline void setCustomSparseHessianElements(const std::vector<size_t>& row,
+                                                   const std::vector<size_t>& col) {
+            _custom_hess_row = row;
+            _custom_hess_col = col;
+        }
+
+        inline const std::string& getLibraryName() const {
+            return _libraryName;
+        }
+
+        inline void setLibraryName(const std::string& libraryName) {
+            _libraryName = libraryName;
+        }
+
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
 
         static inline const std::string baseTypeName();
-        
+
     protected:
 
         virtual void generateVerionSource();
-        
+
         virtual void generateInfoSource();
 
         virtual void generateZeroSource();
@@ -115,7 +139,18 @@ namespace CppAD {
 
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateSparsitySource(const std::string& function, const std::vector<bool>& sparsityBool, size_t rowCount, size_t colCount);
+        virtual void generateSparsitySource(const std::string& function,
+                                            const std::vector<bool>& sparsity,
+                                            size_t m, size_t n);
+
+        virtual void generateSparsitySource(const std::string& function,
+                                            const std::vector<size_t>& rows,
+                                            const std::vector<size_t>& cols);
+
+        virtual void generateSparsityIndexes(const std::vector<bool>& sparsity,
+                                             size_t m, size_t n,
+                                             std::vector<size_t>& rows,
+                                             std::vector<size_t>& cols);
 
         virtual DynamicLib<Base>* loadDynamicLibrary();
 
