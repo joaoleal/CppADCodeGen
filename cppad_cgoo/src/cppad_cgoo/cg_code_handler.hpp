@@ -152,6 +152,8 @@ namespace CppAD {
                 reduceTemporaryVariables(dependent);
             }
 
+            nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount);
+            
             /**
              * Creates the source code for a specific language
              */

@@ -45,6 +45,7 @@ namespace CppAD {
         std::vector<size_t> _custom_hess_col;
         std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
+        size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
     public:
 
         CLangCompileHelper(ADFun<CppAD::CG<Base> >* fun) :
@@ -54,7 +55,8 @@ namespace CppAD {
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
-            _libraryName("cppad_cg_model.so") {
+            _libraryName("cppad_cg_model.so"),
+            _maxAssignPerFunc(20000) {
 
             assert(_fun != NULL);
         }
@@ -119,21 +121,29 @@ namespace CppAD {
             _libraryName = libraryName;
         }
 
+        inline size_t getMaxAssignmentsPerFunc() const {
+            return _maxAssignPerFunc;
+        }
+
+        inline void setMaxAssignmentsPerFunc(size_t maxAssignPerFunc) {
+            _maxAssignPerFunc = maxAssignPerFunc;
+        }
+
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
 
-        static inline const std::string baseTypeName();
+        static inline std::string baseTypeName();
 
     protected:
 
-        virtual void generateVerionSource();
+        virtual void generateVerionSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateInfoSource();
+        virtual void generateInfoSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateZeroSource();
+        virtual void generateZeroSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateJacobianSource();
+        virtual void generateJacobianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateHessianSource();
+        virtual void generateHessianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources);
 

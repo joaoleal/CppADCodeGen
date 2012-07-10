@@ -16,7 +16,7 @@ namespace CppAD {
     /**
      * Creates variables names for the source code generated for hessian
      * calculations.
-     * The independet variables are considered to have been registered first as
+     * The independent variables are considered to have been registered first as
      * variable in the code generation handler and then the multipliers.
      * 
      * \author Joao Leal
@@ -24,25 +24,29 @@ namespace CppAD {
     template<class Base>
     class CLangDefaultHessianVarNameGenerator : public CLangDefaultVariableNameGenerator<Base> {
     protected:
-        // number of independent variables excluding the hessian multipliers
-        size_t _indepCount;
+        // the lowest variable ID used for the equation multipliers
+        const size_t _minMultiplierID;
+        // the lowest variable ID used for the dependent variables
+        const size_t _minDependentID;
         // array name of the independent variables
-        std::string _multName;
+        const std::string _multName;
     public:
 
-        CLangDefaultHessianVarNameGenerator(size_t indepCount) :
+        CLangDefaultHessianVarNameGenerator(size_t m, size_t n) :
             CLangDefaultVariableNameGenerator<Base>("hess", "ind", "var"),
-            _indepCount(indepCount),
+            _minMultiplierID(n + 1),
+            _minDependentID(_minMultiplierID + m),
             _multName("mult") {
         }
 
         CLangDefaultHessianVarNameGenerator(const std::string& depName,
                                             const std::string& indepName,
-                                            size_t indepCount,
                                             const std::string& multName,
-                                            const std::string& tmpName) :
+                                            const std::string& tmpName,
+                                            size_t m, size_t n) :
             CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName),
-            _indepCount(indepCount),
+            _minMultiplierID(n + 1),
+            _minDependentID(_minMultiplierID + m),
             _multName(multName) {
         }
 
@@ -50,11 +54,11 @@ namespace CppAD {
             this->_ss.clear();
             this->_ss.str("");
 
-            size_t index = independent.variableID() - 1;
-            if (index < _indepCount) {
-                this->_ss << this->_indepName << "[" << index << "]";
+            size_t id = independent.variableID();
+            if (id < _minMultiplierID) {
+                this->_ss << this->_indepName << "[" << (id - 1) << "]";
             } else {
-                this->_ss << _multName << "[" << (index - _indepCount) << "]";
+                this->_ss << _multName << "[" << (id - _minMultiplierID) << "]";
             }
 
             return this->_ss.str();

@@ -49,21 +49,15 @@ namespace CppAD {
     DynamicLib<Base>* CLangCompileHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
         std::map<std::string, std::string> sources;
         if (_zero) {
-            generateZeroSource();
-            sources[FUNCTION_FORWAD_ZERO + ".c"] = _cache.str();
-            _cache.str("");
+            generateZeroSource(sources);
         }
 
         if (_jacobian) {
-            generateJacobianSource();
-            sources[FUNCTION_JACOBIAN + ".c"] = _cache.str();
-            _cache.str("");
+            generateJacobianSource(sources);
         }
 
         if (_hessian) {
-            generateHessianSource();
-            sources[FUNCTION_HESSIAN + ".c"] = _cache.str();
-            _cache.str("");
+            generateHessianSource(sources);
         }
 
         if (_sparseJacobian) {
@@ -74,13 +68,9 @@ namespace CppAD {
             generateSparseHessianSource(sources);
         }
 
-        generateVerionSource();
-        sources[FUNCTION_VERSION + ".c"] = _cache.str();
-        _cache.str("");
+        generateVerionSource(sources);
 
-        generateInfoSource();
-        sources[FUNCTION_INFO + ".c"] = _cache.str();
-        _cache.str("");
+        generateInfoSource(sources);
 
         compiler.compileDynamic(_libraryName, sources, true);
 
@@ -88,25 +78,31 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateVerionSource() {
+    void CLangCompileHelper<Base>::generateVerionSource(std::map<std::string, std::string>& sources) {
+        _cache.str("");
         _cache << "unsigned long int " << FUNCTION_VERSION << "() {\n";
         _cache << "return " << API_VERSION << "u;\n";
         _cache << "}\n\n";
+
+        sources[FUNCTION_VERSION + ".c"] = _cache.str();
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateInfoSource() {
+    void CLangCompileHelper<Base>::generateInfoSource(std::map<std::string, std::string>& sources) {
         const char* localBaseName = typeid (Base).name();
 
+        _cache.str("");
         _cache << "void " << FUNCTION_INFO << "(const char** baseName, unsigned long int* m, unsigned long int* n) {\n";
         _cache << "*baseName = \"" << baseTypeName() << "  " << localBaseName << "\";\n";
         _cache << "*m = " << _fun->Range() << ";\n";
         _cache << "*n = " << _fun->Domain() << ";\n";
         _cache << "}\n\n";
+
+        sources[FUNCTION_INFO + ".c"] = _cache.str();
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateZeroSource() {
+    void CLangCompileHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -117,25 +113,21 @@ namespace CppAD {
 
         std::vector<CGD> dep = _fun->Forward(0, indVars);
 
-        CLanguage<Base> langC;
+        std::string basename = baseTypeName();
+
+        CLanguage<Base> langC(basename);
+        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        std::string args = std::string("const ") + basename + " ind[], " + basename + " dep[]";
+        langC.setGenerateFunction(FUNCTION_FORWAD_ZERO, args);
+
         CLangDefaultVariableNameGenerator<Base> nameGen;
 
         std::ostringstream code;
         handler.generateCode(code, langC, dep, nameGen);
-
-        std::string basename = baseTypeName();
-
-        _cache << "#include <math.h>\n\n";
-        _cache << "void " << FUNCTION_FORWAD_ZERO << "(const " << basename << "* ind, " << basename << "* dep) {\n";
-        // declare temporary variables
-        _cache << langC.generateTemporaryVariableDeclaration(basename);
-        // the code
-        _cache << code.str();
-        _cache << "}\n\n";
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateJacobianSource() {
+    void CLangCompileHelper<Base>::generateJacobianSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -146,34 +138,32 @@ namespace CppAD {
 
         std::vector<CGD> jac = _fun->Jacobian(indVars);
 
-        CLanguage<Base> langC;
+        std::string basename = baseTypeName();
+
+        CLanguage<Base> langC(basename);
+        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        std::string args = std::string("const ") + basename + " ind[], " + basename + " jac[]";
+        langC.setGenerateFunction(FUNCTION_JACOBIAN, args);
+
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
         handler.generateCode(code, langC, jac, nameGen);
-
-        std::string basename = baseTypeName();
-
-        _cache << "#include <math.h>\n\n";
-        _cache << "void " << FUNCTION_JACOBIAN << "(const " << basename << "* ind, " << basename << "* jac) {\n";
-        // declare temporary variables
-        _cache << langC.generateTemporaryVariableDeclaration(basename);
-        // the code
-        _cache << code.str();
-        _cache << "}\n\n";
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateHessianSource() {
+    void CLangCompileHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
 
-        size_t m = _fun->Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
 
         // independent variables
-        std::vector<CGD> indVars(m);
+        std::vector<CGD> indVars(n);
         handler.makeVariables(indVars);
         // multipliers
         std::vector<CGD> w(_fun->Range());
@@ -182,27 +172,23 @@ namespace CppAD {
         std::vector<CGD> hess = _fun->Hessian(indVars, w);
 
         // make use of the symmetry of the Hessian in order to reduce operations
-        for (size_t i = 0; i < m; i++) {
+        for (size_t i = 0; i < n; i++) {
             for (size_t j = 0; j < i; j++) {
-                hess[i * m + j] = hess[j * m + i];
+                hess[i * n + j] = hess[j * n + i];
             }
         }
 
-        CLanguage<Base> langC;
-        CLangDefaultHessianVarNameGenerator<Base> nameGen(_fun->Domain());
+        std::string basename = baseTypeName();
+
+        CLanguage<Base> langC(basename);
+        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        std::string args = std::string("const ") + basename + " ind[], const " + basename + " mult[], " + basename + " hess[]";
+        langC.setGenerateFunction(FUNCTION_HESSIAN, args);
+
+        CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
 
         std::ostringstream code;
         handler.generateCode(code, langC, hess, nameGen);
-
-        std::string basename = baseTypeName();
-
-        _cache << "#include <math.h>\n\n";
-        _cache << "void " << FUNCTION_HESSIAN << "(const " << basename << "* ind, const " << basename << "* mult, " << basename << "* hess) {\n";
-        // declare temporary variables
-        _cache << langC.generateTemporaryVariableDeclaration(basename);
-        // the code
-        _cache << code.str();
-        _cache << "}\n\n";
     }
 
     template<class Base>
@@ -260,24 +246,17 @@ namespace CppAD {
             _fun->SparseJacobianReverse(indVars, sparsity, rows, cols, jac, work);
         }
 
-        CLanguage<Base> langC;
+        std::string basename = baseTypeName();
+
+        CLanguage<Base> langC(basename);
+        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        std::string args = std::string("const ") + basename + " ind[], " + basename + " jac[]";
+        langC.setGenerateFunction(FUNCTION_SPARSE_JACOBIAN, args);
+
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
         handler.generateCode(code, langC, jac, nameGen);
-
-        std::string basename = baseTypeName();
-
-        _cache << "#include <math.h>\n\n";
-        _cache << "void " << FUNCTION_SPARSE_JACOBIAN << "(const " << basename << "* ind, " << basename << "* jac) {\n";
-        // declare temporary variables
-        _cache << langC.generateTemporaryVariableDeclaration(basename);
-        // the code
-        _cache << code.str();
-        _cache << "}\n\n";
-
-        sources[FUNCTION_SPARSE_JACOBIAN + ".c"] = _cache.str();
-        _cache.str("");
 
         generateSparsitySource(FUNCTION_JACOBIAN_SPARSITY, rows, cols);
         sources[FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
@@ -311,6 +290,41 @@ namespace CppAD {
             cols = _custom_hess_col;
         }
 
+        // make use of the symmetry of the Hessian in order to reduce operations
+        std::map<size_t, std::map<size_t, size_t> > locations;
+        for (size_t i = 0; i < rows.size(); i++) {
+            locations[rows[i]][cols[i]] = i;
+        }
+
+        std::vector<size_t> upperHessRows, upperHessCols, upperHessOrder;
+        upperHessRows.reserve(rows.size() / 2);
+        upperHessCols.reserve(upperHessRows.size());
+        upperHessOrder.reserve(upperHessRows.size());
+
+        std::map<size_t, size_t> duplicates; // the elements determined using symmetry
+        std::map<size_t, std::map<size_t, size_t> >::const_iterator ii;
+        std::map<size_t, size_t>::const_iterator jj;
+        for (size_t i = 0; i < rows.size(); i++) {
+            bool add = true;
+            if (rows[i] > cols[i]) {
+                ii = locations.find(cols[i]);
+                if (ii != locations.end()) {
+                    jj = ii->second.find(cols[i]);
+                    if (jj != ii->second.end()) {
+                        size_t k = jj->second;
+                        duplicates[i] = k;
+                        add = false; // symmetric value being determined
+                    }
+                }
+            }
+
+            if (add) {
+                upperHessRows.push_back(rows[i]);
+                upperHessCols.push_back(cols[i]);
+                upperHessOrder.push_back(i);
+            }
+        }
+
         /**
          * 
          */
@@ -327,27 +341,31 @@ namespace CppAD {
         handler.makeVariables(w);
 
         CppAD::sparse_hessian_work work;
+        std::vector<CGD> upperHess(upperHessRows.size());
+        _fun->SparseHessian(indVars, w, sparsity, upperHessRows, upperHessCols, upperHess, work);
+
         std::vector<CGD> hess(rows.size());
-        _fun->SparseHessian(indVars, w, sparsity, rows, cols, hess, work);
+        for (size_t i = 0; i < upperHessOrder.size(); i++) {
+            hess[upperHessOrder[i]] = upperHess[i];
+        }
 
-        CLanguage<Base> langC;
-        CLangDefaultHessianVarNameGenerator<Base> nameGen(n);
-
-        std::ostringstream code;
-        handler.generateCode(code, langC, hess, nameGen);
+        // make use of the symmetry of the Hessian in order to reduce operations
+        std::map<size_t, size_t>::const_iterator it2;
+        for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+            hess[it2->first] = hess[it2->second];
+        }
 
         std::string basename = baseTypeName();
 
-        _cache << "#include <math.h>\n\n";
-        _cache << "void " << FUNCTION_SPARSE_HESSIAN << "(const " << basename << "* ind, const " << basename << "* mult, " << basename << "* hess) {\n";
-        // declare temporary variables
-        _cache << langC.generateTemporaryVariableDeclaration(basename);
-        // the code
-        _cache << code.str();
-        _cache << "}\n\n";
+        CLanguage<Base> langC(basename);
+        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        std::string args = std::string("const ") + basename + " ind[], const " + basename + " mult[], " + basename + " hess[]";
+        langC.setGenerateFunction(FUNCTION_SPARSE_HESSIAN, args);
 
-        sources[FUNCTION_SPARSE_HESSIAN + ".c"] = _cache.str();
-        _cache.str("");
+        CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
+
+        std::ostringstream code;
+        handler.generateCode(code, langC, hess, nameGen);
 
         generateSparsitySource(FUNCTION_HESSIAN_SPARSITY, rows, cols);
         sources[FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
@@ -435,12 +453,12 @@ namespace CppAD {
      * Specializations
      */
     template<>
-    inline const std::string CLangCompileHelper<double>::baseTypeName() {
+    inline std::string CLangCompileHelper<double>::baseTypeName() {
         return "double";
     }
 
     template<>
-    inline const std::string CLangCompileHelper<float>::baseTypeName() {
+    inline std::string CLangCompileHelper<float>::baseTypeName() {
         return "float";
     }
 }

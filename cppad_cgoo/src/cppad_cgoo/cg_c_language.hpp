@@ -35,10 +35,12 @@ namespace CppAD {
         static const std::string _C_COMP_OP_NE;
 
     protected:
+        // the type name of the Base class (e.g. "double")
+        const std::string _baseTypeName;
         // line indentation
         const std::string _spaces;
         // output stream for the generated source code
-        std::ostream* _out;
+        std::ostringstream _code;
         // creates the variable names
         VariableNameGenerator<Base>* _nameGen;
         // auxiliary string stream
@@ -58,16 +60,28 @@ namespace CppAD {
         std::string _depAssignOperation;
         // whether or not to ignore assignment of constant zero values to dependent variables
         bool _ignoreZeroDepAssign;
+        // the name of the function to be created (if the string is empty no function is created)
+        std::string _functionName;
+        // the arguments provided to the function
+        std::string _functionArguments;
+        // the arguments provided to local functions called by the main function
+        std::string _localFunctionArguments;
+        // the maximum number of assignment (~lines) per local function
+        size_t _maxAssigmentsPerFunction;
+        //
+        std::map<std::string, std::string>* _sources;
     public:
 
-        CLanguage(size_t spaces = 3) :
+        CLanguage(const std::string& varTypeName, size_t spaces = 3) :
+            _baseTypeName(varTypeName),
             _spaces(spaces, ' '),
-            _out(NULL),
             _nameGen(NULL),
             _independentSize(0),
             _dependent(NULL),
             _depAssignOperation("="),
-            _ignoreZeroDepAssign(false) {
+            _ignoreZeroDepAssign(false),
+            _maxAssigmentsPerFunction(0),
+            _sources(NULL) {
         }
 
         inline const std::string& getDependentAssignOperation() const {
@@ -86,34 +100,52 @@ namespace CppAD {
             _ignoreZeroDepAssign = ignore;
         }
 
-        virtual std::string generateTemporaryVariableDeclaration(const std::string& varTypeName) {
+        virtual void setGenerateFunction(const std::string& functionName, const std::string& functionArguments) {
+            _functionName = functionName;
+            _functionArguments = functionArguments;
+        }
+
+        virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction, std::map<std::string, std::string>* sources) {
+            _maxAssigmentsPerFunction = maxAssigmentsPerFunction;
+            _sources = sources;
+        }
+
+        virtual std::string generateTemporaryVariableDeclaration() {
             assert(_nameGen != NULL);
 
             std::string code;
 
             // declare variables
             if (_temporary.size() > 0) {
-                typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
+                if (_nameGen->isTemporaryVariablesArray()) {
+                    size_t size = _nameGen->getMaxTemporaryVariableID() - _nameGen->getMinTemporaryVariableID() + 1;
+                    const std::string& arrayName = _nameGen->getTemporaryVariablesArrayName();
+                    _ss << _spaces << _baseTypeName << " " << arrayName << "[" << size << "];\n";
+                    code = _ss.str();
+                    _ss.str("");
+                } else {
+                    typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
 
-                for (it = _temporary.begin(); it != _temporary.end(); ++it) {
-                    SourceCodeFragment<Base>* var = it->second;
-                    if (var->getName() == NULL) {
-                        var->setName(_nameGen->generateTemporary(*var));
+                    for (it = _temporary.begin(); it != _temporary.end(); ++it) {
+                        SourceCodeFragment<Base>* var = it->second;
+                        if (var->getName() == NULL) {
+                            var->setName(_nameGen->generateTemporary(*var));
+                        }
                     }
+
+                    SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
+                    const std::string& varName1 = *var1->getName();
+                    code = _spaces + _baseTypeName + " " + varName1;
+
+                    // use a crude estimate of the string size to reserve space
+                    code.reserve(_baseTypeName.size() + 3 + _temporary.size() *(varName1.size() + 3));
+
+                    it = _temporary.begin();
+                    for (it++; it != _temporary.end(); ++it) {
+                        code += ", " + *it->second->getName();
+                    }
+                    code += ";\n";
                 }
-
-                SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
-                const std::string& varName1 = *var1->getName();
-                code = _spaces + varTypeName + " " + varName1;
-
-                // use a crude estimate of the string size to reserve space
-                code.reserve(varTypeName.size() + 3 + _temporary.size() *(varName1.size() + 3));
-
-                it = _temporary.begin();
-                for (it++; it != _temporary.end(); ++it) {
-                    code += ", " + *it->second->getName();
-                }
-                code += ";\n";
             }
 
             return code;
@@ -136,22 +168,26 @@ namespace CppAD {
 
     protected:
 
-        inline std::ostream& out() {
-            return *_out;
-        }
-
         virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) {
-            _out = &out;
+            const bool createFunction = !_functionName.empty() && !_functionArguments.empty();
+            const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != NULL;
+
+            // clean up
+            _code.str("");
+            _ss.str("");
+            _temporary.clear();
+
+            // save some info
             _independentSize = info.independent.size();
             _dependent = &info.dependent;
             _nameGen = &info.nameGen;
             _minTemporaryVarID = info.minTemporaryVarID;
-
             const std::vector<CG<Base> >& dependent = info.dependent;
             const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
 
-            _temporary.clear();
-
+            /**
+             * generate variable names
+             */
             //generate names for the independent variables
             typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
             for (it = info.independent.begin(); it != info.independent.end(); ++it) {
@@ -169,6 +205,9 @@ namespace CppAD {
                 }
             }
 
+            /**
+             * Determine the dependent variables that result from the same operations
+             */
             // dependent variables indexes that are copies of other dependent variables
             std::set<size_t> dependentDuplicates;
 
@@ -188,10 +227,16 @@ namespace CppAD {
                 }
             }
 
-            if (variableOrder.size() > 0) {
-                // non-constant variables
-                *_out << _spaces << "// expressions: " << variableOrder.size() << "\n";
+            // the names of local functions
+            std::vector<std::string> localFuncNames;
+            if (multiFunction) {
+                localFuncNames.reserve(variableOrder.size() / _maxAssigmentsPerFunction);
+            }
 
+            /**
+             * non-constant variables
+             */
+            if (variableOrder.size() > 0) {
                 // generate names for temporary variables
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     SourceCodeFragment<Base>& op = **it;
@@ -202,6 +247,7 @@ namespace CppAD {
                     }
                 }
 
+                size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     SourceCodeFragment<Base>& op = **it;
 
@@ -212,45 +258,118 @@ namespace CppAD {
 
                     bool condAssign = isCondAssign(op.operation());
                     if (!condAssign) {
-                        *_out << _spaces << createVariableName(op) << " ";
-                        *_out << (isDep ? _depAssignOperation : "=") << " ";
+                        _code << _spaces << createVariableName(op) << " ";
+                        _code << (isDep ? _depAssignOperation : "=") << " ";
                     }
                     printExpressionNoVarCheck(op);
                     if (!condAssign) {
-                        *_out << ";\n";
+                        _code << ";\n";
                     }
+
+                    assignCount++;
+                    if (assignCount == _maxAssigmentsPerFunction && multiFunction) {
+                        assignCount = 0;
+                        saveLocalFunction(localFuncNames);
+                    }
+                }
+
+                if (localFuncNames.size() > 0 && assignCount > 0) {
+                    assignCount = 0;
+                    saveLocalFunction(localFuncNames);
+                }
+            }
+
+            if (localFuncNames.size() > 0) {
+                CPPADCG_ASSERT_KNOWN(_nameGen->isTemporaryVariablesArray(),
+                                     "The temporary variables must be saved in an array in order to generate multiple functions");
+
+                std::string localFunctionArguments = _functionArguments + ", "
+                        + _baseTypeName + " " + _nameGen->getTemporaryVariablesArrayName() + "[]";
+
+                // forward declarations
+                for (size_t i = 0; i < localFuncNames.size(); i++) {
+                    _code << "void " << localFuncNames[i] << "(" << localFunctionArguments << ");\n";
+                }
+                _code << "\n"
+                        << "void " << _functionName << "(" << _functionArguments << ") {\n";
+                for (size_t i = 0; i < localFuncNames.size(); i++) {
+                    _code << _spaces << localFuncNames[i] << "(" << localFunctionArguments << ");\n";
                 }
             }
 
             // dependent duplicates
             if (dependentDuplicates.size() > 0) {
-                *_out << _spaces << "// variable duplicates: " << dependentDuplicates.size() << "\n";
+                _code << _spaces << "// variable duplicates: " << dependentDuplicates.size() << "\n";
                 for (std::set<size_t>::const_iterator it = dependentDuplicates.begin(); it != dependentDuplicates.end(); ++it) {
                     size_t index = *it;
                     const CG<Base>& dep = (*_dependent)[index];
                     std::string varName = _nameGen->generateDependent(dep, index);
                     const std::string& origVarName = *dep.getSourceCodeFragment()->getName();
 
-                    *_out << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
+                    _code << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
                 }
             }
 
             // constant dependent variables 
-            *_out << _spaces << "// dependent variables without operations\n";
+            _code << _spaces << "// dependent variables without operations\n";
             for (size_t i = 0; i < dependent.size(); i++) {
                 if (dependent[i].isParameter()) {
                     if (!_ignoreZeroDepAssign || !dependent[i].IdenticalZero()) {
                         std::string varName = _nameGen->generateDependent(dependent[i], i);
-                        *_out << _spaces << varName << " " << _depAssignOperation << " ";
+                        _code << _spaces << varName << " " << _depAssignOperation << " ";
                         printParameter(dependent[i].getParameterValue());
-                        *_out << ";\n";
+                        _code << ";\n";
                     }
                 } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
                     const std::string& indepName = *dependent[i].getSourceCodeFragment()->getName();
-                    *_out << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
+                    _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
             }
+
+            /**
+             * encapsulate the code in a function
+             */
+            if (createFunction) {
+                if (localFuncNames.empty()) {
+                    _ss << "#include <math.h>\n\n";
+                    _ss << "void " << _functionName << "(" << _functionArguments << ") {\n";
+                    // declare temporary variables
+                    _ss << generateTemporaryVariableDeclaration();
+                    // the code
+                    _ss << _code.str();
+                    _ss << "}\n\n";
+
+                    out << _ss.str();
+
+                    if (_sources != NULL) {
+                        (*_sources)[_functionName + ".c"] = _ss.str();
+                    }
+                } else {
+                    _code << "}\n\n";
+
+                    (*_sources)[_functionName + ".c"] = _code.str();
+                }
+            } else {
+                out << _code.str();
+            }
+        }
+
+        virtual void saveLocalFunction(std::vector<std::string>& localFuncNames) {
+            _ss << _functionName << "__" << (localFuncNames.size() + 1);
+            std::string funcName = _ss.str();
+            _ss.str("");
+
+            _ss << "#include <math.h>\n\n";
+            _ss << "void " << funcName << "(" << _functionArguments << ") {\n";
+            _ss << _code.str();
+            _ss << "}\n\n";
+
+            (*_sources)[funcName + ".c"] = _ss.str();
+            localFuncNames.push_back(funcName);
+
+            _code.str("");
+            _ss.str("");
         }
 
         virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) {
@@ -293,7 +412,7 @@ namespace CppAD {
         virtual void printIndependentVariableName(SourceCodeFragment<Base>& op) {
             assert(op.arguments().size() == 0);
 
-            out() << _nameGen->generateIndependent(op);
+            _code << _nameGen->generateIndependent(op);
         }
 
         virtual void print(const Argument<Base>& arg) {
@@ -308,7 +427,7 @@ namespace CppAD {
 
         virtual void printExpression(SourceCodeFragment<Base>& op) throw (CGException) {
             if (op.variableID() > 0) {
-                out() << createVariableName(op);
+                _code << createVariableName(op);
                 return;
             }
 
@@ -377,43 +496,43 @@ namespace CppAD {
 
             switch (op.operation()) {
                 case CGAbsOp:
-                    out() << absFuncName();
+                    _code << absFuncName();
                     break;
                 case CGAcosOp:
-                    out() << acosFuncName();
+                    _code << acosFuncName();
                     break;
                 case CGAsinOp:
-                    out() << asinFuncName();
+                    _code << asinFuncName();
                     break;
                 case CGAtanOp:
-                    out() << atanFuncName();
+                    _code << atanFuncName();
                     break;
                 case CGCoshOp:
-                    out() << coshFuncName();
+                    _code << coshFuncName();
                     break;
                 case CGCosOp:
-                    out() << cosFuncName();
+                    _code << cosFuncName();
                     break;
                 case CGExpOp:
-                    out() << expFuncName();
+                    _code << expFuncName();
                     break;
                 case CGLogOp:
-                    out() << logFuncName();
+                    _code << logFuncName();
                     break;
                 case CGSinhOp:
-                    out() << sinhFuncName();
+                    _code << sinhFuncName();
                     break;
                 case CGSinOp:
-                    out() << sinFuncName();
+                    _code << sinFuncName();
                     break;
                 case CGSqrtOp:
-                    out() << sqrtFuncName();
+                    _code << sqrtFuncName();
                     break;
                 case CGTanhOp:
-                    out() << tanhFuncName();
+                    _code << tanhFuncName();
                     break;
                 case CGTanOp:
-                    out() << tanFuncName();
+                    _code << tanFuncName();
                     break;
                 default:
                     std::stringstream ss;
@@ -421,19 +540,19 @@ namespace CppAD {
                     throw CGException(ss.str());
             }
 
-            out() << "(";
+            _code << "(";
             print(op.arguments()[0]);
-            out() << ")";
+            _code << ")";
         }
 
         virtual void printPowFunction(SourceCodeFragment<Base>& op) throw (CGException) {
             assert(op.arguments().size() == 2);
 
-            out() << powFuncName() << "(";
+            _code << powFuncName() << "(";
             print(op.arguments()[0]);
-            out() << ", ";
+            _code << ", ";
             print(op.arguments()[1]);
-            out() << ")";
+            _code << ")";
         }
 
         virtual void printSignFunction(SourceCodeFragment<Base>& op) throw (CGException) {
@@ -445,24 +564,24 @@ namespace CppAD {
 
             const std::string& argName = createVariableName(arg);
 
-            out() << "(" << argName << " " << _C_COMP_OP_GT << " ";
+            _code << "(" << argName << " " << _C_COMP_OP_GT << " ";
             printParameter(Base(0.0));
-            out() << "?";
+            _code << "?";
             printParameter(Base(1.0));
-            out() << ":(" << argName << " " << _C_COMP_OP_LT << " ";
+            _code << ":(" << argName << " " << _C_COMP_OP_LT << " ";
             printParameter(Base(0.0));
-            out() << "?";
+            _code << "?";
             printParameter(Base(-1.0));
-            out() << ":";
+            _code << ":";
             printParameter(Base(0.0));
-            out() << "))";
+            _code << "))";
         }
 
         virtual void printOperationAdd(SourceCodeFragment<Base>& op) {
             assert(op.arguments().size() == 2);
 
             print(op.arguments()[0]);
-            out() << " + ";
+            _code << " + ";
             print(op.arguments()[1]);
         }
 
@@ -480,13 +599,13 @@ namespace CppAD {
                     !isFunction(opRight->operation());
 
             print(left);
-            out() << " - ";
+            _code << " - ";
             if (encloseRight) {
-                out() << "(";
+                _code << "(";
             }
             print(right);
             if (encloseRight) {
-                out() << ")";
+                _code << ")";
             }
         }
 
@@ -506,19 +625,19 @@ namespace CppAD {
                     !isFunction(opRight->operation());
 
             if (encloseLeft) {
-                out() << "(";
+                _code << "(";
             }
             print(left);
             if (encloseLeft) {
-                out() << ")";
+                _code << ")";
             }
-            out() << " / ";
+            _code << " / ";
             if (encloseRight) {
-                out() << "(";
+                _code << "(";
             }
             print(right);
             if (encloseRight) {
-                out() << ")";
+                _code << ")";
             }
         }
 
@@ -542,19 +661,19 @@ namespace CppAD {
                     !isFunction(opRight->operation());
 
             if (encloseLeft) {
-                out() << "(";
+                _code << "(";
             }
             print(left);
             if (encloseLeft) {
-                out() << ")";
+                _code << ")";
             }
-            out() << " * ";
+            _code << " * ";
             if (encloseRight) {
-                out() << "(";
+                _code << "(";
             }
             print(right);
             if (encloseRight) {
-                out() << ")";
+                _code << ")";
             }
         }
 
@@ -570,13 +689,13 @@ namespace CppAD {
                     scf->operation() != CGMulOp &&
                     !isFunction(scf->operation());
 
-            out() << "-";
+            _code << "-";
             if (enclose) {
-                out() << "(";
+                _code << "(";
             }
             print(arg);
             if (enclose) {
-                out() << ")";
+                _code << ")";
             }
         }
 
@@ -592,21 +711,21 @@ namespace CppAD {
             bool isDep = isDependent(op);
             const std::string& varName = createVariableName(op);
 
-            out() << _spaces << "if( ";
+            _code << _spaces << "if( ";
             print(left);
-            out() << " " << getComparison(op.operation()) << " ";
+            _code << " " << getComparison(op.operation()) << " ";
             print(right);
-            out() << " ) {\n";
-            out() << _spaces << _spaces << varName << " ";
-            out() << (isDep ? _depAssignOperation : "=") << " ";
+            _code << " ) {\n";
+            _code << _spaces << _spaces << varName << " ";
+            _code << (isDep ? _depAssignOperation : "=") << " ";
             print(trueCase);
-            out() << ";\n";
-            out() << _spaces << "} else {\n";
-            out() << _spaces << _spaces << varName << " ";
-            out() << (isDep ? _depAssignOperation : "=") << " ";
+            _code << ";\n";
+            _code << _spaces << "} else {\n";
+            _code << _spaces << _spaces << varName << " ";
+            _code << (isDep ? _depAssignOperation : "=") << " ";
             print(falseCase);
-            out() << ";\n";
-            out() << _spaces << "}\n";
+            _code << ";\n";
+            _code << _spaces << "}\n";
         }
 
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {
@@ -616,9 +735,9 @@ namespace CppAD {
 
         virtual void printParameter(const Base& value) {
             // make sure all digits of floating point values are printed
-            out().unsetf(std::ios::floatfield);
+            _code.unsetf(std::ios::floatfield);
             //std::scientific 
-            out() << std::setprecision(std::numeric_limits< Base >::digits10 + 2) << value;
+            _code << std::setprecision(std::numeric_limits< Base >::digits10 + 2) << value;
         }
 
         virtual const std::string& getComparison(enum CGOpCode op) const {

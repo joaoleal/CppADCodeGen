@@ -27,27 +27,32 @@ namespace CppAD {
         std::string _depName;
         // array name of the independent variables
         std::string _indepName;
-        // variable name prefix for temporary variables
+        // array name of the temporary variables
         std::string _tmpName;
+        // whether or not to use an array for the temporary variables
+        bool _useArray4TempVars;
     public:
 
         CLangDefaultVariableNameGenerator() :
             _depName("dep"),
             _indepName("ind"),
-            _tmpName("var") {
+            _tmpName("var"),
+            _useArray4TempVars(true) {
         }
 
         CLangDefaultVariableNameGenerator(const std::string& depName,
-                                      const std::string& indepName,
-                                      const std::string& tmpName) :
+                                          const std::string& indepName,
+                                          const std::string& tmpName) :
             _depName(depName),
             _indepName(indepName),
-            _tmpName(tmpName) {
+            _tmpName(tmpName),
+            _useArray4TempVars(true) {
         }
 
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
             _ss.clear();
             _ss.str("");
+
             _ss << _depName << "[" << index << "]";
 
             return _ss.str();
@@ -56,7 +61,9 @@ namespace CppAD {
         virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
             _ss.clear();
             _ss.str("");
-            _ss << _indepName << "[" << (independent.variableID() - 1) << "]";
+
+            size_t id = independent.variableID();
+            _ss << _indepName << "[" << (id - 1) << "]";
 
             return _ss.str();
         }
@@ -64,9 +71,23 @@ namespace CppAD {
         virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
             _ss.clear();
             _ss.str("");
-            _ss << _tmpName << variable.variableID();
+
+            size_t id = variable.variableID();
+            if (_useArray4TempVars) {
+                _ss << _tmpName << "[" << (id - this->_minTemporaryID) << "]";
+            } else {
+                _ss << _tmpName << id;
+            }
 
             return _ss.str();
+        }
+
+        virtual bool isTemporaryVariablesArray() const {
+            return _useArray4TempVars;
+        }
+
+        virtual const std::string& getTemporaryVariablesArrayName() const {
+            return _tmpName;
         }
     };
 }

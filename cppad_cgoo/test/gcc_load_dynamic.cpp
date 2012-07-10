@@ -135,7 +135,7 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
 
     vector<CG<double> > dep = f.Forward(0, indVars);
 
-    CLanguage<double> langC;
+    CLanguage<double> langC("double");
     CLangDefaultVariableNameGenerator<double> nameGen;
 
     ostringstream code;
@@ -146,7 +146,7 @@ std::vector<std::vector<double> > run0(ADFun<CG<double> >& f,
             "int " + function + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    source += langC.generateTemporaryVariableDeclaration("double");
+    source += langC.generateTemporaryVariableDeclaration();
 
     source += code.str();
 
@@ -229,7 +229,7 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
 
     vector<CG<double> > jacCG = f.SparseJacobian(indVars);
 
-    CLanguage<double> langC;
+    CLanguage<double> langC("double");
     CLangDefaultVariableNameGenerator<double> nameGen;
 
     ostringstream code;
@@ -240,7 +240,7 @@ std::vector<std::vector<double> > runSparseJac(ADFun<CG<double> >& f,
             "int " + functionJac + "(const double* ind, double* dep) {\n";
 
     // declare variables
-    source += langC.generateTemporaryVariableDeclaration("double");
+    source += langC.generateTemporaryVariableDeclaration();
 
     source += code.str();
 

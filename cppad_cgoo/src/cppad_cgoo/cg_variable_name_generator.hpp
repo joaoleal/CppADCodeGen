@@ -20,12 +20,43 @@ namespace CppAD {
      */
     template<class Base>
     class VariableNameGenerator {
+    protected:
+        // the lowest variable ID used for the temporary variables
+        size_t _minTemporaryID;
+        // the highest variable ID used for the temporary variables
+        size_t _maxTemporaryID;
     public:
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
         virtual std::string generateIndependent(const SourceCodeFragment<Base>& variable) = 0;
 
         virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
+
+        virtual bool isTemporaryVariablesArray() const = 0;
+
+        virtual const std::string& getTemporaryVariablesArrayName() const = 0;
+
+        inline size_t getMinTemporaryVariableID() const {
+            return _minTemporaryID;
+        }
+
+        inline size_t getMaxTemporaryVariableID() const {
+            return _maxTemporaryID;
+        }
+
+    protected:
+
+        inline void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
+            _minTemporaryID = minTempID;
+            _maxTemporaryID = maxTempID;
+            
+            // if
+            //  _minTemporaryID == _maxTemporaryID + 1
+            // then no temporary variables are being used
+            assert(_minTemporaryID <= _maxTemporaryID + 1);
+        }
+
+        friend class CodeHandler<Base>;
     };
 }
 
