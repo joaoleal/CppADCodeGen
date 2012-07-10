@@ -50,6 +50,9 @@ rm check_makefile2.$$
 cd cppad_cgoo/src;
 ls \
 	cppad_cgoo/*.hpp \
+	cppad_cgoo/c/*.hpp \
+	cppad_cgoo/dynamic_lib/*.hpp \
+	cppad_cgoo/dynamic_lib/linux/*.hpp | \
 	sort > check_makefile1.$$
 sed < makefile.am -n \
 	-e '/^nobase_cginclude_HEADERS *=/,/^# End nobase_cginclude_HEADERS/p' | \

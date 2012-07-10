@@ -88,10 +88,10 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 // ---------------------------------------------------------------------------
 // C source code generation
-#include <cppad_cgoo/cg_c_language.hpp>
-#include <cppad_cgoo/cg_c_language_double.hpp>
-#include <cppad_cgoo/cg_c_lang_default_var_name_gen.hpp>
-#include <cppad_cgoo/cg_c_lang_default_hessian_var_name_gen.hpp>
+#include <cppad_cgoo/c/cg_c_language.hpp>
+#include <cppad_cgoo/c/cg_c_language_double.hpp>
+#include <cppad_cgoo/c/cg_c_lang_default_var_name_gen.hpp>
+#include <cppad_cgoo/c/cg_c_lang_default_hessian_var_name_gen.hpp>
 
 // automated dynamic library creation
 #include <cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp>

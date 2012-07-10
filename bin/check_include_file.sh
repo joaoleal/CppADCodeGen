@@ -38,6 +38,7 @@ root[cppad]="cppad"
 rootInclude[cppad]=""
 #
 files[cppad_cgoo]="cppad_cgoo/src/cppad_cgoo/*.hpp\
+                   cppad_cgoo/src/cppad_cgoo/c/*.hpp\
                    cppad_cgoo/src/cppad_cgoo/dynamic_lib/*.hpp\
                    cppad_cgoo/src/cppad_cgoo/dynamic_lib/linux/*.hpp"
 root[cppad_cgoo]="cppad_cgoo/src/"

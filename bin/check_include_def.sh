@@ -56,6 +56,7 @@ rm bin/check_include_def.2.$$
 cd cppad_cgoo/src/;
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	cppad_cgoo/*.hpp \
+	cppad_cgoo/c/*.hpp \
 	cppad_cgoo/dynamic_lib/*.hpp \
 	cppad_cgoo/dynamic_lib/linux/*.hpp \
 	| sed \
@@ -66,6 +67,7 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 #
 ls \
 	cppad_cgoo/*.hpp \
+	cppad_cgoo/c/*.hpp \
 	cppad_cgoo/dynamic_lib/*.hpp \
 	cppad_cgoo/dynamic_lib/linux/*.hpp \
 	| sed -e 's|.*/||' \

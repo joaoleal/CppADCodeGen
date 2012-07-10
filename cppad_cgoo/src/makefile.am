@@ -30,10 +30,6 @@ nobase_cginclude_HEADERS =  \
 	cppad_cgoo/cg_arithmetic.hpp \
 	cppad_cgoo/cg_arithmetic_assign.hpp \
 	cppad_cgoo/cg_base_double.hpp \
-	cppad_cgoo/cg_c_lang_default_var_name_gen.hpp \
-	cppad_cgoo/cg_c_lang_default_hessian_var_name_gen.hpp \
-	cppad_cgoo/cg_c_language.hpp \
-	cppad_cgoo/cg_c_language_double.hpp \
 	cppad_cgoo/cg_cg.hpp \
 	cppad_cgoo/cg_code_handler.hpp \
 	cppad_cgoo/cg_compare.hpp \
@@ -53,6 +49,10 @@ nobase_cginclude_HEADERS =  \
 	cppad_cgoo/cg_unary.hpp \
 	cppad_cgoo/cg_variable.hpp \
 	cppad_cgoo/cg_variable_name_generator.hpp \
+	cppad_cgoo/c/cg_c_lang_default_var_name_gen.hpp \
+	cppad_cgoo/c/cg_c_lang_default_hessian_var_name_gen.hpp \
+	cppad_cgoo/c/cg_c_language.hpp \
+	cppad_cgoo/c/cg_c_language_double.hpp \
 	cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper.hpp \
 	cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper_impl.hpp \
 	cppad_cgoo/dynamic_lib/cg_c_lang_compiler.hpp \
