@@ -46,6 +46,9 @@ namespace CppAD {
     const std::string CLangCompileHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";
 
     template<class Base>
+    const std::string CLangCompileHelper<Base>::CONST = "const";
+
+    template<class Base>
     DynamicLib<Base>* CLangCompileHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
         std::map<std::string, std::string> sources;
         if (_zero) {
@@ -93,7 +96,7 @@ namespace CppAD {
 
         _cache.str("");
         _cache << "void " << FUNCTION_INFO << "(const char** baseName, unsigned long int* m, unsigned long int* n) {\n";
-        _cache << "*baseName = \"" << baseTypeName() << "  " << localBaseName << "\";\n";
+        _cache << "*baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
         _cache << "*m = " << _fun->Range() << ";\n";
         _cache << "*n = " << _fun->Domain() << ";\n";
         _cache << "}\n\n";
@@ -113,11 +116,11 @@ namespace CppAD {
 
         std::vector<CGD> dep = _fun->Forward(0, indVars);
 
-        std::string basename = baseTypeName();
-
-        CLanguage<Base> langC(basename);
+        CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::string args = std::string("const ") + basename + " ind[], " + basename + " dep[]";
+        std::vector<FuncArgument> args(2);
+        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
+        args[1] = FuncArgument(_baseTypeName + "*", "dep");
         langC.setGenerateFunction(FUNCTION_FORWAD_ZERO, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen;
@@ -138,11 +141,11 @@ namespace CppAD {
 
         std::vector<CGD> jac = _fun->Jacobian(indVars);
 
-        std::string basename = baseTypeName();
-
-        CLanguage<Base> langC(basename);
+        CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::string args = std::string("const ") + basename + " ind[], " + basename + " jac[]";
+        std::vector<FuncArgument> args(2);
+        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
+        args[1] = FuncArgument(_baseTypeName + "*", "jac");
         langC.setGenerateFunction(FUNCTION_JACOBIAN, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
@@ -178,11 +181,12 @@ namespace CppAD {
             }
         }
 
-        std::string basename = baseTypeName();
-
-        CLanguage<Base> langC(basename);
+        CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::string args = std::string("const ") + basename + " ind[], const " + basename + " mult[], " + basename + " hess[]";
+        std::vector<FuncArgument> args(3);
+        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
+        args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
+        args[2] = FuncArgument(_baseTypeName + "*", "hess");
         langC.setGenerateFunction(FUNCTION_HESSIAN, args);
 
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
@@ -246,11 +250,11 @@ namespace CppAD {
             _fun->SparseJacobianReverse(indVars, sparsity, rows, cols, jac, work);
         }
 
-        std::string basename = baseTypeName();
-
-        CLanguage<Base> langC(basename);
+        CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::string args = std::string("const ") + basename + " ind[], " + basename + " jac[]";
+        std::vector<FuncArgument> args(2);
+        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
+        args[1] = FuncArgument(_baseTypeName + "*", "jac");
         langC.setGenerateFunction(FUNCTION_SPARSE_JACOBIAN, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
@@ -355,11 +359,12 @@ namespace CppAD {
             hess[it2->first] = hess[it2->second];
         }
 
-        std::string basename = baseTypeName();
-
-        CLanguage<Base> langC(basename);
+        CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::string args = std::string("const ") + basename + " ind[], const " + basename + " mult[], " + basename + " hess[]";
+        std::vector<FuncArgument> args(3);
+        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
+        args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
+        args[2] = FuncArgument(_baseTypeName + "*", "hess");
         langC.setGenerateFunction(FUNCTION_SPARSE_HESSIAN, args);
 
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);

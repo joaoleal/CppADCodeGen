@@ -66,6 +66,7 @@ bool Dynamic1() {
     compHelp.setCreateHessian(true);
     compHelp.setCreateSparseJacobian(true);
     compHelp.setCreateSparseHessian(true);
+    compHelp.setMaxAssignmentsPerFunc(1);
 
     GccCompiler<double> compiler;
 
@@ -245,7 +246,8 @@ bool Dynamic2() {
 }
 
 bool Dynamic() {
-    bool ok = Dynamic1();
+    bool ok = true;
+    ok &= Dynamic1();
     ok &= Dynamic2();
 
     return ok;

@@ -33,7 +33,10 @@ namespace CppAD {
         static const std::string FUNCTION_VERSION;
         static const unsigned long int API_VERSION;
     protected:
+        static const std::string CONST;
+    protected:
         ADFun<CppAD::CG<Base> >* _fun;
+        const std::string _baseTypeName;
         bool _zero;
         bool _jacobian;
         bool _hessian;
@@ -50,6 +53,7 @@ namespace CppAD {
 
         CLangCompileHelper(ADFun<CppAD::CG<Base> >* fun) :
             _fun(fun),
+            _baseTypeName(CLangCompileHelper<Base>::baseTypeName()),
             _zero(true),
             _jacobian(false),
             _hessian(false),

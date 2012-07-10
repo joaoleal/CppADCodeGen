@@ -20,6 +20,22 @@ inline virtual const std::string& fn ## FuncName() {\
 namespace CppAD {
 
     /**
+     * Function arguments
+     */
+    typedef struct FuncArgument {
+        std::string type;
+        std::string name;
+
+        inline FuncArgument() {
+        }
+
+        inline FuncArgument(const std::string& typ, const std::string & nam) :
+            type(typ),
+            name(nam) {
+        }
+    } FuncArgument;
+
+    /**
      * Generates code for the C language
      * 
      * \author Joao Leal
@@ -63,13 +79,18 @@ namespace CppAD {
         // the name of the function to be created (if the string is empty no function is created)
         std::string _functionName;
         // the arguments provided to the function
-        std::string _functionArguments;
+        std::vector<FuncArgument> _functionArguments;
         // the arguments provided to local functions called by the main function
         std::string _localFunctionArguments;
         // the maximum number of assignment (~lines) per local function
         size_t _maxAssigmentsPerFunction;
         //
         std::map<std::string, std::string>* _sources;
+    private:
+        std::string defaultFuncArgDcl_;
+        std::string localFuncArgDcl_;
+        std::string localFuncArgs_;
+
     public:
 
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
@@ -100,7 +121,7 @@ namespace CppAD {
             _ignoreZeroDepAssign = ignore;
         }
 
-        virtual void setGenerateFunction(const std::string& functionName, const std::string& functionArguments) {
+        virtual void setGenerateFunction(const std::string& functionName, const std::vector<FuncArgument>& functionArguments) {
             _functionName = functionName;
             _functionArguments = functionArguments;
         }
@@ -116,36 +137,34 @@ namespace CppAD {
             std::string code;
 
             // declare variables
-            if (_temporary.size() > 0) {
-                if (_nameGen->isTemporaryVariablesArray()) {
-                    size_t size = _nameGen->getMaxTemporaryVariableID() - _nameGen->getMinTemporaryVariableID() + 1;
-                    const std::string& arrayName = _nameGen->getTemporaryVariablesArrayName();
-                    _ss << _spaces << _baseTypeName << " " << arrayName << "[" << size << "];\n";
-                    code = _ss.str();
-                    _ss.str("");
-                } else {
-                    typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
+            if (_nameGen->isTemporaryVariablesArray()) {
+                size_t size = _nameGen->getMaxTemporaryVariableID() + 1 - _nameGen->getMinTemporaryVariableID();
+                const std::string& arrayName = _nameGen->getTemporaryVariablesArrayName();
+                _ss << _spaces << _baseTypeName << " " << arrayName << "[" << size << "]; // auxiliary variables\n";
+                code = _ss.str();
+                _ss.str("");
+            } else if (_temporary.size() > 0) {
+                typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
 
-                    for (it = _temporary.begin(); it != _temporary.end(); ++it) {
-                        SourceCodeFragment<Base>* var = it->second;
-                        if (var->getName() == NULL) {
-                            var->setName(_nameGen->generateTemporary(*var));
-                        }
+                for (it = _temporary.begin(); it != _temporary.end(); ++it) {
+                    SourceCodeFragment<Base>* var = it->second;
+                    if (var->getName() == NULL) {
+                        var->setName(_nameGen->generateTemporary(*var));
                     }
-
-                    SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
-                    const std::string& varName1 = *var1->getName();
-                    code = _spaces + _baseTypeName + " " + varName1;
-
-                    // use a crude estimate of the string size to reserve space
-                    code.reserve(_baseTypeName.size() + 3 + _temporary.size() *(varName1.size() + 3));
-
-                    it = _temporary.begin();
-                    for (it++; it != _temporary.end(); ++it) {
-                        code += ", " + *it->second->getName();
-                    }
-                    code += ";\n";
                 }
+
+                SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
+                const std::string& varName1 = *var1->getName();
+                code = _spaces + _baseTypeName + " " + varName1;
+
+                // use a crude estimate of the string size to reserve space
+                code.reserve(_baseTypeName.size() + 3 + _temporary.size() *(varName1.size() + 3));
+
+                it = _temporary.begin();
+                for (it++; it != _temporary.end(); ++it) {
+                    code += ", " + *it->second->getName();
+                }
+                code += ";\n";
             }
 
             return code;
@@ -176,6 +195,9 @@ namespace CppAD {
             _code.str("");
             _ss.str("");
             _temporary.clear();
+            defaultFuncArgDcl_ = "";
+            localFuncArgDcl_ = "";
+            localFuncArgs_ = "";
 
             // save some info
             _independentSize = info.independent.size();
@@ -203,6 +225,22 @@ namespace CppAD {
                 if (op != NULL && op->getName() == NULL) {
                     op->setName(_nameGen->generateDependent(dependent[i], i));
                 }
+            }
+
+            /**
+             * function variable declaration
+             */
+            if (_functionArguments.size() > 0) {
+                defaultFuncArgDcl_ = _functionArguments[0].type + " " + _functionArguments[0].name;
+                localFuncArgs_ = _functionArguments[0].name;
+                for (size_t i = 1; i < _functionArguments.size(); i++) {
+                    defaultFuncArgDcl_ += ", " + _functionArguments[i].type + " " + _functionArguments[i].name;
+                    localFuncArgs_ += ", " + _functionArguments[i].name;
+                }
+
+                const std::string& tmpArray = _nameGen->getTemporaryVariablesArrayName();
+                localFuncArgDcl_ = defaultFuncArgDcl_ + ", " + _baseTypeName + " " + tmpArray + "[]";
+                localFuncArgs_ += ", " + tmpArray;
             }
 
             /**
@@ -249,6 +287,11 @@ namespace CppAD {
 
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
+                    if (assignCount >= _maxAssigmentsPerFunction && multiFunction) {
+                        assignCount = 0;
+                        saveLocalFunction(localFuncNames);
+                    }
+
                     SourceCodeFragment<Base>& op = **it;
 
                     bool isDep = isDependent(op);
@@ -267,10 +310,6 @@ namespace CppAD {
                     }
 
                     assignCount++;
-                    if (assignCount == _maxAssigmentsPerFunction && multiFunction) {
-                        assignCount = 0;
-                        saveLocalFunction(localFuncNames);
-                    }
                 }
 
                 if (localFuncNames.size() > 0 && assignCount > 0) {
@@ -283,17 +322,15 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(_nameGen->isTemporaryVariablesArray(),
                                      "The temporary variables must be saved in an array in order to generate multiple functions");
 
-                std::string localFunctionArguments = _functionArguments + ", "
-                        + _baseTypeName + " " + _nameGen->getTemporaryVariablesArrayName() + "[]";
-
                 // forward declarations
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
-                    _code << "void " << localFuncNames[i] << "(" << localFunctionArguments << ");\n";
+                    _code << "void " << localFuncNames[i] << "(" << localFuncArgDcl_ << ");\n";
                 }
                 _code << "\n"
-                        << "void " << _functionName << "(" << _functionArguments << ") {\n";
+                        << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n"
+                        << generateTemporaryVariableDeclaration();
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
-                    _code << _spaces << localFuncNames[i] << "(" << localFunctionArguments << ");\n";
+                    _code << _spaces << localFuncNames[i] << "(" << localFuncArgs_ << ");\n";
                 }
             }
 
@@ -333,7 +370,7 @@ namespace CppAD {
             if (createFunction) {
                 if (localFuncNames.empty()) {
                     _ss << "#include <math.h>\n\n";
-                    _ss << "void " << _functionName << "(" << _functionArguments << ") {\n";
+                    _ss << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
                     // declare temporary variables
                     _ss << generateTemporaryVariableDeclaration();
                     // the code
@@ -360,10 +397,10 @@ namespace CppAD {
             std::string funcName = _ss.str();
             _ss.str("");
 
-            _ss << "#include <math.h>\n\n";
-            _ss << "void " << funcName << "(" << _functionArguments << ") {\n";
-            _ss << _code.str();
-            _ss << "}\n\n";
+            _ss << "#include <math.h>\n\n"
+                    << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n"
+                    << _code.str()
+                    << "}\n\n";
 
             (*_sources)[funcName + ".c"] = _ss.str();
             localFuncNames.push_back(funcName);
