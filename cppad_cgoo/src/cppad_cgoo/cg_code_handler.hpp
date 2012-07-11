@@ -41,6 +41,8 @@ namespace CppAD {
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
         size_t _minTemporaryVarID;
+        //
+        bool _verbose;
     public:
 
         CodeHandler(size_t varCount = 50) :
@@ -48,16 +50,17 @@ namespace CppAD {
             _used(false),
             _reuseIDs(true),
             _lang(NULL),
-            _minTemporaryVarID(0) {
+            _minTemporaryVarID(0),
+            _verbose(false) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
 
-        void setReuseVariableIDs(bool reuse) {
+        inline void setReuseVariableIDs(bool reuse) {
             _reuseIDs = reuse;
         }
 
-        bool isReuseVariableIDs() const {
+        inline bool isReuseVariableIDs() const {
             return _reuseIDs;
         }
 
@@ -72,8 +75,16 @@ namespace CppAD {
             variable.makeVariable(*this, _independentVariables.back());
         }
 
-        virtual size_t getMaximumVariableID() const {
+        inline size_t getMaximumVariableID() const {
             return _idCount;
+        }
+
+        inline bool isVerbose() const {
+            return _verbose;
+        }
+
+        inline void setVerbose(bool verbose) {
+            _verbose = verbose;
         }
 
         /**
@@ -87,7 +98,18 @@ namespace CppAD {
          *                  reduced and thus providing a more optimized code.
          * \param nameGen Provides the rules for variable name creation.
          */
-        virtual void generateCode(std::ostream& out, CppAD::Language<Base>& lang, std::vector<CG<Base> >& dependent, VariableNameGenerator<Base>& nameGen) {
+        virtual void generateCode(std::ostream& out,
+                                  CppAD::Language<Base>& lang,
+                                  std::vector<CG<Base> >& dependent,
+                                  VariableNameGenerator<Base>& nameGen, 
+                                  const std::string& jobName = "source") {
+            double beginTime;
+            if (_verbose) {
+                std::cout << "generating '" << jobName << "' ... ";
+                std::cout.flush();
+                beginTime = system::currentTime();
+            }
+
             _lang = &lang;
             _idCount = 0;
 
@@ -153,7 +175,7 @@ namespace CppAD {
             }
 
             nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount);
-            
+
             /**
              * Creates the source code for a specific language
              */
@@ -161,6 +183,11 @@ namespace CppAD {
                                               _minTemporaryVarID, _variableOrder,
                                               nameGen, _reuseIDs);
             lang.generateSourceCode(out, info);
+
+            if (_verbose) {
+                double endTime = system::currentTime();
+                std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
+            }
         }
 
         virtual void reset() {

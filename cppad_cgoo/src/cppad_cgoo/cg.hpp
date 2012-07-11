@@ -64,6 +64,11 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad/cppad.hpp>
 
 // ---------------------------------------------------------------------------
+// system dependent files
+#include <cppad_cgoo/dynamic_lib/cg_system.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_linux_system.hpp>
+
+// ---------------------------------------------------------------------------
 // core files
 #include <cppad_cgoo/cg_debug.hpp>
 #include <cppad_cgoo/cg_operation.hpp>
@@ -105,7 +110,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 // ---------------------------------------------------------------------------
 // automated dynamic library creation for linux
-#include <cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compiler.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp>

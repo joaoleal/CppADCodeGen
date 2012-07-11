@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_COMPILE_HELPER_IMPL_INCLUDED
-#define	CPPAD_CG_C_LANG_COMPILE_HELPER_IMPL_INCLUDED
+#ifndef CPPAD_CG_C_LANG_COMPILE_DYNAMIC_HELPER_IMPL_INCLUDED
+#define	CPPAD_CG_C_LANG_COMPILE_DYNAMIC_HELPER_IMPL_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -34,10 +34,13 @@ namespace CppAD {
             for (it = _models.begin(); it != _models.end(); ++it) {
                 it->second->compileSources(compiler);
             }
-
+            
             std::map<std::string, std::string> sources;
             generateVerionSource(sources);
             generateModelsSource(sources);
+
+            sources.insert(_customSource.begin(), _customSource.end());
+
             compiler.compileSources(sources, true);
 
             compiler.buildDynamic(_libraryName);

@@ -23,6 +23,7 @@ namespace CppAD {
     protected:
         std::string _gccPath;
         std::set<std::string> _ofiles;
+        std::set<std::string> _sfiles;
     public:
 
         GccCompiler() :
@@ -41,6 +42,14 @@ namespace CppAD {
             _gccPath = gccPath;
         }
 
+        virtual const std::set<std::string>& getObjectFiles() const {
+            return _ofiles;
+        }
+
+        virtual const std::set<std::string>& getSourceFiles() const {
+            return _sfiles;
+        }
+
         /**
          * creates a dynamic library with the provided C source code
          * 
@@ -53,33 +62,45 @@ namespace CppAD {
                                     bool savefiles) {
 
             if (savefiles) {
-                CLangCompiler<Base>::createFolder(this->_sourcesFolder);
+                system::createFolder(this->_sourcesFolder);
 
                 std::map<std::string, std::string>::const_iterator it;
                 for (it = sources.begin(); it != sources.end(); ++it) {
                     // for debugging purposes only
                     std::ofstream sourceFile;
-                    std::string file = createPath(this->_sourcesFolder, it->first);
+                    std::string file = system::createPath(this->_sourcesFolder, it->first);
                     sourceFile.open(file.c_str());
                     sourceFile << it->second;
                     sourceFile.close();
                 }
             }
 
-            CLangCompiler<Base>::createFolder(this->_tmpFolder);
+            system::createFolder(this->_tmpFolder);
 
             // compile each source code file into a different object file
+            size_t maxsize = 0;
             std::map<std::string, std::string>::const_iterator it;
+            for (it = sources.begin(); it != sources.end(); ++it) {
+                _sfiles.insert(it->first);
+                std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
+                _ofiles.insert(file);
+                maxsize = std::max(maxsize, file.size());
+            }
+
             size_t count = 0;
             std::cout << std::endl;
             for (it = sources.begin(); it != sources.end(); ++it) {
                 count++;
-                std::string file = createPath(this->_tmpFolder, it->first + ".o");
-                _ofiles.insert(file);
-                std::cout << "[" << count << "/" << sources.size() << "] compiling '" << file << "' ... ";
+                std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
+
+                double beginTime = system::currentTime();
+                std::cout << "[" << count << "/" << sources.size() << "] compiling '" << std::setw(maxsize + 8) << (file + "' ...  ");
                 std::cout.flush();
+
                 compile(it->second, file);
-                std::cout << "done" << std::endl;
+
+                double endTime = system::currentTime();
+                std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
             }
         }
 
@@ -103,7 +124,7 @@ namespace CppAD {
             }
 
             std::cout << "building library" << std::endl;
-            CLangCompiler<Base>::callExecutable(_gccPath, args);
+            system::callExecutable(_gccPath, args);
         }
 
         virtual void cleanup() {
@@ -114,6 +135,7 @@ namespace CppAD {
                     std::cerr << "Failed to delete temporary file '" << *it << "'" << std::endl;
             }
             _ofiles.clear();
+            _sfiles.clear();
 
             remove(this->_tmpFolder.c_str());
         }
@@ -142,7 +164,7 @@ namespace CppAD {
             args.push_back("-o");
             args.push_back(output);
 
-            CLangCompiler<Base>::callExecutable(_gccPath, args, true, source);
+            system::callExecutable(_gccPath, args, true, source);
         }
 
     private:

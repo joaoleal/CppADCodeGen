@@ -30,6 +30,7 @@ namespace CppAD {
         static const std::string CONST;
     protected:
         std::map<std::string, CLangCompileModelHelper<Base>*> _models; // holds all models
+        std::map<std::string, std::string> _customSource; // custom functions to be compiled in the dynamic library
         std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
     public:
@@ -61,6 +62,12 @@ namespace CppAD {
 
         const std::map<std::string, CLangCompileModelHelper<Base>*>& getModels() const {
             return _models;
+        }
+
+        void addCustomFunctionSource(const std::string& filename, const std::string& source) {
+            CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty");
+            
+            _customSource[filename] = source;
         }
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);

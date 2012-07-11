@@ -71,6 +71,10 @@ namespace CppAD {
             _tmpFolder = tmpFolder;
         }
 
+        virtual const std::set<std::string>& getObjectFiles() const = 0;
+
+        virtual const std::set<std::string>& getSourceFiles() const = 0;
+
         /**
          * creates a dynamic library with the provided C source code
          * 
@@ -95,44 +99,6 @@ namespace CppAD {
          */
         virtual void cleanup() = 0;
 
-    protected:
-
-        /**
-         * creates a new folder (system dependent)
-         * 
-         * \param folder the path to the folder
-         */
-        static void createFolder(const std::string& folder);
-
-        /**
-         * Creates a new path (system dependent)
-         * 
-         * \param baseFolder the path to the base folder
-         * \param file the file or folder name inside the base folder
-         * \return the new path
-         */
-        static std::string createPath(const std::string& baseFolder, const std::string& file);
-
-        /**
-         * Calls an external executable (system dependent)
-         * 
-         * @param executable the executable path
-         * @param args the command line arguments to the executable
-         * @param pipe whether or not to create a pipe to the executable
-         * @param message the information to pass in the pipe
-         */
-        static void callExecutable(const std::string& executable,
-                                   const std::vector<std::string>& args,
-                                   bool pipe = false,
-                                   const std::string& message = "");
-
-        /**
-         * Escapes a file or folder path (system dependent)
-         * 
-         * \param path the file/folder path
-         * \return the escaped file/folder path
-         */
-        static std::string escapePath(const std::string& path);
     };
 
 }

@@ -108,7 +108,7 @@ namespace CppAD {
         CLangDefaultVariableNameGenerator<Base> nameGen;
 
         std::ostringstream code;
-        handler.generateCode(code, langC, dep, nameGen);
+        handler.generateCode(code, langC, dep, nameGen, "model (zero-order forward)");
     }
 
     template<class Base>
@@ -133,7 +133,7 @@ namespace CppAD {
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
-        handler.generateCode(code, langC, jac, nameGen);
+        handler.generateCode(code, langC, jac, nameGen, "Jacobian");
     }
 
     template<class Base>
@@ -174,7 +174,7 @@ namespace CppAD {
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, hess, nameGen);
+        handler.generateCode(code, langC, hess, nameGen, "Hessian");
     }
 
     template<class Base>
@@ -242,7 +242,7 @@ namespace CppAD {
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
-        handler.generateCode(code, langC, jac, nameGen);
+        handler.generateCode(code, langC, jac, nameGen, "sparse Jacobian");
 
         generateSparsitySource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
@@ -352,7 +352,7 @@ namespace CppAD {
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, hess, nameGen);
+        handler.generateCode(code, langC, hess, nameGen, "sparse Hessian");
 
         generateSparsitySource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();

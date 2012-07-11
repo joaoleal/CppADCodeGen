@@ -27,6 +27,8 @@ namespace CppAD {
 
         virtual size_t getAPIVersion() = 0;
 
+        virtual void* loadFunction(const std::string& functionName, std::string& error) = 0;
+
     };
 
 }

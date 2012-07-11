@@ -268,10 +268,11 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp \
 	cppad_cgoo/dynamic_lib/cg_dynamiclib_model.hpp \
 	cppad_cgoo/dynamic_lib/cg_gcc_compiler.hpp \
+	cppad_cgoo/dynamic_lib/cg_system.hpp \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp \
-	cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compiler.hpp \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib.hpp \
-	cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp
+	cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp \
+	cppad_cgoo/dynamic_lib/linux/cg_linux_system.hpp
 
 all: all-am
 

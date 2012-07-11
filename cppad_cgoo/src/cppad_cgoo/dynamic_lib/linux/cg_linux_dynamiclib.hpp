@@ -67,6 +67,18 @@ namespace CppAD {
         virtual size_t getAPIVersion() {
             return _version;
         }
+        
+        virtual void* loadFunction(const std::string& functionName, std::string& error) {
+            void* functor = dlsym(_dynLibHandle, functionName.c_str());
+            char *err;
+            error.clear();
+            if ((err = dlerror()) != NULL) {
+                error += "Failed to load function '";
+                error += functionName + ": " + err;
+                return NULL;
+            }
+            return functor;
+        }
 
         virtual ~LinuxDynamicLib() {
             typename std::map<std::string, DynamicLibModel<Base>*>::const_iterator it;
@@ -111,18 +123,6 @@ namespace CppAD {
             for (int i = 0; i < model_count; i++) {
                 _models[model_names[i]] = new LinuxDynamicLibModel<Base>(this, model_names[i]);
             }
-        }
-
-        inline void* loadFunction(const std::string& functionName, std::string& error) {
-            void* functor = dlsym(_dynLibHandle, functionName.c_str());
-            char *err;
-            error.clear();
-            if ((err = dlerror()) != NULL) {
-                error += "Failed to load function '";
-                error += functionName + ": " + err;
-                return NULL;
-            }
-            return functor;
         }
 
     private:

@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_COMPILE_HELPER_LINUX_INCLUDED
-#define	CPPAD_CG_C_LANG_COMPILE_HELPER_LINUX_INCLUDED
+#ifndef CPPAD_CG_LINUX_C_LANG_COMPILE_DYNAMIC_HELPER_INCLUDED
+#define	CPPAD_CG_LINUX_C_LANG_COMPILE_DYNAMIC_HELPER_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
