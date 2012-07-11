@@ -88,6 +88,20 @@ namespace CppAD {
             return s;
         }
 
+        virtual void JacobianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) {
+            CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
+
+            unsigned long int const* row, *col;
+            unsigned long int nnz;
+            (*_jacobianSparsity)(&row, &col, &nnz);
+
+            rows.resize(nnz);
+            cols.resize(nnz);
+
+            std::copy(row, row + nnz, rows.begin());
+            std::copy(col, col + nnz, cols.begin());
+        }
+
         // Hessian sparsity 
 
         virtual std::vector<bool> HessianSparsityBool() {
@@ -120,6 +134,20 @@ namespace CppAD {
             return s;
         }
 
+        virtual void HessianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) {
+            CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
+
+            unsigned long int const* row, *col;
+            unsigned long int nnz;
+            (*_hessianSparsity)(&row, &col, &nnz);
+
+            rows.resize(nnz);
+            cols.resize(nnz);
+
+            std::copy(row, row + nnz, rows.begin());
+            std::copy(col, col + nnz, cols.begin());
+        }
+
         /// number of independent variables
 
         virtual size_t Domain() const {
@@ -149,6 +177,14 @@ namespace CppAD {
             (*_zero)(&x[0], &dep[0]);
         }
 
+        virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) {
+            CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+
+            (*_zero)(x, dep);
+        }
+
         /// calculate entire Jacobian       
 
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) {
@@ -164,6 +200,15 @@ namespace CppAD {
 
             jac.resize(_m * _n);
             (*_jacobian)(&x[0], &jac[0]);
+        }
+
+        virtual void Jacobian(const Base* x, size_t x_size,
+                              Base* jac, size_t jac_size) {
+            CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(jac_size == _m * _n, "Invalid Jacobian array size");
+
+            (*_jacobian)(x, jac);
         }
 
         /// calculate Hessian for one component of f
@@ -195,6 +240,16 @@ namespace CppAD {
 
             hess.resize(_n * _n);
             (*_hessian)(&x[0], &w[0], &hess[0]);
+        }
+
+        virtual void Hessian(const Base* x, size_t x_size,
+                             const Base* w, size_t w_size,
+                             Base* hess) {
+            CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+
+            (*_hessian)(x, w, hess);
         }
 
         /// calculate sparse Jacobians 
@@ -245,6 +300,26 @@ namespace CppAD {
             std::copy(dcol, dcol + nnz, col.begin());
         }
 
+        virtual void SparseJacobian(const Base* x, size_t x_size,
+                                    Base* jac,
+                                    size_t const** row,
+                                    size_t const** col,
+                                    size_t nnz) {
+
+            CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+
+            unsigned long int const* drow;
+            unsigned long int const* dcol;
+            unsigned long int K;
+            (*_jacobianSparsity)(&drow, &dcol, &K);
+            CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Jacobian");
+            *row = drow;
+            *col = dcol;
+
+            (*_sparseJacobian)(x, jac);
+        }
+
         /// calculate sparse Hessians 
 
         virtual std::vector<Base> SparseHessian(const std::vector<Base> &x, const std::vector<Base> &w) {
@@ -291,6 +366,26 @@ namespace CppAD {
             (*_sparseHessian)(&x[0], &w[0], &hess[0]);
             std::copy(drow, drow + nnz, row.begin());
             std::copy(dcol, dcol + nnz, col.begin());
+        }
+
+        virtual void SparseHessian(const Base* x, size_t x_size,
+                                   const Base* w, size_t w_size,
+                                   Base* hess,
+                                   size_t const** row,
+                                   size_t const** col,
+                                   size_t nnz) {
+            CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+
+            unsigned long int const* drow, *dcol;
+            unsigned long int K;
+            (*_hessianSparsity)(&drow, &dcol, &K);
+            CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Hessian");
+            *row = drow;
+            *col = dcol;
+
+            (*_sparseHessian)(x, w, hess);
         }
 
         virtual ~LinuxDynamicLibModel() {

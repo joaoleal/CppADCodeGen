@@ -26,10 +26,12 @@ namespace CppAD {
         // Jacobian sparsity 
         virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
         virtual std::vector<bool> JacobianSparsityBool() = 0;
+        virtual void JacobianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
 
         // Hessian sparsity 
         virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
         virtual std::vector<bool> HessianSparsityBool() = 0;
+        virtual void HessianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
 
         /// number of independent variables
         virtual size_t Domain() const = 0;
@@ -41,11 +43,15 @@ namespace CppAD {
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;
 
         virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) = 0;
+        virtual void ForwardZero(const Base* x, size_t x_size,
+                                 Base* dep, size_t dep_size) = 0;
 
         /// calculate entire Jacobian
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) = 0;
 
         virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) = 0;
+        virtual void Jacobian(const Base* x, size_t x_size,
+                              Base* jac, size_t jac_size) = 0;
 
         /// calculate Hessian for one component of f
         virtual std::vector<Base> Hessian(const std::vector<Base> &x,
@@ -57,6 +63,9 @@ namespace CppAD {
         virtual void Hessian(const std::vector<Base> &x,
                              const std::vector<Base> &w,
                              std::vector<Base>& hess) = 0;
+        virtual void Hessian(const Base* x, size_t x_size,
+                             const Base* w, size_t w_size,
+                             Base* hess) = 0;
 
         /// calculate sparse Jacobians 
         virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;
@@ -68,6 +77,11 @@ namespace CppAD {
                                     std::vector<Base>& jac,
                                     std::vector<size_t>& row,
                                     std::vector<size_t>& col) = 0;
+        virtual void SparseJacobian(const Base* x, size_t x_size,
+                                    Base* jac,
+                                    size_t const** row,
+                                    size_t const** col,
+                                    size_t nnz) = 0;
 
         /// calculate sparse Hessians 
         virtual std::vector<Base> SparseHessian(const std::vector<Base> &x,
@@ -82,6 +96,12 @@ namespace CppAD {
                                    std::vector<Base>& hess,
                                    std::vector<size_t>& row,
                                    std::vector<size_t>& col) = 0;
+        virtual void SparseHessian(const Base* x, size_t x_size,
+                                   const Base* w, size_t w_size,
+                                   Base* hess,
+                                   size_t const** row,
+                                   size_t const** col,
+                                   size_t nnz) = 0;
     };
 
 }
