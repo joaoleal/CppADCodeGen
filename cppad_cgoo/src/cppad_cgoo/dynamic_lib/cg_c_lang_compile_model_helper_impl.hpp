@@ -92,6 +92,7 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
+        handler.setVerbose(_verbose);
 
         std::vector<CGD> indVars(_fun->Domain());
         handler.makeVariables(indVars);
@@ -117,7 +118,8 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
-
+        handler.setVerbose(_verbose);
+        
         std::vector<CGD> indVars(_fun->Domain());
         handler.makeVariables(indVars);
 
@@ -142,6 +144,7 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
+        handler.setVerbose(_verbose);
 
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
@@ -220,6 +223,7 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
+        handler.setVerbose(_verbose);
 
         std::vector<CGD> indVars(n);
         handler.makeVariables(indVars);
@@ -318,6 +322,7 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCG;
 
         CodeHandler<Base> handler;
+        handler.setVerbose(_verbose);
 
         // independent variables
         std::vector<CGD> indVars(n);

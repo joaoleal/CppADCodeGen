@@ -13,6 +13,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <typeinfo>
 
+#include "cg_c_lang_compile_model_helper.hpp"
+
 namespace CppAD {
 
     template<class Base>
@@ -32,6 +34,7 @@ namespace CppAD {
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
+                it->second->setVerbose(_verbose);
                 it->second->compileSources(compiler);
             }
             

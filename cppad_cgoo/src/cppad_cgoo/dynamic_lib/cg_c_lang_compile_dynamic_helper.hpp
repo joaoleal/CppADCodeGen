@@ -34,11 +34,14 @@ namespace CppAD {
         std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
         bool _savedSourceFiles;
+        //
+        bool _verbose;
     public:
 
         CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool savedSourceFiles = true) :
             _libraryName("cppad_cg_model.so"),
-            _savedSourceFiles(savedSourceFiles) {
+            _savedSourceFiles(savedSourceFiles),
+            _verbose(false) {
 
             CPPADCG_ASSERT_KNOWN(model != NULL, "The model cannot be null");
             _models[model->getName()] = model;
@@ -52,6 +55,14 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty");
 
             _libraryName = libraryName;
+        }
+
+        inline bool isVerbose() const {
+            return _verbose;
+        }
+
+        inline void setVerbose(bool verbose) {
+            _verbose = verbose;
         }
 
         inline void addModel(CLangCompileModelHelper<Base>* model) {
@@ -68,7 +79,7 @@ namespace CppAD {
 
         void addCustomFunctionSource(const std::string& filename, const std::string& source) {
             CPPADCG_ASSERT_KNOWN(!filename.empty(), "The filename name cannot be empty");
-            
+
             _customSource[filename] = source;
         }
 

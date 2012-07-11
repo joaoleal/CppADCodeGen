@@ -47,6 +47,7 @@ namespace CppAD {
         std::vector<size_t> _custom_hess_col;
         std::ostringstream _cache;
         size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
+        bool _verbose;
     public:
 
         /**
@@ -148,6 +149,15 @@ namespace CppAD {
         static inline std::string baseTypeName();
 
     protected:
+
+        inline bool isVerbose() const {
+            return _verbose;
+        }
+
+        inline void setVerbose(bool verbose) {
+            _verbose = verbose;
+        }
+
         virtual void compileSources(CLangCompiler<Base>& compiler);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
