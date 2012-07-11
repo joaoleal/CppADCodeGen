@@ -79,9 +79,21 @@ namespace CppAD {
          * \param savefiles whether or not to save the content of the source 
          *                  files in the sources folder
          */
-        virtual void compileDynamic(const std::string& library,
-                                    const std::map<std::string, std::string>& sources,
+        virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool savefiles) = 0;
+
+        /**
+         * Creates a dynamic library from the previously compiled object files
+         * 
+         * \param library the path to the dynamic library to be created
+         */
+        virtual void buildDynamic(const std::string& library) = 0;
+
+        /**
+         * Deletes the previously compiled object files and clears of files
+         * to include in a dynamic library
+         */
+        virtual void cleanup() = 0;
 
     protected:
 
@@ -113,7 +125,7 @@ namespace CppAD {
                                    const std::vector<std::string>& args,
                                    bool pipe = false,
                                    const std::string& message = "");
-        
+
         /**
          * Escapes a file or folder path (system dependent)
          * 

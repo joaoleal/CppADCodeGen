@@ -95,16 +95,20 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 // automated dynamic library creation
 #include <cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_dynamiclib_model.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_c_lang_compiler.hpp>
-#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper.hpp>
-#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_helper_impl.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_model_helper.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_dynamic_helper.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
+#include <cppad_cgoo/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppad_cgoo/dynamic_lib/cg_gcc_compiler.hpp>
 
 // ---------------------------------------------------------------------------
 // automated dynamic library creation for linux
-#include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compiler_linux.hpp>
-#include <cppad_cgoo/dynamic_lib/linux/cg_dynamiclib_linux.hpp>
-#include <cppad_cgoo/dynamic_lib/linux/cg_c_lang_compile_helper_linux.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compiler.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib.hpp>
+#include <cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp>
 
 #endif
 

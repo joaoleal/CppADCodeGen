@@ -22,7 +22,7 @@ namespace CppAD {
     class GccCompiler : public CLangCompiler<Base> {
     protected:
         std::string _gccPath;
-        std::vector<std::string> _ofiles;
+        std::set<std::string> _ofiles;
     public:
 
         GccCompiler() :
@@ -49,8 +49,7 @@ namespace CppAD {
          * \param savefiles whether or not to save the content of the source 
          *                  files in the sources folder
          */
-        virtual void compileDynamic(const std::string& library,
-                                    const std::map<std::string, std::string>& sources,
+        virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool savefiles) {
 
             if (savefiles) {
@@ -67,35 +66,60 @@ namespace CppAD {
                 }
             }
 
-            try {
-                CLangCompiler<Base>::createFolder(this->_tmpFolder);
+            CLangCompiler<Base>::createFolder(this->_tmpFolder);
 
-                // compile each source code file into a different object file
-                _ofiles.clear();
-
-                std::map<std::string, std::string>::const_iterator it;
-                size_t count = 0;
-                std::cout << std::endl;
-                for (it = sources.begin(); it != sources.end(); ++it) {
-                    count++;
-                    _ofiles.push_back(createPath(this->_tmpFolder, it->first + ".o"));
-                    std::cout << "[" << count << "/" << sources.size() << "] compiling '" << _ofiles.back() << "' ... ";
-                    std::cout.flush();
-                    compile(it->second, _ofiles.back());
-                    std::cout << "done" << std::endl;
-                }
-
-                // make dynamic library
-                buildDynamic(library);
-
-            } catch (...) {
-                cleanup();
-                throw;
+            // compile each source code file into a different object file
+            std::map<std::string, std::string>::const_iterator it;
+            size_t count = 0;
+            std::cout << std::endl;
+            for (it = sources.begin(); it != sources.end(); ++it) {
+                count++;
+                std::string file = createPath(this->_tmpFolder, it->first + ".o");
+                _ofiles.insert(file);
+                std::cout << "[" << count << "/" << sources.size() << "] compiling '" << file << "' ... ";
+                std::cout.flush();
+                compile(it->second, file);
+                std::cout << "done" << std::endl;
             }
-            cleanup();
+        }
+
+        /**
+         * Creates a dynamic library from a set of object files
+         * 
+         * \param library the path to the dynamic library to be created
+         */
+        virtual void buildDynamic(const std::string& library) {
+
+            std::vector<std::string> args;
+            args.push_back("gcc");
+            args.push_back("-O2"); // Optimization level
+            args.push_back("-shared"); // Make shared object
+            args.push_back("-Wl,-soname," + library); // Pass suitable options to linker
+            args.push_back("-o"); // Output file name
+            args.push_back(library); // Output file name
+            std::set<std::string>::const_iterator it;
+            for (it = _ofiles.begin(); it != _ofiles.end(); ++it) {
+                args.push_back(*it);
+            }
+
+            std::cout << "building library" << std::endl;
+            CLangCompiler<Base>::callExecutable(_gccPath, args);
+        }
+
+        virtual void cleanup() {
+            // clean up
+            std::set<std::string>::const_iterator it;
+            for (it = _ofiles.begin(); it != _ofiles.end(); ++it) {
+                if (remove(it->c_str()) != 0)
+                    std::cerr << "Failed to delete temporary file '" << *it << "'" << std::endl;
+            }
+            _ofiles.clear();
+
+            remove(this->_tmpFolder.c_str());
         }
 
         virtual ~GccCompiler() {
+            cleanup();
         }
 
     protected:
@@ -119,40 +143,6 @@ namespace CppAD {
             args.push_back(output);
 
             CLangCompiler<Base>::callExecutable(_gccPath, args, true, source);
-        }
-
-        /**
-         * Creates a dynamic library from a set of object files
-         * 
-         * \param library the path to the dynamic library to be created
-         * \param files the object files to include in the dynamic library
-         */
-        virtual void buildDynamic(const std::string& library) {
-
-            std::vector<std::string> args;
-            args.push_back("gcc");
-            args.push_back("-O2"); // Optimization level
-            args.push_back("-shared"); // Make shared object
-            args.push_back("-Wl,-soname," + library); // Pass suitable options to linker
-            args.push_back("-o"); // Output file name
-            args.push_back(library); // Output file name
-            for (size_t i = 0; i < _ofiles.size(); i++) {
-                args.push_back(_ofiles[i]);
-            }
-
-            std::cout << "building library" << std::endl;
-            CLangCompiler<Base>::callExecutable(_gccPath, args);
-        }
-
-        virtual void cleanup() {
-            // clean up
-            for (size_t i = 0; i < _ofiles.size(); i++) {
-                if (remove(_ofiles[i].c_str()) != 0)
-                    std::cerr << "Failed to delete temporary file '" << _ofiles[i] << "'" << std::endl;
-            }
-            _ofiles.clear();
-
-            remove(this->_tmpFolder.c_str());
         }
 
     private:

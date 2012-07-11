@@ -14,72 +14,19 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     /**
-     * Abstract class used to call compiled code in a dynamic library
+     * Abstract class used to load compiled models in a dynamic library
      * 
      * \author Joao Leal
      */
     template<class Base>
     class DynamicLib {
     public:
-        // Jacobian sparsity 
-        virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
-        virtual std::vector<bool> JacobianSparsityBool() = 0;
-        
-        // Hessian sparsity 
-        virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
-        virtual std::vector<bool> HessianSparsityBool() = 0;
+        virtual std::map<std::string, DynamicLibModel<Base>*> getModels() = 0;
 
-        /// number of independent variables
-        virtual size_t Domain(void) const = 0;
+        virtual DynamicLibModel<Base>* model(const std::string& modelName) = 0;
 
-        /// number of dependent variables
-        virtual size_t Range(void) const = 0;
+        virtual size_t getAPIVersion() = 0;
 
-        /// calculate the dependent values (zero order)
-        virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;
-
-        virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) = 0;
-
-        /// calculate entire Jacobian
-        virtual std::vector<Base> Jacobian(const std::vector<Base> &x) = 0;
-
-        virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) = 0;
-
-        /// calculate Hessian for one component of f
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          const std::vector<Base> &w) = 0;
-
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          size_t i) = 0;
-
-        virtual void Hessian(const std::vector<Base> &x,
-                             const std::vector<Base> &w,
-                             std::vector<Base>& hess) = 0;
-
-        /// calculate sparse Jacobians 
-        virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;
-
-        virtual void SparseJacobian(const std::vector<Base> &x,
-                                    std::vector<Base>& jac) = 0;
-
-        virtual void SparseJacobian(const std::vector<Base> &x,
-                                    std::vector<Base>& jac,
-                                    std::vector<size_t>& row,
-                                    std::vector<size_t>& col) = 0;
-
-        /// calculate sparse Hessians 
-        virtual std::vector<Base> SparseHessian(const std::vector<Base> &x,
-                                                const std::vector<Base> &w) = 0;
-
-        virtual void SparseHessian(const std::vector<Base> &x,
-                                   const std::vector<Base> &w,
-                                   std::vector<Base>& hess) = 0;
-
-        virtual void SparseHessian(const std::vector<Base> &x,
-                                   const std::vector<Base> &w,
-                                   std::vector<Base>& hess,
-                                   std::vector<size_t>& row,
-                                   std::vector<size_t>& col) = 0;
     };
 
 }

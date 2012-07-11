@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_COMPILE_HELPER_INCLUDED
-#define	CPPAD_CG_C_LANG_COMPILE_HELPER_INCLUDED
+#ifndef CPPAD_CG_C_LANG_COMPILE_MODEL_HELPER_INCLUDED
+#define	CPPAD_CG_C_LANG_COMPILE_MODEL_HELPER_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -20,7 +20,7 @@ namespace CppAD {
      * \author Joao Leal
      */
     template<class Base>
-    class CLangCompileHelper {
+    class CLangCompileModelHelper {
     public:
         static const std::string FUNCTION_FORWAD_ZERO;
         static const std::string FUNCTION_JACOBIAN;
@@ -30,12 +30,11 @@ namespace CppAD {
         static const std::string FUNCTION_JACOBIAN_SPARSITY;
         static const std::string FUNCTION_HESSIAN_SPARSITY;
         static const std::string FUNCTION_INFO;
-        static const std::string FUNCTION_VERSION;
-        static const unsigned long int API_VERSION;
     protected:
         static const std::string CONST;
     protected:
-        ADFun<CppAD::CG<Base> >* _fun;
+        ADFun<CppAD::CG<Base> >* _fun; // the  model
+        std::string _name; // the name of the model
         const std::string _baseTypeName;
         bool _zero;
         bool _jacobian;
@@ -46,23 +45,44 @@ namespace CppAD {
         std::vector<size_t> _custom_jac_col;
         std::vector<size_t> _custom_hess_row;
         std::vector<size_t> _custom_hess_col;
-        std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
         size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
     public:
 
-        CLangCompileHelper(ADFun<CppAD::CG<Base> >* fun) :
+        /**
+         * Creates a new C language compilation helper for a model
+         * 
+         * \param fun The ADFun with the taped model
+         * \param model The model name (must be a valid C function name)
+         */
+        CLangCompileModelHelper(ADFun<CppAD::CG<Base> >* fun, const std::string& model) :
             _fun(fun),
-            _baseTypeName(CLangCompileHelper<Base>::baseTypeName()),
+            _name(model),
+            _baseTypeName(CLangCompileModelHelper<Base>::baseTypeName()),
             _zero(true),
             _jacobian(false),
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
-            _libraryName("cppad_cg_model.so"),
             _maxAssignPerFunc(20000) {
 
-            assert(_fun != NULL);
+            CPPADCG_ASSERT_KNOWN(_fun != NULL, "ADFun cannot be null");
+            CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
+            CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
+                                 (_name[0] >= 'A' && _name[0] <= 'Z'),
+                                 "Invalid model name character");
+            for (size_t i = 1; i < _name.size(); i++) {
+                char c = _name[i];
+                CPPADCG_ASSERT_KNOWN((c >= 'a' && c <= 'z') ||
+                                     (c >= 'A' && c <= 'Z') ||
+                                     (c >= '0' && c <= '9') ||
+                                     c == '_'
+                                     , "Invalid model name character");
+            }
+        }
+
+        inline const std::string& getName() const {
+            return _name;
         }
 
         inline bool isCreateHessian() const {
@@ -117,14 +137,6 @@ namespace CppAD {
             _custom_hess_col = col;
         }
 
-        inline const std::string& getLibraryName() const {
-            return _libraryName;
-        }
-
-        inline void setLibraryName(const std::string& libraryName) {
-            _libraryName = libraryName;
-        }
-
         inline size_t getMaxAssignmentsPerFunc() const {
             return _maxAssignPerFunc;
         }
@@ -133,13 +145,10 @@ namespace CppAD {
             _maxAssignPerFunc = maxAssignPerFunc;
         }
 
-        DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
-
         static inline std::string baseTypeName();
 
     protected:
-
-        virtual void generateVerionSource(std::map<std::string, std::string>& sources);
+        virtual void compileSources(CLangCompiler<Base>& compiler);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
 
@@ -166,12 +175,13 @@ namespace CppAD {
                                              std::vector<size_t>& rows,
                                              std::vector<size_t>& cols);
 
-        virtual DynamicLib<Base>* loadDynamicLibrary();
-
     private:
-        CLangCompileHelper(const CLangCompileHelper&); // not implemented
+        CLangCompileModelHelper(const CLangCompileModelHelper&); // not implemented
 
-        CLangCompileHelper& operator=(const CLangCompileHelper&); // not implemented
+        CLangCompileModelHelper& operator=(const CLangCompileModelHelper&); // not implemented
+
+        friend class
+        CLangCompileDynamicHelper<Base>;
     };
 
 }

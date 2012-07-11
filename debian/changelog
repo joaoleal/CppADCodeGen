@@ -1,3 +1,9 @@
+cppadcodegen (20120709.2-1) unstable; urgency=low
+
+  * added support for large models and dynamic libraries with several models.
+
+ -- Development <development@ciengis.com>  Wed, 11 Jul 2012 17:30:00 +0000
+
 cppadcodegen (20120709.1-1) unstable; urgency=low
 
   * updated to CppAD cppad-20120709.

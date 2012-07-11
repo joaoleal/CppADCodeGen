@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_COMPILE_HELPER_IMPL_INCLUDED
-#define	CPPAD_CG_C_LANG_COMPILE_HELPER_IMPL_INCLUDED
+#ifndef CPPAD_CG_C_LANG_COMPILE_MODEL_HELPER_IMPL_INCLUDED
+#define	CPPAD_CG_C_LANG_COMPILE_MODEL_HELPER_IMPL_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -16,40 +16,34 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    const unsigned long int CLangCompileHelper<Base>::API_VERSION = 0;
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_FORWAD_ZERO = "forward_zero";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_FORWAD_ZERO = "cppad_cg_forward_zero";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN = "jacobian";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_JACOBIAN = "cppad_cg_jacobian";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_HESSIAN = "hessian";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_HESSIAN = "cppad_cg_hessian";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN = "sparse_jacobian";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_SPARSE_JACOBIAN = "cppad_cg_sparse_jacobian";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_HESSIAN = "sparse_hessian";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_SPARSE_HESSIAN = "cppad_cg_sparse_hessian";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN_SPARSITY = "jacobian_sparsity";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_JACOBIAN_SPARSITY = "cppad_cg_jacobian_sparsity";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY = "hessian_sparsity";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_HESSIAN_SPARSITY = "cppad_cg_hessian_sparsity";
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_INFO = "info";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_INFO = "cppad_cg_info";
+    const std::string CLangCompileModelHelper<Base>::CONST = "const";
 
     template<class Base>
-    const std::string CLangCompileHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";
-
-    template<class Base>
-    const std::string CLangCompileHelper<Base>::CONST = "const";
-
-    template<class Base>
-    DynamicLib<Base>* CLangCompileHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
+    void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler) {
         std::map<std::string, std::string> sources;
         if (_zero) {
             generateZeroSource(sources);
@@ -71,41 +65,29 @@ namespace CppAD {
             generateSparseHessianSource(sources);
         }
 
-        generateVerionSource(sources);
-
         generateInfoSource(sources);
 
-        compiler.compileDynamic(_libraryName, sources, true);
-
-        return loadDynamicLibrary();
+        compiler.compileSources(sources, true);
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateVerionSource(std::map<std::string, std::string>& sources) {
-        _cache.str("");
-        _cache << "unsigned long int " << FUNCTION_VERSION << "() {\n";
-        _cache << "return " << API_VERSION << "u;\n";
-        _cache << "}\n\n";
-
-        sources[FUNCTION_VERSION + ".c"] = _cache.str();
-    }
-
-    template<class Base>
-    void CLangCompileHelper<Base>::generateInfoSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateInfoSource(std::map<std::string, std::string>& sources) {
         const char* localBaseName = typeid (Base).name();
 
+        std::string funcName = _name + "_" + FUNCTION_INFO;
+
         _cache.str("");
-        _cache << "void " << FUNCTION_INFO << "(const char** baseName, unsigned long int* m, unsigned long int* n) {\n";
+        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n) {\n";
         _cache << "*baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
         _cache << "*m = " << _fun->Range() << ";\n";
         _cache << "*n = " << _fun->Domain() << ";\n";
         _cache << "}\n\n";
 
-        sources[FUNCTION_INFO + ".c"] = _cache.str();
+        sources[funcName + ".c"] = _cache.str();
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -121,7 +103,7 @@ namespace CppAD {
         std::vector<FuncArgument> args(2);
         args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
         args[1] = FuncArgument(_baseTypeName + "*", "dep");
-        langC.setGenerateFunction(FUNCTION_FORWAD_ZERO, args);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen;
 
@@ -130,7 +112,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateJacobianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateJacobianSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -146,7 +128,7 @@ namespace CppAD {
         std::vector<FuncArgument> args(2);
         args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
         args[1] = FuncArgument(_baseTypeName + "*", "jac");
-        langC.setGenerateFunction(FUNCTION_JACOBIAN, args);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
@@ -155,7 +137,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
@@ -187,7 +169,7 @@ namespace CppAD {
         args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
         args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
         args[2] = FuncArgument(_baseTypeName + "*", "hess");
-        langC.setGenerateFunction(FUNCTION_HESSIAN, args);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN, args);
 
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
 
@@ -196,7 +178,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -255,20 +237,20 @@ namespace CppAD {
         std::vector<FuncArgument> args(2);
         args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
         args[1] = FuncArgument(_baseTypeName + "*", "jac");
-        langC.setGenerateFunction(FUNCTION_SPARSE_JACOBIAN, args);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN, args);
 
         CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
 
         std::ostringstream code;
         handler.generateCode(code, langC, jac, nameGen);
 
-        generateSparsitySource(FUNCTION_JACOBIAN_SPARSITY, rows, cols);
-        sources[FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
+        generateSparsitySource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, rows, cols);
+        sources[_name + "_" + FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -365,22 +347,22 @@ namespace CppAD {
         args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
         args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
         args[2] = FuncArgument(_baseTypeName + "*", "hess");
-        langC.setGenerateFunction(FUNCTION_SPARSE_HESSIAN, args);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN, args);
 
         CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
 
         std::ostringstream code;
         handler.generateCode(code, langC, hess, nameGen);
 
-        generateSparsitySource(FUNCTION_HESSIAN_SPARSITY, rows, cols);
-        sources[FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
+        generateSparsitySource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, rows, cols);
+        sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparsitySource(const std::string& function,
-                                                          const std::vector<bool>& sparsity,
-                                                          size_t m, size_t n) {
+    void CLangCompileModelHelper<Base>::generateSparsitySource(const std::string& function,
+                                                               const std::vector<bool>& sparsity,
+                                                               size_t m, size_t n) {
         std::vector<size_t> rows, cols;
 
         generateSparsityIndexes(sparsity, m, n, rows, cols);
@@ -389,9 +371,9 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparsitySource(const std::string& function,
-                                                          const std::vector<size_t>& rows,
-                                                          const std::vector<size_t>& cols) {
+    void CLangCompileModelHelper<Base>::generateSparsitySource(const std::string& function,
+                                                               const std::vector<size_t>& rows,
+                                                               const std::vector<size_t>& cols) {
         assert(rows.size() == cols.size());
 
         _cache << "void " << function << "("
@@ -425,10 +407,10 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileHelper<Base>::generateSparsityIndexes(const std::vector<bool>& sparsity,
-                                                           size_t m, size_t n,
-                                                           std::vector<size_t>& rows,
-                                                           std::vector<size_t>& cols) {
+    void CLangCompileModelHelper<Base>::generateSparsityIndexes(const std::vector<bool>& sparsity,
+                                                                size_t m, size_t n,
+                                                                std::vector<size_t>& rows,
+                                                                std::vector<size_t>& cols) {
         size_t K = 0;
         for (size_t i = 0; i < sparsity.size(); i++) {
             if (sparsity[i]) {
@@ -458,12 +440,12 @@ namespace CppAD {
      * Specializations
      */
     template<>
-    inline std::string CLangCompileHelper<double>::baseTypeName() {
+    inline std::string CLangCompileModelHelper<double>::baseTypeName() {
         return "double";
     }
 
     template<>
-    inline std::string CLangCompileHelper<float>::baseTypeName() {
+    inline std::string CLangCompileModelHelper<float>::baseTypeName() {
         return "float";
     }
 }

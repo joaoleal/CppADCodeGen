@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_DYNAMICLIB_LINUX_INCLUDED
-#define	CPPAD_CG_DYNAMICLIB_LINUX_INCLUDED
+#ifndef CPPAD_CG_LINUX_DYNAMICLIB_MODEL_INCLUDED
+#define	CPPAD_CG_LINUX_DYNAMICLIB_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -18,17 +18,18 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     /**
-     * Useful class to call the compiled source code in a dynamic library.
+     * Useful class to call the compiled model in a dynamic library.
      * For the Linux Operating System only.
      * 
      * \author Joao Leal
      */
     template<class Base>
-    class LinuxDynamicLib : public DynamicLib<Base> {
+    class LinuxDynamicLibModel : public DynamicLibModel<Base> {
     protected:
-        const std::string _dynLibName;
-        /// the dynamic library handler
-        void* _dynLibHandle;
+        /// the model name
+        const std::string _name;
+        /// the dynamic library
+        LinuxDynamicLib<Base> * const _dynLib;
         size_t _m;
         size_t _n;
         void (*_zero)(const double*, double*);
@@ -51,35 +52,8 @@ namespace CppAD {
 
     public:
 
-        LinuxDynamicLib(const std::string& dynLibName) :
-            _dynLibName(dynLibName),
-            _dynLibHandle(NULL),
-            _m(0),
-            _n(0),
-            _zero(NULL),
-            _jacobian(NULL),
-            _hessian(NULL),
-            _sparseJacobian(NULL),
-            _sparseHessian(NULL),
-            _jacobianSparsity(NULL),
-            _hessianSparsity(NULL) {
-
-            std::string path;
-            if (dynLibName[0] == '/') {
-                path = dynLibName; // absolute path
-            } else {
-                path = "./" + dynLibName; // relative path
-            }
-
-            // load the dynamic library
-            _dynLibHandle = dlopen(path.c_str(), RTLD_NOW);
-            CPPADCG_ASSERT_KNOWN(_dynLibHandle != NULL, ("Failed to dynamically load library '" + dynLibName + "'").c_str());
-
-            // validate the dynamic library
-            validate();
-
-            // load functions from the dynamic library
-            loadFunctions();
+        const std::string& getName() const {
+            return _name;
         }
 
         // Jacobian sparsity
@@ -319,59 +293,71 @@ namespace CppAD {
             std::copy(dcol, dcol + nnz, col.begin());
         }
 
-        virtual ~LinuxDynamicLib() {
-            if (_dynLibHandle != NULL) {
-                dlclose(_dynLibHandle);
-                _dynLibHandle = NULL;
-            }
+        virtual ~LinuxDynamicLibModel() {
         }
 
     protected:
-        
+
+        /**
+         * Creates a new model 
+         * 
+         * \param name The model name
+         */
+        LinuxDynamicLibModel(LinuxDynamicLib<Base>* dynLib, const std::string& name) :
+            _dynLib(dynLib),
+            _name(name),
+            _m(0),
+            _n(0),
+            _zero(NULL),
+            _jacobian(NULL),
+            _hessian(NULL),
+            _sparseJacobian(NULL),
+            _sparseHessian(NULL),
+            _jacobianSparsity(NULL),
+            _hessianSparsity(NULL) {
+
+            assert(_dynLib != NULL);
+
+            // validate the dynamic library
+            validate();
+
+            // load functions from the dynamic library
+            loadFunctions();
+        }
+
         virtual void validate() {
             std::string error;
-            
-            /**
-             * Check the version
-             */
-            unsigned long int (*versionFunc)();
-            *(void **) (&versionFunc) = loadFunction(CLangCompileHelper<Base>::FUNCTION_VERSION, error);
-            CPPADCG_ASSERT_KNOWN(error.empty(), error.c_str());
-            
-            unsigned long int version = (*versionFunc)();
-            CPPADCG_ASSERT_KNOWN(CLangCompileHelper<Base>::API_VERSION == version,
-                    "The version of the dynamic library is incompatible with the current version");
-            
+
             /**
              * Check the data type
              */
             void (*infoFunc)(const char** baseName, unsigned long int*, unsigned long int*);
-            *(void **) (&infoFunc) = loadFunction(CLangCompileHelper<Base>::FUNCTION_INFO, error);
+            *(void **) (&infoFunc) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_INFO, error);
             CPPADCG_ASSERT_KNOWN(error.empty(), error.c_str());
 
             // local
             const char* localBaseName = typeid (Base).name();
-            std::string local = CLangCompileHelper<Base>::baseTypeName() + "  " + localBaseName;
-            
+            std::string local = CLangCompileModelHelper<Base>::baseTypeName() + "  " + localBaseName;
+
             // from dynamic library
             const char* dynamicLibBaseName = NULL;
             (*infoFunc)(&dynamicLibBaseName, &_m, &_n);
 
             CPPADCG_ASSERT_KNOWN(local == std::string(dynamicLibBaseName),
-                    (std::string("Invalid data type in dynamic library. Expected '") + local
-                    + "' but the library provided '" + dynamicLibBaseName + "'.").c_str());
+                                 (std::string("Invalid data type in dynamic library. Expected '") + local
+                                 + "' but the library provided '" + dynamicLibBaseName + "'.").c_str());
         }
 
         virtual void loadFunctions() {
             std::string error;
-            
-            *(void **) (&_zero) = loadFunction(CLangCompileHelper<Base>::FUNCTION_FORWAD_ZERO, error);
-            *(void **) (&_jacobian) = loadFunction(CLangCompileHelper<Base>::FUNCTION_JACOBIAN, error);
-            *(void **) (&_hessian) = loadFunction(CLangCompileHelper<Base>::FUNCTION_HESSIAN, error);
-            *(void **) (&_sparseJacobian) = loadFunction(CLangCompileHelper<Base>::FUNCTION_SPARSE_JACOBIAN, error);
-            *(void **) (&_sparseHessian) = loadFunction(CLangCompileHelper<Base>::FUNCTION_SPARSE_HESSIAN, error);
-            *(void **) (&_jacobianSparsity) = loadFunction(CLangCompileHelper<Base>::FUNCTION_JACOBIAN_SPARSITY, error);
-            *(void **) (&_hessianSparsity) = loadFunction(CLangCompileHelper<Base>::FUNCTION_HESSIAN_SPARSITY, error);
+
+            *(void **) (&_zero) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWAD_ZERO, error);
+            *(void **) (&_jacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN, error);
+            *(void **) (&_hessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN, error);
+            *(void **) (&_sparseJacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN, error);
+            *(void **) (&_sparseHessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_HESSIAN, error);
+            *(void **) (&_jacobianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN_SPARSITY, error);
+            *(void **) (&_hessianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY, error);
 
             CPPADCG_ASSERT_KNOWN((_sparseJacobian == NULL) == (_jacobianSparsity == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) == (_hessianSparsity == NULL), "Missing functions in the dynamic library");
@@ -419,22 +405,12 @@ namespace CppAD {
             }
         }
 
-        inline void* loadFunction(const std::string& functionName, std::string& error) {
-            void* functor = dlsym(_dynLibHandle, functionName.c_str());
-            char *err;
-            error.clear();
-            if ((err = dlerror()) != NULL) {
-                error += "Failed to load function '";
-                error += functionName + ": " + err;
-                return NULL;
-            }
-            return functor;
-        }
-
     private:
-        LinuxDynamicLib(const LinuxDynamicLib&); // not implemented
+        LinuxDynamicLibModel(const LinuxDynamicLibModel&); // not implemented
 
-        LinuxDynamicLib& operator=(const LinuxDynamicLib&); // not implemented
+        LinuxDynamicLibModel& operator=(const LinuxDynamicLibModel&); // not implemented
+
+        friend class LinuxDynamicLib<Base>;
     };
 
 }

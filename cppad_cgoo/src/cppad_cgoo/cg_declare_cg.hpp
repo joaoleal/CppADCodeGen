@@ -27,6 +27,30 @@ namespace CppAD {
     template<class Base>
     class AD;
 
+    template<class Base>
+    class CLangCompiler;
+
+    template<class Base>
+    class DynamicLibModel;
+
+    template<class Base>
+    class DynamicLib;
+
+    template<class Base>
+    class CLangCompileModelHelper;
+
+    template<class Base>
+    class CLangCompileDynamicHelper;
+
+
+#ifdef __linux__
+    template<class Base>
+    class LinuxDynamicLibModel;
+    
+    template<class Base>
+    class LinuxDynamicLib;
+#endif
+
     // order determining functions, see ordered.hpp
     template<class Base>
     bool GreaterThanZero(const CG<Base> &x);

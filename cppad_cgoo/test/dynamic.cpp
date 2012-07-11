@@ -59,7 +59,7 @@ bool Dynamic1() {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    CLangCompileHelper<double> compHelp(&fun);
+    CLangCompileModelHelper<double> compHelp(&fun, "dynamic");
 
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
@@ -70,16 +70,21 @@ bool Dynamic1() {
 
     GccCompiler<double> compiler;
 
-    DynamicLib<double>* dynamicLib = compHelp.createDynamicLibrary(compiler);
+    CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
+    DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 
     /**
      * test the library
      */
     bool ok = true;
 
+    DynamicLibModel<double>* model = dynamicLib->model("dynamic");
+    if (model == NULL)
+        return false;
+
     // dimensions
-    ok &= dynamicLib->Domain() == fun.Domain();
-    ok &= dynamicLib->Range() == fun.Range();
+    ok &= model->Domain() == fun.Domain();
+    ok &= model->Range() == fun.Range();
 
     /**
      */
@@ -96,12 +101,12 @@ bool Dynamic1() {
     // forward zero
     std::vector<CGD> dep = fun.Forward(0, x2);
 
-    std::vector<double> depCGen = dynamicLib->ForwardZero(x);
+    std::vector<double> depCGen = model->ForwardZero(x);
     ok &= compareValues("ForwardZero", depCGen, dep);
 
     // Jacobian
     std::vector<CGD> jac = fun.Jacobian(x2);
-    depCGen = dynamicLib->Jacobian(x);
+    depCGen = model->Jacobian(x);
     ok &= compareValues("Jacobian", depCGen, jac);
 
     // Hessian
@@ -109,13 +114,13 @@ bool Dynamic1() {
     std::vector<double> w(Z.size(), 1.0);
 
     std::vector<CGD> hess = fun.Hessian(x2, w2);
-    depCGen = dynamicLib->Hessian(x, w);
+    depCGen = model->Hessian(x, w);
     ok &= compareValues("Hessian", depCGen, hess);
 
     // sparse Jacobian
     std::vector<double> jacCGen;
     std::vector<size_t> row, col;
-    dynamicLib->SparseJacobian(x, jacCGen, row, col);
+    model->SparseJacobian(x, jacCGen, row, col);
     std::vector<double> jacCGenDense(jac.size());
     for (size_t i = 0; i < jacCGen.size(); i++) {
         jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
@@ -125,7 +130,7 @@ bool Dynamic1() {
 
     // sparse Hessian
     std::vector<double> hessCGen;
-    dynamicLib->SparseHessian(x, w, hessCGen, row, col);
+    model->SparseHessian(x, w, hessCGen, row, col);
     std::vector<double> hessCGenDense(hess.size());
     for (size_t i = 0; i < hessCGen.size(); i++) {
         hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
@@ -167,8 +172,7 @@ bool Dynamic2() {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    CLangCompileHelper<double> compHelp(&fun);
-    compHelp.setLibraryName("cppad_cg_model_2.so");
+    CLangCompileModelHelper<double> compHelp(&fun, "dynamic2");
 
     compHelp.setCreateSparseJacobian(true);
     std::vector<size_t> row(3), col(3); // all elements except 1
@@ -191,16 +195,23 @@ bool Dynamic2() {
 
     GccCompiler<double> compiler;
     compiler.setSourcesFolder("cppadcg_sources_2");
-    DynamicLib<double>* dynamicLib = compHelp.createDynamicLibrary(compiler);
+
+    CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
+    compDynHelp.setLibraryName("cppad_cg_model_2.so");
+    DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 
     /**
      * test the library
      */
+    DynamicLibModel<double>* model = dynamicLib->model("dynamic2");
+    if (model == NULL)
+        return false;
+
     bool ok = true;
 
     // dimensions
-    ok &= dynamicLib->Domain() == fun.Domain();
-    ok &= dynamicLib->Range() == fun.Range();
+    ok &= model->Domain() == fun.Domain();
+    ok &= model->Range() == fun.Range();
 
     /**
      */
@@ -216,9 +227,9 @@ bool Dynamic2() {
 
     // sparse Jacobian
     std::vector<double> jacCGen;
-    dynamicLib->SparseJacobian(x, jacCGen, row, col);
+    model->SparseJacobian(x, jacCGen, row, col);
     std::vector<CG<double> > jacSparse(row.size());
-    
+
     std::vector<CGD> jac = fun.Jacobian(x2);
     for (size_t i = 0; i < row.size(); i++) {
         jacSparse[i] = jac[row[i] * x.size() + col[i]];
@@ -229,9 +240,9 @@ bool Dynamic2() {
     // sparse Hessian
     std::vector<double> w(Z.size(), 1.0);
     std::vector<double> hessCGen;
-    dynamicLib->SparseHessian(x, w, hessCGen, row, col);
+    model->SparseHessian(x, w, hessCGen, row, col);
     std::vector<CG<double> > hessSparse(row.size());
-    
+
     std::vector<CGD> w2(Z.size(), 1.0);
     std::vector<CGD> hess = fun.Hessian(x2, w2);
     for (size_t i = 0; i < row.size(); i++) {
