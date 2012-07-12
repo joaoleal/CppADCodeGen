@@ -158,6 +158,10 @@ namespace CppAD {
             _verbose = verbose;
         }
 
+        virtual VariableNameGenerator<Base>* createVariableNameGenerator(const std::string& depName,
+                                                                         const std::string& indepName,
+                                                                         const std::string& tmpName);
+
         virtual void compileSources(CLangCompiler<Base>& compiler);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);

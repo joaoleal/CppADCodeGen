@@ -29,15 +29,19 @@ namespace CppAD {
         std::string _indepName;
         // array name of the temporary variables
         std::string _tmpName;
-        // whether or not to use an array for the temporary variables
-        bool _useArray4TempVars;
+        // the lowest variable ID used for the temporary variables
+        size_t _minTemporaryID;
+        // the highest variable ID used for the temporary variables
+        size_t _maxTemporaryID;
     public:
 
         CLangDefaultVariableNameGenerator() :
             _depName("dep"),
             _indepName("ind"),
-            _tmpName("var"),
-            _useArray4TempVars(true) {
+            _tmpName("var") {
+            this->_independent.push_back(FuncArgument(_indepName));
+            this->_dependent.push_back(FuncArgument(_depName));
+            this->_temporary.push_back(FuncArgument(_tmpName));
         }
 
         CLangDefaultVariableNameGenerator(const std::string& depName,
@@ -45,8 +49,18 @@ namespace CppAD {
                                           const std::string& tmpName) :
             _depName(depName),
             _indepName(indepName),
-            _tmpName(tmpName),
-            _useArray4TempVars(true) {
+            _tmpName(tmpName) {
+            this->_independent.push_back(FuncArgument(_indepName));
+            this->_dependent.push_back(FuncArgument(_depName));
+            this->_temporary.push_back(FuncArgument(_tmpName));
+        }
+
+        virtual size_t getMinTemporaryVariableID() const {
+            return _minTemporaryID;
+        }
+
+        virtual size_t getMaxTemporaryVariableID() const {
+            return _maxTemporaryID;
         }
 
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
@@ -73,7 +87,7 @@ namespace CppAD {
             _ss.str("");
 
             size_t id = variable.variableID();
-            if (_useArray4TempVars) {
+            if (this->_temporary[0].array) {
                 _ss << _tmpName << "[" << (id - this->_minTemporaryID) << "]";
             } else {
                 _ss << _tmpName << id;
@@ -82,13 +96,16 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual bool isTemporaryVariablesArray() const {
-            return _useArray4TempVars;
+        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
+            _minTemporaryID = minTempID;
+            _maxTemporaryID = maxTempID;
+
+            // if
+            //  _minTemporaryID == _maxTemporaryID + 1
+            // then no temporary variables are being used
+            assert(_minTemporaryID <= _maxTemporaryID + 1);
         }
 
-        virtual const std::string& getTemporaryVariablesArrayName() const {
-            return _tmpName;
-        }
     };
 }
 

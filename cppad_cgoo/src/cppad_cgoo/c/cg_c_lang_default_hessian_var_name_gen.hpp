@@ -14,7 +14,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     /**
-     * Creates variables names for the source code generated for hessian
+     * Creates variables names for the source code generated for Hessian
      * calculations.
      * The independent variables are considered to have been registered first as
      * variable in the code generation handler and then the multipliers.
@@ -22,46 +22,87 @@ namespace CppAD {
      * \author Joao Leal
      */
     template<class Base>
-    class CLangDefaultHessianVarNameGenerator : public CLangDefaultVariableNameGenerator<Base> {
+    class CLangDefaultHessianVarNameGenerator : public VariableNameGenerator<Base> {
     protected:
+        VariableNameGenerator<Base>* _nameGen;
         // the lowest variable ID used for the equation multipliers
         const size_t _minMultiplierID;
-        // the lowest variable ID used for the dependent variables
-        const size_t _minDependentID;
         // array name of the independent variables
         const std::string _multName;
+        // auxiliary string stream
+        std::stringstream _ss;
     public:
 
-        CLangDefaultHessianVarNameGenerator(size_t m, size_t n) :
-            CLangDefaultVariableNameGenerator<Base>("hess", "ind", "var"),
+        CLangDefaultHessianVarNameGenerator(VariableNameGenerator<Base>* nameGen,
+                                            size_t n) :
+            _nameGen(nameGen),
             _minMultiplierID(n + 1),
-            _minDependentID(_minMultiplierID + m),
             _multName("mult") {
+
+            CPPADCG_ASSERT_KNOWN(_nameGen != NULL, "The name generator must not be null");
+
+            initialize();
         }
 
-        CLangDefaultHessianVarNameGenerator(const std::string& depName,
-                                            const std::string& indepName,
+        CLangDefaultHessianVarNameGenerator(VariableNameGenerator<Base>* nameGen,
                                             const std::string& multName,
-                                            const std::string& tmpName,
-                                            size_t m, size_t n) :
-            CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName),
+                                            size_t n) :
+            _nameGen(nameGen),
             _minMultiplierID(n + 1),
-            _minDependentID(_minMultiplierID + m),
             _multName(multName) {
+
+            CPPADCG_ASSERT_KNOWN(_nameGen != NULL, "The name generator must not be null");
+            CPPADCG_ASSERT_KNOWN(_multName.size() > 0, "The name for the multipliers must not be null");
+
+            initialize();
+        }
+
+        virtual const std::vector<FuncArgument>& getDependent() const {
+            return _nameGen->getDependent();
+        }
+
+        virtual const std::vector<FuncArgument>& getTemporaryVariables() const {
+            return _nameGen->getTemporaryVariables();
+        }
+
+        virtual size_t getMinTemporaryVariableID() const {
+            return _nameGen->getMinTemporaryVariableID();
+        }
+
+        virtual size_t getMaxTemporaryVariableID() const {
+            return _nameGen->getMaxTemporaryVariableID();
+        }
+
+        virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
+            return _nameGen->generateDependent(variable, index);
         }
 
         virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
-            this->_ss.clear();
-            this->_ss.str("");
-
             size_t id = independent.variableID();
             if (id < _minMultiplierID) {
-                this->_ss << this->_indepName << "[" << (id - 1) << "]";
-            } else {
-                this->_ss << _multName << "[" << (id - _minMultiplierID) << "]";
+                return _nameGen->generateIndependent(independent);
             }
 
-            return this->_ss.str();
+            _ss.clear();
+            _ss.str("");
+            _ss << _multName << "[" << (id - _minMultiplierID) << "]";
+            return _ss.str();
+        }
+
+        virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
+            return _nameGen->generateTemporary(variable);
+        }
+
+        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
+            _nameGen->setTemporaryVariableID(minTempID, maxTempID);
+        }
+
+    private:
+
+        inline void initialize() {
+            this->_independent = _nameGen->getIndependent(); // copy
+
+            this->_independent.push_back(FuncArgument(_multName));
         }
 
     };

@@ -43,6 +43,13 @@ namespace CppAD {
     const std::string CLangCompileModelHelper<Base>::CONST = "const";
 
     template<class Base>
+    VariableNameGenerator<Base>* CLangCompileModelHelper<Base>::createVariableNameGenerator(const std::string& depName,
+                                                                                            const std::string& indepName,
+                                                                                            const std::string& tmpName) {
+        return new CLangDefaultVariableNameGenerator<Base > (depName, indepName, tmpName);
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler) {
         std::map<std::string, std::string> sources;
         if (_zero) {
@@ -76,12 +83,21 @@ namespace CppAD {
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        _cache.str("");
-        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n) {\n";
-        _cache << "*baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
-        _cache << "*m = " << _fun->Range() << ";\n";
-        _cache << "*n = " << _fun->Domain() << ";\n";
-        _cache << "}\n\n";
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("dep", "ind", "var");
+        try {
+            _cache.str("");
+            _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n";
+            _cache << "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
+            _cache << "   *m = " << _fun->Range() << ";\n";
+            _cache << "   *n = " << _fun->Domain() << ";\n";
+            _cache << "   *depCount = " << nameGen->getDependent().size() << ";\n";
+            _cache << "   *indCount = " << nameGen->getIndependent().size() << ";\n";
+            _cache << "}\n\n";
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
 
         sources[funcName + ".c"] = _cache.str();
     }
@@ -101,15 +117,17 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::vector<FuncArgument> args(2);
-        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
-        args[1] = FuncArgument(_baseTypeName + "*", "dep");
-        langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO, args);
-
-        CLangDefaultVariableNameGenerator<Base> nameGen;
+        langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, dep, nameGen, "model (zero-order forward)");
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("dep", "ind", "var");
+        try {
+            handler.generateCode(code, langC, dep, *nameGen, "model (zero-order forward)");
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
     }
 
     template<class Base>
@@ -119,7 +137,7 @@ namespace CppAD {
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
-        
+
         std::vector<CGD> indVars(_fun->Domain());
         handler.makeVariables(indVars);
 
@@ -127,15 +145,17 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::vector<FuncArgument> args(2);
-        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
-        args[1] = FuncArgument(_baseTypeName + "*", "jac");
-        langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN, args);
-
-        CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
+        langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, jac, nameGen, "Jacobian");
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
+        try {
+            handler.generateCode(code, langC, jac, *nameGen, "Jacobian");
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
     }
 
     template<class Base>
@@ -168,16 +188,18 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::vector<FuncArgument> args(3);
-        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
-        args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
-        args[2] = FuncArgument(_baseTypeName + "*", "hess");
-        langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN, args);
-
-        CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, hess, nameGen, "Hessian");
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
+        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
+        try {
+            handler.generateCode(code, langC, hess, nameGenHess, "Hessian");
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
     }
 
     template<class Base>
@@ -238,15 +260,17 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::vector<FuncArgument> args(2);
-        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
-        args[1] = FuncArgument(_baseTypeName + "*", "jac");
-        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN, args);
-
-        CLangDefaultVariableNameGenerator<Base> nameGen("jac", "ind", "var");
+        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, jac, nameGen, "sparse Jacobian");
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
+        try {
+            handler.generateCode(code, langC, jac, *nameGen, "sparse Jacobian");
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
 
         generateSparsitySource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
@@ -348,16 +372,18 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
-        std::vector<FuncArgument> args(3);
-        args[0] = FuncArgument(CONST + " " + _baseTypeName + "*", "ind");
-        args[1] = FuncArgument(CONST + " " + _baseTypeName + "*", "mult");
-        args[2] = FuncArgument(_baseTypeName + "*", "hess");
-        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN, args);
-
-        CLangDefaultHessianVarNameGenerator<Base> nameGen(m, n);
+        langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
         std::ostringstream code;
-        handler.generateCode(code, langC, hess, nameGen, "sparse Hessian");
+        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
+        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
+        try {
+            handler.generateCode(code, langC, hess, nameGenHess, "sparse Hessian");
+        } catch (...) {
+            delete nameGen;
+            throw;
+        }
+        delete nameGen;
 
         generateSparsitySource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();

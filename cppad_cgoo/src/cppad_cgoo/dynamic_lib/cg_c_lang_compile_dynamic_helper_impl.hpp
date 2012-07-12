@@ -18,7 +18,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    const unsigned long int CLangCompileDynamicHelper<Base>::API_VERSION = 1;
+    const unsigned long int CLangCompileDynamicHelper<Base>::API_VERSION = 2;
 
     template<class Base>
     const std::string CLangCompileDynamicHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";

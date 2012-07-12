@@ -14,6 +14,27 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     /**
+     * Function arguments
+     */
+    typedef struct FuncArgument {
+        std::string name;
+        bool array;
+
+        inline FuncArgument() {
+        }
+
+        inline FuncArgument(const std::string & nam) :
+            name(nam),
+            array(true) {
+        }
+
+        inline FuncArgument(const std::string& nam, bool a) :
+            name(nam),
+            array(a) {
+        }
+    } FuncArgument;
+
+    /**
      * Creates variables names for the source code.
      * 
      * \author Joao Leal
@@ -21,42 +42,34 @@ namespace CppAD {
     template<class Base>
     class VariableNameGenerator {
     protected:
-        // the lowest variable ID used for the temporary variables
-        size_t _minTemporaryID;
-        // the highest variable ID used for the temporary variables
-        size_t _maxTemporaryID;
+        std::vector<FuncArgument> _dependent;
+        std::vector<FuncArgument> _independent;
+        std::vector<FuncArgument> _temporary;
     public:
+
+        virtual const std::vector<FuncArgument>& getDependent() const {
+            return _dependent;
+        }
+
+        virtual const std::vector<FuncArgument>& getIndependent() const {
+            return _independent;
+        }
+
+        virtual const std::vector<FuncArgument>& getTemporaryVariables() const {
+            return _temporary;
+        }
+
+        virtual size_t getMinTemporaryVariableID() const = 0;
+
+        virtual size_t getMaxTemporaryVariableID() const = 0;
+
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
         virtual std::string generateIndependent(const SourceCodeFragment<Base>& variable) = 0;
 
         virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
 
-        virtual bool isTemporaryVariablesArray() const = 0;
-
-        virtual const std::string& getTemporaryVariablesArrayName() const = 0;
-
-        inline size_t getMinTemporaryVariableID() const {
-            return _minTemporaryID;
-        }
-
-        inline size_t getMaxTemporaryVariableID() const {
-            return _maxTemporaryID;
-        }
-
-    protected:
-
-        inline void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
-            _minTemporaryID = minTempID;
-            _maxTemporaryID = maxTempID;
-            
-            // if
-            //  _minTemporaryID == _maxTemporaryID + 1
-            // then no temporary variables are being used
-            assert(_minTemporaryID <= _maxTemporaryID + 1);
-        }
-
-        friend class CodeHandler<Base>;
+        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) = 0;
     };
 }
 

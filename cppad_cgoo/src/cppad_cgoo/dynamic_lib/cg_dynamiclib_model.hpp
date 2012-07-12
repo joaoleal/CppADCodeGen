@@ -46,6 +46,19 @@ namespace CppAD {
         virtual void ForwardZero(const Base* x, size_t x_size,
                                  Base* dep, size_t dep_size) = 0;
 
+        /**
+         * Determines the dependent variable values using a variable number of 
+         * independent variable arrays. This method can be useful if the dynamic
+         * library was compiled considering that the independent variables are
+         * provided by several arrays.
+         * 
+         * \param x Contains the several independent variable vectors
+         * \param dep The values of the dependent variables
+         * \param dep_size The number of dependent variables
+         */
+        virtual void ForwardZero(const std::vector<const Base*> &x,
+                                 Base* dep, size_t dep_size) = 0;
+
         /// calculate entire Jacobian
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) = 0;
 
@@ -83,6 +96,24 @@ namespace CppAD {
                                     size_t const** col,
                                     size_t nnz) = 0;
 
+        /**
+         * Determines the sparse Jacobian using a variable number of independent 
+         * variable arrays. This method can be useful if the dynamic library
+         * was compiled considering that the independent variables are provided
+         * by several arrays.
+         * 
+         * \param x Contains the several independent variable vectors
+         * \param jac The values of the sparse Jacobian in the order provided by row and col
+         * \param row The row indices of the Jacobian values
+         * \param col The column indices of the Jacobian values
+         * \param nnz The total number of non-zero elements
+         */
+        virtual void SparseJacobian(const std::vector<const Base*>& x,
+                                    Base* jac,
+                                    size_t const** row,
+                                    size_t const** col,
+                                    size_t nnz) = 0;
+
         /// calculate sparse Hessians 
         virtual std::vector<Base> SparseHessian(const std::vector<Base> &x,
                                                 const std::vector<Base> &w) = 0;
@@ -97,6 +128,27 @@ namespace CppAD {
                                    std::vector<size_t>& row,
                                    std::vector<size_t>& col) = 0;
         virtual void SparseHessian(const Base* x, size_t x_size,
+                                   const Base* w, size_t w_size,
+                                   Base* hess,
+                                   size_t const** row,
+                                   size_t const** col,
+                                   size_t nnz) = 0;
+
+        /**
+         * Determines the sparse Hessian using a variable number of independent 
+         * variable arrays. This method can be useful if the dynamic library
+         * was compiled considering that the independent variables are provided
+         * by several arrays.
+         * 
+         * \param x Contains the several independent variable vectors
+         * \param w The equation multipliers
+         * \param w_size The number of equations
+         * \param hess The values of the sparse hessian in the order provided by row and col
+         * \param row The row indices of the hessian values
+         * \param col The column indices of the hessian values
+         * \param nnz The total number of non-zero elements
+         */
+        virtual void SparseHessian(const std::vector<const Base*>& x,
                                    const Base* w, size_t w_size,
                                    Base* hess,
                                    size_t const** row,
