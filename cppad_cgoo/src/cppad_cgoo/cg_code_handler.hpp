@@ -101,7 +101,7 @@ namespace CppAD {
         virtual void generateCode(std::ostream& out,
                                   CppAD::Language<Base>& lang,
                                   std::vector<CG<Base> >& dependent,
-                                  VariableNameGenerator<Base>& nameGen, 
+                                  VariableNameGenerator<Base>& nameGen,
                                   const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
@@ -186,7 +186,8 @@ namespace CppAD {
 
             if (_verbose) {
                 double endTime = system::currentTime();
-                std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
+                std::cout << "done [" << std::fixed << std::setprecision(3)
+                        << (endTime - beginTime) << "]" << std::endl;
             }
         }
 

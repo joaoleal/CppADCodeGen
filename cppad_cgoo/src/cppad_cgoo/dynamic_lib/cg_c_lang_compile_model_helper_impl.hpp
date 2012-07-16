@@ -508,7 +508,8 @@ namespace CppAD {
     void inline CLangCompileModelHelper<Base>::finishedGraphCreation() {
         if (_verbose) {
             double endTime = system::currentTime();
-            std::cout << "done [" << (endTime - _beginTime) << "]" << std::endl;
+            std::cout << "done [" << std::fixed << std::setprecision(3)
+                    << (endTime - _beginTime) << "]" << std::endl;
         }
     }
 

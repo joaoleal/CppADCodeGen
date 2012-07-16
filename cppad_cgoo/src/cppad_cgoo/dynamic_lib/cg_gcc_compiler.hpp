@@ -156,7 +156,8 @@ namespace CppAD {
 
                 if (_verbose) {
                     double endTime = system::currentTime();
-                    std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
+                    std::cout << "done [" << std::fixed << std::setprecision(3)
+                            << (endTime - beginTime) << "]" << std::endl;
                 }
             }
         }
