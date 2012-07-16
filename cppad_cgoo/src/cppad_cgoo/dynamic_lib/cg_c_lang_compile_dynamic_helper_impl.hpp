@@ -13,8 +13,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 #include <typeinfo>
 
-#include "cg_c_lang_compile_model_helper.hpp"
-
 namespace CppAD {
 
     template<class Base>
@@ -31,6 +29,9 @@ namespace CppAD {
 
     template<class Base>
     DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
+        
+        compiler.setVerbose(_verbose);
+        
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
@@ -60,7 +61,7 @@ namespace CppAD {
     void CLangCompileDynamicHelper<Base>::generateVerionSource(std::map<std::string, std::string>& sources) {
         _cache.str("");
         _cache << "unsigned long int " << FUNCTION_VERSION << "() {\n"
-                << "return " << API_VERSION << "u;\n"
+                << "   return " << API_VERSION << "u;\n"
                 << "}\n\n";
 
         sources[FUNCTION_VERSION + ".c"] = _cache.str();
@@ -70,18 +71,18 @@ namespace CppAD {
     void CLangCompileDynamicHelper<Base>::generateModelsSource(std::map<std::string, std::string>& sources) {
         _cache.str("");
         _cache << "void " << FUNCTION_MODELS << "(char const *const** names, int* count) {\n"
-                "const static char* models[] = {\n";
+                "   static const char* const models[] = {\n";
 
         typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
         for (it = _models.begin(); it != _models.end(); ++it) {
             if (it != _models.begin()) {
                 _cache << ",\n";
             }
-            _cache << "\"" << it->first << "\"";
+            _cache << "      \"" << it->first << "\"";
         }
         _cache << "};\n"
-                "*names = models;\n"
-                "*count = " << _models.size() << ";\n"
+                "   *names = models;\n"
+                "   *count = " << _models.size() << ";\n"
                 "}\n\n";
 
         sources[FUNCTION_MODELS + ".c"] = _cache.str();

@@ -17,7 +17,7 @@ namespace CppAD {
      * System dependent functions
      */
     namespace system {
-        
+
         /**
          * creates a new folder (system dependent)
          * 
@@ -35,6 +35,16 @@ namespace CppAD {
         inline std::string createPath(const std::string& baseFolder, const std::string& file);
 
         /**
+         * Escapes a file or folder path (system dependent)
+         * 
+         * \param path the file/folder path
+         * \return the escaped file/folder path
+         */
+        inline std::string escapePath(const std::string& path);
+
+        inline std::string filenameFromPath(const std::string& path);
+
+        /**
          * Calls an external executable (system dependent)
          * 
          * \param executable the executable path
@@ -43,16 +53,9 @@ namespace CppAD {
          * \param message the information to pass in the pipe
          */
         inline void callExecutable(const std::string& executable,
-                            const std::vector<std::string>& args,
-                            bool pipe = false,
-                            const std::string& message = "");
-        /**
-         * Escapes a file or folder path (system dependent)
-         * 
-         * \param path the file/folder path
-         * \return the escaped file/folder path
-         */
-        inline std::string escapePath(const std::string& path);
+                                   const std::vector<std::string>& args,
+                                   bool pipe = false,
+                                   const std::string& message = "");
 
         inline double currentTime();
     }

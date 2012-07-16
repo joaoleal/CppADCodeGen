@@ -75,6 +75,10 @@ namespace CppAD {
 
         virtual const std::set<std::string>& getSourceFiles() const = 0;
 
+        virtual bool isVerbose() const = 0;
+
+        virtual void setVerbose(bool verbose) = 0;
+
         /**
          * creates a dynamic library with the provided C source code
          * 

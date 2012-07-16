@@ -38,6 +38,23 @@ namespace CppAD {
             return baseFolder + "/" + file;
         }
 
+        inline std::string escapePath(const std::string& path) {
+            return std::string("\"") + path + "\"";
+        }
+
+        inline std::string filenameFromPath(const std::string& path) {
+            size_t pos = path.rfind('/');
+            if (pos != std::string::npos) {
+                if (pos == path.size() - 1) {
+                    return "";
+                } else {
+                    return path.substr(pos + 1);
+                }
+            } else {
+                return path;
+            }
+        }
+
         inline void callExecutable(const std::string& executable,
                                    const std::vector<std::string>& args,
                                    bool createPipe,
@@ -97,10 +114,6 @@ namespace CppAD {
             //Wait for the executable to exit
             int status;
             CPPADCG_ASSERT_KNOWN(wait(&status) >= 0, ("Failed while waiting for '" + executable + "'").c_str());
-        }
-
-        inline std::string escapePath(const std::string& path) {
-            return std::string("\"") + path + "\"";
         }
 
         inline double currentTime() {

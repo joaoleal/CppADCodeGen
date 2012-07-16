@@ -122,7 +122,7 @@ namespace CppAD {
             assert(_nameGen != NULL);
 
             // declare variables
-            const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporaryVariables();
+            const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
 
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
                                  "There must be one temporary variable");
@@ -250,7 +250,7 @@ namespace CppAD {
              */
             const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
             const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
-            const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporaryVariables();
+            const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
                                  "There must be at least one dependent and one independent argument");
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
@@ -348,10 +348,12 @@ namespace CppAD {
                     _code << "void " << localFuncNames[i] << "(" << localFuncArgDcl_ << ");\n";
                 }
                 _code << "\n"
-                        << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n"
-                        << generateIndependentVariableDeclaration() << "\n"
-                        << generateDependentVariableDeclaration() << "\n"
-                        << generateTemporaryVariableDeclaration() << "\n";
+                        << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
+                _nameGen->customFunctionVariableDeclarations(_code);
+                _code << generateIndependentVariableDeclaration() << "\n";
+                _code << generateDependentVariableDeclaration() << "\n";
+                _code << generateTemporaryVariableDeclaration() << "\n";
+                _nameGen->prepareCustomFunctionVariables(_code);
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
                     _code << _spaces << localFuncNames[i] << "(" << localFuncArgs_ << ");\n";
                 }
@@ -393,12 +395,15 @@ namespace CppAD {
             if (createFunction) {
                 if (localFuncNames.empty()) {
                     _ss << "#include <math.h>\n\n"
-                            << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n"
-                            << generateIndependentVariableDeclaration() << "\n"
-                            << generateDependentVariableDeclaration() << "\n"
-                            << generateTemporaryVariableDeclaration() << "\n"
-                            << _code.str()
-                            << "}\n\n";
+                            << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
+                    _nameGen->customFunctionVariableDeclarations(_ss);
+                    _ss << generateIndependentVariableDeclaration() << "\n";
+                    _ss << generateDependentVariableDeclaration() << "\n";
+                    _ss << generateTemporaryVariableDeclaration() << "\n";
+                    _nameGen->prepareCustomFunctionVariables(_ss);
+                    _ss << _code.str();
+                    _nameGen->finalizeCustomFunctionVariables(_ss);
+                    _ss << "}\n\n";
 
                     out << _ss.str();
 
@@ -406,6 +411,7 @@ namespace CppAD {
                         (*_sources)[_functionName + ".c"] = _ss.str();
                     }
                 } else {
+                    _nameGen->finalizeCustomFunctionVariables(_code);
                     _code << "}\n\n";
 
                     (*_sources)[_functionName + ".c"] = _code.str();
@@ -429,11 +435,14 @@ namespace CppAD {
             _ss.str("");
 
             _ss << "#include <math.h>\n\n"
-                    << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n"
-                    << generateIndependentVariableDeclaration() << "\n"
-                    << generateDependentVariableDeclaration() << "\n"
-                    << _code.str()
-                    << "}\n\n";
+                    << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n";
+            _nameGen->customFunctionVariableDeclarations(_ss);
+            _ss << generateIndependentVariableDeclaration() << "\n";
+            _ss << generateDependentVariableDeclaration() << "\n";
+            _nameGen->prepareCustomFunctionVariables(_ss);
+            _ss << _code.str();
+            _nameGen->finalizeCustomFunctionVariables(_ss);
+            _ss << "}\n\n";
 
             (*_sources)[funcName + ".c"] = _ss.str();
             localFuncNames.push_back(funcName);

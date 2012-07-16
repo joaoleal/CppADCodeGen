@@ -105,7 +105,7 @@ namespace CppAD {
                                   const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
-                std::cout << "generating '" << jobName << "' ... ";
+                std::cout << "generating source for '" << jobName << "' ... ";
                 std::cout.flush();
                 beginTime = system::currentTime();
             }

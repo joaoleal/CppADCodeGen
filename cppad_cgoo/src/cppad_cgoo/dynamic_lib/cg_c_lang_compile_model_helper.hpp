@@ -48,6 +48,7 @@ namespace CppAD {
         std::ostringstream _cache;
         size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
         bool _verbose;
+        double _beginTime; // auxiliary variable to measure the elapsed time
     public:
 
         /**
@@ -65,7 +66,8 @@ namespace CppAD {
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
-            _maxAssignPerFunc(20000) {
+            _maxAssignPerFunc(20000),
+            _beginTime(0) {
 
             CPPADCG_ASSERT_KNOWN(_fun != NULL, "ADFun cannot be null");
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
@@ -190,6 +192,10 @@ namespace CppAD {
                                              std::vector<size_t>& cols);
 
     private:
+        void inline startingGraphCreation(const std::string& jobName);
+
+        void inline finishedGraphCreation();
+
         CLangCompileModelHelper(const CLangCompileModelHelper&); // not implemented
 
         CLangCompileModelHelper& operator=(const CLangCompileModelHelper&); // not implemented

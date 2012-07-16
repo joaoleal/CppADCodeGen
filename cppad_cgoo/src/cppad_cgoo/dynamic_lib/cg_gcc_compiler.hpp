@@ -21,17 +21,34 @@ namespace CppAD {
     template<class Base>
     class GccCompiler : public CLangCompiler<Base> {
     protected:
-        std::string _gccPath;
-        std::set<std::string> _ofiles;
-        std::set<std::string> _sfiles;
+        std::string _gccPath; // the path to the gcc executable
+        std::set<std::string> _ofiles; // compiled object files
+        std::set<std::string> _sfiles; // compiled source files
+        std::vector<std::string> _compileFlags;
+        std::vector<std::string> _compileLibFlags;
+        std::vector<std::string> _linkFlags;
+        bool _verbose;
     public:
 
         GccCompiler() :
-            _gccPath("/usr/bin/gcc") {
+            _gccPath("/usr/bin/gcc"),
+            _verbose(false) {
+
+            _compileFlags.push_back("-O2"); // Optimization level
+            _compileLibFlags.push_back("-O2"); // Optimization level
+            _compileLibFlags.push_back("-shared"); // Make shared object
+            _compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
+
         }
 
         GccCompiler(const std::string& gccPath) :
-            _gccPath(gccPath) {
+            _gccPath(gccPath),
+            _verbose(false) {
+
+            _compileFlags.push_back("-O2"); // Optimization level
+            _compileLibFlags.push_back("-O2"); // Optimization level
+            _compileLibFlags.push_back("-shared"); // Make shared object
+            _compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
         }
 
         std::string getGccPath() const {
@@ -48,6 +65,38 @@ namespace CppAD {
 
         virtual const std::set<std::string>& getSourceFiles() const {
             return _sfiles;
+        }
+
+        const std::vector<std::string>& getCompileFlags() const {
+            return _compileFlags;
+        }
+
+        void setCompileFlags(const std::vector<std::string>& compileFlags) {
+            _compileFlags = compileFlags;
+        }
+
+        const std::vector<std::string>& getLinkFlags() const {
+            return _linkFlags;
+        }
+
+        void setLinkFlags(const std::vector<std::string>& linkFlags) {
+            _linkFlags = linkFlags;
+        }
+
+        const std::vector<std::string>& getCompileLibFlags() const {
+            return _compileLibFlags;
+        }
+
+        void setCompileLibFlags(const std::vector<std::string>& compileLibFlags) {
+            _compileLibFlags = compileLibFlags;
+        }
+
+        virtual bool isVerbose() const {
+            return _verbose;
+        }
+
+        virtual void setVerbose(bool verbose) {
+            _verbose = verbose;
         }
 
         /**
@@ -88,19 +137,27 @@ namespace CppAD {
             }
 
             size_t count = 0;
-            std::cout << std::endl;
+            if (_verbose) {
+                std::cout << std::endl;
+            }
             for (it = sources.begin(); it != sources.end(); ++it) {
                 count++;
                 std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
 
-                double beginTime = system::currentTime();
-                std::cout << "[" << count << "/" << sources.size() << "] compiling '" << std::setw(maxsize + 8) << (file + "' ...  ");
-                std::cout.flush();
+                double beginTime;
+                if (_verbose) {
+                    beginTime = system::currentTime();
+                    std::cout << "[" << count << "/" << sources.size() << "] compiling "
+                            << std::setw(maxsize + 9) << ("'" + file + "' ...  ");
+                    std::cout.flush();
+                }
 
                 compile(it->second, file);
 
-                double endTime = system::currentTime();
-                std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
+                if (_verbose) {
+                    double endTime = system::currentTime();
+                    std::cout << "done [" << (endTime - beginTime) << "]" << std::endl;
+                }
             }
         }
 
@@ -111,11 +168,14 @@ namespace CppAD {
          */
         virtual void buildDynamic(const std::string& library) {
 
+            std::string linkerFlags = "-Wl,-soname," + system::filenameFromPath(library);
+            for (size_t i = 0; i < _linkFlags.size(); i++)
+                linkerFlags += "," + _linkFlags[i];
+
             std::vector<std::string> args;
             args.push_back("gcc");
-            args.push_back("-O2"); // Optimization level
-            args.push_back("-shared"); // Make shared object
-            args.push_back("-Wl,-soname," + library); // Pass suitable options to linker
+            args.insert(args.end(), _compileLibFlags.begin(), _compileLibFlags.end());
+            args.push_back(linkerFlags); // Pass suitable options to linker
             args.push_back("-o"); // Output file name
             args.push_back(library); // Output file name
             std::set<std::string>::const_iterator it;
@@ -123,7 +183,9 @@ namespace CppAD {
                 args.push_back(*it);
             }
 
-            std::cout << "building library" << std::endl;
+            if (_verbose) {
+                std::cout << "building library '" << library << "'" << std::endl;
+            }
             system::callExecutable(_gccPath, args);
         }
 
@@ -156,11 +218,11 @@ namespace CppAD {
             std::vector<std::string> args;
             args.push_back("gcc");
             args.push_back("-x");
-            args.push_back("c");
-            args.push_back("-O2");
+            args.push_back("c"); // C source files
+            args.insert(args.end(), _compileFlags.begin(), _compileFlags.end());
             args.push_back("-c");
             args.push_back("-");
-            args.push_back("-fPIC");
+            args.push_back("-fPIC"); // position-independent code for dynamic linking
             args.push_back("-o");
             args.push_back(output);
 

@@ -55,7 +55,7 @@ namespace CppAD {
             return _independent;
         }
 
-        virtual const std::vector<FuncArgument>& getTemporaryVariables() const {
+        virtual const std::vector<FuncArgument>& getTemporary() const {
             return _temporary;
         }
 
@@ -70,6 +70,15 @@ namespace CppAD {
         virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
 
         virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) = 0;
+
+        virtual void customFunctionVariableDeclarations(std::ostream& out) {
+        }
+        
+        virtual void prepareCustomFunctionVariables(std::ostream& out) {
+        }
+
+        virtual void finalizeCustomFunctionVariables(std::ostream& out) {
+        }
     };
 }
 

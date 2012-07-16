@@ -107,6 +107,10 @@ namespace CppAD {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
+        const std::string jobName = "model (zero-order forward)";
+
+        startingGraphCreation(jobName);
+
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
@@ -115,6 +119,8 @@ namespace CppAD {
 
         std::vector<CGD> dep = _fun->Forward(0, indVars);
 
+        finishedGraphCreation();
+
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
@@ -122,7 +128,7 @@ namespace CppAD {
         std::ostringstream code;
         VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("dep", "ind", "var");
         try {
-            handler.generateCode(code, langC, dep, *nameGen, "model (zero-order forward)");
+            handler.generateCode(code, langC, dep, *nameGen, jobName);
         } catch (...) {
             delete nameGen;
             throw;
@@ -135,6 +141,10 @@ namespace CppAD {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
 
+        const std::string jobName = "Jacobian";
+
+        startingGraphCreation(jobName);
+
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
@@ -143,6 +153,8 @@ namespace CppAD {
 
         std::vector<CGD> jac = _fun->Jacobian(indVars);
 
+        finishedGraphCreation();
+
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
@@ -150,7 +162,7 @@ namespace CppAD {
         std::ostringstream code;
         VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
         try {
-            handler.generateCode(code, langC, jac, *nameGen, "Jacobian");
+            handler.generateCode(code, langC, jac, *nameGen, jobName);
         } catch (...) {
             delete nameGen;
             throw;
@@ -162,6 +174,10 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCG;
+
+        const std::string jobName = "Hessian";
+
+        startingGraphCreation(jobName);
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
@@ -186,6 +202,8 @@ namespace CppAD {
             }
         }
 
+        finishedGraphCreation();
+
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
         langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
@@ -194,7 +212,7 @@ namespace CppAD {
         VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
         try {
-            handler.generateCode(code, langC, hess, nameGenHess, "Hessian");
+            handler.generateCode(code, langC, hess, nameGenHess, jobName);
         } catch (...) {
             delete nameGen;
             throw;
@@ -204,6 +222,11 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
+        typedef CppAD::CG<Base> CGD;
+        typedef CppAD::AD<CGD> ADCG;
+
+        const std::string jobName = "sparse Jacobian";
+
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -241,8 +264,7 @@ namespace CppAD {
             cols = _custom_jac_col;
         }
 
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
+        startingGraphCreation(jobName);
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
@@ -258,6 +280,8 @@ namespace CppAD {
             _fun->SparseJacobianReverse(indVars, sparsity, rows, cols, jac, work);
         }
 
+        finishedGraphCreation();
+
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
@@ -265,7 +289,7 @@ namespace CppAD {
         std::ostringstream code;
         VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
         try {
-            handler.generateCode(code, langC, jac, *nameGen, "sparse Jacobian");
+            handler.generateCode(code, langC, jac, *nameGen, jobName);
         } catch (...) {
             delete nameGen;
             throw;
@@ -279,6 +303,10 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
+        typedef CppAD::CG<Base> CGD;
+        typedef CppAD::AD<CGD> ADCG;
+
+        const std::string jobName = "sparse Hessian";
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -342,8 +370,7 @@ namespace CppAD {
         /**
          * 
          */
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
+        startingGraphCreation(jobName);
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
@@ -370,6 +397,8 @@ namespace CppAD {
             hess[it2->first] = hess[it2->second];
         }
 
+        finishedGraphCreation();
+
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
@@ -378,7 +407,7 @@ namespace CppAD {
         VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
         try {
-            handler.generateCode(code, langC, hess, nameGenHess, "sparse Hessian");
+            handler.generateCode(code, langC, hess, nameGenHess, jobName);
         } catch (...) {
             delete nameGen;
             throw;
@@ -464,6 +493,23 @@ namespace CppAD {
         }
 
         assert(k == K);
+    }
+
+    template<class Base>
+    void inline CLangCompileModelHelper<Base>::startingGraphCreation(const std::string& jobName) {
+        if (_verbose) {
+            std::cout << "generating operation graph for '" << jobName << "' ... ";
+            std::cout.flush();
+            _beginTime = system::currentTime();
+        }
+    }
+
+    template<class Base>
+    void inline CLangCompileModelHelper<Base>::finishedGraphCreation() {
+        if (_verbose) {
+            double endTime = system::currentTime();
+            std::cout << "done [" << (endTime - _beginTime) << "]" << std::endl;
+        }
     }
 
     /**

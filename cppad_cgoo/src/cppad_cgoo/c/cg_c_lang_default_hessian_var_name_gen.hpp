@@ -61,8 +61,8 @@ namespace CppAD {
             return _nameGen->getDependent();
         }
 
-        virtual const std::vector<FuncArgument>& getTemporaryVariables() const {
-            return _nameGen->getTemporaryVariables();
+        virtual const std::vector<FuncArgument>& getTemporary() const {
+            return _nameGen->getTemporary();
         }
 
         virtual size_t getMinTemporaryVariableID() const {

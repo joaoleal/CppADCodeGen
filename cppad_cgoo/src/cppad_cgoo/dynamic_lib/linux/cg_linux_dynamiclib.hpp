@@ -30,7 +30,8 @@ namespace CppAD {
         /// the dynamic library handler
         void* _dynLibHandle;
         unsigned long int _version; // API version
-        std::map<std::string, DynamicLibModel<Base>*> _models;
+        std::set<std::string> _modelNames;
+        std::set<LinuxDynamicLibModel<Base>*> _models;
     public:
 
         LinuxDynamicLib(const std::string& dynLibName) :
@@ -40,51 +41,65 @@ namespace CppAD {
             std::string path;
             if (dynLibName[0] == '/') {
                 path = dynLibName; // absolute path
-            } else {
+            } else if (!(dynLibName[0] == '.' && dynLibName[1] == '/') &&
+                    !(dynLibName[0] == '.' && dynLibName[1] == '.')) {
                 path = "./" + dynLibName; // relative path
+            } else {
+                path = dynLibName;
             }
 
             // load the dynamic library
             _dynLibHandle = dlopen(path.c_str(), RTLD_NOW);
-            CPPADCG_ASSERT_KNOWN(_dynLibHandle != NULL, ("Failed to dynamically load library '" + dynLibName + "'").c_str());
+            CPPADCG_ASSERT_KNOWN(_dynLibHandle != NULL, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
 
             // validate the dynamic library
             validate();
         }
 
-        virtual std::map<std::string, DynamicLibModel<Base>*> getModels() {
-            return _models;
+        virtual std::set<std::string> getModelNames() {
+            return _modelNames;
         }
 
         virtual DynamicLibModel<Base>* model(const std::string& modelName) {
-            typename std::map<std::string, DynamicLibModel<Base>*>::iterator it = _models.find(modelName);
-            if (it != _models.end())
-                return it->second;
-            else
+            typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
+            if (it == _modelNames.end()) {
                 return NULL;
+            }
+            LinuxDynamicLibModel<Base>* m = new LinuxDynamicLibModel<Base > (this, modelName);
+            _models.insert(m);
+            return m;
         }
 
-        virtual size_t getAPIVersion() {
+        virtual unsigned long int getAPIVersion() {
             return _version;
         }
-        
+
+        virtual void* loadFunction(const std::string& functionName, bool required) {
+            std::string error;
+            void* functor = loadFunction(functionName, error);
+
+            CPPADCG_ASSERT_KNOWN(!required || error.empty(), error.c_str());
+
+            return functor;
+        }
+
         virtual void* loadFunction(const std::string& functionName, std::string& error) {
             void* functor = dlsym(_dynLibHandle, functionName.c_str());
             char *err;
             error.clear();
             if ((err = dlerror()) != NULL) {
                 error += "Failed to load function '";
-                error += functionName + ": " + err;
+                error += functionName + "': " + err;
                 return NULL;
             }
             return functor;
         }
 
         virtual ~LinuxDynamicLib() {
-            typename std::map<std::string, DynamicLibModel<Base>*>::const_iterator it;
+            typename std::set<LinuxDynamicLibModel<Base>*>::const_iterator it;
             for (it != _models.begin(); it != _models.end(); ++it) {
-                DynamicLibModel<Base>* model = it->second;
-                delete model;
+                LinuxDynamicLibModel<Base>* model = *it;
+                model->dynamicLibClosed();
             }
 
             if (_dynLibHandle != NULL) {
@@ -110,7 +125,7 @@ namespace CppAD {
                                  "The API version of the dynamic library is incompatible with the current version");
 
             /**
-             * Load the models
+             * Load the list of models
              */
             void (*modelsFunc)(char const *const**, int*);
             *(void **) (&modelsFunc) = loadFunction(CLangCompileDynamicHelper<Base>::FUNCTION_MODELS, error);
@@ -121,8 +136,12 @@ namespace CppAD {
             (*modelsFunc)(&model_names, &model_count);
 
             for (int i = 0; i < model_count; i++) {
-                _models[model_names[i]] = new LinuxDynamicLibModel<Base>(this, model_names[i]);
+                _modelNames.insert(model_names[i]);
             }
+        }
+
+        virtual void destroyed(LinuxDynamicLibModel<Base>* model) {
+            _models.erase(model);
         }
 
     private:

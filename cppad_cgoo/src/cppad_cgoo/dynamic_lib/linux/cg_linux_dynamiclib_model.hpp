@@ -29,7 +29,7 @@ namespace CppAD {
         /// the model name
         const std::string _name;
         /// the dynamic library
-        LinuxDynamicLib<Base> * const _dynLib;
+        LinuxDynamicLib<Base>* _dynLib;
         size_t _m;
         size_t _n;
         std::vector<const Base*> _in;
@@ -62,6 +62,7 @@ namespace CppAD {
         // Jacobian sparsity
 
         virtual std::vector<bool> JacobianSparsityBool() {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -77,6 +78,7 @@ namespace CppAD {
         }
 
         virtual std::vector<std::set<size_t> > JacobianSparsitySet() {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -92,6 +94,7 @@ namespace CppAD {
         }
 
         virtual void JacobianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -108,6 +111,7 @@ namespace CppAD {
         // Hessian sparsity 
 
         virtual std::vector<bool> HessianSparsityBool() {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -123,6 +127,7 @@ namespace CppAD {
         }
 
         virtual std::vector<std::set<size_t> > HessianSparsitySet() {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -138,6 +143,7 @@ namespace CppAD {
         }
 
         virtual void HessianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
             unsigned long int const* row, *col;
@@ -166,8 +172,11 @@ namespace CppAD {
         /// calculate the dependent values (zero order)
 
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1, please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+                                 " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
             std::vector<double> dep(_m);
@@ -179,9 +188,11 @@ namespace CppAD {
         }
 
         virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
             dep.resize(_m);
@@ -191,6 +202,7 @@ namespace CppAD {
         }
 
         virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -206,6 +218,7 @@ namespace CppAD {
 
         virtual void ForwardZero(const std::vector<const Base*> &x,
                                  Base* dep, size_t dep_size) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
@@ -218,9 +231,11 @@ namespace CppAD {
         /// calculate entire Jacobian       
 
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
             std::vector<double> jac(_m * _n);
@@ -232,9 +247,11 @@ namespace CppAD {
         }
 
         virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
             jac.resize(_m * _n);
@@ -245,6 +262,7 @@ namespace CppAD {
 
         virtual void Jacobian(const Base* x, size_t x_size,
                               Base* jac, size_t jac_size) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -262,6 +280,7 @@ namespace CppAD {
 
         virtual std::vector<Base> Hessian(const std::vector<Base> &x,
                                           const std::vector<Base> &w) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -278,6 +297,7 @@ namespace CppAD {
 
         virtual std::vector<Base> Hessian(const std::vector<Base> &x,
                                           size_t i) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -297,6 +317,7 @@ namespace CppAD {
         virtual void Hessian(const std::vector<Base> &x,
                              const std::vector<Base> &w,
                              std::vector<Base>& hess) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -312,6 +333,7 @@ namespace CppAD {
         virtual void Hessian(const Base* x, size_t x_size,
                              const Base* w, size_t w_size,
                              Base* hess) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -335,6 +357,7 @@ namespace CppAD {
 
         virtual void SparseJacobian(const std::vector<Base> &x,
                                     std::vector<Base>& jac) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -362,6 +385,7 @@ namespace CppAD {
                                     std::vector<Base>& jac,
                                     std::vector<size_t>& row,
                                     std::vector<size_t>& col) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -388,7 +412,7 @@ namespace CppAD {
                                     size_t const** row,
                                     size_t const** col,
                                     size_t nnz) {
-
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -413,6 +437,7 @@ namespace CppAD {
                                     size_t const** row,
                                     size_t const** col,
                                     size_t nnz) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
 
@@ -440,6 +465,7 @@ namespace CppAD {
         virtual void SparseHessian(const std::vector<Base> &x,
                                    const std::vector<Base> &w,
                                    std::vector<Base>& hess) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -468,6 +494,7 @@ namespace CppAD {
                                    std::vector<Base>& hess,
                                    std::vector<size_t>& row,
                                    std::vector<size_t>& col) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -495,6 +522,7 @@ namespace CppAD {
                                    size_t const** row,
                                    size_t const** col,
                                    size_t nnz) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
@@ -521,6 +549,7 @@ namespace CppAD {
                                    size_t const** row,
                                    size_t const** col,
                                    size_t nnz) {
+            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
@@ -540,6 +569,9 @@ namespace CppAD {
         }
 
         virtual ~LinuxDynamicLibModel() {
+            if (_dynLib != NULL) {
+                _dynLib->destroyed(this);
+            }
         }
 
     protected:
@@ -598,18 +630,20 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(local == std::string(dynamicLibBaseName),
                                  (std::string("Invalid data type in dynamic library. Expected '") + local
                                  + "' but the library provided '" + dynamicLibBaseName + "'.").c_str());
+            CPPADCG_ASSERT_KNOWN(inSize > 0,
+                                 "Invalid dimension received from the dynamic library.");
+            CPPADCG_ASSERT_KNOWN(outSize > 0,
+                                 "Invalid dimension received from the dynamic library.");
         }
 
         virtual void loadFunctions() {
-            std::string error;
-
-            *(void **) (&_zero) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWAD_ZERO, error);
-            *(void **) (&_jacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN, error);
-            *(void **) (&_hessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN, error);
-            *(void **) (&_sparseJacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN, error);
-            *(void **) (&_sparseHessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_HESSIAN, error);
-            *(void **) (&_jacobianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN_SPARSITY, error);
-            *(void **) (&_hessianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY, error);
+            *(void **) (&_zero) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWAD_ZERO, false);
+            *(void **) (&_jacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN, false);
+            *(void **) (&_hessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN, false);
+            *(void **) (&_sparseJacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN, false);
+            *(void **) (&_sparseHessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_HESSIAN, false);
+            *(void **) (&_jacobianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN_SPARSITY, false);
+            *(void **) (&_hessianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY, false);
 
             CPPADCG_ASSERT_KNOWN((_sparseJacobian == NULL) == (_jacobianSparsity == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) == (_hessianSparsity == NULL), "Missing functions in the dynamic library");
@@ -655,6 +689,17 @@ namespace CppAD {
             for (size_t i = 0; i < nnz; i++) {
                 mat[rows[i] * ncols + cols[i]] = compressed[i];
             }
+        }
+
+        void dynamicLibClosed() {
+            _dynLib = NULL;
+            _zero = NULL;
+            _jacobian = NULL;
+            _hessian = NULL;
+            _sparseJacobian = NULL;
+            _sparseHessian = NULL;
+            _jacobianSparsity = NULL;
+            _hessianSparsity = NULL;
         }
 
     private:
