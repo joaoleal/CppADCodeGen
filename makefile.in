@@ -103,12 +103,13 @@ AM_RECURSIVE_TARGETS = $(RECURSIVE_TARGETS:-recursive=) \
 	distdir dist dist-all distcheck
 ETAGS = etags
 CTAGS = ctags
-DIST_SUBDIRS = cppad_cgoo/src cppad_cgoo/test cppad_ipopt/src \
-	cppad_ipopt/example cppad_ipopt/speed cppad_ipopt/test \
-	speed/src speed/adolc speed/cppad speed/double speed/example \
-	speed/fadbad speed/profile speed/sacado example \
-	introduction/get_started introduction/exp_apx print_for \
-	multi_thread multi_thread/test_multi test_more
+DIST_SUBDIRS = cppad_cgoo/src cppad_cgoo/test cppad_cgoo/example \
+	cppad_ipopt/src cppad_ipopt/example cppad_ipopt/speed \
+	cppad_ipopt/test speed/src speed/adolc speed/cppad \
+	speed/double speed/example speed/fadbad speed/profile \
+	speed/sacado example introduction/get_started \
+	introduction/exp_apx print_for multi_thread \
+	multi_thread/test_multi test_more
 DISTFILES = $(DIST_COMMON) $(DIST_SOURCES) $(TEXINFOS) $(EXTRA_DIST)
 distdir = $(PACKAGE)-$(VERSION)
 top_distdir = $(distdir)
@@ -348,9 +349,12 @@ BUILT_SOURCES = $(top_srcdir)/cppad/configure.hpp
 #
 CODEGENOO_TESTS = cppad_cgoo/test
 #
+CODEGENOO_EXAMPLES = cppad_cgoo/example
+#
 CODEGENOO_DIRS = \
 	cppad_cgoo/src \
-	$(CODEGENOO_TESTS)
+	$(CODEGENOO_TESTS) \
+	$(CODEGENOO_EXAMPLES)
 
 #
 # ---------------------------------------------------------------------------
@@ -563,7 +567,7 @@ nobase_myinclude_HEADERS = \
 # No objects or executables are required to install CppAD.
 # See 'make test' below for building the tests.
 SUBDIRS = \
-	$(CODEGENOO_DIRS)\
+	$(CODEGENOO_DIRS) \
 	$(IPOPT_DIRS) \
 	$(SPEED_DIRS) \
 	example \
@@ -590,6 +594,7 @@ EXTRA_DIST = \
 # put test_code_gen at front of list so it is tested first
 test_directory_list = \
 	$(CODEGENOO_TESTS) \
+	$(CODEGENOO_EXAMPLES) \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \
 	example \

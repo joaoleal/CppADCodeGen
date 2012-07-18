@@ -670,6 +670,7 @@ AC_CONFIG_FILES([
 	test_more/makefile 
 	cppad_cgoo/src/makefile
 	cppad_cgoo/test/makefile
+	cppad_cgoo/example/makefile
 ])
 dnl END AC_CONFIG_FILES 
 dnl the comment line above is used by ./new_stable.sh

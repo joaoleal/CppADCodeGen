@@ -55,3 +55,8 @@ junk.sh
 /cppad_cgoo/test/cppadcg_sources_2
 /cppad_cgoo/test/temp
 /cppad_cgoo/test/tmp
+
+# compiled examples
+/cppad_cgoo/example/dynamic_linux
+/cppad_cgoo/example/source_generation
+/cppad_cgoo/example/cppadcg_sources

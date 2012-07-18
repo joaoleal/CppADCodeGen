@@ -81,9 +81,12 @@ endif
 #
 CODEGENOO_TESTS = cppad_cgoo/test
 #
+CODEGENOO_EXAMPLES = cppad_cgoo/example
+#
 CODEGENOO_DIRS = \
 	cppad_cgoo/src \
-	$(CODEGENOO_TESTS)
+	$(CODEGENOO_TESTS) \
+	$(CODEGENOO_EXAMPLES)
 #
 # ---------------------------------------------------------------------------
 myincludedir = $(includedir)/$(postfix_dir)
@@ -293,7 +296,7 @@ nobase_myinclude_HEADERS =  \
 # No objects or executables are required to install CppAD.
 # See 'make test' below for building the tests.
 SUBDIRS =  \
-	$(CODEGENOO_DIRS)\
+	$(CODEGENOO_DIRS) \
 	$(IPOPT_DIRS) \
 	$(SPEED_DIRS) \
 	example \
@@ -318,6 +321,7 @@ EXTRA_DIST = \
 # put test_code_gen at front of list so it is tested first
 test_directory_list = \
 	$(CODEGENOO_TESTS) \
+	$(CODEGENOO_EXAMPLES) \
 	$(IPOPT_TESTS) \
 	$(SPEED_TESTS) \
 	example \
