@@ -22,7 +22,6 @@ namespace CppAD {
         CGAbsOp, //  abs(variable)
         CGAcosOp, // asin(variable)
         CGAddOp, //  a + b
-        CGAddSubOp, //  a + b - c + (...)
         CGAsinOp, // asin(variable)
         CGAtanOp, // atan(variable)
         CGComOpLt, // result = left < right? trueCase: falseCase
@@ -48,16 +47,6 @@ namespace CppAD {
         CGTanhOp, //  tan(variable)
         CGTanOp, //  tan(variable)
         CGUnMinusOp // -(a)
-    };
-    
-    /**
-     * Some additional information for some operations
-     * 
-     * \author Joao Leal
-     */
-    enum CGOpCodeExtra {
-        CGExtraAddOp, //  a + b
-        CGExtraSubOp, //  a - b
     };
 
 }

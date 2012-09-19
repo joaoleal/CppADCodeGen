@@ -533,9 +533,6 @@ namespace CppAD {
                 case CGAddOp:
                     printOperationAdd(op);
                     break;
-                case CGAddSubOp:
-                    printOperationAddSub(op);
-                    break;
                 case CGComOpLt:
                 case CGComOpLe:
                 case CGComOpEq:
@@ -562,6 +559,7 @@ namespace CppAD {
                 case CGSubOp:
                     printOperationMinus(op);
                     break;
+
                 case CGUnMinusOp:
                     printOperationUnaryMinus(op);
                     break;
@@ -687,41 +685,6 @@ namespace CppAD {
             print(right);
             if (encloseRight) {
                 _code << ")";
-            }
-        }
-
-        virtual void printOperationAddSub(SourceCodeFragment<Base>& op) throw (CGException) {
-            const std::vector<Argument<Base> >& args = op.arguments();
-            const std::vector<CGOpCodeExtra>& info = op.operationInfo();
-            assert(args.size() == info.size() - 1);
-
-            print(args[0]);
-            for (size_t i = 0; i < info.size(); i++) {
-                if (info[i] == CGExtraAddOp) {
-                    _code << " + ";
-                } else if (info[i] == CGExtraSubOp) {
-                    _code << " - ";
-                } else {
-                    std::stringstream ss;
-                    ss << "Invalid operation extra information code '" << info[i] << "'.";
-                    throw CGException(ss.str());
-                }
-
-                const Argument<Base>& right = op.arguments()[i + 1];
-                const SourceCodeFragment<Base>* opRight = right.operation();
-                bool enclose = opRight != NULL &&
-                        opRight->variableID() == 0 &&
-                        opRight->operation() != CGDivOp &&
-                        opRight->operation() != CGMulOp &&
-                        !isFunction(opRight->operation());
-
-                if (enclose) {
-                    _code << "(";
-                }
-                print(right);
-                if (enclose) {
-                    _code << ")";
-                }
             }
         }
 
