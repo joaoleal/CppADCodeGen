@@ -26,7 +26,11 @@ namespace CppAD {
         // the code blocks this block depends upon (empty for independent 
         // variables and possibly for the 1st assignment of a dependent variable)
         std::vector<Argument<Base> > arguments_;
+        // extra information for some operations (temporary variables only)
+        std::vector<CGOpCodeExtra> operationInfo_;
         // variable ID that was altered/assigned in this source code
+        // the same ID can be used in more than one variable, meaning these
+        // variables can be saved in the same memory location at different times
         // (zero means that no variable is assigned)
         size_t var_id_;
         //
@@ -103,9 +107,25 @@ namespace CppAD {
             arguments_[3] = arg4;
         }
 
+        inline SourceCodeFragment(CGOpCode op,
+                                  const std::vector<Argument<Base> >& args,
+                                  const std::vector<CGOpCodeExtra>& operationInfo,
+                                  const SourceCodeFragment& orig) :
+            operation_(op),
+            arguments_(args),
+            operationInfo_(operationInfo),
+            var_id_(orig.var_id_),
+            evaluation_order_(orig.evaluation_order_),
+            total_use_count_(orig.total_use_count_),
+            use_count_(orig.use_count_),
+            last_usage_order_(orig.last_usage_order_),
+            name_(orig.name_) {
+        }
+        
         SourceCodeFragment(const SourceCodeFragment& orig) :
             operation_(orig.operation_),
             arguments_(orig.arguments_),
+            operationInfo_(orig.operationInfo_),
             var_id_(0),
             evaluation_order_(0),
             total_use_count_(0),
@@ -125,6 +145,14 @@ namespace CppAD {
          */
         inline const std::vector<Argument<Base> >& arguments() const {
             return arguments_;
+        }
+        
+        /**
+         * Provides additional information related with this operation.
+         * \return additional information on this operation
+         */
+        inline const std::vector<CGOpCodeExtra>& operationInfo() const {
+            return operationInfo_;
         }
 
         /**
@@ -209,6 +237,8 @@ namespace CppAD {
                 break;
             case CGAddOp:
                 os << "$1 + $2";
+            case CGAddSubOp:
+                os << "$1 (+/-) $2 (+/-) ...";
                 break;
             case CGAsinOp:
                 os << "asin( $1 )";

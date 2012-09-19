@@ -31,12 +31,23 @@ namespace CppAD {
         std::vector<SourceCodeFragment<Base> *> _independentVariables;
         // all the source code blocks created with the CG<Base> objects
         std::vector<SourceCodeFragment<Base> *> _codeBlocks;
-        // the order for the variable creation in the source code
+        /** the order for the variable creation in the source code
+         * (variables which are used more than once) */
         std::vector<SourceCodeFragment<Base> *> _variableOrder;
+        // all the source code blocks created for the optimized operation graph
+        std::vector<SourceCodeFragment<Base> *> _codeBlocksOpt;
+        /** the order for the optimized variable creation in the source code
+         * (variables which are used more than once) */
+        std::vector<SourceCodeFragment<Base> *> _variableOrderOpt;
+        // Maps regular variables to their optimized versions
+        std::map<SourceCodeFragment<Base> *, SourceCodeFragment<Base> *> _regular2OptcodeBlocks;
         // a flag indicating if this handler was previously used to generate code
         bool _used;
         // a flag indicating whether or not to reuse the IDs of destroyed variables
         bool _reuseIDs;
+        /* a flag indicating whether or not to attempt to reduce the number of
+         * operations in the operation graph */
+        bool _optimize;
         // the language used for source code generation
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
@@ -46,12 +57,13 @@ namespace CppAD {
     public:
 
         CodeHandler(size_t varCount = 50) :
-            _idCount(0),
-            _used(false),
-            _reuseIDs(true),
-            _lang(NULL),
-            _minTemporaryVarID(0),
-            _verbose(false) {
+        _idCount(0),
+        _used(false),
+        _reuseIDs(true),
+        _optimize(true),
+        _lang(NULL),
+        _minTemporaryVarID(0),
+        _verbose(false) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -62,6 +74,14 @@ namespace CppAD {
 
         inline bool isReuseVariableIDs() const {
             return _reuseIDs;
+        }
+
+        inline void setOptimize(bool optimize) {
+            _optimize = optimize;
+        }
+
+        inline bool isOptimize() const {
+            return _optimize;
         }
 
         void makeVariables(std::vector<CG<Base> >& variables) {
@@ -99,10 +119,10 @@ namespace CppAD {
          * \param nameGen Provides the rules for variable name creation.
          */
         virtual void generateCode(std::ostream& out,
-                                  CppAD::Language<Base>& lang,
-                                  std::vector<CG<Base> >& dependent,
-                                  VariableNameGenerator<Base>& nameGen,
-                                  const std::string& jobName = "source") {
+                CppAD::Language<Base>& lang,
+                std::vector<CG<Base> >& dependent,
+                VariableNameGenerator<Base>& nameGen,
+                const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
@@ -115,6 +135,8 @@ namespace CppAD {
 
             if (_used) {
                 _variableOrder.clear();
+                _variableOrderOpt.clear();
+                _regular2OptcodeBlocks.clear();
 
                 for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                     SourceCodeFragment<Base>* block = *it;
@@ -170,8 +192,24 @@ namespace CppAD {
 
             assert(_idCount == _variableOrder.size() + _independentVariables.size());
 
+            std::vector<CG<Base> > dependentOpt;
+            //_optimize = false;
+            if (_optimize) {
+                // optimize the operation graph
+                optimizeOperationGraph();
+                // determine the list of optimized dependent variables
+                dependentOpt = dependent;
+                for (size_t i = 0; i < dependentOpt.size(); i++) {
+                    if (dependentOpt[i].isVariable() && !isIndependent(*dependentOpt[i].sourceCode_)) {
+                        dependentOpt[i].sourceCode_ = _regular2OptcodeBlocks.at(dependent[i].sourceCode_);
+                    }
+                }
+            }
+
+            std::vector<CG<Base> >& dependent2 = _optimize ? dependentOpt : dependent;
+
             if (_reuseIDs) {
-                reduceTemporaryVariables(dependent);
+                reduceTemporaryVariables(dependent2);
             }
 
             nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount);
@@ -179,9 +217,10 @@ namespace CppAD {
             /**
              * Creates the source code for a specific language
              */
-            LanguageGenerationData<Base> info(_independentVariables, dependent,
-                                              _minTemporaryVarID, _variableOrder,
-                                              nameGen, _reuseIDs);
+            LanguageGenerationData<Base> info(_independentVariables, dependent2,
+                    _minTemporaryVarID,
+                    _optimize ? _variableOrderOpt : _variableOrder,
+                    nameGen, _reuseIDs);
             lang.generateSourceCode(out, info);
 
             if (_verbose) {
@@ -197,6 +236,11 @@ namespace CppAD {
                 delete *itc;
             }
             _codeBlocks.clear();
+            for (itc = _codeBlocksOpt.begin(); itc != _codeBlocksOpt.end(); ++itc) {
+                delete *itc;
+            }
+            _codeBlocksOpt.clear();
+            _regular2OptcodeBlocks.clear();
             _independentVariables.clear();
             _idCount = 0;
             _used = false;
@@ -284,6 +328,7 @@ namespace CppAD {
 
         inline void reduceTemporaryVariables(std::vector<CG<Base> >& dependent) {
 
+             std::vector<SourceCodeFragment<Base> *>& varOrder =   _optimize ? _variableOrderOpt : _variableOrder;
             /**
              * determine the last line where each temporary variable is used
              */
@@ -302,9 +347,9 @@ namespace CppAD {
             }
 
             // location of where temporary variables can be released
-            std::vector<std::vector<SourceCodeFragment<Base>* > > tempVarRelease(_variableOrder.size());
-            for (size_t i = 0; i < _variableOrder.size(); i++) {
-                SourceCodeFragment<Base>* var = _variableOrder[i];
+            std::vector<std::vector<SourceCodeFragment<Base>* > > tempVarRelease(varOrder.size());
+            for (size_t i = 0; i < varOrder.size(); i++) {
+                SourceCodeFragment<Base>* var = varOrder[i];
                 if (isTemporary(*var)) {
                     tempVarRelease[var->getLastUsageEvaluationOrder() - 1].push_back(var);
                 }
@@ -317,8 +362,8 @@ namespace CppAD {
             std::vector<size_t> freedVariables; // variable IDs no longer in use
             _idCount = _minTemporaryVarID - 1;
 
-            for (size_t i = 0; i < _variableOrder.size(); i++) {
-                SourceCodeFragment<Base>& var = *_variableOrder[i];
+            for (size_t i = 0; i < varOrder.size(); i++) {
+                SourceCodeFragment<Base>& var = *varOrder[i];
 
                 const std::vector<SourceCodeFragment<Base>* >& released = tempVarRelease[i];
                 for (size_t r = 0; r < released.size(); r++) {
@@ -368,12 +413,15 @@ namespace CppAD {
             for (it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                 SourceCodeFragment<Base>* block = *it;
                 block->use_count_ = 0;
-
+            }
+            for (it = _codeBlocksOpt.begin(); it != _codeBlocksOpt.end(); ++it) {
+                SourceCodeFragment<Base>* block = *it;
+                block->use_count_ = 0;
             }
         }
 
         /**
-         * Defines the evaluation order for the code fragments that do not
+         * Defines the evaluation order for code fragments that do not
          * create variables
          * \param code The operation just added to the evaluation order
          */
@@ -400,6 +448,111 @@ namespace CppAD {
 
         inline bool isTemporary(const SourceCodeFragment<Base>& arg) const {
             return arg.variableID() >= _minTemporaryVarID;
+        }
+
+        /**
+         * Reduces the number of operations
+         */
+        inline void optimizeOperationGraph() throw (CGException) {
+            _variableOrderOpt.reserve(_variableOrder.size());
+            _codeBlocksOpt.reserve(_codeBlocks.size());
+
+            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
+            for (it = _variableOrder.begin(); it != _variableOrder.end(); ++it) {
+                SourceCodeFragment<Base>* opOpt = optimizeOperationGraph(**it);
+                _variableOrderOpt.push_back(opOpt);
+                _regular2OptcodeBlocks[*it] = opOpt;
+            }
+        }
+
+        /**
+         * Reduces the number of operations
+         * \param op graph operation node to optimize
+         * \return  The new optimized graph operation node
+         */
+        inline SourceCodeFragment<Base>* optimizeOperationGraph(SourceCodeFragment<Base>& op) throw (CGException) {
+            if (op.variableID() > 0) {
+                if (isTemporary(op)) {
+                    typename std::map<SourceCodeFragment<Base> *, SourceCodeFragment<Base> *>::const_iterator it = _regular2OptcodeBlocks.find(&op);
+                    if (it != _regular2OptcodeBlocks.end()) {
+                        // already done
+                        return it->second;
+                    }
+                } else if (isIndependent(op)) {
+                    return &op; // independent variable (the originals can be used)
+                }
+            }
+
+            const std::vector<Argument<Base> >& args = op.arguments();
+
+            /**
+             * optimize the arguments
+             */
+            std::vector<Argument<Base> > argsOpt(args.size());
+            for (size_t i = 0; i < args.size(); i++) {
+                if (args[i].operation() != NULL) {
+                    argsOpt[i] = Argument<Base > (*optimizeOperationGraph(*args[i].operation()));
+                } else {
+                    argsOpt[i] = Argument<Base > (*args[i].parameter());
+                }
+            }
+
+            /**
+             * optimize op
+             */
+            SourceCodeFragment<Base>* opOpt = NULL;
+
+            CGOpCode opCode = op.operation();
+
+            if (op.operation() == CGAddOp || op.operation() == CGSubOp) {
+                //combine and sort addition/subtraction operations
+
+                SourceCodeFragment<Base>* left = argsOpt[0].operation();
+                SourceCodeFragment<Base>* right = argsOpt[1].operation();
+
+                if (left != NULL && left->operation() == CGAddSubOp) {
+                    // the left operation is already a combined addition/subtraction: just include this new operation there
+
+                    left->operationInfo_.push_back(opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
+                    if (right != NULL && right->operation() == CGAddSubOp) {
+                        // the right operation is also an addition/subtraction: merge operations 
+                        left->operationInfo_.insert(left->operationInfo_.end(), right->operationInfo_.begin(), right->operationInfo_.end());
+                        left->arguments_.insert(left->arguments_.end(), right->arguments_.begin(), right->arguments_.end());
+                    } else {
+                        left->arguments_.push_back(argsOpt[1]);
+                    }
+                    return left;
+
+                } else if (right != NULL && right->operation() == CGAddSubOp) {
+                    // the right operation is already a combined addition/subtraction: just include this new operation there
+
+                    right->operationInfo_.insert(right->operationInfo_.begin(), opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
+                    right->arguments_.insert(right->arguments_.begin(), argsOpt[0]);
+
+                    return right;
+
+                } else {
+                    std::vector<CGOpCodeExtra> operationInfo(1);
+                    operationInfo[0] = opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp;
+
+                    opOpt = new SourceCodeFragment<Base > (opCode,
+                            argsOpt,
+                            operationInfo,
+                            op);
+                    _codeBlocksOpt.push_back(opOpt); // for memory management
+
+                    return opOpt;
+                }
+            }
+
+            std::vector<CGOpCodeExtra> operationInfo;
+            opOpt = new SourceCodeFragment<Base > (opCode,
+                    argsOpt,
+                    operationInfo,
+                    op);
+            _codeBlocksOpt.push_back(opOpt); // for memory management
+
+            return opOpt;
         }
 
     private:
