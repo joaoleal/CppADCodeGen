@@ -45,10 +45,11 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	acos.$(OBJEXT) add.$(OBJEXT) asin.$(OBJEXT) assign.$(OBJEXT) \
 	atan.$(OBJEXT) atan_2.$(OBJEXT) compare_change.$(OBJEXT) \
 	cond_exp.$(OBJEXT) cos.$(OBJEXT) cosh.$(OBJEXT) div.$(OBJEXT) \
-	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
-	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
-	tan.$(OBJEXT) unary.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
-	dynamic.$(OBJEXT) TestException.$(OBJEXT)
+	div_mul.$(OBJEXT) exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) \
+	mul.$(OBJEXT) parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) \
+	sub.$(OBJEXT) tan.$(OBJEXT) unary.$(OBJEXT) \
+	gcc_load_dynamic.$(OBJEXT) dynamic.$(OBJEXT) \
+	TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
 testCGOO_DEPENDENCIES =
@@ -245,6 +246,7 @@ testCGOO_SOURCES = \
 	cos.cpp \
 	cosh.cpp \
 	div.cpp \
+	div_mul.cpp \
 	exp.cpp \
 	log.cpp \
 	log_10.cpp \
@@ -319,6 +321,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cosh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div_mul.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dynamic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcc_load_dynamic.Po@am__quote@

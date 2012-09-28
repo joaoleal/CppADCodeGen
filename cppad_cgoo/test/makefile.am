@@ -43,6 +43,7 @@ testCGOO_SOURCES        = \
 	cos.cpp \
 	cosh.cpp \
 	div.cpp \
+	div_mul.cpp \
 	exp.cpp \
 	log.cpp \
 	log_10.cpp \

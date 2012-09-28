@@ -34,6 +34,7 @@ namespace CppAD {
         CGCoshOp, // cosh(variable)
         CGCosOp, //  cos(variable)
         CGDivOp, // a / b
+        CGDivMulOp, // a / b * c / (...)
         CGExpOp, //  exp(variable)
         CGInvOp, //                             independent variable
         CGLogOp, //  log(variable)
@@ -58,6 +59,8 @@ namespace CppAD {
     enum CGOpCodeExtra {
         CGExtraAddOp, //  a + b
         CGExtraSubOp, //  a - b
+        CGExtraDivOp, //  a / b
+        CGExtraMulOp, //  a * b
     };
 
 }

@@ -121,7 +121,7 @@ namespace CppAD {
             last_usage_order_(orig.last_usage_order_),
             name_(orig.name_) {
         }
-        
+
         SourceCodeFragment(const SourceCodeFragment& orig) :
             operation_(orig.operation_),
             arguments_(orig.arguments_),
@@ -146,7 +146,7 @@ namespace CppAD {
         inline const std::vector<Argument<Base> >& arguments() const {
             return arguments_;
         }
-        
+
         /**
          * Provides additional information related with this operation.
          * \return additional information on this operation
@@ -179,7 +179,7 @@ namespace CppAD {
         inline void setEvaluationOrder(size_t evaluation_order) {
             evaluation_order_ = evaluation_order;
         }
-        
+
         /**
          * Provides the total number of times the result of this operation is being 
          * used as an argument for another operation.
@@ -217,6 +217,17 @@ namespace CppAD {
 
         virtual ~SourceCodeFragment() {
             delete name_;
+        }
+
+    protected:
+
+        inline void cloneInfo(const SourceCodeFragment& orig) {
+            var_id_ = orig.var_id_;
+            evaluation_order_ = orig.evaluation_order_;
+            total_use_count_ = orig.total_use_count_;
+            use_count_ = orig.use_count_;
+            last_usage_order_ = orig.last_usage_order_;
+            name_ = orig.name_;
         }
 
 

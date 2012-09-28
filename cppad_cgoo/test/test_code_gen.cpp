@@ -33,6 +33,7 @@ extern bool CondExp();
 extern bool Cos();
 extern bool Cosh();
 extern bool Div();
+extern bool DivMul();
 extern bool Exp();
 extern bool Log();
 extern bool Log10();
@@ -78,7 +79,7 @@ namespace {
 
 // main program that runs all the tests
 
-int main(void) {
+int main() {
     using std::cout;
     using std::endl;
 
@@ -95,6 +96,7 @@ int main(void) {
     ok &= Run(Cos, "Cos");
     ok &= Run(Cosh, "Cosh");
     ok &= Run(Div, "Div");
+    ok &= Run(DivMul, "DivMul");
     ok &= Run(Exp, "Exp");
     ok &= Run(Log, "Log");
     ok &= Run(Log10, "Log10");

@@ -547,6 +547,9 @@ namespace CppAD {
                 case CGDivOp:
                     printOperationDiv(op);
                     break;
+                case CGDivMulOp:
+                    printOperationDivMul(op);
+                    break;
                 case CGInvOp:
                     printIndependentVariableName(op);
                     break;
@@ -676,6 +679,7 @@ namespace CppAD {
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
                     opRight->operation() != CGDivOp &&
+                    opRight->operation() != CGDivMulOp &&
                     opRight->operation() != CGMulOp &&
                     !isFunction(opRight->operation());
 
@@ -693,7 +697,7 @@ namespace CppAD {
         virtual void printOperationAddSub(SourceCodeFragment<Base>& op) throw (CGException) {
             const std::vector<Argument<Base> >& args = op.arguments();
             const std::vector<CGOpCodeExtra>& info = op.operationInfo();
-            assert(args.size() == info.size() - 1);
+            assert(args.size() == info.size() + 1);
 
             print(args[0]);
             for (size_t i = 0; i < info.size(); i++) {
@@ -712,6 +716,7 @@ namespace CppAD {
                 bool enclose = opRight != NULL &&
                         opRight->variableID() == 0 &&
                         opRight->operation() != CGDivOp &&
+                        opRight->operation() != CGDivMulOp &&
                         opRight->operation() != CGMulOp &&
                         !isFunction(opRight->operation());
 
@@ -793,6 +798,52 @@ namespace CppAD {
             }
         }
 
+        virtual void printOperationDivMul(SourceCodeFragment<Base>& op) {
+            const std::vector<Argument<Base> >& args = op.arguments();
+            const std::vector<CGOpCodeExtra>& info = op.operationInfo();
+            assert(args.size() == info.size() + 1);
+
+            const Argument<Base>& first = op.arguments()[0];
+            const SourceCodeFragment<Base>* opFirst = first.operation();
+            bool encloseFirst = opFirst != NULL &&
+                    opFirst->variableID() == 0 &&
+                    !isFunction(opFirst->operation());
+            if (encloseFirst) {
+                _code << "(";
+            }
+            print(first);
+            if (encloseFirst) {
+                _code << ")";
+            }
+
+            for (size_t i = 0; i < info.size(); i++) {
+                if (info[i] == CGExtraDivOp) {
+                    _code << " / ";
+                } else if (info[i] == CGExtraMulOp) {
+                    _code << " * ";
+                } else {
+                    std::stringstream ss;
+                    ss << "Invalid operation extra information code '" << info[i] << "'.";
+                    throw CGException(ss.str());
+                }
+
+                const Argument<Base>& right = op.arguments()[i + 1];
+
+                const SourceCodeFragment<Base>* opRight = right.operation();
+                bool encloseRight = opRight != NULL &&
+                        opRight->variableID() == 0 &&
+                        !isFunction(opRight->operation());
+
+                if (encloseRight) {
+                    _code << "(";
+                }
+                print(right);
+                if (encloseRight) {
+                    _code << ")";
+                }
+            }
+        }
+
         virtual void printOperationUnaryMinus(SourceCodeFragment<Base>& op) {
             assert(op.arguments().size() == 1);
 
@@ -802,6 +853,7 @@ namespace CppAD {
             bool enclose = scf != NULL &&
                     scf->variableID() == 0 &&
                     scf->operation() != CGDivOp &&
+                    scf->operation() != CGDivMulOp &&
                     scf->operation() != CGMulOp &&
                     !isFunction(scf->operation());
 

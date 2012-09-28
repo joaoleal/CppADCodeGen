@@ -57,13 +57,13 @@ namespace CppAD {
     public:
 
         CodeHandler(size_t varCount = 50) :
-        _idCount(0),
-        _used(false),
-        _reuseIDs(true),
-        _optimize(true),
-        _lang(NULL),
-        _minTemporaryVarID(0),
-        _verbose(false) {
+            _idCount(0),
+            _used(false),
+            _reuseIDs(true),
+            _optimize(true),
+            _lang(NULL),
+            _minTemporaryVarID(0),
+            _verbose(false) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -119,10 +119,10 @@ namespace CppAD {
          * \param nameGen Provides the rules for variable name creation.
          */
         virtual void generateCode(std::ostream& out,
-                CppAD::Language<Base>& lang,
-                std::vector<CG<Base> >& dependent,
-                VariableNameGenerator<Base>& nameGen,
-                const std::string& jobName = "source") {
+                                  CppAD::Language<Base>& lang,
+                                  std::vector<CG<Base> >& dependent,
+                                  VariableNameGenerator<Base>& nameGen,
+                                  const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
@@ -218,9 +218,9 @@ namespace CppAD {
              * Creates the source code for a specific language
              */
             LanguageGenerationData<Base> info(_independentVariables, dependent2,
-                    _minTemporaryVarID,
-                    _optimize ? _variableOrderOpt : _variableOrder,
-                    nameGen, _reuseIDs);
+                                              _minTemporaryVarID,
+                                              _optimize ? _variableOrderOpt : _variableOrder,
+                                              nameGen, _reuseIDs);
             lang.generateSourceCode(out, info);
 
             if (_verbose) {
@@ -328,7 +328,7 @@ namespace CppAD {
 
         inline void reduceTemporaryVariables(std::vector<CG<Base> >& dependent) {
 
-             std::vector<SourceCodeFragment<Base> *>& varOrder =   _optimize ? _variableOrderOpt : _variableOrder;
+            std::vector<SourceCodeFragment<Base> *>& varOrder = _optimize ? _variableOrderOpt : _variableOrder;
             /**
              * determine the last line where each temporary variable is used
              */
@@ -505,54 +505,161 @@ namespace CppAD {
             CGOpCode opCode = op.operation();
 
             if (op.operation() == CGAddOp || op.operation() == CGSubOp) {
-                //combine and sort addition/subtraction operations
-
-                SourceCodeFragment<Base>* left = argsOpt[0].operation();
-                SourceCodeFragment<Base>* right = argsOpt[1].operation();
-
-                if (left != NULL && left->operation() == CGAddSubOp) {
-                    // the left operation is already a combined addition/subtraction: just include this new operation there
-
-                    left->operationInfo_.push_back(opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
-                    if (right != NULL && right->operation() == CGAddSubOp) {
-                        // the right operation is also an addition/subtraction: merge operations 
-                        left->operationInfo_.insert(left->operationInfo_.end(), right->operationInfo_.begin(), right->operationInfo_.end());
-                        left->arguments_.insert(left->arguments_.end(), right->arguments_.begin(), right->arguments_.end());
-                    } else {
-                        left->arguments_.push_back(argsOpt[1]);
-                    }
-                    return left;
-
-                } else if (right != NULL && right->operation() == CGAddSubOp) {
-                    // the right operation is already a combined addition/subtraction: just include this new operation there
-
-                    right->operationInfo_.insert(right->operationInfo_.begin(), opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
-                    right->arguments_.insert(right->arguments_.begin(), argsOpt[0]);
-
-                    return right;
-
-                } else {
-                    std::vector<CGOpCodeExtra> operationInfo(1);
-                    operationInfo[0] = opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp;
-
-                    opOpt = new SourceCodeFragment<Base > (opCode,
-                            argsOpt,
-                            operationInfo,
-                            op);
-                    _codeBlocksOpt.push_back(opOpt); // for memory management
-
-                    return opOpt;
-                }
+                opOpt = optimizeOperationGraphAddSub(op, argsOpt);
+            } else if (op.operation() == CGDivOp || op.operation() == CGMulOp) {
+                opOpt = optimizeOperationGraphDivMul(op, argsOpt);
             }
 
-            std::vector<CGOpCodeExtra> operationInfo;
-            opOpt = new SourceCodeFragment<Base > (opCode,
-                    argsOpt,
-                    operationInfo,
-                    op);
-            _codeBlocksOpt.push_back(opOpt); // for memory management
+            if (opOpt == NULL) {
+                std::vector<CGOpCodeExtra> operationInfo;
+                opOpt = new SourceCodeFragment<Base > (opCode,
+                        argsOpt,
+                        operationInfo,
+                        op);
+                _codeBlocksOpt.push_back(opOpt); // for memory management
+            }
 
             return opOpt;
+        }
+
+        /**
+         * Combines and sorts addition/subtraction operations
+         * 
+         * \param op The operation to be optimized
+         * \param argsOpt The optimized arguments for this operation
+         * \return the optimized operation
+         */
+        inline SourceCodeFragment<Base>* optimizeOperationGraphAddSub(SourceCodeFragment<Base>& op,
+                                                                      const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
+            CGOpCode opCode = op.operation();
+            SourceCodeFragment<Base>* left = argsOpt[0].operation();
+            SourceCodeFragment<Base>* right = argsOpt[1].operation();
+
+            if (left != NULL && left->variableID() == 0 && left->operation() == CGAddSubOp) {
+                // the left operation is already a combined addition/subtraction: just include this new operation there
+
+                left->operationInfo_.push_back(opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
+                if (right != NULL && right->variableID() == 0 && right->operation() == CGAddSubOp) {
+                    // the right operation is also an addition/subtraction: merge operations
+                    if (opCode == CGAddOp) {
+                        // a + (b - c)  ->  a + b - c
+                        left->operationInfo_.insert(left->operationInfo_.end(), right->operationInfo_.begin(), right->operationInfo_.end());
+                    } else {
+                        // a - (b - c)  ->  a - b + c
+                        left->operationInfo_.reserve(left->operationInfo_.size() + right->operationInfo_.size());
+                        for (std::vector<CGOpCodeExtra>::const_iterator it = right->operationInfo_.begin(); it != right->operationInfo_.end(); ++it) {
+                            left->operationInfo_.push_back(*it == CGExtraAddOp ? CGExtraSubOp : CGExtraAddOp);
+                        }
+                    }
+                    left->arguments_.insert(left->arguments_.end(), right->arguments_.begin(), right->arguments_.end());
+                } else {
+                    left->arguments_.push_back(argsOpt[1]);
+                }
+
+                left->cloneInfo(op);
+
+                return left;
+
+            } else if (right != NULL && right->variableID() == 0 && right->operation() == CGAddSubOp) {
+                // the right operation is already a combined addition/subtraction: just include this new operation there
+
+                if (opCode == CGSubOp) {
+                    // a - (b - c)  ->  a - b + c
+                    for (std::vector<CGOpCodeExtra>::iterator it = right->operationInfo_.begin(); it != right->operationInfo_.end(); ++it) {
+                        *it = (*it == CGExtraAddOp) ? CGExtraSubOp : CGExtraAddOp;
+                    }
+                }
+
+                right->operationInfo_.insert(right->operationInfo_.begin(), opCode == CGSubOp ? CGExtraSubOp : CGExtraAddOp);
+                right->arguments_.insert(right->arguments_.begin(), argsOpt[0]);
+
+                right->cloneInfo(op);
+
+                return right;
+
+            } else {
+                std::vector<CGOpCodeExtra> operationInfo(1);
+                operationInfo[0] = opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp;
+
+                SourceCodeFragment<Base>* opOpt = new SourceCodeFragment<Base > (CGAddSubOp,
+                        argsOpt,
+                        operationInfo,
+                        op);
+                _codeBlocksOpt.push_back(opOpt); // for memory management
+
+                return opOpt;
+            }
+        }
+
+        /**
+         * Combines and sorts division/multiplication operations
+         * 
+         * \param op The operation to be optimized
+         * \param argsOpt The optimized arguments for this operation
+         * \return the optimized operation
+         */
+        inline SourceCodeFragment<Base>* optimizeOperationGraphDivMul(SourceCodeFragment<Base>& op,
+                                                                      const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
+            CGOpCode opCode = op.operation();
+            SourceCodeFragment<Base>* left = argsOpt[0].operation();
+            SourceCodeFragment<Base>* right = argsOpt[1].operation();
+
+            if (left != NULL && left->variableID() == 0 && left->operation() == CGDivMulOp) {
+                // the left operation is already a combined division/multiplication: just include this new operation there
+
+                left->operationInfo_.push_back(opCode == CGDivOp ? CGExtraDivOp : CGExtraMulOp);
+                if (right != NULL && right->variableID() == 0 && right->operation() == CGDivMulOp) {
+                    // the right operation is also a division/multiplication: merge operations 
+                    
+                    if (opCode == CGMulOp) {
+                        // a * (b / c)  ->  a * b / c
+                        left->operationInfo_.insert(left->operationInfo_.end(), right->operationInfo_.begin(), right->operationInfo_.end());
+                    } else {
+                        // a / (b / c)  ->  a / b * c
+                        left->operationInfo_.reserve(left->operationInfo_.size() + right->operationInfo_.size());
+                        for (std::vector<CGOpCodeExtra>::const_iterator it = right->operationInfo_.begin(); it != right->operationInfo_.end(); ++it) {
+                            left->operationInfo_.push_back((*it == CGExtraMulOp) ? CGExtraDivOp : CGExtraMulOp);
+                        }
+                    }
+                    
+                    left->arguments_.insert(left->arguments_.end(), right->arguments_.begin(), right->arguments_.end());
+                } else {
+                    left->arguments_.push_back(argsOpt[1]);
+                }
+
+                left->cloneInfo(op);
+
+                return left;
+
+            } else if (right != NULL && right->variableID() == 0 && right->operation() == CGDivMulOp) {
+                // the right operation is already a combined division/multiplication: just include this new operation there
+
+                if (opCode == CGDivOp) {
+                    // a / (b / c)  ->  a / b / c
+                    for (std::vector<CGOpCodeExtra>::iterator it = right->operationInfo_.begin(); it != right->operationInfo_.end(); ++it) {
+                        *it = (*it == CGExtraMulOp) ? CGExtraDivOp : CGExtraMulOp;
+                    }
+                }
+                
+                right->operationInfo_.insert(right->operationInfo_.begin(), opCode == CGDivOp ? CGExtraDivOp : CGExtraMulOp);
+                right->arguments_.insert(right->arguments_.begin(), argsOpt[0]);
+
+                right->cloneInfo(op);
+
+                return right;
+
+            } else {
+                std::vector<CGOpCodeExtra> operationInfo(1);
+                operationInfo[0] = opCode == CGDivOp ? CGExtraDivOp : CGExtraMulOp;
+
+                SourceCodeFragment<Base>* opOpt = new SourceCodeFragment<Base > (CGDivMulOp,
+                        argsOpt,
+                        operationInfo,
+                        op);
+                _codeBlocksOpt.push_back(opOpt); // for memory management
+
+                return opOpt;
+            }
         }
 
     private:
