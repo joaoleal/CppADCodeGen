@@ -44,7 +44,7 @@ namespace CppAD {
         CGSinOp, //  sin(variable)
         CGSqrtOp, // sqrt(variable)
         CGSubOp, //  a - b
-        CGTanhOp, //  tan(variable)
+        CGTanhOp, //  tanh(variable)
         CGTanOp, //  tan(variable)
         CGUnMinusOp // -(a)
     };

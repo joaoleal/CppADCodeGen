@@ -48,7 +48,7 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
 	tan.$(OBJEXT) unary.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
-	dynamic.$(OBJEXT) TestException.$(OBJEXT)
+	dynamic.$(OBJEXT) pantelides.$(OBJEXT) TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
 testCGOO_DEPENDENCIES =
@@ -256,7 +256,8 @@ testCGOO_SOURCES = \
 	tan.cpp \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
-	dynamic.cpp\
+	dynamic.cpp \
+	dae_index_reduction/pantelides.cpp \
 	TestException.cpp
 
 all: all-am
@@ -325,6 +326,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/log_10.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/mul.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pantelides.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parameter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sin.Po@am__quote@
@@ -346,6 +348,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+pantelides.o: dae_index_reduction/pantelides.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT pantelides.o -MD -MP -MF $(DEPDIR)/pantelides.Tpo -c -o pantelides.o `test -f 'dae_index_reduction/pantelides.cpp' || echo '$(srcdir)/'`dae_index_reduction/pantelides.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/pantelides.Tpo $(DEPDIR)/pantelides.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dae_index_reduction/pantelides.cpp' object='pantelides.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o pantelides.o `test -f 'dae_index_reduction/pantelides.cpp' || echo '$(srcdir)/'`dae_index_reduction/pantelides.cpp
+
+pantelides.obj: dae_index_reduction/pantelides.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT pantelides.obj -MD -MP -MF $(DEPDIR)/pantelides.Tpo -c -o pantelides.obj `if test -f 'dae_index_reduction/pantelides.cpp'; then $(CYGPATH_W) 'dae_index_reduction/pantelides.cpp'; else $(CYGPATH_W) '$(srcdir)/dae_index_reduction/pantelides.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/pantelides.Tpo $(DEPDIR)/pantelides.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dae_index_reduction/pantelides.cpp' object='pantelides.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o pantelides.obj `if test -f 'dae_index_reduction/pantelides.cpp'; then $(CYGPATH_W) 'dae_index_reduction/pantelides.cpp'; else $(CYGPATH_W) '$(srcdir)/dae_index_reduction/pantelides.cpp'; fi`
 
 ID: $(HEADERS) $(SOURCES) $(LISP) $(TAGS_FILES)
 	list='$(SOURCES) $(HEADERS) $(LISP) $(TAGS_FILES)'; \

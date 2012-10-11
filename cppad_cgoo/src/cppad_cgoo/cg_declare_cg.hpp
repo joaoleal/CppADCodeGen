@@ -42,15 +42,29 @@ namespace CppAD {
     template<class Base>
     class CLangCompileDynamicHelper;
 
-
 #ifdef __linux__
     template<class Base>
     class LinuxDynamicLibModel;
-    
+
     template<class Base>
     class LinuxDynamicLib;
 #endif
 
+    /**
+     * Index reduction classes
+     */
+    template<class Base>
+    class Enode;
+
+    template<class Base>
+    class Vnode;
+
+    template<class Base>
+    class Evaluator;
+
+    /**
+     * 
+     */
     // order determining functions, see ordered.hpp
     template<class Base>
     bool GreaterThanZero(const CG<Base> &x);
@@ -186,6 +200,20 @@ namespace CppAD {
     template<class Base>
     inline CG<Base> tanh(const CG<Base>& var);
 
+    /**
+     * Utility functions
+     */
+    template<class Base>
+    inline std::vector<bool> jacobianSparsity(ADFun<CppAD::CG<Base> >& fun);
+
+    /**
+     * Index reduction functions
+     */
+    template<class Base>
+    inline std::ostream& operator <<(std::ostream& os, const Enode<Base>& i);
+
+    template<class Base>
+    inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j);
 }
 
 #endif

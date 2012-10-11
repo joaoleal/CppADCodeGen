@@ -10,8 +10,8 @@ the terms of the
 A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
-
-#include <cppad/base_require.hpp> // all base type requirements
+// all base type requirements
+#include <cppad/base_require.hpp> 
 
 // --------------------------------------------------------------------------
 // System routines that can be used by rest of CppAD with out including 
@@ -92,11 +92,17 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/cg_base_double.hpp>
 
 // ---------------------------------------------------------------------------
+// additional utlities
+#include <cppad_cgoo/cg_util.hpp>
+#include <cppad_cgoo/cg_evaluator.hpp>
+
+// ---------------------------------------------------------------------------
 // C source code generation
 #include <cppad_cgoo/c/cg_c_language.hpp>
 #include <cppad_cgoo/c/cg_c_language_double.hpp>
 #include <cppad_cgoo/c/cg_c_lang_default_var_name_gen.hpp>
 #include <cppad_cgoo/c/cg_c_lang_default_hessian_var_name_gen.hpp>
+#include <cppad_cgoo/c/cg_c_lang_custom_var_name_gen.hpp>
 
 // automated dynamic library creation
 #include <cppad_cgoo/dynamic_lib/cg_dynamiclib.hpp>
@@ -113,6 +119,15 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib.hpp>
 #include <cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp>
+
+// ---------------------------------------------------------------------------
+// automated DAE differential index reduction
+#define CPPAD_CG_DAE_VERBOSE
+#include <cppad_cgoo/dae_index_reduction/cg_bipartite.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_dae_index_reduction.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_time_diff.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_pantelides.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_dummy_deriv.hpp>
 
 #endif
 

@@ -245,6 +245,7 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_debug.hpp \
 	cppad_cgoo/cg_declare_cg.hpp \
 	cppad_cgoo/cg_default.hpp \
+	cppad_cgoo/cg_evaluator.hpp \
 	cppad_cgoo/cg_exception.hpp \
 	cppad_cgoo/cg_identical.hpp \
 	cppad_cgoo/cg_language.hpp \
@@ -254,8 +255,10 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_ordered.hpp \
 	cppad_cgoo/cg_source_code_fragment.hpp \
 	cppad_cgoo/cg_unary.hpp \
+	cppad_cgoo/cg_util.hpp \
 	cppad_cgoo/cg_variable.hpp \
 	cppad_cgoo/cg_variable_name_generator.hpp \
+	cppad_cgoo/c/cg_c_lang_custom_var_name_gen.hpp \
 	cppad_cgoo/c/cg_c_lang_default_var_name_gen.hpp \
 	cppad_cgoo/c/cg_c_lang_default_hessian_var_name_gen.hpp \
 	cppad_cgoo/c/cg_c_language.hpp \
@@ -272,7 +275,12 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib.hpp \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp \
-	cppad_cgoo/dynamic_lib/linux/cg_linux_system.hpp
+	cppad_cgoo/dynamic_lib/linux/cg_linux_system.hpp \
+	cppad_cgoo/dae_index_reduction/cg_bipartite.hpp \
+	cppad_cgoo/dae_index_reduction/cg_dae_index_reduction.hpp \
+	cppad_cgoo/dae_index_reduction/cg_dummy_deriv.hpp \
+	cppad_cgoo/dae_index_reduction/cg_pantelides.hpp \
+	cppad_cgoo/dae_index_reduction/cg_time_diff.hpp
 
 all: all-am
 

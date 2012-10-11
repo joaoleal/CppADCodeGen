@@ -75,6 +75,22 @@ namespace CppAD {
             variable.makeVariable(*this, _independentVariables.back());
         }
 
+        size_t getIndependentVariableSize() const {
+            return _independentVariables.size();
+        }
+
+        size_t getIndependentVariableIndex(const SourceCodeFragment<Base>& var) const throw (CGException) {
+            assert(var.operation_ == CGInvOp);
+
+            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it =
+                    std::find(_independentVariables.begin(), _independentVariables.end(), &var);
+            if (it == _independentVariables.end()) {
+                throw CGException("Variable not found in the independent variable vector");
+            }
+
+            return it - _independentVariables.begin();
+        }
+
         inline size_t getMaximumVariableID() const {
             return _idCount;
         }

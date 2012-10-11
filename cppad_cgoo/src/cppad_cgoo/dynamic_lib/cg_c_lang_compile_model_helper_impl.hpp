@@ -235,26 +235,7 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        std::vector<bool> sparsity;
-        if (n <= m) {
-            // use forward mode 
-            std::vector<bool> r(n * n);
-            for (size_t j = 0; j < n; j++) {
-                for (size_t k = 0; k < n; k++)
-                    r[j * n + k] = false;
-                r[j * n + j] = true;
-            }
-            sparsity = _fun->ForSparseJac(n, r);
-        } else {
-            // use reverse mode 
-            std::vector<bool> s(m * m);
-            for (size_t i = 0; i < m; i++) {
-                for (size_t k = 0; k < m; k++)
-                    s[i * m + k] = false;
-                s[i * m + i] = true;
-            }
-            sparsity = _fun->RevSparseJac(m, s);
-        }
+        std::vector<bool> sparsity = jacobianSparsity(*_fun);
 
         if (_custom_jac_row.empty()) {
             generateSparsityIndexes(sparsity, m, n, rows, cols);

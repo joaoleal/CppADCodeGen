@@ -46,6 +46,8 @@ extern bool Unary();
 extern bool Dynamic();
 //extern bool HandlerReset();
 
+extern bool Pantelides();
+
 bool test_verbose = false;
 bool test_printvalues = false;
 
@@ -108,8 +110,11 @@ int main(void) {
     //ok &= Run(HandlerReset, "HandlerReset");
 
     ok &= Run(Dynamic, "Dynamic");
-    // check for errors
 
+    // DAE index reduction
+    ok &= Run(Pantelides, "Pantelides");
+
+    // check for errors
     assert(ok || (Run_error_count > 0));
     if (CppAD::memory_leak()) {
         ok = false;

@@ -54,7 +54,8 @@ testCGOO_SOURCES        = \
 	tan.cpp \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
-	dynamic.cpp\
+	dynamic.cpp \
+	dae_index_reduction/pantelides.cpp \
 	TestException.cpp
 
 #	handler_reset.cpp
