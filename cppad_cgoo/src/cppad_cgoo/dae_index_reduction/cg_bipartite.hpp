@@ -114,6 +114,14 @@ namespace CppAD {
             return differentiationOf_;
         }
 
+        inline Enode<Base>* originalEquation() {
+            if (differentiationOf_ == NULL) {
+                return this;
+            } else {
+                return differentiationOf_->originalEquation();
+            }
+        }
+
         inline void deleteNode(Vnode<Base>* j) {
             vnodes_.erase(j);
         }
@@ -150,7 +158,14 @@ namespace CppAD {
     class Vnode : public BiPGraphNode<Base> {
     protected:
         static const std::string TYPE;
+        /**
+         * 
+         */
         bool deleted_;
+        /**
+         * Whether or not this variable is time dependent
+         */
+        bool parameter_;
         /**
          * equations that use this variable
          */
@@ -168,18 +183,39 @@ namespace CppAD {
          *  the variable which was differentiated to create this one
          */
         Vnode<Base>* derivativeOf_;
+        /**
+         * name
+         */
+        std::string name_;
     public:
 
-        inline Vnode(size_t index, Vnode<Base>* derivativeOf = NULL, Vnode<Base>* diff = NULL) :
+        inline Vnode(size_t index, const std::string& name) :
             BiPGraphNode<Base>(index),
             deleted_(false),
+            parameter_(false),
+            assign_(NULL),
+            derivative_(NULL),
+            derivativeOf_(NULL),
+            name_(name) {
+
+        }
+
+        inline Vnode(size_t index, Vnode<Base>* derivativeOf, Vnode<Base>* diff = NULL) :
+            BiPGraphNode<Base>(index),
+            deleted_(false),
+            parameter_(false),
             assign_(NULL),
             derivative_(diff),
-            derivativeOf_(derivativeOf) {
+            derivativeOf_(derivativeOf),
+            name_("d" + derivativeOf->name() + "dt") {
+            assert(derivativeOf_ != NULL);
 
-            if (derivativeOf_ != NULL) {
-                derivativeOf_->setDerivative(this);
-            }
+            derivativeOf_->setDerivative(this);
+
+        }
+
+        const std::string& name() const {
+            return name_;
         }
 
         inline const std::set<Enode<Base>*>& equations() const {
@@ -200,8 +236,25 @@ namespace CppAD {
             return derivativeOf_;
         }
 
+        inline Vnode<Base>* originalVariable() {
+            if (derivativeOf_ == NULL) {
+                return this;
+            } else {
+                return derivativeOf_->originalVariable();
+            }
+        }
+
         inline bool isDeleted() const {
             return deleted_;
+        }
+
+        inline void makeParameter() {
+            parameter_ = true;
+            deleteNode();
+        }
+
+        inline bool isParameter() const {
+            return parameter_;
         }
 
         inline void deleteNode() {
@@ -231,6 +284,14 @@ namespace CppAD {
             return TYPE;
         }
 
+        unsigned int order() const {
+            if (derivativeOf_ == NULL) {
+                return 0u;
+            } else {
+                return derivativeOf_->order() + 1u;
+            }
+        }
+
     protected:
 
         inline void addEquation(Enode<Base>* i) {
@@ -251,7 +312,7 @@ namespace CppAD {
         if (j.derivativeOf() != NULL) {
             os << "Diff(" << *j.derivativeOf() << ")";
         } else {
-            os << "Variable " << j.index();
+            os << "Variable " << j.name();
         }
         return os;
     }

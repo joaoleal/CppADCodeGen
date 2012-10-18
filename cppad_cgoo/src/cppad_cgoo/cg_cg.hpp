@@ -95,8 +95,9 @@ namespace CppAD {
     private:
 
         friend class CodeHandler<Base>;
-        
-        friend class Evaluator<Base>;
+
+        template<class Base1, class Base2>
+        friend class Evaluator;
 
         /**
          * arithmetic binary operators

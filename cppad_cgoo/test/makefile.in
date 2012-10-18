@@ -48,7 +48,8 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
 	tan.$(OBJEXT) unary.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
-	dynamic.$(OBJEXT) pantelides.$(OBJEXT) TestException.$(OBJEXT)
+	dynamic.$(OBJEXT) dummy_derivative.$(OBJEXT) \
+	pantelides.$(OBJEXT) TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
 testCGOO_DEPENDENCIES =
@@ -127,7 +128,8 @@ ECHO_N = @ECHO_N@
 ECHO_T = @ECHO_T@
 EGREP = @EGREP@
 EIGEN_DIR = @EIGEN_DIR@
-EIGEN_INCLUDE = @EIGEN_INCLUDE@
+#
+EIGEN_INCLUDE = -I/usr/include/eigen3/
 EXEEXT = @EXEEXT@
 FADBAD_DIR = @FADBAD_DIR@
 FC = @FC@
@@ -216,12 +218,15 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 #
-AM_CXXFLAGS = -g $(CXX_FLAGS)
+AM_CXXFLAGS = -g $(CXX_FLAGS) \
+                    $(CXX_FLAGS_EIGEN)	            
+
 #
 AM_CPPFLAGS = -I. \
                     -I$(top_srcdir) \
                     -I$(top_srcdir)/cppad_cgoo/src/ \
-                    $(BOOST_INCLUDE)
+                    $(BOOST_INCLUDE) \
+                    $(EIGEN_INCLUDE)
 
 #
 LDADD = -ldl
@@ -257,6 +262,7 @@ testCGOO_SOURCES = \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
 	dynamic.cpp \
+	dae_index_reduction/dummy_derivative.cpp \
 	dae_index_reduction/pantelides.cpp \
 	TestException.cpp
 
@@ -320,6 +326,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cos.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cosh.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/div.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dummy_derivative.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dynamic.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/exp.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/gcc_load_dynamic.Po@am__quote@
@@ -348,6 +355,20 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+dummy_derivative.o: dae_index_reduction/dummy_derivative.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dummy_derivative.o -MD -MP -MF $(DEPDIR)/dummy_derivative.Tpo -c -o dummy_derivative.o `test -f 'dae_index_reduction/dummy_derivative.cpp' || echo '$(srcdir)/'`dae_index_reduction/dummy_derivative.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dummy_derivative.Tpo $(DEPDIR)/dummy_derivative.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dae_index_reduction/dummy_derivative.cpp' object='dummy_derivative.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dummy_derivative.o `test -f 'dae_index_reduction/dummy_derivative.cpp' || echo '$(srcdir)/'`dae_index_reduction/dummy_derivative.cpp
+
+dummy_derivative.obj: dae_index_reduction/dummy_derivative.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dummy_derivative.obj -MD -MP -MF $(DEPDIR)/dummy_derivative.Tpo -c -o dummy_derivative.obj `if test -f 'dae_index_reduction/dummy_derivative.cpp'; then $(CYGPATH_W) 'dae_index_reduction/dummy_derivative.cpp'; else $(CYGPATH_W) '$(srcdir)/dae_index_reduction/dummy_derivative.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/dummy_derivative.Tpo $(DEPDIR)/dummy_derivative.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='dae_index_reduction/dummy_derivative.cpp' object='dummy_derivative.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o dummy_derivative.obj `if test -f 'dae_index_reduction/dummy_derivative.cpp'; then $(CYGPATH_W) 'dae_index_reduction/dummy_derivative.cpp'; else $(CYGPATH_W) '$(srcdir)/dae_index_reduction/dummy_derivative.cpp'; fi`
 
 pantelides.o: dae_index_reduction/pantelides.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT pantelides.o -MD -MP -MF $(DEPDIR)/pantelides.Tpo -c -o pantelides.o `test -f 'dae_index_reduction/pantelides.cpp' || echo '$(srcdir)/'`dae_index_reduction/pantelides.cpp

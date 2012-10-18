@@ -14,7 +14,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 namespace CppAD {
 
     template<class Base>
-    inline std::vector<bool> jacobianForwardSparsity(ADFun<CppAD::CG<Base> >& fun) {
+    inline std::vector<bool> jacobianForwardSparsity(ADFun<Base>& fun) {
         size_t n = fun.Domain();
 
         std::vector<bool> r(n * n);
@@ -28,7 +28,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline std::vector<bool> jacobianReverseSparsity(ADFun<CppAD::CG<Base> >& fun) {
+    inline std::vector<bool> jacobianReverseSparsity(ADFun<Base>& fun) {
         size_t m = fun.Range();
 
         std::vector<bool> s(m * m);
@@ -41,7 +41,18 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline std::vector<bool> jacobianSparsity(ADFun<CppAD::CG<Base> >& fun) {
+    inline std::vector< std::set<size_t> > jacobianReverseSparsitySet(ADFun<Base>& fun) {
+        size_t m = fun.Range();
+
+        std::vector< std::set<size_t> > s_s(m);
+        for (size_t i = 0; i < m; i++)
+            s_s[i].insert(i);
+
+        return fun.RevSparseJac(m, s_s);
+    }
+
+    template<class Base>
+    inline std::vector<bool> jacobianSparsity(ADFun<Base>& fun) {
         size_t m = fun.Range();
         size_t n = fun.Domain();
 
@@ -51,6 +62,63 @@ namespace CppAD {
         } else {
             // use reverse mode 
             return jacobianReverseSparsity(fun);
+        }
+    }
+
+    inline void generateSparsityIndexes(const std::vector<bool>& sparsity,
+                                        size_t m,
+                                        size_t n,
+                                        std::vector<size_t>& row,
+                                        std::vector<size_t>& col) {
+        assert(sparsity.size() == m * n);
+
+        // determine total number of non zeros
+        size_t nnz = 0;
+        for (size_t i = 0; i < sparsity.size(); i++) {
+            if (sparsity[i])
+                nnz++;
+        }
+
+        row.resize(nnz);
+        col.resize(nnz);
+
+        // save the indexes
+        nnz = 0;
+        for (size_t i = 0; i < m; i++) {
+            for (size_t j = 0; j < n; j++) {
+                if (sparsity[i * n + j]) {
+                    row[nnz] = i;
+                    col[nnz] = j;
+                    nnz++;
+                }
+            }
+        }
+
+        assert(nnz == row.size());
+    }
+
+    inline void generateSparsityIndexes(const std::vector< std::set<size_t> >& sparsity,
+                                        std::vector<size_t>& row,
+                                        std::vector<size_t>& col) {
+        std::vector< std::set<size_t> >::const_iterator rowIt;
+
+        // determine total number of non zeros
+        size_t nnz = 0;
+        for (rowIt = sparsity.begin(); rowIt != sparsity.end(); ++rowIt) {
+            nnz += rowIt->size();
+        }
+
+        row.resize(nnz);
+        col.resize(nnz);
+
+        // save the indexes
+        nnz = 0;
+        size_t i = 0;
+        for (rowIt = sparsity.begin(); rowIt != sparsity.end(); ++rowIt, i++) {
+            size_t rownnz = rowIt->size();
+            std::fill(row.begin() + nnz, row.begin() + nnz + rownnz, i);
+            std::copy(rowIt->begin(), rowIt->end(), col.begin() + nnz);
+            nnz += rownnz;
         }
     }
 

@@ -12,6 +12,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 #include <typeinfo>
+#include <memory>
 
 namespace CppAD {
 
@@ -83,21 +84,16 @@ namespace CppAD {
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("dep", "ind", "var");
-        try {
-            _cache.str("");
-            _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n";
-            _cache << "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
-            _cache << "   *m = " << _fun->Range() << ";\n";
-            _cache << "   *n = " << _fun->Domain() << ";\n";
-            _cache << "   *depCount = " << nameGen->getDependent().size() << ";\n";
-            _cache << "   *indCount = " << nameGen->getIndependent().size() << ";\n";
-            _cache << "}\n\n";
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var"));
+
+        _cache.str("");
+        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n";
+        _cache << "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
+        _cache << "   *m = " << _fun->Range() << ";\n";
+        _cache << "   *n = " << _fun->Domain() << ";\n";
+        _cache << "   *depCount = " << nameGen->getDependent().size() << ";\n";
+        _cache << "   *indCount = " << nameGen->getIndependent().size() << ";\n";
+        _cache << "}\n\n";
 
         sources[funcName + ".c"] = _cache.str();
     }
@@ -126,14 +122,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("dep", "ind", "var");
-        try {
-            handler.generateCode(code, langC, dep, *nameGen, jobName);
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dep", "ind", "var"));
+
+        handler.generateCode(code, langC, dep, *nameGen, jobName);
     }
 
     template<class Base>
@@ -160,14 +151,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
-        try {
-            handler.generateCode(code, langC, jac, *nameGen, jobName);
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
+
+        handler.generateCode(code, langC, jac, *nameGen, jobName);
     }
 
     template<class Base>
@@ -209,15 +195,10 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
         std::ostringstream code;
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
-        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
-        try {
-            handler.generateCode(code, langC, hess, nameGenHess, jobName);
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var"));
+        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+
+        handler.generateCode(code, langC, hess, nameGenHess, jobName);
     }
 
     template<class Base>
@@ -268,14 +249,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("jac", "ind", "var");
-        try {
-            handler.generateCode(code, langC, jac, *nameGen, jobName);
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
+
+        handler.generateCode(code, langC, jac, *nameGen, jobName);
 
         generateSparsitySource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
@@ -385,30 +361,14 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
         std::ostringstream code;
-        VariableNameGenerator<Base>* nameGen = createVariableNameGenerator("hess", "ind", "var");
-        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen, n);
-        try {
-            handler.generateCode(code, langC, hess, nameGenHess, jobName);
-        } catch (...) {
-            delete nameGen;
-            throw;
-        }
-        delete nameGen;
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var"));
+        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+
+        handler.generateCode(code, langC, hess, nameGenHess, jobName);
 
         generateSparsitySource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, rows, cols);
         sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
-    }
-
-    template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparsitySource(const std::string& function,
-                                                               const std::vector<bool>& sparsity,
-                                                               size_t m, size_t n) {
-        std::vector<size_t> rows, cols;
-
-        generateSparsityIndexes(sparsity, m, n, rows, cols);
-
-        generateSparsitySource(function, rows, cols);
     }
 
     template<class Base>
@@ -445,35 +405,6 @@ namespace CppAD {
                 "*col = cols;\n"
                 "*nnz = " << rows.size() << ";\n"
                 "}\n";
-    }
-
-    template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparsityIndexes(const std::vector<bool>& sparsity,
-                                                                size_t m, size_t n,
-                                                                std::vector<size_t>& rows,
-                                                                std::vector<size_t>& cols) {
-        size_t K = 0;
-        for (size_t i = 0; i < sparsity.size(); i++) {
-            if (sparsity[i]) {
-                K++;
-            }
-        }
-
-        rows.resize(K);
-        cols.resize(K);
-
-        size_t k = 0;
-        for (size_t i = 0; i < m; i++) {
-            for (size_t j = 0; j < n; j++) {
-                if (sparsity[i * n + j]) {
-                    rows[k] = i;
-                    cols[k] = j;
-                    k++;
-                }
-            }
-        }
-
-        assert(k == K);
     }
 
     template<class Base>

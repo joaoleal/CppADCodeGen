@@ -14,7 +14,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 #include "gcc_load_dynamic.hpp"
 #include "pendulum.hpp"
 
-inline bool PantelidesPendulum2D() {
+inline bool DummyDerivPendulum2D() {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
@@ -27,19 +27,30 @@ inline bool PantelidesPendulum2D() {
     std::vector<bool> varInfo(6, true);
     varInfo[5] = false;
 
-    Plantelides<double> pantelides(fun, eqDifferentialInfo, varInfo);
+    std::vector<double> x(6);
+    std::vector<double> norm(6, 1.0);
 
-    pantelides.reduceIndex();
+    x[0] = -1.0; // x
+    x[1] = 0.0; // y
+    x[2] = 0.0; // vx
+    x[3] = 0.0; // vy
+    x[4] = 1.0; // Tension
+    x[5] = 1.0; // length
+
+    DummyDerivatives<double> dummyD(fun, eqDifferentialInfo, varInfo, x, norm);
+
+    dummyD.reduceIndex();
 
     delete fun;
 
     return false;
 }
 
-inline bool PantelidesPendulum3D() {
+inline bool DummyDerivPendulum3D() {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
@@ -48,18 +59,18 @@ inline bool PantelidesPendulum3D() {
     eqDifferentialInfo[6] = false;
     std::vector<bool> varInfo(7, true);
 
-    Plantelides<double> pantelides(fun, eqDifferentialInfo, varInfo);
+    //DummyDerivatives<double> dummyD(fun, eqDifferentialInfo, varInfo);
 
-    pantelides.reduceIndex();
+    //dummyD.reduceIndex();
 
     delete fun;
 
     return false;
 }
 
-bool Pantelides() {
+bool DummyDeriv() {
     bool ok = true;
-    ok &= PantelidesPendulum2D();
-    ok &= PantelidesPendulum3D();
+    ok &= DummyDerivPendulum2D();
+    ok &= DummyDerivPendulum3D();
     return ok;
 }

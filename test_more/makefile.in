@@ -285,7 +285,7 @@ top_srcdir = @top_srcdir@
 @CppAD_EIGEN_DIR_TRUE@	-g \
 @CppAD_EIGEN_DIR_TRUE@	$(CXX_FLAGS_EIGEN) \
 @CppAD_EIGEN_DIR_TRUE@	-DCPPAD_EIGEN_TEST \
-@CppAD_EIGEN_DIR_TRUE@	 -I$(EIGEN_DIR)/include 
+@CppAD_EIGEN_DIR_TRUE@	 -I$(EIGEN_DIR)
 
 # -------------------------------------------------------------------------
 # Microsoft project files and script to run a single test

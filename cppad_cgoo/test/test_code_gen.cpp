@@ -47,6 +47,7 @@ extern bool Dynamic();
 //extern bool HandlerReset();
 
 extern bool Pantelides();
+extern bool DummyDeriv();
 
 bool test_verbose = false;
 bool test_printvalues = false;
@@ -113,6 +114,7 @@ int main(void) {
 
     // DAE index reduction
     ok &= Run(Pantelides, "Pantelides");
+    ok &= Run(DummyDeriv, "DummyDerivatives");
 
     // check for errors
     assert(ok || (Run_error_count > 0));

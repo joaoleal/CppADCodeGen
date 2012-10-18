@@ -35,7 +35,7 @@ EIGEN_LIB           = -L. -leigen
 libeigen_a_CXXFLAGS = \
 	-g $(CXX_FLAGS_EIGEN) \
 	-DCPPAD_EIGEN_EXAMPLES \
-	-I$(EIGEN_DIR)/include 
+	-I$(EIGEN_DIR) 
 else
 EIGEN_EXTRA_FILES   = eigen_det.cpp eigen_array.cpp
 EIGEN_LIB           =

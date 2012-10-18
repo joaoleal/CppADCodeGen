@@ -16,13 +16,13 @@ namespace CppAD {
     /**
      * Utility class used for some code transformation
      */
-    template<class Base>
+    template<class Base, class BaseOut>
     class Evaluator {
     protected:
         const CodeHandler<Base>* handler_;
         const std::vector<CG<Base> > dep_;
-        const std::vector<AD<CG<Base> > >* indep_;
-        std::map<SourceCodeFragment<Base>*, AD<CG<Base> > > evals_;
+        const std::vector<AD<BaseOut > >* indep_;
+        std::map<SourceCodeFragment<Base>*, AD<BaseOut> > evals_;
     public:
 
         /**
@@ -34,7 +34,7 @@ namespace CppAD {
             indep_(NULL) {
         }
 
-        inline std::vector<AD<CG<Base> > > evaluate(const std::vector<AD<CG<Base> > >& indep) throw (CGException) {
+        inline std::vector<AD<BaseOut> > evaluate(const std::vector<AD<BaseOut> >& indep) throw (CGException) {
             if (handler_->getIndependentVariableSize() != indep.size()) {
                 std::stringstream ss;
                 ss << "Invalid independent variable size. Expected " << handler_->getIndependentVariableSize() << " but got " << indep.size() << ".";
@@ -42,14 +42,14 @@ namespace CppAD {
             }
 
             if (indep.empty()) {
-                return std::vector<AD<CG<Base> > >(0); // nothing in, nothing out
+                return std::vector<AD<BaseOut> >(0); // nothing in, nothing out
             }
 
             indep_ = &indep;
 
             evals_.clear(); // clean-up
 
-            std::vector<AD<CG<Base> > > newDep(dep_.size());
+            std::vector<AD<BaseOut> > newDep(dep_.size());
 
             for (size_t i = 0; i < dep_.size(); i++) {
                 newDep[i] = evalCG(dep_[i]);
@@ -62,27 +62,27 @@ namespace CppAD {
 
     private:
 
-        inline AD<CG<Base> > evalCG(const CG<Base>& dep) const throw (CGException) {
+        inline AD<BaseOut> evalCG(const CG<Base>& dep) const throw (CGException) {
             if (dep.isParameter()) {
                 // parameter
-                return AD<CG<Base > > (dep.getParameterValue());
+                return AD<BaseOut> (dep.getParameterValue());
             } else {
                 return evalSourceCodeFragment(*dep.getSourceCodeFragment());
             }
         }
 
-        inline AD<CG<Base> > evalArg(const Argument<Base>& arg) const throw (CGException) {
+        inline AD<BaseOut> evalArg(const Argument<Base>& arg) const throw (CGException) {
             if (arg.operation() != NULL) {
                 return evalSourceCodeFragment(*arg.operation());
             } else {
                 // parameter
-                return AD<CG<Base> > (*arg.parameter());
+                return AD<BaseOut> (*arg.parameter());
             }
         }
 
-        inline AD<CG<Base> > evalSourceCodeFragment(SourceCodeFragment<Base>& node) const throw (CGException) {
+        inline AD<BaseOut> evalSourceCodeFragment(SourceCodeFragment<Base>& node) const throw (CGException) {
             // check if this node was previously determined
-            typename std::map<SourceCodeFragment<Base>*, AD<CG<Base> > >::const_iterator it;
+            typename std::map<SourceCodeFragment<Base>*, AD<BaseOut> >::const_iterator it;
             it = evals_.find(&node);
             if (it != evals_.end()) {
                 return it->second;

@@ -13,14 +13,18 @@
 # CppAD puts all it's preprocessor definitions in the cppad/configure.hpp
 DEFS          =
 #
+EIGEN_INCLUDE     = -I/usr/include/eigen3/
+#
 check_PROGRAMS    = testCGOO
 #
-AM_CXXFLAGS       = -g $(CXX_FLAGS)
+AM_CXXFLAGS       = -g $(CXX_FLAGS) \
+                    $(CXX_FLAGS_EIGEN)	            
 #
 AM_CPPFLAGS       = -I. \
                     -I$(top_srcdir) \
                     -I$(top_srcdir)/cppad_cgoo/src/ \
-                    $(BOOST_INCLUDE)
+                    $(BOOST_INCLUDE) \
+                    $(EIGEN_INCLUDE)
 #
 LDADD             = -ldl
 #
@@ -55,6 +59,7 @@ testCGOO_SOURCES        = \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
 	dynamic.cpp \
+	dae_index_reduction/dummy_derivative.cpp \
 	dae_index_reduction/pantelides.cpp \
 	TestException.cpp
 

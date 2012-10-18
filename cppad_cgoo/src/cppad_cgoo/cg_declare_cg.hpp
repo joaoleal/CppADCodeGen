@@ -59,7 +59,7 @@ namespace CppAD {
     template<class Base>
     class Vnode;
 
-    template<class Base>
+    template<class Base, class Base2>
     class Evaluator;
 
     /**
@@ -204,7 +204,19 @@ namespace CppAD {
      * Utility functions
      */
     template<class Base>
-    inline std::vector<bool> jacobianSparsity(ADFun<CppAD::CG<Base> >& fun);
+    inline std::vector<bool> jacobianSparsity(ADFun<Base>& fun);
+
+    template<class Base>
+    inline void generateSparsityIndexes(const std::vector<bool>& sparsity,
+                                        size_t m,
+                                        size_t n,
+                                        std::vector<size_t>& row,
+                                        std::vector<size_t>& col);
+
+    template<class Base>
+    inline void generateSparsityIndexes(const std::vector< std::set<size_t> >& sparsity,
+                                        std::vector<size_t>& row,
+                                        std::vector<size_t>& col);
 
     /**
      * Index reduction functions

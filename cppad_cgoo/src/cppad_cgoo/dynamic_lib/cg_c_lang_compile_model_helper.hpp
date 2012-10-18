@@ -179,17 +179,8 @@ namespace CppAD {
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparsitySource(const std::string& function,
-                                            const std::vector<bool>& sparsity,
-                                            size_t m, size_t n);
-
-        virtual void generateSparsitySource(const std::string& function,
                                             const std::vector<size_t>& rows,
                                             const std::vector<size_t>& cols);
-
-        virtual void generateSparsityIndexes(const std::vector<bool>& sparsity,
-                                             size_t m, size_t n,
-                                             std::vector<size_t>& rows,
-                                             std::vector<size_t>& cols);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

@@ -1,8 +1,6 @@
 #ifndef CPPAD_CG_PANTELIDES_INCLUDED
 #define	CPPAD_CG_PANTELIDES_INCLUDED
 
-#include "cg_bipartite.hpp"
-
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -45,21 +43,26 @@ namespace CppAD {
             }
 
             // create the variable nodes
-            size_t vcount = 0;
-            for (size_t j = 0; j < varInfo.size(); j++) {
-                if (varInfo[j]) {
-                    vcount++;
-                }
-            }
-
-            vnodes_.reserve(2.1 * vcount + 1);
-            vnodes_.resize(vcount);
-            size_t j = 0;
+            vnodes_.reserve(2.1 * varInfo.size() + 1);
+            vnodes_.resize(varInfo.size());
+            std::stringstream ss;
+            size_t paramCount = 0;
+            size_t timeVarCount = 0;
             for (size_t v = 0; v < varInfo.size(); v++) {
                 if (varInfo[v]) {
-                    vnodes_[j] = new Vnode<Base > (j);
-                    j++;
+                    ss << "x" << timeVarCount;
+                    timeVarCount++;
+                } else {
+                    ss << "p" << paramCount;
+                    paramCount++;
                 }
+
+                vnodes_[v] = new Vnode<Base > (v, ss.str());
+                ss.str("");
+                ss.clear();
+
+                if (!varInfo[v])
+                    vnodes_[v]->makeParameter(); // does not depend on time
             }
 
             // create the edges
@@ -73,12 +76,11 @@ namespace CppAD {
                     assert(varInfo[i]);
                     Vnode<Base>* diffj = new Vnode<Base > (vnodes_.size(), vnodes_[i]);
                     vnodes_.push_back(diffj);
-
                     enodes_[i]->addVariable(diffj);
                 }
 
-                for (j = 0; j < m; j++) {
-                    if (sparsity_[i * n + j] && varInfo[j]) {
+                for (size_t j = 0; j < m; j++) {
+                    if (sparsity_[i * n + j] && !vnodes_[j]->isDeleted()) {
                         enodes_[i]->addVariable(vnodes_[j]);
                     }
                 }
@@ -97,26 +99,37 @@ namespace CppAD {
 
         inline void printResultInfo() {
             std::cout << "\nPantelides DAE differentiation index reduction:\n\n"
-                    << "   Equations count: " << enodes_.size() << "\n";
+                    "   Equations count: " << enodes_.size() << "\n";
             typename std::vector<Enode<Base>*>::const_iterator i;
             for (i = enodes_.begin(); i != enodes_.end(); ++i) {
                 const Enode<Base>& ii = **i;
                 std::cout << "      " << ii.index() << " - " << ii << "\n";
             }
 
-            std::cout << "\n   Variable count: " << vnodes_.size() << "\n";
+            size_t paramCount = 0;
             typename std::vector<Vnode<Base>*>::const_iterator j;
+            for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
+                if ((*j)->isParameter())
+                    paramCount++;
+            }
+
+            size_t timeIndepCount = vnodes_.size() - paramCount;
+
+            std::cout << "\n   Parameter count: " << paramCount << "\n";
+            std::cout << "\n   Variable count: " << timeIndepCount << "\n";
             for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
                 const Vnode<Base>& jj = **j;
                 std::cout << "      " << jj.index() << " - " << jj;
                 if (jj.assigmentEquation() != NULL) {
                     std::cout << " assigned to " << *jj.assigmentEquation() << "\n";
+                } else if (jj.isParameter()) {
+                    std::cout << " is a parameter (time independent)\n";
                 } else {
                     std::cout << " NOT assigned to any equation\n";
                 }
             }
 
-            std::cout << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << "\n";
+            std::cout << "\n   Degrees of freedom: " << timeIndepCount - enodes_.size() << "\n";
         }
 
         virtual ~Plantelides() {
@@ -351,7 +364,7 @@ namespace CppAD {
                 vector<ADCG> indep2 = prepareTimeDependentVariables(indepNew);
                 indep2.resize(indep0.size());
 
-                Evaluator<Base> evaluator0(handler, dep0);
+                Evaluator<Base, CG<Base> > evaluator0(handler, dep0);
                 vector<ADCG> depNew = evaluator0.evaluate(indep2);
                 depNew.resize(enodes_.size());
 
@@ -386,13 +399,8 @@ namespace CppAD {
                 /**
                  * register operations used to differentiate the equations
                  */
-                vector<CGBase> u(m, CGBase(0));
-                u[timeIndex] = CGBase(1);
-                vector<CGBase> v = reducedFun_->Forward(1, u);
-
-                for (size_t e = 0; e < equations.size(); e++) {
-                    dep[equations[e]->index()] = v[equations[e]->derivativeOf()->index()];
-                }
+                //forwardTimeDiff(equations, dep);
+                reverseTimeDiff(equations, dep);
 
                 delete reducedFun_; // not needed anymore
                 reducedFun_ = NULL;
@@ -418,7 +426,7 @@ namespace CppAD {
                     indep2.resize(m);
                 }
 
-                Evaluator<Base> evaluator(handler0, dep);
+                Evaluator<Base, CG<Base> > evaluator(handler0, dep);
                 vector<ADCG> depNew = evaluator.evaluate(indep2);
 
                 reducedFun_ = new ADFun<CG<Base> > (indepNew, depNew);
@@ -429,6 +437,50 @@ namespace CppAD {
 #endif
             }
 
+        }
+
+        inline void forwardTimeDiff(const std::vector<Enode<Base>*>& equations,
+                                    std::vector<CG<Base> >& dep) const {
+            typedef CG<Base> CGBase;
+            typedef AD<CGBase> ADCG;
+
+            size_t m = reducedFun_->Domain();
+            size_t timeIndex = vnodes_.size();
+
+            std::vector<CGBase> u(m, CGBase(0));
+            u[timeIndex] = CGBase(1);
+            std::vector<CGBase> v = reducedFun_->Forward(1, u);
+
+            for (size_t e = 0; e < equations.size(); e++) {
+                dep[equations[e]->index()] = v[equations[e]->derivativeOf()->index()];
+            }
+        }
+
+        inline void reverseTimeDiff(const std::vector<Enode<Base>*>& equations,
+                                    std::vector<CG<Base> >& dep) const {
+            size_t m = reducedFun_->Domain();
+            size_t n = reducedFun_->Range();
+            std::vector<CG<Base> > u(m);
+            std::vector<CG<Base> > v(n);
+
+            for (size_t e = 0; e < equations.size(); e++) {
+                size_t i = equations[e]->derivativeOf()->index();
+                if (reducedFun_->Parameter(i)) { // return zero for this component of f
+                    dep[equations[e]->index()] = 0;
+                } else {
+                    // set v to the i-th coordinate direction
+                    v[i] = 1;
+
+                    // compute the derivative of this component of f
+                    u = reducedFun_->Reverse(1, v);
+
+                    // reset v to vector of all zeros
+                    v[i] = 0;
+
+                    // return the result
+                    dep[equations[e]->index()] = u.back();
+                }
+            }
         }
 
         /**
@@ -446,6 +498,8 @@ namespace CppAD {
             std::vector<AD<CG<Base> > > ay(1);
 
             ax[2] = indepNew.back(); // time
+
+
 
             for (size_t j = 0; j < vnodes_.size() - 1; j++) {
                 if (vnodes_[j]->derivative() != NULL) {
@@ -549,23 +603,7 @@ namespace CppAD {
 
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
-                size_t depth = 0;
-                while (jj->derivativeOf() != NULL) {
-                    jj = jj->derivativeOf();
-                    depth++;
-                }
-
-                for (size_t c = 0; c < depth; c++) {
-                    ss << "d";
-                }
-                ss << "x" << jj->index();
-                for (size_t c = 0; c < depth; c++) {
-                    ss << "dt";
-                }
-
-                indepNames[j] = ss.str();
-                ss.clear();
-                ss.str("");
+                indepNames[j] = jj->name();
             }
 
             /**

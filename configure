@@ -2895,7 +2895,7 @@ fi
 if test "$EIGEN_DIR" != "" ; then
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $EIGEN_DIR" >&5
 $as_echo "$EIGEN_DIR" >&6; }
-	EIGEN_INCLUDE=-I$EIGEN_DIR/include
+	EIGEN_INCLUDE=-I$EIGEN_DIR
 
 else
 	{ $as_echo "$as_me:${as_lineno-$LINENO}: result: no" >&5

@@ -41,7 +41,7 @@ libeigen_a_CXXFLAGS = \
 	-g \
 	$(CXX_FLAGS_EIGEN) \
 	-DCPPAD_EIGEN_TEST \
-	 -I$(EIGEN_DIR)/include 
+	 -I$(EIGEN_DIR)
 else
 EIGEN_EXTRA_FILES   = cppad_eigen.cpp
 EIGEN_LIB           =

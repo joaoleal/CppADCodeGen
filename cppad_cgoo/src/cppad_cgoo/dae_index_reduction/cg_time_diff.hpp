@@ -77,7 +77,29 @@ namespace CppAD {
                            const vector<CG<Base> >& tzy,
                            vector<CG<Base> >& px,
                            const vector<CG<Base> >& pzy) {
-        return false;
+
+        assert(n == 3); // [x, dxdt, t]
+        assert(m == 1);
+        assert(tx.size() >= (order + 1) * n);
+        assert(tzy.size() >= (order + 1) * m);
+        assert(px.size() >= (order + 1) * n);
+
+        CG<Base>* pxx = &px[0];
+        CG<Base>* pdxdt = &px[order + 1];
+        CG<Base>* pt = &px[2 * (order + 1)];
+
+        const CG<Base>* txx = &tx[0];
+        const CG<Base>* tdxdt = &tx[order + 1];
+        const CG<Base>* tt = &tx[2 * (order + 1)];
+
+        if (order == 0) {
+            pxx[0] = pzy[0] * 1.0;
+            pdxdt[0] = 0.0;
+            pt[0] = pzy[0] * tdxdt[0];
+            return true;
+        }
+
+        return false; // not implemented yet
     }
     // ----------------------------------------------------------------------
     // forward Jacobian sparsity routine called by CppAD
@@ -111,6 +133,14 @@ namespace CppAD {
                                   size_t q,
                                   vector< std::set<size_t> >& r,
                                   const vector< std::set<size_t> >& s) {
+        assert(n == 3);
+        assert(m == 1);
+        assert(r.size() >= n);
+        assert(s.size() >= m);
+
+        r[0] = s[0];
+        r[2] = s[0];
+        
         return false;
     }
     // ----------------------------------------------------------------------
