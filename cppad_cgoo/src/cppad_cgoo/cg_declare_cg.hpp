@@ -28,6 +28,12 @@ namespace CppAD {
     class AD;
 
     template<class Base>
+    class SourceCodeFragment;
+
+    template<class Base>
+    struct SourceCodePathNode;
+
+    template<class Base>
     class CLangCompiler;
 
     template<class Base>
@@ -200,6 +206,19 @@ namespace CppAD {
     template<class Base>
     inline CG<Base> tanh(const CG<Base>& var);
 
+    /**
+     * Graph management functions
+     */
+    template<class Base>
+    inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>* root,
+                                                                          SourceCodeFragment<Base>* code,
+                                                                          size_t max);
+
+    template<class Base>
+    inline void findPaths(std::vector<SourceCodePathNode<Base> >& path2node,
+                          SourceCodeFragment<Base>* code,
+                          std::vector<std::vector<SourceCodePathNode<Base> > >& found,
+                          size_t max);
     /**
      * Utility functions
      */

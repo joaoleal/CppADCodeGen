@@ -87,6 +87,16 @@ namespace CppAD {
         // creates a temporary variable
         inline CG(CodeHandler<Base>& handler, SourceCodeFragment<Base>* sourceCode);
 
+        // 
+        /**
+         * creates a variable/parameter from an existing argument 
+         * \param handler The code handler.
+         * \param arg  An argument that may be a parameter or a variable. 
+         *              (source code fragments are assumed to already be managed
+         *              by the handler)
+         */
+        inline CG(CodeHandler<Base>& handler, const Argument<Base>& arg);
+
         //
         inline void makeParameter(const Base &b);
         inline void makeVariable(CodeHandler<Base>& handler, SourceCodeFragment<Base>* operation);

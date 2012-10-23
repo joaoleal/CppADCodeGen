@@ -1,6 +1,5 @@
 #ifndef CPPAD_CG_PANTELIDES_INCLUDED
 #define	CPPAD_CG_PANTELIDES_INCLUDED
-
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -27,74 +26,116 @@ namespace CppAD {
         std::vector<Enode<Base>*> enodes_;
         // new index reduced model
         ADFun<CG<Base> >* reducedFun_;
+        // the maximum order of the time derivatives in the original model
+        size_t origMaxTimeDivOrder_;
     public:
 
         Plantelides(ADFun<CG<Base> >* fun,
-                    const std::vector<bool>& eqDifferentialInfo,
-                    const std::vector<bool>& varInfo) :
-            DaeIndexReduction<Base>(fun, eqDifferentialInfo, varInfo),
-            reducedFun_(NULL) {
+                    const std::vector<int>& derivative,
+                    const std::vector<bool>& timeDependent) :
+            DaeIndexReduction<Base>(fun, derivative, timeDependent),
+            reducedFun_(NULL),
+            origMaxTimeDivOrder_(0) {
+
+            using namespace std;
+            using std::vector;
+
+            const size_t m = fun->Range(); // equation count
+            const size_t n = fun->Domain(); // total variable count
 
             // create equation nodes
-            enodes_.reserve(1.1 * eqDifferentialInfo.size() + 1);
-            enodes_.resize(eqDifferentialInfo.size());
-            for (size_t i = 0; i < eqDifferentialInfo.size(); i++) {
+            enodes_.reserve(1.2 * m + 1);
+            enodes_.resize(m);
+            for (size_t i = 0; i < m; i++) {
                 enodes_[i] = new Enode<Base > (i);
             }
 
             // create the variable nodes
-            vnodes_.reserve(2.1 * varInfo.size() + 1);
-            vnodes_.resize(varInfo.size());
-            std::stringstream ss;
+            vnodes_.reserve(1.2 * n + 1);
+            vnodes_.resize(n);
+
+            // determine the order of each time derivative
+
+            vector<size_t> derivOrder(n, 0);
+            vector<int> derivativeOf(n, -1);
+            for (size_t j = 0; j < n; j++) {
+                int dj = derivative[j];
+                if (dj >= 0) {
+                    derivativeOf[dj] = j;
+                    while (dj >= 0) {
+                        assert(dj < n && dj != j);
+                        assert(timeDependent[dj]);
+
+                        derivativeOf[dj] = j;
+
+                        derivOrder[dj]++;
+                        dj = derivative[dj];
+                    }
+                }
+            }
+
+            origMaxTimeDivOrder_ = *std::max_element(derivOrder.begin(), derivOrder.end());
+
+            // sort the variables according to the time derivative order
+            vector<size_t> new2OrigPosition;
+            vector<size_t> orig2NewPosition(n);
+            new2OrigPosition.reserve(n);
+            for (size_t order = 0; order <= origMaxTimeDivOrder_; order++) {
+                for (size_t j = 0; j < n; j++) {
+                    if (derivOrder[j] == order) {
+                        orig2NewPosition[j] = new2OrigPosition.size();
+                        new2OrigPosition.push_back(j);
+                    }
+                }
+            }
+
+            stringstream ss;
             size_t paramCount = 0;
             size_t timeVarCount = 0;
-            for (size_t v = 0; v < varInfo.size(); v++) {
-                if (varInfo[v]) {
-                    ss << "x" << timeVarCount;
-                    timeVarCount++;
+            for (size_t p = 0; p < n; p++) {
+                size_t j = orig2NewPosition[p];
+                if (derivativeOf[p] < 0) {
+                    // generate the variable name
+                    if (timeDependent[p]) {
+                        ss << "x" << timeVarCount;
+                        timeVarCount++;
+                    } else {
+                        ss << "p" << paramCount;
+                        paramCount++;
+                    }
+
+                    vnodes_[j] = new Vnode<Base > (j, p, ss.str());
+                    ss.str("");
+                    ss.clear();
+
+                    if (!timeDependent[p])
+                        vnodes_[j]->makeParameter(); // does not depend on time
                 } else {
-                    ss << "p" << paramCount;
-                    paramCount++;
+                    vnodes_[j] = new Vnode<Base > (j, p, vnodes_[orig2NewPosition[derivativeOf[p]]]);
                 }
-
-                vnodes_[v] = new Vnode<Base > (v, ss.str());
-                ss.str("");
-                ss.clear();
-
-                if (!varInfo[v])
-                    vnodes_[v]->makeParameter(); // does not depend on time
             }
 
             // create the edges
             sparsity_ = jacobianSparsity(*fun);
 
-            size_t m = fun->Range(); // equation count
-            size_t n = fun->Domain(); // total variable count
-
             for (size_t i = 0; i < m; i++) {
-                if (eqDifferentialInfo[i]) {
-                    assert(varInfo[i]);
-                    Vnode<Base>* diffj = new Vnode<Base > (vnodes_.size(), vnodes_[i]);
-                    vnodes_.push_back(diffj);
-                    enodes_[i]->addVariable(diffj);
-                }
-
-                for (size_t j = 0; j < m; j++) {
-                    if (sparsity_[i * n + j] && !vnodes_[j]->isDeleted()) {
+                for (size_t p = 0; p < n; p++) {
+                    size_t j = orig2NewPosition[p];
+                    if (sparsity_[i * n + p] && !vnodes_[j]->isDeleted()) {
                         enodes_[i]->addVariable(vnodes_[j]);
                     }
                 }
             }
         }
 
-        virtual inline void reduceIndex() {
+        virtual inline void reduceIndex() throw (CGException) {
             detectSubset2Dif();
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             printResultInfo();
 #endif
 
-            generateSystem();
+            generateNewModel();
         }
 
         inline void printResultInfo() {
@@ -182,7 +223,7 @@ namespace CppAD {
                             jj = vnodes_[l];
                             if (jj->isColored() && !jj->isDeleted()) {
                                 // add new variable derivatives of colored variables
-                                Vnode<Base>* jDiff = new Vnode<Base > (vnodes_.size(), jj);
+                                Vnode<Base>* jDiff = new Vnode<Base > (vnodes_.size(), vnodes_.size(), jj);
                                 vnodes_.push_back(jDiff);
 #ifdef CPPAD_CG_DAE_VERBOSE
                                 std::cout << "Created " << *jDiff << "\n";
@@ -303,9 +344,9 @@ namespace CppAD {
         }
 
         /**
-         * NOT FINISHED!!!!
+         * Creates a new tape for the index 1 model
          */
-        inline void generateSystem() {
+        inline void generateNewModel() {
             using std::vector;
 
             typedef CG<Base> CGBase;
@@ -314,11 +355,11 @@ namespace CppAD {
             vector<vector<Enode<Base>*> > newEquations;
 
             // find new equations that must be generated by differentiation
-            assert(this->eqDifferentialInfo_.size() <= enodes_.size());
-
             vector<Enode<Base>* > newEqs;
-            for (size_t i = 0; i < this->eqDifferentialInfo_.size(); i++) {
+            size_t origM = this->fun_->Range();
+            for (size_t i = 0; i < origM; i++) {
                 if (enodes_[i]->derivative() != NULL) {
+                    assert(enodes_[i]->derivativeOf() == NULL);
                     newEqs.push_back(enodes_[i]->derivative());
                 }
             }
@@ -339,8 +380,6 @@ namespace CppAD {
                 return;
             }
 
-            size_t timeIndex = vnodes_.size();
-
             /**
              * Add the relationship between variables and derivatives
              */
@@ -357,7 +396,7 @@ namespace CppAD {
                 /**
                  * generate a new tape
                  */
-                vector<ADCG> indepNew(vnodes_.size() + 1); // variables, time derivatives, time
+                vector<ADCG> indepNew(vnodes_.size() + 1); // variables + time
                 Independent(indepNew);
 
                 // variables with the relationship between x dxdt and t
@@ -484,71 +523,47 @@ namespace CppAD {
         }
 
         /**
-         * Introduces a dependency with respect to time in the provided variables.
+         * Introduces a dependency with respect to time in the provided
+         * variables.
          * 
-         * \param indepNew  The variables without time dependency
-         * \return The new variables with the time dependency
+         * \param indepOrig  The variables without time dependency 
+         *                    (in the original variable order).
+         * \return The new variables with the time dependency 
+         *          (in the original variable order).
          */
-        inline std::vector<AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<AD<CG<Base> > >& indepNew) const {
-            assert(vnodes_.size() + 1 == indepNew.size());
+        inline std::vector<AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<AD<CG<Base> > >& indepOrig) const {
+            assert(vnodes_.size() + 1 == indepOrig.size());
 
-            std::vector<AD<CG<Base> > > indep2(indepNew.size());
+            using std::vector;
 
-            std::vector<AD<CG<Base> > > ax(3);
-            std::vector<AD<CG<Base> > > ay(1);
+            vector<AD<CG<Base> > > indepOut(indepOrig.size());
 
-            ax[2] = indepNew.back(); // time
+            vector<AD<CG<Base> > > ax(3);
+            vector<AD<CG<Base> > > ay(1);
 
+            ax[2] = indepOrig.back(); // time
 
+            // convert the tape values to the new vnode variable order
+            vector<AD<CG<Base> > > indepNewOrder(indepOrig.size());
+            for (size_t j = 0; j < indepOrig.size() - 1; j++) {
+                indepNewOrder[j] = indepOrig[vnodes_[j]->tapeIndex()];
+            }
 
-            for (size_t j = 0; j < vnodes_.size() - 1; j++) {
-                if (vnodes_[j]->derivative() != NULL) {
-                    ax[0] = indepNew[j]; // x
-                    ax[1] = indepNew[vnodes_[j]->derivative()->index()]; // dxdt
+            for (size_t j = 0; j < vnodes_.size(); j++) {
+                Vnode<Base>* jj = vnodes_[j];
+                if (jj->derivative() != NULL) {
+                    ax[0] = indepNewOrder[j]; // x
+                    ax[1] = indepNewOrder[jj->derivative()->index()]; // dxdt
                     time_var(0, ax, ay);
-                    indep2[j] = ay[0];
+                    indepOut[jj->tapeIndex()] = ay[0];
                 } else {
-                    indep2[j] = indepNew[j];
+                    indepOut[jj->tapeIndex()] = indepNewOrder[j];
                 }
             }
 
-            indep2[indep2.size() - 1] = indepNew.back(); // time
+            indepOut[indepOut.size() - 1] = indepOrig.back(); // time
 
-            return indep2;
-        }
-
-        inline std::vector<bool> equationsTimeSparsity(ADFun<CG<Base> >* fun,
-                                                       const std::vector<Enode<Base>*>& eqs,
-                                                       std::vector<size_t>& row,
-                                                       std::vector<size_t>& col) {
-            assert(fun != NULL);
-
-            std::vector<bool> sparsity = jacobianForwardSparsity(*fun);
-
-            size_t m = fun->Range(); // equation count
-            size_t n = fun->Domain(); // total variable count
-            size_t timeIndex = n - 1;
-
-            row.resize(eqs.size());
-            col.resize(eqs.size());
-            std::fill(col.begin(), col.end(), timeIndex);
-
-#if 1
-            std::vector<std::vector<int> > zoot(m, std::vector<int>(n));
-            for (size_t i = 0; i < m; i++)
-                for (size_t j = 0; j < n; j++)
-                    zoot[i][j] = sparsity[i * n + j];
-#endif
-
-            for (size_t e = 0; e < eqs.size(); e++) {
-                assert(eqs[e]->derivativeOf() != NULL);
-
-                size_t i = eqs[e]->derivativeOf()->index();
-                row[e] = i;
-                assert(sparsity[i * n + timeIndex]);
-            }
-
-            return sparsity;
+            return indepOut;
         }
 
         /**
@@ -572,34 +587,8 @@ namespace CppAD {
             /**
              * create variable names
              */
-            std::vector<std::string> depNames(dep0.size());
+            std::vector<std::string> depNames;
             std::vector<std::string> indepNames(indep0.size());
-
-            std::stringstream ss;
-            for (size_t i = 0; i < dep0.size(); i++) {
-                if (dep0[i].isParameter()) {
-                    continue;
-                }
-                Enode<Base>* ii = enodes_[i];
-                size_t depth = 0;
-                while (ii->derivativeOf() != NULL) {
-                    ii = ii->derivativeOf();
-                    depth++;
-                }
-
-                if (this->eqDifferentialInfo_[ii->index()]) {
-                    for (size_t c = 0; c < depth; c++) {
-                        ss << "d";
-                    }
-                    ss << "dx" << ii->index() << "dt";
-                    for (size_t c = 0; c < depth; c++) {
-                        ss << "dt";
-                    }
-                    depNames[i] = ss.str();
-                    ss.clear();
-                    ss.str("");
-                }
-            }
 
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
@@ -622,4 +611,3 @@ namespace CppAD {
 }
 
 #endif
-

@@ -22,13 +22,9 @@ inline bool DummyDerivPendulum2D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
 
-    std::vector<bool> eqDifferentialInfo(5, true);
-    eqDifferentialInfo[4] = false;
-    std::vector<bool> varInfo(6, true);
-    varInfo[5] = false;
-
-    std::vector<double> x(6);
-    std::vector<double> norm(6, 1.0);
+    std::vector<double> x(10);
+    std::vector<double> normVar(10, 1.0);
+    std::vector<double> normEq(5, 1.0);
 
     x[0] = -1.0; // x
     x[1] = 0.0; // y
@@ -37,7 +33,21 @@ inline bool DummyDerivPendulum2D() {
     x[4] = 1.0; // Tension
     x[5] = 1.0; // length
 
-    DummyDerivatives<double> dummyD(fun, eqDifferentialInfo, varInfo, x, norm);
+    x[6] = 0.0; // dxdt
+    x[7] = 0.0; // dydt
+    x[8] = 0.0; // dvxdt
+    x[9] = 0.0; // dvydt
+
+    std::vector<int> derivative(10, -1);
+    derivative[0] = 6;
+    derivative[1] = 7;
+    derivative[2] = 8;
+    derivative[3] = 9;
+
+    std::vector<bool> timeDependent(10, true);
+    timeDependent[5] = false;
+
+    DummyDerivatives<double> dummyD(fun, derivative, timeDependent, x, normVar, normEq);
 
     dummyD.reduceIndex();
 
@@ -55,9 +65,9 @@ inline bool DummyDerivPendulum3D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
 
-    std::vector<bool> eqDifferentialInfo(7, true);
-    eqDifferentialInfo[6] = false;
-    std::vector<bool> varInfo(7, true);
+    std::vector<double> x(13);
+    std::vector<double> normVar(13, 1.0);
+    std::vector<double> normEq(7, 1.0);
 
     //DummyDerivatives<double> dummyD(fun, eqDifferentialInfo, varInfo);
 

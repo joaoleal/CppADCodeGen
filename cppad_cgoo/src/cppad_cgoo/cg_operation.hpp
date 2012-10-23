@@ -38,7 +38,7 @@ namespace CppAD {
         CGLogOp, //  log(variable)
         CGMulOp, // a * b
         CGPowOp, //  pow(a,   b)
-//        PriOp, //  PrintFor(text, parameter or variable, parameter or variable)
+        //        PriOp, //  PrintFor(text, parameter or variable, parameter or variable)
         CGSignOp, // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
         CGSinhOp, // sinh(variable)
         CGSinOp, //  sin(variable)
@@ -48,6 +48,97 @@ namespace CppAD {
         CGTanOp, //  tan(variable)
         CGUnMinusOp // -(a)
     };
+
+    inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
+        switch (op) {
+            case CGAbsOp:
+                os << "abs()";
+                break;
+            case CGAcosOp:
+                os << "acos()";
+                break;
+            case CGAddOp:
+                os << "a+b";
+                break;
+            case CGAsinOp:
+                os << "asin()";
+                break;
+            case CGAtanOp:
+                os << "atan()";
+                break;
+            case CGComOpLt:
+                os << "result = left < right? trueCase: falseCase";
+                break;
+            case CGComOpLe:
+                os << "result = left <= right? trueCase: falseCase";
+                break;
+            case CGComOpEq:
+                os << "result = left == right? trueCase: falseCase";
+                break;
+            case CGComOpGe:
+                os << "result = left >= right? trueCase: falseCase";
+                break;
+            case CGComOpGt:
+                os << "result = left > right? trueCase: falseCase";
+                break;
+            case CGComOpNe:
+                os << "result = left != right? trueCase: falseCase";
+                break;
+            case CGCoshOp:
+                os << "cosh()";
+                break;
+            case CGCosOp:
+                os << "cos()";
+                break;
+            case CGDivOp:
+                os << "a / b";
+                break;
+            case CGExpOp:
+                os << "exp()";
+                break;
+            case CGInvOp:
+                os << "independent()";
+                break;
+            case CGLogOp:
+                os << "log()";
+                break;
+            case CGMulOp:
+                os << "a * b";
+                break;
+            case CGPowOp:
+                os << "pow(a, b)";
+                break;
+                //        PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
+            case CGSignOp:
+                os << "sign()";
+                break;
+            case CGSinhOp:
+                os << "sinh()";
+                break;
+            case CGSinOp:
+                os << "sin()";
+                break;
+            case CGSqrtOp:
+                os << "sqrt()";
+                break;
+            case CGSubOp:
+                os << "a - b";
+                break;
+            case CGTanhOp:
+                os << "tanh()";
+                break;
+            case CGTanOp:
+                os << "tan()";
+                break;
+            case CGUnMinusOp:
+                os << "-(a)";
+                break;
+            default:
+                os << "\?\?\?\?()";
+                break;
+        }
+        return os;
+    }
 
 }
 

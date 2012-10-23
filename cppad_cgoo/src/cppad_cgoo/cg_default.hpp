@@ -32,6 +32,14 @@ namespace CppAD {
         handler.manageSourceCodeBlock(sourceCode);
     }
 
+    template <class Base>
+    inline CG<Base>::CG(CodeHandler<Base>& handler, const Argument<Base>& arg) :
+    handler_(&handler),
+    sourceCode_(arg.operation()),
+    value_(arg.parameter() != NULL ? new Base(*arg.parameter()) : NULL) {
+
+    }
+
     /**
      * Creates a parameter with the given value
      */

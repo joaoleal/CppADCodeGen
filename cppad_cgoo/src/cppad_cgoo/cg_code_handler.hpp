@@ -218,6 +218,9 @@ namespace CppAD {
             _used = false;
         }
 
+        inline CG<Base> solveFor(SourceCodeFragment<Base>* expression,
+                                 SourceCodeFragment<Base>* code) throw (CGException);
+
         virtual ~CodeHandler() {
             reset();
         }

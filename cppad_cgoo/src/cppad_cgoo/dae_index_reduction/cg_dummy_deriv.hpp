@@ -33,9 +33,13 @@ namespace CppAD {
     protected:
         // typical values;
         std::vector<Base> x_;
-        // normalization constants
-        std::vector<Base> norm_;
-        // jacobian sparsity pattern of the reduced system
+        // normalization constants for the variables (in the original order)
+        std::vector<Base> normVar_;
+        // normalization constants for the equations
+        std::vector<Base> normEq_;
+        /** Jacobian sparsity pattern of the reduced system
+         * (in the original variable order)
+         */
         std::vector<bool> jacSparsity_;
         // the initial index of time derivatives
         size_t diffVarStart_;
@@ -43,6 +47,7 @@ namespace CppAD {
         size_t diffEqStart_;
         /** normalized Jacobian of the index one system's  differentiated
          *  equations relative to the time derivatives
+         *  (in the new variable order).
          */
         Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> jacobian_;
         /**
@@ -52,15 +57,17 @@ namespace CppAD {
     public:
 
         DummyDerivatives(ADFun<CG<Base> >* fun,
-                         const std::vector<bool>& eqDifferentialInfo,
-                         const std::vector<bool>& varInfo,
+                         const std::vector<int>& derivative,
+                         const std::vector<bool>& timeDependent,
                          const std::vector<Base>& x,
-                         const std::vector<Base>& norm) :
-            Plantelides<Base>(fun, eqDifferentialInfo, varInfo),
+                         const std::vector<Base>& normVar,
+                         const std::vector<Base>& normEq) :
+            Plantelides<Base>(fun, derivative, timeDependent),
             x_(x),
-            norm_(norm),
+            normVar_(normVar),
+            normEq_(normEq),
             diffVarStart_(0),
-            diffEqStart_(this->eqDifferentialInfo_.size()) {
+            diffEqStart_(fun->Range()) {
 
             typename std::vector<Vnode<Base>*> ::const_iterator j;
             for (j = this->vnodes_.begin(); j != this->vnodes_.end(); ++j) {
@@ -72,7 +79,18 @@ namespace CppAD {
             }
         }
 
-        virtual inline void reduceIndex() {
+        virtual inline std::vector<bool> timeDerivativeVariables() {
+            std::vector<bool> tderiv(this->vnodes_.size());
+            for (size_t j = 0; j< this->vnodes_.size(); j++) {
+                Vnode<Base>* jj = this->vnodes_[j];
+                bool isDeriv = jj->derivativeOf() != NULL && dummyD_.find(jj) == dummyD_.end();
+                tderiv[jj->tapeIndex()] = isDeriv;
+            }
+
+            return tderiv;
+        }
+
+        virtual inline void reduceIndex() throw (CGException) {
             Plantelides<Base>::reduceIndex();
 
             assert(this->reducedFun_ != NULL);
@@ -89,7 +107,7 @@ namespace CppAD {
             for (rj = this->vnodes_.rbegin(); rj != this->vnodes_.rend(); ++rj) {
                 Vnode<Base>* jj = *rj;
                 if (jj->derivativeOf() != NULL && jj->derivative() == NULL) {
-                    vars.push_back(jj);
+                    vars.push_back(jj); // highest order time derivatives in the index 1 model
                 }
             }
 
@@ -124,7 +142,7 @@ namespace CppAD {
                 std::cout << "\n";
 #endif
 
-                // create the jacobian for the selected variables and equations
+                // create the Jacobian for the selected variables and equations
                 workJac.resize(eqs.size(), vars.size());
                 for (size_t i = 0; i < eqs.size(); i++) {
                     Enode<Base>* ii = eqs[i];
@@ -175,14 +193,18 @@ namespace CppAD {
                     }
                 }
                 vars.swap(varsNew);
-
-                size_t newDummyCount = vars.size() - eqs.size();
             }
+
+            // create a new tape for the model with the new variables
+            generateSystem();
+
         }
 
     protected:
 
         inline void solveDAESystem() {
+            throw 1; // not finished!!!!
+            /**
             Functor dae(this);
             Eigen::LevenbergMarquardt<Functor> lm(dae);
 
@@ -196,6 +218,7 @@ namespace CppAD {
             }
 
             int info = lm.minimize(x);
+             **/
         }
 
         /**
@@ -203,27 +226,32 @@ namespace CppAD {
          * (e.g. dxdt)
          */
         inline void determineJacobian() {
+            using namespace std;
+            using std::vector;
+
             const size_t n = this->reducedFun_->Domain();
             const size_t m = this->reducedFun_->Range();
 
-            jacSparsity_ = jacobianReverseSparsity(*this->reducedFun_);
+            jacSparsity_ = jacobianReverseSparsity(*this->reducedFun_); // in the original variable order
 
-            std::vector<size_t> row, col;
+            vector<size_t> row, col;
             row.reserve((this->vnodes_.size() - diffVarStart_) * (m - diffEqStart_));
             col.reserve(row.capacity());
 
             for (size_t i = diffEqStart_; i < m; i++) {
                 for (size_t j = diffVarStart_; j < n; j++) {
-                    if (jacSparsity_[i * n + j]) {
+                    assert(this->vnodes_[j]->derivativeOf() != NULL);
+                    size_t t = this->vnodes_[j]->tapeIndex();
+                    if (jacSparsity_[i * n + t]) {
                         row.push_back(i);
-                        col.push_back(j);
+                        col.push_back(t);
                     }
                 }
             }
 
-            std::vector<CG<Base> > jac(row.size());
+            vector<CG<Base> > jac(row.size());
 
-            std::vector<CG<Base> > indep(n);
+            vector<CG<Base> > indep(n);
             std::copy(x_.begin(), x_.end(), indep.begin());
             std::fill(indep.begin() + x_.size(), indep.end(), 0);
 
@@ -234,46 +262,36 @@ namespace CppAD {
             // resize and zero matrix
             jacobian_.setZero(m - diffEqStart_, n - diffVarStart_);
 
-            // right hand side of the equations
-            for (size_t e = 0; e < jac.size(); e++) {
-                Vnode<Base>* v = this->vnodes_[col[e]]->originalVariable();
-                Enode<Base>* eq = this->enodes_[row[e]]->originalEquation();
+            map<size_t, Vnode<Base>*> origIndex2var;
+            for (size_t j = diffVarStart_; j< this->vnodes_.size(); j++) {
+                Vnode<Base>* jj = this->vnodes_[j];
+                origIndex2var[jj->tapeIndex()] = jj;
+            }
 
-                Base normVal = jac[e].getParameterValue() * norm_[v->index()]; // normalized jacobian value
-                if (this->eqDifferentialInfo_[eq->index()]) {
-                    normVal /= norm_[eq->index()];
-                }
+            // normalize values
+            for (size_t e = 0; e < jac.size(); e++) {
+                Enode<Base>* eqOrig = this->enodes_[row[e]]->originalEquation();
+                Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->fun_->Domain());
+
+                /**
+                 * TODO: use the provided norm for the time derivatives
+                 */
+
+                // normalized jacobian value
+                Base normVal = jac[e].getParameterValue() * normVar_[vOrig->tapeIndex()]
+                        / normEq_[eqOrig->index()];
 
                 jacobian_(row[e] - diffEqStart_, col[e] - diffVarStart_) = normVal;
             }
 
-            // left hand side of the equations
-            for (size_t i = 0; i < diffEqStart_; i++) {
-                if (this->eqDifferentialInfo_[i]) {
-                    Vnode<Base>* vDiff = this->vnodes_[i]->derivative();
-                    Enode<Base>* eq = this->enodes_[i];
-
-                    while (eq->derivative() != NULL) {
-                        assert(vDiff != NULL);
-
-                        eq = eq->derivative();
-                        vDiff = vDiff->derivative();
-
-                        size_t r = eq->index() - diffEqStart_;
-                        size_t c = vDiff->index() - diffVarStart_;
-                        jacobian_(r, c) = -1.0 / norm_[i];
-                    }
-                }
-            }
-
 #ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "partial jacobian:\n" << jacobian_ << "\n\n";
+            cout << "partial jacobian:\n" << jacobian_ << "\n\n";
 #endif
         }
 
         inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
                                            const std::vector<Vnode<Base>* >& vars,
-                                           MatrixB& subsetJac) {
+                                           MatrixB& subsetJac) throw (CGException) {
 
             if (eqs.size() == vars.size()) {
                 dummyD_.insert(vars.begin(), vars.end());
@@ -306,7 +324,7 @@ namespace CppAD {
             /**
              * Brute force approach!!!
              */
-            std::vector<size_t> bestCols2keep = cols2keep;
+            std::vector<size_t> bestCols2keep;
             Base bestCond = std::numeric_limits<Base>::max();
             size_t bestTotalOrder = 0;
 
@@ -328,7 +346,7 @@ namespace CppAD {
                 std::cout << "    current jac:\n" << workJac << "\n";
 #endif
 
-                Base cond = evalCondition(workJac);
+                Base cond = evalMatrixCondition(workJac);
 
 #ifdef CPPAD_CG_DAE_VERBOSE
                 std::cout << "    condition: " << cond << "\n";
@@ -370,17 +388,145 @@ namespace CppAD {
                 }
             };
 
+            if (bestCols2keep.empty()) {
+                throw CGException("Failed to select dummy derivatives! The resulting system is probably singular for the provided data.");
+            }
+
 #ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "# new dummy derivatives (condition = " << bestCond << "): ";
+            std::cout << "## new dummy derivatives (condition = " << bestCond << "): ";
             for (size_t c = 0; c < bestCols2keep.size(); c++)
                 std::cout << *vars[bestCols2keep[c]] << "; ";
-            std::cout << " \n";
+            std::cout << " \n\n";
 #endif
 
             for (size_t c = 0; c < bestCols2keep.size(); c++) {
                 dummyD_.insert(vars[bestCols2keep[c]]);
             }
 
+        }
+
+        inline void reduceEquations() {
+         
+            // determine if the time derivative variable is present in the
+            // equation only multiplied by a constant value
+            
+            
+        }
+
+        inline void generateSystem() {
+            using std::vector;
+            typedef CG<Base> CGBase;
+            typedef AD<CGBase> ADCG;
+
+            CodeHandler<Base> handler;
+
+            vector<CGBase> indep0(this->reducedFun_->Domain());
+            handler.makeVariables(indep0);
+
+            const vector<CGBase> dep0 = this->reducedFun_->Forward(0, indep0);
+
+            const vector<bool> algEq(dep0.size());
+
+            /**
+             * make relations between dependent and independent variables.
+             * Equations may be removed when used to calculate dummy derivatives.
+             */
+
+            // check if it is possible to get a semi-explicit DAE
+
+
+            for (size_t diffj = diffVarStart_; diffj < this->vnodes_.size(); diffj++) {
+                // find equation used to determine it
+                Vnode<Base>* diffjj = this->vnodes_[diffj];
+
+                //   get original var -> get diff equation -> get norder equation
+                Vnode<Base>* origj = diffjj->originalVariable();
+
+                Enode<Base>* eq = this->enodes_[origj->index()];
+                if (eq->isAlgebraic()) {
+                    std::stringstream ss;
+                    ss << "Unable to produce a semi-explicit DAE system due to the presence"
+                            " of the algebraic variable '" << origj->index() << "' in new equation(s)"
+                            " generated by differentiation of existing algebraic equations.";
+                    throw CGException(ss.str());
+                }
+
+                size_t order = diffjj->order();
+                for (size_t o = 0; o < order - 1; o++) {
+                    eq = eq->derivative();
+                }
+
+                SourceCodeFragment<Base>* code = dep0[eq->index()].getSourceCodeFragment();
+
+            }
+
+            typename std::set<Vnode<Base>* >::const_iterator j;
+            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
+                //find equation used to 
+            }
+
+            for (size_t i = 0; i< this->enodes_.size(); i++) {
+                Enode<Base>* ii = this->enodes_[i];
+
+            }
+
+
+            /**
+             * generate a new tape
+             */
+            delete this->reducedFun_;
+
+            vector<ADCG> indepNew(this->vnodes_.size() + 1); // variables, time derivatives, time
+            Independent(indepNew);
+
+            // variables with the relationship between x dxdt and t
+            vector<ADCG> indep2 = prepareTimeDependentVariables(indepNew);
+            indep2.resize(indep0.size());
+
+            Evaluator<Base, CG<Base> > evaluator0(handler, dep0);
+            vector<ADCG> depNew = evaluator0.evaluate(indep2);
+            depNew.resize(this->enodes_.size());
+
+            this->reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            printModel(this->reducedFun_);
+#endif
+
+        }
+
+        static Base evalMatrixCondition(const MatrixB& mat) {
+            /**
+             * determine eigenvalues
+             */
+            VectorCB eigenv = mat.eigenvalues();
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::cout << "    eigen values:\n" << eigenv << "\n";
+#endif
+
+            /**
+             * determine condition
+             */
+            if (eigenv(0).imag() != 0) {
+                return std::numeric_limits<Base>::quiet_NaN();
+            }
+            Base max = std::abs(eigenv(0).real());
+            Base min = max;
+
+            for (size_t r = 1; r < eigenv.rows(); r++) {
+                if (eigenv(r).imag() != 0) {
+                    return std::numeric_limits<Base>::quiet_NaN();
+                }
+                Base eigv = std::abs(eigenv(r).real());
+                if (eigv > max) {
+                    max = eigv;
+                } else if (eigv < min) {
+                    min = eigv;
+                }
+            }
+
+            // the condition number
+            return max / min;
         }
 
         /**
@@ -447,7 +593,7 @@ namespace CppAD {
                     if (!dummyDer_->eqDifferentialInfo_[j]) {
                         indep2[j] = indepShort[pos];
                         // algebraic variable normalization constant
-                        normindep_[pos] = dummyDer_->norm_[j];
+                        normindep_[pos] = dummyDer_->normVar_[j];
                         pos++;
                     } else {
                         indep2[j] = dummyDer_->x_[j]; // constant value
@@ -463,7 +609,7 @@ namespace CppAD {
                     if (dummyDer_->vnodes_[j]->derivativeOf() == NULL) {
                         Vnode<Base>* vDiff = dummyDer_->vnodes_[j]->derivative();
                         while (vDiff != NULL) {
-                            normindep_[vDiff->index() - stateCount] = dummyDer_->norm_[j];
+                            normindep_[vDiff->index() - stateCount] = dummyDer_->normVar_[j];
                             vDiff = vDiff->derivative();
                         }
                     }
@@ -481,7 +627,7 @@ namespace CppAD {
                         while (eq != NULL) {
                             assert(vDiff != NULL);
                             depNew[eq->index()] -= indepShort[vDiff->index() - stateCount];
-                            normdep_[eq->index()] = dummyDer_->norm_[i];
+                            normdep_[eq->index()] = dummyDer_->normVar_[i];
 
                             eq = eq->derivative();
                             vDiff = vDiff->derivative();
@@ -548,39 +694,7 @@ namespace CppAD {
             }
         };
 
-        static Base evalCondition(const MatrixB& mat) {
-            /**
-             * determine eigenvalues
-             */
-            VectorCB eigenv = mat.eigenvalues();
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "    eigen values:\n" << eigenv << "\n";
-#endif
 
-            /**
-             * determine condition
-             */
-            if (eigenv(0).imag() != 0) {
-                return std::numeric_limits<Base>::quiet_NaN();
-            }
-            Base max = std::abs(eigenv(0).real());
-            Base min = max;
-
-            for (size_t r = 1; r < eigenv.rows(); r++) {
-                if (eigenv(r).imag() != 0) {
-                    return std::numeric_limits<Base>::quiet_NaN();
-                }
-                Base eigv = std::abs(eigenv(r).real());
-                if (eigv > max) {
-                    max = eigv;
-                } else if (eigv < min) {
-                    min = eigv;
-                }
-            }
-
-            // the condition number
-            return max / min;
-        }
 
     };
 }

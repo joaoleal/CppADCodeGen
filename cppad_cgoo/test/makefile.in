@@ -48,7 +48,12 @@ am_testCGOO_OBJECTS = test_code_gen.$(OBJEXT) abs.$(OBJEXT) \
 	exp.$(OBJEXT) log.$(OBJEXT) log_10.$(OBJEXT) mul.$(OBJEXT) \
 	parameter.$(OBJEXT) pow.$(OBJEXT) sin.$(OBJEXT) sub.$(OBJEXT) \
 	tan.$(OBJEXT) unary.$(OBJEXT) gcc_load_dynamic.$(OBJEXT) \
-	dynamic.$(OBJEXT) dummy_derivative.$(OBJEXT) \
+	dynamic.$(OBJEXT) solve_add.$(OBJEXT) solve_cosh.$(OBJEXT) \
+	solve_div.$(OBJEXT) solve_exp.$(OBJEXT) solve_log.$(OBJEXT) \
+	solve_log_10.$(OBJEXT) solve_mul.$(OBJEXT) solve_pow.$(OBJEXT) \
+	solve_sinh.$(OBJEXT) solve_sqrt.$(OBJEXT) solve_sub.$(OBJEXT) \
+	solve_tanh.$(OBJEXT) test_solve.$(OBJEXT) \
+	solve_unary.$(OBJEXT) dummy_derivative.$(OBJEXT) \
 	pantelides.$(OBJEXT) TestException.$(OBJEXT)
 testCGOO_OBJECTS = $(am_testCGOO_OBJECTS)
 testCGOO_LDADD = $(LDADD)
@@ -262,6 +267,20 @@ testCGOO_SOURCES = \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
 	dynamic.cpp \
+	solve/solve_add.cpp \
+	solve/solve_cosh.cpp \
+	solve/solve_div.cpp \
+	solve/solve_exp.cpp \
+	solve/solve_log.cpp \
+	solve/solve_log_10.cpp \
+	solve/solve_mul.cpp \
+	solve/solve_pow.cpp \
+	solve/solve_sinh.cpp \
+	solve/solve_sqrt.cpp \
+	solve/solve_sub.cpp \
+	solve/solve_tanh.cpp \
+	solve/test_solve.cpp \
+	solve/solve_unary.cpp \
 	dae_index_reduction/dummy_derivative.cpp \
 	dae_index_reduction/pantelides.cpp \
 	TestException.cpp
@@ -337,9 +356,23 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parameter.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pow.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sin.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_add.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_cosh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_div.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_exp.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_log.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_log_10.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_mul.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_pow.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_sinh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_sqrt.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_sub.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_tanh.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/solve_unary.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/sub.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tan.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_code_gen.Po@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test_solve.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/unary.Po@am__quote@
 
 .cpp.o:
@@ -355,6 +388,202 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='$<' object='$@' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCXX_FALSE@	$(CXXCOMPILE) -c -o $@ `$(CYGPATH_W) '$<'`
+
+solve_add.o: solve/solve_add.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_add.o -MD -MP -MF $(DEPDIR)/solve_add.Tpo -c -o solve_add.o `test -f 'solve/solve_add.cpp' || echo '$(srcdir)/'`solve/solve_add.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_add.Tpo $(DEPDIR)/solve_add.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_add.cpp' object='solve_add.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_add.o `test -f 'solve/solve_add.cpp' || echo '$(srcdir)/'`solve/solve_add.cpp
+
+solve_add.obj: solve/solve_add.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_add.obj -MD -MP -MF $(DEPDIR)/solve_add.Tpo -c -o solve_add.obj `if test -f 'solve/solve_add.cpp'; then $(CYGPATH_W) 'solve/solve_add.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_add.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_add.Tpo $(DEPDIR)/solve_add.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_add.cpp' object='solve_add.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_add.obj `if test -f 'solve/solve_add.cpp'; then $(CYGPATH_W) 'solve/solve_add.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_add.cpp'; fi`
+
+solve_cosh.o: solve/solve_cosh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_cosh.o -MD -MP -MF $(DEPDIR)/solve_cosh.Tpo -c -o solve_cosh.o `test -f 'solve/solve_cosh.cpp' || echo '$(srcdir)/'`solve/solve_cosh.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_cosh.Tpo $(DEPDIR)/solve_cosh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_cosh.cpp' object='solve_cosh.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_cosh.o `test -f 'solve/solve_cosh.cpp' || echo '$(srcdir)/'`solve/solve_cosh.cpp
+
+solve_cosh.obj: solve/solve_cosh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_cosh.obj -MD -MP -MF $(DEPDIR)/solve_cosh.Tpo -c -o solve_cosh.obj `if test -f 'solve/solve_cosh.cpp'; then $(CYGPATH_W) 'solve/solve_cosh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_cosh.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_cosh.Tpo $(DEPDIR)/solve_cosh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_cosh.cpp' object='solve_cosh.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_cosh.obj `if test -f 'solve/solve_cosh.cpp'; then $(CYGPATH_W) 'solve/solve_cosh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_cosh.cpp'; fi`
+
+solve_div.o: solve/solve_div.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_div.o -MD -MP -MF $(DEPDIR)/solve_div.Tpo -c -o solve_div.o `test -f 'solve/solve_div.cpp' || echo '$(srcdir)/'`solve/solve_div.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_div.Tpo $(DEPDIR)/solve_div.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_div.cpp' object='solve_div.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_div.o `test -f 'solve/solve_div.cpp' || echo '$(srcdir)/'`solve/solve_div.cpp
+
+solve_div.obj: solve/solve_div.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_div.obj -MD -MP -MF $(DEPDIR)/solve_div.Tpo -c -o solve_div.obj `if test -f 'solve/solve_div.cpp'; then $(CYGPATH_W) 'solve/solve_div.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_div.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_div.Tpo $(DEPDIR)/solve_div.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_div.cpp' object='solve_div.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_div.obj `if test -f 'solve/solve_div.cpp'; then $(CYGPATH_W) 'solve/solve_div.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_div.cpp'; fi`
+
+solve_exp.o: solve/solve_exp.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_exp.o -MD -MP -MF $(DEPDIR)/solve_exp.Tpo -c -o solve_exp.o `test -f 'solve/solve_exp.cpp' || echo '$(srcdir)/'`solve/solve_exp.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_exp.Tpo $(DEPDIR)/solve_exp.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_exp.cpp' object='solve_exp.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_exp.o `test -f 'solve/solve_exp.cpp' || echo '$(srcdir)/'`solve/solve_exp.cpp
+
+solve_exp.obj: solve/solve_exp.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_exp.obj -MD -MP -MF $(DEPDIR)/solve_exp.Tpo -c -o solve_exp.obj `if test -f 'solve/solve_exp.cpp'; then $(CYGPATH_W) 'solve/solve_exp.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_exp.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_exp.Tpo $(DEPDIR)/solve_exp.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_exp.cpp' object='solve_exp.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_exp.obj `if test -f 'solve/solve_exp.cpp'; then $(CYGPATH_W) 'solve/solve_exp.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_exp.cpp'; fi`
+
+solve_log.o: solve/solve_log.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_log.o -MD -MP -MF $(DEPDIR)/solve_log.Tpo -c -o solve_log.o `test -f 'solve/solve_log.cpp' || echo '$(srcdir)/'`solve/solve_log.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_log.Tpo $(DEPDIR)/solve_log.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_log.cpp' object='solve_log.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_log.o `test -f 'solve/solve_log.cpp' || echo '$(srcdir)/'`solve/solve_log.cpp
+
+solve_log.obj: solve/solve_log.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_log.obj -MD -MP -MF $(DEPDIR)/solve_log.Tpo -c -o solve_log.obj `if test -f 'solve/solve_log.cpp'; then $(CYGPATH_W) 'solve/solve_log.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_log.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_log.Tpo $(DEPDIR)/solve_log.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_log.cpp' object='solve_log.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_log.obj `if test -f 'solve/solve_log.cpp'; then $(CYGPATH_W) 'solve/solve_log.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_log.cpp'; fi`
+
+solve_log_10.o: solve/solve_log_10.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_log_10.o -MD -MP -MF $(DEPDIR)/solve_log_10.Tpo -c -o solve_log_10.o `test -f 'solve/solve_log_10.cpp' || echo '$(srcdir)/'`solve/solve_log_10.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_log_10.Tpo $(DEPDIR)/solve_log_10.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_log_10.cpp' object='solve_log_10.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_log_10.o `test -f 'solve/solve_log_10.cpp' || echo '$(srcdir)/'`solve/solve_log_10.cpp
+
+solve_log_10.obj: solve/solve_log_10.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_log_10.obj -MD -MP -MF $(DEPDIR)/solve_log_10.Tpo -c -o solve_log_10.obj `if test -f 'solve/solve_log_10.cpp'; then $(CYGPATH_W) 'solve/solve_log_10.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_log_10.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_log_10.Tpo $(DEPDIR)/solve_log_10.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_log_10.cpp' object='solve_log_10.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_log_10.obj `if test -f 'solve/solve_log_10.cpp'; then $(CYGPATH_W) 'solve/solve_log_10.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_log_10.cpp'; fi`
+
+solve_mul.o: solve/solve_mul.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_mul.o -MD -MP -MF $(DEPDIR)/solve_mul.Tpo -c -o solve_mul.o `test -f 'solve/solve_mul.cpp' || echo '$(srcdir)/'`solve/solve_mul.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_mul.Tpo $(DEPDIR)/solve_mul.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_mul.cpp' object='solve_mul.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_mul.o `test -f 'solve/solve_mul.cpp' || echo '$(srcdir)/'`solve/solve_mul.cpp
+
+solve_mul.obj: solve/solve_mul.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_mul.obj -MD -MP -MF $(DEPDIR)/solve_mul.Tpo -c -o solve_mul.obj `if test -f 'solve/solve_mul.cpp'; then $(CYGPATH_W) 'solve/solve_mul.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_mul.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_mul.Tpo $(DEPDIR)/solve_mul.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_mul.cpp' object='solve_mul.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_mul.obj `if test -f 'solve/solve_mul.cpp'; then $(CYGPATH_W) 'solve/solve_mul.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_mul.cpp'; fi`
+
+solve_pow.o: solve/solve_pow.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_pow.o -MD -MP -MF $(DEPDIR)/solve_pow.Tpo -c -o solve_pow.o `test -f 'solve/solve_pow.cpp' || echo '$(srcdir)/'`solve/solve_pow.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_pow.Tpo $(DEPDIR)/solve_pow.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_pow.cpp' object='solve_pow.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_pow.o `test -f 'solve/solve_pow.cpp' || echo '$(srcdir)/'`solve/solve_pow.cpp
+
+solve_pow.obj: solve/solve_pow.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_pow.obj -MD -MP -MF $(DEPDIR)/solve_pow.Tpo -c -o solve_pow.obj `if test -f 'solve/solve_pow.cpp'; then $(CYGPATH_W) 'solve/solve_pow.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_pow.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_pow.Tpo $(DEPDIR)/solve_pow.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_pow.cpp' object='solve_pow.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_pow.obj `if test -f 'solve/solve_pow.cpp'; then $(CYGPATH_W) 'solve/solve_pow.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_pow.cpp'; fi`
+
+solve_sinh.o: solve/solve_sinh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sinh.o -MD -MP -MF $(DEPDIR)/solve_sinh.Tpo -c -o solve_sinh.o `test -f 'solve/solve_sinh.cpp' || echo '$(srcdir)/'`solve/solve_sinh.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sinh.Tpo $(DEPDIR)/solve_sinh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sinh.cpp' object='solve_sinh.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sinh.o `test -f 'solve/solve_sinh.cpp' || echo '$(srcdir)/'`solve/solve_sinh.cpp
+
+solve_sinh.obj: solve/solve_sinh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sinh.obj -MD -MP -MF $(DEPDIR)/solve_sinh.Tpo -c -o solve_sinh.obj `if test -f 'solve/solve_sinh.cpp'; then $(CYGPATH_W) 'solve/solve_sinh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sinh.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sinh.Tpo $(DEPDIR)/solve_sinh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sinh.cpp' object='solve_sinh.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sinh.obj `if test -f 'solve/solve_sinh.cpp'; then $(CYGPATH_W) 'solve/solve_sinh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sinh.cpp'; fi`
+
+solve_sqrt.o: solve/solve_sqrt.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sqrt.o -MD -MP -MF $(DEPDIR)/solve_sqrt.Tpo -c -o solve_sqrt.o `test -f 'solve/solve_sqrt.cpp' || echo '$(srcdir)/'`solve/solve_sqrt.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sqrt.Tpo $(DEPDIR)/solve_sqrt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sqrt.cpp' object='solve_sqrt.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sqrt.o `test -f 'solve/solve_sqrt.cpp' || echo '$(srcdir)/'`solve/solve_sqrt.cpp
+
+solve_sqrt.obj: solve/solve_sqrt.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sqrt.obj -MD -MP -MF $(DEPDIR)/solve_sqrt.Tpo -c -o solve_sqrt.obj `if test -f 'solve/solve_sqrt.cpp'; then $(CYGPATH_W) 'solve/solve_sqrt.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sqrt.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sqrt.Tpo $(DEPDIR)/solve_sqrt.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sqrt.cpp' object='solve_sqrt.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sqrt.obj `if test -f 'solve/solve_sqrt.cpp'; then $(CYGPATH_W) 'solve/solve_sqrt.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sqrt.cpp'; fi`
+
+solve_sub.o: solve/solve_sub.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sub.o -MD -MP -MF $(DEPDIR)/solve_sub.Tpo -c -o solve_sub.o `test -f 'solve/solve_sub.cpp' || echo '$(srcdir)/'`solve/solve_sub.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sub.Tpo $(DEPDIR)/solve_sub.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sub.cpp' object='solve_sub.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sub.o `test -f 'solve/solve_sub.cpp' || echo '$(srcdir)/'`solve/solve_sub.cpp
+
+solve_sub.obj: solve/solve_sub.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_sub.obj -MD -MP -MF $(DEPDIR)/solve_sub.Tpo -c -o solve_sub.obj `if test -f 'solve/solve_sub.cpp'; then $(CYGPATH_W) 'solve/solve_sub.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sub.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_sub.Tpo $(DEPDIR)/solve_sub.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_sub.cpp' object='solve_sub.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_sub.obj `if test -f 'solve/solve_sub.cpp'; then $(CYGPATH_W) 'solve/solve_sub.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_sub.cpp'; fi`
+
+solve_tanh.o: solve/solve_tanh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_tanh.o -MD -MP -MF $(DEPDIR)/solve_tanh.Tpo -c -o solve_tanh.o `test -f 'solve/solve_tanh.cpp' || echo '$(srcdir)/'`solve/solve_tanh.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_tanh.Tpo $(DEPDIR)/solve_tanh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_tanh.cpp' object='solve_tanh.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_tanh.o `test -f 'solve/solve_tanh.cpp' || echo '$(srcdir)/'`solve/solve_tanh.cpp
+
+solve_tanh.obj: solve/solve_tanh.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_tanh.obj -MD -MP -MF $(DEPDIR)/solve_tanh.Tpo -c -o solve_tanh.obj `if test -f 'solve/solve_tanh.cpp'; then $(CYGPATH_W) 'solve/solve_tanh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_tanh.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_tanh.Tpo $(DEPDIR)/solve_tanh.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_tanh.cpp' object='solve_tanh.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_tanh.obj `if test -f 'solve/solve_tanh.cpp'; then $(CYGPATH_W) 'solve/solve_tanh.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_tanh.cpp'; fi`
+
+test_solve.o: solve/test_solve.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test_solve.o -MD -MP -MF $(DEPDIR)/test_solve.Tpo -c -o test_solve.o `test -f 'solve/test_solve.cpp' || echo '$(srcdir)/'`solve/test_solve.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/test_solve.Tpo $(DEPDIR)/test_solve.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/test_solve.cpp' object='test_solve.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test_solve.o `test -f 'solve/test_solve.cpp' || echo '$(srcdir)/'`solve/test_solve.cpp
+
+test_solve.obj: solve/test_solve.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT test_solve.obj -MD -MP -MF $(DEPDIR)/test_solve.Tpo -c -o test_solve.obj `if test -f 'solve/test_solve.cpp'; then $(CYGPATH_W) 'solve/test_solve.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/test_solve.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/test_solve.Tpo $(DEPDIR)/test_solve.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/test_solve.cpp' object='test_solve.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o test_solve.obj `if test -f 'solve/test_solve.cpp'; then $(CYGPATH_W) 'solve/test_solve.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/test_solve.cpp'; fi`
+
+solve_unary.o: solve/solve_unary.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_unary.o -MD -MP -MF $(DEPDIR)/solve_unary.Tpo -c -o solve_unary.o `test -f 'solve/solve_unary.cpp' || echo '$(srcdir)/'`solve/solve_unary.cpp
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_unary.Tpo $(DEPDIR)/solve_unary.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_unary.cpp' object='solve_unary.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_unary.o `test -f 'solve/solve_unary.cpp' || echo '$(srcdir)/'`solve/solve_unary.cpp
+
+solve_unary.obj: solve/solve_unary.cpp
+@am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT solve_unary.obj -MD -MP -MF $(DEPDIR)/solve_unary.Tpo -c -o solve_unary.obj `if test -f 'solve/solve_unary.cpp'; then $(CYGPATH_W) 'solve/solve_unary.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_unary.cpp'; fi`
+@am__fastdepCXX_TRUE@	$(am__mv) $(DEPDIR)/solve_unary.Tpo $(DEPDIR)/solve_unary.Po
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	source='solve/solve_unary.cpp' object='solve_unary.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCXX_FALSE@	DEPDIR=$(DEPDIR) $(CXXDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCXX_FALSE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -c -o solve_unary.obj `if test -f 'solve/solve_unary.cpp'; then $(CYGPATH_W) 'solve/solve_unary.cpp'; else $(CYGPATH_W) '$(srcdir)/solve/solve_unary.cpp'; fi`
 
 dummy_derivative.o: dae_index_reduction/dummy_derivative.cpp
 @am__fastdepCXX_TRUE@	$(CXX) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CXXFLAGS) $(CXXFLAGS) -MT dummy_derivative.o -MD -MP -MF $(DEPDIR)/dummy_derivative.Tpo -c -o dummy_derivative.o `test -f 'dae_index_reduction/dummy_derivative.cpp' || echo '$(srcdir)/'`dae_index_reduction/dummy_derivative.cpp

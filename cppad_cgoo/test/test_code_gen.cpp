@@ -46,6 +46,22 @@ extern bool Unary();
 extern bool Dynamic();
 //extern bool HandlerReset();
 
+// solve
+extern bool SolveAdd();
+extern bool SolveCosh();
+extern bool SolveDiv();
+extern bool SolveExp();
+extern bool SolveLog();
+extern bool SolveLog10();
+extern bool SolveMul();
+extern bool SolvePow();
+extern bool SolveSinh();
+extern bool SolveSqrt();
+extern bool SolveSub();
+extern bool SolveTanh();
+extern bool SolveUnaryMinus();
+
+// DAE index reduction
 extern bool Pantelides();
 extern bool DummyDeriv();
 
@@ -112,6 +128,21 @@ int main(void) {
 
     ok &= Run(Dynamic, "Dynamic");
 
+    // Solve
+    ok &= Run(SolveAdd, "SolveAdd");
+    ok &= Run(SolveTanh, "SolveCosh");
+    ok &= Run(SolveDiv, "SolveDiv");
+    ok &= Run(SolveExp, "SolveExp");
+    ok &= Run(SolveLog, "SolveLog");
+    ok &= Run(SolveLog10, "SolveLog10");
+    ok &= Run(SolveMul, "SolveMul");
+    ok &= Run(SolvePow, "SolvePow");
+    ok &= Run(SolveTanh, "SolveSinh");
+    ok &= Run(SolveSqrt, "SolveSqrt");
+    ok &= Run(SolveSub, "SolveSub");
+    ok &= Run(SolveTanh, "SolveTanh");
+    ok &= Run(SolveUnaryMinus, "SolveUnaryMinus");
+    
     // DAE index reduction
     ok &= Run(Pantelides, "Pantelides");
     ok &= Run(DummyDeriv, "DummyDerivatives");

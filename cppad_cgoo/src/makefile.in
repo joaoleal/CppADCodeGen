@@ -253,7 +253,9 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_math_other.hpp \
 	cppad_cgoo/cg_operation.hpp \
 	cppad_cgoo/cg_ordered.hpp \
+	cppad_cgoo/cg_solver.hpp \
 	cppad_cgoo/cg_source_code_fragment.hpp \
+	cppad_cgoo/cg_source_code_path.hpp \
 	cppad_cgoo/cg_unary.hpp \
 	cppad_cgoo/cg_util.hpp \
 	cppad_cgoo/cg_variable.hpp \

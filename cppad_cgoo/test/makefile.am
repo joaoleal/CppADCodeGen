@@ -59,6 +59,20 @@ testCGOO_SOURCES        = \
 	unary.cpp \
 	gcc_load_dynamic.cpp \
 	dynamic.cpp \
+	solve/solve_add.cpp \
+	solve/solve_cosh.cpp \
+	solve/solve_div.cpp \
+	solve/solve_exp.cpp \
+	solve/solve_log.cpp \
+	solve/solve_log_10.cpp \
+	solve/solve_mul.cpp \
+	solve/solve_pow.cpp \
+	solve/solve_sinh.cpp \
+	solve/solve_sqrt.cpp \
+	solve/solve_sub.cpp \
+	solve/solve_tanh.cpp \
+	solve/test_solve.cpp \
+	solve/solve_unary.cpp \
 	dae_index_reduction/dummy_derivative.cpp \
 	dae_index_reduction/pantelides.cpp \
 	TestException.cpp

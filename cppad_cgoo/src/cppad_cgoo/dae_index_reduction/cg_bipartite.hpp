@@ -74,16 +74,30 @@ namespace CppAD {
          * 
          */
         Enode<Base>* differentiationOf_;
+        /**
+         * true if this equation is a purely algebraic equation
+         */
+        bool algebraic_;
     public:
 
-        inline Enode(size_t index, Enode<Base>* differentiationOf = NULL, Enode<Base>* diff = NULL) :
+        inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
-            differentiation_(diff),
-            differentiationOf_(differentiationOf) {
+            differentiation_(NULL),
+            differentiationOf_(NULL),
+            algebraic_(true) {
+        }
 
-            if (differentiationOf_ != NULL) {
-                differentiationOf_->setDerivative(this);
-            }
+        inline Enode(size_t index, Enode<Base>* differentiationOf) :
+            BiPGraphNode<Base>(index),
+            differentiation_(NULL),
+            differentiationOf_(differentiationOf),
+            algebraic_(true) {
+
+            differentiationOf_->setDerivative(this);
+        }
+
+        inline bool isAlgebraic() const {
+            return algebraic_;
         }
 
         inline const std::set<Vnode<Base>*>& variables() const {
@@ -96,6 +110,9 @@ namespace CppAD {
 
         inline void addVariable(Vnode<Base>* j) {
             vnodes_orig_.insert(j);
+            if (j->derivativeOf() != NULL) {
+                algebraic_ = false;
+            }
             if (!j->isDeleted()) {
                 vnodes_.insert(j);
                 j->addEquation(this);
@@ -184,38 +201,48 @@ namespace CppAD {
          */
         Vnode<Base>* derivativeOf_;
         /**
+         * The index in the tape
+         */
+        size_t tapeIndex_;
+        /**
          * name
          */
         std::string name_;
+
     public:
 
-        inline Vnode(size_t index, const std::string& name) :
+        inline Vnode(size_t index, int tapeIndex, const std::string& name) :
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
             assign_(NULL),
             derivative_(NULL),
             derivativeOf_(NULL),
+            tapeIndex_(tapeIndex),
             name_(name) {
 
         }
 
-        inline Vnode(size_t index, Vnode<Base>* derivativeOf, Vnode<Base>* diff = NULL) :
+        inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf) :
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
             assign_(NULL),
-            derivative_(diff),
+            derivative_(NULL),
             derivativeOf_(derivativeOf),
+            tapeIndex_(tapeIndex),
             name_("d" + derivativeOf->name() + "dt") {
             assert(derivativeOf_ != NULL);
 
             derivativeOf_->setDerivative(this);
-
         }
 
         const std::string& name() const {
             return name_;
+        }
+
+        size_t tapeIndex() const {
+            return tapeIndex_;
         }
 
         inline const std::set<Enode<Base>*>& equations() const {
@@ -238,6 +265,14 @@ namespace CppAD {
 
         inline Vnode<Base>* originalVariable() {
             if (derivativeOf_ == NULL) {
+                return this;
+            } else {
+                return derivativeOf_->originalVariable();
+            }
+        }
+
+        inline Vnode<Base>* originalVariable(size_t origVarSize) {
+            if (derivativeOf_ == NULL || this->index_ < origVarSize) {
                 return this;
             } else {
                 return derivativeOf_->originalVariable();

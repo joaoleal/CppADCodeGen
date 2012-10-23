@@ -22,12 +22,16 @@ inline bool PantelidesPendulum2D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
 
-    std::vector<bool> eqDifferentialInfo(5, true);
-    eqDifferentialInfo[4] = false;
-    std::vector<bool> varInfo(6, true);
-    varInfo[5] = false;
+    std::vector<int> derivative(10, -1);
+    derivative[0] = 6;
+    derivative[1] = 7;
+    derivative[2] = 8;
+    derivative[3] = 9;
 
-    Plantelides<double> pantelides(fun, eqDifferentialInfo, varInfo);
+    std::vector<bool> timeDependent(10, true);
+    timeDependent[5] = false;
+
+    Plantelides<double> pantelides(fun, derivative, timeDependent);
 
     pantelides.reduceIndex();
 
@@ -44,11 +48,17 @@ inline bool PantelidesPendulum3D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
 
-    std::vector<bool> eqDifferentialInfo(7, true);
-    eqDifferentialInfo[6] = false;
-    std::vector<bool> varInfo(7, true);
+    std::vector<int> derivative(13, -1);
+    derivative[0] = 7;
+    derivative[1] = 8;
+    derivative[2] = 9;
+    derivative[3] = 10;
+    derivative[4] = 11;
+    derivative[5] = 12;
 
-    Plantelides<double> pantelides(fun, eqDifferentialInfo, varInfo);
+    std::vector<bool> timeDependent(13, true);
+    
+    Plantelides<double> pantelides(fun, derivative, timeDependent);
 
     pantelides.reduceIndex();
 

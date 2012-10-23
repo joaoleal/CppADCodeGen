@@ -95,6 +95,8 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 // additional utlities
 #include <cppad_cgoo/cg_util.hpp>
 #include <cppad_cgoo/cg_evaluator.hpp>
+#include <cppad_cgoo/cg_source_code_path.hpp>
+#include <cppad_cgoo/cg_solver.hpp>
 
 // ---------------------------------------------------------------------------
 // C source code generation

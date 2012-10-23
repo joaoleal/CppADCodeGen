@@ -12,39 +12,46 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 namespace CppAD {
-
+   
     /**
      * Base class for algorithms that perform automatic (differentiation) index
-     * reduction of semi-implicit DAEs.
+     * reduction of implicit DAEs.
      */
     template<class Base>
     class DaeIndexReduction {
     protected:
+        /**
+         * The original model
+         */
         ADFun<CG<Base> >* fun_;
-        // defines the equations that are differential: dxdt = ...
-        const std::vector<bool> eqDifferentialInfo_;
+        /** Defines the variable index that represents the time derivative. 
+         * A negative value means that there isn't any time derivative for the
+         * current variable.
+         */
+        const std::vector<int> derivative_;
         // defines the independent variables that dependent on time
-        const std::vector<bool> varInfo_;
+        const std::vector<bool> timeDependent_;
     public:
 
         /**
          * Creates a new DAE model index reduction algorithm.
          * 
          * \param fun  The original (high index) model
-         * \param eqDifferentialInfo  Defines the equations that are
-         *                             differential
-         * \param varInfo  Defines the independent variables that dependent on
-         *                  time
+         * \param derivative  Defines the variable index that represents the 
+         *                    time derivative.  A negative value means that 
+         *                    there isn't any time derivative for the current 
+         *                    variable.
+         * \param timeDepebdent Defines the time dependent variables.
          */
         DaeIndexReduction(ADFun<CG<Base> >* fun,
-                          const std::vector<bool>& eqDifferentialInfo,
-                          const std::vector<bool>& varInfo) :
+                          const std::vector<int>& derivative,
+                          const std::vector<bool>& timeDependent) :
             fun_(fun),
-            eqDifferentialInfo_(eqDifferentialInfo),
-            varInfo_(varInfo) {
+            derivative_(derivative),
+            timeDependent_(timeDependent) {
             assert(fun_ != NULL);
-            assert(eqDifferentialInfo_.size() == fun->Range());
-            assert(varInfo_.size() == fun->Domain());
+            assert(derivative_.size() == fun->Domain());
+            assert(timeDependent_.size() == fun->Domain());
         }
     };
 }
