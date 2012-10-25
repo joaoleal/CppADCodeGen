@@ -26,7 +26,9 @@ namespace CppAD {
     public:
 
         /**
-         * \param dep dependent variable vector (all variables must belong to the same code handler)
+         * \param handler The source code handler
+         * \param dep Dependent variable vector (all variables must belong to
+         *             the same code handler)
          */
         Evaluator(const CodeHandler<Base>& handler, const std::vector<CG<Base> >& dep) :
             handler_(&handler),
@@ -34,6 +36,13 @@ namespace CppAD {
             indep_(NULL) {
         }
 
+        /**
+         * Performs all the operations required to calculate the dependent 
+         * variables with a (potentially) new data type
+         * 
+         * \param indep The new independent variables.
+         * \return The dependent variable values
+         */
         inline std::vector<AD<BaseOut> > evaluate(const std::vector<AD<BaseOut> >& indep) throw (CGException) {
             if (handler_->getIndependentVariableSize() != indep.size()) {
                 std::stringstream ss;
@@ -65,7 +74,7 @@ namespace CppAD {
         inline AD<BaseOut> evalCG(const CG<Base>& dep) const throw (CGException) {
             if (dep.isParameter()) {
                 // parameter
-                return AD<BaseOut> (dep.getParameterValue());
+                return AD<BaseOut > (dep.getParameterValue());
             } else {
                 return evalSourceCodeFragment(*dep.getSourceCodeFragment());
             }
@@ -76,7 +85,7 @@ namespace CppAD {
                 return evalSourceCodeFragment(*arg.operation());
             } else {
                 // parameter
-                return AD<BaseOut> (*arg.parameter());
+                return AD<BaseOut > (*arg.parameter());
             }
         }
 

@@ -1,10 +1,5 @@
 #ifndef CG_SOLVER_INCLUDED
 #define	CG_SOLVER_INCLUDED
-
-#include "cg_source_code_path.hpp"
-#include "cg_source_code_fragment.hpp"
-#include "cg_argument.hpp"
-
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -18,14 +13,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 namespace CppAD {
 
-    /**
-     * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
-     * The variable can appear only once in the expression.
-     * 
-     * \param expression  The original expression (f(x, y))
-     * \param code  The variable to solve for
-     * \return  The expression for variable
-     */
     template<class Base>
     inline CG<Base> CodeHandler<Base>::solveFor(SourceCodeFragment<Base>* expression,
                                                 SourceCodeFragment<Base>* code) throw (CGException) {

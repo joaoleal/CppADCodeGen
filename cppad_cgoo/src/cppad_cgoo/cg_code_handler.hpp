@@ -218,8 +218,30 @@ namespace CppAD {
             _used = false;
         }
 
+        /**
+         * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
+         * The variable can appear only once in the expression.
+         * 
+         * \param expression  The original expression (f(x, y))
+         * \param code  The variable to solve for
+         * \return  The expression for variable
+         */
         inline CG<Base> solveFor(SourceCodeFragment<Base>* expression,
                                  SourceCodeFragment<Base>* code) throw (CGException);
+
+        /**
+         * Eliminates an independent variable by substitution using the provided
+         * dependent variable which is assumed to be a residual of an equation.
+         * If successful the model will contain one less independent variable.
+         * 
+         * \param indep The independent variable to eliminate.
+         * \param dep The dependent variable representing a residual
+         */
+        inline void substituteIndependent(const CG<Base>& indep,
+                                          const CG<Base>& dep) throw (CGException);
+
+        inline void substituteIndependent(SourceCodeFragment<Base>* indep,
+                                          SourceCodeFragment<Base>* dep) throw (CGException);
 
         virtual ~CodeHandler() {
             reset();

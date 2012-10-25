@@ -35,8 +35,8 @@ inline bool DummyDerivPendulum2D() {
 
     x[6] = 0.0; // dxdt
     x[7] = 0.0; // dydt
-    x[8] = 0.0; // dvxdt
-    x[9] = 0.0; // dvydt
+    x[8] = -1.0; // dvxdt
+    x[9] = 9.80665; // dvydt
 
     std::vector<int> derivative(10, -1);
     derivative[0] = 6;
@@ -50,6 +50,8 @@ inline bool DummyDerivPendulum2D() {
     DummyDerivatives<double> dummyD(fun, derivative, timeDependent, x, normVar, normEq);
 
     dummyD.reduceIndex();
+    
+    dummyD.reduceEquations();
 
     delete fun;
 

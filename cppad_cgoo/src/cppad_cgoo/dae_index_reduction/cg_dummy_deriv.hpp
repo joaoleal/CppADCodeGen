@@ -2,8 +2,10 @@
 #define	CPPAD_CG_DUMMY_DERIV_INCLUDED
 
 #include <Eigen/Dense>
+#include <Eigen/Sparse>
 #include <Eigen/Eigenvalues>
-#include <unsupported/Eigen/NonLinearOptimization>
+#include <Eigen/LU>
+//#include <unsupported/Eigen/NonLinearOptimization>
 
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
@@ -49,7 +51,7 @@ namespace CppAD {
          *  equations relative to the time derivatives
          *  (in the new variable order).
          */
-        Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> jacobian_;
+        Eigen::SparseMatrix<Base, Eigen::RowMajor> jacobian_;
         /**
          * Dummy derivatives
          */
@@ -126,7 +128,7 @@ namespace CppAD {
             }
 
 
-            MatrixB workJac;
+            Eigen::SparseMatrix<Base> workJac;
 
             while (true) {
 
@@ -143,12 +145,13 @@ namespace CppAD {
 #endif
 
                 // create the Jacobian for the selected variables and equations
+                workJac.setZero();
                 workJac.resize(eqs.size(), vars.size());
                 for (size_t i = 0; i < eqs.size(); i++) {
                     Enode<Base>* ii = eqs[i];
                     for (size_t j = 0; j < vars.size(); j++) {
                         Vnode<Base>* jj = vars[j];
-                        workJac(i, j) = jacobian_(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                        workJac.coeffRef(i, j) = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
                     }
                 }
 
@@ -198,6 +201,59 @@ namespace CppAD {
             // create a new tape for the model with the new variables
             generateSystem();
 
+        }
+
+        inline void reduceEquations() {
+            using std::vector;
+            typedef CG<Base> CGBase;
+            typedef AD<CGBase> ADCG;
+
+            if (this->reducedFun_ == NULL) {
+                throw CGException("reduceIndex() must be called before reduceEquations()");
+            }
+
+            CodeHandler<Base> handler;
+
+            vector<CGBase> indep0(this->reducedFun_->Domain());
+            handler.makeVariables(indep0);
+
+            const vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
+
+            // determine if the time derivative variable is present in the
+            // equation only multiplied by a constant value
+            std::set<size_t> removedEquations;
+            typename std::set<Vnode<Base>* >::const_iterator j;
+            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
+                Vnode<Base>* dummy = *j;
+
+                Enode<Base>* i = dummy->assigmentEquation();
+                removedEquations.insert(i->index());
+
+                // eliminate all references to the dummy variable by substitution
+                handler.substituteIndependent(indep0[dummy->tapeIndex()], res0[i->index()]);
+            }
+
+            /**
+             * create a new tape without the dummy derivatives and with 
+             * less equations
+             */
+            vector<ADCG> indepNew(handler.getIndependentVariableSize());
+            Independent(indepNew);
+
+            // one less equation
+            vector<CGBase> resNew(this->reducedFun_->Range() - dummyD_.size());
+            for (size_t i = 0, p = 0; i< this->enodes_.size(); i++) {
+                if (removedEquations.find(i) != removedEquations.end()) {
+                    resNew[p++] = res0[i];
+                }
+            }
+
+            Evaluator<Base, CG<Base> > evaluator0(handler, resNew);
+            vector<ADCG> depNew = evaluator0.evaluate(indepNew);
+            depNew.resize(this->enodes_.size());
+
+            delete this->reducedFun_;
+            this->reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
         }
 
     protected:
@@ -260,7 +316,8 @@ namespace CppAD {
                                                      row, col, jac, work);
 
             // resize and zero matrix
-            jacobian_.setZero(m - diffEqStart_, n - diffVarStart_);
+            //jacobian_.setZero(m - diffEqStart_, n - diffVarStart_);
+            jacobian_.resize(m - diffEqStart_, n - diffVarStart_);
 
             map<size_t, Vnode<Base>*> origIndex2var;
             for (size_t j = diffVarStart_; j< this->vnodes_.size(); j++) {
@@ -281,17 +338,23 @@ namespace CppAD {
                 Base normVal = jac[e].getParameterValue() * normVar_[vOrig->tapeIndex()]
                         / normEq_[eqOrig->index()];
 
-                jacobian_(row[e] - diffEqStart_, col[e] - diffVarStart_) = normVal;
+                size_t i = row[e]; // same order
+                size_t j = origIndex2var[col[e]]->index(); // different order than in model/tape
+
+                jacobian_.coeffRef(i - diffEqStart_, j - diffVarStart_) = normVal;
             }
+
+            jacobian_.makeCompressed();
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             cout << "partial jacobian:\n" << jacobian_ << "\n\n";
+            //cout << jacobian_.triangularView<Eigen::Lower > () << "\n\n";
 #endif
         }
 
         inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
                                            const std::vector<Vnode<Base>* >& vars,
-                                           MatrixB& subsetJac) throw (CGException) {
+                                           Eigen::SparseMatrix<Base>& subsetJac) throw (CGException) {
 
             if (eqs.size() == vars.size()) {
                 dummyD_.insert(vars.begin(), vars.end());
@@ -304,22 +367,74 @@ namespace CppAD {
                 return;
             }
 
+            /**
+             * Fill in the Jacobian subset for the selected equations and variables
+             */
             subsetJac.resize(eqs.size(), vars.size());
+            std::vector<size_t> rowNnz(eqs.size()); // the number of non-zero elements per row
+            std::vector<size_t> rowNnzCol(eqs.size()); // the last defined column for each row
             for (size_t i = 0; i < eqs.size(); i++) {
                 Enode<Base>* ii = eqs[i];
                 for (size_t j = 0; j < vars.size(); j++) {
                     Vnode<Base>* jj = vars[j];
-                    subsetJac(i, j) = jacobian_(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                    Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                    if (val != Base(0.0)) {
+                        subsetJac.coeffRef(i, j) = val;
+                        rowNnz[i]++;
+                        rowNnzCol[i] = j;
+                    }
                 }
+            }
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::cout << "subset Jac:\n" << subsetJac << "\n";
+#endif
+
+            MatrixB workJac(eqs.size(), eqs.size());
+
+            /**
+             * Determine the columns that cannot be removed
+             */
+            std::set<size_t> fixedCols;
+            for (size_t i = 0; i < rowNnz.size(); ++i) {
+                if (rowNnz[i] == 1) {
+                    fixedCols.insert(rowNnzCol[i]);
+                }
+            }
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            if (!fixedCols.empty()) {
+                std::cout << " fixed columns:";
+                for (std::set<size_t>::const_iterator it = fixedCols.begin(); it != fixedCols.end(); ++it) {
+                    std::cout << " " << *vars[*it];
+                }
+                std::cout << "\n";
+            }
+#endif
+
+            /**
+             * column indexes that can be added/removed from the selection
+             */
+            std::vector<size_t> freeCols;
+            for (size_t j = 0; j < vars.size(); ++j) {
+                if (fixedCols.find(j) == fixedCols.end()) {
+                    freeCols.push_back(j);
+                }
+            }
+
+            std::vector<size_t> vcols2keep(eqs.size() - fixedCols.size());
+            for (size_t c = 0; c < vcols2keep.size(); c++) {
+                vcols2keep[c] = c;
             }
 
             // number of columns/variables to remove (the remaining will be dummy derivatives)
             std::vector<size_t> cols2keep(eqs.size());
-            for (size_t c = 0; c < eqs.size(); c++) {
-                cols2keep[c] = c;
+            {
+                std::set<size_t> cols2keepAux(fixedCols);
+                for (size_t c = 0; c < vcols2keep.size(); c++) {
+                    cols2keepAux.insert(freeCols[c]);
+                }
+                std::copy(cols2keepAux.begin(), cols2keepAux.end(), cols2keep.begin());
             }
-
-            MatrixB workJac(eqs.size(), eqs.size());
 
             /**
              * Brute force approach!!!
@@ -336,17 +451,20 @@ namespace CppAD {
                     std::cout << cols2keep[s] << " ";
                 std::cout << " \n";
 #endif
-
-                for (size_t i = 0; i < eqs.size(); i++) {
-                    for (size_t j = 0; j < cols2keep.size(); j++) {
-                        workJac(i, j) = subsetJac(i, cols2keep[j]);
+                workJac.setZero(eqs.size(), eqs.size());
+                for (size_t c = 0; c < cols2keep.size(); ++c) {
+                    typename Eigen::SparseMatrix<Base>::InnerIterator itCol(subsetJac, cols2keep[c]);
+                    for (; itCol; ++itCol) {
+                        assert(itCol.col() == cols2keep[c]);
+                        workJac(itCol.row(), c) = itCol.value();
                     }
                 }
+
 #ifdef CPPAD_CG_DAE_VERBOSE
                 std::cout << "    current jac:\n" << workJac << "\n";
 #endif
 
-                Base cond = evalMatrixCondition(workJac);
+                Base cond = evalBestMatrixCondition(workJac);
 
 #ifdef CPPAD_CG_DAE_VERBOSE
                 std::cout << "    condition: " << cond << "\n";
@@ -358,34 +476,21 @@ namespace CppAD {
                     for (size_t j = 0; j < cols2keep.size(); j++) {
                         totalOrd += vars[cols2keep[j]]->order();
                     }
-                    if (cond <= bestCond) {
-                        if (totalOrd >= bestTotalOrder) {
-                            bestTotalOrder = totalOrd;
-                            bestCond = cond;
-                            bestCols2keep = cols2keep;
-                        }
+                    if ((totalOrd > bestTotalOrder && cond / Base(10.0) <= bestCond) ||
+                            (totalOrd == bestTotalOrder && cond < bestCond) ||
+                            (totalOrd < bestTotalOrder && cond * Base(10.0) <= bestCond)) {
+                        bestTotalOrder = totalOrd;
+                        bestCond = cond;
+                        bestCols2keep = cols2keep;
                     }
                 }
 
                 /**
                  * determine the next set of columns
                  */
-                if (cols2keep.back() == vars.size() - 1) {
-                    if (cols2keep[0] == vars.size() - cols2keep.size())
-                        break; // end of combinations
-
-                    for (size_t cc = 1; cc < cols2keep.size(); cc++) {
-                        if (cols2keep[cc] == vars.size() - (cols2keep.size() - cc)) {
-                            cols2keep[cc - 1]++;
-                            for (size_t cc2 = cc; cc2 < cols2keep.size(); cc2++) {
-                                cols2keep[cc2] = cols2keep[cc2 - 1] + 1;
-                            }
-                            break;
-                        }
-                    }
-                } else {
-                    cols2keep.back()++;
-                }
+                cols2keep = nextColumnSelection(fixedCols, freeCols, vcols2keep);
+                if (cols2keep.empty())
+                    break;
             };
 
             if (bestCols2keep.empty()) {
@@ -405,12 +510,46 @@ namespace CppAD {
 
         }
 
-        inline void reduceEquations() {
-         
-            // determine if the time derivative variable is present in the
-            // equation only multiplied by a constant value
-            
-            
+        /**
+         * 
+         * \param fixedCols Column indeces that must be selected
+         * \param freeCols Column that can be selected (excluding the fixedCols)
+         * \param vcols2keep The previous column selection from the free columns
+         * @return the next column selection
+         */
+        inline std::vector<size_t > nextColumnSelection(const std::set<size_t>& fixedCols,
+                                                        const std::vector<size_t>& freeCols,
+                                                        std::vector<size_t>& vcols2keep) const {
+
+            if (vcols2keep.empty()) {
+                return std::vector<size_t > (0); // end of combinations
+            }
+
+            if (vcols2keep.back() == freeCols.size() - 1) {
+                if (vcols2keep[0] == freeCols.size() - vcols2keep.size())
+                    return std::vector<size_t > (0); // end of combinations
+
+                for (size_t cc = 1; cc < vcols2keep.size(); cc++) {
+                    if (vcols2keep[cc] == freeCols.size() - (vcols2keep.size() - cc)) {
+                        vcols2keep[cc - 1]++;
+                        for (size_t cc2 = cc; cc2 < vcols2keep.size(); cc2++) {
+                            vcols2keep[cc2] = vcols2keep[cc2 - 1] + 1;
+                        }
+                        break;
+                    }
+                }
+            } else {
+                vcols2keep.back()++;
+            }
+
+            std::set<size_t> cols2keep(fixedCols);
+
+            for (size_t c = 0; c < vcols2keep.size(); c++) {
+                size_t vColIndex = freeCols[vcols2keep[c]];
+                cols2keep.insert(vColIndex);
+            }
+
+            return std::vector<size_t > (cols2keep.begin(), cols2keep.end());
         }
 
         inline void generateSystem() {
@@ -460,64 +599,45 @@ namespace CppAD {
 
             }
 
-            typename std::set<Vnode<Base>* >::const_iterator j;
-            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                //find equation used to 
-            }
-
-            for (size_t i = 0; i< this->enodes_.size(); i++) {
-                Enode<Base>* ii = this->enodes_[i];
-
-            }
-
-
-            /**
-             * generate a new tape
-             */
-            delete this->reducedFun_;
-
-            vector<ADCG> indepNew(this->vnodes_.size() + 1); // variables, time derivatives, time
-            Independent(indepNew);
-
-            // variables with the relationship between x dxdt and t
-            vector<ADCG> indep2 = prepareTimeDependentVariables(indepNew);
-            indep2.resize(indep0.size());
-
-            Evaluator<Base, CG<Base> > evaluator0(handler, dep0);
-            vector<ADCG> depNew = evaluator0.evaluate(indep2);
-            depNew.resize(this->enodes_.size());
-
-            this->reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
-
 #ifdef CPPAD_CG_DAE_VERBOSE
-            printModel(this->reducedFun_);
+            this->printModel(this->reducedFun_);
 #endif
-
         }
 
-        static Base evalMatrixCondition(const MatrixB& mat) {
-            /**
-             * determine eigenvalues
-             */
-            VectorCB eigenv = mat.eigenvalues();
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "    eigen values:\n" << eigenv << "\n";
-#endif
+        /**
+         * Determines the best matrix
+         * \param mat The matrix
+         * @return The best condition value (lowest possible and real)
+         */
+        static Base evalBestMatrixCondition(const MatrixB& mat) {
+
+            Eigen::FullPivLU<MatrixB> lu = mat.fullPivLu();
+            //  MatrixB l = MatrixB::Identity(mat.rows(), mat.cols());
+            //  l.template triangularView<Eigen::StrictlyLower > () = lu.matrixLU();
+            MatrixB u = lu.matrixLU().template triangularView<Eigen::Upper > ();
+
+            //  std::cout << "mat:\n" << mat << "\n\n";
+            //  std::cout << "L:\n" << l << "\n\n";
+            //  std::cout << "U:\n" << u << "\n\n";
+
+            //VectorCB eigenv = u.eigenvalues();            
+            //std::cout << "    eigen values:\n" << eigenv << "\n";
 
             /**
-             * determine condition
+             * determine condition of U 
+             * (the eigenvalues are in the diagonal)
              */
-            if (eigenv(0).imag() != 0) {
+            if (u(0, 0) == 0) {
                 return std::numeric_limits<Base>::quiet_NaN();
             }
-            Base max = std::abs(eigenv(0).real());
+            Base max = std::abs(u(0, 0));
             Base min = max;
 
-            for (size_t r = 1; r < eigenv.rows(); r++) {
-                if (eigenv(r).imag() != 0) {
+            for (size_t r = 1; r < u.rows(); r++) {
+                if (u(r, r) == 0) {
                     return std::numeric_limits<Base>::quiet_NaN();
                 }
-                Base eigv = std::abs(eigenv(r).real());
+                Base eigv = std::abs(u(r, r));
                 if (eigv > max) {
                     max = eigv;
                 } else if (eigv < min) {
@@ -693,8 +813,6 @@ namespace CppAD {
                 return 0;
             }
         };
-
-
 
     };
 }

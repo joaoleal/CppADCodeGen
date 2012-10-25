@@ -1,13 +1,24 @@
+/* --------------------------------------------------------------------------
+CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
+
+CppAD is distributed under multiple licenses. This distribution is under
+the terms of the 
+                    Common Public License Version 1.0.
+
+A copy of this license is included in the COPYING file of this distribution.
+Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
+-------------------------------------------------------------------------- */
+#include <sys/types.h>
+#include <sys/wait.h>
+
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
 #include <unistd.h>
-#include <sys/wait.h>
 #include <vector>
 
 #include "gcc_load_dynamic.hpp"
-#include "cppad/local/ad_fun.hpp"
-#include "cppad/vector.hpp"
+//#include "cppad/local/ad_fun.hpp"
+//#include "cppad/vector.hpp"
 
 using namespace std;
 using namespace CppAD;
