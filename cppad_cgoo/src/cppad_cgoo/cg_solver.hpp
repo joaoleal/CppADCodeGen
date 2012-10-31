@@ -77,6 +77,9 @@ namespace CppAD {
                     rightHs -= CG<Base > (*this, other);
                     break;
                 }
+                case CGAliasOp:
+                    // do nothing 
+                    break;
                 case CGSubOp:
                 {
                     if (argIndex == 0) {

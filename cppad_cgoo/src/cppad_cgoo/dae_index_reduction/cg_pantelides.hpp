@@ -31,11 +31,11 @@ namespace CppAD {
     public:
 
         Plantelides(ADFun<CG<Base> >* fun,
-                    const std::vector<int>& derivative,
-                    const std::vector<bool>& timeDependent) :
-            DaeIndexReduction<Base>(fun, derivative, timeDependent),
-            reducedFun_(NULL),
-            origMaxTimeDivOrder_(0) {
+                const std::vector<int>& derivative,
+                const std::vector<bool>& timeDependent) :
+        DaeIndexReduction<Base>(fun, derivative, timeDependent),
+        reducedFun_(NULL),
+        origMaxTimeDivOrder_(0) {
 
             using namespace std;
             using std::vector;
@@ -479,7 +479,7 @@ namespace CppAD {
         }
 
         inline void forwardTimeDiff(const std::vector<Enode<Base>*>& equations,
-                                    std::vector<CG<Base> >& dep) const {
+                std::vector<CG<Base> >& dep) const {
             typedef CG<Base> CGBase;
             typedef AD<CGBase> ADCG;
 
@@ -496,7 +496,7 @@ namespace CppAD {
         }
 
         inline void reverseTimeDiff(const std::vector<Enode<Base>*>& equations,
-                                    std::vector<CG<Base> >& dep) const {
+                std::vector<CG<Base> >& dep) const {
             size_t m = reducedFun_->Domain();
             size_t n = reducedFun_->Range();
             std::vector<CG<Base> > u(m);
@@ -567,13 +567,31 @@ namespace CppAD {
         }
 
         /**
-         * Prints out a DAE model to the stardard output.
+         * Prints out a DAE model to the standard output.
          * 
          * \param fun  The taped model
          */
         inline void printModel(ADFun<CG<Base> >* fun) {
+            std::vector<std::string> indepNames(fun->Domain());
+            
+            for (size_t j = 0; j < vnodes_.size(); j++) {
+                Vnode<Base>* jj = vnodes_[j];
+                indepNames[jj->tapeIndex()] = jj->name();
+            }
+
+            printModel(fun, indepNames);
+        }
+
+        /**
+         * Prints out a DAE model to the standard output.
+         * 
+         * \param fun  The taped model
+         * \param vnodes  The independent variables
+         */
+        inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<std::string>& indepNames) {
 
             assert(fun != NULL);
+            assert(fun->Domain() == indepNames.size() || fun->Domain() == indepNames.size() + 1); // with or without time
 
             CodeHandler<Base> handler;
 
@@ -588,18 +606,12 @@ namespace CppAD {
              * create variable names
              */
             std::vector<std::string> depNames;
-            std::vector<std::string> indepNames(indep0.size());
-
-            for (size_t j = 0; j < vnodes_.size(); j++) {
-                Vnode<Base>* jj = vnodes_[j];
-                indepNames[j] = jj->name();
-            }
 
             /**
              * generate the source code
              */
             CLangCustomVariableNameGenerator<double> nameGen(depNames, indepNames,
-                                                             "res", "ind", "var");
+                    "res", "ind", "var");
 
             std::ostringstream code;
             handler.generateCode(code, langC, dep0, nameGen);

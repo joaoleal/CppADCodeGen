@@ -110,6 +110,9 @@ namespace CppAD {
                 case CGAddOp: //  a + b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition");
                     return evalArg(args[0]) + evalArg(args[1]);
+                case CGAliasOp:
+                    CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias");
+                    return evalArg(args[0]);
                 case CGAsinOp: // asin(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()");
                     return asin(evalArg(args[0]));

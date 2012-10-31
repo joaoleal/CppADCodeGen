@@ -43,60 +43,60 @@ namespace CppAD {
     public:
 
         inline SourceCodeFragment(CGOpCode op) :
-            operation_(op),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(0),
-            name_(NULL) {
+        operation_(op),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        use_count_(0),
+        last_usage_order_(0),
+        name_(NULL) {
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg) :
-            operation_(op),
-            arguments_(1),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(0),
-            name_(NULL) {
+                const Argument<Base>& arg) :
+        operation_(op),
+        arguments_(1),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        use_count_(0),
+        last_usage_order_(0),
+        name_(NULL) {
             assert(arg.operation() != NULL);
             arguments_[0] = arg;
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg1,
-                                  const Argument<Base>& arg2) :
-            operation_(op),
-            arguments_(2),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(0),
-            name_(NULL) {
+                const Argument<Base>& arg1,
+                const Argument<Base>& arg2) :
+        operation_(op),
+        arguments_(2),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        use_count_(0),
+        last_usage_order_(0),
+        name_(NULL) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
         }
 
         inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg1,
-                                  const Argument<Base>& arg2,
-                                  const Argument<Base>& arg3,
-                                  const Argument<Base>& arg4) :
-            operation_(op),
-            arguments_(4),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(0),
-            name_(NULL) {
+                const Argument<Base>& arg1,
+                const Argument<Base>& arg2,
+                const Argument<Base>& arg3,
+                const Argument<Base>& arg4) :
+        operation_(op),
+        arguments_(4),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        use_count_(0),
+        last_usage_order_(0),
+        name_(NULL) {
             assert(arg1.operation() != NULL || arg2.operation() != NULL ||
-                   arg3.operation() != NULL || arg4.operation() != NULL);
+                    arg3.operation() != NULL || arg4.operation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
             arguments_[2] = arg3;
@@ -104,14 +104,23 @@ namespace CppAD {
         }
 
         SourceCodeFragment(const SourceCodeFragment& orig) :
-            operation_(orig.operation_),
-            arguments_(orig.arguments_),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(orig.last_usage_order_),
-            name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
+        operation_(orig.operation_),
+        arguments_(orig.arguments_),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        use_count_(0),
+        last_usage_order_(orig.last_usage_order_),
+        name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
+        }
+
+        inline void makeAlias(const Argument<Base>& other) {
+            operation_ = CGAliasOp;
+            arguments_.resize(1);
+            arguments_[0] = other;
+            var_id_ = 0;
+            delete name_;
+            name_ = NULL;
         }
 
         inline CGOpCode operation() const {
@@ -151,7 +160,7 @@ namespace CppAD {
         inline void setEvaluationOrder(size_t evaluation_order) {
             evaluation_order_ = evaluation_order;
         }
-        
+
         /**
          * Provides the total number of times the result of this operation is being 
          * used as an argument for another operation.
@@ -209,6 +218,9 @@ namespace CppAD {
                 break;
             case CGAddOp:
                 os << "$1 + $2";
+                break;
+            case CGAliasOp:
+                os << "alias($1)";
                 break;
             case CGAsinOp:
                 os << "asin( $1 )";

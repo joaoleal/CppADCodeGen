@@ -79,7 +79,14 @@ namespace {
         std::streamsize width = 20;
         //
         ok &= name.size() < size_t(width);
-        ok &= TestOk();
+        try {
+            ok &= TestOk();
+        } catch (const std::exception& ex) {
+            std::cerr << "   Error: " << ex.what() << std::endl;
+            ok = false;
+        } catch (...) {
+            ok = false;
+        }
 
         std::cout.width(width);
         std::cout.setf(std::ios_base::left);
@@ -142,7 +149,7 @@ int main(void) {
     ok &= Run(SolveSub, "SolveSub");
     ok &= Run(SolveTanh, "SolveTanh");
     ok &= Run(SolveUnaryMinus, "SolveUnaryMinus");
-    
+
     // DAE index reduction
     ok &= Run(Pantelides, "Pantelides");
     ok &= Run(DummyDeriv, "DummyDerivatives");

@@ -22,6 +22,7 @@ namespace CppAD {
         CGAbsOp, //  abs(variable)
         CGAcosOp, // asin(variable)
         CGAddOp, //  a + b
+        CGAliasOp, //  alias (reference to another operation)
         CGAsinOp, // asin(variable)
         CGAtanOp, // atan(variable)
         CGComOpLt, // result = left < right? trueCase: falseCase
