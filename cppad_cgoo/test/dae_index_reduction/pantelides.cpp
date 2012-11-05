@@ -22,20 +22,20 @@ inline bool PantelidesPendulum2D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
 
-    std::vector<int> derivative(10, -1);
-    derivative[0] = 6;
-    derivative[1] = 7;
-    derivative[2] = 8;
-    derivative[3] = 9;
+    std::vector<DaeVarInfo> daeVar(10);
+    daeVar[5].makeTimeIndependent();
+    daeVar[6] = 0;
+    daeVar[7] = 1;
+    daeVar[8] = 2;
+    daeVar[9] = 3;
 
-    std::vector<bool> timeDependent(10, true);
-    timeDependent[5] = false;
+    Plantelides<double> pantelides(fun, daeVar);
 
-    Plantelides<double> pantelides(fun, derivative, timeDependent);
-
-    pantelides.reduceIndex();
+    std::vector<DaeVarInfo> newDaeVar;
+    ADFun<CGD>* reducedFun = pantelides.reduceIndex(newDaeVar);
 
     delete fun;
+    delete reducedFun;
 
     return false;
 }
@@ -48,21 +48,21 @@ inline bool PantelidesPendulum3D() {
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
 
-    std::vector<int> derivative(13, -1);
-    derivative[0] = 7;
-    derivative[1] = 8;
-    derivative[2] = 9;
-    derivative[3] = 10;
-    derivative[4] = 11;
-    derivative[5] = 12;
+    std::vector<DaeVarInfo> daeVar(13);
+    daeVar[7] = 0;
+    daeVar[8] = 1;
+    daeVar[9] = 2;
+    daeVar[10] = 3;
+    daeVar[11] = 4;
+    daeVar[12] = 5;
 
-    std::vector<bool> timeDependent(13, true);
-    
-    Plantelides<double> pantelides(fun, derivative, timeDependent);
+    Plantelides<double> pantelides(fun, daeVar);
 
-    pantelides.reduceIndex();
+    std::vector<DaeVarInfo> newDaeVar;
+    ADFun<CGD>* reducedFun = pantelides.reduceIndex(newDaeVar);
 
     delete fun;
+    delete reducedFun;
 
     return false;
 }

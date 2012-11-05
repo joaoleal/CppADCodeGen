@@ -12,7 +12,45 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
 namespace CppAD {
-   
+
+    /**
+     * DAE variable information
+     */
+    class DaeVarInfo {
+    private:
+        /** The index of the variable for which this variable is the time
+         * derivative. A negative value means that the current variable isn't 
+         * a time derivative.
+         */
+        int derivativeOf_;
+        // defines the independent variables that dependent on time
+        bool timeDependent_;
+    public:
+
+        inline DaeVarInfo() :
+            derivativeOf_(-1),
+            timeDependent_(true) {
+        }
+
+        inline DaeVarInfo(int derivativeOf) :
+            derivativeOf_(derivativeOf),
+            timeDependent_(true) {
+        }
+
+        inline int getDerivativeOf() const {
+            return derivativeOf_;
+        }
+
+        inline bool isTimeDependent() const {
+            return timeDependent_;
+        }
+
+        inline void makeTimeIndependent() {
+            timeDependent_ = false;
+            derivativeOf_ = -1;
+        }
+    };
+
     /**
      * Base class for algorithms that perform automatic (differentiation) index
      * reduction of implicit DAEs.
@@ -24,34 +62,23 @@ namespace CppAD {
          * The original model
          */
         ADFun<CG<Base> >* fun_;
-        /** Defines the variable index that represents the time derivative. 
-         * A negative value means that there isn't any time derivative for the
-         * current variable.
-         */
-        const std::vector<int> derivative_;
-        // defines the independent variables that dependent on time
-        const std::vector<bool> timeDependent_;
+        // DAE variable information
+        const std::vector<DaeVarInfo> varInfo_;
     public:
 
         /**
          * Creates a new DAE model index reduction algorithm.
          * 
          * \param fun  The original (high index) model
-         * \param derivative  Defines the variable index that represents the 
-         *                    time derivative.  A negative value means that 
-         *                    there isn't any time derivative for the current 
-         *                    variable.
-         * \param timeDepebdent Defines the time dependent variables.
+         * \param varInfo  DAE  system variable information (in the same order 
+         *                 as in the tape)
          */
         DaeIndexReduction(ADFun<CG<Base> >* fun,
-                          const std::vector<int>& derivative,
-                          const std::vector<bool>& timeDependent) :
+                          const std::vector<DaeVarInfo>& varInfo) :
             fun_(fun),
-            derivative_(derivative),
-            timeDependent_(timeDependent) {
+            varInfo_(varInfo) {
             assert(fun_ != NULL);
-            assert(derivative_.size() == fun->Domain());
-            assert(timeDependent_.size() == fun->Domain());
+            assert(varInfo_.size() == fun->Domain());
         }
     };
 }

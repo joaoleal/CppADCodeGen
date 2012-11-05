@@ -56,20 +56,23 @@ namespace CppAD {
          * Dummy derivatives
          */
         std::set<Vnode<Base>* > dummyD_;
+        /**
+         * 
+         */
+        std::vector<DaeVarInfo> reducedVarInfo_;
     public:
 
         DummyDerivatives(ADFun<CG<Base> >* fun,
-                const std::vector<int>& derivative,
-                const std::vector<bool>& timeDependent,
-                const std::vector<Base>& x,
-                const std::vector<Base>& normVar,
-                const std::vector<Base>& normEq) :
-        Plantelides<Base>(fun, derivative, timeDependent),
-        x_(x),
-        normVar_(normVar),
-        normEq_(normEq),
-        diffVarStart_(0),
-        diffEqStart_(fun->Range()) {
+                         const std::vector<DaeVarInfo>& varInfo,
+                         const std::vector<Base>& x,
+                         const std::vector<Base>& normVar,
+                         const std::vector<Base>& normEq) :
+            Plantelides<Base>(fun, varInfo),
+            x_(x),
+            normVar_(normVar),
+            normEq_(normEq),
+            diffVarStart_(0),
+            diffEqStart_(fun->Range()) {
 
             typename std::vector<Vnode<Base>*> ::const_iterator j;
             for (j = this->vnodes_.begin(); j != this->vnodes_.end(); ++j) {
@@ -92,10 +95,11 @@ namespace CppAD {
             return tderiv;
         }
 
-        virtual inline void reduceIndex() throw (CGException) {
-            Plantelides<Base>::reduceIndex();
+        virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
+            Plantelides<Base>::reduceIndex(reducedVarInfo_);
 
-            assert(this->reducedFun_ != NULL);
+            if (this->reducedFun_ == NULL)
+                return NULL; //nothing to do
 
             //solveDAESystem();
 
@@ -199,26 +203,41 @@ namespace CppAD {
             }
 
 
+            /**
+             * Output information
+             */
+            typename std::set<Vnode<Base>* >::const_iterator j;
+            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
+                assert((*j)->derivativeOf() != NULL);
+                reducedVarInfo_[(*j)->derivativeOf()->tapeIndex()] = -1;
+            }
+
+            newVarInfo = reducedVarInfo_;
+
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "## dummy derivatives:\n";
-            typename std::set<Vnode<Base>* >::const_iterator j;
+
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
                 std::cout << "# " << **j << "\n";
             std::cout << "# \n";
 #endif
 
+            return this->reducedFun_;
         }
 
-        inline void reduceEquations() {
+        inline ADFun<CG<Base> >* reduceEquations(std::vector<DaeVarInfo>& newVarInfo) {
             using namespace std;
             using std::vector;
             typedef CG<Base> CGBase;
             typedef AD<CGBase> ADCG;
 
             if (this->reducedFun_ == NULL) {
-                throw CGException("reduceIndex() must be called before reduceEquations()");
+                return NULL; // nothing to do
             }
 
+            /**
+             * Generate an operation graph
+             */
             CodeHandler<Base> handler;
 
             vector<CGBase> indep0(this->reducedFun_->Domain());
@@ -226,20 +245,26 @@ namespace CppAD {
 
             const vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
 
-            // determine if the time derivative variable is present in the
-            // equation only multiplied by a constant value
+            /**
+             * determine if the time derivative variable is present in the 
+             * equation only multiplied by a constant value
+             */
             set<size_t> removedEquations;
             set<Vnode<Base>* > removedDummy;
             typename set<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
                 Vnode<Base>* dummy = *j;
-
                 Enode<Base>* i = dummy->assigmentEquation();
-                removedEquations.insert(i->index());
-                removedDummy.insert(dummy);
 
-                // eliminate all references to the dummy variable by substitution
-                handler.substituteIndependent(indep0[dummy->tapeIndex()], res0[i->index()]);
+                try {
+                    // eliminate all references to the dummy variable by substitution
+                    handler.substituteIndependent(indep0[dummy->tapeIndex()], res0[i->index()]);
+
+                    removedEquations.insert(i->index());
+                    removedDummy.insert(dummy);
+                } catch (const CGException& ex) {
+                    // unable to solve for a dummy variable: keep the equation and variable
+                }
             }
 
             vector<size_t> orig2New(this->vnodes_.size(), -1);
@@ -293,16 +318,36 @@ namespace CppAD {
             Evaluator<Base, CGBase> evaluator0(handler, resNew);
             vector<ADCG> depNew = evaluator0.evaluate(indepNew);
 
-            delete this->reducedFun_;
-            this->reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+            ADFun<CG<Base> >* shortFun = new ADFun<CGBase > (indepNew, depNew);
+            try {
+                vector<string> vnames(vnodesNew.size());
+                for (size_t p = 0; p < vnodesNew.size(); p++) {
+                    Vnode<Base>* n = vnodesNew[p];
+                    vnames[orig2New[n->tapeIndex()]] = n->name();
+                }
 
-            vector<string> vnames(vnodesNew.size());
-            for (size_t p = 0; p < vnodesNew.size(); p++) {
-                Vnode<Base>* n = vnodesNew[p];
-                vnames[orig2New[n->tapeIndex()]] = n->name();
+#ifdef CPPAD_CG_DAE_VERBOSE
+                this->printModel(shortFun, vnames);
+#endif
+
+                /**
+                 * Output information
+                 */
+                assert(usedOrig.size() == reducedVarInfo_.size());
+
+                newVarInfo = reducedVarInfo_;
+                for (int p = usedOrig.size() - 1; p >= 0; p--) {
+                    if (!usedOrig[p]) {
+                        newVarInfo.erase(newVarInfo.begin() + p);
+                    }
+                }
+
+            } catch (...) {
+                delete shortFun;
+                throw;
             }
 
-            this->printModel(this->reducedFun_, vnames);
+            return shortFun;
         }
 
     protected:
@@ -362,7 +407,7 @@ namespace CppAD {
 
             CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
             this->reducedFun_->SparseJacobianReverse(indep, jacSparsity_,
-                    row, col, jac, work);
+                                                     row, col, jac, work);
 
             // resize and zero matrix
             jacobian_.resize(m - diffEqStart_, n - diffVarStart_);
@@ -377,10 +422,6 @@ namespace CppAD {
             for (size_t e = 0; e < jac.size(); e++) {
                 Enode<Base>* eqOrig = this->enodes_[row[e]]->originalEquation();
                 Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->fun_->Domain());
-
-                /**
-                 * TODO: use the provided norm for the time derivatives
-                 */
 
                 // normalized jacobian value
                 Base normVal = jac[e].getParameterValue() * normVar_[vOrig->tapeIndex()]
@@ -401,8 +442,8 @@ namespace CppAD {
         }
 
         inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
-                const std::vector<Vnode<Base>* >& vars,
-                Eigen::SparseMatrix<Base>& subsetJac) throw (CGException) {
+                                           const std::vector<Vnode<Base>* >& vars,
+                                           Eigen::SparseMatrix<Base>& subsetJac) throw (CGException) {
 
             if (eqs.size() == vars.size()) {
                 dummyD_.insert(vars.begin(), vars.end());
@@ -542,7 +583,8 @@ namespace CppAD {
             };
 
             if (bestCols2keep.empty()) {
-                throw CGException("Failed to select dummy derivatives! The resulting system is probably singular for the provided data.");
+                throw CGException("Failed to select dummy derivatives! "
+                                  "The resulting system is probably singular for the provided data.");
             }
 
 #ifdef CPPAD_CG_DAE_VERBOSE
@@ -566,8 +608,8 @@ namespace CppAD {
          * @return the next column selection
          */
         inline std::vector<size_t > nextColumnSelection(const std::set<size_t>& fixedCols,
-                const std::vector<size_t>& freeCols,
-                std::vector<size_t>& vcols2keep) const {
+                                                        const std::vector<size_t>& freeCols,
+                                                        std::vector<size_t>& vcols2keep) const {
 
             if (vcols2keep.empty()) {
                 return std::vector<size_t > (0); // end of combinations
@@ -717,9 +759,9 @@ namespace CppAD {
             CppAD::sparse_jacobian_work work_; // temporary structure for CPPAD
 
             Functor(DummyDerivatives<Base>* dummyDer) :
-            dummyDer_(dummyDer),
-            normdep_(dummyDer_->reducedFun_->Range(), 1.0),
-            normindep_(dummyDer_->reducedFun_->Range(), 1.0) {
+                dummyDer_(dummyDer),
+                normdep_(dummyDer_->reducedFun_->Range(), 1.0),
+                normindep_(dummyDer_->reducedFun_->Range(), 1.0) {
 
                 /**
                  * get rid of the CG encapsulation
@@ -855,7 +897,7 @@ namespace CppAD {
                 }
 
                 size_t n_sweep = reducedFunB_->SparseJacobianReverse(indep, jac_sparsity_,
-                        row_, col_, jac_, work_);
+                                                                     row_, col_, jac_, work_);
 
                 for (size_t pos = 0; pos < jac_.size(); pos++) {
                     size_t i = row_[pos];
@@ -870,6 +912,4 @@ namespace CppAD {
     };
 }
 
-
 #endif
-

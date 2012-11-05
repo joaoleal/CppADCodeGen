@@ -38,24 +38,24 @@ inline bool DummyDerivPendulum2D() {
     x[8] = -1.0; // dvxdt
     x[9] = 9.80665; // dvydt
 
-    std::vector<int> derivative(10, -1);
-    derivative[0] = 6;
-    derivative[1] = 7;
-    derivative[2] = 8;
-    derivative[3] = 9;
+    std::vector<DaeVarInfo> daeVar(10);
+    daeVar[5].makeTimeIndependent();
+    daeVar[6] = 0;
+    daeVar[7] = 1;
+    daeVar[8] = 2;
+    daeVar[9] = 3;
 
-    std::vector<bool> timeDependent(10, true);
-    timeDependent[5] = false;
+    DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
 
-    DummyDerivatives<double> dummyD(fun, derivative, timeDependent, x, normVar, normEq);
-
-    dummyD.reduceIndex();
-    
-    dummyD.reduceEquations();
+    std::vector<DaeVarInfo> newDaeVar;
+    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
+    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
 
     delete fun;
+    delete reducedFun;
+    delete reducedFunShort;
 
-    return false;
+    return reducedFunShort != NULL;
 }
 
 inline bool DummyDerivPendulum3D() {
