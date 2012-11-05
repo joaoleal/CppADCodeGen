@@ -11,47 +11,12 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
+#include <cppad_cgoo/cg.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_dae_var_info.hpp>
+
 namespace CppAD {
 
-    /**
-     * DAE variable information
-     */
-    class DaeVarInfo {
-    private:
-        /** The index of the variable for which this variable is the time
-         * derivative. A negative value means that the current variable isn't 
-         * a time derivative.
-         */
-        int derivativeOf_;
-        // defines the independent variables that dependent on time
-        bool timeDependent_;
-    public:
-
-        inline DaeVarInfo() :
-            derivativeOf_(-1),
-            timeDependent_(true) {
-        }
-
-        inline DaeVarInfo(int derivativeOf) :
-            derivativeOf_(derivativeOf),
-            timeDependent_(true) {
-        }
-
-        inline int getDerivativeOf() const {
-            return derivativeOf_;
-        }
-
-        inline bool isTimeDependent() const {
-            return timeDependent_;
-        }
-
-        inline void makeTimeIndependent() {
-            timeDependent_ = false;
-            derivativeOf_ = -1;
-        }
-    };
-
-    /**
+        /**
      * Base class for algorithms that perform automatic (differentiation) index
      * reduction of implicit DAEs.
      */

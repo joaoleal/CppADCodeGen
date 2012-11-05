@@ -126,11 +126,6 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 // ---------------------------------------------------------------------------
 // automated DAE differential index reduction
 #define CPPAD_CG_DAE_VERBOSE
-#include <cppad_cgoo/dae_index_reduction/cg_bipartite.hpp>
-#include <cppad_cgoo/dae_index_reduction/cg_dae_index_reduction.hpp>
-#include <cppad_cgoo/dae_index_reduction/cg_time_diff.hpp>
-#include <cppad_cgoo/dae_index_reduction/cg_pantelides.hpp>
-#include <cppad_cgoo/dae_index_reduction/cg_dummy_deriv.hpp>
 
 #endif
 

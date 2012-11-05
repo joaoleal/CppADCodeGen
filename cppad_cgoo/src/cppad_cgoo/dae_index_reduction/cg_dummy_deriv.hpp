@@ -1,12 +1,5 @@
 #ifndef CPPAD_CG_DUMMY_DERIV_INCLUDED
 #define	CPPAD_CG_DUMMY_DERIV_INCLUDED
-
-#include <Eigen/Dense>
-#include <Eigen/Sparse>
-#include <Eigen/Eigenvalues>
-#include <Eigen/LU>
-//#include <unsupported/Eigen/NonLinearOptimization>
-
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 
@@ -17,6 +10,16 @@ the terms of the
 A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
+#include <Eigen/Dense>
+#include <Eigen/Sparse>
+#include <Eigen/Eigenvalues>
+#include <Eigen/LU>
+
+#include <cppad_cgoo/dae_index_reduction/cg_pantelides.hpp>
+
+#include "cg_dae_var_info.hpp"
+
+//#include <unsupported/Eigen/NonLinearOptimization>
 namespace CppAD {
 
     template<class Base>
@@ -339,6 +342,11 @@ namespace CppAD {
                 for (int p = usedOrig.size() - 1; p >= 0; p--) {
                     if (!usedOrig[p]) {
                         newVarInfo.erase(newVarInfo.begin() + p);
+                        for (int pp = 0; pp < usedOrig.size(); pp++) {
+                            if (newVarInfo[pp].getDerivativeOf() > p) {
+                                newVarInfo[pp] = DaeVarInfo(newVarInfo[pp].getDerivativeOf() - 1);
+                            }
+                        }
                     }
                 }
 

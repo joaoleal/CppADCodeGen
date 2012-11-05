@@ -150,10 +150,6 @@ int main(void) {
     ok &= Run(SolveTanh, "SolveTanh");
     ok &= Run(SolveUnaryMinus, "SolveUnaryMinus");
 
-    // DAE index reduction
-    ok &= Run(Pantelides, "Pantelides");
-    ok &= Run(DummyDeriv, "DummyDerivatives");
-
     // check for errors
     assert(ok || (Run_error_count > 0));
     if (CppAD::memory_leak()) {
@@ -164,6 +160,11 @@ int main(void) {
         Run_ok_count++;
         cout << "OK:    " << "No memory leak detected" << endl;
     }
+
+    // DAE index reduction (must be called after memory check because the atomic functions use static data)
+    ok &= Run(Pantelides, "Pantelides");
+    ok &= Run(DummyDeriv, "DummyDerivatives");
+
     // convert int(size_t) to avoid warning on _MSC_VER systems
     ok &= Run_warn_count == 0;
     if (ok) {

@@ -11,6 +11,10 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
+#include <cppad_cgoo/dae_index_reduction/cg_bipartite.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_dae_index_reduction.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_time_diff.hpp>
+
 namespace CppAD {
 
     /**
@@ -457,7 +461,7 @@ namespace CppAD {
                     indepNew.resize(m);
                     Independent(indepNew);
 
-                    // variables with the relationship between x dxdt and t
+                    // variables with the relationship between x, dxdt and t
                     indep2 = prepareTimeDependentVariables(indepNew);
                 } else {
                     // the very last model creation
@@ -557,29 +561,23 @@ namespace CppAD {
             assert(vnodes_.size() + 1 == indepOrig.size());
 
             using std::vector;
+            typedef AD<CG<Base> > ADCGBase;
 
-            vector<AD<CG<Base> > > indepOut(indepOrig.size());
-
-            vector<AD<CG<Base> > > ax(3);
-            vector<AD<CG<Base> > > ay(1);
+            vector<ADCGBase> indepOut(indepOrig.size());
+            vector<ADCGBase> ax(3);
+            vector<ADCGBase> ay(1);
 
             ax[2] = indepOrig.back(); // time
-
-            // convert the tape values to the new vnode variable order
-            vector<AD<CG<Base> > > indepNewOrder(indepOrig.size());
-            for (size_t j = 0; j < indepOrig.size() - 1; j++) {
-                indepNewOrder[j] = indepOrig[vnodes_[j]->tapeIndex()];
-            }
 
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
                 if (jj->derivative() != NULL) {
-                    ax[0] = indepNewOrder[j]; // x
-                    ax[1] = indepNewOrder[jj->derivative()->index()]; // dxdt
+                    ax[0] = indepOrig[jj->tapeIndex()]; // x
+                    ax[1] = indepOrig[jj->derivative()->tapeIndex()]; // dxdt
                     time_var(0, ax, ay);
                     indepOut[jj->tapeIndex()] = ay[0];
                 } else {
-                    indepOut[jj->tapeIndex()] = indepNewOrder[j];
+                    indepOut[jj->tapeIndex()] = indepOrig[jj->tapeIndex()];
                 }
             }
 

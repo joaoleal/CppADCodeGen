@@ -9,7 +9,7 @@ A copy of this license is included in the COPYING file of this distribution.
 Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 -------------------------------------------------------------------------- */
 
-#include <cppad_cgoo/cg.hpp>
+#include <cppad_cgoo/dae_index_reduction/cg_dummy_deriv.hpp>
 
 #include "gcc_load_dynamic.hpp"
 #include "pendulum.hpp"
@@ -71,13 +71,41 @@ inline bool DummyDerivPendulum3D() {
     std::vector<double> normVar(13, 1.0);
     std::vector<double> normEq(7, 1.0);
 
-    //DummyDerivatives<double> dummyD(fun, eqDifferentialInfo, varInfo);
+    x[0] = -1.0; // x
+    x[1] = 0.0; // y
+    x[2] = 0.0; // z
+    x[3] = 0.0; // vx
+    x[4] = 0.0; // vy
+    x[5] = 0.0; // vz
+    x[6] = 1.0; // Tension
+    //x[7] = 1.0; // length
 
-    //dummyD.reduceIndex();
+    x[7] = 0.0; // dxdt
+    x[8] = 0.0; // dydt
+    x[9] = 0.0; // dzdt
+    x[10] = -1.0; // dvxdt
+    x[11] = 9.80665; // dvydt
+    x[12] = 0.0; // dvzdt
+
+    std::vector<DaeVarInfo> daeVar(13);
+    daeVar[7] = 0;
+    daeVar[8] = 1;
+    daeVar[9] = 2;
+    daeVar[10] = 3;
+    daeVar[11] = 4;
+    daeVar[12] = 5;
+
+    DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
+
+    std::vector<DaeVarInfo> newDaeVar;
+    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
+    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
 
     delete fun;
+    delete reducedFun;
+    delete reducedFunShort;
 
-    return false;
+    return reducedFunShort != NULL;
 }
 
 bool DummyDeriv() {
