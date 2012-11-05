@@ -1,5 +1,5 @@
-#ifndef CG_SOLVER_INCLUDED
-#define	CG_SOLVER_INCLUDED
+#ifndef CPPAD_CG_SOLVER_INCLUDED
+#define	CPPAD_CG_SOLVER_INCLUDED
 /* --------------------------------------------------------------------------
 CppAD: C++ Algorithmic Differentiation: Copyright (C) 2012 Ciengis
 

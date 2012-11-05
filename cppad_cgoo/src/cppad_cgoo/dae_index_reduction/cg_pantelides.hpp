@@ -254,6 +254,21 @@ namespace CppAD {
                             }
                         }
 
+                        // structural check to avoid infinite recursion
+                        for (size_t l = esize; l < enodes_.size(); l++) {
+                            ll = enodes_[l];
+                            const std::set<Vnode<Base>*>& nvars = ll->originalVariables();
+                            bool ok = false;
+                            for (typename std::set<Vnode<Base>*>::const_iterator js = nvars.begin(); js != nvars.end(); ++js) {
+                                if ((*js)->equations().size() > 1) {
+                                    ok = true;
+                                    break;
+                                }
+                            }
+                            if (!ok)
+                                throw CGException("Invalid equation structure. The model appears to be over-defined.");
+                        }
+
                         for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
                             jj = *j;
                             if (jj->isColored() && !jj->isDeleted()) {
@@ -338,7 +353,7 @@ namespace CppAD {
          * 
          * \param i equation node to differentiate
          */
-        inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) {
+        inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) throw (CGException) {
             const std::set<Vnode<Base>*>& vars = i.originalVariables();
             typename std::set<Vnode<Base>*>::const_iterator j;
             for (j = vars.begin(); j != vars.end(); ++j) {
