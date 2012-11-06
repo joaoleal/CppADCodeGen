@@ -279,6 +279,7 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/cg_default.hpp \
 	cppad_cgoo/cg_evaluator.hpp \
 	cppad_cgoo/cg_exception.hpp \
+	cppad_cgoo/cg_graph_mod.hpp \
 	cppad_cgoo/cg_identical.hpp \
 	cppad_cgoo/cg_language.hpp \
 	cppad_cgoo/cg_math.hpp \
@@ -312,6 +313,7 @@ nobase_cginclude_HEADERS = \
 	cppad_cgoo/dynamic_lib/linux/cg_linux_system.hpp \
 	cppad_cgoo/dae_index_reduction/cg_bipartite.hpp \
 	cppad_cgoo/dae_index_reduction/cg_dae_index_reduction.hpp \
+	cppad_cgoo/dae_index_reduction/cg_dae_var_info.hpp \
 	cppad_cgoo/dae_index_reduction/cg_dummy_deriv.hpp \
 	cppad_cgoo/dae_index_reduction/cg_pantelides.hpp \
 	cppad_cgoo/dae_index_reduction/cg_time_diff.hpp
