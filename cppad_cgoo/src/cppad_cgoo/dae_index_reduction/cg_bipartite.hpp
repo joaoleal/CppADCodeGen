@@ -53,6 +53,9 @@ namespace CppAD {
         }
 
         virtual std::string nodeType() = 0;
+
+        inline virtual ~BiPGraphNode() {
+        }
     };
 
     template<class Base>
@@ -149,6 +152,9 @@ namespace CppAD {
 
         virtual std::string nodeType() {
             return TYPE;
+        }
+
+        inline virtual ~Enode() {
         }
 
     protected:
@@ -329,6 +335,9 @@ namespace CppAD {
             } else {
                 return derivativeOf_->order() + 1u;
             }
+        }
+
+        inline virtual ~Vnode() {
         }
 
     protected:

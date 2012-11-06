@@ -80,17 +80,17 @@ namespace CppAD {
     public:
 
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
-        _baseTypeName(varTypeName),
-        _spaces(spaces, ' '),
-        _inArgName("in"),
-        _outArgName("out"),
-        _nameGen(NULL),
-        _independentSize(0),
-        _dependent(NULL),
-        _depAssignOperation("="),
-        _ignoreZeroDepAssign(false),
-        _maxAssigmentsPerFunction(0),
-        _sources(NULL) {
+            _baseTypeName(varTypeName),
+            _spaces(spaces, ' '),
+            _inArgName("in"),
+            _outArgName("out"),
+            _nameGen(NULL),
+            _independentSize(0),
+            _dependent(NULL),
+            _depAssignOperation("="),
+            _ignoreZeroDepAssign(false),
+            _maxAssigmentsPerFunction(0),
+            _sources(NULL) {
         }
 
         inline const std::string& getDependentAssignOperation() const {
@@ -125,7 +125,7 @@ namespace CppAD {
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
 
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                    "There must be one temporary variable");
+                                 "There must be one temporary variable");
 
             _ss << _spaces << "// auxiliary variables\n";
             if (tmpArg[0].array) {
@@ -161,7 +161,7 @@ namespace CppAD {
         virtual std::string generateDependentVariableDeclaration() {
             const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
             CPPADCG_ASSERT_KNOWN(depArg.size() > 0,
-                    "There must be at least one dependent argument");
+                                 "There must be at least one dependent argument");
 
             _ss << _spaces << "//dependent variables\n";
             for (size_t i = 0; i < depArg.size(); i++) {
@@ -176,7 +176,7 @@ namespace CppAD {
         virtual std::string generateIndependentVariableDeclaration() {
             const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0,
-                    "There must be at least one independent argument");
+                                 "There must be at least one independent argument");
 
             _ss << _spaces << "//independent variables\n";
             for (size_t i = 0; i < indArg.size(); i++) {
@@ -202,6 +202,9 @@ namespace CppAD {
         CPPAD_CG_C_LANG_FUNCNAME(tanh)
         CPPAD_CG_C_LANG_FUNCNAME(tan)
         CPPAD_CG_C_LANG_FUNCNAME(pow)
+
+        inline virtual ~CLanguage() {
+        }
 
     protected:
 
@@ -252,9 +255,9 @@ namespace CppAD {
             const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
-                    "There must be at least one dependent and one independent argument");
+                                 "There must be at least one dependent and one independent argument");
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                    "There must be one temporary variable");
+                                 "There must be one temporary variable");
 
             if (!_functionName.empty()) {
                 defaultFuncArgDcl_ = _baseTypeName + " const *const * " + _inArgName +
@@ -341,7 +344,7 @@ namespace CppAD {
 
             if (localFuncNames.size() > 0) {
                 CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
-                        "The temporary variables must be saved in an array in order to generate multiple functions");
+                                     "The temporary variables must be saved in an array in order to generate multiple functions");
 
                 // forward declarations
                 for (size_t i = 0; i < localFuncNames.size(); i++) {

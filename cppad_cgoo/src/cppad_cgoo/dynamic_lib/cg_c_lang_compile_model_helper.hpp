@@ -148,6 +148,9 @@ namespace CppAD {
             _maxAssignPerFunc = maxAssignPerFunc;
         }
 
+        inline virtual ~CLangCompileModelHelper() {
+        };
+
         static inline std::string baseTypeName();
 
     protected:

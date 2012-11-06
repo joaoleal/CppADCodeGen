@@ -69,6 +69,9 @@ namespace CppAD {
             return newDep;
         }
 
+        inline virtual ~Evaluator() {
+        }
+
     private:
 
         inline AD<BaseOut> evalCG(const CG<Base>& dep) const throw (CGException) {

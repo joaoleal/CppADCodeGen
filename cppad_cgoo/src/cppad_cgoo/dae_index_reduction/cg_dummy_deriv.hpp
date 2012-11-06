@@ -358,6 +358,9 @@ namespace CppAD {
             return shortFun;
         }
 
+        inline virtual ~DummyDerivatives() {
+        }
+
     protected:
 
         inline void solveDAESystem() {

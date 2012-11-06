@@ -49,6 +49,9 @@ namespace CppAD {
             timeDependent_ = false;
             derivativeOf_ = -1;
         }
+        
+        inline virtual ~DaeVarInfo() {
+        }
     };
 
 }

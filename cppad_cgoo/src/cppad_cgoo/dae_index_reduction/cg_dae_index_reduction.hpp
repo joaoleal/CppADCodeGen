@@ -16,7 +16,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 namespace CppAD {
 
-        /**
+    /**
      * Base class for algorithms that perform automatic (differentiation) index
      * reduction of implicit DAEs.
      */
@@ -44,6 +44,9 @@ namespace CppAD {
             varInfo_(varInfo) {
             assert(fun_ != NULL);
             assert(varInfo_.size() == fun->Domain());
+        }
+
+        inline virtual ~DaeIndexReduction() {
         }
     };
 }

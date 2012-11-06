@@ -85,6 +85,9 @@ namespace CppAD {
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
 
+        inline virtual ~CLangCompileDynamicHelper() {
+        };
+
     protected:
 
         virtual void generateVerionSource(std::map<std::string, std::string>& sources);

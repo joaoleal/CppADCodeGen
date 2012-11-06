@@ -70,6 +70,9 @@ namespace CppAD {
          */
         virtual void* loadFunction(const std::string& functionName, std::string& error) = 0;
 
+        inline virtual ~DynamicLib() {
+        }
+
     };
 
 }

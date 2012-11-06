@@ -154,6 +154,9 @@ namespace CppAD {
                                    size_t const** row,
                                    size_t const** col,
                                    size_t nnz) = 0;
+
+        inline virtual ~DynamicLibModel() {
+        };
     };
 
 }

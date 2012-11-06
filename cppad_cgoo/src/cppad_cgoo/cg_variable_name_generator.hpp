@@ -73,11 +73,14 @@ namespace CppAD {
 
         virtual void customFunctionVariableDeclarations(std::ostream& out) {
         }
-        
+
         virtual void prepareCustomFunctionVariables(std::ostream& out) {
         }
 
         virtual void finalizeCustomFunctionVariables(std::ostream& out) {
+        }
+
+        inline virtual ~VariableNameGenerator() {
         }
     };
 }

@@ -106,6 +106,9 @@ namespace CppAD {
             assert(_minTemporaryID <= _maxTemporaryID + 1);
         }
 
+        inline virtual ~CLangDefaultVariableNameGenerator() {
+        }
+
     };
 }
 

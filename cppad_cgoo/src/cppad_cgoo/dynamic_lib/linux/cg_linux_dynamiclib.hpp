@@ -97,7 +97,7 @@ namespace CppAD {
 
         virtual ~LinuxDynamicLib() {
             typename std::set<LinuxDynamicLibModel<Base>*>::const_iterator it;
-            for (it != _models.begin(); it != _models.end(); ++it) {
+            for (it = _models.begin(); it != _models.end(); ++it) {
                 LinuxDynamicLibModel<Base>* model = *it;
                 model->dynamicLibClosed();
             }

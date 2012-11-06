@@ -125,7 +125,7 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 // ---------------------------------------------------------------------------
 // automated DAE differential index reduction
-#define CPPAD_CG_DAE_VERBOSE
+//#define CPPAD_CG_DAE_VERBOSE
 
 #endif
 

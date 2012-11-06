@@ -61,6 +61,9 @@ namespace CppAD {
             }
         }
 
+        inline virtual ~CLangCustomVariableNameGenerator() {
+        }
+
     };
 }
 

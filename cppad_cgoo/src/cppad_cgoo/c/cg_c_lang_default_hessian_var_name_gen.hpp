@@ -97,6 +97,9 @@ namespace CppAD {
             _nameGen->setTemporaryVariableID(minTempID, maxTempID);
         }
 
+        inline virtual ~CLangDefaultHessianVarNameGenerator() {
+        }
+
     private:
 
         inline void initialize() {

@@ -103,6 +103,9 @@ namespace CppAD {
          */
         virtual void cleanup() = 0;
 
+        inline virtual ~CLangCompiler() {
+        }
+
     };
 
 }
