@@ -13,11 +13,11 @@ Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 
 namespace CppAD {
 
-    template<class Base>
-    inline std::vector<bool> jacobianForwardSparsity(ADFun<Base>& fun) {
+    template<class VectorBool, class Base>
+    inline VectorBool jacobianForwardSparsity(ADFun<Base>& fun) {
         size_t n = fun.Domain();
 
-        std::vector<bool> r(n * n);
+        VectorBool r(n * n);
         for (size_t j = 0; j < n; j++) {
             for (size_t k = 0; k < n; k++)
                 r[j * n + k] = false;
@@ -27,11 +27,11 @@ namespace CppAD {
 
     }
 
-    template<class Base>
-    inline std::vector<bool> jacobianReverseSparsity(ADFun<Base>& fun) {
+    template<class VectorBool, class Base>
+    inline VectorBool jacobianReverseSparsity(ADFun<Base>& fun) {
         size_t m = fun.Range();
 
-        std::vector<bool> s(m * m);
+        VectorBool s(m * m);
         for (size_t i = 0; i < m; i++) {
             for (size_t k = 0; k < m; k++)
                 s[i * m + k] = false;
@@ -51,21 +51,22 @@ namespace CppAD {
         return fun.RevSparseJac(m, s_s);
     }
 
-    template<class Base>
-    inline std::vector<bool> jacobianSparsity(ADFun<Base>& fun) {
+    template<class VectorBool, class Base>
+    inline VectorBool jacobianSparsity(ADFun<Base>& fun) {
         size_t m = fun.Range();
         size_t n = fun.Domain();
 
         if (n <= m) {
             // use forward mode 
-            return jacobianForwardSparsity(fun);
+            return jacobianForwardSparsity<VectorBool, Base > (fun);
         } else {
             // use reverse mode 
-            return jacobianReverseSparsity(fun);
+            return jacobianReverseSparsity<VectorBool, Base >(fun);
         }
     }
 
-    inline void generateSparsityIndexes(const std::vector<bool>& sparsity,
+    template<class VectorBool>
+    inline void generateSparsityIndexes(const VectorBool& sparsity,
                                         size_t m,
                                         size_t n,
                                         std::vector<size_t>& row,

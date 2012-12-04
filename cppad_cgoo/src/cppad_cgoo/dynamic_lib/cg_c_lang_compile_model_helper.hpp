@@ -21,6 +21,8 @@ namespace CppAD {
      */
     template<class Base>
     class CLangCompileModelHelper {
+        typedef CppAD::CG<Base> CGBase;
+        typedef CppAD::AD<CGBase> ADCG;
     public:
         static const std::string FUNCTION_FORWAD_ZERO;
         static const std::string FUNCTION_JACOBIAN;
@@ -33,7 +35,7 @@ namespace CppAD {
     protected:
         static const std::string CONST;
     protected:
-        ADFun<CppAD::CG<Base> >* _fun; // the  model
+        ADFun<CGBase>* _fun; // the  model
         std::string _name; // the name of the model
         const std::string _baseTypeName;
         bool _zero;

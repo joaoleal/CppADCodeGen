@@ -222,11 +222,11 @@ namespace CppAD {
     /**
      * Utility functions
      */
-    template<class Base>
-    inline std::vector<bool> jacobianSparsity(ADFun<Base>& fun);
+    template<class VectorBool, class Base>
+    inline VectorBool jacobianSparsity(ADFun<Base>& fun);
 
-    template<class Base>
-    inline void generateSparsityIndexes(const std::vector<bool>& sparsity,
+    template<class VectorBool, class Base>
+    inline void generateSparsityIndexes(const VectorBool& sparsity,
                                         size_t m,
                                         size_t n,
                                         std::vector<size_t>& row,

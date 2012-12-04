@@ -100,9 +100,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
-
         const std::string jobName = "model (zero-order forward)";
 
         startingGraphCreation(jobName);
@@ -110,10 +107,10 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGD> indVars(_fun->Domain());
+        std::vector<CGBase> indVars(_fun->Domain());
         handler.makeVariables(indVars);
 
-        std::vector<CGD> dep = _fun->Forward(0, indVars);
+        std::vector<CGBase> dep = _fun->Forward(0, indVars);
 
         finishedGraphCreation();
 
@@ -129,9 +126,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateJacobianSource(std::map<std::string, std::string>& sources) {
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
-
         const std::string jobName = "Jacobian";
 
         startingGraphCreation(jobName);
@@ -139,10 +133,10 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGD> indVars(_fun->Domain());
+        std::vector<CGBase> indVars(_fun->Domain());
         handler.makeVariables(indVars);
 
-        std::vector<CGD> jac = _fun->Jacobian(indVars);
+        std::vector<CGBase> jac = _fun->Jacobian(indVars);
 
         finishedGraphCreation();
 
@@ -158,9 +152,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
-
         const std::string jobName = "Hessian";
 
         startingGraphCreation(jobName);
@@ -173,13 +164,13 @@ namespace CppAD {
 
 
         // independent variables
-        std::vector<CGD> indVars(n);
+        std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
         // multipliers
-        std::vector<CGD> w(_fun->Range());
+        std::vector<CGBase> w(_fun->Range());
         handler.makeVariables(w);
 
-        std::vector<CGD> hess = _fun->Hessian(indVars, w);
+        std::vector<CGBase> hess = _fun->Hessian(indVars, w);
 
         // make use of the symmetry of the Hessian in order to reduce operations
         for (size_t i = 0; i < n; i++) {
@@ -203,9 +194,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
-
         const std::string jobName = "sparse Jacobian";
 
         size_t m = _fun->Range();
@@ -216,7 +204,7 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        std::vector<bool> sparsity = jacobianSparsity(*_fun);
+        std::vector<bool> sparsity = jacobianSparsity<std::vector<bool>, CGBase>(*_fun);
 
         if (_custom_jac_row.empty()) {
             generateSparsityIndexes(sparsity, m, n, rows, cols);
@@ -231,10 +219,10 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGD> indVars(n);
+        std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
 
-        std::vector<CGD> jac(rows.size());
+        std::vector<CGBase> jac(rows.size());
         CppAD::sparse_jacobian_work work;
         if (n <= m) {
             _fun->SparseJacobianForward(indVars, sparsity, rows, cols, jac, work);
@@ -260,9 +248,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
-        typedef CppAD::CG<Base> CGD;
-        typedef CppAD::AD<CGD> ADCG;
-
         const std::string jobName = "sparse Hessian";
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
@@ -333,17 +318,17 @@ namespace CppAD {
         handler.setVerbose(_verbose);
 
         // independent variables
-        std::vector<CGD> indVars(n);
+        std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
         // multipliers
-        std::vector<CGD> w(m);
+        std::vector<CGBase> w(m);
         handler.makeVariables(w);
 
         CppAD::sparse_hessian_work work;
-        std::vector<CGD> upperHess(upperHessRows.size());
+        std::vector<CGBase> upperHess(upperHessRows.size());
         _fun->SparseHessian(indVars, w, sparsity, upperHessRows, upperHessCols, upperHess, work);
 
-        std::vector<CGD> hess(rows.size());
+        std::vector<CGBase> hess(rows.size());
         for (size_t i = 0; i < upperHessOrder.size(); i++) {
             hess[upperHessOrder[i]] = upperHess[i];
         }

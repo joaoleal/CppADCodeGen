@@ -32,6 +32,8 @@ namespace CppAD {
      */
     template<class Base>
     class DummyDerivatives : public Plantelides<Base> {
+        typedef CG<Base> CGBase;
+        typedef AD<CGBase> ADCG;
         typedef Eigen::Matrix<Base, Eigen::Dynamic, 1 > VectorB;
         typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1 > VectorCB;
         typedef Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> MatrixB;
@@ -231,8 +233,6 @@ namespace CppAD {
         inline ADFun<CG<Base> >* reduceEquations(std::vector<DaeVarInfo>& newVarInfo) {
             using namespace std;
             using std::vector;
-            typedef CG<Base> CGBase;
-            typedef AD<CGBase> ADCG;
 
             if (this->reducedFun_ == NULL) {
                 return NULL; // nothing to do
@@ -393,7 +393,7 @@ namespace CppAD {
             const size_t n = this->reducedFun_->Domain();
             const size_t m = this->reducedFun_->Range();
 
-            jacSparsity_ = jacobianReverseSparsity(*this->reducedFun_); // in the original variable order
+            jacSparsity_ = jacobianReverseSparsity < vector<bool>, CGBase > (*this->reducedFun_); // in the original variable order
 
             vector<size_t> row, col;
             row.reserve((this->vnodes_.size() - diffVarStart_) * (m - diffEqStart_));
@@ -660,8 +660,6 @@ namespace CppAD {
              * 
              */
             using std::vector;
-            typedef CG<Base> CGBase;
-            typedef AD<CGBase> ADCG;
 
             CodeHandler<Base> handler;
 
