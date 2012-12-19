@@ -1,8 +1,7 @@
 #
-# directories created by build.sh
-work
+# directories for compilation
+build
 doc
-doxydoc
 
 # log files
 *.log
@@ -60,3 +59,4 @@ junk.sh
 /cppad_cgoo/example/dynamic_linux
 /cppad_cgoo/example/source_generation
 /cppad_cgoo/example/cppadcg_sources
+/build/
