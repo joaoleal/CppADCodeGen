@@ -1,23 +1,23 @@
-# -----------------------------------------------------------------------------
-# CppADCodeGen: C++ Algorithmic Differentiation with source code generation
+# --------------------------------------------------------------------------
+#  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2012 Ciengis
 #
-# Copyright (C) 2012 Ciengis
+#  CppADCodeGen is distributed under multiple licenses:
 #
-# CppAD is distributed under multiple licenses. This distribution is under
-# the terms of the 
-#                     Eclipse Public License Version 1.0.
+#   - Common Public License Version 1.0 (CPL1), and
+#   - GNU General Public License Version 2 (GPL2).
 #
-# A copy of this license is included in the COPYING file of this distribution.
-# Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
-# -----------------------------------------------------------------------------
-# Some constants
+# CPL1 terms and conditions can be found in the file "epl-v10.txt", while
+# terms and conditions for the GPL2 can be found in the file "gpl2.txt".
 # ----------------------------------------------------------------------------
-# Set the minimum required version of cmake for this project.
+#
+# Author: Joao Leal
+#
+# ----------------------------------------------------------------------------
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX)
 
-# cppadcg_version is used by set_version.sh to get the version number.
 SET(cppadcg_version      "20121215" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "Differentiation of C++ Algorithms with Source Code Generation" )
@@ -41,7 +41,7 @@ INCLUDE_DIRECTORIES( ${CPPAD_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include" ${EIGEN3
 set(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install path prefix")
 set(install_export_location "${CMAKE_INSTALL_PREFIX}/share/cppadcg")
 set(install_include_location "${CMAKE_INSTALL_PREFIX}/include/cppadcg")
-set(install_library_pkg_location "${install_library_location}/pkgconfig")
+set(install_library_pkg_location "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 
 
 # ----------------------------------------------------------------------------

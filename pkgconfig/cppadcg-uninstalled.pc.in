@@ -11,8 +11,8 @@
 # Please visit http://www.coin-or.org/CppAD/ for information on other licenses.
 # -----------------------------------------------------------------------------
 # This file is used with pkg-config to include CppADCodeGen before it is installed.
-Name:         @PACKAGE_NAME@
-Description:  @PACKAGE_DESCRIPTION@
-Version:      @PACKAGE_VERSION@
-URL:          @PACKAGE_URL@
+Name:         @PROJECT_NAME@
+Description:  @cppadcg_descriptio@
+Version:      @cppadcg_versioN@
+URL:          @cppadcg_url@
 Cflags:       -I@install_include_location@
