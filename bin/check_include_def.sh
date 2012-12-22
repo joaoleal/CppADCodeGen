@@ -19,46 +19,15 @@ fi
 echo "Differences between include file names and ifndef at top directives."
 echo "Also make sure same ifndef not used by two different files."
 echo "-------------------------------------------------------------------"
-grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
-	cppad_ipopt/*/*.hpp \
-	cppad/*.hpp \
-	cppad/example/*.hpp \
-	cppad/local/*.hpp \
-	cppad/speed/*.hpp \
-	example/*.hpp \
-	multi_thread/*.hpp \
-	| sed \
-	-e 's|.*# *ifndef *CPPAD_\([0-9a-zA-Z_]*\)_INCLUDED$|\1.HPP|' \
-	| tr [a-zA-Z] [A-Za-z] \
-	| sort \
-	> bin/check_include_def.1.$$
- 
-ls \
-	cppad_ipopt/*/*.hpp \
-	cppad/*.hpp \
-	cppad/example/*.hpp \
-	cppad/local/*.hpp \
-	cppad/speed/*.hpp \
-	example/*.hpp \
-	multi_thread/*.hpp \
-	| sed -e 's|.*/||' \
-	| sort -u \
-	> bin/check_include_def.2.$$
-if !(diff bin/check_include_def.1.$$ bin/check_include_def.2.$$)
-then
-	different="yes"
-fi
-rm bin/check_include_def.1.$$
-rm bin/check_include_def.2.$$
 #
 #          source code generation
 #
-cd cppad_cgoo/src/;
+cd include/cppadcg;
 grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
-	cppad_cgoo/*.hpp \
-	cppad_cgoo/c/*.hpp \
-	cppad_cgoo/dynamic_lib/*.hpp \
-	cppad_cgoo/dynamic_lib/linux/*.hpp \
+	*.hpp \
+	c/*.hpp \
+	dynamic_lib/*.hpp \
+        dynamic_lib/linux/*.hpp \
 	| sed \
 	-e 's|.*# *ifndef *CPPAD_\([0-9a-zA-Z_]*\)_INCLUDED$|\1.HPP|' \
 	| tr [a-zA-Z] [A-Za-z] \
@@ -66,21 +35,21 @@ grep '^# *ifndef *CPPAD_[0-9a-zA-Z_]*_INCLUDED$' \
 	> ../../bin/check_include_def.1.$$
 #
 ls \
-	cppad_cgoo/*.hpp \
-	cppad_cgoo/c/*.hpp \
-	cppad_cgoo/dynamic_lib/*.hpp \
-	cppad_cgoo/dynamic_lib/linux/*.hpp \
+	*.hpp \
+	c/*.hpp \
+	dynamic_lib/*.hpp \
+	dynamic_lib/linux/*.hpp \
 	| sed -e 's|.*/||' \
 	| sort -u \
 	> ../../bin/check_include_def.2.$$
 #
 if diff ../../bin/check_include_def.1.$$ ../../bin/check_include_def.2.$$
 then
-different=$different
+        different="no"
 else
 	different="yes"
 fi
-cd ../../;
+
 rm bin/check_include_def.1.$$
 rm bin/check_include_def.2.$$
 #

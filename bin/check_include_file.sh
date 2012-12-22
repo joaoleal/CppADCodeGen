@@ -30,19 +30,13 @@ declare -A files;
 declare -A root;
 declare -A rootInclude;
 #
-files[cppad]="cppad/*.hpp\
-              cppad/example/*.hpp\
-              cppad/local/*.hpp\
-              cppad/speed/*.hpp"
-root[cppad]="cppad"
-rootInclude[cppad]=""
-#
-files[cppad_cgoo]="cppad_cgoo/src/cppad_cgoo/*.hpp\
-                   cppad_cgoo/src/cppad_cgoo/c/*.hpp\
-                   cppad_cgoo/src/cppad_cgoo/dynamic_lib/*.hpp\
-                   cppad_cgoo/src/cppad_cgoo/dynamic_lib/linux/*.hpp"
-root[cppad_cgoo]="cppad_cgoo/src/"
-rootInclude[cppad_cgoo]="cppad_cgoo/src/"
+files[cppadcg]="include/cppadcg/*.hpp\
+                include/cppadcg/c/*.hpp\
+                include/cppadcg/dae_index_reduction/*.hpp\
+                include/cppadcg/dynamic_lib/*.hpp\
+                include/cppadcg/dynamic_lib/linux/*.hpp"
+root[cppadcg]="include/"
+rootInclude[cppadcg]="include/"
 #
 different="no"
 for ff in cppad_cgoo cppad
@@ -67,8 +61,6 @@ do
 	cat bin/check_include_file.1.$$ | \
 		sed -e 's%[^<]*<%%'  -e 's%>.*$%%' -e 's|^${root[$ff]}||' | \
 		sort -u > bin/check_include_file.2.$$
-# The file cppad/local/prototype_op.hpp should never be included. 
-# All other files should.
 	
 	if [ "${rootInclude[$ff]}" = "" ]
  	then
@@ -76,8 +68,6 @@ do
 			sort > bin/check_include_file.3.$$ 
  	else
  	 	ls	${files[$ff]} | \
-			sed -e '/cppad\/local\/prototype_op.hpp/d' | \
-			sed -e '/cppad\/example\/eigen_plugin.hpp/d' | \
  	 	 	sed -e "s|${rootInclude[$ff]}||" | \
 			sort > bin/check_include_file.3.$$ 
         fi
