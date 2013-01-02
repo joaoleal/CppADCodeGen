@@ -49,7 +49,7 @@ namespace CppAD {
 
             sources.insert(_customSource.begin(), _customSource.end());
 
-            compiler.compileSources(sources, _savedSourceFiles);
+            compiler.compileSources(sources, _saveSourceFiles);
 
             compiler.buildDynamic(_libraryName);
         } catch (...) {

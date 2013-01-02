@@ -297,7 +297,7 @@ namespace CppAD {
             if (rows[i] > cols[i]) {
                 ii = locations.find(cols[i]);
                 if (ii != locations.end()) {
-                    jj = ii->second.find(cols[i]);
+                    jj = ii->second.find(rows[i]);
                     if (jj != ii->second.end()) {
                         size_t k = jj->second;
                         duplicates[i] = k;

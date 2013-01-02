@@ -1,7 +1,8 @@
 #
 # directories for compilation
-build
-doc
+/build
+/doc
+/obj-x86_64-linux-gnu
 
 # log files
 *.log
@@ -50,13 +51,12 @@ junk.sh
 /debian/*.stamp
 
 # automatically generated directories
-/cppad_cgoo/test/cppadcg_sources
-/cppad_cgoo/test/cppadcg_sources_2
-/cppad_cgoo/test/temp
-/cppad_cgoo/test/tmp
+/test/cppadcg_sources
+/test/cppadcg_sources_2
+/test/temp
+/test/tmp
 
 # compiled examples
-/cppad_cgoo/example/dynamic_linux
-/cppad_cgoo/example/source_generation
-/cppad_cgoo/example/cppadcg_sources
-/build/
+/example/dynamic_linux
+/example/source_generation
+/example/cppadcg_sources
