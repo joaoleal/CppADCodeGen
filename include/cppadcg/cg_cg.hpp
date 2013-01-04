@@ -226,6 +226,17 @@ namespace CppAD {
         return os;
     }
 
+    template<class Base>
+    inline std::istream& operator >>(
+    std::istream& is, //< stream to load a parameter value
+    CppAD::CG<Base>& v//< the variable that will be assign the value
+    ) {
+        Base value;
+        is >> value;
+        v = value;
+        return is;
+    }
+
 }
 
 #endif	

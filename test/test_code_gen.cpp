@@ -48,6 +48,7 @@ extern bool Sub();
 extern bool Tan();
 extern bool Unary();
 extern bool Dynamic();
+extern bool InputStream();
 //extern bool HandlerReset();
 
 // solve
@@ -113,6 +114,7 @@ int main(void) {
     using std::endl;
 
     bool ok = true;
+    ok &= Run(InputStream, "InputStream");
     ok &= Run(Assign, "Assign");
     ok &= Run(Abs, "Abs");
     ok &= Run(Acos, "Acos");

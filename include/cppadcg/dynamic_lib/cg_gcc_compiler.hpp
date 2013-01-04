@@ -108,10 +108,13 @@ namespace CppAD {
          * 
          * \param library the path of the dynamic library to be created
          * \param sources maps the names to the content of the source files
+         * \param dynamic whether or not to create position-independent code for
+         *                dynamic linking
          * \param savefiles whether or not to save the content of the source 
          *                  files in the sources folder
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
+                                    bool dynamic,
                                     bool savefiles) {
 
             if (savefiles) {
@@ -156,7 +159,7 @@ namespace CppAD {
                     std::cout.flush();
                 }
 
-                compile(it->second, file);
+                compile(it->second, file, dynamic);
 
                 if (_verbose) {
                     double endTime = system::currentTime();
@@ -219,7 +222,7 @@ namespace CppAD {
          * \param source the content of the source file
          * \param output the compiled output file name (the object file path)
          */
-        virtual void compile(const std::string& source, const std::string& output) {
+        virtual void compile(const std::string& source, const std::string& output, bool dynamic) {
             std::vector<std::string> args;
             args.push_back("gcc");
             args.push_back("-x");
@@ -227,7 +230,9 @@ namespace CppAD {
             args.insert(args.end(), _compileFlags.begin(), _compileFlags.end());
             args.push_back("-c");
             args.push_back("-");
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            if (dynamic) {
+                args.push_back("-fPIC"); // position-independent code for dynamic linking
+            }
             args.push_back("-o");
             args.push_back(output);
 

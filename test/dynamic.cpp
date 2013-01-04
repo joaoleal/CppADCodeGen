@@ -201,7 +201,7 @@ bool Dynamic2() {
     compiler.setSourcesFolder("cppadcg_sources_2");
 
     CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
-    compDynHelp.setLibraryName("cppad_cg_model_2.so");
+    compDynHelp.setLibraryName("cppad_cg_model_2");
     DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 
     /**

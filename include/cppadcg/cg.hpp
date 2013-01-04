@@ -111,6 +111,10 @@
 #include <cppadcg/c/cg_c_lang_default_hessian_var_name_gen.hpp>
 #include <cppadcg/c/cg_c_lang_custom_var_name_gen.hpp>
 
+// automated static library creation
+#include <cppadcg/dynamic_lib/cg_archiver.hpp>
+#include <cppadcg/dynamic_lib/cg_ar_archiver.hpp>
+
 // automated dynamic library creation
 #include <cppadcg/dynamic_lib/cg_dynamiclib.hpp>
 #include <cppadcg/dynamic_lib/cg_dynamiclib_model.hpp>

@@ -42,7 +42,7 @@ namespace CppAD {
     public:
 
         CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool saveSourceFiles = true) :
-            _libraryName("cppad_cg_model.so"),
+            _libraryName("cppad_cg_model"),
             _saveSourceFiles(saveSourceFiles),
             _verbose(false) {
 
@@ -87,6 +87,8 @@ namespace CppAD {
         }
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
+        
+        void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar);
 
         inline virtual ~CLangCompileDynamicHelper() {
         };
