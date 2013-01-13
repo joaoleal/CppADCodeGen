@@ -29,6 +29,12 @@ namespace CppAD {
      */
     namespace system {
 
+        template<class T>
+        const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".so";
+
+        template<class T>
+        const std::string SystemInfo<T>::STATIC_LIB_EXTENSION = ".a";
+
         inline void createFolder(const std::string& folder) {
             int ret = mkdir(folder.c_str(), 0755);
             if (ret == -1) {
@@ -63,7 +69,7 @@ namespace CppAD {
         inline void callExecutable(const std::string& executable,
                                    const std::vector<std::string>& args,
                                    bool createPipe,
-                                   const std::string& pipeMessage) {
+                                   const std::string& pipeMessage) throw (CGException) {
 
             int fd[2];
 
@@ -118,7 +124,28 @@ namespace CppAD {
 
             //Wait for the executable to exit
             int status;
-            CPPADCG_ASSERT_KNOWN(wait(&status) >= 0, ("Failed while waiting for '" + executable + "'").c_str());
+            do {
+                if (waitpid(pid, &status, 0) < 0) {
+                    int error = errno;
+                    char* buf = new char[512];
+                    std::stringstream s;
+                    s << "Waitpid failed for pid " << pid << " [" << strerror_r(error, buf, 512) << "]";
+                    delete [] buf;
+                    throw CGException(s.str());
+                }
+            } while (!WIFEXITED(status) && !WIFSIGNALED(status));
+
+            if (WIFEXITED(status)) {
+                if (WEXITSTATUS(status) != EXIT_SUCCESS) {
+                    std::stringstream s;
+                    s << "Executable '" << executable << "' (pid " << pid << ") exited with code " << WEXITSTATUS(status);
+                    throw CGException(s.str());
+                }
+            } else if (WIFSIGNALED(status)) {
+                std::stringstream s;
+                s << "Executable '" << executable << "' (pid " << pid << ") terminated by signal " << WTERMSIG(status);
+                throw CGException(s.str());
+            }
         }
 
         inline double currentTime() {

@@ -33,25 +33,25 @@ namespace CppAD {
 
     template<class Base>
     DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
-        
+
         compiler.setVerbose(_verbose);
-        
+
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
                 it->second->setVerbose(_verbose);
-                it->second->compileSources(compiler);
+                it->second->compileSources(compiler, true);
             }
-            
+
             std::map<std::string, std::string> sources;
             generateVerionSource(sources);
             generateModelsSource(sources);
 
             sources.insert(_customSource.begin(), _customSource.end());
 
-            compiler.compileSources(sources, _savedSourceFiles);
+            compiler.compileSources(sources, true, _saveSourceFiles);
 
-            compiler.buildDynamic(_libraryName);
+            compiler.buildDynamic(_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
         } catch (...) {
             compiler.cleanup();
             throw;
@@ -59,6 +59,34 @@ namespace CppAD {
         compiler.cleanup();
 
         return loadDynamicLibrary();
+    }
+
+    template<class Base>
+    void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar) {
+        compiler.setVerbose(_verbose);
+        ar.setVerbose(_verbose);
+
+        try {
+            typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
+            for (it = _models.begin(); it != _models.end(); ++it) {
+                it->second->setVerbose(_verbose);
+                it->second->compileSources(compiler, false);
+            }
+
+            std::map<std::string, std::string> sources;
+            generateVerionSource(sources);
+            generateModelsSource(sources);
+
+            sources.insert(_customSource.begin(), _customSource.end());
+
+            compiler.compileSources(sources, false, _saveSourceFiles);
+
+            ar.create(_libraryName + system::SystemInfo<>::STATIC_LIB_EXTENSION, compiler.getObjectFiles());
+        } catch (...) {
+            compiler.cleanup();
+            throw;
+        }
+        compiler.cleanup();
     }
 
     template<class Base>

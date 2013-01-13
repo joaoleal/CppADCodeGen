@@ -36,14 +36,14 @@ namespace CppAD {
         std::map<std::string, std::string> _customSource; // custom functions to be compiled in the dynamic library
         std::string _libraryName; // the path of the dynamic library to be created
         std::ostringstream _cache;
-        bool _savedSourceFiles;
+        bool _saveSourceFiles;
         //
         bool _verbose;
     public:
 
-        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool savedSourceFiles = true) :
-            _libraryName("cppad_cg_model.so"),
-            _savedSourceFiles(savedSourceFiles),
+        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool saveSourceFiles = true) :
+            _libraryName("cppad_cg_model"),
+            _saveSourceFiles(saveSourceFiles),
             _verbose(false) {
 
             CPPADCG_ASSERT_KNOWN(model != NULL, "The model cannot be null");
@@ -87,6 +87,8 @@ namespace CppAD {
         }
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
+        
+        void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar);
 
         inline virtual ~CLangCompileDynamicHelper() {
         };

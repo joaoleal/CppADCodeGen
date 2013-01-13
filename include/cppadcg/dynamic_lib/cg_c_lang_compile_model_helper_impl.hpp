@@ -55,7 +55,8 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler) {
+    void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler,
+                                                       bool dynamic) {
         std::map<std::string, std::string> sources;
         if (_zero) {
             generateZeroSource(sources);
@@ -79,7 +80,7 @@ namespace CppAD {
 
         generateInfoSource(sources);
 
-        compiler.compileSources(sources, true);
+        compiler.compileSources(sources, dynamic, true);
     }
 
     template<class Base>
@@ -95,8 +96,8 @@ namespace CppAD {
         _cache << "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
         _cache << "   *m = " << _fun->Range() << ";\n";
         _cache << "   *n = " << _fun->Domain() << ";\n";
-        _cache << "   *depCount = " << nameGen->getDependent().size() << ";\n";
-        _cache << "   *indCount = " << nameGen->getIndependent().size() << ";\n";
+        _cache << "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n";
+        _cache << "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n";
         _cache << "}\n\n";
 
         sources[funcName + ".c"] = _cache.str();
@@ -208,7 +209,7 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        std::vector<bool> sparsity = jacobianSparsity<std::vector<bool>, CGBase>(*_fun);
+        std::vector<bool> sparsity = jacobianSparsity < std::vector<bool>, CGBase > (*_fun);
 
         if (_custom_jac_row.empty()) {
             generateSparsityIndexes(sparsity, m, n, rows, cols);
@@ -297,7 +298,7 @@ namespace CppAD {
             if (rows[i] > cols[i]) {
                 ii = locations.find(cols[i]);
                 if (ii != locations.end()) {
-                    jj = ii->second.find(cols[i]);
+                    jj = ii->second.find(rows[i]);
                     if (jj != ii->second.end()) {
                         size_t k = jj->second;
                         duplicates[i] = k;

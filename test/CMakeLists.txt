@@ -39,6 +39,7 @@ ADD_EXECUTABLE(testCGOO EXCLUDE_FROM_ALL
 	div.cpp
 	div_mul.cpp
 	exp.cpp
+        inputstream.cpp
 	log.cpp
 	log_10.cpp
 	mul.cpp

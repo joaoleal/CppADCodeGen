@@ -92,6 +92,7 @@ namespace CppAD {
          *                  files in the sources folder
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
+                                    bool dynamic,
                                     bool savefiles) = 0;
 
         /**

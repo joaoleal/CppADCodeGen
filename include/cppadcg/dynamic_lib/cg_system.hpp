@@ -22,6 +22,13 @@ namespace CppAD {
      */
     namespace system {
 
+        template<class T = int >
+        class SystemInfo {
+        public:
+            static const std::string DYNAMIC_LIB_EXTENSION;
+            static const std::string STATIC_LIB_EXTENSION;
+        };
+
         /**
          * creates a new folder (system dependent)
          * 
@@ -59,7 +66,7 @@ namespace CppAD {
         inline void callExecutable(const std::string& executable,
                                    const std::vector<std::string>& args,
                                    bool pipe = false,
-                                   const std::string& message = "");
+                                   const std::string& message = "") throw(CGException);
 
         inline double currentTime();
     }

@@ -1,8 +1,8 @@
-#ifndef CPPAD_CG_LINUX_C_LANG_COMPILE_DYNAMIC_HELPER_INCLUDED
-#define CPPAD_CG_LINUX_C_LANG_COMPILE_DYNAMIC_HELPER_INCLUDED
+#ifndef CPPAD_CG_ARCHIVER_INCLUDED
+#define CPPAD_CG_ARCHIVER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -14,16 +14,25 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#ifdef __linux__
+
+#include <typeinfo>
 
 namespace CppAD {
 
-    template<class Base>
-    DynamicLib<Base>* CLangCompileDynamicHelper<Base>::loadDynamicLibrary() {
-        return new LinuxDynamicLib<Base > (_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
-    }
+    /**
+     * A tool used to create static libraries from object files
+     */
+    class Archiver {
+    public:
+        virtual bool isVerbose() const = 0;
 
+        virtual void setVerbose(bool verbose) = 0;
+
+        virtual void create(const std::string& library, const std::set<std::string>& objectFiles) = 0;
+
+        inline virtual ~Archiver() {
+        };
+    };
 }
-#endif
 
 #endif
