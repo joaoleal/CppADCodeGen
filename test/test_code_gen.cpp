@@ -55,6 +55,7 @@ extern bool Dynamic();
 extern bool SolveAdd();
 extern bool SolveCosh();
 extern bool SolveDiv();
+extern bool SolveDivMul();
 extern bool SolveExp();
 extern bool SolveLog();
 extern bool SolveLog10();
@@ -138,13 +139,14 @@ int main() {
     ok &= Run(Tan, "Tan");
     ok &= Run(Unary, "Unary");
     //ok &= Run(HandlerReset, "HandlerReset");
-
+    
     ok &= Run(Dynamic, "Dynamic");
 
     // Solve
     ok &= Run(SolveAdd, "SolveAdd");
     ok &= Run(SolveTanh, "SolveCosh");
     ok &= Run(SolveDiv, "SolveDiv");
+    ok &= Run(SolveDivMul, "SolveDivMul");
     ok &= Run(SolveExp, "SolveExp");
     ok &= Run(SolveLog, "SolveLog");
     ok &= Run(SolveLog10, "SolveLog10");

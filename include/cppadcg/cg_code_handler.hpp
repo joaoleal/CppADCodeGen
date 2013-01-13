@@ -61,13 +61,13 @@ namespace CppAD {
     public:
 
         CodeHandler(size_t varCount = 50) :
-            _idCount(0),
-            _used(false),
-            _reuseIDs(true),
-            _optimize(true),
-            _lang(NULL),
-            _minTemporaryVarID(0),
-            _verbose(false) {
+        _idCount(0),
+        _used(false),
+        _reuseIDs(true),
+        _optimize(true),
+        _lang(NULL),
+        _minTemporaryVarID(0),
+        _verbose(false) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -139,10 +139,10 @@ namespace CppAD {
          * \param nameGen Provides the rules for variable name creation.
          */
         virtual void generateCode(std::ostream& out,
-                                  CppAD::Language<Base>& lang,
-                                  std::vector<CG<Base> >& dependent,
-                                  VariableNameGenerator<Base>& nameGen,
-                                  const std::string& jobName = "source") {
+                CppAD::Language<Base>& lang,
+                std::vector<CG<Base> >& dependent,
+                VariableNameGenerator<Base>& nameGen,
+                const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
@@ -238,9 +238,9 @@ namespace CppAD {
              * Creates the source code for a specific language
              */
             LanguageGenerationData<Base> info(_independentVariables, dependent2,
-                                              _minTemporaryVarID,
-                                              _optimize ? _variableOrderOpt : _variableOrder,
-                                              nameGen, _reuseIDs);
+                    _minTemporaryVarID,
+                    _optimize ? _variableOrderOpt : _variableOrder,
+                    nameGen, _reuseIDs);
             lang.generateSourceCode(out, info);
 
             if (_verbose) {
@@ -275,7 +275,7 @@ namespace CppAD {
          * \return  The expression for variable
          */
         inline CG<Base> solveFor(SourceCodeFragment<Base>* expression,
-                                 SourceCodeFragment<Base>* code) throw (CGException);
+                SourceCodeFragment<Base>* code) throw (CGException);
 
         /**
          * Eliminates an independent variable by substitution using the provided
@@ -286,10 +286,10 @@ namespace CppAD {
          * \param dep The dependent variable representing a residual
          */
         inline void substituteIndependent(const CG<Base>& indep,
-                                          const CG<Base>& dep) throw (CGException);
+                const CG<Base>& dep) throw (CGException);
 
         inline void substituteIndependent(SourceCodeFragment<Base>* indep,
-                                          SourceCodeFragment<Base>* dep) throw (CGException);
+                SourceCodeFragment<Base>* dep) throw (CGException);
 
         virtual ~CodeHandler() {
             reset();
@@ -345,7 +345,7 @@ namespace CppAD {
 
                             size_t argIndex = it - args.begin();
                             if (_lang->createsNewVariable(arg) ||
-                                    _lang->requiresVariableArgument(code.operation(), argIndex)) {
+                                    _lang->requiresVariableArgument(code.operationCode(), argIndex)) {
                                 addToEvaluationQueue(arg);
                                 if (arg.variableID() == 0) {
                                     arg.setVariableID(++_idCount);
@@ -535,10 +535,15 @@ namespace CppAD {
              */
             std::vector<Argument<Base> > argsOpt(args.size());
             for (size_t i = 0; i < args.size(); i++) {
-                if (args[i].operation() != NULL) {
-                    argsOpt[i] = Argument<Base > (*optimizeOperationGraph(*args[i].operation()));
+                const Argument<Base>* arg = &args[i];
+                while (arg->operation() != NULL && arg->operation()->operationCode() == CGAliasOp) {
+                    arg = &arg->operation()->arguments()[0];
+                }
+
+                if (arg->operation() != NULL) {
+                    argsOpt[i] = Argument<Base > (*optimizeOperationGraph(*arg->operation()));
                 } else {
-                    argsOpt[i] = Argument<Base > (*args[i].parameter());
+                    argsOpt[i] = Argument<Base > (*arg->parameter());
                 }
             }
 
@@ -547,11 +552,11 @@ namespace CppAD {
              */
             SourceCodeFragment<Base>* opOpt = NULL;
 
-            CGOpCode opCode = op.operation();
+            CGOpCode opCode = op.operationCode();
 
-            if (op.operation() == CGAddOp || op.operation() == CGSubOp) {
+            if (op.operationCode() == CGAddOp || op.operationCode() == CGSubOp) {
                 opOpt = optimizeOperationGraphAddSub(op, argsOpt);
-            } else if (op.operation() == CGDivOp || op.operation() == CGMulOp) {
+            } else if (op.operationCode() == CGDivOp || op.operationCode() == CGMulOp) {
                 opOpt = optimizeOperationGraphDivMul(op, argsOpt);
             }
 
@@ -575,16 +580,16 @@ namespace CppAD {
          * \return the optimized operation
          */
         inline SourceCodeFragment<Base>* optimizeOperationGraphAddSub(SourceCodeFragment<Base>& op,
-                                                                      const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
-            CGOpCode opCode = op.operation();
+                const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
+            CGOpCode opCode = op.operationCode();
             SourceCodeFragment<Base>* left = argsOpt[0].operation();
             SourceCodeFragment<Base>* right = argsOpt[1].operation();
 
-            if (left != NULL && left->variableID() == 0 && left->operation() == CGAddSubOp) {
+            if (left != NULL && left->variableID() == 0 && left->operationCode() == CGAddSubOp) {
                 // the left operation is already a combined addition/subtraction: just include this new operation there
 
                 left->operationInfo_.push_back(opCode == CGAddOp ? CGExtraAddOp : CGExtraSubOp);
-                if (right != NULL && right->variableID() == 0 && right->operation() == CGAddSubOp) {
+                if (right != NULL && right->variableID() == 0 && right->operationCode() == CGAddSubOp) {
                     // the right operation is also an addition/subtraction: merge operations
                     if (opCode == CGAddOp) {
                         // a + (b - c)  ->  a + b - c
@@ -605,7 +610,7 @@ namespace CppAD {
 
                 return left;
 
-            } else if (right != NULL && right->variableID() == 0 && right->operation() == CGAddSubOp) {
+            } else if (right != NULL && right->variableID() == 0 && right->operationCode() == CGAddSubOp) {
                 // the right operation is already a combined addition/subtraction: just include this new operation there
 
                 if (opCode == CGSubOp) {
@@ -644,18 +649,18 @@ namespace CppAD {
          * \return the optimized operation
          */
         inline SourceCodeFragment<Base>* optimizeOperationGraphDivMul(SourceCodeFragment<Base>& op,
-                                                                      const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
-            CGOpCode opCode = op.operation();
+                const std::vector<Argument<Base> >& argsOpt) throw (CGException) {
+            CGOpCode opCode = op.operationCode();
             SourceCodeFragment<Base>* left = argsOpt[0].operation();
             SourceCodeFragment<Base>* right = argsOpt[1].operation();
 
-            if (left != NULL && left->variableID() == 0 && left->operation() == CGDivMulOp) {
+            if (left != NULL && left->variableID() == 0 && left->operationCode() == CGDivMulOp) {
                 // the left operation is already a combined division/multiplication: just include this new operation there
 
                 left->operationInfo_.push_back(opCode == CGDivOp ? CGExtraDivOp : CGExtraMulOp);
-                if (right != NULL && right->variableID() == 0 && right->operation() == CGDivMulOp) {
+                if (right != NULL && right->variableID() == 0 && right->operationCode() == CGDivMulOp) {
                     // the right operation is also a division/multiplication: merge operations 
-                    
+
                     if (opCode == CGMulOp) {
                         // a * (b / c)  ->  a * b / c
                         left->operationInfo_.insert(left->operationInfo_.end(), right->operationInfo_.begin(), right->operationInfo_.end());
@@ -666,7 +671,7 @@ namespace CppAD {
                             left->operationInfo_.push_back((*it == CGExtraMulOp) ? CGExtraDivOp : CGExtraMulOp);
                         }
                     }
-                    
+
                     left->arguments_.insert(left->arguments_.end(), right->arguments_.begin(), right->arguments_.end());
                 } else {
                     left->arguments_.push_back(argsOpt[1]);
@@ -676,7 +681,7 @@ namespace CppAD {
 
                 return left;
 
-            } else if (right != NULL && right->variableID() == 0 && right->operation() == CGDivMulOp) {
+            } else if (right != NULL && right->variableID() == 0 && right->operationCode() == CGDivMulOp) {
                 // the right operation is already a combined division/multiplication: just include this new operation there
 
                 if (opCode == CGDivOp) {
@@ -685,7 +690,7 @@ namespace CppAD {
                         *it = (*it == CGExtraMulOp) ? CGExtraDivOp : CGExtraMulOp;
                     }
                 }
-                
+
                 right->operationInfo_.insert(right->operationInfo_.begin(), opCode == CGDivOp ? CGExtraDivOp : CGExtraMulOp);
                 right->arguments_.insert(right->arguments_.begin(), argsOpt[0]);
 

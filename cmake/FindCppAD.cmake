@@ -18,16 +18,14 @@
 #  CPPAD_LIBRARY_DIRS - The library directories needed to use CppAD
 #  CPPAD_LIBRARIES    - The libraries needed to use CppAD
 
-if (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
-  set(CPPAD_FIND_QUIETLY TRUE)
-endif (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
+IF (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
+  SET(CPPAD_FIND_QUIETLY TRUE)
+ENDIF (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
 
 
 FIND_PACKAGE(PkgConfig)
 IF( PKG_CONFIG_FOUND )
-
-  pkg_check_modules( CPPAD QUIET cppad)
-
+  pkg_check_modules(CPPAD QUIET cppad)
 ENDIF( PKG_CONFIG_FOUND )
 
 
@@ -36,9 +34,9 @@ IF( CPPAD_FOUND )
     MESSAGE(STATUS "package cppad found")
   ENDIF()
 ELSE( CPPAD_FOUND )
-  FIND_PATH(CPPAD_INCLUDE_DIRS NAMES cppad.hpp
+  FIND_PATH(CPPAD_INCLUDE_DIRS NAMES cppad/cppad.hpp
             HINTS  $ENV{CPPAD_HOME}
-                   "/usr/include/cppad" )
+                   "/usr/include" )
            
   FIND_LIBRARY(CPPAD_IPOPT_LIBRARY 
                 cppad_ipopt

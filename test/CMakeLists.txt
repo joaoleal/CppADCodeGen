@@ -37,6 +37,7 @@ ADD_EXECUTABLE(testCGOO EXCLUDE_FROM_ALL
 	cos.cpp
 	cosh.cpp
 	div.cpp
+	div_mul.cpp
 	exp.cpp
 	log.cpp
 	log_10.cpp
@@ -52,6 +53,7 @@ ADD_EXECUTABLE(testCGOO EXCLUDE_FROM_ALL
 	solve/solve_add.cpp
 	solve/solve_cosh.cpp
 	solve/solve_div.cpp
+	solve/solve_div_mul.cpp
 	solve/solve_exp.cpp
 	solve/solve_log.cpp
 	solve/solve_log_10.cpp

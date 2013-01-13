@@ -18,12 +18,14 @@
 bool test_solve(CppAD::ADFun<CppAD::CG<double> >& fun,
                 size_t expressionIndex,
                 size_t indIndex,
-                const std::vector<CppAD::AD<CppAD::CG<double> > >& testValues);
+                const std::vector<CppAD::AD<CppAD::CG<double> > >& testValues,
+                bool optOperations = false);
 
 bool test_solve(CppAD::ADFun<CppAD::CG<double> >& fun,
                 size_t expressionIndex,
                 size_t indIndex,
-                const std::vector<double>& testValues);
+                const std::vector<double>& testValues,
+                bool optOperations = false);
 
 std::vector<double> calculateDependentForward0(CppAD::ADFun<CppAD::CG<double> >& fun,
                                                const std::vector<double>& testValues);

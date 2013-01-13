@@ -26,6 +26,7 @@ namespace CppAD {
         CGAbsOp, //  abs(variable)
         CGAcosOp, // asin(variable)
         CGAddOp, //  a + b
+        CGAddSubOp, //  a + b - c + (...)
         CGAliasOp, //  alias (reference to another operation)
         CGAsinOp, // asin(variable)
         CGAtanOp, // atan(variable)
@@ -38,6 +39,7 @@ namespace CppAD {
         CGCoshOp, // cosh(variable)
         CGCosOp, //  cos(variable)
         CGDivOp, // a / b
+        CGDivMulOp, // a / b * c / (...)
         CGExpOp, //  exp(variable)
         CGInvOp, //                             independent variable
         CGLogOp, //  log(variable)
@@ -52,6 +54,18 @@ namespace CppAD {
         CGTanhOp, //  tanh(variable)
         CGTanOp, //  tan(variable)
         CGUnMinusOp // -(a)
+    };
+    
+    /**
+     * Some additional information for some operations
+     * 
+     * \author Joao Leal
+     */
+    enum CGOpCodeExtra {
+        CGExtraAddOp, //  a + b
+        CGExtraSubOp, //  a - b
+        CGExtraDivOp, //  a / b
+        CGExtraMulOp, //  a * b
     };
 
     inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {

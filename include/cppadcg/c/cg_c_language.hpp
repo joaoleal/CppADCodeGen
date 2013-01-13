@@ -84,17 +84,17 @@ namespace CppAD {
     public:
 
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
-            _baseTypeName(varTypeName),
-            _spaces(spaces, ' '),
-            _inArgName("in"),
-            _outArgName("out"),
-            _nameGen(NULL),
-            _independentSize(0),
-            _dependent(NULL),
-            _depAssignOperation("="),
-            _ignoreZeroDepAssign(false),
-            _maxAssigmentsPerFunction(0),
-            _sources(NULL) {
+        _baseTypeName(varTypeName),
+        _spaces(spaces, ' '),
+        _inArgName("in"),
+        _outArgName("out"),
+        _nameGen(NULL),
+        _independentSize(0),
+        _dependent(NULL),
+        _depAssignOperation("="),
+        _ignoreZeroDepAssign(false),
+        _maxAssigmentsPerFunction(0),
+        _sources(NULL) {
         }
 
         inline const std::string& getDependentAssignOperation() const {
@@ -129,7 +129,7 @@ namespace CppAD {
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
 
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                                 "There must be one temporary variable");
+                    "There must be one temporary variable");
 
             _ss << _spaces << "// auxiliary variables\n";
             if (tmpArg[0].array) {
@@ -165,7 +165,7 @@ namespace CppAD {
         virtual std::string generateDependentVariableDeclaration() {
             const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
             CPPADCG_ASSERT_KNOWN(depArg.size() > 0,
-                                 "There must be at least one dependent argument");
+                    "There must be at least one dependent argument");
 
             _ss << _spaces << "//dependent variables\n";
             for (size_t i = 0; i < depArg.size(); i++) {
@@ -180,7 +180,7 @@ namespace CppAD {
         virtual std::string generateIndependentVariableDeclaration() {
             const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0,
-                                 "There must be at least one independent argument");
+                    "There must be at least one independent argument");
 
             _ss << _spaces << "//independent variables\n";
             for (size_t i = 0; i < indArg.size(); i++) {
@@ -259,9 +259,9 @@ namespace CppAD {
             const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
-                                 "There must be at least one dependent and one independent argument");
+                    "There must be at least one dependent and one independent argument");
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                                 "There must be one temporary variable");
+                    "There must be one temporary variable");
 
             if (!_functionName.empty()) {
                 defaultFuncArgDcl_ = _baseTypeName + " const *const * " + _inArgName +
@@ -279,7 +279,7 @@ namespace CppAD {
 
             for (size_t i = 0; i < dependent.size(); i++) {
                 SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
-                if (op != NULL && op->operation() != CGInvOp) {
+                if (op != NULL && op->operationCode() != CGInvOp) {
                     size_t varID = op->variableID();
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
@@ -327,7 +327,7 @@ namespace CppAD {
                         _temporary[op.variableID()] = &op;
                     }
 
-                    bool condAssign = isCondAssign(op.operation());
+                    bool condAssign = isCondAssign(op.operationCode());
                     if (!condAssign) {
                         _code << _spaces << createVariableName(op) << " ";
                         _code << (isDep ? _depAssignOperation : "=") << " ";
@@ -348,7 +348,7 @@ namespace CppAD {
 
             if (localFuncNames.size() > 0) {
                 CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
-                                     "The temporary variables must be saved in an array in order to generate multiple functions");
+                        "The temporary variables must be saved in an array in order to generate multiple functions");
 
                 // forward declarations
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
@@ -389,7 +389,7 @@ namespace CppAD {
                         printParameter(dependent[i].getParameterValue());
                         _code << ";\n";
                     }
-                } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
+                } else if (dependent[i].getSourceCodeFragment()->operationCode() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
                     const std::string& indepName = *dependent[i].getSourceCodeFragment()->getName();
                     _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
@@ -460,12 +460,12 @@ namespace CppAD {
 
         virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) {
             return op.totalUsageCount() > 1 ||
-                    op.operation() == CGComOpLt ||
-                    op.operation() == CGComOpLe ||
-                    op.operation() == CGComOpEq ||
-                    op.operation() == CGComOpGe ||
-                    op.operation() == CGComOpGt ||
-                    op.operation() == CGComOpNe;
+                    op.operationCode() == CGComOpLt ||
+                    op.operationCode() == CGComOpLe ||
+                    op.operationCode() == CGComOpEq ||
+                    op.operationCode() == CGComOpGe ||
+                    op.operationCode() == CGComOpGt ||
+                    op.operationCode() == CGComOpNe;
         }
 
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) {
@@ -521,7 +521,7 @@ namespace CppAD {
         }
 
         virtual void printExpressionNoVarCheck(SourceCodeFragment<Base>& op) throw (CGException) {
-            switch (op.operation()) {
+            switch (op.operationCode()) {
                 case CGAbsOp:
                 case CGAcosOp:
                 case CGAsinOp:
@@ -542,6 +542,7 @@ namespace CppAD {
                     break;
                 case CGAddSubOp:
                     printOperationAddSub(op);
+                    break;
                 case CGAliasOp:
                     printOperationAlias(op);
                     break;
@@ -579,7 +580,7 @@ namespace CppAD {
                     break;
                 default:
                     std::stringstream ss;
-                    ss << "Unkown operation code '" << op.operation() << "'.";
+                    ss << "Unkown operation code '" << op.operationCode() << "'.";
                     throw CGException(ss.str());
             }
         }
@@ -587,7 +588,7 @@ namespace CppAD {
         virtual void printUnaryFunction(SourceCodeFragment<Base>& op) throw (CGException) {
             CPPADCG_ASSERT_KNOWN(op.arguments().size() == 1, "Invalid number of arguments for unary function");
 
-            switch (op.operation()) {
+            switch (op.operationCode()) {
                 case CGAbsOp:
                     _code << absFuncName();
                     break;
@@ -629,7 +630,7 @@ namespace CppAD {
                     break;
                 default:
                     std::stringstream ss;
-                    ss << "Unkown function name for operation code '" << op.operation() << "'.";
+                    ss << "Unkown function name for operation code '" << op.operationCode() << "'.";
                     throw CGException(ss.str());
             }
 
@@ -692,10 +693,10 @@ namespace CppAD {
             const SourceCodeFragment<Base>* opRight = right.operation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    opRight->operation() != CGDivOp &&
-                    opRight->operation() != CGDivMulOp &&
-                    opRight->operation() != CGMulOp &&
-                    !isFunction(opRight->operation());
+                    opRight->operationCode() != CGDivOp &&
+                    opRight->operationCode() != CGDivMulOp &&
+                    opRight->operationCode() != CGMulOp &&
+                    !isFunction(opRight->operationCode());
 
             print(left);
             _code << " - ";
@@ -729,10 +730,10 @@ namespace CppAD {
                 const SourceCodeFragment<Base>* opRight = right.operation();
                 bool enclose = opRight != NULL &&
                         opRight->variableID() == 0 &&
-                        opRight->operation() != CGDivOp &&
-                        opRight->operation() != CGDivMulOp &&
-                        opRight->operation() != CGMulOp &&
-                        !isFunction(opRight->operation());
+                        opRight->operationCode() != CGDivOp &&
+                        opRight->operationCode() != CGDivMulOp &&
+                        opRight->operationCode() != CGMulOp &&
+                        !isFunction(opRight->operationCode());
 
                 if (enclose) {
                     _code << "(";
@@ -753,11 +754,11 @@ namespace CppAD {
             const SourceCodeFragment<Base>* opLeft = left.operation();
             bool encloseLeft = opLeft != NULL &&
                     opLeft->variableID() == 0 &&
-                    !isFunction(opLeft->operation());
+                    !isFunction(opLeft->operationCode());
             const SourceCodeFragment<Base>* opRight = right.operation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    !isFunction(opRight->operation());
+                    !isFunction(opRight->operationCode());
 
             if (encloseLeft) {
                 _code << "(";
@@ -785,15 +786,15 @@ namespace CppAD {
             const SourceCodeFragment<Base>* opLeft = left.operation();
             bool encloseLeft = opLeft != NULL &&
                     opLeft->variableID() == 0 &&
-                    opLeft->operation() != CGDivOp &&
-                    opLeft->operation() != CGMulOp &&
-                    !isFunction(opLeft->operation());
+                    opLeft->operationCode() != CGDivOp &&
+                    opLeft->operationCode() != CGMulOp &&
+                    !isFunction(opLeft->operationCode());
             const SourceCodeFragment<Base>* opRight = right.operation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    opRight->operation() != CGDivOp &&
-                    opRight->operation() != CGMulOp &&
-                    !isFunction(opRight->operation());
+                    opRight->operationCode() != CGDivOp &&
+                    opRight->operationCode() != CGMulOp &&
+                    !isFunction(opRight->operationCode());
 
             if (encloseLeft) {
                 _code << "(";
@@ -815,13 +816,14 @@ namespace CppAD {
         virtual void printOperationDivMul(SourceCodeFragment<Base>& op) {
             const std::vector<Argument<Base> >& args = op.arguments();
             const std::vector<CGOpCodeExtra>& info = op.operationInfo();
+            assert(args.size() > 1);
             assert(args.size() == info.size() + 1);
 
             const Argument<Base>& first = op.arguments()[0];
             const SourceCodeFragment<Base>* opFirst = first.operation();
             bool encloseFirst = opFirst != NULL &&
                     opFirst->variableID() == 0 &&
-                    !isFunction(opFirst->operation());
+                    !isFunction(opFirst->operationCode());
             if (encloseFirst) {
                 _code << "(";
             }
@@ -830,29 +832,70 @@ namespace CppAD {
                 _code << ")";
             }
 
+            /**
+             * Print all multiplications first (numerator)
+             */
+            size_t divisionCount = 0;
             for (size_t i = 0; i < info.size(); i++) {
                 if (info[i] == CGExtraDivOp) {
-                    _code << " / ";
-                } else if (info[i] == CGExtraMulOp) {
-                    _code << " * ";
-                } else {
+                    divisionCount++;
+                    continue;
+                } else if (info[i] != CGExtraMulOp) {
                     std::stringstream ss;
                     ss << "Invalid operation extra information code '" << info[i] << "'.";
                     throw CGException(ss.str());
                 }
-
+                
                 const Argument<Base>& right = op.arguments()[i + 1];
-
                 const SourceCodeFragment<Base>* opRight = right.operation();
                 bool encloseRight = opRight != NULL &&
                         opRight->variableID() == 0 &&
-                        !isFunction(opRight->operation());
+                        !isFunction(opRight->operationCode());
 
+                _code << " * ";
                 if (encloseRight) {
                     _code << "(";
                 }
                 print(right);
                 if (encloseRight) {
+                    _code << ")";
+                }
+            }
+
+            /**
+             * Print all divisions (denominator)
+             */
+            if (divisionCount > 0) {
+                _code << " / ";
+                if (divisionCount > 1) {
+                    _code << "(";
+                }
+
+                bool firstDiv = true;
+                for (size_t i = 0; i < info.size(); i++) {
+                    if (info[i] == CGExtraMulOp)
+                        continue;
+                    const Argument<Base>& right = op.arguments()[i + 1];
+                    const SourceCodeFragment<Base>* opRight = right.operation();
+                    bool encloseRight = opRight != NULL &&
+                            opRight->variableID() == 0 &&
+                            !isFunction(opRight->operationCode());
+                    
+                    if (firstDiv)
+                        firstDiv = false;
+                    else
+                        _code << " * ";
+                    
+                    if (encloseRight) {
+                        _code << "(";
+                    }
+                    print(right);
+                    if (encloseRight) {
+                        _code << ")";
+                    }
+                }
+
+                if (divisionCount > 1) {
                     _code << ")";
                 }
             }
@@ -866,10 +909,10 @@ namespace CppAD {
             const SourceCodeFragment<Base>* scf = arg.operation();
             bool enclose = scf != NULL &&
                     scf->variableID() == 0 &&
-                    scf->operation() != CGDivOp &&
-                    scf->operation() != CGDivMulOp &&
-                    scf->operation() != CGMulOp &&
-                    !isFunction(scf->operation());
+                    scf->operationCode() != CGDivOp &&
+                    scf->operationCode() != CGDivMulOp &&
+                    scf->operationCode() != CGMulOp &&
+                    !isFunction(scf->operationCode());
 
             _code << "-";
             if (enclose) {
@@ -895,7 +938,7 @@ namespace CppAD {
 
             _code << _spaces << "if( ";
             print(left);
-            _code << " " << getComparison(op.operation()) << " ";
+            _code << " " << getComparison(op.operationCode()) << " ";
             print(right);
             _code << " ) {\n";
             _code << _spaces << _spaces << varName << " ";

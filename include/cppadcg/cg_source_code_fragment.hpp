@@ -113,6 +113,19 @@ namespace CppAD {
 
         inline SourceCodeFragment(CGOpCode op,
                                   const std::vector<Argument<Base> >& args,
+                                  const std::vector<CGOpCodeExtra>& operationInfo) :
+            operation_(op),
+            arguments_(args),
+            operationInfo_(operationInfo),
+            var_id_(0),
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0) {
+        }
+        
+        inline SourceCodeFragment(CGOpCode op,
+                                  const std::vector<Argument<Base> >& args,
                                   const std::vector<CGOpCodeExtra>& operationInfo,
                                   const SourceCodeFragment& orig) :
             operation_(op),
@@ -147,7 +160,7 @@ namespace CppAD {
             name_ = NULL;
         }
 
-        inline CGOpCode operation() const {
+        inline CGOpCode operationCode() const {
             return operation_;
         }
 
@@ -252,7 +265,7 @@ namespace CppAD {
     inline std::ostream& operator <<(
     std::ostream& os, //< stream to write to
     const CppAD::SourceCodeFragment<Base>& c) {
-        switch (c.operation()) {
+        switch (c.operationCode()) {
             case CGAbsOp:
                 os << "abs( $1 )";
                 break;

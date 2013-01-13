@@ -106,7 +106,7 @@ namespace CppAD {
 
             // first evaluation of this node
             const std::vector<Argument<Base> >& args = node.arguments();
-            const CGOpCode code = node.operation();
+            const CGOpCode code = node.operationCode();
             switch (code) {
                 case CGAbsOp: //  abs(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");

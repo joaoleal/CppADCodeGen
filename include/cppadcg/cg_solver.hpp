@@ -32,6 +32,7 @@ namespace CppAD {
 
         typedef vector<SourceCodePathNode<Base> > SourceCodePath;
 
+        // find the location of the variable (code) in the expression
         vector<SourceCodePath> paths = findPaths(expression, code, 2);
 
         if (paths.empty()) {
@@ -54,7 +55,7 @@ namespace CppAD {
             size_t argIndex = path0[n + 1].arg_index;
             const std::vector<Argument<Base> >& args = pnodeOp.node->arguments();
 
-            CGOpCode op = pnodeOp.node->operation();
+            CGOpCode op = pnodeOp.node->operationCode();
             switch (op) {
                 case CGMulOp:
                 {
@@ -71,7 +72,39 @@ namespace CppAD {
                         rightHs = CG<Base > (*this, other) / rightHs;
                     }
                     break;
-
+                case CGDivMulOp:
+                {
+                    vector<Argument<Base> > rhsArgs(args.size());
+                    size_t j = 0;
+                    for (size_t i = 0; i < args.size(); i++) {
+                        if(i != argIndex)
+                            rhsArgs[j++] = args[i];
+                    }
+                    if(rightHs.isVariable())
+                        rhsArgs.back() = Argument<Base > (*rightHs.getSourceCodeFragment());
+                    else
+                        rhsArgs.back() = Argument<Base > (rightHs.getParameterValue());
+                    
+                    const vector<CGOpCodeExtra>& opInfoOrig = code->operationInfo();
+                    vector<CGOpCodeExtra> operationInfo(opInfoOrig.size());
+                    if (argIndex == 0 || opInfoOrig[argIndex - 1] == CGExtraMulOp) {
+                        j = 0;
+                        for (size_t i = 0; i < opInfoOrig.size(); i++) {
+                            if (i + 1 != argIndex)
+                                operationInfo[j++] = opInfoOrig[i] == CGExtraMulOp ? CGExtraDivOp : CGExtraMulOp;
+                        }
+                        operationInfo.back() = CGExtraMulOp;
+                    } else {
+                        j = 0;
+                        for (size_t i = 0; i < args.size() - 1; i++) {
+                            if (i + 1 != argIndex)
+                                operationInfo[j++] = opInfoOrig[i];
+                        }
+                        operationInfo.back() = CGExtraDivOp;
+                    }
+                    rightHs = CG<Base > (*this, new SourceCodeFragment<Base>(CGDivMulOp, rhsArgs, operationInfo));
+                }
+                    break;
                 case CGUnMinusOp:
                     rightHs *= Base(-1.0);
                     break;
