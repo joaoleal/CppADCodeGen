@@ -24,7 +24,8 @@ namespace CppAD {
         std::string name;
         bool array;
 
-        inline FuncArgument() {
+        inline FuncArgument() :
+            array(false) {
         }
 
         inline FuncArgument(const std::string & nam) :

@@ -56,7 +56,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler,
-                                                       bool dynamic) {
+                                                       bool posIndepCode) {
         std::map<std::string, std::string> sources;
         if (_zero) {
             generateZeroSource(sources);
@@ -80,7 +80,7 @@ namespace CppAD {
 
         generateInfoSource(sources);
 
-        compiler.compileSources(sources, dynamic, true);
+        compiler.compileSources(sources, posIndepCode, true);
     }
 
     template<class Base>

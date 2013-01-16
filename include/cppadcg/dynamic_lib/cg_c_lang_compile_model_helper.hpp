@@ -173,7 +173,7 @@ namespace CppAD {
                                                                          const std::string& indepName,
                                                                          const std::string& tmpName);
 
-        virtual void compileSources(CLangCompiler<Base>& compiler, bool dynamic);
+        virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
 

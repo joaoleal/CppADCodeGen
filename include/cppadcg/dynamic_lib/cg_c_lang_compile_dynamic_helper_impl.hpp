@@ -62,7 +62,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar) {
+    void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode) {
         compiler.setVerbose(_verbose);
         ar.setVerbose(_verbose);
 
@@ -70,7 +70,7 @@ namespace CppAD {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
                 it->second->setVerbose(_verbose);
-                it->second->compileSources(compiler, false);
+                it->second->compileSources(compiler, posIndepCode);
             }
 
             std::map<std::string, std::string> sources;
@@ -79,7 +79,7 @@ namespace CppAD {
 
             sources.insert(_customSource.begin(), _customSource.end());
 
-            compiler.compileSources(sources, false, _saveSourceFiles);
+            compiler.compileSources(sources, posIndepCode, _saveSourceFiles);
 
             ar.create(_libraryName + system::SystemInfo<>::STATIC_LIB_EXTENSION, compiler.getObjectFiles());
         } catch (...) {
