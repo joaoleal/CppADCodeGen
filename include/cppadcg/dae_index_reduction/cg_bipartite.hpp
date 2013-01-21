@@ -237,7 +237,7 @@ namespace CppAD {
 
         }
 
-        inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf) :
+        inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf, const std::string& name = "") :
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
@@ -245,7 +245,7 @@ namespace CppAD {
             derivative_(NULL),
             derivativeOf_(derivativeOf),
             tapeIndex_(tapeIndex),
-            name_("d" + derivativeOf->name() + "dt") {
+            name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
             assert(derivativeOf_ != NULL);
 
             derivativeOf_->setDerivative(this);

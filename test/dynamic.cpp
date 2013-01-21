@@ -14,28 +14,31 @@
  */
 #include "CppADCGTest.hpp"
 
-class CppADCGDynamicTest : public CppADCGTest {
-public:
+namespace CppAD {
 
-    inline CppADCGDynamicTest(bool verbose = false, bool printValues = false) :
-        CppADCGTest(verbose, printValues) {
-    }
+    class CppADCGDynamicTest : public CppADCGTest {
+    public:
 
-    inline void compareValues(const std::string& testType,
-                              const std::vector<double>& depCGen,
-                              const std::vector<CppAD::CG<double> >& dep,
-                              double epsilonR = 1e-14, double epsilonA = 1e-14) {
-
-        std::vector<double> depd(dep.size());
-
-        for (size_t i = 0; i < depd.size(); i++) {
-            depd[i] = dep[i].getParameterValue();
+        inline CppADCGDynamicTest(bool verbose = false, bool printValues = false) :
+            CppADCGTest(verbose, printValues) {
         }
 
-        CppADCGTest::compareValues(testType, depCGen, depd, epsilonR, epsilonA);
-    }
-};
+        inline void compareValues(const std::string& testType,
+                                  const std::vector<double>& depCGen,
+                                  const std::vector<CppAD::CG<double> >& dep,
+                                  double epsilonR = 1e-14, double epsilonA = 1e-14) {
 
+            std::vector<double> depd(dep.size());
+
+            for (size_t i = 0; i < depd.size(); i++) {
+                depd[i] = dep[i].getParameterValue();
+            }
+
+            CppADCGTest::compareValues(testType, depCGen, depd, epsilonR, epsilonA);
+        }
+    };
+
+}
 using namespace CppAD;
 using namespace std;
 

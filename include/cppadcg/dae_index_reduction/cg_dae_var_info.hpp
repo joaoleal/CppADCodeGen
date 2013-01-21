@@ -35,18 +35,25 @@ namespace CppAD {
          * associated with time)
          */
         bool integratedVariable_;
+        /**
+         * A custom variable name (keep it empty to use an automatically 
+         * generated name)
+         */
+        std::string name_;
     public:
 
-        inline DaeVarInfo() :
+        inline DaeVarInfo(const std::string& name = "") :
             derivativeOf_(-1),
             integratedDependent_(true),
-            integratedVariable_(false) {
+            integratedVariable_(false),
+            name_(name) {
         }
 
-        inline DaeVarInfo(int derivativeOf) :
+        inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
             derivativeOf_(derivativeOf),
             integratedDependent_(true),
-            integratedVariable_(false) {
+            integratedVariable_(false),
+            name_(name) {
         }
 
         /**
@@ -101,6 +108,26 @@ namespace CppAD {
          */
         inline bool isIntegratedVariable() const {
             return integratedVariable_;
+        }
+
+        /**
+         * Returns the custom variable name. If the string is empty an 
+         * automatically generated name will be used.
+         * 
+         * \return the custom variable name
+         */
+        inline const std::string& getName() const {
+            return name_;
+        }
+
+        /**
+         * Defines a custom variable name. If the string is empty an 
+         * automatically generated name will be used.
+         * 
+         * \param name the custom variable name
+         */
+        inline void setName(const std::string& name) {
+            name_ = name;
         }
 
         inline virtual ~DaeVarInfo() {

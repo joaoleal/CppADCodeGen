@@ -108,22 +108,39 @@ namespace CppAD {
                 }
             }
 
+            std::string timeVarName;
+            if (timeOrigVarIndex_ == fun->Domain() || varInfo[timeOrigVarIndex_].getName().empty()) {
+                timeVarName = "t";
+            } else {
+                timeVarName = varInfo[timeOrigVarIndex_].getName();
+            }
+
             stringstream ss;
             size_t paramCount = 0;
             size_t timeDepVarCount = 0;
             for (size_t j = 0; j < n; j++) {
                 size_t p = new2Orig[j];
                 int origIndex = varInfo[p].getDerivativeOf();
+                const std::string& customName = varInfo[p].getName();
                 if (origIndex < 0) {
                     // generate the variable name
                     if (varInfo[p].isFunctionOfIntegrated()) {
-                        ss << "x" << timeDepVarCount;
+                        if (customName.empty())
+                            ss << "x" << timeDepVarCount;
+                        else
+                            ss << varInfo[p].getName();
                         timeDepVarCount++;
                     } else if (varInfo[p].isIntegratedVariable()) {
-                        ss << "t";
+                        if (customName.empty())
+                            ss << "t";
+                        else
+                            ss << varInfo[p].getName();
                         timeVarIndex_ = j;
                     } else {
-                        ss << "p" << paramCount;
+                        if (customName.empty())
+                            ss << "p" << paramCount;
+                        else
+                            ss << varInfo[p].getName();
                         paramCount++;
                     }
 
@@ -134,7 +151,15 @@ namespace CppAD {
                     if (!varInfo[p].isFunctionOfIntegrated())
                         vnodes_[j]->makeParameter(); // does not depend on time
                 } else {
-                    vnodes_[j] = new Vnode<Base > (j, p, vnodes_[orig2New[origIndex]]);
+                    Vnode<Base>* derivativeOf = vnodes_[orig2New[origIndex]];
+                    std::string name;
+                    if (!customName.empty()) {
+                        name = customName;
+                    } else {
+                        name = "d" + derivativeOf->name() + "d" + timeVarName;
+
+                    }
+                    vnodes_[j] = new Vnode<Base > (j, p, derivativeOf, name);
                 }
             }
 
