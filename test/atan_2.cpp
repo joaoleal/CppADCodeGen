@@ -12,19 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "atan_2.hpp"
 
-bool Atan2() {
-    using namespace CppAD;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, atan_2) {
     // independent variable vector
     std::vector<double> u(1);
     u[0] = 1.;
 
-    bool ok = test0nJac("Atan2",&Atan2Func<double >, &Atan2Func<CG<double> >, u);
-
-    return ok;
+    test0nJac("Atan2", &Atan2Func<double >, &Atan2Func<CG<double> >, u);
 }

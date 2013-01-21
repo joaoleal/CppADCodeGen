@@ -39,13 +39,18 @@ namespace CppAD {
         ADFun<CGBase>* reducedFun_;
         // the maximum order of the time derivatives in the original model
         size_t origMaxTimeDivOrder_;
+    private:
+        size_t timeOrigVarIndex_; // time index in the original user model (may not exist)
+        size_t timeVarIndex_; // the time index in the graph (may not exist)
     public:
 
         Plantelides(ADFun<CG<Base> >* fun,
                     const std::vector<DaeVarInfo>& varInfo) :
             DaeIndexReduction<Base>(fun, varInfo),
             reducedFun_(NULL),
-            origMaxTimeDivOrder_(0) {
+            origMaxTimeDivOrder_(0),
+            timeOrigVarIndex_(fun->Domain()),
+            timeVarIndex_(fun->Domain()) {
 
             using namespace std;
             using std::vector;
@@ -64,15 +69,24 @@ namespace CppAD {
             vnodes_.reserve(1.2 * n + 1);
             vnodes_.resize(n);
 
-            // determine the order of each time derivative
+            // locate the time variable (if present)
+            for (size_t dj = 0; dj < n; dj++) {
+                if (varInfo[dj].isIntegratedVariable()) {
+                    if (timeOrigVarIndex_ < n) {
+                        throw CGException("More than one time variable defined");
+                    }
+                    timeOrigVarIndex_ = dj;
+                }
+            }
 
+            // determine the order of each time derivative
             vector<size_t> derivOrder(n, 0);
             for (size_t dj = 0; dj < n; dj++) {
                 int j = varInfo[dj].getDerivativeOf();
                 if (j >= 0) {
                     while (j >= 0) {
                         assert(j < int(n) && j != int(dj));
-                        assert(varInfo[j].isTimeDependent());
+                        assert(varInfo[j].isFunctionOfIntegrated());
                         derivOrder[dj]++;
                         j = varInfo[j].getDerivativeOf();
                     }
@@ -96,15 +110,18 @@ namespace CppAD {
 
             stringstream ss;
             size_t paramCount = 0;
-            size_t timeVarCount = 0;
+            size_t timeDepVarCount = 0;
             for (size_t j = 0; j < n; j++) {
                 size_t p = new2Orig[j];
                 int origIndex = varInfo[p].getDerivativeOf();
                 if (origIndex < 0) {
                     // generate the variable name
-                    if (varInfo[p].isTimeDependent()) {
-                        ss << "x" << timeVarCount;
-                        timeVarCount++;
+                    if (varInfo[p].isFunctionOfIntegrated()) {
+                        ss << "x" << timeDepVarCount;
+                        timeDepVarCount++;
+                    } else if (varInfo[p].isIntegratedVariable()) {
+                        ss << "t";
+                        timeVarIndex_ = j;
                     } else {
                         ss << "p" << paramCount;
                         paramCount++;
@@ -114,7 +131,7 @@ namespace CppAD {
                     ss.str("");
                     ss.clear();
 
-                    if (!varInfo[p].isTimeDependent())
+                    if (!varInfo[p].isFunctionOfIntegrated())
                         vnodes_[j]->makeParameter(); // does not depend on time
                 } else {
                     vnodes_[j] = new Vnode<Base > (j, p, vnodes_[orig2New[origIndex]]);
@@ -137,7 +154,7 @@ namespace CppAD {
         /**
          * Performs the DAE differentiation index reductions
          * \param newVarInfo  Variable information of the reduced index model
-         * @return the reduced index model
+         * \return the reduced index model (must be deleted by user)
          */
         virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
             if (reducedFun_ != NULL)
@@ -422,7 +439,12 @@ namespace CppAD {
                 /**
                  * generate a new tape
                  */
-                vector<ADCG> indepNew(vnodes_.size() + 1); // variables + time
+                vector<ADCG> indepNew;
+                if (timeOrigVarIndex_ < vnodes_.size()) {
+                    indepNew = vector<ADCG > (vnodes_.size()); // variables + time    
+                } else {
+                    indepNew = vector<ADCG > (vnodes_.size() + 1); // variables + time
+                }
                 Independent(indepNew);
 
                 // variables with the relationship between x dxdt and t
@@ -484,7 +506,10 @@ namespace CppAD {
                     indep2 = prepareTimeDependentVariables(indepNew);
                 } else {
                     // the very last model creation
-                    indepNew.resize(m - 1); // take out time
+                    if (timeOrigVarIndex_ == vnodes_.size())
+                        indepNew.resize(m - 1); // take out time (it was added by this function and not the user)
+                    else
+                        indepNew.resize(m);
                     Independent(indepNew);
 
                     indep2 = indepNew;
@@ -514,8 +539,12 @@ namespace CppAD {
                     newVarInfo[tape] = jj->derivative()->tapeIndex();
                 } else if (jj->derivativeOf() == NULL &&
                         tape < this->varInfo_.size() &&
-                        !this->varInfo_[tape].isTimeDependent()) {
-                    newVarInfo[tape].makeTimeIndependent();
+                        !this->varInfo_[tape].isFunctionOfIntegrated() &&
+                        !this->varInfo_[tape].isIntegratedVariable()) {
+                    newVarInfo[tape].makeConstant();
+                } else if (tape < this->varInfo_.size() &&
+                        this->varInfo_[tape].isIntegratedVariable()) {
+                    newVarInfo[tape].makeIntegratedVariable();
                 } else {
                     newVarInfo[tape] = DaeVarInfo();
                 }
@@ -527,10 +556,9 @@ namespace CppAD {
                                     std::vector<CG<Base> >& dep) const {
 
             size_t m = reducedFun_->Domain();
-            size_t timeIndex = vnodes_.size();
 
             std::vector<CGBase> u(m, CGBase(0));
-            u[timeIndex] = CGBase(1);
+            u[timeVarIndex_] = CGBase(1);
             std::vector<CGBase> v = reducedFun_->Forward(1, u);
 
             for (size_t e = 0; e < equations.size(); e++) {
@@ -560,7 +588,7 @@ namespace CppAD {
                     v[i] = 0;
 
                     // return the result
-                    dep[equations[e]->index()] = u.back();
+                    dep[equations[e]->index()] = u[timeVarIndex_];
                 }
             }
         }
@@ -575,7 +603,8 @@ namespace CppAD {
          *          (in the original variable order).
          */
         inline std::vector<AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<AD<CG<Base> > >& indepOrig) const {
-            assert(vnodes_.size() + 1 == indepOrig.size());
+            assert(timeOrigVarIndex_ < vnodes_.size() ||
+                   (vnodes_.size() + 1 == indepOrig.size() && timeOrigVarIndex_ == vnodes_.size()));
 
             using std::vector;
             typedef AD<CGBase> ADCGBase;
@@ -584,7 +613,8 @@ namespace CppAD {
             vector<ADCGBase> ax(3);
             vector<ADCGBase> ay(1);
 
-            ax[2] = indepOrig.back(); // time
+            assert(timeOrigVarIndex_ < indepOrig.size());
+            ax[2] = indepOrig[timeOrigVarIndex_]; // time
 
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
@@ -598,7 +628,9 @@ namespace CppAD {
                 }
             }
 
-            indepOut[indepOut.size() - 1] = indepOrig.back(); // time
+            if (vnodes_.size() < indepOrig.size()) {
+                indepOut[indepOut.size() - 1] = indepOrig[timeOrigVarIndex_];
+            }
 
             return indepOut;
         }

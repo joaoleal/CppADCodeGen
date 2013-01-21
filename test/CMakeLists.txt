@@ -16,72 +16,127 @@
 # ----------------------------------------------------------------------------
 SET(CMAKE_BUILD_TYPE DEBUG)
 
-IF( UNIX )
-	SET(UNIX_TESTS dynamic.cpp)
-ENDIF()
+################################################################################
+# download and compile GTest
+################################################################################
+INCLUDE(ExternalProject)
 
-ADD_EXECUTABLE(testCGOO EXCLUDE_FROM_ALL
-	#sources:
-	gcc_load_dynamic.hpp
-	TestException.hpp
-	test_code_gen.cpp
-	abs.cpp
-	acos.cpp
-	add.cpp
-	asin.cpp
-	assign.cpp
-	atan.cpp
-	atan_2.cpp
-	compare_change.cpp
-	cond_exp.cpp
-	cos.cpp
-	cosh.cpp
-	div.cpp
-	exp.cpp
-        inputstream.cpp
-	log.cpp
-	log_10.cpp
-	mul.cpp
-	parameter.cpp
-	pow.cpp
-	sin.cpp
-	sub.cpp
-	tan.cpp
-	unary.cpp
-	gcc_load_dynamic.cpp
-	${UNIX_TESTS}
-	solve/solve_add.cpp
-	solve/solve_cosh.cpp
-	solve/solve_div.cpp
-	solve/solve_exp.cpp
-	solve/solve_log.cpp
-	solve/solve_log_10.cpp
-	solve/solve_mul.cpp
-	solve/solve_pow.cpp
-	solve/solve_sinh.cpp
-	solve/solve_sqrt.cpp
-	solve/solve_sub.cpp
-	solve/solve_tanh.cpp
-	solve/test_solve.cpp
-	solve/solve_unary.cpp
-	dae_index_reduction/dummy_derivative.cpp
-	dae_index_reduction/pantelides.cpp
-	TestException.cpp
-)
+# Set default ExternalProject root directory
+SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
-IF( UNIX )
-	TARGET_LINK_LIBRARIES(testCGOO ${DL_LIBRARIES})
-ENDIF()
+# Add gtest
+ExternalProject_Add(
+    googletest
+    SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
+    TIMEOUT 10
+    # Force separate output paths for debug and release builds to allow easy
+    # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
+    CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
+               -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
+               -Dgtest_force_shared_crt=ON
+    # Disable install step
+    INSTALL_COMMAND ""
+    # Wrap download, configure and build steps in a script to log output
+    LOG_DOWNLOAD ON
+    LOG_CONFIGURE ON
+    LOG_BUILD ON)
 
-ADD_CUSTOM_TARGET(test
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
-                  COMMAND ${CMAKE_COMMAND} -E make_directory "tmp"
-                  COMMAND testCGOO
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp")
-                  
-ADD_DEPENDENCIES(test testCGOO)
+# Specify include dir
+ExternalProject_Get_Property(googletest source_dir)
+SET(gtest_source_dir ${source_dir})
+
+# Specify MainTest's link libraries
+ExternalProject_Get_Property(googletest binary_dir)
+SET(GTEST_LIBS_DIR ${binary_dir})
+
+INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
+
+################################################################################
+# add gtest dependency
+################################################################################
+FUNCTION(add_gest_link_libraries test_target_name use_main)
+  IF(CMAKE_COMPILER_IS_GNUCXX)
+    TARGET_LINK_LIBRARIES(${test_target_name} pthread)
+    TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
+    IF(${use_main})
+      TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
+    ENDIF()
+  ELSE()
+    TARGET_LINK_LIBRARIES(${test_target_name}
+                          debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
+                          optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES})
+    IF(${use_main})
+      TARGET_LINK_LIBRARIES(${test_target_name}
+                            debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES}
+                            optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES})
+    ENDIF()
+  ENDIF()
+  
+  # Create dependency of test on googletest
+  ADD_DEPENDENCIES(${test_target_name} googletest)
+ENDFUNCTION()
+
+################################################################################
+# add test function
+################################################################################
+FUNCTION(add_cppadcg_test source_file)
+
+  GET_FILENAME_COMPONENT(test_target_name "${source_file}" NAME_WE)
+
+  ADD_EXECUTABLE("${test_target_name}"
+               # sources:
+               "${source_file}"
+               ${ARGN})
+
+  # Specify MainTest's link libraries
+  add_gest_link_libraries(${test_target_name} ON)
+
+  IF( UNIX )
+    TARGET_LINK_LIBRARIES(${test_target_name} ${DL_LIBRARIES})
+  ENDIF()
+
+  ADD_CUSTOM_COMMAND(TARGET ${test_target_name}
+                     POST_BUILD
+                     COMMAND ${CMAKE_COMMAND} ARGS -E remove_directory "tmp" # make sure tmp is empty
+                     COMMAND ${CMAKE_COMMAND} ARGS -E make_directory "tmp"
+                     COMMENT "Creating tmp folder")
+
+  ADD_TEST(NAME ${test_target_name}
+           COMMAND ${test_target_name})
+ENDFUNCTION()
+
+################################################################################
+# add tests
+################################################################################
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-ADD_TEST(NAME testCGOO
-         COMMAND testCGOO)
+add_cppadcg_test(abs.cpp)
+add_cppadcg_test(acos.cpp)
+add_cppadcg_test(add.cpp)
+add_cppadcg_test(asin.cpp)
+add_cppadcg_test(assign.cpp)
+add_cppadcg_test(atan.cpp)
+add_cppadcg_test(atan_2.cpp)
+add_cppadcg_test(compare_change.cpp)
+add_cppadcg_test(cond_exp.cpp)
+add_cppadcg_test(cos.cpp)
+add_cppadcg_test(cosh.cpp)
+add_cppadcg_test(div.cpp)
+add_cppadcg_test(exp.cpp)
+add_cppadcg_test(inputstream.cpp)
+add_cppadcg_test(log.cpp)
+add_cppadcg_test(log_10.cpp)
+add_cppadcg_test(mul.cpp)
+add_cppadcg_test(parameter.cpp)
+add_cppadcg_test(pow.cpp)
+add_cppadcg_test(sin.cpp)
+add_cppadcg_test(sub.cpp)
+add_cppadcg_test(tan.cpp)
+add_cppadcg_test(unary.cpp)
+IF( UNIX )
+    add_cppadcg_test(dynamic.cpp)
+ENDIF()
+
+ADD_SUBDIRECTORY(solve)
+ADD_SUBDIRECTORY(dae_index_reduction)

@@ -12,24 +12,21 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#include <cppadcg/cg.hpp>
+#include <cmath>
 
-#include "test_solve.hpp"
+#include "CppADCGSolveTest.hpp"
 
-bool SolveUnaryMinus() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
-    typedef CG<double> CGD;
-
+TEST_F(CppADCGSolveTest, SolveUnaryMinus) {
     // independent variable vector
-    std::vector<AD<CGD> > u(2);
+    std::vector<ADCGD> u(2);
     u[0] = 4.5;
     u[1] = 2.5;
     Independent(u);
 
     // dependent variable vector
-    std::vector< AD<CGD> > Z(3);
+    std::vector<ADCGD> Z(3);
 
     // model
     Z[0] = -u[1] + u[0]; // AD<double> + AD<double>
@@ -39,7 +36,5 @@ bool SolveUnaryMinus() {
     // create f: U -> Z 
     ADFun<CGD> fun(u, Z);
 
-    bool ok = test_solve(fun, 2, 1, u);
-
-    return ok;
+    test_solve(fun, 2, 1, u);
 }

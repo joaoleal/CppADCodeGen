@@ -12,39 +12,31 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
+#include "CppADCGSolveTest.hpp"
 
-#include <cppadcg/cg.hpp>
+using namespace CppAD;
 
-#include "test_solve.hpp"
-
-bool SolveMul() {
-    using namespace CppAD;
-    using namespace std;
-
-    typedef CG<double> CGD;
-
+TEST_F(CppADCGSolveTest, SolveMul) {
     // independent variable vector
-    std::vector<AD<CGD> > u(2);
+    std::vector<ADCGD> u(2);
     u[0] = 4.0;
     u[1] = 2.0;
-    
+
     Independent(u);
 
     // dependent variable vector
-    std::vector< AD<CGD> > Z(4);
+    std::vector<ADCGD> Z(4);
 
     // model
     Z[0] = u[0] * u[1];
-    Z[1] = Z[0] * 4.; 
-    Z[2] = 2. * Z[1]; 
+    Z[1] = Z[0] * 4.;
+    Z[2] = 2. * Z[1];
     Z[3] = Z[2] * 1 - 64.0;
-    
+
     // create f: U -> Z
     ADFun<CGD> fun(u, Z);
 
-    bool ok = test_solve(fun, 3, 0, u);
-    ok &= test_solve(fun, 3, 1, u);
-    
-    return  ok;
+    test_solve(fun, 3, 0, u);
+    test_solve(fun, 3, 1, u);
 }
 

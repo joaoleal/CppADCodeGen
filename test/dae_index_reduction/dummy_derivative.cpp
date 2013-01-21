@@ -12,16 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
 #include <cppadcg/dae_index_reduction/cg_dummy_deriv.hpp>
 
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGIndexReductionTest.hpp"
 #include "pendulum.hpp"
 
-inline bool DummyDerivPendulum2D() {
-    using namespace CppAD;
+using namespace CppAD;
+
+TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     using namespace std;
-    typedef CG<double> CGD;
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
@@ -43,7 +42,7 @@ inline bool DummyDerivPendulum2D() {
     x[9] = 9.80665; // dvydt
 
     std::vector<DaeVarInfo> daeVar(10);
-    daeVar[5].makeTimeIndependent();
+    daeVar[5].makeConstant();
     daeVar[6] = 0;
     daeVar[7] = 1;
     daeVar[8] = 2;
@@ -59,10 +58,10 @@ inline bool DummyDerivPendulum2D() {
     delete reducedFun;
     delete reducedFunShort;
 
-    return reducedFunShort != NULL;
+    ASSERT_TRUE(reducedFunShort != NULL);
 }
 
-inline bool DummyDerivPendulum3D() {
+TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
@@ -109,12 +108,5 @@ inline bool DummyDerivPendulum3D() {
     delete reducedFun;
     delete reducedFunShort;
 
-    return reducedFunShort != NULL;
-}
-
-bool DummyDeriv() {
-    bool ok = true;
-    ok &= DummyDerivPendulum2D();
-    ok &= DummyDerivPendulum3D();
-    return ok;
+    ASSERT_TRUE(reducedFunShort != NULL);
 }

@@ -12,43 +12,24 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "atan.hpp"
 
-namespace { // BEGIN empty namespace
+using namespace CppAD;
 
-    bool AtanTestOne() {
-        using namespace CppAD;
+TEST_F(CppADCGOperationTest, atan1) {
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(1);
+    size_t s = 0;
+    u[s] = 1.;
 
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(1);
-        size_t s = 0;
-        u[s] = 1.;
+    test0nJac("AtanTestOne", &AtanTestOneFunc<double >, &AtanTestOneFunc<CG<double> >, u);
+}
 
-        bool ok = test0nJac("AtanTestOne", &AtanTestOneFunc<double >, &AtanTestOneFunc<CG<double> >, u);
+TEST_F(CppADCGOperationTest, atan2) {
+    // independent variable vector
+    std::vector<double> u(1);
+    u[0] = 1.;
 
-        return ok;
-    }
-
-    bool AtanTestTwo() {
-        using namespace CppAD;
-
-        // independent variable vector
-        std::vector<double> u(1);
-        u[0] = 1.;
-
-        bool ok = test0nJac("AtanTestTwo", &AtanTestTwoFunc<double >, &AtanTestTwoFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-} // END empty namespace
-
-bool Atan(void) {
-    bool ok = true;
-    ok &= AtanTestOne();
-    ok &= AtanTestTwo();
-    return ok;
+    test0nJac("AtanTestTwo", &AtanTestTwoFunc<double >, &AtanTestTwoFunc<CG<double> >, u);
 }

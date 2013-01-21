@@ -27,33 +27,82 @@ namespace CppAD {
          * a time derivative.
          */
         int derivativeOf_;
-        // defines the independent variables that dependent on time
-        bool timeDependent_;
+        /** Defines the independent variables that dependent on the integrated
+         *  variable
+         */
+        bool integratedDependent_;
+        /** Whether or not this variable is an integrated variable (usually 
+         * associated with time)
+         */
+        bool integratedVariable_;
     public:
 
         inline DaeVarInfo() :
             derivativeOf_(-1),
-            timeDependent_(true) {
+            integratedDependent_(true),
+            integratedVariable_(false) {
         }
 
         inline DaeVarInfo(int derivativeOf) :
             derivativeOf_(derivativeOf),
-            timeDependent_(true) {
+            integratedDependent_(true),
+            integratedVariable_(false) {
         }
 
+        /**
+         * The index of the variable that the current variable is the derivative
+         * of. A negative value means that the current variable isn't a 
+         * derivative.
+         * 
+         * \return The index of the variable for which this variable is the 
+         *         derivative of.
+         */
         inline int getDerivativeOf() const {
             return derivativeOf_;
         }
 
-        inline bool isTimeDependent() const {
-            return timeDependent_;
+        /**
+         * Determines whether or not this variable depends on the 
+         * independent/integrated variables.
+         * 
+         * \return true if it is a parameter that does not depend on the
+         *              integrated variables
+         */
+        inline bool isFunctionOfIntegrated() const {
+            return integratedDependent_;
         }
 
-        inline void makeTimeIndependent() {
-            timeDependent_ = false;
+        /**
+         * Defines this variable as a parameter/constant that does not depend on
+         * the independent/integrated variables
+         */
+        inline void makeConstant() {
+            integratedVariable_ = false;
+            integratedDependent_ = false;
             derivativeOf_ = -1;
         }
-        
+
+        /**
+         * Defines this variable as an integrated variable, also known
+         * as the independent variable of the DAE system (usually associated
+         * with time)
+         */
+        inline void makeIntegratedVariable() {
+            integratedVariable_ = true;
+            integratedDependent_ = false;
+            derivativeOf_ = -1;
+        }
+
+        /**
+         * Determines whether or not this is an integrated variable, also known
+         * as the independent variable of the DAE system (typically time).
+         * 
+         * \return true if it is the integrated variable
+         */
+        inline bool isIntegratedVariable() const {
+            return integratedVariable_;
+        }
+
         inline virtual ~DaeVarInfo() {
         }
     };

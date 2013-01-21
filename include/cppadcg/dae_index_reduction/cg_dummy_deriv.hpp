@@ -20,10 +20,8 @@
 #include <Eigen/LU>
 
 #include <cppadcg/dae_index_reduction/cg_pantelides.hpp>
-
-#include "cg_dae_var_info.hpp"
-
 //#include <unsupported/Eigen/NonLinearOptimization>
+
 namespace CppAD {
 
     template<class Base>
@@ -71,6 +69,16 @@ namespace CppAD {
         std::vector<DaeVarInfo> reducedVarInfo_;
     public:
 
+        /**
+         * Creates the DAE index reduction algorithm that implements the dummy
+         * derivatives method.
+         * 
+         * \param fun The DAE model
+         * \param varInfo DAE model variable classification
+         * \param x typical variable values
+         * \param normVar variable normalization values
+         * \param normEq equation normalization values
+         */
         DummyDerivatives(ADFun<CG<Base> >* fun,
                          const std::vector<DaeVarInfo>& varInfo,
                          const std::vector<Base>& x,
@@ -104,6 +112,11 @@ namespace CppAD {
             return tderiv;
         }
 
+        /**
+         * Performs the DAE differentiation index reductions
+         * \param newVarInfo  Variable information of the reduced index model
+         * \return The reduced index model (must be deleted by user)
+         */
         virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
             Plantelides<Base>::reduceIndex(reducedVarInfo_);
 
@@ -234,6 +247,12 @@ namespace CppAD {
             return this->reducedFun_;
         }
 
+        /**
+         * Attempts to reduce the number of equations by variable substitution
+         * \param newVarInfo Variable information of the resulting model
+         * \return The new DAE reduced model with (possibly) less equations and
+         *         variables
+         */
         inline ADFun<CG<Base> >* reduceEquations(std::vector<DaeVarInfo>& newVarInfo) {
             using namespace std;
             using std::vector;
@@ -717,7 +736,7 @@ namespace CppAD {
          * \param mat The matrix
          * @return The best condition value (lowest possible and real)
          */
-        static Base evalBestMatrixCondition(const MatrixB& mat) {
+        inline static Base evalBestMatrixCondition(const MatrixB& mat) {
 
             Eigen::FullPivLU<MatrixB> lu = mat.fullPivLu();
             //  MatrixB l = MatrixB::Identity(mat.rows(), mat.cols());

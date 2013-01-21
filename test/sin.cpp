@@ -12,18 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "sin.hpp"
 
-bool Sin() {
-    using namespace CppAD;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, sin) {
     // independent variable vector
     std::vector<double> u(1);
     u[0] = 1.;
 
-    return test0nJac("sin", &SinFunc<double >, &SinFunc<CG<double> >, u);
+    test0nJac("sin", &SinFunc<double >, &SinFunc<CG<double> >, u);
 }

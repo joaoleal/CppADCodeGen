@@ -12,19 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "assign.hpp"
 
-bool Assign() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, assign) {
     std::vector<double> u(2);
     u[0] = 0;
     u[1] = 1;
     
-    return test0nJac("assign", &AssignFunc<double >, &AssignFunc<CG<double> >, u);
+    test0nJac("assign", &AssignFunc<double >, &AssignFunc<CG<double> >, u);
 }

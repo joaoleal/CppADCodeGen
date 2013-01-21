@@ -12,18 +12,12 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "cos.hpp"
 
-bool Cos() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
-    bool ok = true;
-
+TEST_F(CppADCGOperationTest, cos) {
     // independent variable vector
     std::vector<double> u(1);
     std::vector<std::vector<double> > uV;
@@ -32,7 +26,5 @@ bool Cos() {
     u[0] = 0.0;
     uV.push_back(u);
 
-    ok &= test0nJac("cos", &CosFunc<double >, &CosFunc<CG<double> >, uV);
-
-    return ok;
+    test0nJac("cos", &CosFunc<double >, &CosFunc<CG<double> >, uV);
 }

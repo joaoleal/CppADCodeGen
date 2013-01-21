@@ -12,16 +12,12 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "abs.hpp"
 
-bool Abs() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, abs) {
     std::vector<std::vector<double> > uV;
     std::vector<double> u(1);
     u[0] = 0;
@@ -31,5 +27,5 @@ bool Abs() {
     u[0] = -1;
     uV.push_back(u);
 
-    return test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
+    test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
 }

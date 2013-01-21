@@ -12,13 +12,14 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
 #include <cppadcg/dae_index_reduction/cg_pantelides.hpp>
 
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGIndexReductionTest.hpp"
 #include "pendulum.hpp"
 
-inline bool PantelidesPendulum2D() {
+using namespace CppAD;
+
+TEST_F(CppADCGIndexReductionTest, PantelidesPendulum2D) {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
@@ -27,7 +28,7 @@ inline bool PantelidesPendulum2D() {
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
 
     std::vector<DaeVarInfo> daeVar(10);
-    daeVar[5].makeTimeIndependent();
+    daeVar[5].makeConstant();
     daeVar[6] = 0;
     daeVar[7] = 1;
     daeVar[8] = 2;
@@ -41,10 +42,10 @@ inline bool PantelidesPendulum2D() {
     delete fun;
     delete reducedFun;
 
-    return reducedFun != NULL;
+    ASSERT_TRUE(reducedFun != NULL);
 }
 
-inline bool PantelidesPendulum3D() {
+TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
@@ -68,12 +69,5 @@ inline bool PantelidesPendulum3D() {
     delete fun;
     delete reducedFun;
 
-    return reducedFun != NULL;
-}
-
-bool Pantelides() {
-    bool ok = true;
-    ok &= PantelidesPendulum2D();
-    ok &= PantelidesPendulum3D();
-    return ok;
+    ASSERT_TRUE(reducedFun != NULL);
 }

@@ -12,22 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "cosh.hpp"
 
-bool Cosh() {
-    bool ok = true;
+using namespace CppAD;
 
-    using namespace CppAD;
-
+TEST_F(CppADCGOperationTest, cosh) {
     // independent variable vector
     std::vector<double> u(1);
     u[0] = 1.;
 
-    ok &= test0nJac("cosh", &CoshFunc<double >, &CoshFunc<CG<double> >, u, 1e-10, 1e-10);
-
-    return ok;
+    test0nJac("cosh", &CoshFunc<double >, &CoshFunc<CG<double> >, u, 1e-10, 1e-10);
 }

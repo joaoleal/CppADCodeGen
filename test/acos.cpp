@@ -12,19 +12,15 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "acos.hpp"
 
-bool Acos() {
-    using namespace CppAD;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, acos) {
     // independent variable vector
     std::vector<double> u(1);
     u[0] = 0.5;
 
-    bool ok = test0nJac("acos", &AcosFunc<double >, &AcosFunc<CG<double> >, u);
-
-    return ok;
+    test0nJac("acos", &AcosFunc<double >, &AcosFunc<CG<double> >, u);
 }

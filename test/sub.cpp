@@ -12,55 +12,38 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "sub.hpp"
 
 using namespace CppAD;
 
-namespace { // BEGIN empty namespace
+TEST_F(CppADCGOperationTest, subOne) {
+    std::vector<double> u(2);
+    size_t s = 0;
+    size_t t = 1;
+    u[s] = 3.;
+    u[t] = 2.;
 
-    bool One() {
-        std::vector<double> u(2);
-        size_t s = 0;
-        size_t t = 1;
-        u[s] = 3.;
-        u[t] = 2.;
+    test0nJac("SubOne", &OneFunc<double >, &OneFunc<CG<double> >, u);
+}
 
-        return test0nJac("SubOne", &OneFunc<double >, &OneFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, subTwo) {
+    std::vector<double> u(1);
+    u[0] = .5;
 
-    bool Two() {
-        std::vector<double> u(1);
-        u[0] = .5;
+    test0nJac("SubTwo", &TwoFunc<double >, &TwoFunc<CG<double> >, u, 1e-10, 1e-10);
+}
 
-        return test0nJac("SubTwo", &TwoFunc<double >, &TwoFunc<CG<double> >, u, 1e-10, 1e-10);
-    }
+TEST_F(CppADCGOperationTest, subThree) {
+    std::vector<double> u(1);
+    u[0] = 1.;
 
-    bool Three() {
-        std::vector<double> u(1);
-        u[0] = 1.;
+    test0nJac("SubThree", &ThreeFunc<double >, &ThreeFunc<CG<double> >, u, 1e-10, 1e-10);
+}
 
-        return test0nJac("SubThree", &ThreeFunc<double >, &ThreeFunc<CG<double> >, u, 1e-10, 1e-10);
-    }
+TEST_F(CppADCGOperationTest, subFour) {
+    std::vector<double> u(1);
+    u[0] = 1.;
 
-    bool Four() {
-        std::vector<double> u(1);
-        u[0] = 1.;
-
-        return test0nJac("SubFour", &FourFunc<double >, &FourFunc<CG<double> >, u, 1e-10, 1e-10);
-    }
-
-
-} // END empty namespace
-
-bool Sub() {
-    bool ok = true;
-    ok &= One();
-    ok &= Two();
-    ok &= Three();
-    ok &= Four();
-    return ok;
+    test0nJac("SubFour", &FourFunc<double >, &FourFunc<CG<double> >, u, 1e-10, 1e-10);
 }
