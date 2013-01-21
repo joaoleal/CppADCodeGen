@@ -18,7 +18,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX)
 
-SET(cppadcg_version      "20121215" )
+SET(cppadcg_version      "20121215.5" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "Differentiation of C++ Algorithms with Source Code Generation" )
 
