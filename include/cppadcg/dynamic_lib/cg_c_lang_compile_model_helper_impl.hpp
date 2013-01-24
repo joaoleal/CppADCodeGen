@@ -211,12 +211,12 @@ namespace CppAD {
          */
         std::vector<bool> sparsity = jacobianSparsity < std::vector<bool>, CGBase > (*_fun);
 
-        if (_custom_jac_row.empty()) {
+        if (!_custom_jac.defined) {
             generateSparsityIndexes(sparsity, m, n, rows, cols);
 
         } else {
-            rows = _custom_jac_row;
-            cols = _custom_jac_col;
+            rows = _custom_jac.row;
+            cols = _custom_jac.col;
         }
 
         startingGraphCreation(jobName);
@@ -271,12 +271,12 @@ namespace CppAD {
         std::vector<bool> sparsity = _fun->RevSparseHes(n, s);
 
         std::vector<size_t> rows, cols;
-        if (_custom_hess_row.empty()) {
+        if (!_custom_hess.defined) {
             generateSparsityIndexes(sparsity, n, n, rows, cols);
 
         } else {
-            rows = _custom_hess_row;
-            cols = _custom_hess_col;
+            rows = _custom_hess.row;
+            cols = _custom_hess.col;
         }
 
         // make use of the symmetry of the Hessian in order to reduce operations

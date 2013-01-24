@@ -38,6 +38,26 @@ namespace CppAD {
         static const std::string FUNCTION_INFO;
     protected:
         static const std::string CONST;
+
+        /**
+         * Useful class for storing matrix indexes
+         */
+        class Position {
+        public:
+            bool defined;
+            std::vector<size_t> row;
+            std::vector<size_t> col;
+
+            inline Position() :
+                defined(false) {
+            }
+
+            inline Position(const std::vector<size_t>& r, const std::vector<size_t>& c) :
+                defined(true),
+                row(r),
+                col(c) {
+            }
+        };
     protected:
         ADFun<CGBase>* _fun; // the  model
         std::string _name; // the name of the model
@@ -47,10 +67,8 @@ namespace CppAD {
         bool _hessian;
         bool _sparseJacobian;
         bool _sparseHessian;
-        std::vector<size_t> _custom_jac_row;
-        std::vector<size_t> _custom_jac_col;
-        std::vector<size_t> _custom_hess_row;
-        std::vector<size_t> _custom_hess_col;
+        Position _custom_jac;
+        Position _custom_hess;
         std::ostringstream _cache;
         size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
         bool _verbose;
@@ -136,14 +154,12 @@ namespace CppAD {
 
         inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
                                                     const std::vector<size_t>& col) {
-            _custom_jac_row = row;
-            _custom_jac_col = col;
+            _custom_jac = Position(row, col);
         }
 
         inline void setCustomSparseHessianElements(const std::vector<size_t>& row,
                                                    const std::vector<size_t>& col) {
-            _custom_hess_row = row;
-            _custom_hess_col = col;
+            _custom_hess = Position(row, col);
         }
 
         inline size_t getMaxAssignmentsPerFunc() const {
