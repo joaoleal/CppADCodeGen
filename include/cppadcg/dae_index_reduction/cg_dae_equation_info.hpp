@@ -32,7 +32,7 @@ namespace CppAD {
          * equation. A negative value means that the current equation isn't a
          * differentiation of an existing equation.
          */
-        int derivativeOf_;
+        int antiDerivative_;
         /**
          * The variable index associated with this equation. A negative value is
          * used if this equation does not have an assigned variable.
@@ -46,24 +46,24 @@ namespace CppAD {
 
         inline DaeEquationInfo() :
             originalIndex_(-1),
-            derivativeOf_(-1),
+            antiDerivative_(-1),
             assignedVarIndex_(-1),
             explicit_(false) {
         }
 
         inline DaeEquationInfo(int originalIndex, int derivativeOf, int assignedVarIndex, bool explicitEq = false) :
             originalIndex_(originalIndex),
-            derivativeOf_(derivativeOf),
+            antiDerivative_(derivativeOf),
             assignedVarIndex_(assignedVarIndex),
             explicit_(explicitEq) {
         }
 
-        inline int getDerivativeOf() const {
-            return derivativeOf_;
+        inline int getAntiDerivative() const {
+            return antiDerivative_;
         }
 
-        inline void setDerivativeOf(int derivativeOf) {
-            derivativeOf_ = derivativeOf;
+        inline void setAntiDerivative(int derivativeOf) {
+            antiDerivative_ = derivativeOf;
         }
 
         inline int getAssignedVarIndex() const {

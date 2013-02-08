@@ -168,7 +168,7 @@ namespace CppAD {
             typename std::vector<Vnode<Base>*> ::const_iterator j;
             for (j = this->vnodes_.begin(); j != this->vnodes_.end(); ++j) {
                 Vnode<Base>* jj = *j;
-                if (jj->derivativeOf() != NULL) {
+                if (jj->antiDerivative() != NULL) {
                     diffVarStart_ = jj->index();
                     break;
                 }
@@ -270,7 +270,7 @@ namespace CppAD {
             typename std::vector<Vnode<Base>* >::const_reverse_iterator rj;
             for (rj = this->vnodes_.rbegin(); rj != this->vnodes_.rend(); ++rj) {
                 Vnode<Base>* jj = *rj;
-                if (jj->derivativeOf() != NULL && jj->derivative() == NULL) {
+                if (jj->antiDerivative() != NULL && jj->derivative() == NULL) {
                     vars.push_back(jj); // highest order time derivatives in the index 1 model
                 }
             }
@@ -352,8 +352,8 @@ namespace CppAD {
                 varsNew.reserve(vars.size());
                 typename std::vector<Vnode<Base>* >::const_iterator j;
                 for (j = vars.begin(); j != vars.end(); ++j) {
-                    Vnode<Base>* v = (*j)->derivativeOf();
-                    if (v != NULL && v->derivativeOf() != NULL) {
+                    Vnode<Base>* v = (*j)->antiDerivative();
+                    if (v != NULL && v->antiDerivative() != NULL) {
                         varsNew.push_back(v);
                     }
                 }
@@ -367,8 +367,9 @@ namespace CppAD {
             newVarInfo = varInfo; //copy
             typename std::set<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                assert((*j)->derivativeOf() != NULL);
-                newVarInfo[(*j)->derivativeOf()->tapeIndex()].setDerivativeOf(-1);
+                assert((*j)->antiDerivative() != NULL);
+                assert((*j)->tapeIndex() >= 0);
+                newVarInfo[(*j)->tapeIndex()].setAntiDerivative(-1);
             }
 
 #ifdef CPPAD_CG_DAE_VERBOSE
@@ -377,7 +378,7 @@ namespace CppAD {
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
                 std::cout << "# " << **j << "   " << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
             std::cout << "# \n";
-            printModel(this->reducedFun_, newVarInfo);
+            Plantelides<Base>::printModel(this->reducedFun_, newVarInfo);
 #endif
 
         }
@@ -421,7 +422,7 @@ namespace CppAD {
              * the  new tape indexes in the model with less equations and
              * variables (removed variables have negative indexes)
              */
-            std::vector<int> tapeIndexReduced2Short(this->vnodes_.size());
+            std::vector<int> tapeIndexReduced2Short(reducedVarInfo.size());
             for (size_t j = 0; j < tapeIndexReduced2Short.size(); j++) {
                 tapeIndexReduced2Short[j] = j;
             }
@@ -491,8 +492,15 @@ namespace CppAD {
                     newVarInfo.erase(newVarInfo.begin() + p);
                     for (size_t pp = 0; pp < tapeIndexReduced2Short.size(); pp++) {
                         DaeVarInfo& v = newVarInfo[pp];
-                        if (v.getDerivativeOf() > p) {
-                            v.setDerivativeOf(v.getDerivativeOf() - 1);
+                        if (v.getAntiDerivative() > p) {
+                            v.setAntiDerivative(v.getAntiDerivative() - 1);
+                        } else if (v.getAntiDerivative() == p) {
+                            v.setAntiDerivative(-1);
+                        }
+                        if (v.getDerivative() > p) {
+                            v.setDerivative(v.getDerivative() - 1);
+                        } else if (v.getDerivative() == p) {
+                            v.setDerivative(-1);
                         }
                     }
                 }
@@ -504,11 +512,12 @@ namespace CppAD {
                 if (eqIndexReduced2Short[p] < 0) {// removed from model
                     newEqInfo.erase(newEqInfo.begin() + p);
                 } else {
-                    int reducedVIndex = newEqInfo[p].getAssignedVarIndex();
+                    DaeEquationInfo& eq = newEqInfo[p];
+                    int reducedVIndex = eq.getAssignedVarIndex();
                     if (reducedVIndex >= 0)
-                        newEqInfo[p].setAssignedVarIndex(tapeIndexReduced2Short[reducedVIndex]);
-                    if (newEqInfo[p].getDerivativeOf() >= 0)
-                        newEqInfo[p].setDerivativeOf(eqIndexReduced2Short[newEqInfo[p].getDerivativeOf()]);
+                        eq.setAssignedVarIndex(tapeIndexReduced2Short[reducedVIndex]);
+                    if (eq.getAntiDerivative() >= 0)
+                        eq.setAntiDerivative(eqIndexReduced2Short[eq.getAntiDerivative()]);
                 }
             }
 
@@ -522,7 +531,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "DAE with less equations and variables:\n";
-            printModel(shortFun.get(), newVarInfo);
+            Plantelides<Base>::printModel(shortFun.get(), newVarInfo);
 #endif
 
             return shortFun;
@@ -567,7 +576,7 @@ namespace CppAD {
             size_t count = 0;
             for (size_t j = 0; j != varInfo.size(); ++j) {
                 // exclude derivatives (they will be removed)
-                if (varInfo[j].getDerivativeOf() < 0) {
+                if (varInfo[j].getAntiDerivative() < 0) {
                     varIndexOld2New[j] = count++;
                 }
             }
@@ -582,7 +591,7 @@ namespace CppAD {
                     continue;
                 const DaeVarInfo& jj = varInfo[j];
 
-                if (jj.getDerivativeOf() >= 0) {
+                if (jj.getAntiDerivative() >= 0) {
                     try {
                         CGBase& dep = res0[i]; // the equation residual
                         CGBase& indep = indep0[j]; // the time derivative
@@ -596,7 +605,7 @@ namespace CppAD {
                         // it is now an explicit differential equation
                         newEqInfo[i].setExplicit(true);
                         // the derivative variable will disappear, associate the equation with the original variable
-                        newEqInfo[i].setAssignedVarIndex(varIndexOld2New[jj.getDerivativeOf()]);
+                        newEqInfo[i].setAssignedVarIndex(varIndexOld2New[jj.getAntiDerivative()]);
                     } catch (const CGException& ex) {
                         // unable to solve for a dummy variable: keep the equation and variable
                         throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
@@ -609,10 +618,13 @@ namespace CppAD {
              */
             newVarInfo = varInfo;
             for (int j = newVarInfo.size() - 1; j >= 0; --j) {
-                if (newVarInfo[j].getDerivativeOf() >= 0) {
+                if (newVarInfo[j].getAntiDerivative() >= 0) {
                     // a derivative
                     newVarInfo.erase(newVarInfo.begin() + j);
                 }
+            }
+            for (size_t j = 0; j < newVarInfo.size(); j++) {
+                newVarInfo[j].setDerivative(-1); // no derivatives in tape
             }
 
             /**
@@ -623,7 +635,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "Semi-Eplicit DAE:\n";
-            this->printModel(semiExplicitFun.get(), newVarInfo);
+            Plantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
 #endif
 
             return semiExplicitFun;
@@ -655,8 +667,8 @@ namespace CppAD {
                 for (size_t j = 0; j < varInfo.size(); j++) {
                     int index = j;
                     bool differential = false;
-                    while (varInfo[index].getDerivativeOf() >= 0) {
-                        index = varInfo[index].getDerivativeOf();
+                    while (varInfo[index].getAntiDerivative() >= 0) {
+                        index = varInfo[index].getAntiDerivative();
                         differential = true;
                     }
 
@@ -693,9 +705,12 @@ namespace CppAD {
             newVarInfo.resize(varInfo.size());
             for (size_t j = 0; j < varOrder.size(); ++j) {
                 newVarInfo[j] = varInfo[varOrder[j].originalIndex];
-                int oldDerivOfIndex = newVarInfo[j].getDerivativeOf();
+                int oldDerivOfIndex = newVarInfo[j].getAntiDerivative();
                 if (oldDerivOfIndex >= 0)
-                    newVarInfo[j].setDerivativeOf(varIndexOld2New[oldDerivOfIndex]);
+                    newVarInfo[j].setAntiDerivative(varIndexOld2New[oldDerivOfIndex]);
+                int oldDerivIndex = newVarInfo[j].getDerivative();
+                if (oldDerivIndex >= 0)
+                    newVarInfo[j].setDerivative(varIndexOld2New[oldDerivIndex]);
             }
 
             /**
@@ -729,7 +744,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "reordered DAE equations and variables:\n";
-            this->printModel(reorderedFun.get(), newVarInfo);
+            Plantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
 #endif
 
             return reorderedFun;
@@ -837,8 +852,8 @@ namespace CppAD {
             col.reserve(row.capacity());
 
             for (size_t i = diffEqStart_; i < m; i++) {
-                for (size_t j = diffVarStart_; j < n; j++) {
-                    assert(this->vnodes_[j]->derivativeOf() != NULL);
+                for (size_t j = diffVarStart_; j < this->vnodes_.size(); j++) {
+                    assert(this->vnodes_[j]->antiDerivative() != NULL);
                     size_t t = this->vnodes_[j]->tapeIndex();
                     if (jacSparsity_[i * n + t]) {
                         row.push_back(i);
@@ -858,7 +873,7 @@ namespace CppAD {
                                                      row, col, jac, work);
 
             // resize and zero matrix
-            jacobian_.resize(m - diffEqStart_, n - diffVarStart_);
+            jacobian_.resize(m - diffEqStart_, this->vnodes_.size() - diffVarStart_);
 
             map<size_t, Vnode<Base>*> origIndex2var;
             for (size_t j = diffVarStart_; j< this->vnodes_.size(); j++) {
@@ -869,7 +884,7 @@ namespace CppAD {
             // normalize values
             for (size_t e = 0; e < jac.size(); e++) {
                 Enode<Base>* eqOrig = this->enodes_[row[e]]->originalEquation();
-                Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->fun_->Domain());
+                Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->origTimeDependentCount_);
 
                 // normalized jacobian value
                 Base normVal = jac[e].getParameterValue() * normVar_[vOrig->tapeIndex()]
@@ -1133,15 +1148,6 @@ namespace CppAD {
 
             // the condition number
             return max / min;
-        }
-
-        inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<DaeVarInfo>& varInfo) {
-            std::vector<std::string> vnames(varInfo.size());
-            for (size_t p = 0; p < varInfo.size(); p++) {
-                vnames[p] = varInfo[p].getName();
-            }
-
-            Plantelides<Base>::printModel(fun, vnames);
         }
 
         inline static void printModel(CodeHandler<Base>& handler,

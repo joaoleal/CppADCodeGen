@@ -27,7 +27,12 @@ namespace CppAD {
          * derivative. A negative value means that the current variable isn't 
          * a time derivative.
          */
-        int derivativeOf_;
+        int antiDerivative_;
+        /**
+         * The index of the time derivative of this variable. A negative value
+         * means that there is none.
+         */
+        int derivative_;
         /**
          *  Defines the independent variables that dependent on the integrated
          *  variable
@@ -50,7 +55,8 @@ namespace CppAD {
     public:
 
         inline DaeVarInfo(const std::string& name = "") :
-            derivativeOf_(-1),
+            antiDerivative_(-1),
+            derivative_(-1),
             integratedDependent_(true),
             integratedVariable_(false),
             name_(name),
@@ -58,7 +64,8 @@ namespace CppAD {
         }
 
         inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
-            derivativeOf_(derivativeOf),
+            antiDerivative_(derivativeOf),
+            derivative_(-1),
             integratedDependent_(true),
             integratedVariable_(false),
             name_(name),
@@ -73,12 +80,26 @@ namespace CppAD {
          * \return The index of the variable for which this variable is the 
          *         derivative of.
          */
-        inline int getDerivativeOf() const {
-            return derivativeOf_;
+        inline int getAntiDerivative() const {
+            return antiDerivative_;
         }
 
-        void setDerivativeOf(int derivativeOf) {
-            derivativeOf_ = derivativeOf;
+        void setAntiDerivative(int derivativeOf) {
+            antiDerivative_ = derivativeOf;
+        }
+
+        /**
+         * The index of the time derivative for this variable. A negative value
+         * means that there is none.
+         * 
+         * \return The index of the time derivative for this variable.
+         */
+        inline int getDerivative() const {
+            return derivative_;
+        }
+
+        inline void setDerivative(int derivative) {
+            derivative_ = derivative;
         }
 
         /**
@@ -99,7 +120,7 @@ namespace CppAD {
         inline void makeConstant() {
             integratedVariable_ = false;
             integratedDependent_ = false;
-            derivativeOf_ = -1;
+            antiDerivative_ = -1;
         }
 
         /**
@@ -110,7 +131,7 @@ namespace CppAD {
         inline void makeIntegratedVariable() {
             integratedVariable_ = true;
             integratedDependent_ = false;
-            derivativeOf_ = -1;
+            antiDerivative_ = -1;
         }
 
         /**

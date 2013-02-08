@@ -51,6 +51,13 @@ namespace CppAD {
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 varInfo_[j].setOriginalIndex(j);
             }
+
+            for (size_t j = 0; j < varInfo_.size(); ++j) {
+                int deriv = varInfo_[j].getAntiDerivative();
+                if (deriv >= 0) {
+                    varInfo_[deriv].setDerivative(j);
+                }
+            }
         }
 
         inline virtual ~DaeIndexReduction() {

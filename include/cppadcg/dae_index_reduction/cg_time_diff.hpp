@@ -18,7 +18,7 @@
 namespace CppAD {
 
     // ----------------------------------------------------------------------
-    // forward mode routine called by CppAD
+    // forward mode routine called by CppAD for  y = f(x, dxdt, t)
 
     template<class Base>
     bool time_diff_forward(size_t id,
@@ -69,7 +69,7 @@ namespace CppAD {
         return true;
     }
     // ----------------------------------------------------------------------
-    // reverse mode routine called by CppAD
+    // reverse mode routine called by CppAD for  y = f(x, dxdt, t)
 
     template<class Base>
     bool time_diff_reverse(size_t id,

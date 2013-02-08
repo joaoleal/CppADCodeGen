@@ -23,11 +23,13 @@ using namespace CppAD;
 TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     using namespace std;
 
+    std::vector<DaeVarInfo> daeVar;
+
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD > ();
-   
-    std::vector<double> x(10);
-    std::vector<double> normVar(10, 1.0);
+    ADFun<CGD>* fun = Pendulum2D<CGD > (daeVar);
+
+    std::vector<double> x(daeVar.size());
+    std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(5, 1.0);
 
     x[0] = -1.0; // x
@@ -37,23 +39,12 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     x[4] = 1.0; // Tension
     x[5] = 1.0; // length
 
-    x[6] = 0.0; // dxdt
-    x[7] = 0.0; // dydt
-    x[8] = -1.0; // dvxdt
-    x[9] = 9.80665; // dvydt
+    x[6] = 0.0; // time
 
-    std::vector<DaeVarInfo> daeVar(10);
-    daeVar[0] = DaeVarInfo("x");
-    daeVar[1] = DaeVarInfo("y");
-    daeVar[2] = DaeVarInfo("vx");
-    daeVar[3] = DaeVarInfo("vy");
-    daeVar[4] = DaeVarInfo("T");
-    daeVar[5] = DaeVarInfo("l");
-    daeVar[5].makeConstant();
-    daeVar[6] = 0;
-    daeVar[7] = 1;
-    daeVar[8] = 2;
-    daeVar[9] = 3;
+    x[7] = 0.0; // dxdt
+    x[8] = 0.0; // dydt
+    x[9] = -1.0; // dvxdt
+    x[10] = 9.80665; // dvydt
 
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
@@ -74,7 +65,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     using namespace std;
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
-   
+
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
 

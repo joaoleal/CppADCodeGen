@@ -124,12 +124,10 @@ FIND_PACKAGE(Valgrind)
 
 IF(VALGRIND_FOUND)
   SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
-  SET(MEMORYCHECK_COMMAND_OPTIONS "--read-var-info=yes --leak-check=full --track-origins=yes --leak-resolution=high --quiet --error-exitcode=1")
   MESSAGE(STATUS "Valgrind found")
 ELSE()
   MESSAGE(WARNING "Valgrind not found")
 ENDIF()
-
 
 ################################################################################
 # add tests

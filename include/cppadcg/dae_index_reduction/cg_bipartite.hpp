@@ -199,7 +199,7 @@ namespace CppAD {
         /**
          *  the variable which was differentiated to create this one
          */
-        Vnode<Base>* derivativeOf_;
+        Vnode<Base>* antiDerivative_;
         /**
          * The index in the tape
          */
@@ -217,7 +217,7 @@ namespace CppAD {
             parameter_(false),
             assign_(NULL),
             derivative_(NULL),
-            derivativeOf_(NULL),
+            antiDerivative_(NULL),
             tapeIndex_(tapeIndex),
             name_(name) {
 
@@ -229,20 +229,24 @@ namespace CppAD {
             parameter_(false),
             assign_(NULL),
             derivative_(NULL),
-            derivativeOf_(derivativeOf),
+            antiDerivative_(derivativeOf),
             tapeIndex_(tapeIndex),
             name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
-            assert(derivativeOf_ != NULL);
+            assert(antiDerivative_ != NULL);
 
-            derivativeOf_->setDerivative(this);
+            antiDerivative_->setDerivative(this);
         }
 
-        const std::string& name() const {
+        inline const std::string& name() const {
             return name_;
         }
 
-        size_t tapeIndex() const {
+        inline size_t tapeIndex() const {
             return tapeIndex_;
+        }
+
+        inline void setTapeIndex(size_t tapeIndex) {
+            tapeIndex_ = tapeIndex;
         }
 
         inline const std::set<Enode<Base>*>& equations() const {
@@ -259,23 +263,23 @@ namespace CppAD {
         /**
          * \return the variable which was differentiated to create this one
          */
-        inline Vnode<Base>* derivativeOf() const {
-            return derivativeOf_;
+        inline Vnode<Base>* antiDerivative() const {
+            return antiDerivative_;
         }
 
         inline Vnode<Base>* originalVariable() {
-            if (derivativeOf_ == NULL) {
+            if (antiDerivative_ == NULL) {
                 return this;
             } else {
-                return derivativeOf_->originalVariable();
+                return antiDerivative_->originalVariable();
             }
         }
 
         inline Vnode<Base>* originalVariable(size_t origVarSize) {
-            if (derivativeOf_ == NULL || this->index_ < origVarSize) {
+            if (antiDerivative_ == NULL || this->index_ < origVarSize) {
                 return this;
             } else {
-                return derivativeOf_->originalVariable();
+                return antiDerivative_->originalVariable();
             }
         }
 
@@ -320,10 +324,10 @@ namespace CppAD {
         }
 
         unsigned int order() const {
-            if (derivativeOf_ == NULL) {
+            if (antiDerivative_ == NULL) {
                 return 0u;
             } else {
-                return derivativeOf_->order() + 1u;
+                return antiDerivative_->order() + 1u;
             }
         }
 
@@ -347,8 +351,8 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j) {
-        if (j.derivativeOf() != NULL) {
-            os << "Diff(" << *j.derivativeOf() << ")";
+        if (j.antiDerivative() != NULL) {
+            os << "Diff(" << *j.antiDerivative() << ")";
         } else {
             os << "Variable " << j.name();
         }
