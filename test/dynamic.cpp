@@ -147,6 +147,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
 
     compareValues("sparse Hessian", hessCGenDense, hess);
 
+    delete model;
     delete dynamicLib;
 }
 
@@ -255,5 +256,6 @@ TEST_F(CppADCGDynamicTest, Dynamic2) {
 
     compareValues("sparse Hessian", hessCGen, hessSparse);
 
+    delete model;
     delete dynamicLib;
 }

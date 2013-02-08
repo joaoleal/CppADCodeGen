@@ -89,6 +89,7 @@
 #include <cppadcg/cg_arithmetic_assign.hpp>
 #include <cppadcg/cg_math.hpp>
 #include <cppadcg/cg_math_other.hpp>
+#include <cppadcg/cg_nan.hpp>
 #include <cppadcg/cg_cond_exp_op.hpp>
 #include <cppadcg/cg_compare.hpp>
 #include <cppadcg/cg_ordered.hpp>

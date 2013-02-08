@@ -85,30 +85,19 @@ namespace CppAD {
          * 
          */
         Enode<Base>* differentiationOf_;
-        /**
-         * true if this equation is a purely algebraic equation
-         */
-        bool algebraic_;
     public:
 
         inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(NULL),
-            algebraic_(true) {
+            differentiationOf_(NULL) {
         }
 
         inline Enode(size_t index, Enode<Base>* differentiationOf) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(differentiationOf),
-            algebraic_(true) {
-
+            differentiationOf_(differentiationOf) {
             differentiationOf_->setDerivative(this);
-        }
-
-        inline bool isAlgebraic() const {
-            return algebraic_;
         }
 
         inline const std::set<Vnode<Base>*>& variables() const {
@@ -121,9 +110,6 @@ namespace CppAD {
 
         inline void addVariable(Vnode<Base>* j) {
             vnodes_orig_.insert(j);
-            if (j->derivativeOf() != NULL) {
-                algebraic_ = false;
-            }
             if (!j->isDeleted()) {
                 vnodes_.insert(j);
                 j->addEquation(this);

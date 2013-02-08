@@ -17,6 +17,7 @@
 
 #include <cppadcg/dae_index_reduction/cg_bipartite.hpp>
 #include <cppadcg/dae_index_reduction/cg_dae_index_reduction.hpp>
+#include <cppadcg/dae_index_reduction/cg_dae_equation_info.hpp>
 #include <cppadcg/dae_index_reduction/cg_time_diff.hpp>
 
 namespace CppAD {
@@ -30,6 +31,8 @@ namespace CppAD {
         typedef CG<Base> CGBase;
         typedef AD<CGBase> ADCG;
     protected:
+        // typical values;
+        std::vector<Base> x_;
         // original sparsity
         std::vector<bool> sparsity_;
         // Bipartite graph ([equation i][variable j])
@@ -38,15 +41,25 @@ namespace CppAD {
         // new index reduced model
         ADFun<CGBase>* reducedFun_;
         // the maximum order of the time derivatives in the original model
-        size_t origMaxTimeDivOrder_;
+        int origMaxTimeDivOrder_;
     private:
         size_t timeOrigVarIndex_; // time index in the original user model (may not exist)
         size_t timeVarIndex_; // the time index in the graph (may not exist)
     public:
 
+        /**
+         * Creates the DAE index reduction algorithm that implements the 
+         * Pantelides method.
+         * 
+         * \param fun The DAE model
+         * \param varInfo DAE model variable classification
+         * \param x typical variable values (used to avoid NaNs in CppAD checks)
+         */
         Plantelides(ADFun<CG<Base> >* fun,
-                    const std::vector<DaeVarInfo>& varInfo) :
+                    const std::vector<DaeVarInfo>& varInfo,
+                    const std::vector<Base>& x) :
             DaeIndexReduction<Base>(fun, varInfo),
+            x_(x),
             reducedFun_(NULL),
             origMaxTimeDivOrder_(0),
             timeOrigVarIndex_(fun->Domain()),
@@ -73,25 +86,14 @@ namespace CppAD {
             for (size_t dj = 0; dj < n; dj++) {
                 if (varInfo[dj].isIntegratedVariable()) {
                     if (timeOrigVarIndex_ < n) {
-                        throw CGException("More than one time variable defined");
+                        throw CGException("More than one time variable (integrated variable) defined");
                     }
                     timeOrigVarIndex_ = dj;
                 }
             }
 
             // determine the order of each time derivative
-            vector<size_t> derivOrder(n, 0);
-            for (size_t dj = 0; dj < n; dj++) {
-                int j = varInfo[dj].getDerivativeOf();
-                if (j >= 0) {
-                    while (j >= 0) {
-                        assert(j < int(n) && j != int(dj));
-                        assert(varInfo[j].isFunctionOfIntegrated());
-                        derivOrder[dj]++;
-                        j = varInfo[j].getDerivativeOf();
-                    }
-                }
-            }
+            vector<int> derivOrder = determineVariableDiffOrder(varInfo);
 
             origMaxTimeDivOrder_ = *std::max_element(derivOrder.begin(), derivOrder.end());
 
@@ -99,7 +101,7 @@ namespace CppAD {
             vector<size_t> new2Orig;
             vector<size_t> orig2New(n);
             new2Orig.reserve(n);
-            for (size_t order = 0; order <= origMaxTimeDivOrder_; order++) {
+            for (int order = -1; order <= origMaxTimeDivOrder_; order++) {
                 for (size_t j = 0; j < n; j++) {
                     if (derivOrder[j] == order) {
                         orig2New[j] = new2Orig.size();
@@ -174,14 +176,38 @@ namespace CppAD {
                     }
                 }
             }
+
+            // make sure the system is not under or over determined
+            size_t nvar = 0;
+            for (size_t j = 0; j < n; j++) {
+                const Vnode<Base>* jj = vnodes_[j];
+                if (!jj->isParameter() && // exclude constants
+                        (jj->derivativeOf() != NULL || // derivatives
+                        jj->derivative() == NULL) // algebraic variables
+                        ) {
+                    nvar++;
+                }
+            }
+
+            if (nvar != m) {
+                stringstream ss;
+                ss << "The system is not well determined. "
+                        "The of number of equations (" << enodes_.size() << ") does not match the number of unknown variables (" << nvar << ").";
+                throw CGException(ss.str());
+            }
         }
 
         /**
          * Performs the DAE differentiation index reductions
-         * \param newVarInfo  Variable information of the reduced index model
+         * 
+         * \param newVarInfo Variable related information of the reduced index
+         *                   model
+         * \param equationInfo Equation related information of the reduced index
+         *                     model
          * \return the reduced index model (must be deleted by user)
          */
-        virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
+        virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                     std::vector<DaeEquationInfo>& equationInfo) throw (CGException) {
             if (reducedFun_ != NULL)
                 throw CGException("reduceIndex() can only be called once!");
 
@@ -191,7 +217,7 @@ namespace CppAD {
             printResultInfo();
 #endif
 
-            generateNewModel(newVarInfo);
+            generateNewModel(newVarInfo, equationInfo);
 
             return reducedFun_;
         }
@@ -240,6 +266,34 @@ namespace CppAD {
         }
 
     protected:
+
+        static inline std::vector<int> determineVariableDiffOrder(const std::vector<DaeVarInfo>& varInfo) {
+            size_t n = varInfo.size();
+            // determine the order of each time derivative
+            std::vector<int> derivOrder(n, 0);
+            for (size_t dj = 0; dj < n; dj++) {
+                size_t j0;
+                derivOrder[dj] = determineVariableDiffOrder(varInfo, dj, j0);
+            }
+
+            return derivOrder;
+        }
+
+        static inline int determineVariableDiffOrder(const std::vector<DaeVarInfo>& varInfo, size_t index, size_t& j0) {
+            int derivOrder = -1;
+            j0 = index;
+            if (varInfo[index].isFunctionOfIntegrated()) {
+                derivOrder = 0;
+                while (varInfo[j0].getDerivativeOf() >= 0) {
+                    assert(j0 < varInfo.size());
+                    assert(varInfo[j0].isFunctionOfIntegrated());
+                    derivOrder++;
+                    j0 = varInfo[j0].getDerivativeOf();
+                }
+            }
+
+            return derivOrder;
+        }
 
         /**
          * 
@@ -417,7 +471,8 @@ namespace CppAD {
         /**
          * Creates a new tape for the index 1 model
          */
-        inline void generateNewModel(std::vector<DaeVarInfo>& newVarInfo) {
+        inline void generateNewModel(std::vector<DaeVarInfo>& newVarInfo,
+                                     std::vector<DaeEquationInfo>& equationInfo) {
             using std::vector;
 
             vector<vector<Enode<Base>*> > newEquations;
@@ -470,6 +525,9 @@ namespace CppAD {
                 } else {
                     indepNew = vector<ADCG > (vnodes_.size() + 1); // variables + time
                 }
+                for (size_t j = 0; j < x_.size(); j++) {
+                    indepNew[j] = x_[j];
+                }
                 Independent(indepNew);
 
                 // variables with the relationship between x dxdt and t
@@ -480,7 +538,12 @@ namespace CppAD {
                 vector<ADCG> depNew = evaluator0.evaluate(indep2);
                 depNew.resize(enodes_.size());
 
-                reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+                try {
+                    reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+                } catch (const std::exception& ex) {
+                    throw CGException(std::string("Failed to create ADFun: ") + ex.what());
+                }
+
 
 #ifdef CPPAD_CG_DAE_VERBOSE
                 printModel(reducedFun_);
@@ -525,18 +588,23 @@ namespace CppAD {
 
                 if (d < newEquations.size() - 1) {
                     indepNew.resize(m);
-                    Independent(indepNew);
+                } else if (timeOrigVarIndex_ == vnodes_.size()) {
+                    // the very last model creation
+                    indepNew.resize(m - 1); // take out time (it was added by this function and not the user)
+                } else {
+                    // the very last model creation
+                    indepNew.resize(m);
+                }
 
+                for (size_t j = 0; j < x_.size(); j++) {
+                    indepNew[j] = x_[j];
+                }
+                Independent(indepNew);
+
+                if (d < newEquations.size() - 1) {
                     // variables with the relationship between x, dxdt and t
                     indep2 = prepareTimeDependentVariables(indepNew);
                 } else {
-                    // the very last model creation
-                    if (timeOrigVarIndex_ == vnodes_.size())
-                        indepNew.resize(m - 1); // take out time (it was added by this function and not the user)
-                    else
-                        indepNew.resize(m);
-                    Independent(indepNew);
-
                     indep2 = indepNew;
                     indep2.resize(m);
                 }
@@ -544,7 +612,11 @@ namespace CppAD {
                 Evaluator<Base, CGBase> evaluator(handler0, dep);
                 vector<ADCG> depNew = evaluator.evaluate(indep2);
 
-                reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+                try {
+                    reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+                } catch (const std::exception& ex) {
+                    throw CGException(std::string("Failed to create ADFun: ") + ex.what());
+                }
 
 #ifdef CPPAD_CG_DAE_VERBOSE
                 std::cout << equations.size() << " new equations:\n";
@@ -559,22 +631,35 @@ namespace CppAD {
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
                 size_t tape = jj->tapeIndex();
+                if (j < this->varInfo_.size()) {
+                    // nothing changed
+                    newVarInfo[tape] = this->varInfo_[tape];
+                    newVarInfo[tape].setName(jj->name());
 
-                if (jj->derivative() != NULL) {
-                    newVarInfo[tape] = jj->derivative()->tapeIndex();
-                } else if (jj->derivativeOf() == NULL &&
-                        tape < this->varInfo_.size() &&
-                        !this->varInfo_[tape].isFunctionOfIntegrated() &&
-                        !this->varInfo_[tape].isIntegratedVariable()) {
-                    newVarInfo[tape].makeConstant();
-                } else if (tape < this->varInfo_.size() &&
-                        this->varInfo_[tape].isIntegratedVariable()) {
-                    newVarInfo[tape].makeIntegratedVariable();
                 } else {
-                    newVarInfo[tape] = DaeVarInfo();
+                    // new variable derivative added by the Pantelides method
+                    assert(jj->derivativeOf() != NULL);
+
+                    newVarInfo[tape] = DaeVarInfo(jj->derivativeOf()->tapeIndex(), jj->name());
                 }
             }
 
+            std::map<Enode<Base>*, Vnode<Base>*> assigments;
+            for (size_t j = 0; j < vnodes_.size(); j++) {
+                Vnode<Base>* jj = vnodes_[j];
+                if (jj->assigmentEquation() != NULL) {
+                    assigments[jj->assigmentEquation()] = jj;
+                }
+            }
+
+            equationInfo.resize(enodes_.size());
+            for (size_t i = 0; i < enodes_.size(); i++) {
+                Enode<Base>* ii = enodes_[i];
+                int derivativeOf = ii->derivativeOf() != NULL ? ii->derivativeOf()->index() : -1;
+                int assignedVarIndex = assigments.count(ii) > 0 ? assigments[ii]->tapeIndex() : -1;
+
+                equationInfo[i] = DaeEquationInfo(i, derivativeOf, assignedVarIndex);
+            }
         }
 
         inline void forwardTimeDiff(const std::vector<Enode<Base>*>& equations,
@@ -584,7 +669,12 @@ namespace CppAD {
 
             std::vector<CGBase> u(m, CGBase(0));
             u[timeVarIndex_] = CGBase(1);
-            std::vector<CGBase> v = reducedFun_->Forward(1, u);
+            std::vector<CGBase> v;
+            try {
+                v = reducedFun_->Forward(1, u);
+            } catch (const std::exception& ex) {
+                throw CGException(std::string("Failed to determine model Jacobian (forward mode): ") + ex.what());
+            }
 
             for (size_t e = 0; e < equations.size(); e++) {
                 dep[equations[e]->index()] = v[equations[e]->derivativeOf()->index()];
@@ -607,7 +697,11 @@ namespace CppAD {
                     v[i] = 1;
 
                     // compute the derivative of this component of f
-                    u = reducedFun_->Reverse(1, v);
+                    try {
+                        u = reducedFun_->Reverse(1, v);
+                    } catch (const std::exception& ex) {
+                        throw CGException(std::string("Failed to determine model Jacobian (reverse mode): ") + ex.what());
+                    }
 
                     // reset v to vector of all zeros
                     v[i] = 0;

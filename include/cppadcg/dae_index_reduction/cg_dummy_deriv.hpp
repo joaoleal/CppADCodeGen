@@ -24,9 +24,82 @@
 
 namespace CppAD {
 
+    /**
+     * Sorts variable nodes according to the variable differentiation order
+     * 
+     * \param i
+     * \param j
+     * \return true if i should come before j
+     */
     template<class Base>
     bool sortVnodesByOrder(Vnode<Base>* i, Vnode<Base>* j) {
         return (i->order() > j->order());
+    }
+
+    /**
+     * Utility class used to sort varibles in the DAE
+     */
+    class DAEVarOrderInfo {
+    public:
+        size_t originalIndex;
+        size_t originalIndex0;
+        bool hasDerivatives;
+        int order;
+
+        inline DAEVarOrderInfo() :
+            originalIndex(0),
+            originalIndex0(0),
+            hasDerivatives(false),
+            order(-1) {
+        }
+
+        inline DAEVarOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mhasDerivatives, int morder) :
+            originalIndex(moriginalIndex),
+            originalIndex0(moriginalIndex0),
+            hasDerivatives(mhasDerivatives),
+            order(morder) {
+        }
+    };
+
+    /**
+     * Sorts variables based on the differentiation order, whether they are 
+     * algebraic or differential and the order in the original model
+     * 
+     * \param i
+     * \param j
+     * \return true if i should come before j
+     */
+    inline bool sortVariablesByOrder(const DAEVarOrderInfo& i, const DAEVarOrderInfo& j) {
+        if (j.order < i.order) {
+            return true;
+        } else if (j.order > i.order) {
+            return false;
+        } else if (i.hasDerivatives == j.hasDerivatives) {
+            return j.originalIndex > i.originalIndex;
+        } else {
+            return i.hasDerivatives;
+        }
+    }
+
+    /**
+     * Sorts equations according to the index/order of the assigned variables
+     * 
+     * \param i
+     * \param j
+     * \return true if i should come before j
+     */
+    inline bool sortEquationByAssignedOrder(const DaeEquationInfo& i, const DaeEquationInfo& j) {
+        if (i.getAssignedVarIndex() < 0) {
+            if (j.getAssignedVarIndex() < 0)
+                return i.getOriginalIndex() < j.getOriginalIndex();
+            else
+                return false;
+        } else {
+            if (j.getAssignedVarIndex() >= 0)
+                return i.getAssignedVarIndex() < j.getAssignedVarIndex();
+            else
+                return true;
+        }
     }
 
     /**
@@ -40,13 +113,12 @@ namespace CppAD {
         typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1 > VectorCB;
         typedef Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> MatrixB;
     protected:
-        // typical values;
-        std::vector<Base> x_;
         // normalization constants for the variables (in the original order)
         std::vector<Base> normVar_;
         // normalization constants for the equations
         std::vector<Base> normEq_;
-        /** Jacobian sparsity pattern of the reduced system
+        /** 
+         * Jacobian sparsity pattern of the reduced system
          * (in the original variable order)
          */
         std::vector<bool> jacSparsity_;
@@ -54,19 +126,19 @@ namespace CppAD {
         size_t diffVarStart_;
         // the initial index of the differentiated equations
         size_t diffEqStart_;
-        /** normalized Jacobian of the index one system's  differentiated
-         *  equations relative to the time derivatives
-         *  (in the new variable order).
+        /**
+         * Normalized Jacobian of the index one system's  differentiated
+         * equations relative to the time derivatives
+         * (in the new variable order).
          */
         Eigen::SparseMatrix<Base, Eigen::RowMajor> jacobian_;
         /**
          * Dummy derivatives
          */
         std::set<Vnode<Base>* > dummyD_;
-        /**
-         * 
-         */
-        std::vector<DaeVarInfo> reducedVarInfo_;
+        bool reduceEquations_;
+        bool generateSemiExplicitDae_;
+        bool reorder_;
     public:
 
         /**
@@ -75,7 +147,7 @@ namespace CppAD {
          * 
          * \param fun The DAE model
          * \param varInfo DAE model variable classification
-         * \param x typical variable values
+         * \param x typical variable values (used to determine Jacobian values)
          * \param normVar variable normalization values
          * \param normEq equation normalization values
          */
@@ -84,12 +156,14 @@ namespace CppAD {
                          const std::vector<Base>& x,
                          const std::vector<Base>& normVar,
                          const std::vector<Base>& normEq) :
-            Plantelides<Base>(fun, varInfo),
-            x_(x),
+            Plantelides<Base>(fun, varInfo, x),
             normVar_(normVar),
             normEq_(normEq),
             diffVarStart_(0),
-            diffEqStart_(fun->Range()) {
+            diffEqStart_(fun->Range()),
+            reduceEquations_(true),
+            generateSemiExplicitDae_(false),
+            reorder_(true) {
 
             typename std::vector<Vnode<Base>*> ::const_iterator j;
             for (j = this->vnodes_.begin(); j != this->vnodes_.end(); ++j) {
@@ -101,32 +175,94 @@ namespace CppAD {
             }
         }
 
-        virtual inline std::vector<bool> timeDerivativeVariables() {
-            std::vector<bool> tderiv(this->vnodes_.size());
-            for (size_t j = 0; j< this->vnodes_.size(); j++) {
-                Vnode<Base>* jj = this->vnodes_[j];
-                bool isDeriv = jj->derivativeOf() != NULL && dummyD_.find(jj) == dummyD_.end();
-                tderiv[jj->tapeIndex()] = isDeriv;
-            }
+        inline bool isGenerateSemiExplicitDae() const {
+            return generateSemiExplicitDae_;
+        }
 
-            return tderiv;
+        inline void setGenerateSemiExplicitDae(bool generateSemiExplicitDae) {
+            generateSemiExplicitDae_ = generateSemiExplicitDae;
+        }
+
+        inline bool isReduceEquations() const {
+            return reduceEquations_;
+        }
+
+        inline void setReduceEquations(bool reduceEquations) {
+            reduceEquations_ = reduceEquations;
+        }
+
+        inline bool isReorder() const {
+            return reorder_;
+        }
+
+        inline void setReorder(bool reorder) {
+            reorder_ = reorder;
         }
 
         /**
          * Performs the DAE differentiation index reductions
-         * \param newVarInfo  Variable information of the reduced index model
-         * \return The reduced index model (must be deleted by user)
+         * 
+         * \param newVarInfo Variable related information of the reduced index
+         *                   model
+         * \param equationInfo Equation related information of the reduced index
+         *                     model
+         * \return the reduced index model (must be deleted by user)
          */
-        virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
-            Plantelides<Base>::reduceIndex(reducedVarInfo_);
+        virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                     std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
 
-            if (this->reducedFun_ == NULL)
-                return NULL; //nothing to do
+            /**
+             * Variable information for the reduced
+             */
+            std::vector<DaeVarInfo> reducedVarInfo;
+            /**
+             * Equation information for the reduced model
+             */
+            std::vector<DaeEquationInfo> reducedEqInfo;
 
-            //solveDAESystem();
+            std::auto_ptr<ADFun<CG<Base> > > fun(Plantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
+            if (fun.get() == NULL)
+                return NULL; //nothing to do (no index reduction required)
+
+            newEqInfo = reducedEqInfo; // copy
+            addDummyDerivatives(reducedVarInfo, newVarInfo);
+
+            if (reduceEquations_) {
+                std::auto_ptr<ADFun<CG<Base> > > funShort = reduceEquations(reducedVarInfo, newVarInfo,
+                                                                            reducedEqInfo, newEqInfo);
+                fun = funShort;
+            }
+
+            if (generateSemiExplicitDae_) {
+                std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
+                std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
+                std::auto_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(fun.get(),
+                                                                                        varInfo, newVarInfo,
+                                                                                        eqInfo, newEqInfo);
+                fun = semiExplicit;
+            }
+
+            if (reorder_) {
+                std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
+                std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
+                std::auto_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(fun.get(),
+                                                                                    varInfo, newVarInfo,
+                                                                                    eqInfo, newEqInfo);
+                fun = reorderedFun;
+            }
+
+            return fun.release();
+        }
+
+        inline virtual ~DummyDerivatives() {
+        }
+
+    protected:
+
+        virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
+                                                std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
 
             determineJacobian();
-
 
             // variables of interest
             std::vector<Vnode<Base>* > vars;
@@ -226,40 +362,39 @@ namespace CppAD {
 
 
             /**
-             * Output information
+             * Prepare the output information
              */
+            newVarInfo = varInfo; //copy
             typename std::set<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
                 assert((*j)->derivativeOf() != NULL);
-                reducedVarInfo_[(*j)->derivativeOf()->tapeIndex()] = -1;
+                newVarInfo[(*j)->derivativeOf()->tapeIndex()].setDerivativeOf(-1);
             }
-
-            newVarInfo = reducedVarInfo_;
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "## dummy derivatives:\n";
 
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
-                std::cout << "# " << **j << "\n";
+                std::cout << "# " << **j << "   " << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
             std::cout << "# \n";
+            printModel(this->reducedFun_, newVarInfo);
 #endif
 
-            return this->reducedFun_;
         }
 
         /**
-         * Attempts to reduce the number of equations by variable substitution
+         * Attempts to reduce the number of equations by variable substitution.
+         * 
          * \param newVarInfo Variable information of the resulting model
          * \return The new DAE reduced model with (possibly) less equations and
          *         variables
          */
-        inline ADFun<CG<Base> >* reduceEquations(std::vector<DaeVarInfo>& newVarInfo) {
+        inline std::auto_ptr<ADFun<CGBase > > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
+                                                              std::vector<DaeVarInfo>& newVarInfo,
+                                                              const std::vector<DaeEquationInfo>& reducedEqInfo,
+                                                              std::vector<DaeEquationInfo>& newEqInfo) {
             using namespace std;
             using std::vector;
-
-            if (this->reducedFun_ == NULL) {
-                return NULL; // nothing to do
-            }
 
             /**
              * Generate an operation graph
@@ -269,14 +404,37 @@ namespace CppAD {
             vector<CGBase> indep0(this->reducedFun_->Domain());
             handler.makeVariables(indep0);
 
-            const vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
+            vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
 
             /**
-             * determine if the time derivative variable is present in the 
-             * equation only multiplied by a constant value
+             * maps the equations indexes of the reduced model to the new 
+             * equation indexes in the model with less equations and variables
+             * (removed equations have negative indexes)
              */
-            set<size_t> removedEquations;
-            set<Vnode<Base>* > removedDummy;
+            std::vector<int> eqIndexReduced2Short(this->enodes_.size());
+            for (size_t i = 0; i < eqIndexReduced2Short.size(); i++) {
+                eqIndexReduced2Short[i] = i;
+            }
+
+            /**
+             * maps the variables indexes in the tape of the reduced model to 
+             * the  new tape indexes in the model with less equations and
+             * variables (removed variables have negative indexes)
+             */
+            std::vector<int> tapeIndexReduced2Short(this->vnodes_.size());
+            for (size_t j = 0; j < tapeIndexReduced2Short.size(); j++) {
+                tapeIndexReduced2Short[j] = j;
+            }
+
+            /**
+             * attempt to eliminate dummy derivatives and the equation they are
+             * assigned to
+             */
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::set<size_t> erasedVariables;
+            std::set<size_t> erasedEquations;
+#endif
+
             typename set<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
                 Vnode<Base>* dummy = *j;
@@ -285,106 +443,362 @@ namespace CppAD {
                 try {
                     // eliminate all references to the dummy variable by substitution
                     handler.substituteIndependent(indep0[dummy->tapeIndex()], res0[i->index()]);
+                    tapeIndexReduced2Short[dummy->tapeIndex()] = -1;
+                    eqIndexReduced2Short[i->index()] = -1;
 
-                    removedEquations.insert(i->index());
-                    removedDummy.insert(dummy);
+#ifdef CPPAD_CG_DAE_VERBOSE
+                    std::cout << "######### use equation " << i->index() << " to solve for variable " << dummy->name() << std::endl;
+                    erasedVariables.insert(dummy->tapeIndex());
+                    erasedEquations.insert(i->index());
+                    printModel(handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
+#endif
                 } catch (const CGException& ex) {
                     // unable to solve for a dummy variable: keep the equation and variable
                 }
             }
 
-            vector<size_t> orig2New(this->vnodes_.size(), -1);
-            vector<bool> usedOrig(this->vnodes_.size(), false);
-            vector<Vnode<Base>* > vnodesNew;
-            typename vector<Vnode<Base>* >::const_iterator j2;
-            for (j2 = this->vnodes_.begin(); j2 != this->vnodes_.end(); ++j2) {
-                if (removedDummy.find(*j2) == removedDummy.end()) {
-                    vnodesNew.push_back(*j2);
-                    orig2New[(*j2)->tapeIndex()] = (*j2)->index();
-                    usedOrig[(*j2)->tapeIndex()] = true;
+            // determine the new equation indexes
+            for (size_t i = 0; i < eqIndexReduced2Short.size(); i++) {
+                if (eqIndexReduced2Short[i] < 0) { // removed equation
+                    for (size_t ii = i + 1; ii < eqIndexReduced2Short.size(); ii++) {
+                        if (eqIndexReduced2Short[ii] >= 0) {
+                            eqIndexReduced2Short[ii]--;
+                        }
+                    }
                 }
             }
 
             // determine the new indexes in the tape
-            for (size_t p = 0; p < orig2New.size(); p++) {
-                if (!usedOrig[p]) {
-                    for (size_t p2 = p + 1; p2 < orig2New.size(); p2++) {
-                        if (usedOrig[p2]) {
-                            orig2New[p2]--;
+            for (size_t p = 0; p < tapeIndexReduced2Short.size(); p++) {
+                if (tapeIndexReduced2Short[p] < 0) {
+                    // removed from model
+                    for (size_t p2 = p + 1; p2 < tapeIndexReduced2Short.size(); p2++) {
+                        if (tapeIndexReduced2Short[p2] >= 0) {
+                            tapeIndexReduced2Short[p2]--;
                         }
                     }
                 }
             }
 
             /**
-             * create a new tape without the dummy derivatives and with 
-             * less equations
+             * Prepare the output information
              */
-            // less variables
-            vector<ADCG> indepNew(handler.getIndependentVariableSize());
-            assert(indepNew.size() == vnodesNew.size());
+            assert(tapeIndexReduced2Short.size() == reducedVarInfo.size());
 
-            for (size_t p = 0; p < orig2New.size(); p++) {
-                if (usedOrig[p]) {
-                    indepNew[orig2New[p]] = x_[p];
-                }
-            }
-
-            Independent(indepNew);
-
-            // less equations
-            vector<CGBase> resNew(this->reducedFun_->Range() - removedDummy.size());
-            for (size_t i = 0, p = 0; i< this->enodes_.size(); i++) {
-                if (removedEquations.find(i) == removedEquations.end()) {
-                    resNew[p] = res0[i];
-                    p++;
-                }
-            }
-
-            Evaluator<Base, CGBase> evaluator0(handler, resNew);
-            vector<ADCG> depNew = evaluator0.evaluate(indepNew);
-
-            ADFun<CG<Base> >* shortFun = new ADFun<CGBase > (indepNew, depNew);
-            try {
-                vector<string> vnames(vnodesNew.size());
-                for (size_t p = 0; p < vnodesNew.size(); p++) {
-                    Vnode<Base>* n = vnodesNew[p];
-                    vnames[orig2New[n->tapeIndex()]] = n->name();
-                }
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-                this->printModel(shortFun, vnames);
-#endif
-
-                /**
-                 * Output information
-                 */
-                assert(usedOrig.size() == reducedVarInfo_.size());
-
-                newVarInfo = reducedVarInfo_;
-                for (int p = usedOrig.size() - 1; p >= 0; p--) {
-                    if (!usedOrig[p]) {
-                        newVarInfo.erase(newVarInfo.begin() + p);
-                        for (size_t pp = 0; pp < usedOrig.size(); pp++) {
-                            if (newVarInfo[pp].getDerivativeOf() > p) {
-                                newVarInfo[pp] = DaeVarInfo(newVarInfo[pp].getDerivativeOf() - 1);
-                            }
+            newVarInfo = reducedVarInfo; // copy
+            for (int p = tapeIndexReduced2Short.size() - 1; p >= 0; p--) {
+                if (tapeIndexReduced2Short[p] < 0) { // removed from model
+                    newVarInfo.erase(newVarInfo.begin() + p);
+                    for (size_t pp = 0; pp < tapeIndexReduced2Short.size(); pp++) {
+                        DaeVarInfo& v = newVarInfo[pp];
+                        if (v.getDerivativeOf() > p) {
+                            v.setDerivativeOf(v.getDerivativeOf() - 1);
                         }
                     }
                 }
-
-            } catch (...) {
-                delete shortFun;
-                throw;
             }
+
+            newEqInfo = reducedEqInfo; // copy
+
+            for (int p = eqIndexReduced2Short.size() - 1; p >= 0; p--) {
+                if (eqIndexReduced2Short[p] < 0) {// removed from model
+                    newEqInfo.erase(newEqInfo.begin() + p);
+                } else {
+                    int reducedVIndex = newEqInfo[p].getAssignedVarIndex();
+                    if (reducedVIndex >= 0)
+                        newEqInfo[p].setAssignedVarIndex(tapeIndexReduced2Short[reducedVIndex]);
+                    if (newEqInfo[p].getDerivativeOf() >= 0)
+                        newEqInfo[p].setDerivativeOf(eqIndexReduced2Short[newEqInfo[p].getDerivativeOf()]);
+                }
+            }
+
+            /**
+             * Implement the model after after the reduction of equations and 
+             * variables by substitution
+             */
+            std::auto_ptr<ADFun<CGBase > > shortFun(generateReorderedModel(handler, res0,
+                                                                           reducedVarInfo, newVarInfo,
+                                                                           reducedEqInfo, newEqInfo));
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::cout << "DAE with less equations and variables:\n";
+            printModel(shortFun.get(), newVarInfo);
+#endif
 
             return shortFun;
         }
 
-        inline virtual ~DummyDerivatives() {
+        /**
+         * Attempts to generate a semi-explicit DAE.
+         * 
+         * \param reorder place all the differential equations and variables
+         *                together
+         * \param differentialEqs 
+         * \return The new semi-explicit DAE model with less variables (without
+         *         the time derivative variables)
+         */
+        inline std::auto_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >* fun,
+                                                                      const std::vector<DaeVarInfo>& varInfo,
+                                                                      std::vector<DaeVarInfo>& newVarInfo,
+                                                                      const std::vector<DaeEquationInfo>& eqInfo,
+                                                                      std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
+            using namespace std;
+            using std::vector;
+
+            assert(fun != NULL);
+
+            newEqInfo = eqInfo; // copy (we will have the same number of equations)
+
+            /**
+             * Generate an operation graph
+             */
+            CodeHandler<Base> handler;
+
+            vector<CGBase> indep0(fun->Domain());
+            handler.makeVariables(indep0);
+
+            vector<CGBase> res0 = fun->Forward(0, indep0);
+
+            /**
+             * determine the variable indexes after the elimination of the time
+             * derivatives
+             */
+            vector<int> varIndexOld2New(varInfo.size(), -1);
+            size_t count = 0;
+            for (size_t j = 0; j != varInfo.size(); ++j) {
+                // exclude derivatives (they will be removed)
+                if (varInfo[j].getDerivativeOf() < 0) {
+                    varIndexOld2New[j] = count++;
+                }
+            }
+
+            /**
+             * Eliminate time derivatives from equations
+             */
+            for (size_t i = 0; i < eqInfo.size(); ++i) {
+                const DaeEquationInfo& ii = eqInfo[i];
+                int j = ii.getAssignedVarIndex();
+                if (j < 0)
+                    continue;
+                const DaeVarInfo& jj = varInfo[j];
+
+                if (jj.getDerivativeOf() >= 0) {
+                    try {
+                        CGBase& dep = res0[i]; // the equation residual
+                        CGBase& indep = indep0[j]; // the time derivative
+
+                        handler.substituteIndependent(indep, dep); // removes indep from the list of variables
+
+                        SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
+                        assert(alias != NULL && alias->operation() == CGAliasOp);
+                        dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]);
+
+                        // it is now an explicit differential equation
+                        newEqInfo[i].setExplicit(true);
+                        // the derivative variable will disappear, associate the equation with the original variable
+                        newEqInfo[i].setAssignedVarIndex(varIndexOld2New[jj.getDerivativeOf()]);
+                    } catch (const CGException& ex) {
+                        // unable to solve for a dummy variable: keep the equation and variable
+                        throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
+                    }
+                }
+            }
+
+            /**
+             * Prepare the output information
+             */
+            newVarInfo = varInfo;
+            for (int j = newVarInfo.size() - 1; j >= 0; --j) {
+                if (newVarInfo[j].getDerivativeOf() >= 0) {
+                    // a derivative
+                    newVarInfo.erase(newVarInfo.begin() + j);
+                }
+            }
+
+            /**
+             * Implement the reordering and derivative variable elimination in
+             * the model
+             */
+            std::auto_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::cout << "Semi-Eplicit DAE:\n";
+            this->printModel(semiExplicitFun.get(), newVarInfo);
+#endif
+
+            return semiExplicitFun;
         }
 
-    protected:
+        inline std::auto_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >* fun,
+                                                                  const std::vector<DaeVarInfo>& varInfo,
+                                                                  std::vector<DaeVarInfo>& newVarInfo,
+                                                                  const std::vector<DaeEquationInfo>& eqInfo,
+                                                                  std::vector<DaeEquationInfo>& newEqInfo) {
+
+            using namespace std;
+            using std::vector;
+
+            assert(fun != NULL);
+
+            /**
+             * Determine the variables that have derivatives in the model
+             */
+            std::set<size_t> oldVarWithDerivatives; // indexes of old variables (before reordering) with derivatives
+            for (size_t i = 0; i < eqInfo.size(); i++) {
+                if (eqInfo[i].isExplicit() && eqInfo[i].getAssignedVarIndex() >= 0) {
+                    oldVarWithDerivatives.insert(eqInfo[i].getAssignedVarIndex());
+                }
+            }
+
+            if (oldVarWithDerivatives.empty()) {
+                // no semi-explicit model generated
+                for (size_t j = 0; j < varInfo.size(); j++) {
+                    int index = j;
+                    bool differential = false;
+                    while (varInfo[index].getDerivativeOf() >= 0) {
+                        index = varInfo[index].getDerivativeOf();
+                        differential = true;
+                    }
+
+                    if (differential) {
+                        oldVarWithDerivatives.insert(index);
+                    }
+                }
+            }
+
+            /**
+             * sort variables
+             */
+            std::vector<DAEVarOrderInfo> varOrder(varInfo.size());
+            for (size_t j = 0; j < varInfo.size(); j++) {
+                size_t j0;
+                int derivOrder = this->determineVariableDiffOrder(varInfo, j, j0);
+                if (varInfo[j].isIntegratedVariable()) {
+                    derivOrder = -2; // so that it goes last
+                }
+                bool hasDerivatives = oldVarWithDerivatives.find(j) != oldVarWithDerivatives.end();
+                varOrder[j] = DAEVarOrderInfo(j, j0, hasDerivatives, derivOrder);
+            }
+
+            std::sort(varOrder.begin(), varOrder.end(), sortVariablesByOrder);
+
+            /**
+             * reorder variables
+             */
+            std::vector<size_t> varIndexOld2New(varInfo.size(), -1);
+            for (size_t j = 0; j < varOrder.size(); ++j) {
+                varIndexOld2New[varOrder[j].originalIndex] = j;
+            }
+
+            newVarInfo.resize(varInfo.size());
+            for (size_t j = 0; j < varOrder.size(); ++j) {
+                newVarInfo[j] = varInfo[varOrder[j].originalIndex];
+                int oldDerivOfIndex = newVarInfo[j].getDerivativeOf();
+                if (oldDerivOfIndex >= 0)
+                    newVarInfo[j].setDerivativeOf(varIndexOld2New[oldDerivOfIndex]);
+            }
+
+            /**
+             * reorder equations
+             */
+            newEqInfo = eqInfo; //copy
+            for (size_t i = 0; i < newEqInfo.size(); i++) {
+                int oldVIndex = newEqInfo[i].getAssignedVarIndex();
+                if (oldVIndex >= 0) {
+                    newEqInfo[i].setAssignedVarIndex(varIndexOld2New[oldVIndex]);
+                }
+            }
+
+            // sort by the order of the assigned variables
+            std::sort(newEqInfo.begin(), newEqInfo.end(), sortEquationByAssignedOrder);
+
+            /**
+             * Generate an operation graph
+             */
+            CodeHandler<Base> handler;
+
+            vector<CGBase> indep0(fun->Domain());
+            handler.makeVariables(indep0);
+
+            const vector<CGBase> res0 = fun->Forward(0, indep0);
+
+            /**
+             * Implement the reordering in the model
+             */
+            std::auto_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            std::cout << "reordered DAE equations and variables:\n";
+            this->printModel(reorderedFun.get(), newVarInfo);
+#endif
+
+            return reorderedFun;
+        }
+
+        inline ADFun<CGBase>* generateReorderedModel(CodeHandler<Base>& handler,
+                                                     const std::vector<CGBase>& res0,
+                                                     const std::vector<DaeVarInfo>& varInfo,
+                                                     const std::vector<DaeVarInfo>& newVarInfo,
+                                                     const std::vector<DaeEquationInfo>& eqInfo,
+                                                     const std::vector<DaeEquationInfo>& newEqInfo) const {
+            using std::vector;
+
+            vector<ADCG> indepNewOrder(handler.getIndependentVariableSize());
+            assert(indepNewOrder.size() == newVarInfo.size());
+
+            for (size_t p = 0; p < newVarInfo.size(); p++) {
+                int origIndex = newVarInfo[p].getOriginalIndex();
+                if (origIndex >= 0) {
+                    indepNewOrder[p] = this->x_[origIndex];
+                }
+            }
+
+            Independent(indepNewOrder);
+
+            /**
+             * the model must be called with the handler order
+             * 
+             * removed variables using substitution are taken out from the list
+             * of independent variables in the handler
+             */
+            std::set<size_t> newVarIndexes;
+            for (size_t j = 0; j < newVarInfo.size(); j++) {
+                newVarIndexes.insert(newVarInfo[j].getOriginalIndex());
+            }
+
+            std::map<size_t, size_t> varOrig2HandlerIndex;
+            size_t handlerIndex = 0;
+            for (size_t j = 0; j < varInfo.size(); j++) {
+                int orig = varInfo[j].getOriginalIndex();
+                if (newVarIndexes.find(orig) != newVarIndexes.end()) {
+                    varOrig2HandlerIndex[orig] = handlerIndex++;
+                }
+            }
+
+            vector<ADCG> indepHandlerOrder(handler.getIndependentVariableSize());
+            for (size_t p = 0; p < newVarInfo.size(); p++) {
+                size_t origIndex = newVarInfo[p].getOriginalIndex();
+                indepHandlerOrder[varOrig2HandlerIndex[origIndex]] = indepNewOrder[p];
+            }
+
+            // reorder equations
+            std::map<size_t, size_t> eqOrigIndex2OldIndex;
+            for (size_t i = 0; i < eqInfo.size(); i++) {
+                eqOrigIndex2OldIndex[eqInfo[i].getOriginalIndex()] = i;
+            }
+
+            vector<CGBase> resNewOrder(newEqInfo.size());
+            for (size_t i = 0; i < newEqInfo.size(); i++) {
+                size_t oldIndex = eqOrigIndex2OldIndex[newEqInfo[i].getOriginalIndex()];
+                resNewOrder[i] = res0[oldIndex];
+            }
+
+            // evaluate the model
+            Evaluator<Base, CGBase> evaluator0(handler, resNewOrder);
+            vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder);
+
+            return new ADFun<CGBase > (indepNewOrder, depNewOrder);
+        }
 
         inline void solveDAESystem() {
             throw 1; // not finished!!!!
@@ -436,8 +850,8 @@ namespace CppAD {
             vector<CG<Base> > jac(row.size());
 
             vector<CG<Base> > indep(n);
-            std::copy(x_.begin(), x_.end(), indep.begin());
-            std::fill(indep.begin() + x_.size(), indep.end(), 0);
+            std::copy(this->x_.begin(), this->x_.end(), indep.begin());
+            std::fill(indep.begin() + this->x_.size(), indep.end(), 0);
 
             CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
             this->reducedFun_->SparseJacobianReverse(indep, jacSparsity_,
@@ -676,61 +1090,6 @@ namespace CppAD {
             return std::vector<size_t > (cols2keep.begin(), cols2keep.end());
         }
 
-        inline void generateSemiExplicitDAE() {
-            /**
-             * 
-             * TODO!!!
-             * 
-             */
-            using std::vector;
-
-            CodeHandler<Base> handler;
-
-            vector<CGBase> indep0(this->reducedFun_->Domain());
-            handler.makeVariables(indep0);
-
-            const vector<CGBase> dep0 = this->reducedFun_->Forward(0, indep0);
-
-            const vector<bool> algEq(dep0.size());
-
-            /**
-             * make relations between dependent and independent variables.
-             * Equations may be removed when used to calculate dummy derivatives.
-             */
-
-            // check if it is possible to get a semi-explicit DAE
-
-
-            for (size_t diffj = diffVarStart_; diffj < this->vnodes_.size(); diffj++) {
-                // find equation used to determine it
-                Vnode<Base>* diffjj = this->vnodes_[diffj];
-
-                //   get original var -> get diff equation -> get norder equation
-                Vnode<Base>* origj = diffjj->originalVariable();
-
-                Enode<Base>* eq = this->enodes_[origj->index()];
-                if (eq->isAlgebraic()) {
-                    std::stringstream ss;
-                    ss << "Unable to produce a semi-explicit DAE system due to the presence"
-                            " of the algebraic variable '" << origj->index() << "' in new equation(s)"
-                            " generated by differentiation of existing algebraic equations.";
-                    throw CGException(ss.str());
-                }
-
-                size_t order = diffjj->order();
-                for (size_t o = 0; o < order - 1; o++) {
-                    eq = eq->derivative();
-                }
-
-                SourceCodeFragment<Base>* code = dep0[eq->index()].getSourceCodeFragment();
-
-            }
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-            this->printModel(this->reducedFun_);
-#endif
-        }
-
         /**
          * Determines the best matrix
          * \param mat The matrix
@@ -774,6 +1133,41 @@ namespace CppAD {
 
             // the condition number
             return max / min;
+        }
+
+        inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<DaeVarInfo>& varInfo) {
+            std::vector<std::string> vnames(varInfo.size());
+            for (size_t p = 0; p < varInfo.size(); p++) {
+                vnames[p] = varInfo[p].getName();
+            }
+
+            Plantelides<Base>::printModel(fun, vnames);
+        }
+
+        inline static void printModel(CodeHandler<Base>& handler,
+                                      const std::vector<CGBase>& res,
+                                      const std::vector<DaeVarInfo>& varInfo,
+                                      const std::set<size_t>& erasedVariables,
+                                      const std::set<size_t>& erasedEquations) {
+            std::vector<std::string> indepNames;
+            for (size_t p = 0; p < varInfo.size(); p++) {
+                if (erasedVariables.find(p) == erasedVariables.end()) {
+                    // not erased from model
+                    indepNames.push_back(varInfo[p].getName());
+                }
+            }
+            assert(handler.getIndependentVariableSize() == indepNames.size());
+
+            CLanguage<Base> lang("double");
+            std::vector<CGBase> resAux;
+            for (size_t p = 0; p < res.size(); ++p) {
+                if (erasedEquations.find(p) == erasedEquations.end()) {
+                    resAux.push_back(res[p]);
+                }
+            }
+            std::vector<std::string> depNames;
+            CLangCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
+            handler.generateCode(std::cout, lang, resAux, nameGen);
         }
 
         /**

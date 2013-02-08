@@ -68,13 +68,21 @@ namespace CppAD {
             return _reuseIDs;
         }
 
-        void makeVariables(std::vector<CG<Base> >& variables) {
+        inline void makeVariables(std::vector<CG<Base> >& variables) {
             for (typename std::vector<CG<Base> >::iterator it = variables.begin(); it != variables.end(); ++it) {
                 makeVariable(*it);
             }
         }
 
-        void makeVariable(CG<Base>& variable) {
+        inline void makeVariables(std::vector<AD<CG<Base> > >& variables) {
+            for (typename std::vector<AD<CG<Base> > >::iterator it = variables.begin(); it != variables.end(); ++it) {
+                CG<Base> v;
+                makeVariable(v); // make it a codegen variable
+                *it = v; // variable[i] id now the same as v
+            }
+        }
+
+        inline void makeVariable(CG<Base>& variable) {
             _independentVariables.push_back(new SourceCodeFragment<Base > (CGInvOp));
             variable.makeVariable(*this, _independentVariables.back());
         }
@@ -138,8 +146,7 @@ namespace CppAD {
 
                 for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                     SourceCodeFragment<Base>* block = *it;
-                    block->total_use_count_ = 0;
-                    block->var_id_ = 0;
+                    block->resetHandlerCounters();
                 }
             }
             _used = true;

@@ -12,6 +12,7 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
+//#define CPPAD_CG_DAE_VERBOSE
 #include <cppadcg/dae_index_reduction/cg_pantelides.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
@@ -34,15 +35,30 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum2D) {
     daeVar[8] = 2;
     daeVar[9] = 3;
 
-    Plantelides<double> pantelides(fun, daeVar);
+    std::vector<double> x(10);
+    x[0] = -1.0; // x
+    x[1] = 0.0; // y
+    x[2] = 0.0; // vx
+    x[3] = 0.0; // vy
+    x[4] = 1.0; // Tension
+    x[5] = 1.0; // length
+
+    x[6] = 0.0; // dxdt
+    x[7] = 0.0; // dydt
+    x[8] = -1.0; // dvxdt
+    x[9] = 9.80665; // dvydt
+
+    Plantelides<double> pantelides(fun, daeVar, x);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = pantelides.reduceIndex(newDaeVar);
+    std::vector<DaeEquationInfo> equationInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-
-    ASSERT_TRUE(reducedFun != NULL);
 }
 
 TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
@@ -61,13 +77,30 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
     daeVar[11] = 4;
     daeVar[12] = 5;
 
-    Plantelides<double> pantelides(fun, daeVar);
+    std::vector<double> x(13);
+    x[0] = -1.0; // x
+    x[1] = 0.0; // y
+    x[2] = 0.0; // z
+    x[3] = 0.0; // vx
+    x[4] = 0.0; // vy
+    x[5] = 0.0; // vz
+    x[6] = 1.0; // Tension
+    //x[7] = 1.0; // length
+    x[7] = 0.0; // dxdt
+    x[8] = 0.0; // dydt
+    x[9] = 0.0; // dzdt
+    x[10] = -1.0; // dvxdt
+    x[11] = 9.80665; // dvydt
+    x[12] = 0.0; // dvzdt
+    Plantelides<double> pantelides(fun, daeVar, x);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = pantelides.reduceIndex(newDaeVar);
+    std::vector<DaeEquationInfo> equationInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-
-    ASSERT_TRUE(reducedFun != NULL);
 }

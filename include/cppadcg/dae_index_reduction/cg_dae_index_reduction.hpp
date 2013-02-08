@@ -32,7 +32,7 @@ namespace CppAD {
          */
         ADFun<CG<Base> >* fun_;
         // DAE variable information
-        const std::vector<DaeVarInfo> varInfo_;
+        std::vector<DaeVarInfo> varInfo_;
     public:
 
         /**
@@ -48,6 +48,9 @@ namespace CppAD {
             varInfo_(varInfo) {
             assert(fun_ != NULL);
             assert(varInfo_.size() == fun->Domain());
+            for (size_t j = 0; j < varInfo_.size(); ++j) {
+                varInfo_[j].setOriginalIndex(j);
+            }
         }
 
         inline virtual ~DaeIndexReduction() {

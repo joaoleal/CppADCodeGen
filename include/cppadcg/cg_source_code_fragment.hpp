@@ -191,6 +191,14 @@ namespace CppAD {
             last_usage_order_ = last;
         }
 
+        inline void resetHandlerCounters() {
+            total_use_count_ = 0;
+            use_count_ = 0;
+            var_id_ = 0;
+            evaluation_order_ = 0;
+            last_usage_order_ = 0;
+        }
+
         inline const std::string* getName() const {
             return name_;
         }
@@ -200,7 +208,7 @@ namespace CppAD {
             name_ = new std::string(name);
         }
 
-        virtual ~SourceCodeFragment() {
+        inline virtual ~SourceCodeFragment() {
             delete name_;
         }
 

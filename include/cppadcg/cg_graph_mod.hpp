@@ -19,13 +19,13 @@ namespace CppAD {
 
     template<class Base>
     inline void CodeHandler<Base>::substituteIndependent(const CG<Base>& indep,
-    const CG<Base>& dep) throw (CGException) {
+                                                         const CG<Base>& dep) throw (CGException) {
         substituteIndependent(indep.getSourceCodeFragment(), dep.getSourceCodeFragment());
     }
 
     template<class Base>
     inline void CodeHandler<Base>::substituteIndependent(SourceCodeFragment<Base>* indep,
-    SourceCodeFragment<Base>* dep) throw (CGException) {
+                                                         SourceCodeFragment<Base>* dep) throw (CGException) {
         using std::vector;
         typedef CG<Base> CGBase;
         typedef AD<CGBase> ADCG;

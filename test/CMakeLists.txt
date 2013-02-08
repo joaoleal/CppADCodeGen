@@ -84,9 +84,9 @@ FUNCTION(add_cppadcg_test source_file)
   GET_FILENAME_COMPONENT(test_target_name "${source_file}" NAME_WE)
 
   ADD_EXECUTABLE("${test_target_name}"
-               # sources:
-               "${source_file}"
-               ${ARGN})
+                 # sources:
+                 "${source_file}"
+                 ${ARGN})
 
   # Specify MainTest's link libraries
   add_gest_link_libraries(${test_target_name} ON)
@@ -103,7 +103,33 @@ FUNCTION(add_cppadcg_test source_file)
 
   ADD_TEST(NAME ${test_target_name}
            COMMAND ${test_target_name})
+  IF(VALGRIND_FOUND)
+    ADD_TEST(NAME memcheck_${test_target_name}
+             COMMAND ${GTEST_MEMORYCHECK_COMMAND} 
+                     --read-var-info=yes
+                     --leak-check=full
+                     --track-origins=yes
+                     --leak-resolution=high
+                     --quiet
+                     --error-exitcode=1
+                     --log-file=${CMAKE_CURRENT_BINARY_DIR}/valgrind.log.${test_target_name}
+                     ./${test_target_name}
+             COMMENT "Running valgrind on test \"${test_target_name}\"")
+  ENDIF()
 ENDFUNCTION()
+################################################################################
+# use valgrind if possible
+################################################################################
+FIND_PACKAGE(Valgrind)
+
+IF(VALGRIND_FOUND)
+  SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
+  SET(MEMORYCHECK_COMMAND_OPTIONS "--read-var-info=yes --leak-check=full --track-origins=yes --leak-resolution=high --quiet --error-exitcode=1")
+  MESSAGE(STATUS "Valgrind found")
+ELSE()
+  MESSAGE(WARNING "Valgrind not found")
+ENDIF()
+
 
 ################################################################################
 # add tests
@@ -140,3 +166,6 @@ ENDIF()
 
 ADD_SUBDIRECTORY(solve)
 ADD_SUBDIRECTORY(dae_index_reduction)
+
+file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/valgrind.sh"
+     DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

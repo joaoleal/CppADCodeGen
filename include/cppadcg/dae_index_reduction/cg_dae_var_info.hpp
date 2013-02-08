@@ -22,16 +22,19 @@ namespace CppAD {
      */
     class DaeVarInfo {
     private:
-        /** The index of the variable for which this variable is the time
+        /**
+         * The index of the variable for which this variable is the time
          * derivative. A negative value means that the current variable isn't 
          * a time derivative.
          */
         int derivativeOf_;
-        /** Defines the independent variables that dependent on the integrated
+        /**
+         *  Defines the independent variables that dependent on the integrated
          *  variable
          */
         bool integratedDependent_;
-        /** Whether or not this variable is an integrated variable (usually 
+        /**
+         * Whether or not this variable is an integrated variable (usually 
          * associated with time)
          */
         bool integratedVariable_;
@@ -40,20 +43,26 @@ namespace CppAD {
          * generated name)
          */
         std::string name_;
+        /**
+         * The variable tape index in the original model
+         */
+        int originalIndex_;
     public:
 
         inline DaeVarInfo(const std::string& name = "") :
             derivativeOf_(-1),
             integratedDependent_(true),
             integratedVariable_(false),
-            name_(name) {
+            name_(name),
+            originalIndex_(-1) {
         }
 
         inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
             derivativeOf_(derivativeOf),
             integratedDependent_(true),
             integratedVariable_(false),
-            name_(name) {
+            name_(name),
+            originalIndex_(-1) {
         }
 
         /**
@@ -66,6 +75,10 @@ namespace CppAD {
          */
         inline int getDerivativeOf() const {
             return derivativeOf_;
+        }
+
+        void setDerivativeOf(int derivativeOf) {
+            derivativeOf_ = derivativeOf;
         }
 
         /**
@@ -128,6 +141,14 @@ namespace CppAD {
          */
         inline void setName(const std::string& name) {
             name_ = name;
+        }
+
+        inline int getOriginalIndex() const {
+            return originalIndex_;
+        }
+
+        inline void setOriginalIndex(int originalIndex) {
+            originalIndex_ = originalIndex;
         }
 
         inline virtual ~DaeVarInfo() {

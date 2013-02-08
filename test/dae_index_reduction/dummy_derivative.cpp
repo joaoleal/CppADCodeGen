@@ -12,6 +12,7 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
+//#define CPPAD_CG_DAE_VERBOSE
 #include <cppadcg/dae_index_reduction/cg_dummy_deriv.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
@@ -24,7 +25,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum2D<CGD > ();
-
+   
     std::vector<double> x(10);
     std::vector<double> normVar(10, 1.0);
     std::vector<double> normEq(5, 1.0);
@@ -42,6 +43,12 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     x[9] = 9.80665; // dvydt
 
     std::vector<DaeVarInfo> daeVar(10);
+    daeVar[0] = DaeVarInfo("x");
+    daeVar[1] = DaeVarInfo("y");
+    daeVar[2] = DaeVarInfo("vx");
+    daeVar[3] = DaeVarInfo("vy");
+    daeVar[4] = DaeVarInfo("T");
+    daeVar[5] = DaeVarInfo("l");
     daeVar[5].makeConstant();
     daeVar[6] = 0;
     daeVar[7] = 1;
@@ -49,16 +56,17 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     daeVar[9] = 3;
 
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
+    dummyD.setGenerateSemiExplicitDae(true);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
-    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
+    std::vector<DaeEquationInfo> newEqInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-    delete reducedFunShort;
-
-    ASSERT_TRUE(reducedFunShort != NULL);
 }
 
 TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
@@ -66,7 +74,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     using namespace std;
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
-
+   
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();
 
@@ -101,12 +109,12 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
-    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
+    std::vector<DaeEquationInfo> newEqInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-    delete reducedFunShort;
-
-    ASSERT_TRUE(reducedFunShort != NULL);
 }
