@@ -12,15 +12,12 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "add.hpp"
 
-bool Add() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, add) {
     std::vector<double> u(2);
     size_t s = 0;
     size_t t = 1;
@@ -28,7 +25,5 @@ bool Add() {
     u[t] = 2.;
 
     // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
-
-    return ok;
+    test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
 }

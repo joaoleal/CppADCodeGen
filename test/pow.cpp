@@ -12,84 +12,66 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "pow.hpp"
 
 using namespace CppAD;
 
-namespace { // BEGIN empty namespace
+TEST_F(CppADCGOperationTest, PowTestOne) {
+    // domain space vector
+    size_t n = 2;
+    double x = 0.5;
+    double y = 2.;
+    std::vector<double> u(n);
+    u[0] = x;
+    u[1] = y;
 
-    bool PowTestOne() {
-        // domain space vector
-        size_t n = 2;
-        double x = 0.5;
-        double y = 2.;
-        std::vector<double> u(n);
-        u[0] = x;
-        u[1] = y;
+    test0nJac("PowTestOne", &PowTestOneFunc<double >, &PowTestOneFunc<CG<double> >, u);
+}
 
-        return test0nJac("PowTestOne", &PowTestOneFunc<double >, &PowTestOneFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, PowTestTwo) {
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(2);
+    size_t s = 0;
+    size_t t = 1;
+    u[s] = 2.;
+    u[t] = 3.;
 
-    bool PowTestTwo() {
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(2);
-        size_t s = 0;
-        size_t t = 1;
-        u[s] = 2.;
-        u[t] = 3.;
+    test0nJac("PowTestTwo", &PowTestTwoFunc<double >, &PowTestTwoFunc<CG<double> >, u);
+}
 
-        return test0nJac("PowTestTwo", &PowTestTwoFunc<double >, &PowTestTwoFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, PowTestThree) {
+    // domain space vector
+    size_t n = 1;
+    std::vector<double> u(n);
+    u[0] = 2.;
 
-    bool PowTestThree() {
-        // domain space vector
-        size_t n = 1;
-        std::vector<double> u(n);
-        u[0] = 2.;
+    test0nJac("PowTestThree", &PowTestThreeFunc<double >, &PowTestThreeFunc<CG<double> >, u);
+}
 
-        return test0nJac("PowTestThree", &PowTestThreeFunc<double >, &PowTestThreeFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, PowTestFour) {
+    // domain space vector
+    size_t n = 1;
+    std::vector<double> u(n);
+    u[0] = -2;
 
-    bool PowTestFour() {
-        // domain space vector
-        size_t n = 1;
-        std::vector<double> u(n);
-        u[0] = -2;
+    test0nJac("PowTestFour", &PowTestFourFunc<double >, &PowTestFourFunc<CG<double> >, u);
+}
 
-        return test0nJac("PowTestFour", &PowTestFourFunc<double >, &PowTestFourFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, PowTestFive) {
+    // domain space vector
+    size_t n = 1;
+    std::vector<double> u(n);
+    u[0] = -1.;
 
-    bool PowTestFive(void) {
-        // domain space vector
-        size_t n = 1;
-        std::vector<double> u(n);
-        u[0] = -1.;
+    test0nJac("PowTestFive", &PowTestFiveFunc<double >, &PowTestFiveFunc<CG<double> >, u);
+}
 
-        return test0nJac("PowTestFive", &PowTestFiveFunc<double >, &PowTestFiveFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, PowTestSix) {
+    // domain space vector
+    size_t n = 1;
+    std::vector<double> u(n);
+    u[0] = 1.5;
 
-    bool PowTestSix() {
-        // domain space vector
-        size_t n = 1;
-        std::vector<double> u(n);
-        u[0] = 1.5;
-
-        return test0nJac("PowTestSix", &PowTestSixFunc<double >, &PowTestSixFunc<CG<double> >, u);
-    }
-
-} // END empty namespace
-
-bool Pow(void) {
-    bool ok = true;
-    ok &= PowTestOne();
-    ok &= PowTestTwo();
-    ok &= PowTestThree();
-    ok &= PowTestFour();
-    ok &= PowTestFive();
-    ok &= PowTestSix();
-    return ok;
+    test0nJac("PowTestSix", &PowTestSixFunc<double >, &PowTestSixFunc<CG<double> >, u);
 }

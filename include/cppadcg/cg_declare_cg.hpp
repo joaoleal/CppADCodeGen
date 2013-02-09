@@ -118,6 +118,9 @@ namespace CppAD {
     template<class Base>
     bool NearEqual(const CG<Base> &x, const Base &y, const Base &r, const Base &a);
 
+    template <class Base>
+    inline bool isnan(const CG<Base> &s);
+
     // CondExp function
     //    template<class Base>
     //    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);

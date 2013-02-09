@@ -22,38 +22,156 @@ namespace CppAD {
      */
     class DaeVarInfo {
     private:
-        /** The index of the variable for which this variable is the time
+        /**
+         * The index of the variable for which this variable is the time
          * derivative. A negative value means that the current variable isn't 
          * a time derivative.
          */
-        int derivativeOf_;
-        // defines the independent variables that dependent on time
-        bool timeDependent_;
+        int antiDerivative_;
+        /**
+         * The index of the time derivative of this variable. A negative value
+         * means that there is none.
+         */
+        int derivative_;
+        /**
+         *  Defines the independent variables that dependent on the integrated
+         *  variable
+         */
+        bool integratedDependent_;
+        /**
+         * Whether or not this variable is an integrated variable (usually 
+         * associated with time)
+         */
+        bool integratedVariable_;
+        /**
+         * A custom variable name (keep it empty to use an automatically 
+         * generated name)
+         */
+        std::string name_;
+        /**
+         * The variable tape index in the original model
+         */
+        int originalIndex_;
     public:
 
-        inline DaeVarInfo() :
-            derivativeOf_(-1),
-            timeDependent_(true) {
+        inline DaeVarInfo(const std::string& name = "") :
+            antiDerivative_(-1),
+            derivative_(-1),
+            integratedDependent_(true),
+            integratedVariable_(false),
+            name_(name),
+            originalIndex_(-1) {
         }
 
-        inline DaeVarInfo(int derivativeOf) :
-            derivativeOf_(derivativeOf),
-            timeDependent_(true) {
+        inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
+            antiDerivative_(derivativeOf),
+            derivative_(-1),
+            integratedDependent_(true),
+            integratedVariable_(false),
+            name_(name),
+            originalIndex_(-1) {
         }
 
-        inline int getDerivativeOf() const {
-            return derivativeOf_;
+        /**
+         * The index of the variable that the current variable is the derivative
+         * of. A negative value means that the current variable isn't a 
+         * derivative.
+         * 
+         * \return The index of the variable for which this variable is the 
+         *         derivative of.
+         */
+        inline int getAntiDerivative() const {
+            return antiDerivative_;
         }
 
-        inline bool isTimeDependent() const {
-            return timeDependent_;
+        void setAntiDerivative(int derivativeOf) {
+            antiDerivative_ = derivativeOf;
         }
 
-        inline void makeTimeIndependent() {
-            timeDependent_ = false;
-            derivativeOf_ = -1;
+        /**
+         * The index of the time derivative for this variable. A negative value
+         * means that there is none.
+         * 
+         * \return The index of the time derivative for this variable.
+         */
+        inline int getDerivative() const {
+            return derivative_;
         }
-        
+
+        inline void setDerivative(int derivative) {
+            derivative_ = derivative;
+        }
+
+        /**
+         * Determines whether or not this variable depends on the 
+         * independent/integrated variables.
+         * 
+         * \return true if it is a parameter that does not depend on the
+         *              integrated variables
+         */
+        inline bool isFunctionOfIntegrated() const {
+            return integratedDependent_;
+        }
+
+        /**
+         * Defines this variable as a parameter/constant that does not depend on
+         * the independent/integrated variables
+         */
+        inline void makeConstant() {
+            integratedVariable_ = false;
+            integratedDependent_ = false;
+            antiDerivative_ = -1;
+        }
+
+        /**
+         * Defines this variable as an integrated variable, also known
+         * as the independent variable of the DAE system (usually associated
+         * with time)
+         */
+        inline void makeIntegratedVariable() {
+            integratedVariable_ = true;
+            integratedDependent_ = false;
+            antiDerivative_ = -1;
+        }
+
+        /**
+         * Determines whether or not this is an integrated variable, also known
+         * as the independent variable of the DAE system (typically time).
+         * 
+         * \return true if it is the integrated variable
+         */
+        inline bool isIntegratedVariable() const {
+            return integratedVariable_;
+        }
+
+        /**
+         * Returns the custom variable name. If the string is empty an 
+         * automatically generated name will be used.
+         * 
+         * \return the custom variable name
+         */
+        inline const std::string& getName() const {
+            return name_;
+        }
+
+        /**
+         * Defines a custom variable name. If the string is empty an 
+         * automatically generated name will be used.
+         * 
+         * \param name the custom variable name
+         */
+        inline void setName(const std::string& name) {
+            name_ = name;
+        }
+
+        inline int getOriginalIndex() const {
+            return originalIndex_;
+        }
+
+        inline void setOriginalIndex(int originalIndex) {
+            originalIndex_ = originalIndex;
+        }
+
         inline virtual ~DaeVarInfo() {
         }
     };

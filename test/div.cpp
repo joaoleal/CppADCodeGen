@@ -12,66 +12,35 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "div.hpp"
 
-namespace { // BEGIN empty namespace
+using namespace CppAD;
 
-    bool DivTestOne() {
-        bool ok = true;
+TEST_F(CppADCGOperationTest, DivTestOne) {
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(2);
+    size_t s = 0;
+    size_t t = 1;
+    u[s] = 2.;
+    u[t] = 3.;
 
-        using namespace CppAD;
+    test0nJac("DivTestOne", &DivTestOneFunc<double >, &DivTestOneFunc<CG<double> >, u);
+}
 
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(2);
-        size_t s = 0;
-        size_t t = 1;
-        u[s] = 2.;
-        u[t] = 3.;
+TEST_F(CppADCGOperationTest, DivTestTwo) {
+    // independent variable vector
+    std::vector<double> u(1);
+    u[0] = .5;
 
-        ok &= test0nJac("DivTestOne", &DivTestOneFunc<double >, &DivTestOneFunc<CG<double> >, u);
+    test0nJac("DivTestTwo", &DivTestTwoFunc<double >, &DivTestTwoFunc<CG<double> >, u);
+}
 
-        return ok;
-    }
+TEST_F(CppADCGOperationTest, DivTestThree) {
+    // more testing of variable / variable case 
+    std::vector<double> u(2);
+    u[0] = 2.;
+    u[1] = 3.;
 
-    bool DivTestTwo() {
-        using namespace CppAD;
-
-        bool ok = true;
-
-        // independent variable vector
-        std::vector<double> u(1);
-        u[0] = .5;
-
-        ok &= test0nJac("DivTestTwo", &DivTestTwoFunc<double >, &DivTestTwoFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-    bool DivTestThree() {
-        using namespace CppAD;
-
-        bool ok = true;
-
-        // more testing of variable / variable case 
-        std::vector<double> u(2);
-        u[0] = 2.;
-        u[1] = 3.;
-
-        ok &= test0nJac("DivTestThree", &DivTestThreeFunc<double >, &DivTestThreeFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-} // END empty namespace
-
-bool Div(void) {
-    bool ok = true;
-    ok &= DivTestOne();
-    ok &= DivTestTwo();
-    ok &= DivTestThree();
-    return ok;
+    test0nJac("DivTestThree", &DivTestThreeFunc<double >, &DivTestThreeFunc<CG<double> >, u);
 }

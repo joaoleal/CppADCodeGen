@@ -12,21 +12,16 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "asin.hpp"
 
-bool Asin() {
-    using namespace CppAD;
-    using namespace std;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, asin) {
     // independent variable vector
     std::vector<double> u(1);
     u[0] = 0.5;
 
     // create f: U -> Z and vectors used for derivative calculations   
-    bool ok = test0nJac("asin", &AsinFunc<double >, &AsinFunc<CG<double> >, u);
-
-    return ok;
+    test0nJac("asin", &AsinFunc<double >, &AsinFunc<CG<double> >, u);
 }

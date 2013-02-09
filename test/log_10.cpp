@@ -12,19 +12,16 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "log_10.hpp"
 
 using namespace CppAD;
 
-bool Log10() {
+TEST_F(CppADCGOperationTest, log_10) {
     // independent variable vector, indices, values, and declaration
     std::vector<double> u(1);
     size_t s = 0;
     u[s] = 10.;
 
-    return test0nJac("log10", &Log10Func<double >, &Log10Func<CG<double> >, u, 1e-10, 1e-10);
+    test0nJac("log10", &Log10Func<double >, &Log10Func<CG<double> >, u, 1e-10, 1e-10);
 }

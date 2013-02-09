@@ -12,48 +12,31 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "tan.hpp"
 
 using namespace CppAD;
 
-namespace {
+TEST_F(CppADCGOperationTest, tan) {
+    double eps = 100. * std::numeric_limits<double>::epsilon();
 
-    bool tan() {
-        double eps = 100. * std::numeric_limits<double>::epsilon();
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(1);
+    u[0] = .7;
 
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(1);
-        u[0] = .7;
+    test0nJac("tan_first", &tanFirstFunc<double >, &tanFirstFunc<CG<double> >, u, eps, eps);
 
-        bool ok = test0nJac("tan_first", &tanFirstFunc<double >, &tanFirstFunc<CG<double> >, u, eps, eps);
-        
-        ok &= test0nJac("tan_last", &tanLastFunc<double >, &tanLastFunc<CG<double> >, u, eps, eps);
-        
-        return ok;
-    }
-
-    bool tanh() {
-        double eps = 100. * std::numeric_limits<double>::epsilon();
-
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(1);
-        u[0] = .5;
-
-        bool ok = test0nJac("tanh_first", &tanhFirstFunc<double >, &tanhFirstFunc<CG<double> >, u, eps, eps);
-        
-        ok &= test0nJac("tanh_last", &tanhLastFunc<double >, &tanhLastFunc<CG<double> >, u, eps, eps);
-        
-        return ok;
-    }
+    test0nJac("tan_last", &tanLastFunc<double >, &tanLastFunc<CG<double> >, u, eps, eps);
 }
 
-bool Tan() {
-    bool ok = true;
-    ok &= tan();
-    ok &= tanh();
-    return ok;
+TEST_F(CppADCGOperationTest, tanh) {
+    double eps = 100. * std::numeric_limits<double>::epsilon();
+
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(1);
+    u[0] = .5;
+
+    test0nJac("tanh_first", &tanhFirstFunc<double >, &tanhFirstFunc<CG<double> >, u, eps, eps);
+
+    test0nJac("tanh_last", &tanhLastFunc<double >, &tanhLastFunc<CG<double> >, u, eps, eps);
 }

@@ -85,30 +85,19 @@ namespace CppAD {
          * 
          */
         Enode<Base>* differentiationOf_;
-        /**
-         * true if this equation is a purely algebraic equation
-         */
-        bool algebraic_;
     public:
 
         inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(NULL),
-            algebraic_(true) {
+            differentiationOf_(NULL) {
         }
 
         inline Enode(size_t index, Enode<Base>* differentiationOf) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(differentiationOf),
-            algebraic_(true) {
-
+            differentiationOf_(differentiationOf) {
             differentiationOf_->setDerivative(this);
-        }
-
-        inline bool isAlgebraic() const {
-            return algebraic_;
         }
 
         inline const std::set<Vnode<Base>*>& variables() const {
@@ -121,9 +110,6 @@ namespace CppAD {
 
         inline void addVariable(Vnode<Base>* j) {
             vnodes_orig_.insert(j);
-            if (j->derivativeOf() != NULL) {
-                algebraic_ = false;
-            }
             if (!j->isDeleted()) {
                 vnodes_.insert(j);
                 j->addEquation(this);
@@ -213,7 +199,7 @@ namespace CppAD {
         /**
          *  the variable which was differentiated to create this one
          */
-        Vnode<Base>* derivativeOf_;
+        Vnode<Base>* antiDerivative_;
         /**
          * The index in the tape
          */
@@ -231,32 +217,36 @@ namespace CppAD {
             parameter_(false),
             assign_(NULL),
             derivative_(NULL),
-            derivativeOf_(NULL),
+            antiDerivative_(NULL),
             tapeIndex_(tapeIndex),
             name_(name) {
 
         }
 
-        inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf) :
+        inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf, const std::string& name = "") :
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
             assign_(NULL),
             derivative_(NULL),
-            derivativeOf_(derivativeOf),
+            antiDerivative_(derivativeOf),
             tapeIndex_(tapeIndex),
-            name_("d" + derivativeOf->name() + "dt") {
-            assert(derivativeOf_ != NULL);
+            name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
+            assert(antiDerivative_ != NULL);
 
-            derivativeOf_->setDerivative(this);
+            antiDerivative_->setDerivative(this);
         }
 
-        const std::string& name() const {
+        inline const std::string& name() const {
             return name_;
         }
 
-        size_t tapeIndex() const {
+        inline size_t tapeIndex() const {
             return tapeIndex_;
+        }
+
+        inline void setTapeIndex(size_t tapeIndex) {
+            tapeIndex_ = tapeIndex;
         }
 
         inline const std::set<Enode<Base>*>& equations() const {
@@ -273,23 +263,23 @@ namespace CppAD {
         /**
          * \return the variable which was differentiated to create this one
          */
-        inline Vnode<Base>* derivativeOf() const {
-            return derivativeOf_;
+        inline Vnode<Base>* antiDerivative() const {
+            return antiDerivative_;
         }
 
         inline Vnode<Base>* originalVariable() {
-            if (derivativeOf_ == NULL) {
+            if (antiDerivative_ == NULL) {
                 return this;
             } else {
-                return derivativeOf_->originalVariable();
+                return antiDerivative_->originalVariable();
             }
         }
 
         inline Vnode<Base>* originalVariable(size_t origVarSize) {
-            if (derivativeOf_ == NULL || this->index_ < origVarSize) {
+            if (antiDerivative_ == NULL || this->index_ < origVarSize) {
                 return this;
             } else {
-                return derivativeOf_->originalVariable();
+                return antiDerivative_->originalVariable();
             }
         }
 
@@ -334,10 +324,10 @@ namespace CppAD {
         }
 
         unsigned int order() const {
-            if (derivativeOf_ == NULL) {
+            if (antiDerivative_ == NULL) {
                 return 0u;
             } else {
-                return derivativeOf_->order() + 1u;
+                return antiDerivative_->order() + 1u;
             }
         }
 
@@ -361,8 +351,8 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j) {
-        if (j.derivativeOf() != NULL) {
-            os << "Diff(" << *j.derivativeOf() << ")";
+        if (j.antiDerivative() != NULL) {
+            os << "Diff(" << *j.antiDerivative() << ")";
         } else {
             os << "Variable " << j.name();
         }

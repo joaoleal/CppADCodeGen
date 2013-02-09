@@ -16,12 +16,12 @@
  */
 
 template<class Base>
-inline CppAD::ADFun<Base>* Pendulum2D() {
+inline CppAD::ADFun<Base>* Pendulum2D(std::vector<CppAD::DaeVarInfo>& daeVar) {
     using namespace CppAD;
     using namespace std;
     typedef CppAD::AD<Base> ADB;
 
-    std::vector<ADB> U(10);
+    std::vector<ADB> U(11);
     Independent(U);
 
     ADB x = U[0];
@@ -30,11 +30,26 @@ inline CppAD::ADFun<Base>* Pendulum2D() {
     ADB vy = U[3]; // auxiliary variable
     ADB T = U[4]; // tension
     ADB L = U[5]; // length  (parameter)
+    ADB t = U[6]; // time (not really used)
 
-    ADB dxdt = U[6];
-    ADB dydt = U[7];
-    ADB dvxdt = U[8]; // auxiliary variable
-    ADB dvydt = U[9]; // auxiliary variable
+    ADB dxdt = U[7];
+    ADB dydt = U[8];
+    ADB dvxdt = U[9]; // auxiliary variable
+    ADB dvydt = U[10]; // auxiliary variable
+
+    daeVar.resize(U.size());
+    daeVar[0] = DaeVarInfo("x");
+    daeVar[1] = DaeVarInfo("y");
+    daeVar[2] = DaeVarInfo("vx");
+    daeVar[3] = DaeVarInfo("vy");
+    daeVar[4] = DaeVarInfo("T");
+    daeVar[5] = DaeVarInfo("l");
+    daeVar[5].makeConstant();
+    daeVar[6].makeIntegratedVariable();
+    daeVar[7] = 0;
+    daeVar[8] = 1;
+    daeVar[9] = 2;
+    daeVar[10] = 3;
 
     double g = 9.80665; // gravity constant
 

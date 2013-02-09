@@ -12,29 +12,26 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
+#include "CppADCGTest.hpp"
 
 using namespace CppAD;
 
-bool InputStream() {
-
+TEST_F(CppADCGTest, InputStreamFloat) {
     std::istringstream is("5.5"); // float
     CppAD::CG<double> var;
 
     is >> var;
 
-    bool ok = var.isParameter();
-    ok &= CppAD::NearEqual(var.getParameterValue(), 5.5, 10e-10, 10e-10);
+    ASSERT_TRUE(var.isParameter());
+    nearEqual(var.getParameterValue(), 5.5, 10e-10, 10e-10);
+}
 
-
+TEST_F(CppADCGTest, InputStreamInteger) {
     std::istringstream is2("8"); // integer
     CppAD::CG<double> var2;
 
     is2 >> var2;
 
-    ok &= var2.isParameter();
-    ok &= CppAD::NearEqual(var2.getParameterValue(), 8.0, 10e-10, 10e-10);
-
-    return ok;
+    ASSERT_TRUE(var2.isParameter());
+    nearEqual(var2.getParameterValue(), 8.0, 10e-10, 10e-10);
 }

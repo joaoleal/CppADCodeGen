@@ -12,47 +12,25 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "exp.hpp"
 
 using namespace CppAD;
 
-namespace { // BEGIN empty namespace
+TEST_F(CppADCGOperationTest, ExpTestOne) {
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(1);
+    size_t s = 0;
+    u[s] = 1.;
 
-    bool ExpTestOne() {
-        bool ok = true;
+    test0nJac("ExpTestOne", &ExpTestOneFunc<double >, &ExpTestOneFunc<CG<double> >, u);
+}
 
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(1);
-        size_t s = 0;
-        u[s] = 1.;
+TEST_F(CppADCGOperationTest, ExpTestTwo) {
+    // independent variable vector
+    std::vector<double> u(1);
+    size_t s = 0;
+    u[s] = 1.;
 
-        ok &= test0nJac("ExpTestOne", &ExpTestOneFunc<double >, &ExpTestOneFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-    bool ExpTestTwo(void) {
-        bool ok = true;
-
-        // independent variable vector
-        std::vector<double> u(1);
-        size_t s = 0;
-        u[s] = 1.;
-
-        ok &= test0nJac("ExpTestTwo", &ExpTestTwoFunc<double >, &ExpTestTwoFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-} // END empty namespace
-
-bool Exp() {
-    bool ok = true;
-    ok &= ExpTestOne();
-    ok &= ExpTestTwo();
-    return ok;
+    test0nJac("ExpTestTwo", &ExpTestTwoFunc<double >, &ExpTestTwoFunc<CG<double> >, u);
 }

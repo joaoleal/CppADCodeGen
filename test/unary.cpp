@@ -12,37 +12,23 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "unary.hpp"
 
 using namespace CppAD;
 
-namespace { // BEGIN empty namespace
+TEST_F(CppADCGOperationTest, unaryPlus) {
+    std::vector<double> u(2);
+    u[0] = -3.;
+    u[1] = 2.;
 
-    bool Plus() {
-        std::vector<double> u(2);
-        u[0] = -3.;
-        u[1] = 2.;
+    test0nJac("UnaryPlus", &UnaryPlusFunc<double >, &UnaryPlusFunc<CG<double> >, u);
+}
 
-        return test0nJac("UnaryPlus", &UnaryPlusFunc<double >, &UnaryPlusFunc<CG<double> >, u);
-    }
+TEST_F(CppADCGOperationTest, unaryMinus) {
+    std::vector<double> u(2);
+    u[0] = -3.;
+    u[1] = 2.;
 
-    bool Minus() {
-        std::vector<double> u(2);
-        u[0] = -3.;
-        u[1] = 2.;
-
-        return test0nJac("UnaryMinus", &UnaryMinusFunc<double >, &UnaryMinusFunc<CG<double> >, u);
-    }
-
-} // END empty namespace
-
-bool Unary() {
-    bool ok = true;
-    ok &= Plus();
-    ok &= Minus();
-    return ok;
+    test0nJac("UnaryMinus", &UnaryMinusFunc<double >, &UnaryMinusFunc<CG<double> >, u);
 }

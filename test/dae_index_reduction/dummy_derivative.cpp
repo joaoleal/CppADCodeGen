@@ -12,22 +12,24 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
+//#define CPPAD_CG_DAE_VERBOSE
 #include <cppadcg/dae_index_reduction/cg_dummy_deriv.hpp>
 
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGIndexReductionTest.hpp"
 #include "pendulum.hpp"
 
-inline bool DummyDerivPendulum2D() {
-    using namespace CppAD;
+using namespace CppAD;
+
+TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
     using namespace std;
-    typedef CG<double> CGD;
+
+    std::vector<DaeVarInfo> daeVar;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD > ();
+    ADFun<CGD>* fun = Pendulum2D<CGD > (daeVar);
 
-    std::vector<double> x(10);
-    std::vector<double> normVar(10, 1.0);
+    std::vector<double> x(daeVar.size());
+    std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(5, 1.0);
 
     x[0] = -1.0; // x
@@ -37,32 +39,28 @@ inline bool DummyDerivPendulum2D() {
     x[4] = 1.0; // Tension
     x[5] = 1.0; // length
 
-    x[6] = 0.0; // dxdt
-    x[7] = 0.0; // dydt
-    x[8] = -1.0; // dvxdt
-    x[9] = 9.80665; // dvydt
+    x[6] = 0.0; // time
 
-    std::vector<DaeVarInfo> daeVar(10);
-    daeVar[5].makeTimeIndependent();
-    daeVar[6] = 0;
-    daeVar[7] = 1;
-    daeVar[8] = 2;
-    daeVar[9] = 3;
+    x[7] = 0.0; // dxdt
+    x[8] = 0.0; // dydt
+    x[9] = -1.0; // dvxdt
+    x[10] = 9.80665; // dvydt
 
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
+    dummyD.setGenerateSemiExplicitDae(true);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
-    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
+    std::vector<DaeEquationInfo> newEqInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-    delete reducedFunShort;
-
-    return reducedFunShort != NULL;
 }
 
-inline bool DummyDerivPendulum3D() {
+TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     using namespace CppAD;
     using namespace std;
     typedef CG<double> CGD;
@@ -102,19 +100,12 @@ inline bool DummyDerivPendulum3D() {
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
 
     std::vector<DaeVarInfo> newDaeVar;
-    ADFun<CGD>* reducedFun = dummyD.reduceIndex(newDaeVar);
-    ADFun<CGD>* reducedFunShort = dummyD.reduceEquations(newDaeVar);
+    std::vector<DaeEquationInfo> newEqInfo;
+    ADFun<CGD>* reducedFun;
+    ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
+
+    ASSERT_TRUE(reducedFun != NULL);
 
     delete fun;
     delete reducedFun;
-    delete reducedFunShort;
-
-    return reducedFunShort != NULL;
-}
-
-bool DummyDeriv() {
-    bool ok = true;
-    ok &= DummyDerivPendulum2D();
-    ok &= DummyDerivPendulum3D();
-    return ok;
 }

@@ -83,6 +83,12 @@ namespace CppAD {
 
     public:
 
+        /**
+         * Creates a C language source code generator
+         * 
+         * \param varTypeName variable data type (e.g. double)
+         * \param spaces number of spaces for indentations
+         */
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
         _baseTypeName(varTypeName),
         _spaces(spaces, ' '),

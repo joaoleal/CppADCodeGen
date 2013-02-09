@@ -39,7 +39,7 @@ namespace CppAD {
         size_t _maxTemporaryID;
     public:
 
-        CLangDefaultVariableNameGenerator() :
+        inline CLangDefaultVariableNameGenerator() :
             _depName("dep"),
             _indepName("ind"),
             _tmpName("var") {
@@ -48,9 +48,9 @@ namespace CppAD {
             this->_temporary.push_back(FuncArgument(_tmpName));
         }
 
-        CLangDefaultVariableNameGenerator(const std::string& depName,
-                                          const std::string& indepName,
-                                          const std::string& tmpName) :
+        inline CLangDefaultVariableNameGenerator(const std::string& depName,
+                                                 const std::string& indepName,
+                                                 const std::string& tmpName) :
             _depName(depName),
             _indepName(indepName),
             _tmpName(tmpName) {
@@ -59,15 +59,15 @@ namespace CppAD {
             this->_temporary.push_back(FuncArgument(_tmpName));
         }
 
-        virtual size_t getMinTemporaryVariableID() const {
+        inline virtual size_t getMinTemporaryVariableID() const {
             return _minTemporaryID;
         }
 
-        virtual size_t getMaxTemporaryVariableID() const {
+        inline virtual size_t getMaxTemporaryVariableID() const {
             return _maxTemporaryID;
         }
 
-        virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
+        inline virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
             _ss.clear();
             _ss.str("");
 
@@ -76,7 +76,7 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
+        inline virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
             _ss.clear();
             _ss.str("");
 
@@ -86,7 +86,7 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
+        inline virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
             _ss.clear();
             _ss.str("");
 
@@ -100,7 +100,7 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
+        inline virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
             _minTemporaryID = minTempID;
             _maxTemporaryID = maxTempID;
 

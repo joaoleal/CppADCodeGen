@@ -12,29 +12,37 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
+#include "CppADCGTest.hpp"
 
-#include <cppadcg/cg.hpp>
+namespace CppAD {
 
-#include "gcc_load_dynamic.hpp"
+    class CppADCGDynamicTest : public CppADCGTest {
+    public:
 
+        inline CppADCGDynamicTest(bool verbose = false, bool printValues = false) :
+            CppADCGTest(verbose, printValues) {
+        }
+
+        inline void compareValues(const std::string& testType,
+                                  const std::vector<double>& depCGen,
+                                  const std::vector<CppAD::CG<double> >& dep,
+                                  double epsilonR = 1e-14, double epsilonA = 1e-14) {
+
+            std::vector<double> depd(dep.size());
+
+            for (size_t i = 0; i < depd.size(); i++) {
+                depd[i] = dep[i].getParameterValue();
+            }
+
+            CppADCGTest::compareValues(testType, depCGen, depd, epsilonR, epsilonA);
+        }
+    };
+
+}
 using namespace CppAD;
 using namespace std;
 
-bool compareValues(const std::string& testType,
-                   const std::vector<double>& depCGen,
-                   const std::vector<CG<double> >& dep,
-                   double epsilonR = 1e-14, double epsilonA = 1e-14) {
-
-    std::vector<double> depd(dep.size());
-
-    for (size_t i = 0; i < depd.size(); i++) {
-        depd[i] = dep[i].getParameterValue();
-    }
-
-    return compareValues(testType, depCGen, depd, epsilonR, epsilonA);
-}
-
-bool Dynamic1() {
+TEST_F(CppADCGDynamicTest, Dynamic1) {
     // use a special object for source code generation
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
@@ -80,15 +88,12 @@ bool Dynamic1() {
     /**
      * test the library
      */
-    bool ok = true;
-
     DynamicLibModel<double>* model = dynamicLib->model("dynamic");
-    if (model == NULL)
-        return false;
+    ASSERT_TRUE(model != NULL);
 
     // dimensions
-    ok &= model->Domain() == fun.Domain();
-    ok &= model->Range() == fun.Range();
+    ASSERT_EQ(model->Domain(), fun.Domain());
+    ASSERT_EQ(model->Range(), fun.Range());
 
     /**
      */
@@ -106,12 +111,12 @@ bool Dynamic1() {
     std::vector<CGD> dep = fun.Forward(0, x2);
 
     std::vector<double> depCGen = model->ForwardZero(x);
-    ok &= compareValues("ForwardZero", depCGen, dep);
+    compareValues("ForwardZero", depCGen, dep);
 
     // Jacobian
     std::vector<CGD> jac = fun.Jacobian(x2);
     depCGen = model->Jacobian(x);
-    ok &= compareValues("Jacobian", depCGen, jac);
+    compareValues("Jacobian", depCGen, jac);
 
     // Hessian
     std::vector<CGD> w2(Z.size(), 1.0);
@@ -119,7 +124,7 @@ bool Dynamic1() {
 
     std::vector<CGD> hess = fun.Hessian(x2, w2);
     depCGen = model->Hessian(x, w);
-    ok &= compareValues("Hessian", depCGen, hess);
+    compareValues("Hessian", depCGen, hess);
 
     // sparse Jacobian
     std::vector<double> jacCGen;
@@ -130,7 +135,7 @@ bool Dynamic1() {
         jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
     }
 
-    ok &= compareValues("sparse Jacobian", jacCGenDense, jac);
+    compareValues("sparse Jacobian", jacCGenDense, jac);
 
     // sparse Hessian
     std::vector<double> hessCGen;
@@ -140,14 +145,13 @@ bool Dynamic1() {
         hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
     }
 
-    ok &= compareValues("sparse Hessian", hessCGenDense, hess);
+    compareValues("sparse Hessian", hessCGenDense, hess);
 
+    delete model;
     delete dynamicLib;
-
-    return ok;
 }
 
-bool Dynamic2() {
+TEST_F(CppADCGDynamicTest, Dynamic2) {
     // use a special object for source code generation
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
@@ -208,14 +212,11 @@ bool Dynamic2() {
      * test the library
      */
     DynamicLibModel<double>* model = dynamicLib->model("dynamic2");
-    if (model == NULL)
-        return false;
-
-    bool ok = true;
+    ASSERT_TRUE(model != NULL);
 
     // dimensions
-    ok &= model->Domain() == fun.Domain();
-    ok &= model->Range() == fun.Range();
+    ASSERT_EQ(model->Domain(), fun.Domain());
+    ASSERT_EQ(model->Range(), fun.Range());
 
     /**
      */
@@ -239,7 +240,7 @@ bool Dynamic2() {
         jacSparse[i] = jac[row[i] * x.size() + col[i]];
     }
 
-    ok &= compareValues("sparse Jacobian", jacCGen, jacSparse);
+    compareValues("sparse Jacobian", jacCGen, jacSparse);
 
     // sparse Hessian
     std::vector<double> w(Z.size(), 1.0);
@@ -253,17 +254,8 @@ bool Dynamic2() {
         hessSparse[i] = hess[row[i] * x.size() + col[i]];
     }
 
-    ok &= compareValues("sparse Hessian", hessCGen, hessSparse);
+    compareValues("sparse Hessian", hessCGen, hessSparse);
 
+    delete model;
     delete dynamicLib;
-
-    return ok;
-}
-
-bool Dynamic() {
-    bool ok = true;
-    ok &= Dynamic1();
-    ok &= Dynamic2();
-
-    return ok;
 }

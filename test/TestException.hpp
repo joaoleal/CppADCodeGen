@@ -25,14 +25,19 @@ namespace CppAD {
         std::string _message;
 
     public:
-        TestException(const std::string& message) throw ();
+        inline TestException(const std::string& message) throw () :
+            _message(message) {
+        }
 
-        const char* what() const throw ();
+        inline const char* what() const throw () {
+            return _message.c_str();
+        }
 
-        ~TestException() throw ();
+        inline virtual ~TestException() throw () {
+        }
 
-    protected:
-        TestException() throw ();
+    private:
+        TestException() throw (); // not implemented
     };
 
 }

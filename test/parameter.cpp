@@ -12,15 +12,12 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "parameter.hpp"
 
-bool Parameter() {
-    using namespace CppAD;
+using namespace CppAD;
 
+TEST_F(CppADCGOperationTest, parameter) {
     // number of different parameter values
     size_t n_parameter = 7;
 
@@ -34,6 +31,6 @@ bool Parameter() {
         u[j] = double(j);
     }
 
-    return test0nJac("parameter", &ParameterFunc<double >, &ParameterFunc<CG<double> >, u);
+    test0nJac("parameter", &ParameterFunc<double >, &ParameterFunc<CG<double> >, u);
 }
 

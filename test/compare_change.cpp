@@ -13,120 +13,100 @@
  * Author: Joao Leal
  */
 
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "compare_change.hpp"
 
+namespace CppAD {
+
+    class CppADCGCompareTest : public CppADCGOperationTest {
+    protected:
+        std::vector<std::vector<double> > xV;
+    public:
+
+        inline CppADCGCompareTest(bool verbose = false, bool printValues = false) :
+            CppADCGOperationTest(verbose, printValues) {
+            std::vector<double> X(2);
+            // create independent variables
+            X[0] = 3.;
+            X[1] = 4.;
+            xV.push_back(X);
+            X[0] = 4.;
+            X[1] = 3.;
+            xV.push_back(X);
+        }
+    };
+}
+
 using namespace CppAD;
-using namespace std;
-
-
 
 // ------------------------------- < ----------------------------
 
-bool CompareChange1(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
-
+TEST_F(CppADCGCompareTest, CompareChange1) {
     int comparisons;
-    ok &= test0("CompareChange<",
-                &CompareChangeFunc1<double >,
-                &CompareChangeFunc1<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange<",
+                       &CompareChangeFunc1<double >,
+                       &CompareChangeFunc1<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 6); // all comparisons have changed
-    return ok;
+    //ASSERT_EQ(comparisons, 6); // all comparisons have changed
 }
 
 // ------------------------------- > ----------------------------
 
-bool CompareChange2(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
+TEST_F(CppADCGCompareTest, CompareChange2) {
     int comparisons;
-    ok &= test0("CompareChange>",
-                &CompareChangeFunc2<double >,
-                &CompareChangeFunc2<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange>",
+                       &CompareChangeFunc2<double >,
+                       &CompareChangeFunc2<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 6); // all comparisons have changed
-    return ok;
+    //ASSERT_EQ(comparisons, 6); // all comparisons have changed
 }
 
 // ------------------------------- <= ----------------------------
 
-bool CompareChange3(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
+TEST_F(CppADCGCompareTest, CompareChange3) {
     int comparisons;
-    ok &= test0("CompareChange<=",
-                &CompareChangeFunc3<double >,
-                &CompareChangeFunc3<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange<=",
+                       &CompareChangeFunc3<double >,
+                       &CompareChangeFunc3<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 6); // all comparisons have changed
-    return ok;
+    //ASSERT_EQ(comparisons, 6); // all comparisons have changed
 }
 
 // ------------------------------- >= ----------------------------
 
-bool CompareChange4(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
+TEST_F(CppADCGCompareTest, CompareChange4) {
     int comparisons;
-    ok &= test0("CompareChange>=",
-                &CompareChangeFunc4<double >,
-                &CompareChangeFunc4<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange>=",
+                       &CompareChangeFunc4<double >,
+                       &CompareChangeFunc4<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 6); // all comparisons have changed
-    return ok;
+    //ASSERT_EQ(comparisons, 6); // all comparisons have changed
 }
 
 // ------------------------------- == ----------------------------
 
-bool CompareChange5(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
+TEST_F(CppADCGCompareTest, CompareChange5) {
     int comparisons;
-    ok &= test0("CompareChange>=",
-                &CompareChangeFunc4<double >,
-                &CompareChangeFunc4<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange>=",
+                       &CompareChangeFunc4<double >,
+                       &CompareChangeFunc4<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 4); // the first two comparisons do not change
-    return ok;
+    //ASSERT_EQ(comparisons, 4); // the first two comparisons do not change
 }
 
 // ------------------------------- != ----------------------------
 
-bool CompareChange6(const std::vector<std::vector<double> >& xV) {
-    bool ok = true;
+TEST_F(CppADCGCompareTest, CompareChange6) {
     int comparisons;
-    ok &= test0("CompareChange>=",
-                &CompareChangeFunc4<double >,
-                &CompareChangeFunc4<CG<double> >,
-                xV, comparisons);
+    ASSERT_THROW(test0("CompareChange>=",
+                       &CompareChangeFunc4<double >,
+                       &CompareChangeFunc4<CG<double> >,
+                       xV, comparisons), CppAD::CGException);
 
-    ok &= (comparisons == 4); // the first two comparisons do not change
-    return ok;
-}
-
-bool CompareChange() {
-    std::vector<double> X(2);
-    std::vector<std::vector<double> > xV;
-    // create independent variables
-    X[0] = 3.;
-    X[1] = 4.;
-    xV.push_back(X);
-    X[0] = 4.;
-    X[1] = 3.;
-    xV.push_back(X);
-
-    bool ok = true;
-
-    ok &= !CompareChange1(xV);
-    ok &= !CompareChange2(xV);
-    ok &= !CompareChange3(xV);
-    ok &= !CompareChange4(xV);
-    ok &= !CompareChange5(xV);
-    ok &= !CompareChange6(xV);
-
-    return ok;
+    //ASSERT_EQ(comparisons, 4); // the first two comparisons do not change
 }

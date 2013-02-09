@@ -29,8 +29,9 @@ namespace CppAD {
 
     public:
 
-        inline CGException(const std::string& message) throw () {
-            _message = message;
+        inline CGException(const std::string& message) throw () :
+            _message(message) {
+
         }
 
         const char* what() const throw () {

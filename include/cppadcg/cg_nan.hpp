@@ -1,6 +1,8 @@
+#ifndef CPPAD_CG_NAN_HPP
+#define	CPPAD_CG_NAN_HPP
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -13,21 +15,20 @@
  * Author: Joao Leal
  */
 
-#include "TestException.hpp"
+namespace CppAD {
 
-using namespace CppAD;
-
-TestException::TestException() throw () {
+    template <class Base>
+    inline bool isnan(const CG<Base> &s) {
+        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+        static Base scalar_nan = nan(Base(0));
+        if (s.isVariable()) {
+            return false;
+        } else {
+            // a parameter
+            const Base& v = s.getParameterValue();
+            return (v != v) | (v == scalar_nan);
+        }
+    }
 }
 
-TestException::TestException(const std::string& message) throw () {
-    _message = message;
-}
-
-const char* TestException::what() const throw () {
-    return _message.c_str();
-}
-
-TestException::~TestException() throw () {
-}
-
+#endif

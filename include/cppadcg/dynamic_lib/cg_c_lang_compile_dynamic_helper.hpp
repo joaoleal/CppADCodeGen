@@ -88,7 +88,7 @@ namespace CppAD {
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
         
-        void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar);
+        void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode = false);
 
         inline virtual ~CLangCompileDynamicHelper() {
         };
