@@ -12,52 +12,28 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
-#include <cppadcg/cg.hpp>
-
-#include "gcc_load_dynamic.hpp"
+#include "CppADCGOperationTest.hpp"
 #include "div_mul.hpp"
 
-namespace { // BEGIN empty namespace
+using namespace CppAD;
 
-    bool DivMulTestOne() {
-        bool ok = true;
+TEST_F(CppADCGOperationTest, DivMulTestOne) {
+    // independent variable vector, indices, values, and declaration
+    std::vector<double> u(3);
+    u[0] = 2.;
+    u[1] = 3.;
+    u[2] = 4.;
 
-        using namespace CppAD;
+    test0nJac("DivMulTestOne", &DivMulTestOneFunc<double >, &DivMulTestOneFunc<CG<double> >, u);
+}
 
-        // independent variable vector, indices, values, and declaration
-        std::vector<double> u(3);
-        u[0] = 2.;
-        u[1] = 3.;
-        u[2] = 4.;
+TEST_F(CppADCGOperationTest, DivMulTestTwo) {
+    // independent variable vector
+    std::vector<double> u(4);
+    u[0] = 2.;
+    u[1] = 3.;
+    u[2] = 4.;
+    u[3] = 5.;
 
-        ok &= test0nJac("DivMulTestOne", &DivMulTestOneFunc<double >, &DivMulTestOneFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-    bool DivMulTestTwo() {
-        using namespace CppAD;
-
-        bool ok = true;
-
-        // independent variable vector
-        std::vector<double> u(4);
-        u[0] = 2.;
-        u[1] = 3.;
-        u[2] = 4.;
-        u[3] = 5.;
-
-        ok &= test0nJac("DivMulTestTwo", &DivMulTestTwoFunc<double >, &DivMulTestTwoFunc<CG<double> >, u);
-
-        return ok;
-    }
-
-} // END empty namespace
-
-bool DivMul() {
-    bool ok = true;
-    ok &= DivMulTestOne();
-    ok &= DivMulTestTwo();
-    return ok;
+    test0nJac("DivMulTestTwo", &DivMulTestTwoFunc<double >, &DivMulTestTwoFunc<CG<double> >, u);
 }

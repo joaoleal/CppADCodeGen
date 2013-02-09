@@ -599,7 +599,7 @@ namespace CppAD {
                         handler.substituteIndependent(indep, dep); // removes indep from the list of variables
 
                         SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
-                        assert(alias != NULL && alias->operation() == CGAliasOp);
+                        assert(alias != NULL && alias->operationCode() == CGAliasOp);
                         dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]);
 
                         // it is now an explicit differential equation
