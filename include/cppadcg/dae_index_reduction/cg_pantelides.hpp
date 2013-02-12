@@ -526,11 +526,16 @@ namespace CppAD {
                 Vnode<Base>* jj = vnodes_[j];
                 assert(jj->antiDerivative() != NULL);
                 size_t antiDeriv = jj->antiDerivative()->tapeIndex();
-                newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name())); // create the new variable
-                newVarInfo[antiDeriv].setDerivative(jj->tapeIndex()); // update the antiderivative
                 
+                newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name())); // create the new variable
+                DaeVarInfo& newVar = newVarInfo.back();
+                DaeVarInfo& newAntiDeriv = newVarInfo[antiDeriv];
+                
+                newAntiDeriv.setDerivative(jj->tapeIndex()); // update the antiderivative
+                newVar.setOrder(newAntiDeriv.getOrder() + 1);
+                newVar.setOriginalAntiDerivative(newVar.getOrder() == 1 ? newAntiDeriv.getOriginalIndex() : newAntiDeriv.getOriginalAntiDerivative());
                 if (jj->derivative() != NULL) {
-                    newVarInfo.back().setDerivative(jj->derivative()->tapeIndex());
+                    newVar.setDerivative(jj->derivative()->tapeIndex());
                 }
             }
 
@@ -563,7 +568,7 @@ namespace CppAD {
                 /**
                  * generate a new tape
                  */
-                
+
                 vector<ADCG> indepNew;
                 if (timeOrigVarIndex_ >= 0) {
                     indepNew = vector<ADCG > (newVarInfo.size()); // variables + time (vnodes include time)
@@ -677,7 +682,7 @@ namespace CppAD {
         }
 
         inline void forwardTimeDiff(const std::vector<Enode<Base>*>& equations,
-                                    std::vector<CG<Base> >& dep, 
+                                    std::vector<CG<Base> >& dep,
                                     size_t tapeTimeIndex) const {
 
             size_t m = reducedFun_->Domain();
@@ -697,7 +702,7 @@ namespace CppAD {
         }
 
         inline void reverseTimeDiff(const std::vector<Enode<Base>*>& equations,
-                                    std::vector<CG<Base> >& dep, 
+                                    std::vector<CG<Base> >& dep,
                                     size_t tapeTimeIndex) const {
             size_t m = reducedFun_->Domain();
             size_t n = reducedFun_->Range();

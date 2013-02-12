@@ -52,15 +52,35 @@ namespace CppAD {
          * The variable tape index in the original model
          */
         int originalIndex_;
+        /**
+         * Time derivative order. A negative value means that it is a constant.
+         * An order higher than zero does not mean that the variable should be
+         * treated as a differential variable.
+         */
+        int order_;
+        /**
+         * The original variable index for which this variable is the 
+         * time derivative (with the order provided by order_). A negative value
+         * means that the current variable was never a time derivative.
+         */
+        int originalAntiDerivative_;
     public:
 
+        /**
+         * Creates a new DAE variable
+         * 
+         * \param name A custom variable name (keep it empty to use an
+         *             automatically generated name)
+         */
         inline DaeVarInfo(const std::string& name = "") :
             antiDerivative_(-1),
             derivative_(-1),
             integratedDependent_(true),
             integratedVariable_(false),
             name_(name),
-            originalIndex_(-1) {
+            originalIndex_(-1),
+            order_(0),
+            originalAntiDerivative_(-1) {
         }
 
         inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
@@ -69,7 +89,9 @@ namespace CppAD {
             integratedDependent_(true),
             integratedVariable_(false),
             name_(name),
-            originalIndex_(-1) {
+            originalIndex_(-1),
+            order_(0),
+            originalAntiDerivative_(-1) {
         }
 
         /**
@@ -84,7 +106,7 @@ namespace CppAD {
             return antiDerivative_;
         }
 
-        void setAntiDerivative(int derivativeOf) {
+        inline void setAntiDerivative(int derivativeOf) {
             antiDerivative_ = derivativeOf;
         }
 
@@ -98,6 +120,12 @@ namespace CppAD {
             return derivative_;
         }
 
+        /**
+         * Defines the index of the time derivative for this variable. 
+         * 
+         * \param derivative The index of the time derivative for this variable.
+         *                   A negative value means that there is none.
+         */
         inline void setDerivative(int derivative) {
             derivative_ = derivative;
         }
@@ -121,6 +149,8 @@ namespace CppAD {
             integratedVariable_ = false;
             integratedDependent_ = false;
             antiDerivative_ = -1;
+            order_ = -1;
+            originalAntiDerivative_ = -1;
         }
 
         /**
@@ -132,6 +162,8 @@ namespace CppAD {
             integratedVariable_ = true;
             integratedDependent_ = false;
             antiDerivative_ = -1;
+            order_ = -1;
+            originalAntiDerivative_ = -1;
         }
 
         /**
@@ -164,12 +196,85 @@ namespace CppAD {
             name_ = name;
         }
 
+        /**
+         * Provides the variable index corresponding to the original model.
+         * 
+         * \return The corresponding variable index in the original model. A 
+         *         negative value means that this variable was created by the
+         *         algorithm.
+         */
         inline int getOriginalIndex() const {
             return originalIndex_;
         }
 
+        /**
+         * Defines the variable index in the original model.
+         * 
+         * \param originalIndex The corresponding variable index in the original
+         *                      model. A negative value means that this variable
+         *                      was created by the algorithm.
+         */
         inline void setOriginalIndex(int originalIndex) {
             originalIndex_ = originalIndex;
+        }
+
+        /**
+         * Provides the original variable index for which this variable is/was
+         * the time derivative (with the order provided by order_).
+         * A negative value means that the current variable was never a time 
+         * derivative.
+         * A non-negative value does not mean that this variable should be 
+         * treated as a time derivative since it might have been transformed 
+         * into an algebraic variable by the algorithm.
+         * 
+         * \return the index in the original model for which this variable is 
+         *         the time derivative
+         */
+        inline int getOriginalAntiDerivative() const {
+            return originalAntiDerivative_;
+        }
+
+        /**
+         * Defines the original variable index for which this variable is/was
+         * the time derivative (with the order provided by order_).
+         * A negative value means that the current variable was never a time 
+         * derivative.
+         * A non-negative value does not mean that this variable should be 
+         * treated as a time derivative since it might have been transformed 
+         * into an algebraic variable by the algorithm.
+         * 
+         * \param originalAntiDerivative the index in the original model for
+         *                               which this variable is the time
+         *                               derivative
+         */
+        inline void setOriginalAntiDerivative(int originalAntiDerivative) {
+            originalAntiDerivative_ = originalAntiDerivative;
+        }
+
+        /**
+         * Provides the order of a time derivative.
+         * A negative value means that it is a constant.
+         * An order higher than zero does not mean that the variable should be
+         * treated as a time derivative, it could very well be a time derivative 
+         * transformed into an algebraic variable by the algorithm.
+         *
+         * \return The order of the time derivative
+         */
+        inline int getOrder() const {
+            return order_;
+        }
+
+        /**
+         * Defines the order of a time derivative.
+         * A negative value means that it is a constant.
+         * An order higher than zero does not mean that the variable should be
+         * treated as a time derivative, it could very well be a time derivative 
+         * transformed into an algebraic variable by the algorithm.
+         * 
+         * \param order The order of the time derivative
+         */
+        inline void setOrder(int order) {
+            order_ = order;
         }
 
         inline virtual ~DaeVarInfo() {

@@ -48,6 +48,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
 
     DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
+    dummyD.setReduceEquations(false);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;

@@ -54,13 +54,31 @@ namespace CppAD {
 
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 int deriv = varInfo_[j].getAntiDerivative();
+                assert(deriv < int(varInfo_.size()));
                 if (deriv >= 0) {
                     varInfo_[deriv].setDerivative(j);
                 }
             }
+
+            for (size_t j = 0; j < varInfo_.size(); ++j) {
+                determineVariableOrder(varInfo_[j]);
+            }
         }
 
         inline virtual ~DaeIndexReduction() {
+        }
+
+    private:
+
+        inline void determineVariableOrder(DaeVarInfo& var) {
+            if (var.getAntiDerivative() >= 0) {
+                DaeVarInfo& antiD = varInfo_[var.getAntiDerivative()];
+                if (antiD.getOriginalAntiDerivative() < 0) {
+                    determineVariableOrder(antiD);
+                }
+                var.setOrder(antiD.getOrder() + 1);
+                var.setOriginalAntiDerivative(var.getOrder() == 1 ? antiD.getOriginalIndex() : antiD.getOriginalAntiDerivative());
+            }
         }
     };
 }
