@@ -610,6 +610,9 @@ namespace CppAD {
                         // unable to solve for a dummy variable: keep the equation and variable
                         throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
                     }
+                } else {
+                    // the algebraic variable index may have changed
+                    newEqInfo[i].setAssignedVarIndex(varIndexOld2New[j]);
                 }
             }
 
