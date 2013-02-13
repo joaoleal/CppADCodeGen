@@ -35,6 +35,7 @@ namespace CppAD {
         std::map<std::string, CLangCompileModelHelper<Base>*> _models; // holds all models
         std::map<std::string, std::string> _customSource; // custom functions to be compiled in the dynamic library
         std::string _libraryName; // the path of the dynamic library to be created
+        const std::string* _customLibExtension; // a custom extension for the dynamic library (e.g. ".so.1")
         std::ostringstream _cache;
         bool _saveSourceFiles;
         //
@@ -43,6 +44,7 @@ namespace CppAD {
 
         CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool saveSourceFiles = true) :
             _libraryName("cppad_cg_model"),
+            _customLibExtension(NULL),
             _saveSourceFiles(saveSourceFiles),
             _verbose(false) {
 
@@ -58,6 +60,33 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(!libraryName.empty(), "Library name cannot be empty");
 
             _libraryName = libraryName;
+        }
+
+        /**
+         * Provides a custom library extension defined by the user
+         * 
+         * \return a custom library extension
+         */
+        inline const std::string* getCustomLibraryExtension() const {
+            return _customLibExtension;
+        }
+
+        /**
+         * Defines a custom extension for the library that will be created
+         * 
+         * \param libraryExtension the custom extension name
+         */
+        inline void setCustomLibraryExtension(const std::string& libraryExtension) {
+            delete _customLibExtension;
+            _customLibExtension = new std::string(libraryExtension);
+        }
+
+        /**
+         * Resets the library extension to the default
+         */
+        inline void remveCustomLibraryExtension() {
+            delete _customLibExtension;
+            _customLibExtension = NULL;
         }
 
         inline bool isVerbose() const {
@@ -87,10 +116,11 @@ namespace CppAD {
         }
 
         DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
-        
+
         void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode = false);
 
         inline virtual ~CLangCompileDynamicHelper() {
+            delete _customLibExtension;
         };
 
     protected:

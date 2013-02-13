@@ -51,7 +51,12 @@ namespace CppAD {
 
             compiler.compileSources(sources, true, _saveSourceFiles);
 
-            compiler.buildDynamic(_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
+            std::string libname = _libraryName;
+            if (_customLibExtension != NULL)
+                libname += *_customLibExtension;
+            else
+                libname += system::SystemInfo<>::DYNAMIC_LIB_EXTENSION;
+            compiler.buildDynamic(libname);
         } catch (...) {
             compiler.cleanup();
             throw;
@@ -81,7 +86,12 @@ namespace CppAD {
 
             compiler.compileSources(sources, posIndepCode, _saveSourceFiles);
 
-            ar.create(_libraryName + system::SystemInfo<>::STATIC_LIB_EXTENSION, compiler.getObjectFiles());
+            std::string libname = _libraryName;
+            if (_customLibExtension != NULL)
+                libname += *_customLibExtension;
+            else
+                libname += system::SystemInfo<>::STATIC_LIB_EXTENSION;
+            ar.create(libname, compiler.getObjectFiles());
         } catch (...) {
             compiler.cleanup();
             throw;
