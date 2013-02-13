@@ -84,7 +84,7 @@ namespace CppAD {
         /**
          * Resets the library extension to the default
          */
-        inline void remveCustomLibraryExtension() {
+        inline void removeCustomLibraryExtension() {
             delete _customLibExtension;
             _customLibExtension = NULL;
         }
