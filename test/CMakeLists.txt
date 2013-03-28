@@ -120,13 +120,17 @@ ENDFUNCTION()
 ################################################################################
 # use valgrind if possible
 ################################################################################
-FIND_PACKAGE(Valgrind)
+OPTION(USE_VALGRIND "Use valgrind in tests" ON)
 
-IF(VALGRIND_FOUND)
-  SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
-  MESSAGE(STATUS "Valgrind found")
-ELSE()
-  MESSAGE(WARNING "Valgrind not found")
+IF(USE_VALGRIND)
+  FIND_PACKAGE(Valgrind)
+
+  IF(VALGRIND_FOUND)
+    SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
+    MESSAGE(STATUS "Valgrind found")
+  ELSE()
+    MESSAGE(WARNING "Valgrind not found")
+  ENDIF()
 ENDIF()
 
 ################################################################################
