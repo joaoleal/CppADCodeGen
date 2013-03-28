@@ -78,7 +78,7 @@ namespace CppAD {
 
     private:
 
-        inline AD<BaseOut> evalCG(const CG<Base>& dep) const throw (CGException) {
+        inline AD<BaseOut> evalCG(const CG<Base>& dep) throw (CGException) {
             if (dep.isParameter()) {
                 // parameter
                 return AD<BaseOut > (dep.getParameterValue());
@@ -87,7 +87,7 @@ namespace CppAD {
             }
         }
 
-        inline AD<BaseOut> evalArg(const Argument<Base>& arg) const throw (CGException) {
+        inline AD<BaseOut> evalArg(const Argument<Base>& arg) throw (CGException) {
             if (arg.operation() != NULL) {
                 return evalSourceCodeFragment(*arg.operation());
             } else {
@@ -96,7 +96,7 @@ namespace CppAD {
             }
         }
 
-        inline AD<BaseOut> evalSourceCodeFragment(SourceCodeFragment<Base>& node) const throw (CGException) {
+        inline AD<BaseOut> evalSourceCodeFragment(SourceCodeFragment<Base>& node) throw (CGException) {
             // check if this node was previously determined
             typename std::map<SourceCodeFragment<Base>*, AD<BaseOut> >::const_iterator it;
             it = evals_.find(&node);
@@ -107,94 +107,129 @@ namespace CppAD {
             // first evaluation of this node
             const std::vector<Argument<Base> >& args = node.arguments();
             const CGOpCode code = node.operation();
+            AD<BaseOut> result;
             switch (code) {
                 case CGAbsOp: //  abs(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");
-                    return abs(evalArg(args[0]));
+                    result = abs(evalArg(args[0]));
+                    break;
                 case CGAcosOp: // acos(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for acos()");
-                    return acos(evalArg(args[0]));
+                    result = acos(evalArg(args[0]));
+                    break;
                 case CGAddOp: //  a + b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition");
-                    return evalArg(args[0]) + evalArg(args[1]);
+                    result = evalArg(args[0]) + evalArg(args[1]);
+                    break;
                 case CGAliasOp:
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias");
-                    return evalArg(args[0]);
+                    result = evalArg(args[0]);
+                    break;
                 case CGAsinOp: // asin(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()");
-                    return asin(evalArg(args[0]));
+                    result = asin(evalArg(args[0]));
+                    break;
                 case CGAtanOp: // atan(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for atan()");
-                    return atan(evalArg(args[0]));
+                    result = atan(evalArg(args[0]));
+                    break;
                 case CGComOpLt: // result = left < right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLt, )");
-                    return CondExpOp(CompareLt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    result = CondExpOp(CompareLt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    break;
                 case CGComOpLe: // result = left <= right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )");
-                    return CondExpOp(CompareLe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                {
+                    AD<BaseOut> a0 = evalArg(args[0]);
+                    AD<BaseOut> a1 = evalArg(args[1]);
+                    AD<BaseOut> a2 = evalArg(args[2]);
+                    AD<BaseOut> a3 = evalArg(args[3]);
+                    result = CondExpOp(CompareLe, a0, a1, a2, a3);
+                }
+                    break;
                 case CGComOpEq: // result = left == right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )");
-                    return CondExpOp(CompareEq, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    result = CondExpOp(CompareEq, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    break;
                 case CGComOpGe: // result = left >= right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGe, )");
-                    return CondExpOp(CompareGe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    result = CondExpOp(CompareGe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    break;
                 case CGComOpGt: // result = left > right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGt, )");
-                    return CondExpOp(CompareGt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    result = CondExpOp(CompareGt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    break;
                 case CGComOpNe: // result = left != right? trueCase: falseCase
                     CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareNe, )");
-                    return CondExpOp(CompareNe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    result = CondExpOp(CompareNe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                    break;
                 case CGCoshOp: // cosh(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cosh()");
-                    return cosh(evalArg(args[0]));
+                    result = cosh(evalArg(args[0]));
+                    break;
                 case CGCosOp: //  cos(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cos()");
-                    return cos(evalArg(args[0]));
+                    result = cos(evalArg(args[0]));
+                    break;
                 case CGDivOp: // a / b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for division");
-                    return evalArg(args[0]) / evalArg(args[1]);
+                    result = evalArg(args[0]) / evalArg(args[1]);
+                    break;
                 case CGExpOp: //  exp(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for exp()");
-                    return exp(evalArg(args[0]));
+                    result = exp(evalArg(args[0]));
+                    break;
                 case CGInvOp: //                             independent variable
                 {
                     size_t index = handler_->getIndependentVariableIndex(node);
-                    return (*indep_)[index];
+                    result = (*indep_)[index];
                 }
+                    break;
                 case CGLogOp: //  log(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
-                    return log(evalArg(args[0]));
+                    result = log(evalArg(args[0]));
+                    break;
                 case CGMulOp: // a * b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication");
-                    return evalArg(args[0]) * evalArg(args[1]);
+                    result = evalArg(args[0]) * evalArg(args[1]);
+                    break;
                 case CGPowOp: //  pow(a,   b)
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()");
-                    return pow(evalArg(args[0]), evalArg(args[1]));
+                    result = pow(evalArg(args[0]), evalArg(args[1]));
+                    break;
                     //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
                 case CGSignOp: // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sign()");
-                    return sign(evalArg(args[0]));
+                    result = sign(evalArg(args[0]));
+                    break;
                 case CGSinhOp: // sinh(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sinh()");
-                    return sinh(evalArg(args[0]));
+                    result = sinh(evalArg(args[0]));
+                    break;
                 case CGSinOp: //  sin(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sin()");
-                    return sin(evalArg(args[0]));
+                    result = sin(evalArg(args[0]));
+                    break;
                 case CGSqrtOp: // sqrt(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sqrt()");
-                    return sqrt(evalArg(args[0]));
+                    result = sqrt(evalArg(args[0]));
+                    break;
                 case CGSubOp: //  a - b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for subtraction");
-                    return evalArg(args[0]) - evalArg(args[1]);
+                    result = evalArg(args[0]) - evalArg(args[1]);
+                    break;
                 case CGTanhOp: //  tanh(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tanh()");
-                    return tanh(evalArg(args[0]));
+                    result = tanh(evalArg(args[0]));
+                    break;
                 case CGTanOp: //  tan(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tan()");
-                    return tan(evalArg(args[0]));
+                    result = tan(evalArg(args[0]));
+                    break;
                 case CGUnMinusOp: // -(a)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for unary minus");
-                    return -evalArg(args[0]);
+                    result = -evalArg(args[0]);
+                    break;
                 default:
                 {
                     std::stringstream ss;
@@ -202,6 +237,10 @@ namespace CppAD {
                     throw CGException(ss.str());
                 }
             }
+
+            evals_[&node] = result;
+
+            return result;
         }
     };
 }

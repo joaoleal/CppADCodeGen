@@ -56,6 +56,7 @@ inline CppAD::ADFun<Base>* Pendulum2D(std::vector<CppAD::DaeVarInfo>& daeVar) {
     // dependent variable vector 
     std::vector<ADB> Z(5);
     Z[0] = dxdt - vx; // dx/dt =
+    //Z[0] = CppAD::CondExpLe<Base>(Z[0], 0, Z[0], 0);
     Z[1] = dydt - vy; // dy/dt =
     Z[2] = dvxdt - T * x; // dvx/dt =
     Z[3] = dvydt - (T * y - g); // dvy/dt =

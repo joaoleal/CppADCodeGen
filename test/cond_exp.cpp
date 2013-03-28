@@ -20,10 +20,18 @@ using namespace CppAD;
 
 TEST_F(CppADCGOperationTest, CondExp_pvvv) {
     // independent variable vector
-    std::vector<double> u(3);
-    u[0] = 0.;
-    u[1] = 1.;
-    u[2] = 2.;
+    std::vector<double> u0(3);
+    u0[0] = 0.;
+    u0[1] = 1.;
+    u0[2] = 2.;
+    std::vector<double> u1(3);
+    u1[0] = 1.5;
+    u1[1] = 0.;
+    u1[2] = 2.;
+
+    std::vector<std::vector<double> > u(2);
+    u[0] = u0;
+    u[1] = u1;
 
     test0nJac("CondExp_pvvv", &CondExp_pvvvFunc<double >, &CondExp_pvvvFunc<CG<double> >, u);
 }

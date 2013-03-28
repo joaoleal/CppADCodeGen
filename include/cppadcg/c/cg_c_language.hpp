@@ -811,21 +811,30 @@ namespace CppAD {
             bool isDep = isDependent(op);
             const std::string& varName = createVariableName(op);
 
-            _code << _spaces << "if( ";
-            print(left);
-            _code << " " << getComparison(op.operation()) << " ";
-            print(right);
-            _code << " ) {\n";
-            _code << _spaces << _spaces << varName << " ";
-            _code << (isDep ? _depAssignOperation : "=") << " ";
-            print(trueCase);
-            _code << ";\n";
-            _code << _spaces << "} else {\n";
-            _code << _spaces << _spaces << varName << " ";
-            _code << (isDep ? _depAssignOperation : "=") << " ";
-            print(falseCase);
-            _code << ";\n";
-            _code << _spaces << "}\n";
+            if ((trueCase.parameter() != NULL && falseCase.parameter() != NULL && *trueCase.parameter() == *falseCase.parameter()) ||
+                    (trueCase.operation() != NULL && falseCase.operation() != NULL && trueCase.operation() == falseCase.operation())) {
+                // true and false cases are the same
+                _code << _spaces << varName << " ";
+                _code << (isDep ? _depAssignOperation : "=") << " ";
+                print(trueCase);
+                _code << ";\n";
+            } else {
+                _code << _spaces << "if( ";
+                print(left);
+                _code << " " << getComparison(op.operation()) << " ";
+                print(right);
+                _code << " ) {\n";
+                _code << _spaces << _spaces << varName << " ";
+                _code << (isDep ? _depAssignOperation : "=") << " ";
+                print(trueCase);
+                _code << ";\n";
+                _code << _spaces << "} else {\n";
+                _code << _spaces << _spaces << varName << " ";
+                _code << (isDep ? _depAssignOperation : "=") << " ";
+                print(falseCase);
+                _code << ";\n";
+                _code << _spaces << "}\n";
+            }
         }
 
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {

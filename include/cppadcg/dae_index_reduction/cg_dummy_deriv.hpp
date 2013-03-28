@@ -926,6 +926,8 @@ namespace CppAD {
              * Fill in the Jacobian subset for the selected equations and variables
              */
             subsetJac.resize(eqs.size(), vars.size());
+
+            // determine the rows that only contain a single nonzero (a single column)
             std::vector<size_t> rowNnz(eqs.size()); // the number of non-zero elements per row
             std::vector<size_t> rowNnzCol(eqs.size()); // the last defined column for each row
             for (size_t i = 0; i < eqs.size(); i++) {
@@ -951,7 +953,12 @@ namespace CppAD {
              */
             std::set<size_t> fixedCols;
             for (size_t i = 0; i < rowNnz.size(); ++i) {
-                if (rowNnz[i] == 1) {
+                if (rowNnz[i] == 0) {
+                    std::ostringstream s;
+                    s << "Failed to select dummy derivatives: "
+                            "the row corresponding to the equation '" << *eqs[i] << "' in the work jacobian is filled with zeros.";
+                    throw CGException(s.str());
+                } else if (rowNnz[i] == 1) {
                     fixedCols.insert(rowNnzCol[i]);
                 }
             }
@@ -967,11 +974,33 @@ namespace CppAD {
 #endif
 
             /**
+             * Determine the columns that must be removed
+             */
+            std::set<size_t> excludeCols;
+            for (size_t j = 0; j < vars.size(); j++) {
+                Vnode<Base>* jj = vars[j];
+                bool notZero = false;
+                for (size_t i = 0; i < eqs.size(); i++) {
+                    Enode<Base>* ii = eqs[i];
+                    Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                    if (val != Base(0.0)) {
+                        notZero = true;
+                        break;
+                    }
+                }
+                if (!notZero) {
+                    // all zeros: must not choose this column/variable
+                    excludeCols.insert(j);
+                }
+            }
+
+
+            /**
              * column indexes that can be added/removed from the selection
              */
             std::vector<size_t> freeCols;
             for (size_t j = 0; j < vars.size(); ++j) {
-                if (fixedCols.find(j) == fixedCols.end()) {
+                if (fixedCols.find(j) == fixedCols.end() && excludeCols.find(j) == excludeCols.end()) {
                     freeCols.push_back(j);
                 }
             }
@@ -1006,38 +1035,55 @@ namespace CppAD {
                     std::cout << cols2keep[s] << " ";
                 std::cout << " \n";
 #endif
+
+                std::vector<int> rowNnz(eqs.size(), 0);
                 workJac.setZero(eqs.size(), eqs.size());
                 for (size_t c = 0; c < cols2keep.size(); ++c) {
                     typename Eigen::SparseMatrix<Base>::InnerIterator itCol(subsetJac, cols2keep[c]);
                     for (; itCol; ++itCol) {
                         assert(itCol.col() == int(cols2keep[c]));
                         workJac(itCol.row(), c) = itCol.value();
+                        rowNnz[itCol.row()]++;
                     }
                 }
 
+                bool doEval = true;
+                for (size_t r = 0; r < rowNnz.size(); r++) {
+                    if (rowNnz[r] == 0) {
+                        doEval = false;
+                        break;
+                    }
+                }
+
+                if (doEval) {
 #ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "    current jac:\n" << workJac << "\n";
+                    std::cout << "    current jac:\n" << workJac << "\n";
 #endif
 
-                Base cond = evalBestMatrixCondition(workJac);
+                    Base cond = evalBestMatrixCondition(workJac);
 
 #ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "    condition: " << cond << "\n";
+                    std::cout << "    condition: " << cond << "\n";
 #endif
 
-                if (cond == cond) {
-                    // not NaN
-                    size_t totalOrd = 0;
-                    for (size_t j = 0; j < cols2keep.size(); j++) {
-                        totalOrd += vars[cols2keep[j]]->order();
+                    if (cond == cond) {
+                        // not NaN
+                        size_t totalOrd = 0;
+                        for (size_t j = 0; j < cols2keep.size(); j++) {
+                            totalOrd += vars[cols2keep[j]]->order();
+                        }
+                        if ((totalOrd > bestTotalOrder && cond / Base(10.0) <= bestCond) ||
+                                (totalOrd == bestTotalOrder && cond < bestCond) ||
+                                (totalOrd < bestTotalOrder && cond * Base(10.0) <= bestCond)) {
+                            bestTotalOrder = totalOrd;
+                            bestCond = cond;
+                            bestCols2keep = cols2keep;
+                        }
                     }
-                    if ((totalOrd > bestTotalOrder && cond / Base(10.0) <= bestCond) ||
-                            (totalOrd == bestTotalOrder && cond < bestCond) ||
-                            (totalOrd < bestTotalOrder && cond * Base(10.0) <= bestCond)) {
-                        bestTotalOrder = totalOrd;
-                        bestCond = cond;
-                        bestCols2keep = cols2keep;
-                    }
+                } else {
+#ifdef CPPAD_CG_DAE_VERBOSE
+                    std::cout << "    skipping...\n";
+#endif
                 }
 
                 /**

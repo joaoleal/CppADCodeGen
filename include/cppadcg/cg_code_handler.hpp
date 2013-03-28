@@ -261,8 +261,7 @@ namespace CppAD {
     protected:
 
         virtual void manageSourceCodeBlock(SourceCodeFragment<Base>* code) {
-            assert(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end());
-
+            //assert(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
             if (_codeBlocks.capacity() == _codeBlocks.size()) {
                 _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
             }

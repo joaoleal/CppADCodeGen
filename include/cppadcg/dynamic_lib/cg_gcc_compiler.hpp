@@ -155,7 +155,8 @@ namespace CppAD {
                 if (_verbose) {
                     beginTime = system::currentTime();
                     std::cout << "[" << count << "/" << sources.size() << "] compiling "
-                            << std::setw(maxsize + 9) << ("'" + file + "' ...  ");
+                            << std::setw(maxsize + 9) << std::setfill('.') << std::left
+                            << ("'" + file + "' ") << " ";
                     std::cout.flush();
                 }
 
