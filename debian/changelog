@@ -1,3 +1,13 @@
+cppadcodegen (1.0.0-1) unstable; urgency=low
+
+  * CHANGED VERSIONING STYLE!!! It no longer follows CppAD version names.
+  * improved DAE index reduction code
+  * minor improvements to conditional expression operation
+  * Evaluator class performs less operations
+  * other minor improvements
+
+ -- Development <development@ciengis.com>  Thu, 28 Mar 2013 13:00:00 +0000
+
 cppadcodegen (20121219.6-1) unstable; urgency=low
 
   * improved DAE index reduction code (Dummy derivatives can generate semi-explicit DAEs)
