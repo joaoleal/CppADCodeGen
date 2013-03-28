@@ -19,10 +19,10 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> CondExpOp(enum CompareOp cop,
-    const CG<Base> &left,
-    const CG<Base> &right,
-    const CG<Base> &trueCase,
-    const CG<Base> &falseCase) {
+                              const CG<Base> &left,
+                              const CG<Base> &right,
+                              const CG<Base> &trueCase,
+                              const CG<Base> &falseCase) {
 
         if (left.isParameter() && right.isParameter()) {
             switch (cop) {
@@ -61,6 +61,11 @@ namespace CppAD {
                     return trueCase;
             }
 
+        } else if ((trueCase.isParameter() && falseCase.isParameter() &&
+                trueCase.getParameterValue() == falseCase.getParameterValue()) ||
+                (trueCase.isVariable() && falseCase.isVariable() &&
+                trueCase.getSourceCodeFragment() == falseCase.getSourceCodeFragment())) {
+            return trueCase;
         } else {
 
             CodeHandler<Base>* handler;
