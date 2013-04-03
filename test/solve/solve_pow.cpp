@@ -32,13 +32,13 @@ TEST_F(CppADCGSolveTest, SolvePow) {
     std::vector<ADCGD> Z(3);
 
     // dependent variables
-    Z[0] = pow(pow(u[0], u[1]), u[2]);
+    Z[0] = pow(u[0], u[1]) - 16.0;
     Z[1] = Z[0] - u[2] * pow(4, 2);
     Z[2] = pow(Z[0], 2.0) - pow(pow(u[3], 2), 2);
 
     // create f: U -> Z
     ADFun<CGD> fun(u, Z);
 
-    //ok &= test_solve(fun, 1, 1, u);
-    test_solve(fun, 2, 0, u);
+    // test_solve(fun, 2, 0, u);// <<< should fail
+    test_solve(fun, 0, 1, u);
 }
