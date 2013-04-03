@@ -23,6 +23,10 @@ namespace CppAD {
     class DaeVarInfo {
     private:
         /**
+         * A unique identifier for this variable (used internally)
+         */
+        size_t id_;
+        /**
          * The index of the variable for which this variable is the time
          * derivative. A negative value means that the current variable isn't 
          * a time derivative.
@@ -71,8 +75,10 @@ namespace CppAD {
          * 
          * \param name A custom variable name (keep it empty to use an
          *             automatically generated name)
+         * \param id A unique identifier for this variable (used internally)
          */
-        inline DaeVarInfo(const std::string& name = "") :
+        inline DaeVarInfo(const std::string& name = "", size_t id = 0) :
+            id_(id),
             antiDerivative_(-1),
             derivative_(-1),
             integratedDependent_(true),
@@ -83,7 +89,8 @@ namespace CppAD {
             originalAntiDerivative_(-1) {
         }
 
-        inline DaeVarInfo(int derivativeOf, const std::string& name = "") :
+        inline DaeVarInfo(int derivativeOf, const std::string& name = "", size_t id = 0) :
+            id_(id),
             antiDerivative_(derivativeOf),
             derivative_(-1),
             integratedDependent_(true),
@@ -92,6 +99,19 @@ namespace CppAD {
             originalIndex_(-1),
             order_(0),
             originalAntiDerivative_(-1) {
+        }
+
+        /**
+         * Provides a unique identifier for the variable.
+         * 
+         * \return a unique identifier for the variable.
+         */
+        inline size_t getId() const {
+            return id_;
+        }
+
+        inline void setId(size_t id) {
+            id_ = id;
         }
 
         /**
@@ -275,6 +295,19 @@ namespace CppAD {
          */
         inline void setOrder(int order) {
             order_ = order;
+        }
+
+        inline void printInfo() {
+            std::cout << name_ << ":\n";
+            if (antiDerivative_ >= 0)
+                std::cout << " derivative-of: " << antiDerivative_ << "\n";
+            if (derivative_ >= 0)
+                std::cout << " derivative: " << derivative_ << "\n";
+            if (integratedDependent_)
+                std::cout << " integrated dependent\n";
+            else if (integratedVariable_)
+                std::cout << " integrated variable\n";
+            std::cout.flush();
         }
 
         inline virtual ~DaeVarInfo() {

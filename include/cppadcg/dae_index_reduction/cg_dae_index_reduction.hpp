@@ -50,6 +50,7 @@ namespace CppAD {
             assert(varInfo_.size() == fun->Domain());
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 varInfo_[j].setOriginalIndex(j);
+                varInfo_[j].setId(j);
             }
 
             for (size_t j = 0; j < varInfo_.size(); ++j) {

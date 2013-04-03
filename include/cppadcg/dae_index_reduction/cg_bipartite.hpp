@@ -18,6 +18,7 @@
 #include <assert.h>
 #include <iostream>
 #include <set>
+#include <sstream>
 
 namespace CppAD {
 
@@ -40,7 +41,7 @@ namespace CppAD {
             colored_ = true;
 
 #ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "      Coloured " << nodeType() << " " << index_ << "\n";
+            std::cout << "      Coloured " << nodeType() << " " << name() << "\n";
 #endif
         }
 
@@ -55,6 +56,8 @@ namespace CppAD {
         inline size_t index() const {
             return index_;
         }
+
+        virtual const std::string& name() const = 0;
 
         virtual std::string nodeType() = 0;
 
@@ -85,12 +88,19 @@ namespace CppAD {
          * 
          */
         Enode<Base>* differentiationOf_;
+        /**
+         * A name for the equation
+         */
+        std::string name_;
     public:
 
         inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
             differentiationOf_(NULL) {
+            std::ostringstream s;
+            s << *this;
+            name_ = s.str();
         }
 
         inline Enode(size_t index, Enode<Base>* differentiationOf) :
@@ -98,6 +108,9 @@ namespace CppAD {
             differentiation_(NULL),
             differentiationOf_(differentiationOf) {
             differentiationOf_->setDerivative(this);
+            std::ostringstream s;
+            s << *this;
+            name_ = s.str();
         }
 
         inline const std::set<Vnode<Base>*>& variables() const {
@@ -138,6 +151,10 @@ namespace CppAD {
 
         inline void deleteNode(Vnode<Base>* j) {
             vnodes_.erase(j);
+        }
+
+        virtual const std::string& name() const {
+            return name_;
         }
 
         virtual std::string nodeType() {
@@ -237,7 +254,7 @@ namespace CppAD {
             antiDerivative_->setDerivative(this);
         }
 
-        inline const std::string& name() const {
+        inline virtual const std::string& name() const {
             return name_;
         }
 

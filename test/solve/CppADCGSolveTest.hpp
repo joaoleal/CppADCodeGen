@@ -68,7 +68,7 @@ namespace CppAD {
             /**
              * solve
              */
-            CGD solution = handler.solveFor(dep[expressionIndex].getSourceCodeFragment(), indVars[indIndex].getSourceCodeFragment());
+            CGD solution = handler.solveFor(*dep[expressionIndex].getSourceCodeFragment(), *indVars[indIndex].getSourceCodeFragment());
 
             if (verbose_) {
                 printModel(handler, solution);

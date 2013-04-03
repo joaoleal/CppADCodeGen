@@ -237,8 +237,10 @@ namespace CppAD {
          * \param code  The variable to solve for
          * \return  The expression for variable
          */
-        inline CG<Base> solveFor(SourceCodeFragment<Base>* expression,
-                                 SourceCodeFragment<Base>* code) throw (CGException);
+        inline CG<Base> solveFor(SourceCodeFragment<Base>& expression,
+                                 SourceCodeFragment<Base>& code) throw (CGException);
+
+        inline CG<Base> solveFor(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException);
 
         /**
          * Eliminates an independent variable by substitution using the provided
@@ -251,10 +253,10 @@ namespace CppAD {
         inline void substituteIndependent(const CG<Base>& indep,
                                           const CG<Base>& dep) throw (CGException);
 
-        inline void substituteIndependent(SourceCodeFragment<Base>* indep,
-                                          SourceCodeFragment<Base>* dep) throw (CGException);
+        inline void substituteIndependent(SourceCodeFragment<Base>& indep,
+                                          SourceCodeFragment<Base>& dep) throw (CGException);
 
-        virtual ~CodeHandler() {
+        inline virtual ~CodeHandler() {
             reset();
         }
 

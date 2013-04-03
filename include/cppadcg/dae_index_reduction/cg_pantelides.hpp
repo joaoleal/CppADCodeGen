@@ -526,11 +526,11 @@ namespace CppAD {
                 Vnode<Base>* jj = vnodes_[j];
                 assert(jj->antiDerivative() != NULL);
                 size_t antiDeriv = jj->antiDerivative()->tapeIndex();
-                
-                newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name())); // create the new variable
+                size_t id = newVarInfo.size();
+                newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name(), id)); // create the new variable
                 DaeVarInfo& newVar = newVarInfo.back();
                 DaeVarInfo& newAntiDeriv = newVarInfo[antiDeriv];
-                
+
                 newAntiDeriv.setDerivative(jj->tapeIndex()); // update the antiderivative
                 newVar.setOrder(newAntiDeriv.getOrder() + 1);
                 newVar.setOriginalAntiDerivative(newVar.getOrder() == 1 ? newAntiDeriv.getOriginalIndex() : newAntiDeriv.getOriginalAntiDerivative());
@@ -551,9 +551,10 @@ namespace CppAD {
             for (size_t i = 0; i < enodes_.size(); i++) {
                 Enode<Base>* ii = enodes_[i];
                 int derivativeOf = ii->derivativeOf() != NULL ? ii->derivativeOf()->index() : -1;
+                int origIndex = ii->derivativeOf() == NULL ? i : -1;
                 int assignedVarIndex = assigments.count(ii) > 0 ? assigments[ii]->tapeIndex() : -1;
 
-                equationInfo[i] = DaeEquationInfo(i, derivativeOf, assignedVarIndex);
+                equationInfo[i] = DaeEquationInfo(i, origIndex, derivativeOf, assignedVarIndex);
             }
 
             size_t timeTapeIndex;

@@ -217,13 +217,13 @@ namespace CppAD {
      * Graph management functions
      */
     template<class Base>
-    inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>* root,
-                                                                          SourceCodeFragment<Base>* code,
+    inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>& root,
+                                                                          SourceCodeFragment<Base>& code,
                                                                           size_t max);
 
     template<class Base>
     inline void findPaths(std::vector<SourceCodePathNode<Base> >& path2node,
-                          SourceCodeFragment<Base>* code,
+                          SourceCodeFragment<Base>& code,
                           std::vector<std::vector<SourceCodePathNode<Base> > >& found,
                           size_t max);
     /**

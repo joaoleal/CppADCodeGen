@@ -24,6 +24,10 @@ namespace CppAD {
     class DaeEquationInfo {
     private:
         /**
+         * A unique identifier for this equation (used internally)
+         */
+        size_t id_;
+        /**
          * The equation index in the original user model
          */
         int originalIndex_;
@@ -45,17 +49,32 @@ namespace CppAD {
     public:
 
         inline DaeEquationInfo() :
+            id_(0),
             originalIndex_(-1),
             antiDerivative_(-1),
             assignedVarIndex_(-1),
             explicit_(false) {
         }
 
-        inline DaeEquationInfo(int originalIndex, int derivativeOf, int assignedVarIndex, bool explicitEq = false) :
+        inline DaeEquationInfo(size_t id, int originalIndex, int derivativeOf, int assignedVarIndex, bool explicitEq = false) :
+            id_(id),
             originalIndex_(originalIndex),
             antiDerivative_(derivativeOf),
             assignedVarIndex_(assignedVarIndex),
             explicit_(explicitEq) {
+        }
+
+        /**
+         * Provides a unique identifier for the equation.
+         * 
+         * \return a unique identifier for the equation.
+         */
+        inline size_t getId() const {
+            return id_;
+        }
+
+        inline void setId(size_t id) {
+            id_ = id;
         }
 
         inline int getAntiDerivative() const {

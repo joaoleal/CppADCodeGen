@@ -25,7 +25,10 @@ INCLUDE(ExternalProject)
 SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
 # Add gtest
-ExternalProject_Add(
+OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" ON)
+IF(GOOGLETEST_SVN)
+  # Download from SVN repository
+  ExternalProject_Add(
     googletest
     SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
     TIMEOUT 10
@@ -40,6 +43,30 @@ ExternalProject_Add(
     LOG_DOWNLOAD ON
     LOG_CONFIGURE ON
     LOG_BUILD ON)
+ELSE()
+  # find installed in system
+  FIND_PATH(GOOGLETEST_SOURCE_DIR NAMES "src/gtest_main.cc"
+            HINTS  $ENV{GOOGLETEST_HOME}
+                   "/usr/src/gtest/" )
+  IF(NOT IS_DIRECTORY ${GOOGLETEST_SOURCE_DIR})
+    MESSAGE(FATAL_ERROR "GoogleTest source folder not found")
+  ENDIF()
+
+  ExternalProject_Add(
+    googletest
+    URL ${GOOGLETEST_SOURCE_DIR}
+    # Force separate output paths for debug and release builds to allow easy
+    # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
+    CMAKE_ARGS -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_DEBUG:PATH=DebugLibs
+               -DCMAKE_ARCHIVE_OUTPUT_DIRECTORY_RELEASE:PATH=ReleaseLibs
+               -Dgtest_force_shared_crt=ON
+    # Disable install step
+    INSTALL_COMMAND ""
+    # Wrap download, configure and build steps in a script to log output
+    LOG_DOWNLOAD ON
+    LOG_CONFIGURE ON
+    LOG_BUILD ON)
+ENDIF()
 
 # Specify include dir
 ExternalProject_Get_Property(googletest source_dir)

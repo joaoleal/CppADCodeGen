@@ -18,22 +18,17 @@
 namespace CppAD {
 
     template<class Base>
-    inline CG<Base> CodeHandler<Base>::solveFor(SourceCodeFragment<Base>* expression,
-                                                SourceCodeFragment<Base>* code) throw (CGException) {
-
-        assert(expression != NULL);
-        assert(code != NULL);
-
+    inline CG<Base> CodeHandler<Base>::solveFor(SourceCodeFragment<Base>& expression,
+                                                SourceCodeFragment<Base>& code) throw (CGException) {
         using std::vector;
 
         // find code in expression
-        if (expression == code)
-            return CG<Base > (*this, Argument<Base > (*code));
+        if (&expression == &code)
+            return CG<Base > (*this, Argument<Base > (code));
 
         typedef vector<SourceCodePathNode<Base> > SourceCodePath;
 
         vector<SourceCodePath> paths = findPaths(expression, code, 2);
-
         if (paths.empty()) {
             throw CGException("The provided variable is not present in the expression");
         } else if (paths.size() > 1) {
@@ -42,16 +37,19 @@ namespace CppAD {
                               " the provided variable was found in multiple locations (not yet supported)");
         }
 
+        assert(paths[0].back().node == &code);
+
+        return solveFor(paths[0]);
+    }
+
+    template<class Base>
+    inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException) {
 
         CG<Base> rightHs(0.0);
 
-        SourceCodePath& path0 = paths[0];
-
-        assert(path0.back().node == code);
-
-        for (size_t n = 0; n < path0.size() - 1; ++n) {
-            SourceCodePathNode<Base>& pnodeOp = path0[n];
-            size_t argIndex = path0[n + 1].arg_index;
+        for (size_t n = 0; n < path.size() - 1; ++n) {
+            const SourceCodePathNode<Base>& pnodeOp = path[n];
+            size_t argIndex = path[n + 1].arg_index;
             const std::vector<Argument<Base> >& args = pnodeOp.node->arguments();
 
             CGOpCode op = pnodeOp.node->operation();
@@ -104,10 +102,21 @@ namespace CppAD {
                     if (argIndex == 0) {
                         // base
                         const Argument<Base>& exponent = args[1];
-                        if (exponent.parameter() != NULL && *exponent.parameter() == Base(2.0)) {
-                            rightHs = sqrt(rightHs);
+                        if (exponent.parameter() != NULL && *exponent.parameter() == Base(0.0)) {
+                            throw CGException("Invalid zero exponent");
+                        } else if (exponent.parameter() != NULL && *exponent.parameter() == Base(1.0)) {
+                            continue; // do nothing
                         } else {
-                            rightHs = pow(rightHs, Base(1.0) / CG<Base > (*this, exponent));
+                            std::ostringstream ss;
+                            ss << "Unable to invert operation '" << op << "'";
+                            throw CGException(ss.str());
+                            /*
+                            if (exponent.parameter() != NULL && *exponent.parameter() == Base(2.0)) {
+                                rightHs = sqrt(rightHs); // TODO: should -sqrt(rightHs) somehow be considered???
+                            } else {
+                                rightHs = pow(rightHs, Base(1.0) / CG<Base > (*this, exponent));
+                            }
+                             */
                         }
                     } else {
                         // 

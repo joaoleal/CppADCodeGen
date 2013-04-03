@@ -60,7 +60,7 @@ inline CppAD::ADFun<Base>* Pendulum2D(std::vector<CppAD::DaeVarInfo>& daeVar) {
     Z[1] = dydt - vy; // dy/dt =
     Z[2] = dvxdt - T * x; // dvx/dt =
     Z[3] = dvydt - (T * y - g); // dvy/dt =
-    Z[4] = x * x + y * y - L*L;
+    Z[4] = x * x + y * y - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
     return new ADFun<Base > (U, Z);
@@ -100,7 +100,7 @@ inline CppAD::ADFun<Base>* Pendulum3D() {
     Z[3] = dvxdt - T * x; // dvx/dt =
     Z[4] = dvydt - (T * y - g); // dvy/dt =
     Z[5] = dvzdt - T * z; // dvz/dt =
-    Z[6] = x * x + y * y + z * z - L*L;
+    Z[6] = x * x + y * y + z * z - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
     return new ADFun<Base > (U, Z);

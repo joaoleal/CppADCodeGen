@@ -17,4 +17,5 @@
 SET(CMAKE_BUILD_TYPE DEBUG)
 
 add_cppadcg_test(dummy_derivative.cpp)
+add_cppadcg_test(dummy_derivative_destil.cpp)
 add_cppadcg_test(pantelides.cpp)

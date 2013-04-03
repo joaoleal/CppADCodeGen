@@ -29,9 +29,17 @@ namespace CppAD {
 
     };
 
+    /**
+     * Finds occurences of a source code fragment in an operation graph.
+     * 
+     * \param root the operation graph where to search
+     * \param code the source code fragment to find in root
+     * \param max the maximum number of occurences of code to find in root
+     * \return the paths from root to code
+     */
     template<class Base>
-    inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>* root,
-                                                                          SourceCodeFragment<Base>* code,
+    inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>& root,
+                                                                          SourceCodeFragment<Base>& code,
                                                                           size_t max) {
 
         std::vector<std::vector<SourceCodePathNode<Base> > > found;
@@ -39,9 +47,9 @@ namespace CppAD {
         if (max > 0) {
             std::vector<SourceCodePathNode<Base> > path2node;
             path2node.reserve(30);
-            path2node.push_back(SourceCodePathNode<Base > (root, 0));
+            path2node.push_back(SourceCodePathNode<Base > (&root, 0));
 
-            if (root == code) {
+            if (&root == &code) {
                 found.push_back(path2node);
             } else {
                 findPaths(path2node, code, found, max);
@@ -53,7 +61,7 @@ namespace CppAD {
 
     template<class Base>
     inline void findPaths(std::vector<SourceCodePathNode<Base> >& currPath,
-                          SourceCodeFragment<Base>* code,
+                          SourceCodeFragment<Base>& code,
                           std::vector<std::vector<SourceCodePathNode<Base> > >& found,
                           size_t max) {
 
@@ -61,7 +69,7 @@ namespace CppAD {
             return;
         }
 
-        if (code == currPath.back().node) {
+        if (&code == currPath.back().node) {
             found.push_back(currPath);
             return;
         }

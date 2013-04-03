@@ -18,6 +18,7 @@
 #include <Eigen/Sparse>
 #include <Eigen/Eigenvalues>
 #include <Eigen/LU>
+#include <Eigen/QR>
 
 #include <cppadcg/dae_index_reduction/cg_pantelides.hpp>
 //#include <unsupported/Eigen/NonLinearOptimization>
@@ -39,25 +40,50 @@ namespace CppAD {
     /**
      * Utility class used to sort varibles in the DAE
      */
-    class DAEVarOrderInfo {
+    class DaeVarOrderInfo {
     public:
         size_t originalIndex;
         size_t originalIndex0;
         bool hasDerivatives;
         int order;
 
-        inline DAEVarOrderInfo() :
+        inline DaeVarOrderInfo() :
             originalIndex(0),
             originalIndex0(0),
             hasDerivatives(false),
             order(-1) {
         }
 
-        inline DAEVarOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mhasDerivatives, int morder) :
+        inline DaeVarOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mhasDerivatives, int morder) :
             originalIndex(moriginalIndex),
             originalIndex0(moriginalIndex0),
             hasDerivatives(mhasDerivatives),
             order(morder) {
+        }
+    };
+
+    /**
+     * Utility class used to sort equations in the DAE system
+     */
+    class DaeEqOrderInfo {
+    public:
+        size_t originalIndex;
+        size_t originalIndex0;
+        bool differential;
+        int assignedVar;
+
+        inline DaeEqOrderInfo() :
+            originalIndex(0),
+            originalIndex0(0),
+            differential(false),
+            assignedVar(-1) {
+        }
+
+        inline DaeEqOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mdifferential, int massignedVar) :
+            originalIndex(moriginalIndex),
+            originalIndex0(moriginalIndex0),
+            differential(mdifferential),
+            assignedVar(massignedVar) {
         }
     };
 
@@ -69,7 +95,7 @@ namespace CppAD {
      * \param j
      * \return true if i should come before j
      */
-    inline bool sortVariablesByOrder(const DAEVarOrderInfo& i, const DAEVarOrderInfo& j) {
+    inline bool sortVariablesByOrder(const DaeVarOrderInfo& i, const DaeVarOrderInfo& j) {
         if (j.order < i.order) {
             return true;
         } else if (j.order > i.order) {
@@ -82,23 +108,29 @@ namespace CppAD {
     }
 
     /**
-     * Sorts equations according to the index/order of the assigned variables
+     * Sorts equations according to the equation type (differential/algebraic)
+     * and original index
      * 
      * \param i
      * \param j
      * \return true if i should come before j
      */
-    inline bool sortEquationByAssignedOrder(const DaeEquationInfo& i, const DaeEquationInfo& j) {
-        if (i.getAssignedVarIndex() < 0) {
-            if (j.getAssignedVarIndex() < 0)
-                return i.getOriginalIndex() < j.getOriginalIndex();
-            else
-                return false;
-        } else {
-            if (j.getAssignedVarIndex() >= 0)
-                return i.getAssignedVarIndex() < j.getAssignedVarIndex();
+    inline bool sortEquationByAssignedOrder2(const DaeEqOrderInfo& i, const DaeEqOrderInfo& j) {
+        if (i.differential) {
+            if (j.differential)
+                return i.assignedVar < j.assignedVar;
             else
                 return true;
+        } else {
+            if (j.differential) {
+                return false;
+            } else {
+                if (i.originalIndex0 == j.originalIndex0) {
+                    return i.originalIndex == j.originalIndex0;
+                } else {
+                    return i.originalIndex0 < j.originalIndex0;
+                }
+            }
         }
     }
 
@@ -228,7 +260,8 @@ namespace CppAD {
             addDummyDerivatives(reducedVarInfo, newVarInfo);
 
             if (reduceEquations_) {
-                std::auto_ptr<ADFun<CG<Base> > > funShort = reduceEquations(reducedVarInfo, newVarInfo,
+                std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
+                std::auto_ptr<ADFun<CG<Base> > > funShort = reduceEquations(varInfo, newVarInfo,
                                                                             reducedEqInfo, newEqInfo);
                 fun = funShort;
             }
@@ -236,7 +269,7 @@ namespace CppAD {
             if (generateSemiExplicitDae_) {
                 std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                 std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                std::auto_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(fun.get(),
+                std::auto_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(*fun.get(),
                                                                                         varInfo, newVarInfo,
                                                                                         eqInfo, newEqInfo);
                 fun = semiExplicit;
@@ -245,7 +278,7 @@ namespace CppAD {
             if (reorder_) {
                 std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                 std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                std::auto_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(fun.get(),
+                std::auto_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(*fun.get(),
                                                                                     varInfo, newVarInfo,
                                                                                     eqInfo, newEqInfo);
                 fun = reorderedFun;
@@ -290,7 +323,7 @@ namespace CppAD {
             }
 
 
-            Eigen::SparseMatrix<Base> workJac;
+            MatrixB workJac;
 
             while (true) {
 
@@ -305,17 +338,6 @@ namespace CppAD {
                     std::cout << *vars[j] << "; ";
                 std::cout << "\n";
 #endif
-
-                // create the Jacobian for the selected variables and equations
-                workJac.setZero();
-                workJac.resize(eqs.size(), vars.size());
-                for (size_t i = 0; i < eqs.size(); i++) {
-                    Enode<Base>* ii = eqs[i];
-                    for (size_t j = 0; j < vars.size(); j++) {
-                        Vnode<Base>* jj = vars[j];
-                        workJac.coeffRef(i, j) = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
-                    }
-                }
 
                 // Exploit the current equations for elimination of candidates
                 selectDummyDerivatives(eqs, vars, workJac);
@@ -367,9 +389,12 @@ namespace CppAD {
             newVarInfo = varInfo; //copy
             typename std::set<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                assert((*j)->antiDerivative() != NULL);
                 assert((*j)->tapeIndex() >= 0);
+                assert((*j)->antiDerivative() != NULL);
+                assert((*j)->antiDerivative()->tapeIndex() >= 0);
+
                 newVarInfo[(*j)->tapeIndex()].setAntiDerivative(-1);
+                newVarInfo[(*j)->antiDerivative()->tapeIndex()].setDerivative(-1);
             }
 
 #ifdef CPPAD_CG_DAE_VERBOSE
@@ -396,6 +421,9 @@ namespace CppAD {
                                                               std::vector<DaeEquationInfo>& newEqInfo) {
             using namespace std;
             using std::vector;
+
+            assert(reducedVarInfo.size() == this->reducedFun_->Domain());
+            assert(reducedEqInfo.size() == this->reducedFun_->Range());
 
             /**
              * Generate an operation graph
@@ -455,6 +483,9 @@ namespace CppAD {
 #endif
                 } catch (const CGException& ex) {
                     // unable to solve for a dummy variable: keep the equation and variable
+#ifdef CPPAD_CG_DAE_VERBOSE
+                    std::cout << "unable to use equation " << i->index() << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
+#endif
                 }
             }
 
@@ -507,7 +538,6 @@ namespace CppAD {
             }
 
             newEqInfo = reducedEqInfo; // copy
-
             for (int p = eqIndexReduced2Short.size() - 1; p >= 0; p--) {
                 if (eqIndexReduced2Short[p] < 0) {// removed from model
                     newEqInfo.erase(newEqInfo.begin() + p);
@@ -546,15 +576,14 @@ namespace CppAD {
          * \return The new semi-explicit DAE model with less variables (without
          *         the time derivative variables)
          */
-        inline std::auto_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >* fun,
+        inline std::auto_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
                                                                       const std::vector<DaeVarInfo>& varInfo,
                                                                       std::vector<DaeVarInfo>& newVarInfo,
                                                                       const std::vector<DaeEquationInfo>& eqInfo,
                                                                       std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
             using namespace std;
             using std::vector;
-
-            assert(fun != NULL);
+            typedef vector<SourceCodePathNode<Base> > SourceCodePath;
 
             newEqInfo = eqInfo; // copy (we will have the same number of equations)
 
@@ -563,10 +592,88 @@ namespace CppAD {
              */
             CodeHandler<Base> handler;
 
-            vector<CGBase> indep0(fun->Domain());
+            vector<CGBase> indep0(fun.Domain());
             handler.makeVariables(indep0);
 
-            vector<CGBase> res0 = fun->Forward(0, indep0);
+            vector<CGBase> res0 = fun.Forward(0, indep0);
+
+            vector<bool> jacSparsity = jacobianSparsity < vector<bool> >(fun);
+
+            std::map<int, int> assignedVar2Eq;
+            for (size_t i = 0; i < eqInfo.size(); ++i) {
+                DaeEquationInfo& newEq = newEqInfo[i];
+                assignedVar2Eq[newEq.getAssignedVarIndex()] = i;
+            }
+
+            /**
+             * Eliminate time derivatives from equations
+             */
+            for (size_t j = 0; j < varInfo.size(); ++j) {
+                const DaeVarInfo& jj = varInfo[j];
+                if (jj.getAntiDerivative() < 0) {
+                    continue; // not a time derivative
+                }
+                CGBase& indep = indep0[j]; // the time derivative
+                /**
+                 * Determine which equation to keep as differential
+                 * (the assigned equation might not be the best)
+                 */
+                SourceCodePath bestPath;
+                int bestEquation = -1;
+                for (size_t i = 0; i < eqInfo.size(); ++i) {
+                    DaeEquationInfo& newEq = newEqInfo[i];
+
+                    bool exists = jacSparsity[varInfo.size() * i + j];
+                    bool forOtherDiffVar;
+                    if (newEq.getAssignedVarIndex() < 0) {
+                        forOtherDiffVar = false;
+                    } else {
+                        assert(newEq.getAssignedVarIndex() < int(varInfo.size()));
+                        const DaeVarInfo& assigned = varInfo[newEq.getAssignedVarIndex()];
+                        forOtherDiffVar = (assigned.getAntiDerivative() != jj.getAntiDerivative() && assigned.getAntiDerivative() >= 0);
+                    }
+
+                    if (exists && // the variable is present in this equation
+                            !newEq.isExplicit() && // the equation was not used before for a different time derivative
+                            !forOtherDiffVar// it is not destined for a different time derivative
+                            ) {
+                        CGBase& dep = res0[i]; // the equation residual
+
+                        vector<SourceCodePath> paths = findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
+                        if (paths.size() == 1) {
+                            if (bestPath.empty() || bestPath.size() > paths[0].size()) {
+                                bestPath = paths[0];
+                                bestEquation = i;
+                            }
+                        }
+                    }
+                }
+                if (bestEquation == -1) {
+                    throw CGException("Failed to generate semi-explicit DAE: unable to create an explicit equation for " + jj.getName());
+                }
+                try {
+                    CGBase& dep = res0[bestEquation]; // the equation residual
+
+                    handler.substituteIndependent(indep, dep); // removes indep from the list of variables
+
+                    SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
+                    assert(alias != NULL && alias->operation() == CGAliasOp);
+                    dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]);
+
+                    // it is now an explicit differential equation
+                    newEqInfo[bestEquation].setExplicit(true);
+                    // possibly switch assigned variables
+                    if (newEqInfo[bestEquation].getAssignedVarIndex() != int(j)) {
+                        DaeEquationInfo& assignedEq = newEqInfo[assignedVar2Eq.at(j)];
+                        assignedEq.setAssignedVarIndex(newEqInfo[bestEquation].getAssignedVarIndex());
+                    }
+                    // the derivative variable will disappear, associate the equation with the original variable
+                    newEqInfo[bestEquation].setAssignedVarIndex(jj.getAntiDerivative());
+                } catch (const CGException& ex) {
+                    // unable to solve for a dummy variable: keep the equation and variable
+                    throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
+                }
+            }
 
             /**
              * determine the variable indexes after the elimination of the time
@@ -581,39 +688,11 @@ namespace CppAD {
                 }
             }
 
-            /**
-             * Eliminate time derivatives from equations
-             */
-            for (size_t i = 0; i < eqInfo.size(); ++i) {
-                const DaeEquationInfo& ii = eqInfo[i];
+            for (size_t i = 0; i < newEqInfo.size(); ++i) {
+                const DaeEquationInfo& ii = newEqInfo[i];
                 int j = ii.getAssignedVarIndex();
-                if (j < 0)
-                    continue;
-                const DaeVarInfo& jj = varInfo[j];
-
-                if (jj.getAntiDerivative() >= 0) {
-                    try {
-                        CGBase& dep = res0[i]; // the equation residual
-                        CGBase& indep = indep0[j]; // the time derivative
-
-                        handler.substituteIndependent(indep, dep); // removes indep from the list of variables
-
-                        SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
-                        assert(alias != NULL && alias->operation() == CGAliasOp);
-                        dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]);
-
-                        // it is now an explicit differential equation
-                        newEqInfo[i].setExplicit(true);
-                        // the derivative variable will disappear, associate the equation with the original variable
-                        newEqInfo[i].setAssignedVarIndex(varIndexOld2New[jj.getAntiDerivative()]);
-                    } catch (const CGException& ex) {
-                        // unable to solve for a dummy variable: keep the equation and variable
-                        throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
-                    }
-                } else {
-                    // the algebraic variable index may have changed
+                if (j >= 0)
                     newEqInfo[i].setAssignedVarIndex(varIndexOld2New[j]);
-                }
             }
 
             /**
@@ -644,7 +723,7 @@ namespace CppAD {
             return semiExplicitFun;
         }
 
-        inline std::auto_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >* fun,
+        inline std::auto_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >& fun,
                                                                   const std::vector<DaeVarInfo>& varInfo,
                                                                   std::vector<DaeVarInfo>& newVarInfo,
                                                                   const std::vector<DaeEquationInfo>& eqInfo,
@@ -652,8 +731,6 @@ namespace CppAD {
 
             using namespace std;
             using std::vector;
-
-            assert(fun != NULL);
 
             /**
              * Determine the variables that have derivatives in the model
@@ -684,7 +761,7 @@ namespace CppAD {
             /**
              * sort variables
              */
-            std::vector<DAEVarOrderInfo> varOrder(varInfo.size());
+            std::vector<DaeVarOrderInfo> varOrder(varInfo.size());
             for (size_t j = 0; j < varInfo.size(); j++) {
                 size_t j0;
                 int derivOrder = this->determineVariableDiffOrder(varInfo, j, j0);
@@ -692,7 +769,7 @@ namespace CppAD {
                     derivOrder = -2; // so that it goes last
                 }
                 bool hasDerivatives = oldVarWithDerivatives.find(j) != oldVarWithDerivatives.end();
-                varOrder[j] = DAEVarOrderInfo(j, j0, hasDerivatives, derivOrder);
+                varOrder[j] = DaeVarOrderInfo(j, j0, hasDerivatives, derivOrder);
             }
 
             std::sort(varOrder.begin(), varOrder.end(), sortVariablesByOrder);
@@ -727,18 +804,35 @@ namespace CppAD {
                 }
             }
 
-            // sort by the order of the assigned variables
-            std::sort(newEqInfo.begin(), newEqInfo.end(), sortEquationByAssignedOrder);
+            std::vector<DaeEqOrderInfo> eqOrder(newEqInfo.size());
+            for (size_t i = 0; i < newEqInfo.size(); i++) {
+                int assignedVar = newEqInfo[i].getAssignedVarIndex();
+                size_t i0 = i;
+                while (newEqInfo[i0].getAntiDerivative() >= 0) {
+                    i0 = newEqInfo[i0].getAntiDerivative();
+                }
+                bool isDifferential = newEqInfo[i].isExplicit() || (assignedVar >= 0 && newVarInfo[assignedVar].getAntiDerivative() >= 0);
+                eqOrder[i] = DaeEqOrderInfo(i, i0, isDifferential, assignedVar);
+            }
+
+            std::sort(eqOrder.begin(), eqOrder.end(), sortEquationByAssignedOrder2);
+
+            std::vector<DaeEquationInfo> newEqInfo2(newEqInfo.size());
+            for (size_t i = 0; i < eqOrder.size(); i++) {
+                newEqInfo2[i] = newEqInfo[eqOrder[i].originalIndex];
+            }
+            newEqInfo = newEqInfo2;
+
 
             /**
              * Generate an operation graph
              */
             CodeHandler<Base> handler;
 
-            vector<CGBase> indep0(fun->Domain());
+            vector<CGBase> indep0(fun.Domain());
             handler.makeVariables(indep0);
 
-            const vector<CGBase> res0 = fun->Forward(0, indep0);
+            const vector<CGBase> res0 = fun.Forward(0, indep0);
 
             /**
              * Implement the reordering in the model
@@ -779,35 +873,35 @@ namespace CppAD {
              * removed variables using substitution are taken out from the list
              * of independent variables in the handler
              */
-            std::set<size_t> newVarIndexes;
+            std::set<size_t> newIds;
             for (size_t j = 0; j < newVarInfo.size(); j++) {
-                newVarIndexes.insert(newVarInfo[j].getOriginalIndex());
+                newIds.insert(newVarInfo[j].getId());
             }
 
-            std::map<size_t, size_t> varOrig2HandlerIndex;
-            size_t handlerIndex = 0;
+            std::map<size_t, size_t> varId2HandlerIndex;
+            size_t handlerIndex = 0; // start the variable count again since some variable might have been removed
             for (size_t j = 0; j < varInfo.size(); j++) {
-                int orig = varInfo[j].getOriginalIndex();
-                if (newVarIndexes.find(orig) != newVarIndexes.end()) {
-                    varOrig2HandlerIndex[orig] = handlerIndex++;
+                int id = varInfo[j].getId();
+                if (newIds.find(id) != newIds.end()) {
+                    varId2HandlerIndex[id] = handlerIndex++; // not removed from model
                 }
             }
 
             vector<ADCG> indepHandlerOrder(handler.getIndependentVariableSize());
             for (size_t p = 0; p < newVarInfo.size(); p++) {
-                size_t origIndex = newVarInfo[p].getOriginalIndex();
-                indepHandlerOrder[varOrig2HandlerIndex[origIndex]] = indepNewOrder[p];
+                size_t id = newVarInfo[p].getId();
+                indepHandlerOrder[varId2HandlerIndex[id]] = indepNewOrder[p];
             }
 
             // reorder equations
-            std::map<size_t, size_t> eqOrigIndex2OldIndex;
+            std::map<size_t, size_t> eqId2OldIndex;
             for (size_t i = 0; i < eqInfo.size(); i++) {
-                eqOrigIndex2OldIndex[eqInfo[i].getOriginalIndex()] = i;
+                eqId2OldIndex[eqInfo[i].getId()] = i;
             }
 
             vector<CGBase> resNewOrder(newEqInfo.size());
             for (size_t i = 0; i < newEqInfo.size(); i++) {
-                size_t oldIndex = eqOrigIndex2OldIndex[newEqInfo[i].getOriginalIndex()];
+                size_t oldIndex = eqId2OldIndex[newEqInfo[i].getId()];
                 resNewOrder[i] = res0[oldIndex];
             }
 
@@ -816,25 +910,6 @@ namespace CppAD {
             vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder);
 
             return new ADFun<CGBase > (indepNewOrder, depNewOrder);
-        }
-
-        inline void solveDAESystem() {
-            throw 1; // not finished!!!!
-            /**
-            Functor dae(this);
-            Eigen::LevenbergMarquardt<Functor> lm(dae);
-
-            size_t size = dae.inputs(); // number of equations and variables
-
-            VectorB x(size);
-            for (size_t j = 0, pos = 0; j< this->eqDifferentialInfo_.size(); j++) {
-                if (this->eqDifferentialInfo_[j]) {
-                    x(pos++) = x_[j];
-                }
-            }
-
-            int info = lm.minimize(x);
-             **/
         }
 
         /**
@@ -909,7 +984,7 @@ namespace CppAD {
 
         inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
                                            const std::vector<Vnode<Base>* >& vars,
-                                           Eigen::SparseMatrix<Base>& subsetJac) throw (CGException) {
+                                           MatrixB& work) throw (CGException) {
 
             if (eqs.size() == vars.size()) {
                 dummyD_.insert(vars.begin(), vars.end());
@@ -921,57 +996,6 @@ namespace CppAD {
 #endif
                 return;
             }
-
-            /**
-             * Fill in the Jacobian subset for the selected equations and variables
-             */
-            subsetJac.resize(eqs.size(), vars.size());
-
-            // determine the rows that only contain a single nonzero (a single column)
-            std::vector<size_t> rowNnz(eqs.size()); // the number of non-zero elements per row
-            std::vector<size_t> rowNnzCol(eqs.size()); // the last defined column for each row
-            for (size_t i = 0; i < eqs.size(); i++) {
-                Enode<Base>* ii = eqs[i];
-                for (size_t j = 0; j < vars.size(); j++) {
-                    Vnode<Base>* jj = vars[j];
-                    Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
-                    if (val != Base(0.0)) {
-                        subsetJac.coeffRef(i, j) = val;
-                        rowNnz[i]++;
-                        rowNnzCol[i] = j;
-                    }
-                }
-            }
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "subset Jac:\n" << subsetJac << "\n";
-#endif
-
-            MatrixB workJac(eqs.size(), eqs.size());
-
-            /**
-             * Determine the columns that cannot be removed
-             */
-            std::set<size_t> fixedCols;
-            for (size_t i = 0; i < rowNnz.size(); ++i) {
-                if (rowNnz[i] == 0) {
-                    std::ostringstream s;
-                    s << "Failed to select dummy derivatives: "
-                            "the row corresponding to the equation '" << *eqs[i] << "' in the work jacobian is filled with zeros.";
-                    throw CGException(s.str());
-                } else if (rowNnz[i] == 1) {
-                    fixedCols.insert(rowNnzCol[i]);
-                }
-            }
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-            if (!fixedCols.empty()) {
-                std::cout << " fixed columns:";
-                for (std::set<size_t>::const_iterator it = fixedCols.begin(); it != fixedCols.end(); ++it) {
-                    std::cout << " " << *vars[*it];
-                }
-                std::cout << "\n";
-            }
-#endif
 
             /**
              * Determine the columns that must be removed
@@ -994,209 +1018,62 @@ namespace CppAD {
                 }
             }
 
-
-            /**
-             * column indexes that can be added/removed from the selection
-             */
-            std::vector<size_t> freeCols;
-            for (size_t j = 0; j < vars.size(); ++j) {
-                if (fixedCols.find(j) == fixedCols.end() && excludeCols.find(j) == excludeCols.end()) {
-                    freeCols.push_back(j);
+            std::vector<Vnode<Base>* > varsLocal;
+            varsLocal.reserve(vars.size() - excludeCols.size());
+            for (size_t j = 0; j < vars.size(); j++) {
+                if (excludeCols.find(j) == excludeCols.end()) {
+                    varsLocal.push_back(vars[j]);
                 }
             }
 
-            std::vector<size_t> vcols2keep(eqs.size() - fixedCols.size());
-            for (size_t c = 0; c < vcols2keep.size(); c++) {
-                vcols2keep[c] = c;
+
+            work.setZero(eqs.size(), varsLocal.size());
+
+            // determine the rows that only contain a single nonzero (a single column)
+            for (size_t i = 0; i < eqs.size(); i++) {
+                Enode<Base>* ii = eqs[i];
+                for (size_t j = 0; j < varsLocal.size(); j++) {
+                    Vnode<Base>* jj = varsLocal[j];
+                    Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                    if (val != Base(0.0)) {
+                        work(i, j) = val;
+                    }
+                }
             }
-
-            // number of columns/variables to remove (the remaining will be dummy derivatives)
-            std::vector<size_t> cols2keep(eqs.size());
-            {
-                std::set<size_t> cols2keepAux(fixedCols);
-                for (size_t c = 0; c < vcols2keep.size(); c++) {
-                    cols2keepAux.insert(freeCols[c]);
-                }
-                std::copy(cols2keepAux.begin(), cols2keepAux.end(), cols2keep.begin());
-            }
-
-            /**
-             * Brute force approach!!!
-             */
-            std::vector<size_t> bestCols2keep;
-            Base bestCond = std::numeric_limits<Base>::max();
-            size_t bestTotalOrder = 0;
-
-            while (true) {
-
 #ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << " ## column selection: ";
-                for (size_t s = 0; s < cols2keep.size(); s++)
-                    std::cout << cols2keep[s] << " ";
-                std::cout << " \n";
+            std::cout << "subset Jac:\n" << work << "\n";
 #endif
 
-                std::vector<int> rowNnz(eqs.size(), 0);
-                workJac.setZero(eqs.size(), eqs.size());
-                for (size_t c = 0; c < cols2keep.size(); ++c) {
-                    typename Eigen::SparseMatrix<Base>::InnerIterator itCol(subsetJac, cols2keep[c]);
-                    for (; itCol; ++itCol) {
-                        assert(itCol.col() == int(cols2keep[c]));
-                        workJac(itCol.row(), c) = itCol.value();
-                        rowNnz[itCol.row()]++;
-                    }
-                }
-
-                bool doEval = true;
-                for (size_t r = 0; r < rowNnz.size(); r++) {
-                    if (rowNnz[r] == 0) {
-                        doEval = false;
-                        break;
-                    }
-                }
-
-                if (doEval) {
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "    current jac:\n" << workJac << "\n";
-#endif
-
-                    Base cond = evalBestMatrixCondition(workJac);
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "    condition: " << cond << "\n";
-#endif
-
-                    if (cond == cond) {
-                        // not NaN
-                        size_t totalOrd = 0;
-                        for (size_t j = 0; j < cols2keep.size(); j++) {
-                            totalOrd += vars[cols2keep[j]]->order();
-                        }
-                        if ((totalOrd > bestTotalOrder && cond / Base(10.0) <= bestCond) ||
-                                (totalOrd == bestTotalOrder && cond < bestCond) ||
-                                (totalOrd < bestTotalOrder && cond * Base(10.0) <= bestCond)) {
-                            bestTotalOrder = totalOrd;
-                            bestCond = cond;
-                            bestCols2keep = cols2keep;
-                        }
-                    }
-                } else {
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "    skipping...\n";
-#endif
-                }
-
-                /**
-                 * determine the next set of columns
-                 */
-                cols2keep = nextColumnSelection(fixedCols, freeCols, vcols2keep);
-                if (cols2keep.empty())
-                    break;
-            };
-
-            if (bestCols2keep.empty()) {
+            Eigen::ColPivHouseholderQR<MatrixB> qr(work);
+            qr.compute(work);
+            if (qr.rank() < work.rows()) {
                 throw CGException("Failed to select dummy derivatives! "
                                   "The resulting system is probably singular for the provided data.");
             }
 
+            typedef typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType PermutationMatrix;
+            typedef typename PermutationMatrix::IndicesType Indices;
+
+            const PermutationMatrix& p = qr.colsPermutation();
+            const Indices& indices = p.indices();
+            if (indices.size() < work.rows()) {
+                throw CGException("Failed to select dummy derivatives! "
+                                  "The resulting system is probably singular for the provided data.");
+            }
+
+            std::set<Vnode<Base>* > newDummies;
+            for (int i = 0; i < work.rows(); i++) {
+                newDummies.insert(varsLocal[indices(i)]);
+            }
+
 #ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "## new dummy derivatives (condition = " << bestCond << "): ";
-            for (size_t c = 0; c < bestCols2keep.size(); c++)
-                std::cout << *vars[bestCols2keep[c]] << "; ";
+            std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
+            for (typename std::set<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it)
+                std::cout << **it << "; ";
             std::cout << " \n\n";
 #endif
 
-            for (size_t c = 0; c < bestCols2keep.size(); c++) {
-                dummyD_.insert(vars[bestCols2keep[c]]);
-            }
-
-        }
-
-        /**
-         * 
-         * \param fixedCols Column indeces that must be selected
-         * \param freeCols Column that can be selected (excluding the fixedCols)
-         * \param vcols2keep The previous column selection from the free columns
-         * @return the next column selection
-         */
-        inline std::vector<size_t > nextColumnSelection(const std::set<size_t>& fixedCols,
-                                                        const std::vector<size_t>& freeCols,
-                                                        std::vector<size_t>& vcols2keep) const {
-
-            if (vcols2keep.empty()) {
-                return std::vector<size_t > (0); // end of combinations
-            }
-
-            if (vcols2keep.back() == freeCols.size() - 1) {
-                if (vcols2keep[0] == freeCols.size() - vcols2keep.size())
-                    return std::vector<size_t > (0); // end of combinations
-
-                for (size_t cc = 1; cc < vcols2keep.size(); cc++) {
-                    if (vcols2keep[cc] == freeCols.size() - (vcols2keep.size() - cc)) {
-                        vcols2keep[cc - 1]++;
-                        for (size_t cc2 = cc; cc2 < vcols2keep.size(); cc2++) {
-                            vcols2keep[cc2] = vcols2keep[cc2 - 1] + 1;
-                        }
-                        break;
-                    }
-                }
-            } else {
-                vcols2keep.back()++;
-            }
-
-            std::set<size_t> cols2keep(fixedCols);
-
-            for (size_t c = 0; c < vcols2keep.size(); c++) {
-                size_t vColIndex = freeCols[vcols2keep[c]];
-                cols2keep.insert(vColIndex);
-            }
-
-            return std::vector<size_t > (cols2keep.begin(), cols2keep.end());
-        }
-
-        /**
-         * Determines the best matrix
-         * \param mat The matrix
-         * @return The best condition value (lowest possible and real)
-         */
-        inline static Base evalBestMatrixCondition(const MatrixB& mat) {
-
-            Eigen::FullPivLU<MatrixB> lu = mat.fullPivLu();
-            //  MatrixB l = MatrixB::Identity(mat.rows(), mat.cols());
-            //  l.template triangularView<Eigen::StrictlyLower > () = lu.matrixLU();
-            MatrixB u = lu.matrixLU().template triangularView<Eigen::Upper > ();
-
-            //  std::cout << "mat:\n" << mat << "\n\n";
-            //  std::cout << "L:\n" << l << "\n\n";
-            //  std::cout << "U:\n" << u << "\n\n";
-
-            //VectorCB eigenv = u.eigenvalues();            
-            //std::cout << "    eigen values:\n" << eigenv << "\n";
-
-            /**
-             * determine condition of U 
-             * (the eigenvalues are in the diagonal)
-             */
-            if (u(0, 0) == 0) {
-                return std::numeric_limits<Base>::quiet_NaN();
-            }
-            Base max = std::abs(u(0, 0));
-            Base min = max;
-
-            for (int r = 1; r < u.rows(); r++) {
-                if (u(r, r) == 0) {
-                    return std::numeric_limits<Base>::quiet_NaN();
-                }
-                Base eigv = std::abs(u(r, r));
-                if (eigv > max) {
-                    max = eigv;
-                } else if (eigv < min) {
-                    min = eigv;
-                }
-            }
-
-            // the condition number
-            return max / min;
+            dummyD_.insert(newDummies.begin(), newDummies.end());
         }
 
         inline static void printModel(CodeHandler<Base>& handler,
@@ -1224,171 +1101,6 @@ namespace CppAD {
             CLangCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
             handler.generateCode(std::cout, lang, resAux, nameGen);
         }
-
-        /**
-         * 
-         */
-        struct Functor {
-            const DummyDerivatives<Base> * const dummyDer_;
-            ADFun<Base>* reducedFunB_;
-            std::vector<Base> normdep_;
-            std::vector<Base> normindep_;
-            std::vector<Base> jac_; // Jacobian
-            std::vector<size_t> row_; // Jacobian row indexes
-            std::vector<size_t> col_; // Jacobian column indexes
-            std::vector< std::set<size_t> > jac_sparsity_; // Jacobian column indexes
-            CppAD::sparse_jacobian_work work_; // temporary structure for CPPAD
-
-            Functor(DummyDerivatives<Base>* dummyDer) :
-                dummyDer_(dummyDer),
-                normdep_(dummyDer_->reducedFun_->Range(), 1.0),
-                normindep_(dummyDer_->reducedFun_->Range(), 1.0) {
-
-                /**
-                 * get rid of the CG encapsulation
-                 */
-                CodeHandler<Base> handler;
-
-                size_t n = dummyDer_->reducedFun_->Domain(); // total variable count
-                size_t m = dummyDer_->reducedFun_->Range(); // equation count
-
-                std::vector<CG<Base> > indep(n);
-                handler.makeVariables(indep);
-
-                std::vector<CG<Base> > dep = dummyDer_->reducedFun_->Forward(0, indep);
-
-                size_t algebraicCount = 0;
-                for (size_t j = 0; j < dummyDer_->eqDifferentialInfo_.size(); j++) {
-                    if (!dummyDer_->eqDifferentialInfo_[j]) {
-                        algebraicCount++;
-                    }
-                }
-                size_t stateCount = dummyDer_->eqDifferentialInfo_.size() - algebraicCount;
-
-                /**
-                 * Short independent variable vector (states will be considered constant)
-                 */
-                std::vector<AD<Base> > indepShort(n - stateCount);
-                size_t pos = 0;
-                for (size_t j = 0; j < dummyDer_->eqDifferentialInfo_.size(); j++) {
-                    if (!dummyDer_->eqDifferentialInfo_[j]) {
-                        indepShort[pos] = dummyDer_->x_[j];
-                        pos++;
-                    }
-                }
-                assert(pos == algebraicCount);
-                for (size_t j = pos; j < dummyDer_->enodes_.size(); j++) {
-                    indepShort[pos] = 0.0; // differential variable
-                }
-                Independent(indepShort);
-
-
-                std::vector<AD<Base> > indep2(n);
-                pos = 0;
-                for (size_t j = 0; j < dummyDer_->eqDifferentialInfo_.size(); j++) {
-                    if (!dummyDer_->eqDifferentialInfo_[j]) {
-                        indep2[j] = indepShort[pos];
-                        // algebraic variable normalization constant
-                        normindep_[pos] = dummyDer_->normVar_[j];
-                        pos++;
-                    } else {
-                        indep2[j] = dummyDer_->x_[j]; // constant value
-                    }
-                }
-                assert(pos == algebraicCount); // purely algebraic equations
-                for (size_t j = pos; j < indepShort.size(); j++) {
-                    indep2[j + stateCount] = indepShort[j]; // differential variable
-                }
-
-                // normalization constants for differential variables
-                for (size_t j = 0; j < dummyDer_->vnodes_.size(); j++) {
-                    if (dummyDer_->vnodes_[j]->derivativeOf() == NULL) {
-                        Vnode<Base>* vDiff = dummyDer_->vnodes_[j]->derivative();
-                        while (vDiff != NULL) {
-                            normindep_[vDiff->index() - stateCount] = dummyDer_->normVar_[j];
-                            vDiff = vDiff->derivative();
-                        }
-                    }
-                }
-
-                Evaluator<Base, Base> evaluator(handler, dep);
-                std::vector<AD<Base> > depNew = evaluator.evaluate(indep2);
-
-                // turn every equation to a residual
-                for (size_t i = 0; i < dummyDer_->eqDifferentialInfo_.size(); i++) {
-                    if (dummyDer_->eqDifferentialInfo_[i]) {
-                        Vnode<Base>* vDiff = dummyDer_->vnodes_[i]->derivative();
-                        Enode<Base>* eq = dummyDer_->enodes_[i];
-
-                        while (eq != NULL) {
-                            assert(vDiff != NULL);
-                            depNew[eq->index()] -= indepShort[vDiff->index() - stateCount];
-                            normdep_[eq->index()] = dummyDer_->normVar_[i];
-
-                            eq = eq->derivative();
-                            vDiff = vDiff->derivative();
-                        }
-                    }
-                }
-
-                reducedFunB_ = new ADFun<Base > (indepShort, depNew);
-                assert(indepShort.size() == depNew.size());
-
-                /**
-                 * save new sparsity information
-                 */
-                jac_sparsity_ = jacobianReverseSparsitySet(*reducedFunB_);
-
-                generateSparsityIndexes(jac_sparsity_, row_, col_);
-
-                jac_.resize(row_.size());
-            }
-
-            ~Functor() {
-                delete reducedFunB_;
-            }
-
-            int inputs() const {
-                return reducedFunB_->Domain();
-            }
-
-            int values() const {
-                return reducedFunB_->Range();
-            }
-
-            int operator()(const VectorB &x, VectorB & fvec) const {
-                std::vector<Base> indep(x.rows()); //TODO: check this
-                for (size_t j = 0; j < indep.size(); j++) {
-                    indep[j] = x(j) * normindep_[j];
-                }
-
-                std::vector<Base> dep = reducedFunB_->Forward(0, indep);
-                for (size_t j = 0; j < dep.size(); j++) {
-                    fvec(j) = dep[j] / normdep_[j];
-                }
-
-                return 0;
-            }
-
-            int df(const VectorB &x, MatrixB & fjac) {
-
-                std::vector<Base> indep(x.rows()); //TODO: check this
-                for (size_t j = 0; j < indep.size(); j++) {
-                    indep[j] = x(j) * normindep_[j];
-                }
-
-                size_t n_sweep = reducedFunB_->SparseJacobianReverse(indep, jac_sparsity_,
-                                                                     row_, col_, jac_, work_);
-
-                for (size_t pos = 0; pos < jac_.size(); pos++) {
-                    size_t i = row_[pos];
-                    size_t j = col_[pos];
-                    fjac(i, j) = jac_[pos] / normdep_[j] * normindep_[i];
-                }
-
-                return 0;
-            }
-        };
 
     };
 }
