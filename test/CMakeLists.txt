@@ -104,6 +104,14 @@ FUNCTION(add_gest_link_libraries test_target_name use_main)
 ENDFUNCTION()
 
 ################################################################################
+# create a temporary folder
+################################################################################
+ADD_CUSTOM_TARGET(create_tmp_folder
+                  COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
+                  COMMAND ${CMAKE_COMMAND} -E make_directory "tmp"
+                  COMMENT "Creating tmp folder")
+
+################################################################################
 # add test function
 ################################################################################
 FUNCTION(add_cppadcg_test source_file)
@@ -114,6 +122,8 @@ FUNCTION(add_cppadcg_test source_file)
                  # sources:
                  "${source_file}"
                  ${ARGN})
+                 
+  ADD_DEPENDENCIES("${test_target_name}" create_tmp_folder)
 
   # Specify MainTest's link libraries
   add_gest_link_libraries(${test_target_name} ON)
@@ -121,12 +131,6 @@ FUNCTION(add_cppadcg_test source_file)
   IF( UNIX )
     TARGET_LINK_LIBRARIES(${test_target_name} ${DL_LIBRARIES})
   ENDIF()
-
-  ADD_CUSTOM_COMMAND(TARGET ${test_target_name}
-                     POST_BUILD
-                     COMMAND ${CMAKE_COMMAND} ARGS -E remove_directory "tmp" # make sure tmp is empty
-                     COMMAND ${CMAKE_COMMAND} ARGS -E make_directory "tmp"
-                     COMMENT "Creating tmp folder")
 
   ADD_TEST(NAME ${test_target_name}
            COMMAND ${test_target_name})
