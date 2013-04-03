@@ -792,6 +792,8 @@ namespace CppAD {
             _code << "-";
             if (enclose) {
                 _code << "(";
+            } else {
+                _code << " "; // there may be several - together -> space required
             }
             print(arg);
             if (enclose) {
