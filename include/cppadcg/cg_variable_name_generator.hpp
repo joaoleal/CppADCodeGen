@@ -42,7 +42,7 @@ namespace CppAD {
     /**
      * Creates variables names for the source code.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class VariableNameGenerator {

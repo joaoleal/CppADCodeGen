@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * A node in the operation graph
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CG {
@@ -94,8 +94,8 @@ namespace CppAD {
         // 
         /**
          * creates a variable/parameter from an existing argument 
-         * \param handler The code handler.
-         * \param arg  An argument that may be a parameter or a variable. 
+         * @param handler The code handler.
+         * @param arg  An argument that may be a parameter or a variable. 
          *              (source code fragments are assumed to already be managed
          *              by the handler)
          */

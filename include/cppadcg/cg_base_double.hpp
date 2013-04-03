@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * Specialization of the abs operation for doubles
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<>
     inline CG<double> abs(const CG<double>& var) {

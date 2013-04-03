@@ -21,7 +21,7 @@ namespace CppAD {
      * Useful class for generating source code for the creation of a dynamic
      * library.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLangCompileModelHelper {
@@ -78,8 +78,8 @@ namespace CppAD {
         /**
          * Creates a new C language compilation helper for a model
          * 
-         * \param fun The ADFun with the taped model
-         * \param model The model name (must be a valid C function name)
+         * @param fun The ADFun with the taped model
+         * @param model The model name (must be a valid C function name)
          */
         CLangCompileModelHelper(ADFun<CppAD::CG<Base> >* fun, const std::string& model) :
             _fun(fun),

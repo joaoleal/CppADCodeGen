@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * Abstract class used to call compiled code in a dynamic library
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class DynamicLibModel {
@@ -56,9 +56,9 @@ namespace CppAD {
          * library was compiled considering that the independent variables are
          * provided by several arrays.
          * 
-         * \param x Contains the several independent variable vectors
-         * \param dep The values of the dependent variables
-         * \param dep_size The number of dependent variables
+         * @param x Contains the several independent variable vectors
+         * @param dep The values of the dependent variables
+         * @param dep_size The number of dependent variables
          */
         virtual void ForwardZero(const std::vector<const Base*> &x,
                                  Base* dep, size_t dep_size) = 0;
@@ -106,11 +106,11 @@ namespace CppAD {
          * was compiled considering that the independent variables are provided
          * by several arrays.
          * 
-         * \param x Contains the several independent variable vectors
-         * \param jac The values of the sparse Jacobian in the order provided by row and col
-         * \param row The row indices of the Jacobian values
-         * \param col The column indices of the Jacobian values
-         * \param nnz The total number of non-zero elements
+         * @param x Contains the several independent variable vectors
+         * @param jac The values of the sparse Jacobian in the order provided by row and col
+         * @param row The row indices of the Jacobian values
+         * @param col The column indices of the Jacobian values
+         * @param nnz The total number of non-zero elements
          */
         virtual void SparseJacobian(const std::vector<const Base*>& x,
                                     Base* jac,
@@ -144,13 +144,13 @@ namespace CppAD {
          * was compiled considering that the independent variables are provided
          * by several arrays.
          * 
-         * \param x Contains the several independent variable vectors
-         * \param w The equation multipliers
-         * \param w_size The number of equations
-         * \param hess The values of the sparse hessian in the order provided by row and col
-         * \param row The row indices of the hessian values
-         * \param col The column indices of the hessian values
-         * \param nnz The total number of non-zero elements
+         * @param x Contains the several independent variable vectors
+         * @param w The equation multipliers
+         * @param w_size The number of equations
+         * @param hess The values of the sparse hessian in the order provided by row and col
+         * @param row The row indices of the hessian values
+         * @param col The column indices of the hessian values
+         * @param nnz The total number of non-zero elements
          */
         virtual void SparseHessian(const std::vector<const Base*>& x,
                                    const Base* w, size_t w_size,

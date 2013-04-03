@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * C compiler class used to create a dynamic library
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLangCompiler {
@@ -38,7 +38,7 @@ namespace CppAD {
          * Provides the path to the folder where source files are saved
          * (if requested).
          * 
-         * \return path to the folder with the generated source files 
+         * @return path to the folder with the generated source files 
          */
         inline const std::string& getSourcesFolder() const {
             return _sourcesFolder;
@@ -48,7 +48,7 @@ namespace CppAD {
          * Defines the path to the folder where source files are saved
          * (if requested).
          * 
-         * \param sourcesFolder path to the folder where the generated source 
+         * @param sourcesFolder path to the folder where the generated source 
          *                      files are saved
          */
         inline void setSourcesFolder(const std::string& sourcesFolder) {
@@ -59,7 +59,7 @@ namespace CppAD {
          * Provides the path to a temporary folder that should not exist
          * (it will be deleted after the dynamic library is created)
          * 
-         * \return path to a temporary folder.
+         * @return path to a temporary folder.
          */
         inline const std::string& getTemporaryFolder() const {
             return _tmpFolder;
@@ -69,7 +69,7 @@ namespace CppAD {
          * Defines the path to a temporary folder that should not exist
          * (it will be deleted after the dynamic library is created)
          * 
-         * \param tmpFolder path to a temporary folder.
+         * @param tmpFolder path to a temporary folder.
          */
         inline void setTemporaryFolder(const std::string& tmpFolder) {
             _tmpFolder = tmpFolder;
@@ -86,10 +86,10 @@ namespace CppAD {
         /**
          * creates a dynamic library with the provided C source code
          * 
-         * \param sources maps the names to the content of the source files
-         * \param posIndepCode whether or not to create position-independent
+         * @param sources maps the names to the content of the source files
+         * @param posIndepCode whether or not to create position-independent
          *                     code for dynamic linking
-         * \param savefiles whether or not to save the content of the source 
+         * @param savefiles whether or not to save the content of the source 
          *                  files in the sources folder
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
@@ -99,7 +99,7 @@ namespace CppAD {
         /**
          * Creates a dynamic library from the previously compiled object files
          * 
-         * \param library the path to the dynamic library to be created
+         * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library) = 0;
 

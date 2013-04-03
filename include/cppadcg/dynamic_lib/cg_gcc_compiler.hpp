@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * C compiler class used to create a dynamic library
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class GccCompiler : public CLangCompiler<Base> {
@@ -106,11 +106,11 @@ namespace CppAD {
         /**
          * creates a dynamic library with the provided C source code
          * 
-         * \param library the path of the dynamic library to be created
-         * \param sources maps the names to the content of the source files
-         * \param posIndepCode whether or not to create position-independent
+         * @param library the path of the dynamic library to be created
+         * @param sources maps the names to the content of the source files
+         * @param posIndepCode whether or not to create position-independent
          *                     code for dynamic linking
-         * \param savefiles whether or not to save the content of the source 
+         * @param savefiles whether or not to save the content of the source 
          *                  files in the sources folder
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
@@ -173,7 +173,7 @@ namespace CppAD {
         /**
          * Creates a dynamic library from a set of object files
          * 
-         * \param library the path to the dynamic library to be created
+         * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library) {
 
@@ -220,8 +220,8 @@ namespace CppAD {
         /**
          * Compiles a single source file into an object file
          * 
-         * \param source the content of the source file
-         * \param output the compiled output file name (the object file path)
+         * @param source the content of the source file
+         * @param output the compiled output file name (the object file path)
          */
         virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) {
             std::vector<std::string> args;

@@ -21,7 +21,7 @@ namespace CppAD {
      * Useful class for generating source code for the creation of a dynamic
      * library.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLangCompileDynamicHelper {
@@ -65,7 +65,7 @@ namespace CppAD {
         /**
          * Provides a custom library extension defined by the user
          * 
-         * \return a custom library extension
+         * @return a custom library extension
          */
         inline const std::string* getCustomLibraryExtension() const {
             return _customLibExtension;
@@ -74,7 +74,7 @@ namespace CppAD {
         /**
          * Defines a custom extension for the library that will be created
          * 
-         * \param libraryExtension the custom extension name
+         * @param libraryExtension the custom extension name
          */
         inline void setCustomLibraryExtension(const std::string& libraryExtension) {
             delete _customLibExtension;

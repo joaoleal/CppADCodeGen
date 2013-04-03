@@ -23,7 +23,7 @@ namespace CppAD {
      * The independent variables are considered to have been registered first as
      * variable in the code generation handler and then the multipliers.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLangDefaultHessianVarNameGenerator : public VariableNameGenerator<Base> {

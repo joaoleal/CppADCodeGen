@@ -24,7 +24,7 @@ namespace CppAD {
      * Helper class to analyze the operation graph and generate source code
      * for several languages
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CodeHandler {
@@ -118,13 +118,13 @@ namespace CppAD {
         /**
          * Creates the source code from the operations registered so far.
          * 
-         * \param out The output stream where the source code is to be printed.
-         * \param lang The targeted language.
-         * \param dependent The dependent variables for which the source code
+         * @param out The output stream where the source code is to be printed.
+         * @param lang The targeted language.
+         * @param dependent The dependent variables for which the source code
          *                  should be generated. By defining this vector the 
          *                  number of operations in the source code can be 
          *                  reduced and thus providing a more optimized code.
-         * \param nameGen Provides the rules for variable name creation.
+         * @param nameGen Provides the rules for variable name creation.
          */
         virtual void generateCode(std::ostream& out,
                                   CppAD::Language<Base>& lang,
@@ -233,9 +233,9 @@ namespace CppAD {
          * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
          * The variable can appear only once in the expression.
          * 
-         * \param expression  The original expression (f(x, y))
-         * \param code  The variable to solve for
-         * \return  The expression for variable
+         * @param expression  The original expression (f(x, y))
+         * @param code  The variable to solve for
+         * @return  The expression for variable
          */
         inline CG<Base> solveFor(SourceCodeFragment<Base>& expression,
                                  SourceCodeFragment<Base>& code) throw (CGException);
@@ -247,8 +247,8 @@ namespace CppAD {
          * dependent variable which is assumed to be a residual of an equation.
          * If successful the model will contain one less independent variable.
          * 
-         * \param indep The independent variable to eliminate.
-         * \param dep The dependent variable representing a residual
+         * @param indep The independent variable to eliminate.
+         * @param dep The dependent variable representing a residual
          */
         inline void substituteIndependent(const CG<Base>& indep,
                                           const CG<Base>& dep) throw (CGException);
@@ -428,7 +428,7 @@ namespace CppAD {
         /**
          * Defines the evaluation order for the code fragments that do not
          * create variables
-         * \param code The operation just added to the evaluation order
+         * @param code The operation just added to the evaluation order
          */
         inline void dependentAdded2EvaluationQueue(SourceCodeFragment<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;

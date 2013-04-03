@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * Specialization of the C language function names for doubles
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<>
     inline const std::string& CLanguage<double>::absFuncName() {

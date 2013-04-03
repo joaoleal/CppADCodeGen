@@ -38,8 +38,8 @@ namespace CppAD {
         /**
          * Creates a new DAE model index reduction algorithm.
          * 
-         * \param fun  The original (high index) model
-         * \param varInfo  DAE  system variable information (in the same order 
+         * @param fun  The original (high index) model
+         * @param varInfo  DAE  system variable information (in the same order 
          *                 as in the tape)
          */
         DaeIndexReduction(ADFun<CG<Base> >* fun,

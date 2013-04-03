@@ -28,9 +28,9 @@ namespace CppAD {
     /**
      * Sorts variable nodes according to the variable differentiation order
      * 
-     * \param i
-     * \param j
-     * \return true if i should come before j
+     * @param i
+     * @param j
+     * @return true if i should come before j
      */
     template<class Base>
     bool sortVnodesByOrder(Vnode<Base>* i, Vnode<Base>* j) {
@@ -91,9 +91,9 @@ namespace CppAD {
      * Sorts variables based on the differentiation order, whether they are 
      * algebraic or differential and the order in the original model
      * 
-     * \param i
-     * \param j
-     * \return true if i should come before j
+     * @param i
+     * @param j
+     * @return true if i should come before j
      */
     inline bool sortVariablesByOrder(const DaeVarOrderInfo& i, const DaeVarOrderInfo& j) {
         if (j.order < i.order) {
@@ -111,9 +111,9 @@ namespace CppAD {
      * Sorts equations according to the equation type (differential/algebraic)
      * and original index
      * 
-     * \param i
-     * \param j
-     * \return true if i should come before j
+     * @param i
+     * @param j
+     * @return true if i should come before j
      */
     inline bool sortEquationByAssignedOrder2(const DaeEqOrderInfo& i, const DaeEqOrderInfo& j) {
         if (i.differential) {
@@ -177,11 +177,11 @@ namespace CppAD {
          * Creates the DAE index reduction algorithm that implements the dummy
          * derivatives method.
          * 
-         * \param fun The DAE model
-         * \param varInfo DAE model variable classification
-         * \param x typical variable values (used to determine Jacobian values)
-         * \param normVar variable normalization values
-         * \param normEq equation normalization values
+         * @param fun The DAE model
+         * @param varInfo DAE model variable classification
+         * @param x typical variable values (used to determine Jacobian values)
+         * @param normVar variable normalization values
+         * @param normEq equation normalization values
          */
         DummyDerivatives(ADFun<CG<Base> >* fun,
                          const std::vector<DaeVarInfo>& varInfo,
@@ -234,11 +234,11 @@ namespace CppAD {
         /**
          * Performs the DAE differentiation index reductions
          * 
-         * \param newVarInfo Variable related information of the reduced index
+         * @param newVarInfo Variable related information of the reduced index
          *                   model
-         * \param equationInfo Equation related information of the reduced index
+         * @param equationInfo Equation related information of the reduced index
          *                     model
-         * \return the reduced index model (must be deleted by user)
+         * @return the reduced index model (must be deleted by user)
          */
         virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
                                                      std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
@@ -411,8 +411,8 @@ namespace CppAD {
         /**
          * Attempts to reduce the number of equations by variable substitution.
          * 
-         * \param newVarInfo Variable information of the resulting model
-         * \return The new DAE reduced model with (possibly) less equations and
+         * @param newVarInfo Variable information of the resulting model
+         * @return The new DAE reduced model with (possibly) less equations and
          *         variables
          */
         inline std::auto_ptr<ADFun<CGBase > > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
@@ -570,10 +570,10 @@ namespace CppAD {
         /**
          * Attempts to generate a semi-explicit DAE.
          * 
-         * \param reorder place all the differential equations and variables
+         * @param reorder place all the differential equations and variables
          *                together
-         * \param differentialEqs 
-         * \return The new semi-explicit DAE model with less variables (without
+         * @param differentialEqs 
+         * @return The new semi-explicit DAE model with less variables (without
          *         the time derivative variables)
          */
         inline std::auto_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,

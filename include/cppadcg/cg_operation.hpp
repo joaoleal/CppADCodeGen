@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * Possible operations
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     enum CGOpCode {
         CGAbsOp, //  abs(variable)

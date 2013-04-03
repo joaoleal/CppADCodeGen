@@ -52,9 +52,9 @@ namespace CppAD {
          * Creates the DAE index reduction algorithm that implements the 
          * Pantelides method.
          * 
-         * \param fun The DAE model
-         * \param varInfo DAE model variable classification
-         * \param x typical variable values (used to avoid NaNs in CppAD checks)
+         * @param fun The DAE model
+         * @param varInfo DAE model variable classification
+         * @param x typical variable values (used to avoid NaNs in CppAD checks)
          */
         Plantelides(ADFun<CG<Base> >* fun,
                     const std::vector<DaeVarInfo>& varInfo,
@@ -213,11 +213,11 @@ namespace CppAD {
         /**
          * Performs the DAE differentiation index reductions
          * 
-         * \param newVarInfo Variable related information of the reduced index
+         * @param newVarInfo Variable related information of the reduced index
          *                   model
-         * \param equationInfo Equation related information of the reduced index
+         * @param equationInfo Equation related information of the reduced index
          *                     model
-         * \return the reduced index model (must be deleted by user)
+         * @return the reduced index model (must be deleted by user)
          */
         virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
                                                      std::vector<DaeEquationInfo>& equationInfo) throw (CGException) {
@@ -400,8 +400,8 @@ namespace CppAD {
 
         /**
          * 
-         * \param i The equation node
-         * \return true if an augmented path was found
+         * @param i The equation node
+         * @return true if an augmented path was found
          */
         bool augmentPath(Enode<Base>& i) {
             i.color();
@@ -461,7 +461,7 @@ namespace CppAD {
          * derivatives (not exactly correct but it works because the 
          * potentially extra variables are removed later)
          * 
-         * \param i equation node to differentiate
+         * @param i equation node to differentiate
          */
         inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) throw (CGException) {
             const std::set<Vnode<Base>*>& vars = i.originalVariables();
@@ -738,9 +738,9 @@ namespace CppAD {
          * Introduces a dependency with respect to time in the provided
          * variables.
          * 
-         * \param indepOrig  The variables without time dependency 
+         * @param indepOrig  The variables without time dependency 
          *                    (in the original variable order).
-         * \return The new variables with the time dependency 
+         * @return The new variables with the time dependency 
          *          (in the original variable order).
          */
         inline std::vector<AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<AD<CG<Base> > >& indepOrig,
@@ -783,7 +783,7 @@ namespace CppAD {
         /**
          * Prints out a DAE model to the standard output.
          * 
-         * \param fun  The taped model
+         * @param fun  The taped model
          */
         inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<DaeVarInfo>& varInfo) {
             std::vector<std::string> vnames(varInfo.size());
@@ -796,8 +796,8 @@ namespace CppAD {
         /**
          * Prints out a DAE model to the standard output.
          * 
-         * \param fun  The taped model
-         * \param vnodes  The independent variables
+         * @param fun  The taped model
+         * @param vnodes  The independent variables
          */
         inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<std::string>& indepNames) {
 

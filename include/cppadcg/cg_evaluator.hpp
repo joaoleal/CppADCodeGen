@@ -30,8 +30,8 @@ namespace CppAD {
     public:
 
         /**
-         * \param handler The source code handler
-         * \param dep Dependent variable vector (all variables must belong to
+         * @param handler The source code handler
+         * @param dep Dependent variable vector (all variables must belong to
          *             the same code handler)
          */
         Evaluator(const CodeHandler<Base>& handler, const std::vector<CG<Base> >& dep) :
@@ -44,8 +44,8 @@ namespace CppAD {
          * Performs all the operations required to calculate the dependent 
          * variables with a (potentially) new data type
          * 
-         * \param indep The new independent variables.
-         * \return The dependent variable values
+         * @param indep The new independent variables.
+         * @return The dependent variable values
          */
         inline std::vector<AD<BaseOut> > evaluate(const std::vector<AD<BaseOut> >& indep) throw (CGException) {
             if (handler_->getIndependentVariableSize() != indep.size()) {

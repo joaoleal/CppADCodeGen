@@ -73,9 +73,9 @@ namespace CppAD {
         /**
          * Creates a new DAE variable
          * 
-         * \param name A custom variable name (keep it empty to use an
+         * @param name A custom variable name (keep it empty to use an
          *             automatically generated name)
-         * \param id A unique identifier for this variable (used internally)
+         * @param id A unique identifier for this variable (used internally)
          */
         inline DaeVarInfo(const std::string& name = "", size_t id = 0) :
             id_(id),
@@ -104,7 +104,7 @@ namespace CppAD {
         /**
          * Provides a unique identifier for the variable.
          * 
-         * \return a unique identifier for the variable.
+         * @return a unique identifier for the variable.
          */
         inline size_t getId() const {
             return id_;
@@ -119,7 +119,7 @@ namespace CppAD {
          * of. A negative value means that the current variable isn't a 
          * derivative.
          * 
-         * \return The index of the variable for which this variable is the 
+         * @return The index of the variable for which this variable is the 
          *         derivative of.
          */
         inline int getAntiDerivative() const {
@@ -134,7 +134,7 @@ namespace CppAD {
          * The index of the time derivative for this variable. A negative value
          * means that there is none.
          * 
-         * \return The index of the time derivative for this variable.
+         * @return The index of the time derivative for this variable.
          */
         inline int getDerivative() const {
             return derivative_;
@@ -143,7 +143,7 @@ namespace CppAD {
         /**
          * Defines the index of the time derivative for this variable. 
          * 
-         * \param derivative The index of the time derivative for this variable.
+         * @param derivative The index of the time derivative for this variable.
          *                   A negative value means that there is none.
          */
         inline void setDerivative(int derivative) {
@@ -154,7 +154,7 @@ namespace CppAD {
          * Determines whether or not this variable depends on the 
          * independent/integrated variables.
          * 
-         * \return true if it is a parameter that does not depend on the
+         * @return true if it is a parameter that does not depend on the
          *              integrated variables
          */
         inline bool isFunctionOfIntegrated() const {
@@ -190,7 +190,7 @@ namespace CppAD {
          * Determines whether or not this is an integrated variable, also known
          * as the independent variable of the DAE system (typically time).
          * 
-         * \return true if it is the integrated variable
+         * @return true if it is the integrated variable
          */
         inline bool isIntegratedVariable() const {
             return integratedVariable_;
@@ -200,7 +200,7 @@ namespace CppAD {
          * Returns the custom variable name. If the string is empty an 
          * automatically generated name will be used.
          * 
-         * \return the custom variable name
+         * @return the custom variable name
          */
         inline const std::string& getName() const {
             return name_;
@@ -210,7 +210,7 @@ namespace CppAD {
          * Defines a custom variable name. If the string is empty an 
          * automatically generated name will be used.
          * 
-         * \param name the custom variable name
+         * @param name the custom variable name
          */
         inline void setName(const std::string& name) {
             name_ = name;
@@ -219,7 +219,7 @@ namespace CppAD {
         /**
          * Provides the variable index corresponding to the original model.
          * 
-         * \return The corresponding variable index in the original model. A 
+         * @return The corresponding variable index in the original model. A 
          *         negative value means that this variable was created by the
          *         algorithm.
          */
@@ -230,7 +230,7 @@ namespace CppAD {
         /**
          * Defines the variable index in the original model.
          * 
-         * \param originalIndex The corresponding variable index in the original
+         * @param originalIndex The corresponding variable index in the original
          *                      model. A negative value means that this variable
          *                      was created by the algorithm.
          */
@@ -247,7 +247,7 @@ namespace CppAD {
          * treated as a time derivative since it might have been transformed 
          * into an algebraic variable by the algorithm.
          * 
-         * \return the index in the original model for which this variable is 
+         * @return the index in the original model for which this variable is 
          *         the time derivative
          */
         inline int getOriginalAntiDerivative() const {
@@ -263,7 +263,7 @@ namespace CppAD {
          * treated as a time derivative since it might have been transformed 
          * into an algebraic variable by the algorithm.
          * 
-         * \param originalAntiDerivative the index in the original model for
+         * @param originalAntiDerivative the index in the original model for
          *                               which this variable is the time
          *                               derivative
          */
@@ -278,7 +278,7 @@ namespace CppAD {
          * treated as a time derivative, it could very well be a time derivative 
          * transformed into an algebraic variable by the algorithm.
          *
-         * \return The order of the time derivative
+         * @return The order of the time derivative
          */
         inline int getOrder() const {
             return order_;
@@ -291,7 +291,7 @@ namespace CppAD {
          * treated as a time derivative, it could very well be a time derivative 
          * transformed into an algebraic variable by the algorithm.
          * 
-         * \param order The order of the time derivative
+         * @param order The order of the time derivative
          */
         inline void setOrder(int order) {
             order_ = order;

@@ -32,10 +32,10 @@ namespace CppAD {
     /**
      * Finds occurences of a source code fragment in an operation graph.
      * 
-     * \param root the operation graph where to search
-     * \param code the source code fragment to find in root
-     * \param max the maximum number of occurences of code to find in root
-     * \return the paths from root to code
+     * @param root the operation graph where to search
+     * @param code the source code fragment to find in root
+     * @param max the maximum number of occurences of code to find in root
+     * @return the paths from root to code
      */
     template<class Base>
     inline std::vector<std::vector<SourceCodePathNode<Base> > > findPaths(SourceCodeFragment<Base>& root,

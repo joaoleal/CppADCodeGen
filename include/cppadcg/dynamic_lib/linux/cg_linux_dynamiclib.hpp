@@ -25,7 +25,7 @@ namespace CppAD {
      * Useful class to call the compiled source code in a dynamic library.
      * For the Linux Operating System only.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class LinuxDynamicLib : public DynamicLib<Base> {

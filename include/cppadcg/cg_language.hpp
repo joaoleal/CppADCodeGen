@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * Information required for the generation of source code for a language
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class LanguageGenerationData {
@@ -58,7 +58,7 @@ namespace CppAD {
     /**
      * Creates the source code for a specific language
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class Language {

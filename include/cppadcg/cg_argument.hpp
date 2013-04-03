@@ -24,7 +24,7 @@ namespace CppAD {
      * An argument used by an operation wich can be either a constant value
      * or the result of another operation
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class Argument {

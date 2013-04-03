@@ -26,7 +26,7 @@ namespace CppAD {
     /**
      * Generates code for the C language
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLanguage : public Language<Base> {
@@ -86,8 +86,8 @@ namespace CppAD {
         /**
          * Creates a C language source code generator
          * 
-         * \param varTypeName variable data type (e.g. double)
-         * \param spaces number of spaces for indentations
+         * @param varTypeName variable data type (e.g. double)
+         * @param spaces number of spaces for indentations
          */
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
             _baseTypeName(varTypeName),

@@ -32,24 +32,24 @@ namespace CppAD {
         /**
          * creates a new folder (system dependent)
          * 
-         * \param folder the path to the folder
+         * @param folder the path to the folder
          */
         inline void createFolder(const std::string& folder);
 
         /**
          * Creates a new path (system dependent)
          * 
-         * \param baseFolder the path to the base folder
-         * \param file the file or folder name inside the base folder
-         * \return the new path
+         * @param baseFolder the path to the base folder
+         * @param file the file or folder name inside the base folder
+         * @return the new path
          */
         inline std::string createPath(const std::string& baseFolder, const std::string& file);
 
         /**
          * Escapes a file or folder path (system dependent)
          * 
-         * \param path the file/folder path
-         * \return the escaped file/folder path
+         * @param path the file/folder path
+         * @return the escaped file/folder path
          */
         inline std::string escapePath(const std::string& path);
 
@@ -58,10 +58,10 @@ namespace CppAD {
         /**
          * Calls an external executable (system dependent)
          * 
-         * \param executable the executable path
-         * \param args the command line arguments to the executable
-         * \param pipe whether or not to create a pipe to the executable
-         * \param message the information to pass in the pipe
+         * @param executable the executable path
+         * @param args the command line arguments to the executable
+         * @param pipe whether or not to create a pipe to the executable
+         * @param message the information to pass in the pipe
          */
         inline void callExecutable(const std::string& executable,
                                    const std::vector<std::string>& args,

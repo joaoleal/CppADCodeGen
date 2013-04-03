@@ -21,7 +21,7 @@ namespace CppAD {
      * Creates variables names for the source code using a list of provided
      * custom names.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class CLangCustomVariableNameGenerator : public CLangDefaultVariableNameGenerator<Base> {

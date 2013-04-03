@@ -20,7 +20,7 @@ namespace CppAD {
     /**
      * An operation
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class SourceCodeFragment {
@@ -134,7 +134,7 @@ namespace CppAD {
         /**
          * Provides the arguments used in the operation represnted by this
          * code fragment.
-         * \return the arguments for the operation in this code fragment
+         * @return the arguments for the operation in this code fragment
          */
         inline const std::vector<Argument<Base> >& arguments() const {
             return arguments_;
@@ -143,7 +143,7 @@ namespace CppAD {
         /**
          * Provides the variable ID that was altered/assigned in this source 
          * code (zero means that no variable is assigned).
-         * \return the variable ID
+         * @return the variable ID
          */
         inline size_t variableID() const {
             return var_id_;
@@ -168,7 +168,7 @@ namespace CppAD {
         /**
          * Provides the total number of times the result of this operation is being 
          * used as an argument for another operation.
-         * \return the total usage count
+         * @return the total usage count
          */
         inline size_t totalUsageCount() const {
             return total_use_count_;
@@ -177,7 +177,7 @@ namespace CppAD {
         /**
          * Provides the number of times the result of this operation has been 
          * used as an argument for another operation.
-         * \return the current usage count
+         * @return the current usage count
          */
         inline size_t usageCount() const {
             return use_count_;

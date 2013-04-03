@@ -67,7 +67,7 @@ namespace CppAD {
         /**
          * Provides a unique identifier for the equation.
          * 
-         * \return a unique identifier for the equation.
+         * @return a unique identifier for the equation.
          */
         inline size_t getId() const {
             return id_;

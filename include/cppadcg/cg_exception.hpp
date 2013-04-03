@@ -21,7 +21,7 @@ namespace CppAD {
     /**
      * Source code generation exception
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     class CGException : public std::exception {
     protected:

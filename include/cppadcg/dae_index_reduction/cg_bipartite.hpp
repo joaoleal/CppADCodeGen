@@ -130,7 +130,7 @@ namespace CppAD {
         }
 
         /**
-         * \return the equation that was derived by differentiating this 
+         * @return the equation that was derived by differentiating this 
          * equation
          */
         inline Enode<Base>* derivative() const {
@@ -271,14 +271,14 @@ namespace CppAD {
         }
 
         /**
-         * \return the time derivative variable
+         * @return the time derivative variable
          */
         inline Vnode<Base>* derivative() const {
             return derivative_;
         }
 
         /**
-         * \return the variable which was differentiated to create this one
+         * @return the variable which was differentiated to create this one
          */
         inline Vnode<Base>* antiDerivative() const {
             return antiDerivative_;

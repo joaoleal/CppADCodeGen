@@ -25,7 +25,7 @@ namespace CppAD {
      * Useful class to call the compiled model in a dynamic library.
      * For the Linux Operating System only.
      * 
-     * \author Joao Leal
+     * @author Joao Leal
      */
     template<class Base>
     class LinuxDynamicLibModel : public DynamicLibModel<Base> {
@@ -583,7 +583,7 @@ namespace CppAD {
         /**
          * Creates a new model 
          * 
-         * \param name The model name
+         * @param name The model name
          */
         LinuxDynamicLibModel(LinuxDynamicLib<Base>* dynLib, const std::string& name) :
             _name(name),
