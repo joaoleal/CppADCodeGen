@@ -154,6 +154,53 @@ namespace CppAD {
 
         return rightHs;
     }
+
+    template<class Base>
+    inline bool isSolvable(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException) {
+        for (size_t n = 0; n < path.size() - 1; ++n) {
+            const SourceCodePathNode<Base>& pnodeOp = path[n];
+            size_t argIndex = path[n + 1].arg_index;
+            const std::vector<Argument<Base> >& args = pnodeOp.node->arguments();
+
+            CGOpCode op = pnodeOp.node->operation();
+            switch (op) {
+                case CGMulOp:
+                case CGDivOp:
+                case CGUnMinusOp:
+                case CGAddOp:
+                case CGAliasOp:
+                case CGSubOp:
+                case CGExpOp:
+                case CGLogOp:
+                case CGSqrtOp:
+                case CGCoshOp: // cosh(variable)
+                case CGSinhOp: // sinh(variable)
+                case CGTanhOp: //  tanh(variable)
+                    break;
+                case CGPowOp:
+                {
+                    if (argIndex == 0) {
+                        // base
+                        const Argument<Base>& exponent = args[1];
+                        if (exponent.parameter() != NULL && *exponent.parameter() == Base(0.0)) {
+                            return false;
+                        } else if (exponent.parameter() != NULL && *exponent.parameter() == Base(1.0)) {
+                            break;
+                        } else {
+                            return false;
+                        }
+                    } else {
+                        break;
+                    }
+                    break;
+                }
+
+                default:
+                    return false;
+            };
+        }
+        return true;
+    }
 }
 
 #endif

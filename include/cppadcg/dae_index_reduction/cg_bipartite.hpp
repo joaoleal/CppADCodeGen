@@ -16,9 +16,10 @@
  */
 
 #include <assert.h>
+#include <algorithm>
 #include <iostream>
-#include <set>
 #include <sstream>
+#include <vector>
 
 namespace CppAD {
 
@@ -75,10 +76,16 @@ namespace CppAD {
     class Enode : public BiPGraphNode<Base> {
     protected:
         static const std::string TYPE;
-        // original variables present in this equation which where not deleted
-        std::set<Vnode<Base>*> vnodes_orig_;
-        // variables present in this equation which where not deleted
-        std::set<Vnode<Base>*> vnodes_;
+        /**
+         * Original variables present in this equation which where not deleted.
+         * A vector is used instead of a set to ensure reproducibility.
+         */
+        std::vector<Vnode<Base>*> vnodes_orig_;
+        /**
+         * Variables present in this equation which where not deleted.
+         * A vector is used instead of a set to ensure reproducibility.
+         */
+        std::vector<Vnode<Base>*> vnodes_;
         /**
          * the differentiated equation used to produce this one
          *  (B in Pantelides algorithm)
@@ -113,19 +120,21 @@ namespace CppAD {
             name_ = s.str();
         }
 
-        inline const std::set<Vnode<Base>*>& variables() const {
+        inline const std::vector<Vnode<Base>*>& variables() const {
             return vnodes_;
         }
 
-        inline const std::set<Vnode<Base>*>& originalVariables() const {
+        inline const std::vector<Vnode<Base>*>& originalVariables() const {
             return vnodes_orig_;
         }
 
         inline void addVariable(Vnode<Base>* j) {
-            vnodes_orig_.insert(j);
-            if (!j->isDeleted()) {
-                vnodes_.insert(j);
-                j->addEquation(this);
+            if (std::find(vnodes_orig_.begin(), vnodes_orig_.end(), j) == vnodes_orig_.end()) {
+                vnodes_orig_.push_back(j);
+                if (!j->isDeleted()) {
+                    vnodes_.push_back(j);
+                    j->addEquation(this);
+                }
             }
         }
 
@@ -150,7 +159,10 @@ namespace CppAD {
         }
 
         inline void deleteNode(Vnode<Base>* j) {
-            vnodes_.erase(j);
+            typename std::vector<Vnode<Base>*>::iterator it;
+            it = std::find(vnodes_.begin(), vnodes_.end(), j);
+            if (it != vnodes_.end())
+                vnodes_.erase(it);
         }
 
         virtual const std::string& name() const {
@@ -201,9 +213,10 @@ namespace CppAD {
          */
         bool parameter_;
         /**
-         * equations that use this variable
+         * Equations that use this variable.
+         * A vector is used instead of a set to ensure reproducibility.
          */
-        std::set<Enode<Base>*> enodes_;
+        std::vector<Enode<Base>*> enodes_;
         /**
          * 
          */
@@ -216,7 +229,7 @@ namespace CppAD {
         /**
          *  the variable which was differentiated to create this one
          */
-        Vnode<Base>* antiDerivative_;
+        Vnode<Base> * const antiDerivative_;
         /**
          * The index in the tape
          */
@@ -266,7 +279,7 @@ namespace CppAD {
             tapeIndex_ = tapeIndex;
         }
 
-        inline const std::set<Enode<Base>*>& equations() const {
+        inline const std::vector<Enode<Base>*>& equations() const {
             return enodes_;
         }
 
@@ -319,7 +332,7 @@ namespace CppAD {
 #endif
 
             deleted_ = true;
-            for (typename std::set<Enode<Base>*>::iterator i = enodes_.begin(); i != enodes_.end(); ++i) {
+            for (typename std::vector<Enode<Base>*>::iterator i = enodes_.begin(); i != enodes_.end(); ++i) {
                 (*i)->deleteNode(this);
             }
             enodes_.clear();
@@ -355,7 +368,8 @@ namespace CppAD {
 
         inline void addEquation(Enode<Base>* i) {
             if (!deleted_) {
-                enodes_.insert(i);
+                assert(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end());
+                enodes_.push_back(i);
             }
         }
 

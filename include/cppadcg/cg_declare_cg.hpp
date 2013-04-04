@@ -226,6 +226,10 @@ namespace CppAD {
                           SourceCodeFragment<Base>& code,
                           std::vector<std::vector<SourceCodePathNode<Base> > >& found,
                           size_t max);
+
+    template<class Base>
+    inline bool isSolvable(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException);
+    
     /**
      * Utility functions
      */

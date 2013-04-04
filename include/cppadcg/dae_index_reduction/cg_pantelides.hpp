@@ -367,9 +367,9 @@ namespace CppAD {
                         // structural check to avoid infinite recursion
                         for (size_t l = esize; l < enodes_.size(); l++) {
                             ll = enodes_[l];
-                            const std::set<Vnode<Base>*>& nvars = ll->originalVariables();
+                            const std::vector<Vnode<Base>*>& nvars = ll->originalVariables();
                             bool ok = false;
-                            for (typename std::set<Vnode<Base>*>::const_iterator js = nvars.begin(); js != nvars.end(); ++js) {
+                            for (typename std::vector<Vnode<Base>*>::const_iterator js = nvars.begin(); js != nvars.end(); ++js) {
                                 if ((*js)->equations().size() > 1) {
                                     ok = true;
                                     break;
@@ -406,8 +406,8 @@ namespace CppAD {
         bool augmentPath(Enode<Base>& i) {
             i.color();
 
-            const std::set<Vnode<Base>*>& vars = i.variables();
-            typename std::set<Vnode<Base>*>::const_iterator j;
+            const std::vector<Vnode<Base>*>& vars = i.variables();
+            typename std::vector<Vnode<Base>*>::const_iterator j;
 
             // first look for derivative variables
             for (j = vars.begin(); j != vars.end(); ++j) {
@@ -464,8 +464,8 @@ namespace CppAD {
          * @param i equation node to differentiate
          */
         inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) throw (CGException) {
-            const std::set<Vnode<Base>*>& vars = i.originalVariables();
-            typename std::set<Vnode<Base>*>::const_iterator j;
+            const std::vector<Vnode<Base>*>& vars = i.originalVariables();
+            typename std::vector<Vnode<Base>*>::const_iterator j;
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
                 newI.addVariable(jj);
