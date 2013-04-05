@@ -249,12 +249,37 @@ namespace CppAD {
          * 
          * @param indep The independent variable to eliminate.
          * @param dep The dependent variable representing a residual
+         * @param removeFromIndeps Whether or not to immediatelly remove the
+         *                         independent variable from the list of
+         *                         independents in the model. The subtitution
+         *                         operation can only be reversed if the 
+         *                         variable is not removed.
          */
         inline void substituteIndependent(const CG<Base>& indep,
-                                          const CG<Base>& dep) throw (CGException);
+                                          const CG<Base>& dep,
+                                          bool removeFromIndeps = true) throw (CGException);
 
         inline void substituteIndependent(SourceCodeFragment<Base>& indep,
-                                          SourceCodeFragment<Base>& dep) throw (CGException);
+                                          SourceCodeFragment<Base>& dep,
+                                          bool removeFromIndeps = true) throw (CGException);
+
+        /**
+         * Reverts a subtitution of an independent variable that has not been 
+         * removed from the list of independents yet.
+         * Warning: it does not recover any custom name assigned to the variable.
+         * 
+         * @param indep The independent variable
+         */
+        inline void undoSubstituteIndependent(SourceCodeFragment<Base>& indep) throw (CGException);
+
+        /**
+         * Finallizes the subtitution of an independent variable by eliminating
+         * it from the list of independents. After this operation the variable
+         * subtitution cannot be undone.
+         * 
+         * @param indep The independent variable
+         */
+        inline void removeIndependent(SourceCodeFragment<Base>& indep) throw (CGException);
 
         inline virtual ~CodeHandler() {
             reset();

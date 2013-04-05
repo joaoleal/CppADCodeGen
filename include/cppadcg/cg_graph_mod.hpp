@@ -19,13 +19,15 @@ namespace CppAD {
 
     template<class Base>
     inline void CodeHandler<Base>::substituteIndependent(const CG<Base>& indep,
-                                                         const CG<Base>& dep) throw (CGException) {
-        substituteIndependent(*indep.getSourceCodeFragment(), *dep.getSourceCodeFragment());
+                                                         const CG<Base>& dep,
+                                                         bool removeFromIndependents) throw (CGException) {
+        substituteIndependent(*indep.getSourceCodeFragment(), *dep.getSourceCodeFragment(), removeFromIndependents);
     }
 
     template<class Base>
     inline void CodeHandler<Base>::substituteIndependent(SourceCodeFragment<Base>& indep,
-                                                         SourceCodeFragment<Base>& dep) throw (CGException) {
+                                                         SourceCodeFragment<Base>& dep,
+                                                         bool removeFromIndependents) throw (CGException) {
         using std::vector;
         typedef CG<Base> CGBase;
         typedef AD<CGBase> ADCG;
@@ -54,8 +56,35 @@ namespace CppAD {
 
         indep.makeAlias(arg);
 
-        // remove the substituted variable from the independent variable vector
-        _independentVariables.erase(_independentVariables.begin() + indepIndex);
+        if (removeFromIndependents) {
+            // remove the substituted variable from the independent variable vector
+            _independentVariables.erase(_independentVariables.begin() + indepIndex);
+        }
+    }
+
+    template<class Base>
+    inline void CodeHandler<Base>::undoSubstituteIndependent(SourceCodeFragment<Base>& indep) throw (CGException) {
+        typename std::vector<SourceCodeFragment<Base> *>::const_iterator it =
+                std::find(_independentVariables.begin(), _independentVariables.end(), &indep);
+        if (it == _independentVariables.end()) {
+            throw CGException("Variable not found in the independent variable vector");
+        }
+
+        indep.setOperation(CGInvOp);
+    }
+
+    template<class Base>
+    inline void CodeHandler<Base>::removeIndependent(SourceCodeFragment<Base>& indep) throw (CGException) {
+        if (indep.operation() != CGAliasOp) {
+            throw CGException("Cannot remove independent variable: not an alias");
+        }
+
+        typename std::vector<SourceCodeFragment<Base> *>::iterator it =
+                std::find(_independentVariables.begin(), _independentVariables.end(), &indep);
+        if (it == _independentVariables.end()) {
+            throw CGException("Variable not found in the independent variable vector");
+        }
+        _independentVariables.erase(it);
     }
 
 }

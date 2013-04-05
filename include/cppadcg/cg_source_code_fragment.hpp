@@ -131,6 +131,11 @@ namespace CppAD {
             return operation_;
         }
 
+        inline void setOperation(CGOpCode op, const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
+            operation_ = op;
+            arguments_ = arguments;
+        }
+
         /**
          * Provides the arguments used in the operation represnted by this
          * code fragment.
@@ -219,8 +224,8 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(
-    std::ostream& os, //< stream to write to
-    const CppAD::SourceCodeFragment<Base>& c) {
+            std::ostream& os, //< stream to write to
+            const CppAD::SourceCodeFragment<Base>& c) {
         switch (c.operation()) {
             case CGAbsOp:
                 os << "abs( $1 )";

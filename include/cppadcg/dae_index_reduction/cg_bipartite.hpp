@@ -96,6 +96,10 @@ namespace CppAD {
          */
         Enode<Base>* differentiationOf_;
         /**
+         * 
+         */
+        Vnode<Base>* assign_;
+        /**
          * A name for the equation
          */
         std::string name_;
@@ -104,7 +108,8 @@ namespace CppAD {
         inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(NULL) {
+            differentiationOf_(NULL),
+            assign_(NULL) {
             std::ostringstream s;
             s << *this;
             name_ = s.str();
@@ -113,7 +118,8 @@ namespace CppAD {
         inline Enode(size_t index, Enode<Base>* differentiationOf) :
             BiPGraphNode<Base>(index),
             differentiation_(NULL),
-            differentiationOf_(differentiationOf) {
+            differentiationOf_(differentiationOf),
+            assign_(NULL) {
             differentiationOf_->setDerivative(this);
             std::ostringstream s;
             s << *this;
@@ -136,6 +142,14 @@ namespace CppAD {
                     j->addEquation(this);
                 }
             }
+        }
+
+        inline Vnode<Base>* assigmentVariable() const {
+            return assign_;
+        }
+
+        inline void setAssigmentVariable(Vnode<Base>& j) {
+            assign_ = &j;
         }
 
         /**
@@ -347,6 +361,7 @@ namespace CppAD {
             std::cout << "      Assigning " << *this << " to " << i << "\n";
 #endif
             assign_ = &i;
+            i.setAssigmentVariable(*this);
         }
 
         virtual std::string nodeType() {

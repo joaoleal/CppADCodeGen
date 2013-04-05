@@ -448,7 +448,8 @@ namespace CppAD {
             map<int, int> assignedVar2Eq;
             for (size_t i = 0; i < newEqInfo.size(); ++i) {
                 DaeEquationInfo& newEq = newEqInfo[i];
-                assignedVar2Eq[newEq.getAssignedVarIndex()] = i;
+                if (newEq.getAssignedVarIndex() >= 0)
+                    assignedVar2Eq[newEq.getAssignedVarIndex()] = i;
             }
 
             /**
@@ -457,11 +458,8 @@ namespace CppAD {
              * (removed equations have negative indexes)
              */
             vector<int> eqIndexReduced2Short(this->enodes_.size());
-            map<int, int> assignedVar2equation;
             for (size_t i = 0; i < eqIndexReduced2Short.size(); i++) {
                 eqIndexReduced2Short[i] = i;
-                if (reducedEqInfo[i].getAssignedVarIndex() >= 0)
-                    assignedVar2equation[reducedEqInfo[i].getAssignedVarIndex()] = i;
             }
 
             /**
@@ -490,8 +488,8 @@ namespace CppAD {
                 /**
                  * Determine which equation to use to eliminate the dummy derivative
                  */
-                map<int, int>::const_iterator ita = assignedVar2equation.find(dummy->tapeIndex());
-                if (ita == assignedVar2equation.end()) {
+                map<int, int>::const_iterator ita = assignedVar2Eq.find(dummy->tapeIndex());
+                if (ita == assignedVar2Eq.end()) {
 #ifdef CPPAD_CG_DAE_VERBOSE
                     std::cout << "unable to solve for variable " << dummy->name() << "." << std::endl;
 #endif
@@ -658,7 +656,7 @@ namespace CppAD {
 
                     SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
                     assert(alias != NULL && alias->operation() == CGAliasOp);
-                    dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]);
+                    dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]); // not a residual anymore but equal to alias (explicit equation)
 
                     // it is now an explicit differential equation
                     newEqInfo[bestEquation].setExplicit(true);
@@ -744,190 +742,390 @@ namespace CppAD {
                 }
             }
 
-            /**
-             * Create a new bipartite graph
-             */
-            // create variable nodes
-            map<Vnode<Base>*, Vnode<Base>*> eliminateOrig2New;
+
             vector<Vnode<Base>*> diffVariables;
             vector<Vnode<Base>*> dummyVariables;
-            for (size_t j = 0; j < this->vnodes_.size(); j++) {
-                Vnode<Base>* v = this->vnodes_[j];
-                if (std::find(dummyD_.begin(), dummyD_.end(), v) != dummyD_.end()) {
-                    if (reduceEquations_) {
-                        dummyVariables.push_back(new Vnode<Base>(j, v->tapeIndex(), v->name()));
-                        eliminateOrig2New[v] = dummyVariables.back();
-                    }
-                } else if (v->antiDerivative() != NULL) {
-                    if (generateSemiExplicitDae_) {
-                        diffVariables.push_back(new Vnode<Base>(j, v->tapeIndex(), v->name()));
-                        eliminateOrig2New[v] = diffVariables.back();
-                    }
-                }
-            }
             vector<Vnode<Base>*> variables;
-            variables.reserve(diffVariables.size() + dummyVariables.size());
-            variables.insert(variables.end(), diffVariables.begin(), diffVariables.end());
-            variables.insert(variables.end(), dummyVariables.begin(), dummyVariables.end());
-
-            // create equation nodes
-            vector<Enode<Base>*> equations(this->enodes_.size());
-            map<Vnode<Base>*, map<Enode<Base>*, int> > solveClassification;
-            for (size_t i = 0; i < this->enodes_.size(); i++) {
-                equations[i] = new Enode<Base>(i);
-                const vector<Vnode<Base>*>& origVars = this->enodes_[i]->originalVariables();
-                for (size_t p = 0; p < origVars.size(); p++) {
-                    Vnode<Base>* jOrig = origVars[p];
-
-                    typename map<Vnode<Base>*, Vnode<Base>*>::const_iterator it;
-                    it = eliminateOrig2New.find(jOrig);
-                    if (it != eliminateOrig2New.end() &&
-                            jacSparsity[varInfo.size() * i + jOrig->tapeIndex()]) {
-                        Vnode<Base>* j = it->second;
-
-                        CGBase& dep = res0[i]; // the equation residual
-                        CGBase& indep = indep0[j->tapeIndex()];
-
-                        vector<SourceCodePath> paths = findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
-                        if (paths.size() == 1 && isSolvable(paths[0])) {
-                            equations[i]->addVariable(j);
-                            solveClassification[j][equations[i]] = paths[0].size();
+            vector<Enode<Base>*> equations(this->enodes_.size(), NULL);
+            try {
+                /**
+                 * Create a new bipartite graph
+                 */
+                // create variable nodes
+                map<Vnode<Base>*, Vnode<Base>*> eliminateOrig2New;
+                for (size_t j = 0; j < this->vnodes_.size(); j++) {
+                    Vnode<Base>* v = this->vnodes_[j];
+                    if (std::find(dummyD_.begin(), dummyD_.end(), v) != dummyD_.end()) {
+                        if (reduceEquations_) {
+                            dummyVariables.push_back(new Vnode<Base>(j, v->tapeIndex(), v->name()));
+                            eliminateOrig2New[v] = dummyVariables.back();
+                        }
+                    } else if (v->antiDerivative() != NULL) {
+                        if (generateSemiExplicitDae_) {
+                            diffVariables.push_back(new Vnode<Base>(j, v->tapeIndex(), v->name()));
+                            eliminateOrig2New[v] = diffVariables.back();
                         }
                     }
                 }
-            }
 
-            /**
-             * Match equations to variables
-             */
-            while (true) {
-                size_t assigned;
-                do {
+                variables.reserve(diffVariables.size() + dummyVariables.size());
+                variables.insert(variables.end(), diffVariables.begin(), diffVariables.end()); // must be added 1st (priority)
+                variables.insert(variables.end(), dummyVariables.begin(), dummyVariables.end());
+
+                // create equation nodes
+                for (size_t i = 0; i < this->enodes_.size(); i++) {
+                    equations[i] = new Enode<Base>(i);
+                    const vector<Vnode<Base>*>& origVars = this->enodes_[i]->originalVariables();
+                    for (size_t p = 0; p < origVars.size(); p++) {
+                        Vnode<Base>* jOrig = origVars[p];
+
+                        typename map<Vnode<Base>*, Vnode<Base>*>::const_iterator it;
+                        it = eliminateOrig2New.find(jOrig);
+                        if (it != eliminateOrig2New.end() &&
+                                jacSparsity[varInfo.size() * i + jOrig->tapeIndex()]) {
+                            Vnode<Base>* j = it->second;
+
+                            CGBase& dep = res0[i]; // the equation residual
+                            CGBase& indep = indep0[j->tapeIndex()];
+
+                            vector<SourceCodePath> paths = findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
+                            if (paths.size() == 1 && isSolvable(paths[0])) {
+                                equations[i]->addVariable(j);
+                            }
+                        }
+                    }
+                }
+
+                map<size_t, Vnode<Base>*> tape2FreeVariables;
+                typename vector<Vnode<Base>*>::const_iterator itj;
+                for (itj = variables.begin(); itj != variables.end(); ++itj) {
+                    Vnode<Base>* j = *itj;
+                    tape2FreeVariables[j->tapeIndex()] = j;
+                }
+
+
+                /**
+                 * Match equations to variables
+                 */
+                while (true) {
+                    size_t assigned;
                     do {
-                        /**
-                         * assign variables that can only be solved by a single equation
-                         */
                         do {
+                            /**
+                             * assign variables that can only be solved by a single equation
+                             */
+                            do {
+                                assigned = 0;
+                                typename vector<Vnode<Base>*>::const_iterator itj;
+                                for (itj = diffVariables.begin(); itj != diffVariables.end(); ++itj) {
+                                    Vnode<Base>* j = *itj;
+                                    if (!j->isDeleted() && j->equations().size() == 1) {
+                                        Enode<Base>& i = *j->equations()[0];
+                                        if (i.assigmentVariable() == NULL) {
+                                            if (!assignVar2Equation(i, res0, *j, indep0, handler,
+                                                                    jacSparsity, tape2FreeVariables,
+                                                                    equations, varInfo)) {
+                                                throw CGException("Failed to solve equation " + i.name() + " for variable " + j->name());
+                                            }
+                                            assigned++;
+                                        }
+                                    }
+                                }
+                            } while (assigned > 0);
+
+                            /**
+                             * assign dummy derivatives that can only be solved by a single 
+                             * equation 
+                             */
                             assigned = 0;
                             typename vector<Vnode<Base>*>::const_iterator itj;
-                            for (itj = diffVariables.begin(); itj != diffVariables.end(); ++itj) {
+                            for (itj = dummyVariables.begin(); itj != dummyVariables.end(); ++itj) {
                                 Vnode<Base>* j = *itj;
                                 if (!j->isDeleted() && j->equations().size() == 1) {
-                                    j->setAssigmentEquation(*j->equations()[0]);
-                                    j->deleteNode();
-                                    assigned++;
+                                    Enode<Base>& i = *j->equations()[0];
+                                    if (i.assigmentVariable() == NULL) {
+                                        if (assignVar2Equation(i, res0, *j, indep0, handler,
+                                                               jacSparsity, tape2FreeVariables,
+                                                               equations, varInfo))
+                                            assigned++;
+                                    }
                                 }
                             }
                         } while (assigned > 0);
 
                         /**
-                         * assign dummy derivatives that can only be solved by a single 
-                         * equation 
+                         * assign equations that can only be used to solve for 
+                         * a single variable
                          */
                         assigned = 0;
-                        typename vector<Vnode<Base>*>::const_iterator itj;
-                        for (itj = dummyVariables.begin(); itj != dummyVariables.end(); ++itj) {
-                            Vnode<Base>* j = *itj;
-                            if (!j->isDeleted() && j->equations().size() == 1) {
-                                j->setAssigmentEquation(*j->equations()[0]);
-                                j->deleteNode();
-                                assigned++;
+                        typename vector<Enode<Base>*>::const_iterator iti;
+                        for (iti = equations.begin(); iti != equations.end(); ++iti) {
+                            Enode<Base>& i = **iti;
+                            if (i.assigmentVariable() == NULL && i.variables().size() == 1) {
+                                Vnode<Base>* j = i.variables()[0];
+                                if (assignVar2Equation(i, res0, *j, indep0, handler,
+                                                       jacSparsity, tape2FreeVariables,
+                                                       equations, varInfo))
+                                    assigned++;
                             }
                         }
+
                     } while (assigned > 0);
 
                     /**
-                     * assign equations that can only be used to solve for 
-                     * a single variable
+                     * All variables have at least two equations that can be used
+                     * and all equations have at least two variables
+                     * choose a tearing variable/equation
                      */
+                    typename vector<Vnode<Base>*>::const_iterator itj;
+
                     assigned = 0;
-                    typename vector<Enode<Base>*>::const_iterator iti;
-                    for (iti = equations.begin(); iti != equations.end(); ++iti) {
-                        Enode<Base>* i = *iti;
-                        if (i->variables().size() == 1) {
-                            Vnode<Base>* j = i->variables()[0];
-                            j->setAssigmentEquation(*i);
-                            j->deleteNode();
-                            assigned++;
+                    for (itj = variables.begin(); itj != variables.end(); ++itj) {
+                        Vnode<Base>* j = *itj;
+                        if (!j->isDeleted()) {
+                            typename vector<Enode<Base>*>::const_iterator iti;
+                            for (iti = j->equations().begin(); iti != j->equations().end(); ++iti) {
+                                Enode<Base>& i = **iti;
+                                if (i.assigmentVariable() == NULL) {
+                                    if (assignVar2Equation(i, res0, *j, indep0, handler,
+                                                           jacSparsity, tape2FreeVariables,
+                                                           equations, varInfo)) {
+                                        assigned++;
+                                        break;
+                                    }
+                                }
+                            }
+                            if (assigned > 0)
+                                break;
                         }
                     }
 
-                } while (assigned > 0);
+                    if (assigned == 0) {
+                        break; // done
+                    }
+                }
 
                 /**
-                 * All variables have at least two equations that can be used
-                 * and all equations have at least two variables
-                 * choose tearing variable/equation
+                 * save results
                  */
-                Vnode<Base>* bestJ = NULL;
-                Enode<Base>* bestI = NULL;
-                typename vector<Vnode<Base>*>::const_iterator itj;
                 for (itj = variables.begin(); itj != variables.end(); ++itj) {
                     Vnode<Base>* j = *itj;
-                    if (j->isDeleted()) {
-                        continue;
-                    }
-                    map<Enode<Base>*, int>& solveClassificationJ = solveClassification[j];
+                    if (j->assigmentEquation() != NULL) {
+                        int i = j->assigmentEquation()->index();
+                        DaeEquationInfo& eq = eqInfo[i];
 
-                    if (bestJ == NULL) {
-                        bestJ = j;
-                        if (j->equations().empty()) {
-                            j->deleteNode(); //should not really happen
-                            continue;
-                        }
-                        bestI = j->equations()[0];
-                        typename vector<Enode<Base>*>::const_iterator iti;
-                        for (iti = j->equations().begin(); iti != j->equations().end(); ++iti) {
-                            Enode<Base>* i = *iti;
-                            if (solveClassificationJ[i] < solveClassification[bestJ][bestI]) {
-                                bestI = i;
+                        if (eq.getAssignedVarIndex() != int(j->tapeIndex())) {
+                            if (eq.getAssignedVarIndex() >= 0) {
+                                // switch variables
+                                if (origAssignedVar2Eq.find(j->tapeIndex()) != origAssignedVar2Eq.end()) {
+                                    DaeEquationInfo& origAssignedEq = eqInfo[origAssignedVar2Eq.at(j->tapeIndex())];
+                                    origAssignedEq.setAssignedVarIndex(eq.getAssignedVarIndex());
+                                }
                             }
-                        }
-                    } else {
-                        typename vector<Enode<Base>*>::const_iterator iti;
-                        for (iti = j->equations().begin(); iti != j->equations().end(); ++iti) {
-                            Enode<Base>* i = *iti;
-                            if (solveClassificationJ[i] < solveClassification[bestJ][bestI]) {
-                                bestI = i;
-                                bestJ = j;
-                            }
+
+                            eq.setAssignedVarIndex(j->tapeIndex());
                         }
                     }
-
                 }
 
-                if (bestJ == NULL && bestI == NULL) {
-                    break; // done
+                // verify results
+                if (generateSemiExplicitDae_) {
+                    std::string error;
+                    for (itj = diffVariables.begin(); itj != diffVariables.end(); ++itj) {
+                        Vnode<Base>* j = *itj;
+                        if (j->assigmentEquation() == NULL) {
+                            // failed!!!
+                            if (!error.empty())
+                                error += ",";
+                            error += " " + j->name();
+                        }
+                    }
+                    if (!error.empty())
+                        throw CGException("Failed to generate semi-explicit DAE. Could not solve system for the following variables:" + error);
                 }
-
-                bestJ->setAssigmentEquation(*bestI);
-                bestJ->deleteNode();
+                
+            } catch (...) {
+                deleteVectorValues(diffVariables);
+                deleteVectorValues(dummyVariables);
+                deleteVectorValues(equations);
+                throw;
             }
 
-            /**
-             * save results
-             */
+#ifdef CPPAD_CG_DAE_VERBOSE
             typename vector<Vnode<Base>*>::const_iterator itj;
             for (itj = variables.begin(); itj != variables.end(); ++itj) {
                 Vnode<Base>* j = *itj;
-                if (j->assigmentEquation() != NULL) {
-                    int i = j->assigmentEquation()->index();
-                    DaeEquationInfo eq = eqInfo[i];
+                if (j->assigmentEquation() != NULL)
+                    std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
+            }
+            std::cout << std::endl;
+#endif
+            deleteVectorValues(diffVariables);
+            deleteVectorValues(dummyVariables);
+            deleteVectorValues(equations);
+        }
 
-                    if (eq.getAssignedVarIndex() != int(j->tapeIndex())) {
-                        if (eq.getAssignedVarIndex() >= 0) {
-                            // switch variables
-                            if (origAssignedVar2Eq.find(j->tapeIndex()) != origAssignedVar2Eq.end()) {
-                                DaeEquationInfo& origAssignedEq = eqInfo[origAssignedVar2Eq.at(j->tapeIndex())];
-                                origAssignedEq.setAssignedVarIndex(eq.getAssignedVarIndex());
-                            }
-                        }
+        inline bool assignVar2Equation(Enode<Base>& i, std::vector<CGBase>& res0,
+                                       Vnode<Base>& j, std::vector<CGBase>& indep0,
+                                       CodeHandler<Base>& handler,
+                                       std::vector<bool>& jacSparsity,
+                                       const std::map<size_t, Vnode<Base>*>& tape2FreeVariables,
+                                       std::vector<Enode<Base>*>& equations,
+                                       std::vector<DaeVarInfo>& varInfo) throw (CGException) {
+            using namespace std;
+            using std::vector;
+            using std::map;
+            typedef vector<SourceCodePathNode<Base> > SourceCodePath;
 
-                        eq.setAssignedVarIndex(j->tapeIndex());
+            std::vector<bool> localJacSparsity = jacSparsity;
+            const size_t n = varInfo.size();
+
+            /**
+             * Implement the assigment in the model
+             */
+            CGBase& dep = res0[i.index()];
+            CGBase& indep = indep0[j.tapeIndex()];
+
+            std::string indepName;
+            if (indep.getSourceCodeFragment()->getName() != NULL) {
+                indepName = *indep.getSourceCodeFragment()->getName();
+            }
+
+
+            try {
+                handler.substituteIndependent(indep, dep, false); // indep not removed from the list of variables yet
+
+                SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
+                assert(alias != NULL && alias->operation() == CGAliasOp);
+
+                // it is now an explicit differential equation
+                //newEqInfo[bestEquation].setExplicit(true);
+                // the derivative variable will disappear, associate the equation with the original variable
+                //newEqInfo[bestEquation].setAssignedVarIndex(jj.getAntiDerivative());
+            } catch (const CGException& ex) {
+                // unable to solve for a dummy variable: keep the equation and variable
+                throw CGException(string("Failed to generate to solve equation ") + i.name() + " for variable " + j.name() + ": " + ex.what());
+            }
+
+
+            /**
+             * Update the connections to the other equations affected  by the
+             * substitution
+             */
+            vector<size_t> nnzs;
+            typename map<size_t, Vnode<Base>*>::const_iterator it;
+            for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
+                size_t tapeJ = it->first;
+                if (localJacSparsity[n * i.index() + tapeJ] && tapeJ != j.tapeIndex()) {
+                    nnzs.push_back(tapeJ);
+                }
+            }
+            set<Enode<Base>*> affected;
+            for (size_t e = 0; e < equations.size(); ++e) {
+                if (equations[e] != &i && localJacSparsity[n * e + j.tapeIndex()]) {
+                    localJacSparsity[n * e + j.tapeIndex()] = false; // eliminated by substitution
+                    affected.insert(equations[e]);
+                    for (size_t p = 0; p < nnzs.size(); ++p) {
+                        localJacSparsity[n * e + nnzs[p]] = true;
                     }
                 }
             }
 
+            if (affected.size() > 0) {
+                /**
+                 * Redetermine solvability for the affected equations
+                 */
+                map<size_t, set<Enode<Base>*> > solvable;
+                for (size_t e = 0; e < equations.size(); ++e) {
+                    Enode<Base>* eq = equations[e];
+                    if (&i != eq && affected.find(eq) == affected.end()) {
+                        // no change
+                        for (size_t v = 0; v < eq->variables().size(); ++v) {
+                            solvable[eq->variables()[v]->tapeIndex()].insert(eq);
+                        }
+                    }
+                }
+
+                // redetermine solvability
+                typename set<Enode<Base>*>::const_iterator itAff;
+                for (itAff = affected.begin(); itAff != affected.end(); ++itAff) {
+                    Enode<Base>& a = **itAff;
+                    for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
+                        size_t j = it->first;
+                        if (localJacSparsity[n * a.index() + j]) {
+                            vector<SourceCodePath> paths = findPaths(*res0[a.index()].getSourceCodeFragment(), *indep0[j].getSourceCodeFragment(), 2);
+                            if (paths.size() == 1 && isSolvable(paths[0])) {
+                                solvable[j].insert(&a);
+                            }
+                        }
+                    }
+                }
+
+                // check if any variable stops being solvable
+                bool ok = true;
+                for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
+                    Vnode<Base>* v = it->second;
+                    if (v == &j)
+                        continue;
+
+                    if (v->assigmentEquation() != NULL) {
+                        if (affected.count(v->assigmentEquation()) > 0 &&
+                                solvable[v->tapeIndex()].count(v->assigmentEquation()) == 0) {
+                            ok = false;
+                            break;
+                        }
+                    } else if (solvable[v->tapeIndex()].size() == 0) {
+                        ok = false;
+                        break;
+                    }
+                }
+
+                if (!ok) {
+                    handler.undoSubstituteIndependent(*indep.getSourceCodeFragment());
+                    if (indepName.size() > 0) {
+                        indep.getSourceCodeFragment()->setName(indepName);
+                    }
+                    return false;
+                }
+
+                /**
+                 * Implement changes in graph
+                 */
+                for (itAff = affected.begin(); itAff != affected.end(); ++itAff) {
+                    Enode<Base>& a = **itAff;
+                    for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
+                        size_t v = it->first;
+                        if (localJacSparsity[n * a.index() + v]) {
+                            if (solvable[v].count(&a) > 0) {
+                                a.addVariable(it->second);
+                            } else {
+                                // not solvable anymore
+                                a.deleteNode(it->second);
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            /**
+             * Finalize model
+             */
+            handler.removeIndependent(*indep.getSourceCodeFragment());
+
+            /**
+             * Implement the assigment in the graph
+             */
+            j.setAssigmentEquation(i);
+            j.deleteNode();
+
+            jacSparsity = localJacSparsity;
+
+#ifdef CPPAD_CG_DAE_VERBOSE
+            //printGraphSparsity(jacSparsity, tape2FreeVariables, equations, n);
+#endif  
+
+            return true;
         }
 
         inline std::auto_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >& fun,
@@ -1317,6 +1515,37 @@ namespace CppAD {
             std::vector<std::string> depNames;
             CLangCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
             handler.generateCode(std::cout, lang, resAux, nameGen);
+        }
+
+        inline static void printGraphSparsity(const std::vector<bool>& jacSparsity,
+                                              const std::map<size_t, Vnode<Base>*>& tape2FreeVariables,
+                                              const std::vector<Enode<Base>*>& equations,
+                                              const size_t n) {
+            for (size_t e = 0; e < equations.size(); ++e) {
+                Enode<Base>* eq = equations[e];
+                size_t count = 0;
+                typename std::map<size_t, Vnode<Base>*>::const_iterator it;
+                for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
+                    if (jacSparsity[n * eq->index() + it->first]) {
+                        if (count == 0)
+                            std::cout << "# Equation " << e << ": \t";
+                        std::cout << " " << it->second->name();
+                        count++;
+                    }
+                }
+                if (count > 0)
+                    std::cout << "\n";
+            }
+
+            std::cout << std::endl;
+        }
+
+        template<class T>
+        inline static void deleteVectorValues(std::vector<T*>& v) {
+            for (size_t i = 0; i < v.size(); i++) {
+                delete v[i];
+            }
+            v.clear();
         }
 
     };
