@@ -23,7 +23,7 @@ using namespace CppAD;
 TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     using namespace std;
 
-    std::vector<double> x(80);
+    std::vector<double> x(81);
     x[0] = 35250;
     x[1] = 11600;
     x[2] = 12400;
@@ -64,22 +64,22 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     x[37] = 0.5;
     x[38] = 0.5;
     x[39] = 0.5;
-    x[40] = 360;
-    x[41] = 360;
-    x[42] = 360;
-    x[43] = 360;
-    x[44] = 360;
-    x[45] = 360;
-    x[46] = 360;
-    x[47] = 1000;
-    x[48] = 0.1;
-    x[49] = 1;
-    x[50] = 4;
-    x[51] = 30;
-    x[52] = 1;
-    x[53] = 0.7;
-    x[54] = 366;
-    x[55] = 0;
+    x[40] = 8;
+    x[41] = 8;
+    x[42] = 8;
+    x[43] = 8;
+    x[44] = 8;
+    x[45] = 8;
+    x[46] = 8;
+    x[47] = 150;
+    x[48] = 250;
+    x[49] = 0.1;
+    x[50] = 2.5;
+    x[51] = 4;
+    x[52] = 30;
+    x[53] = 1;
+    x[54] = 0.7;
+    x[55] = 366;
     x[56] = 0;
     x[57] = 0;
     x[58] = 0;
@@ -104,6 +104,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     x[77] = 0;
     x[78] = 0;
     x[79] = 0;
+    x[80] = 0;
 
     std::vector<DaeVarInfo> daeVar;
 
@@ -111,7 +112,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     std::auto_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
 
     std::vector<double> normVar(daeVar.size(), 1.0);
-    std::vector<double> normEq(47, 1.0);
+    std::vector<double> normEq(fun->Range(), 1.0);
 
     DummyDerivatives<double> dummyD(fun.get(), daeVar, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
