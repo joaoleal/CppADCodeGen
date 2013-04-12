@@ -57,6 +57,8 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum2D) {
 
     ASSERT_TRUE(reducedFun != NULL);
 
+    ASSERT_EQ(3, dummyD.getDifferentiationIndex());
+
     delete fun;
     delete reducedFun;
 }
@@ -106,6 +108,8 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
     ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
 
     ASSERT_TRUE(reducedFun != NULL);
+
+    ASSERT_EQ(3, dummyD.getDifferentiationIndex());
 
     delete fun;
     delete reducedFun;

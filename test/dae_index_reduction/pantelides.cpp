@@ -36,9 +36,9 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum2D) {
     x[3] = 0.0; // vy
     x[4] = 1.0; // Tension
     x[5] = 1.0; // length
-    
+
     x[6] = 0.0; // time
-    
+
     x[7] = 0.0; // dxdt
     x[8] = 0.0; // dydt
     x[9] = -1.0; // dvxdt
@@ -52,6 +52,8 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum2D) {
     ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
 
     ASSERT_TRUE(reducedFun != NULL);
+
+    ASSERT_EQ(3, pantelides.getDifferentiationIndex());
 
     delete fun;
     delete reducedFun;
@@ -96,6 +98,8 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
     ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
 
     ASSERT_TRUE(reducedFun != NULL);
+
+    ASSERT_EQ(3, pantelides.getDifferentiationIndex());
 
     delete fun;
     delete reducedFun;

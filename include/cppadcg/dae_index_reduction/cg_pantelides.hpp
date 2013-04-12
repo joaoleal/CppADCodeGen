@@ -235,6 +235,48 @@ namespace CppAD {
             return reducedFun_;
         }
 
+        /**
+         * Provides the differentiation index. It can only be called after
+         * reduceIndex().
+         * 
+         * @return the DAE differentiation index.
+         */
+        inline size_t getDifferentiationIndex() const throw (CGException) {
+            size_t origM = this->fun_->Range();
+            if (origM == enodes_.size()) {
+                // no index reduction performed: it is either an index 1 DAE or an ODE
+                bool isDAE = false;
+                for (size_t j = 0; j < this->varInfo_.size(); j++) {
+                    const DaeVarInfo& jj = this->varInfo_[j];
+                    if (jj.getDerivative() < 0 && !jj.isIntegratedVariable() && jj.isFunctionOfIntegrated()) {
+                        isDAE = true; // found algebraic variable
+                        break;
+                    }
+                }
+                if (!isDAE) {
+                    return 0;
+                } else {
+                    return 1;
+                }
+            }
+
+            size_t index = 0;
+            for (size_t i = origM; i < enodes_.size(); i++) {
+                Enode<Base>* ii = enodes_[i];
+                size_t eqOrder = 0;
+                if (ii->derivative() == NULL) {
+                    Enode<Base>* eq = ii;
+                    while (eq->derivativeOf() != NULL) {
+                        eq = eq->derivativeOf();
+                        eqOrder++;
+                    }
+                    if (eqOrder > index)
+                        index = eqOrder;
+                }
+            }
+            return index + 1; // one extra differentiation to get an ODE
+        }
+
         inline void printResultInfo() {
             std::cout << "\nPantelides DAE differentiation index reduction:\n\n"
                     "   Equations count: " << enodes_.size() << "\n";

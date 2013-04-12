@@ -30,7 +30,7 @@ namespace CppAD {
         /**
          * The original model
          */
-        ADFun<CG<Base> >* fun_;
+        ADFun<CG<Base> >* const fun_;
         // DAE variable information
         std::vector<DaeVarInfo> varInfo_;
     public:
