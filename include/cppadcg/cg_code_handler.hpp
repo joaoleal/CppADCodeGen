@@ -28,6 +28,8 @@ namespace CppAD {
      */
     template<class Base>
     class CodeHandler {
+    public:
+        typedef std::vector<SourceCodePathNode<Base> > SourceCodePath;
     protected:
         // counter used to generate variable IDs
         size_t _idCount;
@@ -115,6 +117,27 @@ namespace CppAD {
             _verbose = verbose;
         }
 
+        /***********************************************************************
+         *                   Graph management functions
+         **********************************************************************/
+        /**
+         * Finds occurences of a source code fragment in an operation graph.
+         * 
+         * @param root the operation graph where to search
+         * @param code the source code fragment to find in root
+         * @param max the maximum number of occurences of code to find in root
+         * @return the paths from root to code
+         */
+        inline std::vector<SourceCodePath> findPaths(SourceCodeFragment<Base>& root,
+                                                     SourceCodeFragment<Base>& code,
+                                                     size_t max);
+
+        inline bool isSolvable(const SourceCodePath& path) throw (CGException);
+
+        /***********************************************************************
+         *                   Source code generation
+         **********************************************************************/
+
         /**
          * Creates the source code from the operations registered so far.
          * 
@@ -142,12 +165,7 @@ namespace CppAD {
             _idCount = 0;
 
             if (_used) {
-                _variableOrder.clear();
-
-                for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
-                    SourceCodeFragment<Base>* block = *it;
-                    block->resetHandlerCounters();
-                }
+                resetCounters();
             }
             _used = true;
 
@@ -191,7 +209,7 @@ namespace CppAD {
                             addToEvaluationQueue(code);
                         }
                     }
-                    code.use_count_++;
+                    code.increaseUsageCount();
                 }
             }
 
@@ -228,6 +246,10 @@ namespace CppAD {
             _idCount = 0;
             _used = false;
         }
+
+        /***********************************************************************
+         *                   Operation graph manipulation
+         **********************************************************************/
 
         /**
          * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
@@ -343,7 +365,7 @@ namespace CppAD {
                         }
                     }
 
-                    arg.use_count_++;
+                    arg.increaseUsageCount();
                 }
             }
 
@@ -375,7 +397,7 @@ namespace CppAD {
                         // dependencies not visited yet
                         determineLastTempVarUsage(code);
                     }
-                    code.use_count_++;
+                    code.increaseUsageCount();
                 }
             }
 
@@ -432,7 +454,7 @@ namespace CppAD {
                         determineLastTempVarUsage(arg);
                     }
 
-                    arg.use_count_++;
+                    arg.increaseUsageCount();
 
                     if (arg.getLastUsageEvaluationOrder() < code.getEvaluationOrder()) {
                         arg.setLastUsageEvaluationOrder(code.getEvaluationOrder());
@@ -479,6 +501,27 @@ namespace CppAD {
         inline bool isTemporary(const SourceCodeFragment<Base>& arg) const {
             return arg.variableID() >= _minTemporaryVarID;
         }
+
+        virtual void resetCounters() {
+            _variableOrder.clear();
+
+            for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                SourceCodeFragment<Base>* block = *it;
+                block->resetHandlerCounters();
+            }
+        }
+
+        /***********************************************************************
+         *                   Graph management functions
+         **********************************************************************/
+
+        inline void findPaths(SourceCodePath& path2node,
+                              SourceCodeFragment<Base>& code,
+                              std::vector<SourceCodePath>& found,
+                              size_t max);
+
+        static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
+                                                                    SourceCodeFragment<Base>& node);
 
     private:
 

@@ -22,28 +22,28 @@ namespace CppAD {
         if (!x.isParameter()) {
             return false; // its value may change after tapping
         }
-        return IdenticalPar(x.getParameterValue());
+        return IdenticalPar(x.getValue());
     }
 
     template<class Base>
     inline bool IdenticalZero(const CG<Base>& x) throw (CGException) {
         if (!x.isParameter()) {
-            return false;
+            return false; // its value may change after tapping
         }
-        return IdenticalZero(x.getParameterValue());
+        return IdenticalZero(x.getValue());
     }
 
     template<class Base>
     inline bool IdenticalOne(const CG<Base>& x) throw (CGException) {
         if (!x.isParameter()) {
-            return false;
+            return false; // its value may change after tapping
         }
-        return IdenticalOne(x.getParameterValue());
+        return IdenticalOne(x.getValue());
     }
 
     template<class Base>
     inline bool IdenticalEqualPar(const CG<Base>& x, const CG<Base>& y) {
-        return x.isParameter() && y.isParameter() && IdenticalEqualPar(x.getParameterValue(), y.getParameterValue());
+        return x.isParameter() && y.isParameter() && IdenticalEqualPar(x.getValue(), y.getValue());
     }
 }
 

@@ -24,37 +24,47 @@ namespace CppAD {
 
     template<class Base>
     inline bool CG<Base>::isParameter() const {
+        return sourceCode_ == NULL;
+    }
+
+    template<class Base>
+    inline bool CG<Base>::isValueDefined() const {
         return value_ != NULL;
     }
 
     template<class Base>
-    inline const Base& CG<Base>::getParameterValue() const throw (CGException) {
-        if (!isParameter()) {
-            throw CGException("getParameterValue() can only be used for parameters");
+    inline const Base& CG<Base>::getValue() const throw (CGException) {
+        if (!isValueDefined()) {
+            throw CGException("No value defined for this variable");
         }
 
         return *value_;
     }
 
     template<class Base>
+    inline void CG<Base>::setValue(const Base& b) {
+        if (value_ != NULL) {
+            *value_ = b;
+        } else {
+            value_ = new Base(b);
+        }
+    }
+
+    template<class Base>
     inline bool CG<Base>::IdenticalZero() const throw (CGException) {
-        return CppAD::IdenticalZero(getParameterValue());
+        return CppAD::IdenticalZero(getValue());
     }
 
     template<class Base>
     inline bool CG<Base>::IdenticalOne() const throw (CGException) {
-        return CppAD::IdenticalOne(getParameterValue());
+        return CppAD::IdenticalOne(getValue());
     }
 
     template<class Base>
     inline void CG<Base>::makeParameter(const Base &b) {
         sourceCode_ = NULL;
         handler_ = NULL;
-        if (value_ != NULL) {
-            *value_ = b;
-        } else {
-            value_ = new Base(b);
-        }
+        setValue(b);
     }
 
     template<class Base>
@@ -64,7 +74,7 @@ namespace CppAD {
         handler_ = &handler;
         delete value_;
         value_ = NULL;
-        
+
         handler.manageSourceCodeBlock(operation);
     }
 

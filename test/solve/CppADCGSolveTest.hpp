@@ -33,7 +33,7 @@ namespace CppAD {
 
             std::vector<double> testValuesD(testValues.size());
             for (size_t i = 0; i < testValues.size(); i++) {
-                testValuesD[i] = CppAD::Value(CppAD::Var2Par(testValues[i])).getParameterValue();
+                testValuesD[i] = CppAD::Value(CppAD::Var2Par(testValues[i])).getValue();
             }
 
             test_solve(fun, expressionIndex, indIndex, testValuesD);
@@ -124,7 +124,7 @@ namespace CppAD {
 
             vector<double> depVals(m);
             for (size_t i = 0; i < m; ++i) {
-                depVals[i] = dep[i].getParameterValue();
+                depVals[i] = dep[i].getValue();
             }
 
             return depVals;

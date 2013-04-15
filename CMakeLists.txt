@@ -61,6 +61,8 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
 
   # NDEBUG required in order to make CppAD significantly faster
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DNDEBUG")
+
+  SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG")
 ENDIF()
 
 ################################################################################

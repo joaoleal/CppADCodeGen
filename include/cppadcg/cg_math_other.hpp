@@ -20,22 +20,26 @@ namespace CppAD {
     template <class Base>
     inline CG<Base> pow(const CG<Base> &x, const CG<Base> &y) {
         if (x.isParameter() && y.isParameter()) {
-            return CG<Base > (pow(x.getParameterValue(), y.getParameterValue()));
+            return CG<Base> (pow(x.getValue(), y.getValue()));
         }
 
         CodeHandler<Base>* handler;
         if (y.isParameter()) {
             if (y.IdenticalZero()) {
-                return CG<Base > (Base(1.0)); // does not consider that x could be infinity
+                return CG<Base> (Base(1.0)); // does not consider that x could be infinity
             } else if (y.IdenticalOne()) {
-                return CG<Base > (x);
+                return CG<Base> (x);
             }
             handler = x.getCodeHandler();
         } else {
             handler = y.getCodeHandler();
         }
 
-        return CG<Base>(*handler, new SourceCodeFragment<Base>(CGPowOp, x.argument(), y.argument()));
+        CG<Base> result(*handler, new SourceCodeFragment<Base>(CGPowOp, x.argument(), y.argument()));
+        if (x.isValueDefined() && y.isValueDefined()) {
+            result.setValue(pow(x.getValue(), y.getValue()));
+        }
+        return result;
     }
 
     template <class Base>
@@ -51,16 +55,26 @@ namespace CppAD {
     template <class Base>
     inline CG<Base> sign(const CG<Base> &x) {
         if (x.isParameter()) {
-            if (x.getParameterValue() > Base(1.0)) {
-                return CG<Base > (Base(1.0));
-            } else if (x.getParameterValue() == Base(0.0)) {
-                return CG<Base > (Base(0.0));
+            if (x.getValue() > Base(0.0)) {
+                return CG<Base> (Base(1.0));
+            } else if (x.getValue() == Base(0.0)) {
+                return CG<Base> (Base(0.0));
             } else {
-                return CG<Base > (Base(-1.0));
+                return CG<Base> (Base(-1.0));
             }
         }
 
-        return CG<Base>(*x.getCodeHandler(), new SourceCodeFragment<Base>(CGSignOp, x.argument()));
+        CG<Base> result(*x.getCodeHandler(), new SourceCodeFragment<Base>(CGSignOp, x.argument()));
+        if (x.isValueDefined()) {
+            if (x.getValue() > Base(0.0)) {
+                result.setValue(Base(1.0));
+            } else if (x.getValue() == Base(0.0)) {
+                result.setValue(Base(0.0));
+            } else {
+                result.setValue(Base(-1.0));
+            }
+        }
+        return result;
     }
 
 }

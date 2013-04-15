@@ -20,7 +20,7 @@ namespace CppAD {
     template<class Base>
     inline bool operator ==(const CG<Base> &left, const CG<Base> &right) {
         if (left.isParameter() && right.isParameter()) {
-            return left.getParameterValue() == right.getParameterValue();
+            return left.getValue() == right.getValue();
         } else if (left.isParameter() || right.isParameter()) {
             return false;
         } else {
@@ -31,7 +31,7 @@ namespace CppAD {
     template<class Base>
     inline bool operator !=(const CG<Base> &left, const CG<Base> &right) {
         if (left.isParameter() && right.isParameter()) {
-            return left.getParameterValue() != right.getParameterValue();
+            return left.getValue() != right.getValue();
         } else if (left.isParameter() || right.isParameter()) {
             return true;
         } else {
@@ -43,7 +43,7 @@ namespace CppAD {
     template<class Base>                                                       \
     inline bool operator Op(const CG<Base> &left, const CG<Base> &right) {     \
         if (left.isParameter() && right.isParameter()) {                       \
-            return left.getParameterValue() Op right.getParameterValue();      \
+            return left.getValue() Op right.getValue();                        \
         } else {                                                               \
             throw CGException("Cannot use the "#Op" comparison operator in non parameter variables");\
         }                                                                      \

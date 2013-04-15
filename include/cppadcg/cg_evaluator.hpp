@@ -81,7 +81,7 @@ namespace CppAD {
         inline AD<BaseOut> evalCG(const CG<Base>& dep) throw (CGException) {
             if (dep.isParameter()) {
                 // parameter
-                return AD<BaseOut > (dep.getParameterValue());
+                return AD<BaseOut> (dep.getValue());
             } else {
                 return evalSourceCodeFragment(*dep.getSourceCodeFragment());
             }
@@ -92,7 +92,7 @@ namespace CppAD {
                 return evalSourceCodeFragment(*arg.operation());
             } else {
                 // parameter
-                return AD<BaseOut > (*arg.parameter());
+                return AD<BaseOut> (*arg.parameter());
             }
         }
 

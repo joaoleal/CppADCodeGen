@@ -407,7 +407,7 @@ namespace CppAD {
             std::cout << "## dummy derivatives:\n";
 
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
-                std::cout << "# " << **j << "   " << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
+                std::cout << "# " << **j << "   \t" << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
             std::cout << "# \n";
             Plantelides<Base>::printModel(this->reducedFun_, newVarInfo);
 #endif
@@ -788,7 +788,7 @@ namespace CppAD {
                             CGBase& dep = res0[i]; // the equation residual
                             CGBase& indep = indep0[j->tapeIndex()];
 
-                            vector<SourceCodePath> paths = findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
+                            vector<SourceCodePath> paths = handler.findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
                             if (paths.size() == 1 && isSolvable(paths[0])) {
                                 equations[i]->addVariable(j);
                             }
@@ -1053,7 +1053,7 @@ namespace CppAD {
                     for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
                         size_t j = it->first;
                         if (localJacSparsity[n * a.index() + j]) {
-                            vector<SourceCodePath> paths = findPaths(*res0[a.index()].getSourceCodeFragment(), *indep0[j].getSourceCodeFragment(), 2);
+                            vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getSourceCodeFragment(), *indep0[j].getSourceCodeFragment(), 2);
                             if (paths.size() == 1 && isSolvable(paths[0])) {
                                 solvable[j].insert(&a);
                             }
@@ -1370,7 +1370,7 @@ namespace CppAD {
                 Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->origTimeDependentCount_);
 
                 // normalized jacobian value
-                Base normVal = jac[e].getParameterValue() * normVar_[vOrig->tapeIndex()]
+                Base normVal = jac[e].getValue() * normVar_[vOrig->tapeIndex()]
                         / normEq_[eqOrig->index()];
 
                 size_t i = row[e]; // same order

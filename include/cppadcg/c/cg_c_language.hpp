@@ -392,7 +392,7 @@ namespace CppAD {
                     if (!_ignoreZeroDepAssign || !dependent[i].IdenticalZero()) {
                         std::string varName = _nameGen->generateDependent(dependent[i], i);
                         _code << _spaces << varName << " " << _depAssignOperation << " ";
-                        printParameter(dependent[i].getParameterValue());
+                        printParameter(dependent[i].getValue());
                         _code << ";\n";
                     }
                 } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {

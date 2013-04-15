@@ -21,9 +21,12 @@ namespace CppAD {
     template<class Base>                                                       \
     inline CG<Base> OpName(const CG<Base>& var) {                              \
         if (var.isParameter()) {                                               \
-            return CG<Base > (OpName(var.getParameterValue()));                \
+            return CG<Base> (OpName(var.getValue()));                          \
         } else {                                                               \
-            return CG<Base>(*var.getCodeHandler(), new SourceCodeFragment<Base>(OpCode, var.argument()));\
+            CG<Base> result(*var.getCodeHandler(), new SourceCodeFragment<Base>(OpCode, var.argument()));\
+            if(var.isValueDefined())                                           \
+                result.setValue(OpName(var.getValue()));                       \
+            return result;                                                     \
         }                                                                      \
     }
 

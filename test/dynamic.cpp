@@ -31,7 +31,7 @@ namespace CppAD {
             std::vector<double> depd(dep.size());
 
             for (size_t i = 0; i < depd.size(); i++) {
-                depd[i] = dep[i].getParameterValue();
+                depd[i] = dep[i].getValue();
             }
 
             CppADCGTest::compareValues(testType, depCGen, depd, epsilonR, epsilonA);

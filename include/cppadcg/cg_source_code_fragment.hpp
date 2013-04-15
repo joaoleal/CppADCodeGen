@@ -182,6 +182,7 @@ namespace CppAD {
         /**
          * Provides the number of times the result of this operation has been 
          * used as an argument for another operation.
+         * 
          * @return the current usage count
          */
         inline size_t usageCount() const {
@@ -217,6 +218,11 @@ namespace CppAD {
             delete name_;
         }
 
+    protected:
+
+        inline void increaseUsageCount() {
+            use_count_++;
+        }
 
         friend class CodeHandler<Base>;
 

@@ -54,8 +54,8 @@ namespace CppAD {
             const CG<Base>& txx = tx[xIndex * n_order + order]; //
             assert(ttime.isParameter());
             assert(txx.isParameter());
-            if (ttime.getParameterValue() > 0) {
-                assert(txx.getParameterValue() == 0);
+            if (ttime.getValue() > 0) {
+                assert(txx.getValue() == 0);
                 tzy[1] = ttime * tx[dxdtIndex * n_order + 0]; // transform x(t) into dx(t)/dt
             } else {
                 tzy[1] = txx; // do nothing

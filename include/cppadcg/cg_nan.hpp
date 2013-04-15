@@ -25,7 +25,7 @@ namespace CppAD {
             return false;
         } else {
             // a parameter
-            const Base& v = s.getParameterValue();
+            const Base& v = s.getValue();
             return (v != v) | (v == scalar_nan);
         }
     }

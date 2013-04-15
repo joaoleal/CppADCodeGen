@@ -19,16 +19,20 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> CG<Base>::operator+() const {
-        return CG<Base > (*this); // nothing to do
+        return CG<Base> (*this); // nothing to do
     }
 
     template<class Base>
     inline CG<Base> CG<Base>::operator-() const {
         if (isParameter()) {
-            return CG<Base > (-getParameterValue());
+            return CG<Base> (-getValue());
 
         } else {
-            return CG<Base>(*getCodeHandler(), new SourceCodeFragment<Base>(CGUnMinusOp, this->argument()));
+            CG<Base> result(*getCodeHandler(), new SourceCodeFragment<Base>(CGUnMinusOp, this->argument()));
+            if (isValueDefined()) {
+                result.setValue(-getValue());
+            }
+            return result;
         }
     }
 

@@ -30,7 +30,7 @@ namespace CppAD {
         // the source code that generated this variable (NULL for parameters)
         SourceCodeFragment<Base>* sourceCode_;
         // value (constant parameters only)
-        Base * value_;
+        Base* value_;
 
     public:
         // default constructor (creates a parameter with a zero value)
@@ -54,8 +54,10 @@ namespace CppAD {
         // variable classification methods
         inline bool isVariable() const;
         inline bool isParameter() const;
+        inline bool isValueDefined() const;
 
-        inline const Base& getParameterValue() const throw (CGException);
+        inline const Base& getValue() const throw (CGException);
+        inline void setValue(const Base& val);
 
         inline bool IdenticalZero() const throw (CGException);
         inline bool IdenticalOne() const throw (CGException);
@@ -193,8 +195,8 @@ namespace CppAD {
 
     template <class Base>
     int Integer(const CG<Base> &x) {
-        if (x.isParameter()) {
-            return Integer(x.getParameterValue());
+        if (x.isValueDefined()) {
+            return Integer(x.getValue());
         } else {
             assert(false);
         }
@@ -202,11 +204,11 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(
-    std::ostream& os, //< stream to write to
-    const CppAD::CG<Base>& v//< vector that is output
-    ) {
+            std::ostream& os, //< stream to write to
+            const CppAD::CG<Base>& v//< vector that is output
+            ) {
         if (v.isParameter()) {
-            os << v.getParameterValue();
+            os << v.getValue();
         } else {
             os << *v.getSourceCodeFragment();
         }
@@ -215,11 +217,11 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostringstream& operator <<(
-    std::ostringstream& os, //< steam to write the vector to
-    const CppAD::CG<Base>& v//< vector that is output
-    ) {
+            std::ostringstream& os, //< steam to write the vector to
+            const CppAD::CG<Base>& v//< vector that is output
+            ) {
         if (v.isParameter()) {
-            os << v.getParameterValue();
+            os << v.getValue();
         } else {
             os << *v.getSourceCodeFragment();
         }
@@ -228,9 +230,9 @@ namespace CppAD {
 
     template<class Base>
     inline std::istream& operator >>(
-    std::istream& is, //< stream to load a parameter value
-    CppAD::CG<Base>& v//< the variable that will be assign the value
-    ) {
+            std::istream& is, //< stream to load a parameter value
+            CppAD::CG<Base>& v//< the variable that will be assign the value
+            ) {
         Base value;
         is >> value;
         v = value;
@@ -239,5 +241,4 @@ namespace CppAD {
 
 }
 
-#endif	
-
+#endif

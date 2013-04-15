@@ -48,10 +48,10 @@ namespace CppAD {
         Argument<Base> arg;
         // change the independent variable
         if (dummyExp.isVariable()) {
-            arg = Argument<Base > (*dummyExp.getSourceCodeFragment());
+            arg = Argument<Base> (*dummyExp.getSourceCodeFragment());
         } else {
             // create a bogus variable to avoid searching for all occurrences of the independent variable
-            arg = Argument<Base > (dummyExp.getParameterValue());
+            arg = Argument<Base> (dummyExp.getValue());
         }
 
         indep.makeAlias(arg);

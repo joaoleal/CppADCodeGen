@@ -23,7 +23,7 @@ namespace CppAD {
             throw CGException("GreaterThanZero cannot be called for non-parameters");
         }
 
-        return GreaterThanZero(x.getParameterValue());
+        return GreaterThanZero(x.getValue());
     }
 
     template<class Base>
@@ -32,7 +32,7 @@ namespace CppAD {
             throw CGException("GreaterThanOrZero cannot be called for non-parameters");
         }
 
-        return GreaterThanOrZero(x.getParameterValue());
+        return GreaterThanOrZero(x.getValue());
     }
 
     template<class Base>
@@ -41,7 +41,7 @@ namespace CppAD {
             throw CGException("LessThanZero cannot be called for non-parameters");
         }
 
-        return LessThanZero(x.getParameterValue());
+        return LessThanZero(x.getValue());
     }
 
     template<class Base>
@@ -50,7 +50,7 @@ namespace CppAD {
             throw CGException("LessThanOrZero cannot be called for non-parameters");
         }
 
-        return LessThanOrZero(x.getParameterValue());
+        return LessThanOrZero(x.getValue());
     }
 
     template<class Base>
@@ -61,7 +61,7 @@ namespace CppAD {
             throw CGException("abs_geq cannot be called for non-parameters (y)");
         }
 
-        return abs_geq(x.getParameterValue(), y.getParameterValue());
+        return abs_geq(x.getValue(), y.getValue());
     }
 
 }

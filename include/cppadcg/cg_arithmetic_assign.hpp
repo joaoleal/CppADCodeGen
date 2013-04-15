@@ -45,6 +45,9 @@ namespace CppAD {
             }
 
             makeVariable(*handler, new SourceCodeFragment<Base>(CGAddOp, argument(), right.argument()));
+            if (isValueDefined() && right.isValueDefined()) {
+                setValue(getValue() + right.getValue());
+            }
         }
 
         return *this;
@@ -73,6 +76,9 @@ namespace CppAD {
             }
 
             makeVariable(*handler, new SourceCodeFragment<Base>(CGSubOp, argument(), right.argument()));
+            if (isValueDefined() && right.isValueDefined()) {
+                setValue(getValue() - right.getValue());
+            }
         }
 
         return *this;
@@ -111,6 +117,9 @@ namespace CppAD {
             }
 
             makeVariable(*handler, new SourceCodeFragment<Base>(CGMulOp, argument(), right.argument()));
+            if (isValueDefined() && right.isValueDefined()) {
+                setValue(getValue() * right.getValue());
+            }
         }
 
         return *this;
@@ -143,6 +152,9 @@ namespace CppAD {
             }
 
             makeVariable(*handler, new SourceCodeFragment<Base>(CGDivOp, argument(), right.argument()));
+            if (isValueDefined() && right.isValueDefined()) {
+                setValue(getValue() / right.getValue());
+            }
         }
 
         return *this;
@@ -150,46 +162,46 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator+=(const Base &right) {
-        return operator+=(CG<Base > (right));
+        return operator+=(CG<Base> (right));
     }
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator-=(const Base &right) {
-        return operator-=(CG<Base > (right));
+        return operator-=(CG<Base> (right));
     }
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator/=(const Base &right) {
-        return operator/=(CG<Base > (right));
+        return operator/=(CG<Base> (right));
     }
 
     template<class Base>
     inline CG<Base>& CG<Base>::operator*=(const Base &right) {
-        return operator*=(CG<Base > (right));
+        return operator*=(CG<Base> (right));
     }
 
     template<class Base>
     template<class T>
     inline CG<Base>& CG<Base>::operator+=(const T &right) {
-        return operator+=(CG<Base > (right));
+        return operator+=(CG<Base> (right));
     }
 
     template<class Base>
     template<class T>
     inline CG<Base>& CG<Base>::operator-=(const T &right) {
-        return operator-=(CG<Base > (right));
+        return operator-=(CG<Base> (right));
     }
 
     template<class Base>
     template<class T>
     inline CG<Base>& CG<Base>::operator/=(const T &right) {
-        return operator/=(CG<Base > (right));
+        return operator/=(CG<Base> (right));
     }
 
     template<class Base>
     template<class T>
     inline CG<Base>& CG<Base>::operator*=(const T &right) {
-        return operator*=(CG<Base > (right));
+        return operator*=(CG<Base> (right));
     }
 
 }

@@ -25,9 +25,13 @@ namespace CppAD {
     template<>
     inline CG<double> abs(const CG<double>& var) {
         if (var.isParameter()) {
-            return CG<double> (fabs(var.getParameterValue()));
+            return CG<double> (fabs(var.getValue()));
         } else {
-            return CG<double>(*var.getCodeHandler(), new SourceCodeFragment<double>(CGAbsOp, var.argument()));
+            CG<double> result(*var.getCodeHandler(), new SourceCodeFragment<double>(CGAbsOp, var.argument()));
+            if(var.isValueDefined()) {
+                result.setValue(fabs(var.getValue()));
+            }
+            return result;
         }
     }
 

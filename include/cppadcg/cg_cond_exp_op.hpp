@@ -27,34 +27,34 @@ namespace CppAD {
         if (left.isParameter() && right.isParameter()) {
             switch (cop) {
                 case CompareLt:
-                    if (left.getParameterValue() < right.getParameterValue())
+                    if (left.getValue() < right.getValue())
                         return trueCase;
-                    else return falseCase;
-                    break;
+                    else
+                        return falseCase;
 
                 case CompareLe:
-                    if (left.getParameterValue() <= right.getParameterValue())
+                    if (left.getValue() <= right.getValue())
                         return trueCase;
-                    else return falseCase;
-                    break;
+                    else
+                        return falseCase;
 
                 case CompareEq:
-                    if (left.getParameterValue() == right.getParameterValue())
+                    if (left.getValue() == right.getValue())
                         return trueCase;
-                    else return falseCase;
-                    break;
+                    else
+                        return falseCase;
 
                 case CompareGe:
-                    if (left.getParameterValue() >= right.getParameterValue())
+                    if (left.getValue() >= right.getValue())
                         return trueCase;
-                    else return falseCase;
-                    break;
+                    else
+                        return falseCase;
 
                 case CompareGt:
-                    if (left.getParameterValue() > right.getParameterValue())
+                    if (left.getValue() > right.getValue())
                         return trueCase;
-                    else return falseCase;
-                    break;
+                    else
+                        return falseCase;
 
                 default:
                     CPPAD_ASSERT_UNKNOWN(0);
@@ -62,7 +62,7 @@ namespace CppAD {
             }
 
         } else if ((trueCase.isParameter() && falseCase.isParameter() &&
-                trueCase.getParameterValue() == falseCase.getParameterValue()) ||
+                trueCase.getValue() == falseCase.getValue()) ||
                 (trueCase.isVariable() && falseCase.isVariable() &&
                 trueCase.getSourceCodeFragment() == falseCase.getSourceCodeFragment())) {
             return trueCase;
@@ -113,7 +113,76 @@ namespace CppAD {
                     CPPAD_ASSERT_UNKNOWN(0);
             }
 
-            return CG<Base > (*handler, new SourceCodeFragment<Base > (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
+            CG<Base> result(*handler, new SourceCodeFragment<Base> (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
+
+            if (left.isValueDefined() && right.isValueDefined()) {
+                switch (cop) {
+                    case CompareLt:
+                        if (left.getValue() < right.getValue()) {
+                            if (trueCase.isValueDefined()) {
+                                result.setValue(trueCase.getValue());
+                            }
+                        } else {
+                            if (falseCase.isValueDefined()) {
+                                result.setValue(falseCase.getValue());
+                            }
+                        }
+                        break;
+
+                    case CompareLe:
+                        if (left.getValue() <= right.getValue()) {
+                            if (trueCase.isValueDefined()) {
+                                result.setValue(trueCase.getValue());
+                            }
+                        } else {
+                            if (falseCase.isValueDefined()) {
+                                result.setValue(falseCase.getValue());
+                            }
+                        }
+                        break;
+
+                    case CompareEq:
+                        if (left.getValue() == right.getValue()) {
+                            if (trueCase.isValueDefined()) {
+                                result.setValue(trueCase.getValue());
+                            }
+                        } else {
+                            if (falseCase.isValueDefined()) {
+                                result.setValue(falseCase.getValue());
+                            }
+                        }
+                        break;
+
+                    case CompareGe:
+                        if (left.getValue() >= right.getValue()) {
+                            if (trueCase.isValueDefined()) {
+                                result.setValue(trueCase.getValue());
+                            }
+                        } else {
+                            if (falseCase.isValueDefined()) {
+                                result.setValue(falseCase.getValue());
+                            }
+                        }
+                        break;
+
+                    case CompareGt:
+                        if (left.getValue() > right.getValue()) {
+                            if (trueCase.isValueDefined()) {
+                                result.setValue(trueCase.getValue());
+                            }
+                        } else {
+                            if (falseCase.isValueDefined()) {
+                                result.setValue(falseCase.getValue());
+                            }
+                        }
+                        break;
+
+                    default:
+                        break;
+                }
+            }
+
+            return result;
         }
 
     }
