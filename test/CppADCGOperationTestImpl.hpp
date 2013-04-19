@@ -139,9 +139,11 @@ namespace CppAD {
                                                                  int& comparisons) {
         using std::vector;
 
-        CodeHandler<double> handler(10 + indV.size() * indV.size());
+        size_t n = indV.begin()->size();
 
-        vector<CG<double> > indVars(indV.begin()->size());
+        CodeHandler<double> handler(10 + n * n);
+
+        vector<CG<double> > indVars(n);
         handler.makeVariables(indVars);
 
         vector<CG<double> > dep = f.Forward(0, indVars);
@@ -207,6 +209,34 @@ namespace CppAD {
         closeLibrary(libHandle);
 
         return depCGen;
+    }
+
+    std::vector<std::vector<double> > CppADCGOperationTest::run0TapeWithValues(ADFun<CG<double> >& f,
+                                                                               const std::vector<std::vector<double> >& indV) {
+        using std::vector;
+
+        vector<vector<double> > results(indV.size());
+
+        size_t n = indV.begin()->size();
+
+        for (size_t i = 0; i < indV.size(); i++) {
+            const vector<double>& ind = indV[i];
+            CodeHandler<double> handler(10 + n * n);
+
+            vector<CG<double> > indVars(n);
+            handler.makeVariables(indVars);
+            for (size_t j = 0; j < n; j++) {
+                indVars[j].setValue(ind[j]);
+            }
+
+            vector<CG<double> > dep = f.Forward(0, indVars);
+            results[i].resize(dep.size());
+            for (size_t j = 0; j < dep.size(); j++) {
+                results[i][j] = dep[j].getValue();
+            }
+        }
+
+        return results;
     }
 
     std::vector<std::vector<double> > CppADCGOperationTest::runSparseJacDefault(CppAD::ADFun<double>& f,
@@ -347,21 +377,22 @@ namespace CppAD {
 
         std::auto_ptr<CppAD::ADFun<CG<double> > > f2((*func2)(u2));
 
-        vector<vector<double> > depsCG;
-        vector<vector<double> > jacCG;
-
         std::string library = "./tmp/test_" + test + ".so";
         std::string function = "test_" + test;
-        depsCG = run0(*f2.get(), library, function, indV);
+        vector<vector<double> > depsCG = run0(*f2.get(), library, function, indV);
+
+        vector<vector<double> > depCGTape = run0TapeWithValues(*f2.get(), indV);
 
         library = "./tmp/test_" + test + "_jac.so";
         std::string functionJac = "test_" + test + "_jac_for";
-        jacCG = runSparseJac(*f2.get(), library, functionJac, indV);
+        vector<vector<double> > jacCG = runSparseJac(*f2.get(), library, functionJac, indV);
 
         /**
          * compare results
          */
         compareValues("Forward 0", depsCG, depsDef, epsilonR, epsilonA);
+
+        compareValues("Forward 0 (from taped values)", depCGTape, depsDef, epsilonR, epsilonA);
 
         compareValues("Jacobian", jacCG, jacDef, epsilonR, epsilonA);
     }

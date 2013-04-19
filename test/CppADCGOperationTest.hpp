@@ -60,6 +60,9 @@ namespace CppAD {
                                                const std::vector<std::vector<double> >& indV,
                                                int& comparisons);
 
+        std::vector<std::vector<double> > run0TapeWithValues(CppAD::ADFun<CppAD::CG<double> >& f,
+                                                             const std::vector<std::vector<double> >& indV);
+
         std::vector<std::vector<double> > runSparseJacDefault(CppAD::ADFun<double>& f,
                                                               const std::vector<std::vector<double> >& ind);
 
