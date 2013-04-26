@@ -133,6 +133,9 @@ namespace CppAD {
         friend bool operator == <Base> (const CG<Base> &left, const CG<Base> &right);
         friend bool operator != <Base> (const CG<Base> &left, const CG<Base> &right);
 
+        // comparison with double (required by CppAD SparseHessian)
+        friend bool operator != <Base>(const CG<Base> &left, double right);
+
         /**
          * order determining functions
          */

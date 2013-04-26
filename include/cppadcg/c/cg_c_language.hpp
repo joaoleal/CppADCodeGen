@@ -128,7 +128,7 @@ namespace CppAD {
             _sources = sources;
         }
 
-        virtual std::string generateTemporaryVariableDeclaration() {
+        virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false) {
             assert(_nameGen != NULL);
 
             // declare variables
@@ -140,7 +140,9 @@ namespace CppAD {
             _ss << _spaces << "// auxiliary variables\n";
             if (tmpArg[0].array) {
                 size_t size = _nameGen->getMaxTemporaryVariableID() + 1 - _nameGen->getMinTemporaryVariableID();
-                _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
+                if (size > 0 || !localOnly) {
+                    _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
+                }
             } else if (_temporary.size() > 0) {
                 typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
 
@@ -365,7 +367,7 @@ namespace CppAD {
                 _nameGen->customFunctionVariableDeclarations(_code);
                 _code << generateIndependentVariableDeclaration() << "\n";
                 _code << generateDependentVariableDeclaration() << "\n";
-                _code << generateTemporaryVariableDeclaration() << "\n";
+                _code << generateTemporaryVariableDeclaration(false) << "\n";
                 _nameGen->prepareCustomFunctionVariables(_code);
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
                     _code << _spaces << localFuncNames[i] << "(" << localFuncArgs_ << ");\n";
@@ -412,7 +414,7 @@ namespace CppAD {
                     _nameGen->customFunctionVariableDeclarations(_ss);
                     _ss << generateIndependentVariableDeclaration() << "\n";
                     _ss << generateDependentVariableDeclaration() << "\n";
-                    _ss << generateTemporaryVariableDeclaration() << "\n";
+                    _ss << generateTemporaryVariableDeclaration(true) << "\n";
                     _nameGen->prepareCustomFunctionVariables(_ss);
                     _ss << _code.str();
                     _nameGen->finalizeCustomFunctionVariables(_ss);

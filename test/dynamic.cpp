@@ -23,8 +23,7 @@ namespace CppAD {
             CppADCGTest(verbose, printValues) {
         }
 
-        inline void compareValues(const std::string& testType,
-                                  const std::vector<double>& depCGen,
+        inline void compareValues(const std::vector<double>& depCGen,
                                   const std::vector<CppAD::CG<double> >& dep,
                                   double epsilonR = 1e-14, double epsilonA = 1e-14) {
 
@@ -34,7 +33,7 @@ namespace CppAD {
                 depd[i] = dep[i].getValue();
             }
 
-            CppADCGTest::compareValues(testType, depCGen, depd, epsilonR, epsilonA);
+            CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
         }
     };
 
@@ -78,6 +77,9 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
     compHelp.setCreateHessian(true);
     compHelp.setCreateSparseJacobian(true);
     compHelp.setCreateSparseHessian(true);
+    compHelp.setCreateSparseForwardOne(true);
+    compHelp.setCreateSparseReverseOne(true);
+    compHelp.setCreateSparseReverseTwo(true);
     compHelp.setMaxAssignmentsPerFunc(1);
 
     GccCompiler<double> compiler;
@@ -109,14 +111,13 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
 
     // forward zero
     std::vector<CGD> dep = fun.Forward(0, x2);
-
     std::vector<double> depCGen = model->ForwardZero(x);
-    compareValues("ForwardZero", depCGen, dep);
+    compareValues(depCGen, dep);
 
     // Jacobian
     std::vector<CGD> jac = fun.Jacobian(x2);
     depCGen = model->Jacobian(x);
-    compareValues("Jacobian", depCGen, jac);
+    compareValues(depCGen, jac);
 
     // Hessian
     std::vector<CGD> w2(Z.size(), 1.0);
@@ -124,7 +125,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
 
     std::vector<CGD> hess = fun.Hessian(x2, w2);
     depCGen = model->Hessian(x, w);
-    compareValues("Hessian", depCGen, hess);
+    compareValues(depCGen, hess);
 
     // sparse Jacobian
     std::vector<double> jacCGen;
@@ -135,7 +136,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
         jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
     }
 
-    compareValues("sparse Jacobian", jacCGenDense, jac);
+    compareValues(jacCGenDense, jac);
 
     // sparse Hessian
     std::vector<double> hessCGen;
@@ -145,7 +146,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
         hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
     }
 
-    compareValues("sparse Hessian", hessCGenDense, hess);
+    compareValues(hessCGenDense, hess);
 
     delete model;
     delete dynamicLib;
@@ -240,7 +241,7 @@ TEST_F(CppADCGDynamicTest, Dynamic2) {
         jacSparse[i] = jac[row[i] * x.size() + col[i]];
     }
 
-    compareValues("sparse Jacobian", jacCGen, jacSparse);
+    compareValues(jacCGen, jacSparse);
 
     // sparse Hessian
     std::vector<double> w(Z.size(), 1.0);
@@ -254,7 +255,7 @@ TEST_F(CppADCGDynamicTest, Dynamic2) {
         hessSparse[i] = hess[row[i] * x.size() + col[i]];
     }
 
-    compareValues("sparse Hessian", hessCGen, hessSparse);
+    compareValues(hessCGen, hessSparse);
 
     delete model;
     delete dynamicLib;

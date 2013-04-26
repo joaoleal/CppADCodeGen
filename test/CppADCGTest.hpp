@@ -49,23 +49,15 @@ namespace CppAD {
     protected:
 
         template<class T>
-        inline void compareValues(const std::string& testType,
-                                  const std::vector<T>& depCGen,
+        inline void compareValues(const std::vector<T>& depCGen,
                                   const std::vector<T>& dep,
                                   T epsilonR = 1e-14, T epsilonA = 1e-14) {
 
-            std::vector<std::vector<T> > depCGen2D(1);
-            depCGen2D[0] = depCGen;
-
-            std::vector<std::vector<T> > dep2D(1);
-            dep2D[0] = dep;
-
-            compareValues(testType, depCGen2D, dep2D, epsilonR, epsilonA);
+            compareValues(depCGen, &dep[0], "depCGEN", "depTape", epsilonR, epsilonA);
         }
 
         template<class T>
-        inline void compareValues(const std::string& testType,
-                                  const std::vector<std::vector<T> >& depCGen,
+        inline void compareValues(const std::vector<std::vector<T> >& depCGen,
                                   const std::vector<std::vector<T> >& dep,
                                   T epsilonR = 1e-14, T epsilonA = 1e-14) {
 
@@ -77,8 +69,15 @@ namespace CppAD {
             }
         }
 
-        template<class T>
-        inline void compareValues(const std::vector<double>& cgen, const T* orig,
+        template<class VectorT, class T>
+        inline void compareValues(const VectorT& cgen, const VectorT& orig,
+                                  const std::string& nameCgen, const std::string& nameOrig,
+                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+            compareValues(cgen, &orig[0], nameCgen, nameOrig, epsilonR, epsilonA);
+        }
+
+        template<class VectorT, class T>
+        inline void compareValues(const VectorT& cgen, const T* orig,
                                   const std::string& nameCgen, const std::string& nameOrig,
                                   T epsilonR = 1e-14, T epsilonA = 1e-14) {
             for (size_t i = 0; i < cgen.size(); i++) {
@@ -89,8 +88,18 @@ namespace CppAD {
             }
         }
 
+        template<class VectorBool>
+        inline void compareBoolValues(const VectorBool& expected, const VectorBool& value) {
+            ASSERT_EQ(expected.size(), value.size());
+            for (size_t i = 0; i < expected.size(); i++) {
+                ASSERT_EQ(expected[i], value[i]);
+            }
+        }
+
         template <class T>
-        inline void nearEqual(const T &x, const T &y, const T &r, const T &a) {
+        inline void nearEqual(const T &x, const T &y,
+                              const T &r = std::numeric_limits<T>::epsilon() * 10,
+                              const T &a = std::numeric_limits<T>::epsilon() * 10) {
             //bool ne = CppAD::NearEqual(x, y, r, a);
 
             T zero(0);

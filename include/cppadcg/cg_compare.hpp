@@ -53,6 +53,16 @@ namespace CppAD {
     CPPAD_CG_OPERATOR( >=)
     CPPAD_CG_OPERATOR(<)
     CPPAD_CG_OPERATOR( <=)
+
+    template<class Base>
+    inline bool operator !=(const CG<Base> &left, double right) {
+        if (left.isParameter()) {
+            return left.getValue() != right;
+        } else {
+            return true;
+        }
+    }
+    
 }
 
 #endif

@@ -35,6 +35,13 @@ namespace CppAD {
         static const std::string FUNCTION_SPARSE_HESSIAN;
         static const std::string FUNCTION_JACOBIAN_SPARSITY;
         static const std::string FUNCTION_HESSIAN_SPARSITY;
+        static const std::string FUNCTION_HESSIAN_SPARSITY2;
+        static const std::string FUNCTION_SPARSE_FORWARD_ONE;
+        static const std::string FUNCTION_SPARSE_REVERSE_ONE;
+        static const std::string FUNCTION_SPARSE_REVERSE_TWO;
+        static const std::string FUNCTION_FORWARD_ONE_SPARSITY;
+        static const std::string FUNCTION_REVERSE_ONE_SPARSITY;
+        static const std::string FUNCTION_REVERSE_TWO_SPARSITY;
         static const std::string FUNCTION_INFO;
     protected:
         static const std::string CONST;
@@ -58,21 +65,59 @@ namespace CppAD {
                 col(c) {
             }
         };
+
+        /**
+         * 
+         */
+        class LocalSparsityInfo {
+        public:
+            std::vector<bool> sparsity;
+            std::vector<size_t> rows;
+            std::vector<size_t> cols;
+        };
+
     protected:
-        ADFun<CGBase>* _fun; // the  model
-        std::string _name; // the name of the model
+        /**
+         * the  model
+         */
+        ADFun<CGBase>* _fun;
+        /**
+         * the name of the model
+         */
+        std::string _name;
         const std::string _baseTypeName;
         bool _zero;
         bool _jacobian;
         bool _hessian;
         bool _sparseJacobian;
         bool _sparseHessian;
+        bool _sparseForwardOne;
+        bool _sparseReverseOne;
+        bool _sparseReverseTwo;
+        /**
+         * 
+         */
         Position _custom_jac;
+        LocalSparsityInfo _jacSparsity;
+        /**
+         * 
+         */
         Position _custom_hess;
+        LocalSparsityInfo _hessSparsity;
+        std::vector<LocalSparsityInfo> _hessSparsities;
+        /**
+         * A string cache for code generation
+         */
         std::ostringstream _cache;
-        size_t _maxAssignPerFunc; // maximum number of assignments per function (~ lines)
+        /**
+         * maximum number of assignments per function (~ lines)
+         */
+        size_t _maxAssignPerFunc;
         bool _verbose;
-        double _beginTime; // auxiliary variable to measure the elapsed time
+        /**
+         * auxiliary variable to measure the elapsed time
+         */
+        double _beginTime;
     public:
 
         /**
@@ -90,6 +135,9 @@ namespace CppAD {
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
+            _sparseForwardOne(false),
+            _sparseReverseOne(false),
+            _sparseReverseTwo(false),
             _maxAssignPerFunc(20000),
             _beginTime(0) {
 
@@ -152,6 +200,30 @@ namespace CppAD {
             _zero = createFunction;
         }
 
+        inline bool isCreateSparseForwardOne() const {
+            return _sparseForwardOne;
+        }
+
+        inline void setCreateSparseForwardOne(bool createFunction) {
+            _sparseForwardOne = createFunction;
+        }
+
+        inline bool isCreateSparseReverseOne() const {
+            return _sparseReverseOne;
+        }
+
+        inline void setCreateSparseReverseOne(bool createFunction) {
+            _sparseReverseOne = createFunction;
+        }
+
+        inline bool isCreateSparseReverseTwo() const {
+            return _sparseReverseOne;
+        }
+
+        inline void setCreateSparseReverseTwo(bool createFunction) {
+            _sparseReverseTwo = createFunction;
+        }
+
         inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
                                                     const std::vector<size_t>& col) {
             _custom_jac = Position(row, col);
@@ -203,9 +275,37 @@ namespace CppAD {
 
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateSparsitySource(const std::string& function,
-                                            const std::vector<size_t>& rows,
-                                            const std::vector<size_t>& cols);
+        virtual void generateSparsity1DSource(const std::string& function,
+                                              const std::vector<size_t>& sparsity);
+
+        virtual void generateSparsity2DSource(const std::string& function,
+                                              const LocalSparsityInfo& sparsity);
+
+        virtual void generateSparsity2DSource2(const std::string& function,
+                                               const std::vector<LocalSparsityInfo>& sparsities);
+
+        virtual void generateSparsity1DSource2(const std::string& function,
+                                               const std::map<size_t, std::vector<size_t> >& rows);
+
+        virtual void generateSparseForwardOneSources(std::map<std::string, std::string>& sources);
+
+        virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
+
+        virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources);
+
+        virtual void generateGlobalDirectionalFunctionSource(const std::string& function,
+                                                            const std::string& function2_suffix,
+                                                            const std::string& function_sparsity,
+                                                            const std::map<size_t, std::vector<size_t> >& elements,
+                                                            std::map<std::string, std::string>& sources);
+
+        virtual void determineJacobianSparsity();
+
+        virtual void generateJacobianSparsitySource(std::map<std::string, std::string>& sources);
+
+        virtual void determineHessianSparsity();
+
+        virtual void generateHessianSparsitySource(std::map<std::string, std::string>& sources);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

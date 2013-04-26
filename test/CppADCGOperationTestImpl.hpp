@@ -390,11 +390,12 @@ namespace CppAD {
         /**
          * compare results
          */
-        compareValues("Forward 0", depsCG, depsDef, epsilonR, epsilonA);
-
-        compareValues("Forward 0 (from taped values)", depCGTape, depsDef, epsilonR, epsilonA);
-
-        compareValues("Jacobian", jacCG, jacDef, epsilonR, epsilonA);
+        // Forward 0
+        compareValues(depsCG, depsDef, epsilonR, epsilonA);
+        // Forward 0 (from taped values)
+        compareValues(depCGTape, depsDef, epsilonR, epsilonA);
+        // Jacobian
+        compareValues(jacCG, jacDef, epsilonR, epsilonA);
     }
 
     void CppADCGOperationTest::test0(const std::string& test,
@@ -446,7 +447,8 @@ namespace CppAD {
         /**
          * compare results
          */
-        compareValues("Forward 0", depsCG, depsDef, epsilonR, epsilonA);
+        // Forward 0
+        compareValues(depsCG, depsDef, epsilonR, epsilonA);
     }
 
 }

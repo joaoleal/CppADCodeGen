@@ -34,11 +34,12 @@ namespace CppAD {
 
         /**
          * Creates a new DynamicLibModel object that can be used to evaluate the
-         * model. This object must be released by the user.
+         * model.
+         * This object must be released by the user!
          * 
          * @param modelName The model name.
-         * @return The model object or NULL if no model exists with the provided
-         *         name
+         * @return The model object (must be released by the user) or NULL if 
+         *         no model exists with the provided name 
          */
         virtual DynamicLibModel<Base>* model(const std::string& modelName) = 0;
 

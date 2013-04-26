@@ -25,6 +25,11 @@ namespace CppAD {
     template<class Base>
     class DynamicLibModel {
     public:
+        /**
+         * Provides the name for this model.
+         * 
+         * @return The model name
+         */
         virtual const std::string& getName() const = 0;
 
         // Jacobian sparsity 
@@ -32,29 +37,58 @@ namespace CppAD {
         virtual std::vector<bool> JacobianSparsityBool() = 0;
         virtual void JacobianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
 
-        // Hessian sparsity 
+        /**
+         * Provides the sparsity of the sum of the hessian for each dependent 
+         * variable.
+         * 
+         * @return The sparsity
+         */
         virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
         virtual std::vector<bool> HessianSparsityBool() = 0;
         virtual void HessianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
 
-        /// number of independent variables
+        /**
+         * Provides the sparsity of the hessian for a dependent variable
+         * 
+         * @param i The index of the dependent variable
+         * @return The sparsity
+         */
+        virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) = 0;
+        virtual std::vector<bool> HessianSparsityBool(size_t i) = 0;
+        virtual void HessianSparsity(size_t i, std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
+
+        /**
+         * Provides the number of independent variables.
+         * 
+         * @return The number of independent variables
+         */
         virtual size_t Domain() const = 0;
 
-        /// number of dependent variables
+        /**
+         * Provides the number of dependent variables.
+         * 
+         * @return The number of dependent variables.
+         */
         virtual size_t Range() const = 0;
 
         /// calculate the dependent values (zero order)
+        virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) = 0;
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;
 
+        virtual void ForwardZero(const CppAD::vector<bool>& vx,
+                                 CppAD::vector<bool>& vy,
+                                 const CppAD::vector<Base> &tx,
+                                 CppAD::vector<Base>& ty) = 0;
         virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) = 0;
         virtual void ForwardZero(const Base* x, size_t x_size,
                                  Base* dep, size_t dep_size) = 0;
 
         /**
          * Determines the dependent variable values using a variable number of 
-         * independent variable arrays. This method can be useful if the dynamic
-         * library was compiled considering that the independent variables are
-         * provided by several arrays.
+         * independent variable arrays.
+         * This method can be useful if the dynamic library was compiled
+         * considering that the independent variables are provided by several
+         * arrays.
          * 
          * @param x Contains the several independent variable vectors
          * @param dep The values of the dependent variables
@@ -83,6 +117,93 @@ namespace CppAD {
         virtual void Hessian(const Base* x, size_t x_size,
                              const Base* w, size_t w_size,
                              Base* hess) = 0;
+
+        /**
+         * Computes results during a forward mode sweep. 
+         * Computes the first-order Taylor coefficients for dependent variables
+         * relative to a single independent variable.
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
+         * @param ty The values of the directional derivatives
+         */
+        virtual void SparseForwardOne(const CppAD::vector<Base>& tx,
+                                      CppAD::vector<Base>& ty) = 0;
+
+        /**
+         * Computes results during a forward mode sweep. 
+         * Computes the first-order Taylor coefficients for dependent variables
+         * relative to a single independent variable.
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
+         * @return ty
+         */
+        virtual CppAD::vector<Base> SparseForwardOne(const CppAD::vector<Base>& tx) = 0;
+
+        /**
+         * Computes results during a reverse mode sweep. 
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
+         * @param ty
+         * @param px
+         * @param py
+         */
+        virtual void SparseReverseOne(const CppAD::vector<Base>& tx,
+                                      const CppAD::vector<Base>& ty,
+                                      CppAD::vector<Base>& px,
+                                      const CppAD::vector<Base>& py) = 0;
+
+        /**
+         * Computes results during a reverse mode sweep. 
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
+         * @param ty
+         * @param py
+         * @return px
+         */
+        virtual CppAD::vector<Base> SparseReverseOne(const CppAD::vector<Base>& tx,
+                                                     const CppAD::vector<Base>& ty,
+                                                     const CppAD::vector<Base>& py) = 0;
+
+        /**
+         * Computes second-order results during a reverse mode sweep (p = 2).
+         * This method can be used during the evaluation of the hessian when
+         * the model is used through a user defined atomic AD function.
+         * Warning: only the values for px[j * (k+1)] are defined, since
+         *          px[j * (k+1) + 1] is not used during the hessian evaluation.
+         * 
+         * @param tx
+         * @param ty
+         * @param px
+         * @param py
+         */
+        virtual void SparseReverseTwo(const CppAD::vector<Base>& tx,
+                                      const CppAD::vector<Base>& ty,
+                                      CppAD::vector<Base>& px,
+                                      const CppAD::vector<Base>& py) = 0;
+
+        /**
+         * Computes second-order results during a reverse mode sweep (p = 2).
+         * This method can be used during the evaluation of the hessian when
+         * the model is used through a user defined atomic AD function.
+         * Warning: only the values for px[j * (k+1)] are defined, since
+         *          px[j * (k+1) + 1] is not used during the hessian evaluation.
+         * 
+         * @param tx
+         * @param ty
+         * @param py
+         * @return px
+         */
+        virtual CppAD::vector<Base> SparseReverseTwo(const CppAD::vector<Base>& tx,
+                                                     const CppAD::vector<Base>& ty,
+                                                     const CppAD::vector<Base>& py) = 0;
 
         /// calculate sparse Jacobians 
         virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;

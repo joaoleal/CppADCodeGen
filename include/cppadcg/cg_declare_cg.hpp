@@ -164,6 +164,9 @@ namespace CppAD {
     template<class Base>
     bool operator >=(const CG<Base> &left, const CG<Base> &right);
 
+    template<class Base>
+    bool operator !=(const CG<Base> &left, double right);
+
     /**
      * Math functions
      */
@@ -212,7 +215,7 @@ namespace CppAD {
 
     template<class Base>
     inline CG<Base> tanh(const CG<Base>& var);
-   
+
     /**
      * Utility functions
      */

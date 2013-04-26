@@ -42,6 +42,27 @@ namespace CppAD {
     const std::string CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY = "hessian_sparsity";
 
     template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY2 = "hessian_sparsity2";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_FORWARD_ONE = "sparse_forward_one";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_ONE = "sparse_reverse_one";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_TWO = "sparse_reverse_two";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_FORWARD_ONE_SPARSITY = "forward_one_sparsity";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_REVERSE_ONE_SPARSITY = "reverse_one_sparsity";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_REVERSE_TWO_SPARSITY = "sparse_reverse_two_sparsity";
+
+    template<class Base>
     const std::string CLangCompileModelHelper<Base>::FUNCTION_INFO = "info";
 
     template<class Base>
@@ -78,6 +99,26 @@ namespace CppAD {
             generateSparseHessianSource(sources);
         }
 
+        if (_sparseForwardOne) {
+            generateSparseForwardOneSources(sources);
+        }
+
+        if (_sparseReverseOne) {
+            generateSparseReverseOneSources(sources);
+        }
+
+        if (_sparseReverseTwo) {
+            generateSparseReverseTwoSources(sources);
+        }
+
+        if (_sparseJacobian || _sparseForwardOne || _sparseReverseOne) {
+            generateJacobianSparsitySource(sources);
+        }
+
+        if (_sparseHessian || _sparseReverseTwo) {
+            generateHessianSparsitySource(sources);
+        }
+
         generateInfoSource(sources);
 
         compiler.compileSources(sources, posIndepCode, true);
@@ -92,13 +133,13 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var"));
 
         _cache.str("");
-        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n";
-        _cache << "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n";
-        _cache << "   *m = " << _fun->Range() << ";\n";
-        _cache << "   *n = " << _fun->Domain() << ";\n";
-        _cache << "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n";
-        _cache << "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n";
-        _cache << "}\n\n";
+        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n"
+                "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
+                "   *m = " << _fun->Range() << ";\n"
+                "   *n = " << _fun->Domain() << ";\n"
+                "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n"
+                "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n"
+                "}\n\n";
 
         sources[funcName + ".c"] = _cache.str();
     }
@@ -204,20 +245,10 @@ namespace CppAD {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
-        std::vector<size_t> rows, cols;
-
         /**
          * Determine the sparsity pattern
          */
-        std::vector<bool> sparsity = jacobianSparsity < std::vector<bool>, CGBase > (*_fun);
-
-        if (!_custom_jac.defined) {
-            generateSparsityIndexes(sparsity, m, n, rows, cols);
-
-        } else {
-            rows = _custom_jac.row;
-            cols = _custom_jac.col;
-        }
+        determineJacobianSparsity();
 
         startingGraphCreation(jobName);
 
@@ -227,12 +258,12 @@ namespace CppAD {
         std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
 
-        std::vector<CGBase> jac(rows.size());
+        std::vector<CGBase> jac(_jacSparsity.rows.size());
         CppAD::sparse_jacobian_work work;
         if (n <= m) {
-            _fun->SparseJacobianForward(indVars, sparsity, rows, cols, jac, work);
+            _fun->SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         } else {
-            _fun->SparseJacobianReverse(indVars, sparsity, rows, cols, jac, work);
+            _fun->SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         }
 
         finishedGraphCreation();
@@ -245,8 +276,35 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
 
         handler.generateCode(code, langC, jac, *nameGen, jobName);
+    }
 
-        generateSparsitySource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, rows, cols);
+    template<class Base>
+    void CLangCompileModelHelper<Base>::determineJacobianSparsity() {
+        if (!_jacSparsity.sparsity.empty()) {
+            return;
+        }
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        /**
+         * Determine the sparsity pattern
+         */
+        _jacSparsity.sparsity = jacobianSparsity < std::vector<bool>, CGBase > (*_fun);
+
+        if (!_custom_jac.defined) {
+            generateSparsityIndexes(_jacSparsity.sparsity, m, n, _jacSparsity.rows, _jacSparsity.cols);
+
+        } else {
+            _jacSparsity.rows = _custom_jac.row;
+            _jacSparsity.cols = _custom_jac.col;
+        }
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateJacobianSparsitySource(std::map<std::string, std::string>& sources) {
+        determineJacobianSparsity();
+
+        generateSparsity2DSource(_name + "_" + FUNCTION_JACOBIAN_SPARSITY, _jacSparsity);
         sources[_name + "_" + FUNCTION_JACOBIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
     }
@@ -260,45 +318,29 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern p for Hessian of w^T F
          */
-        std::vector<bool> s(m, true);
-        std::vector<bool> r(n * n);
-        for (size_t j = 0; j < n; j++) {
-            for (size_t k = 0; k < n; k++)
-                r[j * n + k] = false;
-            r[j * n + j] = true;
-        }
-        _fun->ForSparseJac(n, r);
-        std::vector<bool> sparsity = _fun->RevSparseHes(n, s);
+        determineHessianSparsity();
 
-        std::vector<size_t> rows, cols;
-        if (!_custom_hess.defined) {
-            generateSparsityIndexes(sparsity, n, n, rows, cols);
-
-        } else {
-            rows = _custom_hess.row;
-            cols = _custom_hess.col;
-        }
 
         // make use of the symmetry of the Hessian in order to reduce operations
         std::map<size_t, std::map<size_t, size_t> > locations;
-        for (size_t i = 0; i < rows.size(); i++) {
-            locations[rows[i]][cols[i]] = i;
+        for (size_t i = 0; i < _hessSparsity.rows.size(); i++) {
+            locations[_hessSparsity.rows[i]][_hessSparsity.cols[i]] = i;
         }
 
         std::vector<size_t> upperHessRows, upperHessCols, upperHessOrder;
-        upperHessRows.reserve(rows.size() / 2);
+        upperHessRows.reserve(_hessSparsity.rows.size() / 2);
         upperHessCols.reserve(upperHessRows.size());
         upperHessOrder.reserve(upperHessRows.size());
 
         std::map<size_t, size_t> duplicates; // the elements determined using symmetry
         std::map<size_t, std::map<size_t, size_t> >::const_iterator ii;
         std::map<size_t, size_t>::const_iterator jj;
-        for (size_t i = 0; i < rows.size(); i++) {
+        for (size_t i = 0; i < _hessSparsity.rows.size(); i++) {
             bool add = true;
-            if (rows[i] > cols[i]) {
-                ii = locations.find(cols[i]);
+            if (_hessSparsity.rows[i] > _hessSparsity.cols[i]) {
+                ii = locations.find(_hessSparsity.cols[i]);
                 if (ii != locations.end()) {
-                    jj = ii->second.find(rows[i]);
+                    jj = ii->second.find(_hessSparsity.rows[i]);
                     if (jj != ii->second.end()) {
                         size_t k = jj->second;
                         duplicates[i] = k;
@@ -308,8 +350,8 @@ namespace CppAD {
             }
 
             if (add) {
-                upperHessRows.push_back(rows[i]);
-                upperHessCols.push_back(cols[i]);
+                upperHessRows.push_back(_hessSparsity.rows[i]);
+                upperHessCols.push_back(_hessSparsity.cols[i]);
                 upperHessOrder.push_back(i);
             }
         }
@@ -331,9 +373,9 @@ namespace CppAD {
 
         CppAD::sparse_hessian_work work;
         std::vector<CGBase> upperHess(upperHessRows.size());
-        _fun->SparseHessian(indVars, w, sparsity, upperHessRows, upperHessCols, upperHess, work);
+        _fun->SparseHessian(indVars, w, _hessSparsity.sparsity, upperHessRows, upperHessCols, upperHess, work);
 
-        std::vector<CGBase> hess(rows.size());
+        std::vector<CGBase> hess(_hessSparsity.rows.size());
         for (size_t i = 0; i < upperHessOrder.size(); i++) {
             hess[upperHessOrder[i]] = upperHess[i];
         }
@@ -355,16 +397,363 @@ namespace CppAD {
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, jobName);
+    }
 
-        generateSparsitySource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, rows, cols);
+    template<class Base>
+    void CLangCompileModelHelper<Base>::determineHessianSparsity() {
+        if (!_hessSparsity.sparsity.empty()) {
+            return;
+        }
+
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        _hessSparsity.sparsity = hessianSparsity < std::vector<bool>, CGBase > (*_fun);
+
+        if (!_custom_hess.defined) {
+            generateSparsityIndexes(_hessSparsity.sparsity, n, n,
+                                    _hessSparsity.rows, _hessSparsity.cols);
+
+        } else {
+            _hessSparsity.rows = _custom_hess.row;
+            _hessSparsity.cols = _custom_hess.col;
+        }
+
+        /**
+         * For each individual equation
+         */
+        _hessSparsities.resize(m);
+        for (size_t i = 0; i < m; i++) {
+            _hessSparsities[i].sparsity = hessianSparsity < std::vector<bool>, CGBase > (*_fun, i);
+
+            if (!_custom_hess.defined) {
+                generateSparsityIndexes(_hessSparsities[i].sparsity, n, n,
+                                        _hessSparsities[i].rows, _hessSparsities[i].cols);
+
+            } else {
+                for (size_t e = 0; e < _custom_hess.row.size(); e++) {
+                    size_t i1 = _custom_hess.row[e];
+                    size_t i2 = _custom_hess.col[e];
+                    if (_hessSparsities[i].sparsity[i1 * n + i2]) {
+                        _hessSparsities[i].rows.push_back(i1);
+                        _hessSparsities[i].cols.push_back(i2);
+                    }
+                }
+            }
+        }
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateHessianSparsitySource(std::map<std::string, std::string>& sources) {
+        determineHessianSparsity();
+
+        generateSparsity2DSource(_name + "_" + FUNCTION_HESSIAN_SPARSITY, _hessSparsity);
         sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
+        _cache.str("");
+
+        generateSparsity2DSource2(_name + "_" + FUNCTION_HESSIAN_SPARSITY2, _hessSparsities);
+        sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY2 + ".c"] = _cache.str();
         _cache.str("");
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparsitySource(const std::string& function,
-                                                               const std::vector<size_t>& rows,
-                                                               const std::vector<size_t>& cols) {
+    void CLangCompileModelHelper<Base>::generateSparseForwardOneSources(std::map<std::string, std::string>& sources) {
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        determineJacobianSparsity();
+
+        // elements[equation]{vars}
+        std::map<size_t, std::vector<size_t> > elements;
+        for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
+            elements[_jacSparsity.cols[e]].push_back(_jacSparsity.rows[e]);
+        }
+
+        /**
+         * Generate one function for each dependent variable
+         */
+        std::vector<CGBase> dx(n, Base(0));
+
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t j = it->first;
+            const std::vector<size_t>& rows = it->second;
+
+            _cache.str("");
+            _cache << "model (forward one)";
+            const std::string jobName = _cache.str();
+
+            startingGraphCreation(jobName);
+
+            CodeHandler<Base> handler;
+            handler.setVerbose(_verbose);
+
+            std::vector<CGBase> indVars(n);
+            handler.makeVariables(indVars);
+
+
+
+            // TODO: consider caching the zero order coefficients somehow between calls
+            _fun->Forward(0, indVars);
+            dx[j] = Base(1);
+            std::vector<CGBase> dy = _fun->Forward(1, dx);
+            dx[j] = Base(0);
+            assert(dy.size() == m);
+
+            std::vector<CGBase> dyCustom;
+            std::vector<size_t>::const_iterator it2;
+            for (it2 = rows.begin(); it2 != rows.end(); ++it2) {
+                dyCustom.push_back(dy[*it2]);
+            }
+
+            finishedGraphCreation();
+
+            CLanguage<Base> langC(_baseTypeName);
+            langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+            _cache.str("");
+            _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "_indep" << j;
+            langC.setGenerateFunction(_cache.str());
+
+            std::ostringstream code;
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "ind", "var"));
+
+            handler.generateCode(code, langC, dyCustom, *nameGen, jobName);
+        }
+
+        _cache.str("");
+
+        generateGlobalDirectionalFunctionSource(FUNCTION_SPARSE_FORWARD_ONE,
+                                                "indep",
+                                                FUNCTION_FORWARD_ONE_SPARSITY,
+                                                elements,
+                                                sources);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseReverseOneSources(std::map<std::string, std::string>& sources) {
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        determineJacobianSparsity();
+
+        // elements[equation]{vars}
+        std::map<size_t, std::vector<size_t> > elements;
+        for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
+            elements[_jacSparsity.rows[e]].push_back(_jacSparsity.cols[e]);
+        }
+
+        std::vector<CGBase> w(m, Base(0));
+
+        /**
+         * Generate one function for each dependent variable
+         */
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t i = it->first;
+            const std::vector<size_t>& cols = it->second;
+
+            _cache.str("");
+            _cache << "model (reverse one, dep " << i << ")";
+            const std::string jobName = _cache.str();
+
+            startingGraphCreation(jobName);
+
+            CodeHandler<Base> handler;
+            handler.setVerbose(_verbose);
+
+            std::vector<CGBase> indVars(_fun->Domain());
+            handler.makeVariables(indVars);
+
+            // TODO: consider caching the zero order coefficients somehow between calls
+            _fun->Forward(0, indVars);
+
+            w[i] = Base(1);
+            std::vector<CGBase> dw = _fun->Reverse(1, w);
+            assert(dw.size() == n);
+            w[i] = Base(0);
+
+            std::vector<CGBase> dwCustom;
+            std::vector<size_t>::const_iterator it2;
+            for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
+                dwCustom.push_back(dw[*it2]);
+            }
+
+            finishedGraphCreation();
+
+            CLanguage<Base> langC(_baseTypeName);
+            langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+            _cache.str("");
+            _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_dep" << i;
+            langC.setGenerateFunction(_cache.str());
+
+            std::ostringstream code;
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "ind", "var"));
+
+            handler.generateCode(code, langC, dwCustom, *nameGen, jobName);
+        }
+
+        _cache.str("");
+
+        generateGlobalDirectionalFunctionSource(FUNCTION_SPARSE_REVERSE_ONE,
+                                                "dep",
+                                                FUNCTION_REVERSE_ONE_SPARSITY,
+                                                elements,
+                                                sources);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) {
+        const size_t m = _fun->Range();
+        const size_t n = _fun->Domain();
+        const size_t k = 1;
+        const size_t k1 = k + 1;
+        const size_t p = 2;
+
+        determineHessianSparsity();
+
+        // elements[vars]{equation}
+        std::map<size_t, std::vector<size_t> > elements;
+        for (size_t e = 0; e < _hessSparsity.cols.size(); e++) {
+            elements[_hessSparsity.cols[e]].push_back(_hessSparsity.rows[e]);
+        }
+
+        std::vector<CGBase> tx1(n, Base(0));
+
+        /**
+         * Generate one function for each dependent variable
+         */
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t j = it->first;
+            const std::vector<size_t>& cols = it->second;
+
+            _cache.str("");
+            _cache << "model (reverse two, indep " << j << ")";
+            const std::string jobName = _cache.str();
+
+            startingGraphCreation(jobName);
+
+            CodeHandler<Base> handler;
+            handler.setVerbose(_verbose);
+
+            std::vector<CGBase> tx0(n);
+            handler.makeVariables(tx0);
+
+            std::vector<CGBase> w(k1 * m);
+            handler.makeVariables(w);
+
+            // TODO: consider caching the zero order coefficients somehow between calls
+            std::vector<CGBase> y = _fun->Forward(0, tx0);
+
+            tx1[j] = Base(1);
+            std::vector<CGBase> y_p = _fun->Forward(1, tx1);
+            tx1[j] = Base(0);
+            std::vector<CGBase> ddw = _fun->Reverse(2, w);
+            assert(ddw.size() == 2 * n);
+
+            std::vector<CGBase> ddwCustom;
+            std::vector<size_t>::const_iterator it2;
+            for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
+                size_t jj = *it2;
+                ddwCustom.push_back(ddw[jj * p]);
+            }
+
+            finishedGraphCreation();
+
+            CLanguage<Base> langC(_baseTypeName);
+            langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+            _cache.str("");
+            _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_indep" << j;
+            langC.setGenerateFunction(_cache.str());
+
+            std::ostringstream code;
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "ind", "var"));
+            CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+
+            handler.generateCode(code, langC, ddwCustom, nameGenHess, jobName);
+        }
+
+        _cache.str("");
+
+        generateGlobalDirectionalFunctionSource(FUNCTION_SPARSE_REVERSE_TWO,
+                                                "indep",
+                                                FUNCTION_REVERSE_TWO_SPARSITY,
+                                                elements,
+                                                sources);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateGlobalDirectionalFunctionSource(const std::string& function,
+                                                                                const std::string& suffix,
+                                                                                const std::string& function_sparsity,
+                                                                                const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                std::map<std::string, std::string>& sources) {
+        /**
+         * The function that matches each equation to a directional derivative function
+         */
+        _cache.str("");
+        _cache << _name << "_" << function;
+        std::string model_function = _cache.str();
+        _cache.str("");
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            _cache << "void " << model_function << "_" << suffix << it->first
+                    << "(double const *const * in, double *const * out);\n";
+        }
+        _cache << "\n";
+        _cache << "void " << model_function << "("
+                "unsigned long int pos," << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "   switch(pos) {\n";
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            // the size of each sparsity row
+            _cache << "      case " << it->first << ":\n"
+                    "         " << model_function << "_" << suffix << it->first << "(in, out);\n"
+                    "         return;\n";
+        }
+        _cache << "      default:\n"
+                "         return;\n"
+                "   };\n";
+
+        _cache << "}\n";
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
+
+        /**
+         * Sparsity
+         */
+        generateSparsity1DSource2(_name + "_" + function_sparsity, elements);
+        sources[_name + "_" + function_sparsity + ".c"] = _cache.str();
+        _cache.str("");
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparsity1DSource(const std::string& function,
+                                                                 const std::vector<size_t>& sparsity) {
+        _cache << "void " << function << "("
+                "unsigned long int const** sparsity,"
+                " unsigned long int* nnz) {\n";
+
+        // the size of each sparsity row
+        _cache << "static unsigned long int const nonzeros[" << sparsity.size() << "] = {";
+        if (!sparsity.empty()) {
+            _cache << sparsity[0];
+            for (size_t i = 1; i < sparsity.size(); i++) {
+                _cache << "," << sparsity[i];
+            }
+        }
+        _cache << "};\n";
+
+        _cache << "*sparsity = nonzeros;\n"
+                "*nnz = " << sparsity.size() << ";\n"
+                "}\n";
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparsity2DSource(const std::string& function,
+                                                                 const LocalSparsityInfo& sparsity) {
+        const std::vector<size_t>& rows = sparsity.rows;
+        const std::vector<size_t>& cols = sparsity.cols;
+
         assert(rows.size() == cols.size());
 
         _cache << "void " << function << "("
@@ -394,6 +783,96 @@ namespace CppAD {
         _cache << "*row = rows;\n"
                 "*col = cols;\n"
                 "*nnz = " << rows.size() << ";\n"
+                "}\n";
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparsity2DSource2(const std::string& function,
+                                                                  const std::vector<LocalSparsityInfo>& sparsities) {
+        _cache << "void " << function << "("
+                "unsigned long int i,"
+                "unsigned long int const** row,"
+                " unsigned long int const** col,"
+                " unsigned long int* nnz) {\n";
+
+        for (size_t i = 0; i < sparsities.size(); i++) {
+            const std::vector<size_t>& rows = sparsities[i].rows;
+            const std::vector<size_t>& cols = sparsities[i].cols;
+            assert(rows.size() == cols.size());
+
+            _cache << "static unsigned long int const rows" << i << "[" << rows.size() << "] = {";
+            if (!rows.empty()) {
+                _cache << rows[0];
+                for (size_t i = 1; i < rows.size(); i++) {
+                    _cache << "," << rows[i];
+                }
+            }
+            _cache << "};\n";
+
+            _cache << "static unsigned long int const cols" << i << "[" << cols.size() << "] = {";
+            if (!cols.empty()) {
+                _cache << cols[0];
+                for (size_t i = 1; i < cols.size(); i++) {
+                    _cache << "," << cols[i];
+                }
+            }
+            _cache << "};\n";
+        }
+
+        _cache << "   switch(i) {\n";
+        for (size_t i = 0; i < sparsities.size(); i++) {
+            // the size of each sparsity
+            _cache << "   case " << i << ":\n"
+                    "      *row = rows" << i << ";\n"
+                    "      *col = cols" << i << ";\n"
+                    "      *nnz = " << sparsities[i].rows.size() << ";\n"
+                    "      break;\n";
+        }
+        _cache << "   default:\n"
+                "      *row = 0;\n"
+                "      *col = 0;\n"
+                "      *nnz = 0;\n"
+                "   break;\n"
+                "   };\n"
+                "}\n";
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparsity1DSource2(const std::string& function,
+                                                                  const std::map<size_t, std::vector<size_t> >& elements) {
+
+        _cache << "void " << function << "("
+                "unsigned long int pos,"
+                " unsigned long int const** elements,"
+                " unsigned long int* nnz) {\n";
+
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            // the size of each sparsity row
+            const std::vector<size_t>& els = it->second;
+            _cache << "   static unsigned long int const elements" << it->first << "[" << els.size() << "] = {";
+            if (!els.empty()) {
+                _cache << els[0];
+                for (size_t i = 1; i < els.size(); i++) {
+                    _cache << "," << els[i];
+                }
+            }
+            _cache << "};\n";
+        }
+
+        _cache << "   switch(pos) {\n";
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            // the size of each sparsity row
+            _cache << "   case " << it->first << ":\n"
+                    "      *elements = elements" << it->first << ";\n"
+                    "      *nnz = " << it->second.size() << ";\n"
+                    "      break;\n";
+        }
+        _cache << "   default:\n"
+                "      *elements = 0;\n"
+                "      *nnz = 0;\n"
+                "   break;\n"
+                "   };\n"
                 "}\n";
     }
 
