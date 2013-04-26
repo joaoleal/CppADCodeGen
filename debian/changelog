@@ -1,3 +1,9 @@
+cppadcodegen (1.1.0-1) unstable; urgency=low
+
+  * new methods for the generation and compilation of C source code from forward one, reverse one and reverse two modes
+
+ -- Development <development@ciengis.com>  Fri, 26 Apr 2013 13:00:00 +0000
+
 cppadcodegen (1.0.0-1) unstable; urgency=low
 
   * CHANGED VERSIONING STYLE!!! It no longer follows CppAD version names.
