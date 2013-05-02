@@ -484,14 +484,19 @@ namespace CppAD {
 
         virtual void ForwardOne(const CppAD::vector<Base>& tx,
                                 CppAD::vector<Base>& ty) {
+            this->ForwardOne(&tx[0], tx.size(), &ty[0], ty.size());
+        }
+
+        virtual void ForwardOne(const Base tx[], size_t tx_size,
+                                Base ty[], size_t ty_size) {
             const size_t k = 1;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_forwardOne != NULL, "No forward one function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(tx.size() >= (k + 1) * _n, "Invalid tx size");
-            CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size");
+            CPPADCG_ASSERT_KNOWN(tx_size >= (k + 1) * _n, "Invalid tx size");
+            CPPADCG_ASSERT_KNOWN(ty_size >= (k + 1) * _m, "Invalid ty size");
 
-            int ret = (*_forwardOne)(&tx[0], &ty[0]);
+            int ret = (*_forwardOne)(tx, ty);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "First-order forward mode failed: Only one tx is allowed to be non-zero.");
             CPPADCG_ASSERT_KNOWN(ret != 2, "First-order forward mode failed: Invalid tx value, must be either zero or one.");
@@ -511,15 +516,27 @@ namespace CppAD {
                                 const CppAD::vector<Base>& ty,
                                 CppAD::vector<Base>& px,
                                 const CppAD::vector<Base>& py) {
+            this->ReverseOne(&tx[0], tx.size(),
+                             &ty[0], ty.size(),
+                             &px[0], px.size(),
+                             &py[0], py.size());
+        }
+
+        virtual void ReverseOne(const Base tx[], size_t tx_size,
+                                const Base ty[], size_t ty_size,
+                                Base px[], size_t px_size,
+                                const Base py[], size_t py_size) {
             const size_t k = 0;
             const size_t k1 = k + 1;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_reverseOne != NULL, "No reverse one function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
-            CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
+            CPPADCG_ASSERT_KNOWN(tx_size >= k1 * _n, "Invalid tx size");
+            CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
+            CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
+            CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
 
-            int ret = (*_reverseOne)(&tx[0], &ty[0], &px[0], &py[0]);
+            int ret = (*_reverseOne)(tx, ty, px, py);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "First-order reverse mode failed: Only one py is allowed to be non-zero.");
             CPPADCG_ASSERT_KNOWN(ret != 2, "First-order reverse mode failed: Invalid py value, must be either zero or one.");
@@ -539,17 +556,28 @@ namespace CppAD {
                                 const CppAD::vector<Base>& ty,
                                 CppAD::vector<Base>& px,
                                 const CppAD::vector<Base>& py) {
+            this->ReverseTwo(&tx[0], tx.size(),
+                             &ty[0], ty.size(),
+                             &px[0], px.size(),
+                             &py[0], py.size());
+        }
+
+        virtual void ReverseTwo(const Base tx[], size_t tx_size,
+                                const Base ty[], size_t ty_size,
+                                Base px[], size_t px_size,
+                                const Base py[], size_t py_size) {
             const size_t k = 1;
             const size_t k1 = k + 1;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_reverseTwo != NULL, "No sparse reverse two function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
-            CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
-            CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
-            CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
+            CPPADCG_ASSERT_KNOWN(tx_size >= k1 * _n, "Invalid tx size");
+            CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
+            CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
+            CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
 
-            int ret = (*_reverseTwo)(&tx[0], &ty[0], &px[0], &py[0]);
+            int ret = (*_reverseTwo)(tx, ty, px, py);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: Only one py is allowed to be non-zero.");
             CPPADCG_ASSERT_KNOWN(ret != 2, "Second-order reverse mode failed: Invalid tx value, must be either zero or one.");

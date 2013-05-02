@@ -126,6 +126,18 @@ namespace CppAD {
          * the model is used through a user defined atomic AD function.
          * 
          * @param tx
+         * @return ty
+         */
+        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) = 0;
+
+        /**
+         * Computes results during a forward mode sweep. 
+         * Computes the first-order Taylor coefficients for dependent variables
+         * relative to a single independent variable.
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
          * @param ty The values of the directional derivatives
          */
         virtual void ForwardOne(const CppAD::vector<Base>& tx,
@@ -139,9 +151,24 @@ namespace CppAD {
          * the model is used through a user defined atomic AD function.
          * 
          * @param tx
-         * @return ty
+         * @param ty The values of the directional derivatives
          */
-        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) = 0;
+        virtual void ForwardOne(const Base tx[], size_t tx_size,
+                                Base ty[], size_t ty_size) = 0;
+
+        /**
+         * Computes results during a reverse mode sweep. 
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined atomic AD function.
+         * 
+         * @param tx
+         * @param ty
+         * @param py
+         * @return px
+         */
+        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
+                                               const CppAD::vector<Base>& ty,
+                                               const CppAD::vector<Base>& py) = 0;
 
         /**
          * Computes results during a reverse mode sweep. 
@@ -165,10 +192,27 @@ namespace CppAD {
          * 
          * @param tx
          * @param ty
+         * @param px
+         * @param py
+         */
+        virtual void ReverseOne(const Base tx[], size_t tx_size,
+                                const Base ty[], size_t ty_size,
+                                Base px[], size_t px_size,
+                                const Base py[], size_t py_size) = 0;
+
+        /**
+         * Computes second-order results during a reverse mode sweep (p = 2).
+         * This method can be used during the evaluation of the hessian when
+         * the model is used through a user defined atomic AD function.
+         * Warning: only the values for px[j * (k+1)] are defined, since
+         *          px[j * (k+1) + 1] is not used during the hessian evaluation.
+         * 
+         * @param tx
+         * @param ty
          * @param py
          * @return px
          */
-        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
+        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
                                                const CppAD::vector<Base>& ty,
                                                const CppAD::vector<Base>& py) = 0;
 
@@ -198,12 +242,13 @@ namespace CppAD {
          * 
          * @param tx
          * @param ty
+         * @param px
          * @param py
-         * @return px
          */
-        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
-                                               const CppAD::vector<Base>& ty,
-                                               const CppAD::vector<Base>& py) = 0;
+        virtual void ReverseTwo(const Base tx[], size_t tx_size,
+                                const Base ty[], size_t ty_size,
+                                Base px[], size_t px_size,
+                                const Base py[], size_t py_size) = 0;
 
         /// calculate sparse Jacobians 
         virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;
