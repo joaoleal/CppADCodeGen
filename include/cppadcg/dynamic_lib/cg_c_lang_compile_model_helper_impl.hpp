@@ -30,6 +30,15 @@ namespace CppAD {
     const std::string CLangCompileModelHelper<Base>::FUNCTION_HESSIAN = "hessian";
 
     template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_FORWARD_ONE = "forward_one";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_REVERSE_ONE = "reverse_one";
+
+    template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_REVERSE_TWO = "reverse_two";
+
+    template<class Base>
     const std::string CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN = "sparse_jacobian";
 
     template<class Base>
@@ -99,23 +108,26 @@ namespace CppAD {
             generateSparseHessianSource(sources);
         }
 
-        if (_sparseForwardOne) {
+        if (_forwardOne) {
             generateSparseForwardOneSources(sources);
+            generateForwardOneSources(sources);
         }
 
-        if (_sparseReverseOne) {
+        if (_reverseOne) {
             generateSparseReverseOneSources(sources);
+            generateReverseOneSources(sources);
         }
 
-        if (_sparseReverseTwo) {
+        if (_reverseTwo) {
             generateSparseReverseTwoSources(sources);
+            generateReverseTwoSources(sources);
         }
 
-        if (_sparseJacobian || _sparseForwardOne || _sparseReverseOne) {
+        if (_sparseJacobian || _forwardOne || _reverseOne) {
             generateJacobianSparsitySource(sources);
         }
 
-        if (_sparseHessian || _sparseReverseTwo) {
+        if (_sparseHessian || _reverseTwo) {
             generateHessianSparsitySource(sources);
         }
 
@@ -530,6 +542,71 @@ namespace CppAD {
     }
 
     template<class Base>
+    void CLangCompileModelHelper<Base>::generateForwardOneSources(std::map<std::string, std::string>& sources) {
+
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_FORWARD_ONE;
+        std::string model_function(_cache.str());
+
+        _cache.str("");
+        _cache << "#include <stdlib.h>\n"
+                "\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long int pos," << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n"
+                "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "\n"
+                "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " ty[]) {\n"
+                "   unsigned long int e, i, j, jj, nnz;\n"
+                "   unsigned long int const* pos;\n"
+                "   " << _baseTypeName << " const * in[1];\n"
+                "   " << _baseTypeName << "* out[1];\n"
+                "   " << _baseTypeName << " x[" << n << "];\n"
+                "   " << _baseTypeName << "* compressed;\n"
+                "   int found;\n"
+                "\n"
+                "   found = 0;\n"
+                "   for (jj = 0; jj < " << n << "; jj++) {\n"
+                "      if (tx[jj * 2 + 1] != 0.0) {\n"
+                "         if (found) {\n"
+                "            return 1; // error \n"
+                "         } else  if(tx[jj * 2 + 1] != 1.0) {\n"
+                "            return 2; // error \n"
+                "         }\n"
+                "         j = jj;\n"
+                "         found = 1;\n"
+                "      }\n"
+                "   }\n"
+                "   for (i = 0; i < " << m << "; i++) {\n"
+                "      ty[i * 2 + 1] = 0;\n"
+                "   }\n"
+                "   if (!found) {\n"
+                "      return 0; //nothing to do\n"
+                "   }\n"
+                "\n"
+                "   " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(j, &pos, &nnz);\n"
+                "\n"
+                "   for (jj = 0; jj < " << n << "; jj++)\n"
+                "      x[jj] = tx[jj * 2];\n"
+                "\n"
+                "   compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof(" << _baseTypeName << "));\n"
+                "   in[0] = x;\n"
+                "   out[0] = compressed;\n"
+                "   " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, in, out);\n"
+                "\n"
+                "   for (e = 0; e < nnz; e++) {\n"
+                "      ty[pos[e] * 2 + 1] = compressed[e];\n"
+                "   }\n"
+                "\n"
+                "   free(compressed);\n"
+                "   return 0;\n"
+                "}\n";
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseReverseOneSources(std::map<std::string, std::string>& sources) {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
@@ -599,6 +676,70 @@ namespace CppAD {
                                                 FUNCTION_REVERSE_ONE_SPARSITY,
                                                 elements,
                                                 sources);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateReverseOneSources(std::map<std::string, std::string>& sources) {
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_REVERSE_ONE;
+        std::string model_function(_cache.str());
+
+        _cache.str("");
+        _cache << "#include <stdlib.h>\n"
+                "\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long int pos," << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n"
+                "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "\n"
+                "int " << model_function << "("
+                << _baseTypeName << " const x[], "
+                << _baseTypeName << " const ty[],"
+                << _baseTypeName << "  px[], "
+                << _baseTypeName << " const py[]) {\n"
+                "   unsigned long int e, i, ii, j, nnz;\n"
+                "   unsigned long int const* pos;\n"
+                "   " << _baseTypeName << " const * in[1];\n"
+                "   " << _baseTypeName << "* out[1];\n"
+                "   " << _baseTypeName << "* compressed;\n"
+                "   int found;\n"
+                "\n"
+                "   found = 0;\n"
+                "   for (ii = 0; ii < " << m << "; ii++) {\n"
+                "      if (py[ii] != 0.0) {\n"
+                "         if (found) {\n"
+                "            return 1; // error \n"
+                "         } else if(py[ii] != 1.0) {\n"
+                "            return 2; // error \n"
+                "         }\n"
+                "         i = ii;\n"
+                "         found = 1;\n"
+                "      }\n"
+                "   }\n"
+                "   for (j = 0; j < " << n << "; j++) {\n"
+                "      px[j] = 0;\n"
+                "   }\n"
+                "   if (!found) {\n"
+                "      return 0; //nothing to do\n"
+                "   }\n"
+                "\n"
+                "   " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(i, &pos, &nnz);\n"
+                "\n"
+                "   compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof(" << _baseTypeName << "));\n"
+                "   in[0] = x;\n"
+                "   out[0] = compressed;\n"
+                "   " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, in, out);\n"
+                "\n"
+                "   for (e = 0; e < nnz; e++) {\n"
+                "      px[pos[e]] = compressed[e];\n"
+                "   }\n"
+                "\n"
+                "   free(compressed);\n"
+                "   return 0;\n"
+                "}\n";
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
     }
 
     template<class Base>
@@ -683,6 +824,72 @@ namespace CppAD {
     }
 
     template<class Base>
+    void CLangCompileModelHelper<Base>::generateReverseTwoSources(std::map<std::string, std::string>& sources) {
+        //size_t m = _fun->Range();
+        size_t n = _fun->Domain();
+
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_REVERSE_TWO;
+        std::string model_function(_cache.str());
+
+        _cache.str("");
+        _cache << "#include <stdlib.h>\n"
+                "\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long int pos, " << _baseTypeName << " const *const * in, " << _baseTypeName << " * const * out);\n"
+                "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "\n"
+                "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " const ty[], " << _baseTypeName << " px[], " << _baseTypeName << " const py[]) {\n"
+                "    unsigned long int e, i, j, jj, nnz;\n"
+                "    unsigned long int const* pos;\n"
+                "    " << _baseTypeName << " const * in[2];\n"
+                "    " << _baseTypeName << " * out[1];\n"
+                "    " << _baseTypeName << " x[" << n << "];\n"
+                "    " << _baseTypeName << "* compressed;\n"
+                "    int found;\n"
+                "\n"
+                "    found = 0;\n"
+                "    for (jj = 0; jj < " << n << "; jj++) {\n"
+                "        if (tx[jj * 2 + 1] != 0.0) {\n"
+                "            if (found) {\n"
+                "                return 1; // error \n"
+                "            } else if(tx[jj * 2 + 1] != 1.0) {\n"
+                "                return 2; // error \n"
+                "            }\n"
+                "            j = jj;\n"
+                "            found = 1;\n"
+                "        }\n"
+                "    }\n"
+                "    for (jj = 0; jj < " << n << "; jj++) {\n"
+                "        px[jj * 2] = 0;\n"
+                "    }\n"
+                "    if (!found) {\n"
+                "        return 0; //nothing to do\n"
+                "    }\n"
+                "\n"
+                "    for (jj = 0; jj < " << n << "; jj++)\n"
+                "        x[jj] = tx[jj * 2];\n"
+                "\n"
+                "    " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(j, &pos, &nnz);\n"
+                "\n"
+                "    compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof (" << _baseTypeName << "));\n"
+                "    in[0] = x;\n"
+                "    in[1] = py; \n"
+                "    out[0] = compressed;\n"
+                "    " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, in, out);\n"
+                "\n"
+                "    for (e = 0; e < nnz; e++) {\n"
+                "        px[pos[e] * 2] = compressed[e];\n"
+                "    }\n"
+                "\n"
+                "    free(compressed);\n"
+                "    return 0;\n"
+                "};\n";
+
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::generateGlobalDirectionalFunctionSource(const std::string& function,
                                                                                 const std::string& suffix,
                                                                                 const std::string& function_sparsity,
@@ -698,20 +905,20 @@ namespace CppAD {
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             _cache << "void " << model_function << "_" << suffix << it->first
-                    << "(double const *const * in, double *const * out);\n";
+                    << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n";
         }
         _cache << "\n";
-        _cache << "void " << model_function << "("
+        _cache << "int " << model_function << "("
                 "unsigned long int pos," << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
                 "   switch(pos) {\n";
         for (it = elements.begin(); it != elements.end(); ++it) {
             // the size of each sparsity row
             _cache << "      case " << it->first << ":\n"
                     "         " << model_function << "_" << suffix << it->first << "(in, out);\n"
-                    "         return;\n";
+                    "         return 0; // done\n";
         }
         _cache << "      default:\n"
-                "         return;\n"
+                "         return 1; // error\n"
                 "   };\n";
 
         _cache << "}\n";
@@ -734,7 +941,7 @@ namespace CppAD {
                 " unsigned long int* nnz) {\n";
 
         // the size of each sparsity row
-        _cache << "static unsigned long int const nonzeros[" << sparsity.size() << "] = {";
+        _cache << "   static unsigned long int const nonzeros[" << sparsity.size() << "] = {";
         if (!sparsity.empty()) {
             _cache << sparsity[0];
             for (size_t i = 1; i < sparsity.size(); i++) {
@@ -743,8 +950,8 @@ namespace CppAD {
         }
         _cache << "};\n";
 
-        _cache << "*sparsity = nonzeros;\n"
-                "*nnz = " << sparsity.size() << ";\n"
+        _cache << "   *sparsity = nonzeros;\n"
+                "   *nnz = " << sparsity.size() << ";\n"
                 "}\n";
     }
 
@@ -800,7 +1007,7 @@ namespace CppAD {
             const std::vector<size_t>& cols = sparsities[i].cols;
             assert(rows.size() == cols.size());
 
-            _cache << "static unsigned long int const rows" << i << "[" << rows.size() << "] = {";
+            _cache << "   static unsigned long int const rows" << i << "[" << rows.size() << "] = {";
             if (!rows.empty()) {
                 _cache << rows[0];
                 for (size_t i = 1; i < rows.size(); i++) {
@@ -809,7 +1016,7 @@ namespace CppAD {
             }
             _cache << "};\n";
 
-            _cache << "static unsigned long int const cols" << i << "[" << cols.size() << "] = {";
+            _cache << "   static unsigned long int const cols" << i << "[" << cols.size() << "] = {";
             if (!cols.empty()) {
                 _cache << cols[0];
                 for (size_t i = 1; i < cols.size(); i++) {

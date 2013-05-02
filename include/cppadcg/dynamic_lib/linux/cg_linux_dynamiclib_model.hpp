@@ -39,21 +39,27 @@ namespace CppAD {
         std::vector<const Base*> _in;
         std::vector<const Base*> _inHess;
         std::vector<Base*> _out;
-        void (*_zero)(double const*const*, double*const*);
+        void (*_zero)(Base const*const*, Base * const*);
+        //
+        int (*_forwardOne)(Base const tx[], Base ty[]);
+        //
+        int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[]);
+        //
+        int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[]);
         // jacobian function in the dynamic library
-        void (*_jacobian)(double const*const*, double*const*);
+        void (*_jacobian)(Base const*const*, Base * const*);
         // hessian function in the dynamic library
-        void (*_hessian)(double const*const*, double*const*);
+        void (*_hessian)(Base const*const*, Base * const*);
         //
-        void (*_sparseForwardOne)(unsigned long int, double const *const *, double *const *);
+        int (*_sparseForwardOne)(unsigned long int, Base const *const *, Base * const *);
         //
-        void (*_sparseReverseZero)(unsigned long int, double const *const *, double *const *);
+        int (*_sparseReverseOne)(unsigned long int, Base const *const *, Base * const *);
         //
-        void (*_sparseReverseOne)(unsigned long int, double const *const *, double *const *);
+        int (*_sparseReverseTwo)(unsigned long int, Base const *const *, Base * const *);
         // sparse jacobian function in the dynamic library
-        void (*_sparseJacobian)(double const*const*, double*const*);
+        void (*_sparseJacobian)(Base const*const*, Base * const*);
         // sparse hessian function in the dynamic library
-        void (*_sparseHessian)(double const*const*, double*const*);
+        void (*_sparseHessian)(Base const*const*, Base * const*);
         //
         void (*_forwardOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*);
         //
@@ -246,7 +252,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
-            CppAD::vector<double> dep(_m);
+            CppAD::vector<Base> dep(_m);
             _out[0] = &dep[0];
 
             (*_zero)(&_in[0], &_out[0]);
@@ -262,7 +268,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
-            std::vector<double> dep(_m);
+            std::vector<Base> dep(_m);
             _out[0] = &dep[0];
 
             (*_zero)(&_in[0], &_out[0]);
@@ -354,7 +360,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
 
             _in[0] = &x[0];
-            std::vector<double> jac(_m * _n);
+            std::vector<Base> jac(_m * _n);
             _out[0] = &jac[0];
 
             (*_jacobian)(&_in[0], &_out[0]);
@@ -463,10 +469,10 @@ namespace CppAD {
             (*_hessian)(&_inHess[0], &_out[0]);
         }
 
-        virtual CppAD::vector<Base> SparseForwardOne(const CppAD::vector<Base>& tx) {
+        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) {
             const size_t k = 1;
             CppAD::vector<Base> ty((k + 1) * _m);
-            this->SparseForwardOne(tx, ty);
+            this->ForwardOne(tx, ty);
 
             CppAD::vector<Base> dy(_m);
             for (size_t i = 0; i < _m; i++) {
@@ -476,188 +482,78 @@ namespace CppAD {
             return dy;
         }
 
-        virtual void SparseForwardOne(const CppAD::vector<Base>& tx,
-                                      CppAD::vector<Base>& ty) {
+        virtual void ForwardOne(const CppAD::vector<Base>& tx,
+                                CppAD::vector<Base>& ty) {
             const size_t k = 1;
-            const size_t el = k;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_sparseForwardOne != NULL, "No sparse forward one function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
+            CPPADCG_ASSERT_KNOWN(_forwardOne != NULL, "No forward one function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(tx.size() >= (k + 1) * _n, "Invalid tx size");
             CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size");
 
-            size_t j;
-            bool found = false;
-            for (size_t jj = 0; jj < _n; jj++) {
-                if (tx[jj * (k + 1) + el] != Base(0.0)) {
-                    CPPADCG_ASSERT_KNOWN(!found, "Only one tx is allowed to be non-zero");
-                    CPPADCG_ASSERT_KNOWN(tx[jj * (k + 1) + el] == Base(1.0), "Invalid tx value, must be either zero or one.");
-                    j = jj;
-                    found = true;
-                }
-            }
+            int ret = (*_forwardOne)(&tx[0], &ty[0]);
 
-            for (size_t i = 0; i < _m; i++) {
-                ty[i * (k + 1) + el] = Base(0);
-            }
-
-            if (!found) {
-                return; //nothing to do
-            }
-
-            unsigned long int const* pos;
-            unsigned long int nnz;
-            (*_forwardOneSparsity)(j, &pos, &nnz);
-
-            std::vector<Base> x(_n);
-            for (size_t jj = 0; jj < _n; jj++)
-                x[jj] = tx[jj * (k + 1)]; // zero-order
-
-            std::vector<Base> compressed(nnz);
-
-            _in[0] = &x[0];
-            _out[0] = &compressed[0];
-
-            (*_sparseForwardOne)(j, &_in[0], &_out[0]);
-
-            for (size_t e = 0; e < nnz; e++) {
-                size_t i = pos[e];
-                ty[i * (k + 1) + el] = compressed[e];
-            }
+            CPPADCG_ASSERT_KNOWN(ret != 1, "First-order forward mode failed: Only one tx is allowed to be non-zero.");
+            CPPADCG_ASSERT_KNOWN(ret != 2, "First-order forward mode failed: Invalid tx value, must be either zero or one.");
+            CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
         }
 
-        virtual CppAD::vector<Base> SparseReverseOne(const CppAD::vector<Base>& tx,
-                                                     const CppAD::vector<Base>& ty,
-                                                     const CppAD::vector<Base>& py) {
+        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
+                                               const CppAD::vector<Base>& ty,
+                                               const CppAD::vector<Base>& py) {
             const size_t k = 0;
             CppAD::vector<Base> px((k + 1) * _n);
-            this->SparseReverseOne(tx, ty, px, py);
+            this->ReverseOne(tx, ty, px, py);
             return px;
         }
 
-        virtual void SparseReverseOne(const CppAD::vector<Base>& tx,
-                                      const CppAD::vector<Base>& ty,
-                                      CppAD::vector<Base>& px,
-                                      const CppAD::vector<Base>& py) {
+        virtual void ReverseOne(const CppAD::vector<Base>& tx,
+                                const CppAD::vector<Base>& ty,
+                                CppAD::vector<Base>& px,
+                                const CppAD::vector<Base>& py) {
             const size_t k = 0;
             const size_t k1 = k + 1;
-            const size_t el = k;
-            const size_t p = k;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_sparseReverseZero != NULL, "No sparse reverse one function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
+            CPPADCG_ASSERT_KNOWN(_reverseOne != NULL, "No reverse one function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
             CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
 
-            size_t i;
-            bool found = false;
-            for (size_t ii = 0; ii < _m; ii++) {
-                if (py[ii * k1 + el] != Base(0.0)) {
-                    CPPADCG_ASSERT_KNOWN(!found, "Only one py is allowed to be non-zero");
-                    CPPADCG_ASSERT_KNOWN(py[ii * k1 + el] == Base(1.0), "Invalid py value, must be either zero or one.");
-                    i = ii;
-                    found = true;
-                }
-            }
-            for (size_t j = 0; j < _n; j++) {
-                px[j * k1 + p] = Base(0);
-            }
+            int ret = (*_reverseOne)(&tx[0], &ty[0], &px[0], &py[0]);
 
-            if (!found) {
-                return; //nothing to do
-            }
-
-            // get px sparsity
-            unsigned long int const* pos;
-            unsigned long int nnz;
-            (*_reverseOneSparsity)(i, &pos, &nnz);
-
-            CppAD::vector<Base> compressed(nnz);
-
-            _in[0] = &tx[0];
-            _out[0] = &compressed[0];
-
-            // get non-zero px values
-            (*_sparseReverseZero)(i, &_in[0], &_out[0]);
-
-            // save non-zero values
-            for (size_t e = 0; e < nnz; e++) {
-                size_t j = pos[e];
-                px[j * k1 + p] = compressed[e];
-            }
+            CPPADCG_ASSERT_KNOWN(ret != 1, "First-order reverse mode failed: Only one py is allowed to be non-zero.");
+            CPPADCG_ASSERT_KNOWN(ret != 2, "First-order reverse mode failed: Invalid py value, must be either zero or one.");
+            CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
         }
 
-        virtual CppAD::vector<Base> SparseReverseTwo(const CppAD::vector<Base>& tx,
-                                                     const CppAD::vector<Base>& ty,
-                                                     const CppAD::vector<Base>& py) {
+        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
+                                               const CppAD::vector<Base>& ty,
+                                               const CppAD::vector<Base>& py) {
             const size_t k = 1;
             CppAD::vector<Base> px((k + 1) * _n);
-            this->SparseReverseTwo(tx, ty, px, py);
+            this->ReverseTwo(tx, ty, px, py);
             return px;
         }
 
-        virtual void SparseReverseTwo(const CppAD::vector<Base>& tx,
-                                      const CppAD::vector<Base>& ty,
-                                      CppAD::vector<Base>& px,
-                                      const CppAD::vector<Base>& py) {
+        virtual void ReverseTwo(const CppAD::vector<Base>& tx,
+                                const CppAD::vector<Base>& ty,
+                                CppAD::vector<Base>& px,
+                                const CppAD::vector<Base>& py) {
             const size_t k = 1;
             const size_t k1 = k + 1;
-            const size_t p = k;
-            //const size_t el = k;
 
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_sparseReverseOne != NULL, "No sparse reverse two function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(_reverseTwo != NULL, "No sparse reverse two function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
             CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
             CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
             CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
 
-            size_t j;
-            bool found = false;
-            for (size_t jj = 0; jj < _n; jj++) {
-                if (tx[jj * k1 + 1] != Base(0.0)) {
-                    CPPADCG_ASSERT_KNOWN(!found, "Only one py is allowed to be non-zero");
-                    CPPADCG_ASSERT_KNOWN(tx[jj * k1 + 1] == Base(1.0), "Invalid tx value, must be either zero or one.");
-                    j = jj;
-                    found = true;
-                }
-            }
+            int ret = (*_reverseTwo)(&tx[0], &ty[0], &px[0], &py[0]);
 
-            for (size_t jj = 0; jj < _n; jj++) {
-                px[jj * k1 + p] = Base(0);
-            }
-
-            if (!found) {
-                return; //nothing to do
-            }
-
-            // get px sparsity
-            unsigned long int const* pos;
-            unsigned long int nnz;
-            (*_reverseTwoSparsity)(j, &pos, &nnz);
-
-            CppAD::vector<Base> x(_n);
-            for (size_t jj = 0; jj < _n; jj++)
-                x[jj] = tx[jj * k1];
-
-
-            std::vector<Base> compressed(nnz);
-
-            _inHess[0] = &x[0];
-            _inHess[1] = &py[0]; // expected size is (k+1)*m
-            _out[0] = &compressed[0];
-
-            // get non-zero px values
-            (*_sparseReverseOne)(j, &_inHess[0], &_out[0]);
-
-            // save non-zero px values
-            for (size_t e = 0; e < nnz; e++) {
-                size_t jj = pos[e];
-                px[jj * k1] = compressed[e];
-            }
-
+            CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: Only one py is allowed to be non-zero.");
+            CPPADCG_ASSERT_KNOWN(ret != 2, "Second-order reverse mode failed: Invalid tx value, must be either zero or one.");
+            CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
         }
 
         /// calculate sparse Jacobians 
@@ -900,11 +796,14 @@ namespace CppAD {
             _m(0),
             _n(0),
             _zero(NULL),
+            _forwardOne(NULL),
+            _reverseOne(NULL),
+            _reverseTwo(NULL),
             _jacobian(NULL),
             _hessian(NULL),
             _sparseForwardOne(NULL),
-            _sparseReverseZero(NULL),
             _sparseReverseOne(NULL),
+            _sparseReverseTwo(NULL),
             _sparseJacobian(NULL),
             _sparseHessian(NULL),
             _forwardOneSparsity(NULL),
@@ -958,11 +857,14 @@ namespace CppAD {
 
         virtual void loadFunctions() {
             *(void **) (&_zero) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWAD_ZERO, false);
+            *(void **) (&_forwardOne) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWARD_ONE, false);
+            *(void **) (&_reverseOne) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_REVERSE_ONE, false);
+            *(void **) (&_reverseTwo) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_REVERSE_TWO, false);
             *(void **) (&_jacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN, false);
             *(void **) (&_hessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN, false);
             *(void **) (&_sparseForwardOne) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_FORWARD_ONE, false);
-            *(void **) (&_sparseReverseZero) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_ONE, false);
-            *(void **) (&_sparseReverseOne) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_TWO, false);
+            *(void **) (&_sparseReverseOne) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_ONE, false);
+            *(void **) (&_sparseReverseTwo) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_REVERSE_TWO, false);
             *(void **) (&_sparseJacobian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_JACOBIAN, false);
             *(void **) (&_sparseHessian) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_SPARSE_HESSIAN, false);
             *(void **) (&_forwardOneSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_FORWARD_ONE_SPARSITY, false);
@@ -973,8 +875,11 @@ namespace CppAD {
             *(void **) (&_hessianSparsity2) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY2, false);
 
             CPPADCG_ASSERT_KNOWN((_sparseForwardOne == NULL) == (_forwardOneSparsity == NULL), "Missing functions in the dynamic library");
-            CPPADCG_ASSERT_KNOWN((_sparseReverseZero == NULL) == (_reverseOneSparsity == NULL), "Missing functions in the dynamic library");
-            CPPADCG_ASSERT_KNOWN((_sparseReverseOne == NULL) == (_reverseTwoSparsity == NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseForwardOne == NULL) == (_forwardOne == NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseReverseOne == NULL) == (_reverseOneSparsity == NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseReverseOne == NULL) == (_reverseOne == NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseReverseTwo == NULL) == (_reverseTwoSparsity == NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseReverseTwo == NULL) == (_reverseTwo == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseJacobian == NULL) || (_jacobianSparsity != NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) || (_hessianSparsity != NULL && _hessianSparsity2 != NULL), "Missing functions in the dynamic library");
         }
@@ -1024,11 +929,14 @@ namespace CppAD {
         void dynamicLibClosed() {
             _dynLib = NULL;
             _zero = NULL;
+            _forwardOne = NULL;
+            _reverseOne = NULL;
+            _reverseTwo = NULL;
             _jacobian = NULL;
             _hessian = NULL;
             _sparseForwardOne = NULL;
-            _sparseReverseZero = NULL;
             _sparseReverseOne = NULL;
+            _sparseReverseTwo = NULL;
             _sparseJacobian = NULL;
             _sparseHessian = NULL;
             _forwardOneSparsity = NULL;

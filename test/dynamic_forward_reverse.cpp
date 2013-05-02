@@ -79,9 +79,9 @@ namespace CppAD {
             CLangCompileModelHelper<double> compHelp(_fun, MODEL_NAME);
 
             compHelp.setCreateForwardZero(true);
-            compHelp.setCreateSparseForwardOne(true);
-            compHelp.setCreateSparseReverseOne(true);
-            compHelp.setCreateSparseReverseTwo(true);
+            compHelp.setCreateForwardOne(true);
+            compHelp.setCreateReverseOne(true);
+            compHelp.setCreateReverseTwo(true);
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
             compHelp.setCreateSparseJacobian(false);
@@ -151,7 +151,7 @@ namespace CppAD {
             CppADCGDynamicForRevTest::MODEL->ForwardZero(vx, vy, tx, ty);
             return true;
         } else if (k == 1) {
-            CppADCGDynamicForRevTest::MODEL->SparseForwardOne(tx, ty);
+            CppADCGDynamicForRevTest::MODEL->ForwardOne(tx, ty);
             return true;
         }
 
@@ -167,10 +167,10 @@ namespace CppAD {
                                 vector<double>& px,
                                 const vector<double>& py) {
         if (k == 0) {
-            CppADCGDynamicForRevTest::MODEL->SparseReverseOne(tx, ty, px, py);
+            CppADCGDynamicForRevTest::MODEL->ReverseOne(tx, ty, px, py);
             return true;
         } else if (k == 1) {
-            CppADCGDynamicForRevTest::MODEL->SparseReverseTwo(tx, ty, px, py);
+            CppADCGDynamicForRevTest::MODEL->ReverseTwo(tx, ty, px, py);
             return true;
         }
 
@@ -365,7 +365,7 @@ TEST_F(CppADCGDynamicForRevTest, DynamicForRev) {
         wOrig[i] = 1;
 
         vector<CGD> dwOrig = _fun->Reverse(1, wOrig);
-        vector<double> dwInner = CppADCGDynamicForRevTest::MODEL->SparseReverseOne(tx, ty, w);
+        vector<double> dwInner = CppADCGDynamicForRevTest::MODEL->ReverseOne(tx, ty, w);
         vector<double> dwOutter = f2.Reverse(1, w);
 
         w[i] = 0;
@@ -404,7 +404,7 @@ TEST_F(CppADCGDynamicForRevTest, DynamicForRev) {
 
         _fun->Forward(1, x_pOrig);
         vector<CGD> dwOrig = _fun->Reverse(2, pyOrig);
-        vector<double> dwInner = CppADCGDynamicForRevTest::MODEL->SparseReverseTwo(tx, ty, py);
+        vector<double> dwInner = CppADCGDynamicForRevTest::MODEL->ReverseTwo(tx, ty, py);
         f2.Forward(1, x_p);
         vector<double> dwOutter = f2.Reverse(2, py);
 

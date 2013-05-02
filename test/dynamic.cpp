@@ -77,9 +77,9 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
     compHelp.setCreateHessian(true);
     compHelp.setCreateSparseJacobian(true);
     compHelp.setCreateSparseHessian(true);
-    compHelp.setCreateSparseForwardOne(true);
-    compHelp.setCreateSparseReverseOne(true);
-    compHelp.setCreateSparseReverseTwo(true);
+    compHelp.setCreateForwardOne(true);
+    compHelp.setCreateReverseOne(true);
+    compHelp.setCreateReverseTwo(true);
     compHelp.setMaxAssignmentsPerFunc(1);
 
     GccCompiler<double> compiler;

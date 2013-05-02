@@ -31,6 +31,9 @@ namespace CppAD {
         static const std::string FUNCTION_FORWAD_ZERO;
         static const std::string FUNCTION_JACOBIAN;
         static const std::string FUNCTION_HESSIAN;
+        static const std::string FUNCTION_FORWARD_ONE;
+        static const std::string FUNCTION_REVERSE_ONE;
+        static const std::string FUNCTION_REVERSE_TWO;
         static const std::string FUNCTION_SPARSE_JACOBIAN;
         static const std::string FUNCTION_SPARSE_HESSIAN;
         static const std::string FUNCTION_JACOBIAN_SPARSITY;
@@ -91,9 +94,9 @@ namespace CppAD {
         bool _hessian;
         bool _sparseJacobian;
         bool _sparseHessian;
-        bool _sparseForwardOne;
-        bool _sparseReverseOne;
-        bool _sparseReverseTwo;
+        bool _forwardOne;
+        bool _reverseOne;
+        bool _reverseTwo;
         /**
          * 
          */
@@ -135,9 +138,9 @@ namespace CppAD {
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
-            _sparseForwardOne(false),
-            _sparseReverseOne(false),
-            _sparseReverseTwo(false),
+            _forwardOne(false),
+            _reverseOne(false),
+            _reverseTwo(false),
             _maxAssignPerFunc(20000),
             _beginTime(0) {
 
@@ -201,27 +204,27 @@ namespace CppAD {
         }
 
         inline bool isCreateSparseForwardOne() const {
-            return _sparseForwardOne;
+            return _forwardOne;
         }
 
-        inline void setCreateSparseForwardOne(bool createFunction) {
-            _sparseForwardOne = createFunction;
+        inline void setCreateForwardOne(bool createFunction) {
+            _forwardOne = createFunction;
         }
 
-        inline bool isCreateSparseReverseOne() const {
-            return _sparseReverseOne;
+        inline bool isCreateReverseOne() const {
+            return _reverseOne;
         }
 
-        inline void setCreateSparseReverseOne(bool createFunction) {
-            _sparseReverseOne = createFunction;
+        inline void setCreateReverseOne(bool createFunction) {
+            _reverseOne = createFunction;
         }
 
-        inline bool isCreateSparseReverseTwo() const {
-            return _sparseReverseOne;
+        inline bool isCreateReverseTwo() const {
+            return _reverseOne;
         }
 
-        inline void setCreateSparseReverseTwo(bool createFunction) {
-            _sparseReverseTwo = createFunction;
+        inline void setCreateReverseTwo(bool createFunction) {
+            _reverseTwo = createFunction;
         }
 
         inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
@@ -289,15 +292,21 @@ namespace CppAD {
 
         virtual void generateSparseForwardOneSources(std::map<std::string, std::string>& sources);
 
+        virtual void generateForwardOneSources(std::map<std::string, std::string>& sources);
+
         virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
+        
+        virtual void generateReverseOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources);
+        
+        virtual void generateReverseTwoSources(std::map<std::string, std::string>& sources);
 
         virtual void generateGlobalDirectionalFunctionSource(const std::string& function,
-                                                            const std::string& function2_suffix,
-                                                            const std::string& function_sparsity,
-                                                            const std::map<size_t, std::vector<size_t> >& elements,
-                                                            std::map<std::string, std::string>& sources);
+                                                             const std::string& function2_suffix,
+                                                             const std::string& function_sparsity,
+                                                             const std::map<size_t, std::vector<size_t> >& elements,
+                                                             std::map<std::string, std::string>& sources);
 
         virtual void determineJacobianSparsity();
 

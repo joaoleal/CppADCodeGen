@@ -128,8 +128,8 @@ namespace CppAD {
          * @param tx
          * @param ty The values of the directional derivatives
          */
-        virtual void SparseForwardOne(const CppAD::vector<Base>& tx,
-                                      CppAD::vector<Base>& ty) = 0;
+        virtual void ForwardOne(const CppAD::vector<Base>& tx,
+                                CppAD::vector<Base>& ty) = 0;
 
         /**
          * Computes results during a forward mode sweep. 
@@ -141,7 +141,7 @@ namespace CppAD {
          * @param tx
          * @return ty
          */
-        virtual CppAD::vector<Base> SparseForwardOne(const CppAD::vector<Base>& tx) = 0;
+        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) = 0;
 
         /**
          * Computes results during a reverse mode sweep. 
@@ -153,10 +153,10 @@ namespace CppAD {
          * @param px
          * @param py
          */
-        virtual void SparseReverseOne(const CppAD::vector<Base>& tx,
-                                      const CppAD::vector<Base>& ty,
-                                      CppAD::vector<Base>& px,
-                                      const CppAD::vector<Base>& py) = 0;
+        virtual void ReverseOne(const CppAD::vector<Base>& tx,
+                                const CppAD::vector<Base>& ty,
+                                CppAD::vector<Base>& px,
+                                const CppAD::vector<Base>& py) = 0;
 
         /**
          * Computes results during a reverse mode sweep. 
@@ -168,9 +168,9 @@ namespace CppAD {
          * @param py
          * @return px
          */
-        virtual CppAD::vector<Base> SparseReverseOne(const CppAD::vector<Base>& tx,
-                                                     const CppAD::vector<Base>& ty,
-                                                     const CppAD::vector<Base>& py) = 0;
+        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
+                                               const CppAD::vector<Base>& ty,
+                                               const CppAD::vector<Base>& py) = 0;
 
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
@@ -184,10 +184,10 @@ namespace CppAD {
          * @param px
          * @param py
          */
-        virtual void SparseReverseTwo(const CppAD::vector<Base>& tx,
-                                      const CppAD::vector<Base>& ty,
-                                      CppAD::vector<Base>& px,
-                                      const CppAD::vector<Base>& py) = 0;
+        virtual void ReverseTwo(const CppAD::vector<Base>& tx,
+                                const CppAD::vector<Base>& ty,
+                                CppAD::vector<Base>& px,
+                                const CppAD::vector<Base>& py) = 0;
 
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
@@ -201,9 +201,9 @@ namespace CppAD {
          * @param py
          * @return px
          */
-        virtual CppAD::vector<Base> SparseReverseTwo(const CppAD::vector<Base>& tx,
-                                                     const CppAD::vector<Base>& ty,
-                                                     const CppAD::vector<Base>& py) = 0;
+        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
+                                               const CppAD::vector<Base>& ty,
+                                               const CppAD::vector<Base>& py) = 0;
 
         /// calculate sparse Jacobians 
         virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;
