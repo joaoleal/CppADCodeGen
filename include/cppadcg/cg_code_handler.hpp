@@ -35,7 +35,7 @@ namespace CppAD {
         size_t _idCount;
         // the independent variables
         std::vector<SourceCodeFragment<Base> *> _independentVariables;
-        // all the source code blocks created with the CG<Base> objects
+        // all the source code blocks created with the CG<Base> objects (does not include independent variables)
         std::vector<SourceCodeFragment<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
         std::vector<SourceCodeFragment<Base> *> _variableOrder;
@@ -468,7 +468,6 @@ namespace CppAD {
             for (it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                 SourceCodeFragment<Base>* block = *it;
                 block->use_count_ = 0;
-
             }
         }
 
