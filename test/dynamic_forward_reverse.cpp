@@ -276,8 +276,8 @@ TEST_F(CppADCGDynamicForRevTest, DynamicForRev) {
     using CppAD::vector;
 
     typedef double Base;
-    typedef CG<Base> CGD;
-    typedef AD<CGD> ADCG;
+    typedef CppAD::CG<Base> CGD;
+    typedef CppAD::AD<CGD> ADCG;
 
     vector< AD<double> > ax(n);
     for (size_t j = 0; j < n; j++)

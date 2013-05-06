@@ -484,7 +484,7 @@ namespace CppAD {
         /**
          * Generate one function for each dependent variable
          */
-        std::vector<CGBase> dx(n, Base(0));
+        std::vector<CGBase> dxv(n, Base(0));
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
@@ -503,13 +503,14 @@ namespace CppAD {
             std::vector<CGBase> indVars(n);
             handler.makeVariables(indVars);
 
-
+            CGBase dx;
+            handler.makeVariable(dx);
 
             // TODO: consider caching the zero order coefficients somehow between calls
             _fun->Forward(0, indVars);
-            dx[j] = Base(1);
-            std::vector<CGBase> dy = _fun->Forward(1, dx);
-            dx[j] = Base(0);
+            dxv[j] = dx;
+            std::vector<CGBase> dy = _fun->Forward(1, dxv);
+            dxv[j] = Base(0);
             assert(dy.size() == m);
 
             std::vector<CGBase> dyCustom;
@@ -528,8 +529,9 @@ namespace CppAD {
 
             std::ostringstream code;
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "ind", "var"));
+            CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
-            handler.generateCode(code, langC, dyCustom, *nameGen, jobName);
+            handler.generateCode(code, langC, dyCustom, nameGenHess, jobName);
         }
 
         _cache.str("");
@@ -560,7 +562,7 @@ namespace CppAD {
                 "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " ty[]) {\n"
                 "   unsigned long int e, i, j, jj, nnz;\n"
                 "   unsigned long int const* pos;\n"
-                "   " << _baseTypeName << " const * in[1];\n"
+                "   " << _baseTypeName << " const * in[2];\n"
                 "   " << _baseTypeName << "* out[1];\n"
                 "   " << _baseTypeName << " x[" << n << "];\n"
                 "   " << _baseTypeName << "* compressed;\n"
@@ -571,8 +573,6 @@ namespace CppAD {
                 "      if (tx[jj * 2 + 1] != 0.0) {\n"
                 "         if (found) {\n"
                 "            return 1; // error \n"
-                "         } else  if(tx[jj * 2 + 1] != 1.0) {\n"
-                "            return 2; // error \n"
                 "         }\n"
                 "         j = jj;\n"
                 "         found = 1;\n"
@@ -592,6 +592,7 @@ namespace CppAD {
                 "\n"
                 "   compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof(" << _baseTypeName << "));\n"
                 "   in[0] = x;\n"
+                "   in[1] = &tx[j * 2 + 1];\n"
                 "   out[0] = compressed;\n"
                 "   " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, in, out);\n"
                 "\n"
@@ -641,10 +642,13 @@ namespace CppAD {
             std::vector<CGBase> indVars(_fun->Domain());
             handler.makeVariables(indVars);
 
+            CGBase py;
+            handler.makeVariable(py);
+
             // TODO: consider caching the zero order coefficients somehow between calls
             _fun->Forward(0, indVars);
 
-            w[i] = Base(1);
+            w[i] = py;
             std::vector<CGBase> dw = _fun->Reverse(1, w);
             assert(dw.size() == n);
             w[i] = Base(0);
@@ -665,8 +669,9 @@ namespace CppAD {
 
             std::ostringstream code;
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "ind", "var"));
+            CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "py", n);
 
-            handler.generateCode(code, langC, dwCustom, *nameGen, jobName);
+            handler.generateCode(code, langC, dwCustom, nameGenHess, jobName);
         }
 
         _cache.str("");
@@ -700,7 +705,7 @@ namespace CppAD {
                 << _baseTypeName << " const py[]) {\n"
                 "   unsigned long int e, i, ii, j, nnz;\n"
                 "   unsigned long int const* pos;\n"
-                "   " << _baseTypeName << " const * in[1];\n"
+                "   " << _baseTypeName << " const * in[2];\n"
                 "   " << _baseTypeName << "* out[1];\n"
                 "   " << _baseTypeName << "* compressed;\n"
                 "   int found;\n"
@@ -710,8 +715,6 @@ namespace CppAD {
                 "      if (py[ii] != 0.0) {\n"
                 "         if (found) {\n"
                 "            return 1; // error \n"
-                "         } else if(py[ii] != 1.0) {\n"
-                "            return 2; // error \n"
                 "         }\n"
                 "         i = ii;\n"
                 "         found = 1;\n"
@@ -728,6 +731,7 @@ namespace CppAD {
                 "\n"
                 "   compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof(" << _baseTypeName << "));\n"
                 "   in[0] = x;\n"
+                "   in[1] = &py[i];\n"
                 "   out[0] = compressed;\n"
                 "   " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, in, out);\n"
                 "\n"
@@ -758,7 +762,7 @@ namespace CppAD {
             elements[_hessSparsity.cols[e]].push_back(_hessSparsity.rows[e]);
         }
 
-        std::vector<CGBase> tx1(n, Base(0));
+        std::vector<CGBase> tx1v(n, Base(0));
 
         /**
          * Generate one function for each dependent variable
@@ -780,15 +784,18 @@ namespace CppAD {
             std::vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
 
+            CGBase tx1;
+            handler.makeVariable(tx1);
+
             std::vector<CGBase> w(k1 * m);
             handler.makeVariables(w);
 
             // TODO: consider caching the zero order coefficients somehow between calls
             std::vector<CGBase> y = _fun->Forward(0, tx0);
 
-            tx1[j] = Base(1);
-            std::vector<CGBase> y_p = _fun->Forward(1, tx1);
-            tx1[j] = Base(0);
+            tx1v[j] = tx1;
+            std::vector<CGBase> y_p = _fun->Forward(1, tx1v);
+            tx1v[j] = Base(0);
             std::vector<CGBase> ddw = _fun->Reverse(2, w);
             assert(ddw.size() == 2 * n);
 
@@ -809,9 +816,9 @@ namespace CppAD {
 
             std::ostringstream code;
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "ind", "var"));
-            CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+            CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
-            handler.generateCode(code, langC, ddwCustom, nameGenHess, jobName);
+            handler.generateCode(code, langC, ddwCustom, nameGenRev2, jobName);
         }
 
         _cache.str("");
@@ -841,7 +848,7 @@ namespace CppAD {
                 "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " const ty[], " << _baseTypeName << " px[], " << _baseTypeName << " const py[]) {\n"
                 "    unsigned long int e, i, j, jj, nnz;\n"
                 "    unsigned long int const* pos;\n"
-                "    " << _baseTypeName << " const * in[2];\n"
+                "    " << _baseTypeName << " const * in[3];\n"
                 "    " << _baseTypeName << " * out[1];\n"
                 "    " << _baseTypeName << " x[" << n << "];\n"
                 "    " << _baseTypeName << "* compressed;\n"
@@ -852,8 +859,6 @@ namespace CppAD {
                 "        if (tx[jj * 2 + 1] != 0.0) {\n"
                 "            if (found) {\n"
                 "                return 1; // error \n"
-                "            } else if(tx[jj * 2 + 1] != 1.0) {\n"
-                "                return 2; // error \n"
                 "            }\n"
                 "            j = jj;\n"
                 "            found = 1;\n"
@@ -873,7 +878,8 @@ namespace CppAD {
                 "\n"
                 "    compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof (" << _baseTypeName << "));\n"
                 "    in[0] = x;\n"
-                "    in[1] = py; \n"
+                "    in[1] = &tx[j * 2 + 1];\n"
+                "    in[2] = py; \n"
                 "    out[0] = compressed;\n"
                 "    " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, in, out);\n"
                 "\n"

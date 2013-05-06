@@ -499,7 +499,6 @@ namespace CppAD {
             int ret = (*_forwardOne)(tx, ty);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "First-order forward mode failed: Only one tx is allowed to be non-zero.");
-            CPPADCG_ASSERT_KNOWN(ret != 2, "First-order forward mode failed: Invalid tx value, must be either zero or one.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
         }
 
@@ -539,7 +538,6 @@ namespace CppAD {
             int ret = (*_reverseOne)(tx, ty, px, py);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "First-order reverse mode failed: Only one py is allowed to be non-zero.");
-            CPPADCG_ASSERT_KNOWN(ret != 2, "First-order reverse mode failed: Invalid py value, must be either zero or one.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
         }
 
@@ -580,7 +578,6 @@ namespace CppAD {
             int ret = (*_reverseTwo)(tx, ty, px, py);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: Only one py is allowed to be non-zero.");
-            CPPADCG_ASSERT_KNOWN(ret != 2, "Second-order reverse mode failed: Invalid tx value, must be either zero or one.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
         }
 

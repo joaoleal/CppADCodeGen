@@ -110,6 +110,7 @@
 #include <cppadcg/c/cg_c_language_double.hpp>
 #include <cppadcg/c/cg_c_lang_default_var_name_gen.hpp>
 #include <cppadcg/c/cg_c_lang_default_hessian_var_name_gen.hpp>
+#include <cppadcg/c/cg_c_lang_default_reverse2_var_name_gen.hpp>
 #include <cppadcg/c/cg_c_lang_custom_var_name_gen.hpp>
 
 // automated static library creation
