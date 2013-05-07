@@ -112,7 +112,7 @@ namespace CppAD {
     /**
      * static data
      */
-    const std::string CppADCGDynamicAtomicTest::MODEL_NAME = "dynamicForRev";
+    const std::string CppADCGDynamicAtomicTest::MODEL_NAME = "dynamicAtomic";
 #ifdef MODEL1
     const size_t CppADCGDynamicAtomicTest::n = 3;
     const size_t CppADCGDynamicAtomicTest::m = 4;

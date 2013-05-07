@@ -284,6 +284,10 @@ namespace CppAD {
 
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
+        virtual void generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources);
+
+        virtual void generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources);
+
         virtual void generateSparsity1DSource(const std::string& function,
                                               const std::vector<size_t>& sparsity);
 

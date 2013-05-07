@@ -577,7 +577,8 @@ namespace CppAD {
 
             int ret = (*_reverseTwo)(tx, ty, px, py);
 
-            CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: Only one py is allowed to be non-zero.");
+            CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
+            CPPADCG_ASSERT_KNOWN(ret != 2, "Second-order reverse mode failed: Only one py[2*i+1] (i=0...m) is allowed to be non-zero.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
         }
 

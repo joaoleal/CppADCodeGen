@@ -393,14 +393,15 @@ namespace CppAD {
             for (size_t e = 0; e < els.size(); e++) {
                 _cache << "   ";
                 set<size_t>::const_iterator itl;
-                for(itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
                     _cache << "jac[" << (*itl) << "] = ";
                 }
                 _cache << "compressed[" << e << "];\n";
             }
         }
 
-        _cache << "}\n";
+        _cache << "\n"
+                "}\n";
         sources[model_function + ".c"] = _cache.str();
         _cache.str("");
     }
@@ -438,15 +439,23 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
-        const std::string jobName = "sparse Hessian";
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
-
         /**
          * Determine the sparsity pattern p for Hessian of w^T F
          */
         determineHessianSparsity();
 
+        if (_reverseTwo) {
+            generateSparseHessianSourceFromRev2(sources);
+        } else {
+            generateSparseHessianSourceDirectly(sources);
+        }
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) {
+        const std::string jobName = "sparse Hessian";
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         // make use of the symmetry of the Hessian in order to reduce operations
         std::map<size_t, std::map<size_t, size_t> > locations;
@@ -524,6 +533,76 @@ namespace CppAD {
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, jobName);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) {
+        //size_t m = _fun->Range();
+        //size_t n = _fun->Domain();
+        using namespace std;
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_SPARSE_HESSIAN;
+        const string model_function(_cache.str());
+
+        map<size_t, std::vector<size_t> >::const_iterator it;
+
+        map<size_t, std::vector<size_t> > elements;
+        map<size_t, std::vector<set<size_t> > > userHessElLocation; // maps each element to its position in the user hessian
+
+        // elements[var]{var}
+        for (size_t e = 0; e < _hessSparsity.rows.size(); e++) {
+            elements[_hessSparsity.cols[e]].push_back(_hessSparsity.rows[e]);
+        }
+        userHessElLocation = determineOrderByCol(elements, _hessSparsity);
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO;
+        string functionRev2 = _cache.str();
+        string rev2Suffix = "indep";
+
+        size_t maxCompressedSize = 0;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            if (it->second.size() > maxCompressedSize)
+                maxCompressedSize = it->second.size();
+        }
+
+        _cache.str("");
+        _cache << "#include <stdlib.h>\n"
+                "\n";
+        generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements);
+        _cache << "\n"
+                "void " << model_function << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "   " << _baseTypeName << " const * inLocal[3];\n"
+                "   " << _baseTypeName << " inLocal1 = 1;\n"
+                "   " << _baseTypeName << " * outLocal[1];\n"
+                "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
+                "   " << _baseTypeName << " * hess = out[0];\n"
+                "\n"
+                "   inLocal[0] = in[0];\n"
+                "   inLocal[1] = &inLocal1;\n"
+                "   inLocal[2] = in[1];\n"
+                "   outLocal[0] = compressed;";
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t index = it->first;
+            const std::vector<size_t>& els = it->second;
+            const std::vector<set<size_t> >& location = userHessElLocation.at(index);
+            assert(els.size() == location.size());
+
+            _cache << "\n"
+                    "   " << functionRev2 << "_" << rev2Suffix << index << "(inLocal, outLocal);\n";
+            for (size_t e = 0; e < els.size(); e++) {
+                _cache << "   ";
+                set<size_t>::const_iterator itl;
+                for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                    _cache << "hess[" << (*itl) << "] = ";
+                }
+                _cache << "compressed[" << e << "];\n";
+            }
+        }
+
+        _cache << "\n"
+                "}\n";
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
     }
 
     template<class Base>
@@ -865,8 +944,7 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) {
         const size_t m = _fun->Range();
         const size_t n = _fun->Domain();
-        const size_t k = 1;
-        const size_t k1 = k + 1;
+        //const size_t k = 1;
         const size_t p = 2;
 
         determineHessianSparsity();
@@ -902,7 +980,7 @@ namespace CppAD {
             CGBase tx1;
             handler.makeVariable(tx1);
 
-            std::vector<CGBase> w(k1 * m);
+            std::vector<CGBase> w(m); // (k+1)*m is not used because we are not interested in all values
             handler.makeVariables(w);
 
             // TODO: consider caching the zero order coefficients somehow between calls
@@ -918,7 +996,7 @@ namespace CppAD {
             std::vector<size_t>::const_iterator it2;
             for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
                 size_t jj = *it2;
-                ddwCustom.push_back(ddw[jj * p]);
+                ddwCustom.push_back(ddw[jj * p + 1]); // not interested in all values
             }
 
             finishedGraphCreation();
@@ -947,7 +1025,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateReverseTwoSources(std::map<std::string, std::string>& sources) {
-        //size_t m = _fun->Range();
+        size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
         _cache.str("");
@@ -966,14 +1044,21 @@ namespace CppAD {
                 "    " << _baseTypeName << " const * in[3];\n"
                 "    " << _baseTypeName << " * out[1];\n"
                 "    " << _baseTypeName << " x[" << n << "];\n"
+                "    " << _baseTypeName << " w[" << m << "];\n"
                 "    " << _baseTypeName << "* compressed;\n"
                 "    int found;\n"
                 "\n"
+                "    for (i = 0; i < " << m << "; i++) {\n"
+                "        if (py[i * 2] != 0.0) {\n"
+                "            return 1; // error\n"
+                "        }\n"
+                "        w[i] = py[i * 2 + 1];\n"
+                "    }\n"
                 "    found = 0;\n"
                 "    for (jj = 0; jj < " << n << "; jj++) {\n"
                 "        if (tx[jj * 2 + 1] != 0.0) {\n"
                 "            if (found) {\n"
-                "                return 1; // error \n"
+                "                return 2; // error \n"
                 "            }\n"
                 "            j = jj;\n"
                 "            found = 1;\n"
@@ -994,7 +1079,7 @@ namespace CppAD {
                 "    compressed = (" << _baseTypeName << "*) malloc(nnz * sizeof (" << _baseTypeName << "));\n"
                 "    in[0] = x;\n"
                 "    in[1] = &tx[j * 2 + 1];\n"
-                "    in[2] = py; \n"
+                "    in[2] = w; \n"
                 "    out[0] = compressed;\n"
                 "    " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, in, out);\n"
                 "\n"
