@@ -88,6 +88,34 @@ namespace CppAD {
             }
         }
 
+        template<class VectorBase, class T>
+        inline void compareValues(const VectorBase& depCGen,
+                                  const CppAD::vector<CppAD::CG<T> >& dep,
+                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+
+            std::vector<T> depd(dep.size());
+
+            for (size_t i = 0; i < depd.size(); i++) {
+                depd[i] = dep[i].getValue();
+            }
+
+            CppADCGTest::compareValues(depCGen, &depd[0], "depCGEN", "depTape", epsilonR, epsilonA);
+        }
+
+        template<class VectorBase, class T>
+        inline void compareValues(const VectorBase& depCGen,
+                                  const std::vector<CppAD::CG<T> >& dep,
+                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+
+            std::vector<T> depd(dep.size());
+
+            for (size_t i = 0; i < depd.size(); i++) {
+                depd[i] = dep[i].getValue();
+            }
+
+            CppADCGTest::compareValues(depCGen, &depd[0], "depCGEN", "depTape", epsilonR, epsilonA);
+        }
+
         template<class VectorBool>
         inline void compareBoolValues(const VectorBool& expected, const VectorBool& value) {
             ASSERT_EQ(expected.size(), value.size());

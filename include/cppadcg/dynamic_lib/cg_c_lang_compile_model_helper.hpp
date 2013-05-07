@@ -276,6 +276,12 @@ namespace CppAD {
 
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources);
 
+        virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources,
+                                                  bool forward);
+
+        virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
+                                                        bool forward);
+
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparsity1DSource(const std::string& function,
@@ -295,11 +301,11 @@ namespace CppAD {
         virtual void generateForwardOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
-        
+
         virtual void generateReverseOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources);
-        
+
         virtual void generateReverseTwoSources(std::map<std::string, std::string>& sources);
 
         virtual void generateGlobalDirectionalFunctionSource(const std::string& function,
@@ -308,6 +314,11 @@ namespace CppAD {
                                                              const std::map<size_t, std::vector<size_t> >& elements,
                                                              std::map<std::string, std::string>& sources);
 
+        virtual void generateFunctionDeclarationSource(std::ostringstream& cache,
+                                                       const std::string& model_function,
+                                                       const std::string& suffix,
+                                                       const std::map<size_t, std::vector<size_t> >& elements);
+
         virtual void determineJacobianSparsity();
 
         virtual void generateJacobianSparsitySource(std::map<std::string, std::string>& sources);
@@ -315,6 +326,13 @@ namespace CppAD {
         virtual void determineHessianSparsity();
 
         virtual void generateHessianSparsitySource(std::map<std::string, std::string>& sources);
+
+
+        static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                            const LocalSparsityInfo& sparsity);
+
+        static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                            const LocalSparsityInfo& sparsity);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

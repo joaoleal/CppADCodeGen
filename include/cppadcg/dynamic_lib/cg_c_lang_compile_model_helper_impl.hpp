@@ -252,8 +252,6 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
-        const std::string jobName = "sparse Jacobian";
-
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -261,6 +259,42 @@ namespace CppAD {
          * Determine the sparsity pattern
          */
         determineJacobianSparsity();
+
+        /**
+         * Estimate the work load of forward vs reverse mode
+         */
+        size_t workForward;
+        size_t workReverse;
+        if (_custom_jac.defined) {
+            std::set<size_t> rows, cols;
+            rows.insert(_jacSparsity.rows.begin(), _jacSparsity.rows.end());
+            workReverse = rows.size();
+            cols.insert(_jacSparsity.cols.begin(), _jacSparsity.cols.end());
+            workForward = cols.size();
+        } else {
+            workReverse = m;
+            workForward = n;
+        }
+
+        /**
+         * call the appropriate method for source code generation
+         */
+        if (_forwardOne && workForward <= workReverse) {
+            generateSparseJacobianForRevSource(sources, true);
+        } else if (_reverseOne && workForward >= workReverse) {
+            generateSparseJacobianForRevSource(sources, false);
+        } else {
+            generateSparseJacobianSource(sources, workForward <= workReverse);
+        }
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources,
+                                                                     bool forward) {
+        const std::string jobName = "sparse Jacobian";
+
+        //size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         startingGraphCreation(jobName);
 
@@ -272,7 +306,7 @@ namespace CppAD {
 
         std::vector<CGBase> jac(_jacSparsity.rows.size());
         CppAD::sparse_jacobian_work work;
-        if (n <= m) {
+        if (forward) {
             _fun->SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         } else {
             _fun->SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
@@ -288,6 +322,87 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
 
         handler.generateCode(code, langC, jac, *nameGen, jobName);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
+                                                                           bool forward) {
+        //size_t m = _fun->Range();
+        //size_t n = _fun->Domain();
+        using namespace std;
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
+        string model_function(_cache.str());
+
+        map<size_t, std::vector<size_t> >::const_iterator it;
+
+        map<size_t, std::vector<size_t> > elements;
+        map<size_t, std::vector<set<size_t> > > userJacElLocation; // maps each element to its position in the user jacobian
+        string functionRevFor, revForSuffix;
+        if (forward) {
+            // elements[var]{equations}
+            for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
+                elements[_jacSparsity.cols[e]].push_back(_jacSparsity.rows[e]);
+            }
+            userJacElLocation = determineOrderByCol(elements, _jacSparsity);
+            _cache.str("");
+            _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE;
+            functionRevFor = _cache.str();
+            revForSuffix = "indep";
+        } else {
+            // elements[equation]{vars}
+            for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
+                elements[_jacSparsity.rows[e]].push_back(_jacSparsity.cols[e]);
+            }
+            userJacElLocation = determineOrderByRow(elements, _jacSparsity);
+            _cache.str("");
+            _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE;
+            functionRevFor = _cache.str();
+            revForSuffix = "dep";
+        }
+
+        size_t maxCompressedSize = 0;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            if (it->second.size() > maxCompressedSize)
+                maxCompressedSize = it->second.size();
+        }
+
+        _cache.str("");
+        _cache << "#include <stdlib.h>\n"
+                "\n";
+        generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, elements);
+        _cache << "\n"
+                "void " << model_function << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "   " << _baseTypeName << " const * inLocal[2];\n"
+                "   " << _baseTypeName << " inLocal1 = 1;\n"
+                "   " << _baseTypeName << " * outLocal[1];\n"
+                "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
+                "   " << _baseTypeName << " * jac = out[0];\n"
+                "\n"
+                "   inLocal[0] = in[0];\n"
+                "   inLocal[1] = &inLocal1;\n"
+                "   outLocal[0] = compressed;";
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t index = it->first;
+            const std::vector<size_t>& els = it->second;
+            const std::vector<set<size_t> >& location = userJacElLocation.at(index);
+            assert(els.size() == location.size());
+
+            _cache << "\n"
+                    "   " << functionRevFor << "_" << revForSuffix << index << "(inLocal, outLocal);\n";
+            for (size_t e = 0; e < els.size(); e++) {
+                _cache << "   ";
+                set<size_t>::const_iterator itl;
+                for(itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                    _cache << "jac[" << (*itl) << "] = ";
+                }
+                _cache << "compressed[" << e << "];\n";
+            }
+        }
+
+        _cache << "}\n";
+        sources[model_function + ".c"] = _cache.str();
+        _cache.str("");
     }
 
     template<class Base>
@@ -475,7 +590,7 @@ namespace CppAD {
 
         determineJacobianSparsity();
 
-        // elements[equation]{vars}
+        // elements[var]{equations}
         std::map<size_t, std::vector<size_t> > elements;
         for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
             elements[_jacSparsity.cols[e]].push_back(_jacSparsity.rows[e]);
@@ -908,15 +1023,12 @@ namespace CppAD {
         _cache << _name << "_" << function;
         std::string model_function = _cache.str();
         _cache.str("");
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            _cache << "void " << model_function << "_" << suffix << it->first
-                    << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n";
-        }
+        generateFunctionDeclarationSource(_cache, model_function, suffix, elements);
         _cache << "\n";
         _cache << "int " << model_function << "("
                 "unsigned long int pos," << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
                 "   switch(pos) {\n";
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             // the size of each sparsity row
             _cache << "      case " << it->first << ":\n"
@@ -937,6 +1049,18 @@ namespace CppAD {
         generateSparsity1DSource2(_name + "_" + function_sparsity, elements);
         sources[_name + "_" + function_sparsity + ".c"] = _cache.str();
         _cache.str("");
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateFunctionDeclarationSource(std::ostringstream& cache,
+                                                                          const std::string& model_function,
+                                                                          const std::string& suffix,
+                                                                          const std::map<size_t, std::vector<size_t> >& elements) {
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            cache << "void " << model_function << "_" << suffix << it->first
+                    << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n";
+        }
     }
 
     template<class Base>
@@ -1105,6 +1229,58 @@ namespace CppAD {
             std::cout << "done [" << std::fixed << std::setprecision(3)
                     << (endTime - _beginTime) << "]" << std::endl;
         }
+    }
+
+    template<class Base>
+    inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                                                const LocalSparsityInfo& sparsity) {
+        std::map<size_t, std::vector<std::set<size_t> > > userLocation;
+
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t col = it->first;
+            const std::vector<size_t>& els = it->second;
+            std::vector<std::set<size_t> >& userLocationCol = userLocation[col];
+            userLocationCol.resize(els.size());
+
+            for (size_t er = 0; er < els.size(); er++) {
+                size_t row = els[er];
+                for (size_t e = 0; e < sparsity.rows.size(); e++) {
+                    if (sparsity.rows[e] == row && sparsity.cols[e] == col) {
+                        userLocationCol[er].insert(e);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return userLocation;
+    }
+
+    template<class Base>
+    inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                                                const LocalSparsityInfo& sparsity) {
+        std::map<size_t, std::vector<std::set<size_t> > > userLocation;
+
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t row = it->first;
+            const std::vector<size_t>& els = it->second;
+            std::vector<std::set<size_t> >& userLocationRow = userLocation[row];
+            userLocationRow.resize(els.size());
+
+            for (size_t ec = 0; ec < els.size(); ec++) {
+                size_t col = els[ec];
+                for (size_t e = 0; e < sparsity.rows.size(); e++) {
+                    if (sparsity.cols[e] == col && sparsity.rows[e] == row) {
+                        userLocationRow[ec].insert(e);
+                        break;
+                    }
+                }
+            }
+        }
+
+        return userLocation;
     }
 
     /**

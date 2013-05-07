@@ -195,6 +195,7 @@ add_cppadcg_test(tan.cpp)
 add_cppadcg_test(unary.cpp)
 IF( UNIX )
     add_cppadcg_test(dynamic.cpp)
+    add_cppadcg_test(dynamic_atomic.cpp)
     add_cppadcg_test(dynamic_forward_reverse.cpp)
 ENDIF()
 

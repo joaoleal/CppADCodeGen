@@ -941,7 +941,7 @@ namespace CppAD {
                                           unsigned long int nrows, unsigned long int ncols,
                                           unsigned long int const* rows, unsigned long int const* cols,
                                           unsigned long int nnz,
-                                          std::vector<Base> mat) const {
+                                          std::vector<Base>& mat) const {
 
             std::fill(mat.begin(), mat.end(), 0);
             mat.resize(nrows * ncols);
