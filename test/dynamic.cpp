@@ -84,7 +84,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
 
     GccCompiler<double> compiler;
 
-    CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
+    CLangCompileDynamicHelper<double> compDynHelp(compHelp);
     DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 
     /**
@@ -205,7 +205,7 @@ TEST_F(CppADCGDynamicTest, Dynamic2) {
     GccCompiler<double> compiler;
     compiler.setSourcesFolder("cppadcg_sources_2");
 
-    CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
+    CLangCompileDynamicHelper<double> compDynHelp(compHelp);
     compDynHelp.setLibraryName("cppad_cg_model_2");
     DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 

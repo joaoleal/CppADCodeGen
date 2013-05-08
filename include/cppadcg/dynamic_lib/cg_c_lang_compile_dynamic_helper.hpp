@@ -42,14 +42,23 @@ namespace CppAD {
         bool _verbose;
     public:
 
-        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>* model, bool saveSourceFiles = true) :
+        /**
+         * Creates a new helper class for the generation of dynamic libraries
+         * using the C language.
+         * 
+         * @param model a model compilation helper (must only be deleted after
+         *              this object)
+         * @param saveSourceFiles whether or not to write the generated source
+         *                        files to disk (for visualisation purposes 
+         *                        only).
+         */
+        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>& model, bool saveSourceFiles = true) :
             _libraryName("cppad_cg_model"),
             _customLibExtension(NULL),
             _saveSourceFiles(saveSourceFiles),
             _verbose(false) {
 
-            CPPADCG_ASSERT_KNOWN(model != NULL, "The model cannot be null");
-            _models[model->getName()] = model;
+            _models[model.getName()] = &model;
         }
 
         inline const std::string& getLibraryName() const {
@@ -97,12 +106,17 @@ namespace CppAD {
             _verbose = verbose;
         }
 
-        inline void addModel(CLangCompileModelHelper<Base>* model) {
-            CPPADCG_ASSERT_KNOWN(model != NULL, "The model cannot be null");
+        /**
+         * Adds additional models to be compiled into the created library.
+         * 
+         * @param model a model compilation helper (must only be deleted after
+         *              this object)
+         */
+        inline void addModel(CLangCompileModelHelper<Base>& model) {
             CPPADCG_ASSERT_KNOWN(_models.find(model->getName()) == _models.end(),
                                  "Another model with the same name was already registered");
 
-            _models[model->getName()] = model;
+            _models[model.getName()] = &model;
         }
 
         const std::map<std::string, CLangCompileModelHelper<Base>*>& getModels() const {

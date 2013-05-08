@@ -89,7 +89,7 @@ namespace CppAD {
 
             GccCompiler<double> compiler;
 
-            CLangCompileDynamicHelper<double> compDynHelp(&compHelp);
+            CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
             _model = _dynamicLib->model(_modelName);
 

@@ -41,10 +41,10 @@ int main(void) {
      * Create the dynamic library
      * (generates and compiles source code)
      */
-    CLangCompileModelHelper<double> compModelH(&fun, "model");
+    CLangCompileModelHelper<double> compModelH(fun, "model");
     compModelH.setCreateJacobian(true);
 
-    CLangCompileDynamicHelper<double> compDynH(&compModelH);
+    CLangCompileDynamicHelper<double> compDynH(compModelH);
 
     GccCompiler<double> compiler;
     DynamicLib<double>* dynamicLib = compDynH.createDynamicLibrary(compiler);
