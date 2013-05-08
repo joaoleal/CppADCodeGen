@@ -70,7 +70,7 @@ TEST_F(CppADCGDynamicTest, Dynamic1) {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    CLangCompileModelHelper<double> compHelp(&fun, "dynamic");
+    CLangCompileModelHelper<double> compHelp(fun, "dynamic");
 
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
@@ -181,7 +181,7 @@ TEST_F(CppADCGDynamicTest, Dynamic2) {
      * Create the dynamic library
      * (generate and compile source code)
      */
-    CLangCompileModelHelper<double> compHelp(&fun, "dynamic2");
+    CLangCompileModelHelper<double> compHelp(fun, "dynamic2");
 
     compHelp.setCreateSparseJacobian(true);
     std::vector<size_t> row(3), col(3); // all elements except 1

@@ -78,7 +78,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(_fun, _modelName);
+            CLangCompileModelHelper<double> compHelp(*_fun, _modelName);
 
             compHelp.setCreateForwardZero(true);
             compHelp.setCreateForwardOne(true);

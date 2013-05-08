@@ -83,7 +83,7 @@ namespace CppAD {
         /**
          * the  model
          */
-        ADFun<CGBase>* _fun;
+        ADFun<CGBase>& _fun;
         /**
          * the name of the model
          */
@@ -126,10 +126,11 @@ namespace CppAD {
         /**
          * Creates a new C language compilation helper for a model
          * 
-         * @param fun The ADFun with the taped model
+         * @param fun The ADFun with the taped model (should only be deleted
+         *            after this object)
          * @param model The model name (must be a valid C function name)
          */
-        CLangCompileModelHelper(ADFun<CppAD::CG<Base> >* fun, const std::string& model) :
+        CLangCompileModelHelper(ADFun<CppAD::CG<Base> >& fun, const std::string& model) :
             _fun(fun),
             _name(model),
             _baseTypeName(CLangCompileModelHelper<Base>::baseTypeName()),
@@ -144,7 +145,6 @@ namespace CppAD {
             _maxAssignPerFunc(20000),
             _beginTime(0) {
 
-            CPPADCG_ASSERT_KNOWN(_fun != NULL, "ADFun cannot be null");
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
             CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
                                  (_name[0] >= 'A' && _name[0] <= 'Z'),
@@ -159,72 +159,267 @@ namespace CppAD {
             }
         }
 
+        /**
+         * Provides the model name which should be a valid C function name.
+         * 
+         * @return the model name 
+         */
         inline const std::string& getName() const {
             return _name;
         }
 
+        /**
+         * Determines whether or not to generate source-code for a function
+         * that evaluates a dense Hessian.
+         * 
+         * @return true if source-code for a dense Hessian should be created,
+         *         false otherwise
+         */
         inline bool isCreateHessian() const {
             return _hessian;
         }
 
-        inline void setCreateHessian(bool createFunction) {
-            _hessian = createFunction;
+        /**
+         * Defines whether or not to generate source-code for a function
+         * that evaluates a dense Hessian.
+         * 
+         * @param create true if source-code for a dense Hessian should be
+         *               created, false otherwise
+         */
+        inline void setCreateHessian(bool create) {
+            _hessian = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for a function
+         * that evaluates a dense Jacobian.
+         * 
+         * @return true if source-code for a dense Jacobian should be created,
+         *         false otherwise
+         */
         inline bool isCreateJacobian() const {
             return _jacobian;
         }
 
-        inline void setCreateJacobian(bool createFunction) {
-            _jacobian = createFunction;
+        /**
+         * Defines whether or not to generate source-code for a function
+         * that evaluates a dense Jacobian.
+         * 
+         * @param create true if source-code for a dense Jacobian should be
+         *               created, false otherwise
+         */
+        inline void setCreateJacobian(bool create) {
+            _jacobian = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for a function
+         * that evaluates a sparse Hessian. If ReverseTwo is also enabled the
+         * generated source-code will use the individual generated functions
+         * from the second-order reverse mode. 
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a negative impact on the performe of the evaluation of the
+         * sparse hessian since Hessian symmetry will not be exploited. To
+         * improve performance one can request only the upper or lower elements
+         * of the hessian using setCustomSparseHessianElements().
+         * 
+         * @see setCustomSparseHessianElements()
+         * 
+         * @return true if source-code for a sparse Hessian should be created,
+         *         false otherwise
+         */
         inline bool isCreateSparseHessian() const {
             return _sparseHessian;
         }
 
-        inline void setCreateSparseHessian(bool createFunction) {
-            _sparseHessian = createFunction;
+        /**
+         * Defines whether or not to generate source-code for a function
+         * that evaluates a sparse Hessian. If ReverseTwo is also enabled the
+         * generated source-code will use the individual generated functions
+         * from the second-order reverse mode. 
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a negative impact on the performe of the evaluation of the
+         * sparse hessian since Hessian symmetry will not be exploited. To
+         * improve performance one can request only the upper or lower elements
+         * of the hessian using setCustomSparseHessianElements().
+         * 
+         * @see setCustomSparseHessianElements()
+         * 
+         * @param create true if source-code for a sparse Hessian should be
+         *               created, false otherwise
+         */
+        inline void setCreateSparseHessian(bool create) {
+            _sparseHessian = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for a function
+         * that evaluates a sparse Jacobian. If ReverseOne or ForwardOne 
+         * functions are enabled, then the sparse Jacobian evaluation might
+         * use those functions.
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a small negative impact on the performe of the evaluation of
+         * the parse Jacobian.
+
+         * @see setCustomSparseJacobianElements()
+         * 
+         * @return true if source-code for a sparse Jacobian should be created,
+         *         false otherwise
+         */
         inline bool isCreateSparseJacobian() const {
             return _sparseJacobian;
         }
 
-        inline void setCreateSparseJacobian(bool createFunction) {
-            _sparseJacobian = createFunction;
+        /**
+         * Defines whether or not to generate source-code for a function
+         * that evaluates a sparse Jacobian. If ReverseOne or ForwardOne 
+         * functions are enabled, then the sparse Jacobian evaluation might
+         * use those functions.
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a small negative impact on the performe of the evaluation of
+         * the parse Jacobian.
+
+         * @see setCustomSparseJacobianElements()
+         * 
+         * @param create true if source-code for a sparse Jacobian should be
+         *               created, false otherwise
+         */
+        inline void setCreateSparseJacobian(bool create) {
+            _sparseJacobian = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for a function
+         * that evaluates the original model.
+         * 
+         * @return true if source-code for the original model should be created,
+         *         false otherwise
+         */
         inline bool isCreateForwardZero() const {
             return _zero;
         }
 
-        inline void setCreateForwardZero(bool createFunction) {
-            _zero = createFunction;
+        /**
+         * Defines whether or not to generate source-code for a function
+         * that evaluates the original model.
+         * 
+         * @return create true if source-code for the original model should be
+         *                created, false otherwise
+         */
+        inline void setCreateForwardZero(bool create) {
+            _zero = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for the
+         * first-order forward mode that is used for the evaluation of the
+         * Jacobian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for forward-mode
+         * might have a small negative impact on the performe of the evaluation
+         * of the sparse Jacobian (if forward mode is selected).
+         * 
+         * @see isCreateSparseJacobian()
+         * 
+         * @return true if the generation of the source for first-order forward
+         *         mode is enabled, false otherwise.
+         */
         inline bool isCreateSparseForwardOne() const {
             return _forwardOne;
         }
 
-        inline void setCreateForwardOne(bool createFunction) {
-            _forwardOne = createFunction;
+        /**
+         * Defines whether or not to generate source-code for the
+         * first-order forward mode that is used for the evaluation of the
+         * Jacobian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for forward-mode
+         * might have a small negative impact on the performe of the evaluation
+         * of the sparse Jacobian (if forward-mode is selected).
+         * 
+         * @see setCreateSparseJacobian()
+         * 
+         * @param create true if the generation of the source for first-order 
+         *               forward mode is enabled, false otherwise.
+         */
+        inline void setCreateForwardOne(bool create) {
+            _forwardOne = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for the
+         * first-order reverse mode that is used for the evaluation of the
+         * Jacobian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for reverse-mode
+         * might have a small negative impact on the performe of the evaluation
+         * of the sparse Jacobian (if reverse-mode is selected).
+         * 
+         * @see isCreateSparseJacobian()
+         * 
+         * @return true if the generation of the source for first-order reverse
+         *         mode is enabled, false otherwise.
+         */
         inline bool isCreateReverseOne() const {
             return _reverseOne;
         }
 
-        inline void setCreateReverseOne(bool createFunction) {
-            _reverseOne = createFunction;
+        /**
+         * Determines whether or not to generate source-code for the
+         * first-order reverse mode that is used for the evaluation of the
+         * Jacobian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for reverse-mode
+         * might have a small negative impact on the performe of the evaluation
+         * of the sparse Jacobian (if reverse-mode is selected).
+         * 
+         * @see setCreateSparseJacobian()
+         * 
+         * @return true if the generation of the source for first-order reverse
+         *         mode is enabled, false otherwise.
+         */
+        inline void setCreateReverseOne(bool create) {
+            _reverseOne = create;
         }
 
+        /**
+         * Determines whether or not to generate source-code for the
+         * second-order reverse mode that is used for the evaluation of the
+         * hessian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a negative impact on the performe of the evaluation of the
+         * sparse hessian.
+         * 
+         * Warning: only the values for px[j * (k+1)] will be defined, since
+         *          px[j * (k+1) + 1] is not used during the hessian evaluation.
+         * 
+         * @return true if the generation of the source for second-order reverse
+         *         mode is enabled, false otherwise.
+         */
         inline bool isCreateReverseTwo() const {
             return _reverseOne;
         }
 
-        inline void setCreateReverseTwo(bool createFunction) {
-            _reverseTwo = createFunction;
+        /**
+         * Defines whether or not to enable the generation of the source-code 
+         * for the second-order reverse mode that is used for the evaluation
+         * of the hessian when the model is used through a user defined atomic
+         * AD function.
+         * Enabling the generation of individuals functions for reverse-mode
+         * can have a negative impact on the performe of the evaluation of the
+         * hessian. To improve performance one can request only the upper or 
+         * lower elements of the hessian using setCustomSparseHessianElements()
+         * and later only request those elements through the outer model (ADFun).
+         * 
+         * Warning: only the values for px[j * (k+1)] will be defined, since
+         *          px[j * (k+1) + 1] is not used during the hessian evaluation.
+         * 
+         * @param create true to enable the generation of the source for
+         *               second-order reverse mode, false otherwise.
+         */
+        inline void setCreateReverseTwo(bool create) {
+            _reverseTwo = create;
         }
 
         inline void setCustomSparseJacobianElements(const std::vector<size_t>& row,
