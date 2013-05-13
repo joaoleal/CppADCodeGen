@@ -113,7 +113,7 @@ namespace CppAD {
          *              this object)
          */
         inline void addModel(CLangCompileModelHelper<Base>& model) {
-            CPPADCG_ASSERT_KNOWN(_models.find(model->getName()) == _models.end(),
+            CPPADCG_ASSERT_KNOWN(_models.find(model.getName()) == _models.end(),
                                  "Another model with the same name was already registered");
 
             _models[model.getName()] = &model;
