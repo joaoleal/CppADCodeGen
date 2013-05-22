@@ -189,6 +189,44 @@ namespace CppAD {
         }
     }
 
+    template<class VectorSet>
+    inline bool isIdentityPattern(const VectorSet& pattern, size_t mRows) {
+        assert(pattern.size() >= mRows);
+        
+        for (size_t i = 0; i < mRows; i++) {
+            if (pattern[i].size() != 1 || *pattern[i].begin() != i) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    template<class VectorSet>
+    inline VectorSet transposePattern(const VectorSet& pattern, size_t mRows, size_t nCols) {
+        assert(pattern.size() >= mRows);
+
+        VectorSet transpose(nCols);
+        for (size_t i = 0; i < mRows; i++) {
+            std::set<size_t>::const_iterator it;
+            for (it = pattern[i].begin(); it != pattern[i].end(); ++it) {
+                transpose[*it].insert(i);
+            }
+        }
+        return transpose;
+    }
+
+    template<class VectorSet, class VectorSet2>
+    inline void transposePattern(const VectorSet& pattern, size_t mRows, VectorSet2& transpose) {
+        assert(pattern.size() >= mRows);
+
+        for (size_t i = 0; i < mRows; i++) {
+            std::set<size_t>::const_iterator it;
+            for (it = pattern[i].begin(); it != pattern[i].end(); ++it) {
+                transpose[*it].insert(i);
+            }
+        }
+    }
+
     /**
      * Computes the resulting sparsity from adding one matrix to another:
      * R += A
@@ -213,27 +251,24 @@ namespace CppAD {
      * @param a The left matrix in the multiplication
      * @param b The right matrix in the multiplication
      * @param result the resulting sparsity matrix
-     * @param q The number of columns of b and the result
+     * @param m The number of rows of A
+     * @param n The number of columns of A and rows of B
+     * @param q The number of columns of B and the result
      */
     template<class VectorSet, class VectorSet2>
     inline void multMatrixMatrixSparsity(const VectorSet& a,
                                          const VectorSet2& b,
                                          CppAD::vector< std::set<size_t> >& result,
+                                         size_t m,
+                                         size_t n,
                                          size_t q) {
-        const size_t m = a.size();
-        const size_t n = b.size();
-        assert(result.size() == m);
+        assert(a.size() >= m);
+        assert(b.size() >= n);
+        assert(result.size() >= m);
 
         //check if b is identity
         if (n == q) {
-            bool identity = true;
-            for (size_t i = 0; i < n; i++) {
-                if (b[i].size() != 1 || *b[i].begin() != i) {
-                    identity = false;
-                    break;
-                }
-            }
-            if (identity) {
+            if (isIdentityPattern(b, n)) {
                 for (size_t i = 0; i < m; i++) {
                     result[i] = a[i];
                 }
@@ -241,13 +276,7 @@ namespace CppAD {
             }
         }
 
-        VectorSet2 bb(q);
-        for (size_t i = 0; i < n; i++) {
-            std::set<size_t>::const_iterator it;
-            for (it = b[i].begin(); it != b[i].end(); ++it) {
-                bb[*it].insert(i);
-            }
-        }
+        VectorSet2 bb = transposePattern(b, n, q);
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
             for (size_t i = 0; i < m; i++) {
@@ -269,20 +298,24 @@ namespace CppAD {
      * @param a The left matrix in the multiplication
      * @param b The right matrix in the multiplication
      * @param result the resulting sparsity matrix
-     * @param q The number of columns of b and the result
+     * @param m The number of rows of A and rows of B
+     * @param n The number of columns of A and rows of the result
+     * @param q The number of columns of B and the result
      */
     template<class VectorSet, class VectorSet2>
     inline void multMatrixTransMatrixSparsity(const VectorSet& a,
                                               const VectorSet2& b,
                                               CppAD::vector< std::set<size_t> >& result,
+                                              size_t m,
+                                              size_t n,
                                               size_t q) {
-        const size_t m = a.size();
-        const size_t n = b.size();
-        assert(m == n);
+        assert(a.size() >= m);
+        assert(b.size() >= m);
+        assert(result.size() >= n);
 
-        //check if b is empty
+        //check if B is empty
         bool empty = true;
-        for (size_t i = 0; i < n; i++) {
+        for (size_t i = 0; i < m; i++) {
             if (b[i].size() > 0) {
                 empty = false;
                 break;
@@ -292,41 +325,22 @@ namespace CppAD {
             return; //nothing to do
         }
 
-        //check if b is identity
-        if (n == q) {
-            bool identity = true;
+        //check if A is identity
+        if (m == n && isIdentityPattern(a, m)) {
             for (size_t i = 0; i < n; i++) {
-                if (b[i].size() != 1 || *b[i].begin() != i) {
-                    identity = false;
-                    break;
-                }
+                result[i] = b[i];
             }
-            if (identity) {
-                for (size_t i = 0; i < m; i++) {
-                    std::set<size_t>::const_iterator it;
-                    for (it = a[i].begin(); it != a[i].end(); ++it) {
-                        result[*it].insert(i);
-                    }
-                }
-                return;
-            }
+            return;
         }
 
-        VectorSet2 bb(q);
-        for (size_t i = 0; i < n; i++) {
-            std::set<size_t>::const_iterator it;
-            for (it = b[i].begin(); it != b[i].end(); ++it) {
-                bb[*it].insert(i);
-            }
+        //check if B is identity
+        if (m == q && isIdentityPattern(b, m)) {
+            transposePattern(a, m, result);
+            return;
         }
 
-        VectorSet2 aa(n);
-        for (size_t i = 0; i < m; i++) {
-            std::set<size_t>::const_iterator it;
-            for (it = a[i].begin(); it != a[i].end(); ++it) {
-                aa[*it].insert(i);
-            }
-        }
+        VectorSet aa = transposePattern(a, m, n);
+        VectorSet2 bb = transposePattern(b, m, q);
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
             for (size_t i = 0; i < n; i++) {
@@ -334,6 +348,62 @@ namespace CppAD {
                 for (it = aa[i].begin(); it != aa[i].end(); ++it) {
                     if (bb[jj].find(*it) != bb[jj].end()) {
                         result[i].insert(jj);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * Computes the transpose of the resulting sparsity from multiplying two
+     * matrices:
+     * (R += A * B)^T
+     * 
+     * @param a The TRANSPOSE of the left matrix in the multiplication
+     * @param b The right matrix in the multiplication
+     * @param result the TRANSPOSE of the resulting sparsity matrix
+     * @param m The number of rows of B
+     * @param n The number of columns of B
+     * @param q The number of rows of A and the result
+     */
+    template<class VectorSet, class VectorSet2>
+    inline void multMatrixMatrixSparsityTrans(const VectorSet& aT,
+                                              const VectorSet2& b,
+                                              CppAD::vector< std::set<size_t> >& rT,
+                                              size_t m,
+                                              size_t n,
+                                              size_t q) {
+        assert(aT.size() >= m);
+        assert(b.size() >= m);
+
+        //check if b is empty
+        bool empty = true;
+        for (size_t i = 0; i < m; i++) {
+            if (b[i].size() > 0) {
+                empty = false;
+                break;
+            }
+        }
+        if (empty) {
+            return; //nothing to do
+        }
+
+        //check if a is identity
+        if (m == q && isIdentityPattern(aT, m)) {
+            transposePattern(b, m, rT);
+            return;
+        }
+
+        VectorSet a = transposePattern(aT, m, q);
+        VectorSet2 bT = transposePattern(b, m, n);
+
+        for (size_t jj = 0; jj < n; jj++) { //loop columns of b
+            for (size_t i = 0; i < q; i++) {
+                std::set<size_t>::const_iterator it;
+                for (it = a[i].begin(); it != a[i].end(); ++it) {
+                    if (bT[jj].find(*it) != bT[jj].end()) {
+                        rT[jj].insert(i);
                         break;
                     }
                 }

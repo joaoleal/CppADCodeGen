@@ -171,7 +171,7 @@ namespace CppAD {
                                        const CppAD::vector< std::set<size_t> >& r,
                                        CppAD::vector< std::set<size_t> >& s) {
         const std::vector<std::set<size_t> > jacSparsity = CppADCGDynamicAtomicTest::MODEL->JacobianSparsitySet();
-        multMatrixMatrixSparsity(jacSparsity, r, s, q);
+        multMatrixMatrixSparsity(jacSparsity, r, s, m, n, q);
         return true;
     }
 
@@ -179,10 +179,10 @@ namespace CppAD {
                                        size_t n,
                                        size_t m,
                                        size_t q,
-                                       CppAD::vector< std::set<size_t> >& r,
-                                       const CppAD::vector< std::set<size_t> >& s) {
+                                       CppAD::vector< std::set<size_t> >& rT,
+                                       const CppAD::vector< std::set<size_t> >& sT) {
         const std::vector<std::set<size_t> > jacSparsity = CppADCGDynamicAtomicTest::MODEL->JacobianSparsitySet();
-        multMatrixMatrixSparsity(s, jacSparsity, r, n);
+        multMatrixMatrixSparsityTrans(sT, jacSparsity, rT, m, n, q);
         return true;
     }
 
@@ -201,11 +201,11 @@ namespace CppAD {
          *  V(x)  =  f^1^T(x) U(x)  +  Sum(  s(x)i  f^2(x)  R(x)   )
          */
         // f^1^T(x) U(x)
-        multMatrixTransMatrixSparsity(jacSparsity, u, v, q);
+        multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
 
         // Sum(  s(x)i  f^2(x)  R(x)   )
         bool allSelected = true;
-        for (size_t i = 0; i < s.size(); i++) {
+        for (size_t i = 0; i < m; i++) {
             if (!s[i]) {
                 allSelected = false;
                 break;
@@ -216,7 +216,7 @@ namespace CppAD {
         if (allSelected) {
             sparsitySF2R = CppADCGDynamicAtomicTest::MODEL->HessianSparsitySet();
         } else {
-            for (size_t i = 0; i < s.size(); i++) {
+            for (size_t i = 0; i < m; i++) {
                 if (s[i]) {
                     const std::vector<std::set<size_t> > sparsity = CppADCGDynamicAtomicTest::MODEL->HessianSparsitySet(i);
                     addMatrixSparsity(sparsity, sparsitySF2R);
@@ -224,12 +224,12 @@ namespace CppAD {
             }
         }
 
-        multMatrixMatrixSparsity(sparsitySF2R, r, v, q);
+        multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q);
 
         /**
          * S(x) * f^1(x)
          */
-        for (size_t i = 0; i < s.size(); i++) {
+        for (size_t i = 0; i < m; i++) {
             if (s[i]) {
                 std::set<size_t>::const_iterator it;
                 for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
@@ -420,10 +420,16 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
     /**
      * Jacobian sparsity
      */
-    const std::vector<bool> jacSparsityOrig = jacobianSparsity < std::vector<bool>, CGD > (*_fun);
-    const std::vector<bool> jacSparsityOutter = jacobianSparsity < std::vector<bool>, double > (f2);
+    const std::vector<bool> jacSparsityOrig = jacobianForwardSparsity < std::vector<bool>, CGD > (*_fun);
+    const std::vector<bool> jacSparsityOutter = jacobianForwardSparsity < std::vector<bool>, double > (f2);
 
     compareBoolValues(jacSparsityOrig, jacSparsityOutter);
+
+    const std::vector<bool> jacSparsityOrigRev = jacobianReverseSparsity < std::vector<bool>, CGD > (*_fun);
+    const std::vector<bool> jacSparsityOutterRev = jacobianReverseSparsity < std::vector<bool>, double > (f2);
+
+    compareBoolValues(jacSparsityOrigRev, jacSparsityOrig);
+    compareBoolValues(jacSparsityOrigRev, jacSparsityOutterRev);
 
     /**
      * Sparse jacobian
@@ -438,7 +444,7 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
 
     sparse_jacobian_work workOrig;
     jacOrig.resize(row.size());
-    _fun->SparseJacobianReverse(xOrig, jacSparsityOutter, row, col, jacOrig, workOrig);
+    _fun->SparseJacobianReverse(xOrig, jacSparsityOrig, row, col, jacOrig, workOrig);
 
     sparse_jacobian_work work2;
     jacOutter.resize(row.size());
@@ -470,4 +476,30 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
     // (If there are future calls to user atomic functions, they will 
     // create new temporary work space.)
     CppAD::user_atomic<double>::clear();
+}
+
+TEST_F(CppADCGDynamicAtomicTest, multMatrixMatrixSparsityTrans) {
+    std::vector<std::set<size_t> > aT(4); // a: 3 x 4
+    aT[0].insert(0);
+    aT[1].insert(1);
+    aT[2].insert(1);
+    aT[3].insert(0);
+    aT[3].insert(2);
+    std::vector<std::set<size_t> > b(4); // b: 4 x 2
+    b[0].insert(0);
+    b[2].insert(0);
+    b[2].insert(1);
+    b[3].insert(1);
+    CppAD::vector<std::set<size_t> > rT(2); // r: 3 x 2 
+
+    multMatrixMatrixSparsityTrans(aT, b, rT, 4, 2, 3);
+
+    CppAD::vector<std::set<size_t> > rTExpected(2);
+    rTExpected[0].insert(0);
+    rTExpected[0].insert(1);
+    rTExpected[1].insert(0);
+    rTExpected[1].insert(1);
+    rTExpected[1].insert(2);
+
+    compareVectorSetValues(rT, rTExpected);
 }

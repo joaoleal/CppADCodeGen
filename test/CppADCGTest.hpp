@@ -124,6 +124,19 @@ namespace CppAD {
             }
         }
 
+        template<class VectorSet>
+        inline void compareVectorSetValues(const VectorSet& expected, const VectorSet& value) {
+            ASSERT_EQ(expected.size(), value.size());
+            for (size_t i = 0; i < expected.size(); i++) {
+                ASSERT_EQ(expected[i].size(), value[i].size());
+                std::set<size_t>::const_iterator itE = expected[i].begin();
+                std::set<size_t>::const_iterator itV = value[i].begin();
+                for (; itE != expected[i].end(); ++itE, ++itV) {
+                    ASSERT_EQ(*itE, *itV);
+                }
+            }
+        }
+
         template <class T>
         inline void nearEqual(const T &x, const T &y,
                               const T &r = std::numeric_limits<T>::epsilon() * 10,
