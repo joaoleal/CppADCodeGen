@@ -157,9 +157,10 @@ namespace CppAD {
                                 Base ty[], size_t ty_size) = 0;
 
         /**
-         * Computes results during a reverse mode sweep. 
-         * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * Computes results during a reverse mode sweep for the evaluation of
+         * the jacobian when the model is used through a user defined atomic AD
+         * function.
+         * Warning: do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty
@@ -171,9 +172,10 @@ namespace CppAD {
                                                const CppAD::vector<Base>& py) = 0;
 
         /**
-         * Computes results during a reverse mode sweep. 
-         * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * Computes results during a reverse mode sweep for the evaluation of
+         * the jacobian when the model is used through a user defined atomic AD
+         * function.
+         * Warning: do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty
@@ -186,9 +188,10 @@ namespace CppAD {
                                 const CppAD::vector<Base>& py) = 0;
 
         /**
-         * Computes results during a reverse mode sweep. 
-         * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * Computes results during a reverse mode sweep for the evaluation of
+         * the jacobian when the model is used through a user defined atomic AD
+         * function.
+         * Warning: do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty

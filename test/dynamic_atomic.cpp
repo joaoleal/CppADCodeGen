@@ -432,6 +432,20 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
     jacOutter = f2.SparseJacobian(x);
     compareValues(jacOutter, jacOrig);
 
+    // sparse reverse
+    std::vector<size_t> row, col;
+    generateSparsityIndexes(jacSparsityOutter, m, n, row, col);
+
+    sparse_jacobian_work workOrig;
+    jacOrig.resize(row.size());
+    _fun->SparseJacobianReverse(xOrig, jacSparsityOutter, row, col, jacOrig, workOrig);
+
+    sparse_jacobian_work work2;
+    jacOutter.resize(row.size());
+    f2.SparseJacobianReverse(x, jacSparsityOutter, row, col, jacOutter, work2);
+
+    compareValues(jacOutter, jacOrig);
+
     /**
      * Hessian
      */
