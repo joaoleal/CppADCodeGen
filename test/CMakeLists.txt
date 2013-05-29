@@ -197,6 +197,7 @@ IF( UNIX )
     add_cppadcg_test(dynamic.cpp)
     add_cppadcg_test(dynamic_atomic.cpp)
     add_cppadcg_test(dynamic_forward_reverse.cpp)
+    add_cppadcg_test(dynamic_forward_reverse_2.cpp)
 ENDIF()
 
 ADD_SUBDIRECTORY(solve)

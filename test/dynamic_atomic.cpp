@@ -503,3 +503,30 @@ TEST_F(CppADCGDynamicAtomicTest, multMatrixMatrixSparsityTrans) {
 
     compareVectorSetValues(rT, rTExpected);
 }
+
+TEST_F(CppADCGDynamicAtomicTest, multMatrixMatrixSparsityTrans2) {
+    size_t m = 2;
+    size_t n = 7;
+    size_t q = 33;
+    std::vector<std::set<size_t> > sT(m);
+    sT[0].insert(29);
+    sT[1].insert(30);
+
+    std::vector<std::set<size_t> > jac(m); 
+    jac[0].insert(0);
+    jac[0].insert(2);
+    jac[1].insert(1);
+    jac[1].insert(3);
+
+    CppAD::vector<std::set<size_t> > rT(n);
+
+    multMatrixMatrixSparsityTrans(sT, jac, rT, m, n, q);
+
+    CppAD::vector<std::set<size_t> > rTExpected(n);
+    rTExpected[0].insert(29);
+    rTExpected[1].insert(30);
+    rTExpected[2].insert(29);
+    rTExpected[3].insert(30);
+
+    compareVectorSetValues(rT, rTExpected);
+}

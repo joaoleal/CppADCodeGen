@@ -124,6 +124,7 @@ namespace CppAD {
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
          * the model is used through a user defined atomic AD function.
+         * @warning do not used it as a generic forward mode function!
          * 
          * @param tx
          * @return ty
@@ -136,6 +137,7 @@ namespace CppAD {
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
          * the model is used through a user defined atomic AD function.
+         * @warning do not used it as a generic forward mode function!
          * 
          * @param tx
          * @param ty The values of the directional derivatives
@@ -149,6 +151,7 @@ namespace CppAD {
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
          * the model is used through a user defined atomic AD function.
+         * @warning do not used it as a generic forward mode function!
          * 
          * @param tx
          * @param ty The values of the directional derivatives
@@ -160,7 +163,7 @@ namespace CppAD {
          * Computes results during a reverse mode sweep for the evaluation of
          * the jacobian when the model is used through a user defined atomic AD
          * function.
-         * Warning: do not used it as a generic reverse mode function!
+         * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty
@@ -175,7 +178,7 @@ namespace CppAD {
          * Computes results during a reverse mode sweep for the evaluation of
          * the jacobian when the model is used through a user defined atomic AD
          * function.
-         * Warning: do not used it as a generic reverse mode function!
+         * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty
@@ -191,7 +194,7 @@ namespace CppAD {
          * Computes results during a reverse mode sweep for the evaluation of
          * the jacobian when the model is used through a user defined atomic AD
          * function.
-         * Warning: do not used it as a generic reverse mode function!
+         * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
          * @param ty
@@ -207,7 +210,8 @@ namespace CppAD {
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
          * the model is used through a user defined atomic AD function.
-         * Warning: only the values for px[j * (k+1)] are defined, since
+         * @warning do not used it as a generic reverse mode function!
+         * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
          * 
          * @param tx
@@ -223,7 +227,8 @@ namespace CppAD {
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
          * the model is used through a user defined atomic AD function.
-         * Warning: only the values for px[j * (k+1)] are defined, since
+         * @warning do not used it as a generic reverse mode function!
+         * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
          * 
          * @param tx
@@ -240,7 +245,8 @@ namespace CppAD {
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
          * the model is used through a user defined atomic AD function.
-         * Warning: only the values for px[j * (k+1)] are defined, since
+         * @warning do not used it as a generic reverse mode function!
+         * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
          * 
          * @param tx
