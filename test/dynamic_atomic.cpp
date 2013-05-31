@@ -27,8 +27,6 @@ namespace CppAD {
         ADFun<CGD>* _fun;
         DynamicLib<double>* _dynamicLib;
     public:
-        static DynamicLibModel<double>* MODEL;
-    public:
 
         inline CppADCGDynamicAtomicTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
@@ -91,18 +89,11 @@ namespace CppAD {
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
-            MODEL = _dynamicLib->model(MODEL_NAME);
-
-            // dimensions
-            ASSERT_EQ(MODEL->Domain(), _fun->Domain());
-            ASSERT_EQ(MODEL->Range(), _fun->Range());
         }
 
         virtual void TearDown() {
             delete _dynamicLib;
             _dynamicLib = NULL;
-            delete MODEL;
-            MODEL = NULL;
             delete _fun;
             _fun = NULL;
         }
@@ -120,138 +111,128 @@ namespace CppAD {
     const size_t CppADCGDynamicAtomicTest::n = 1;
     const size_t CppADCGDynamicAtomicTest::m = 1;
 #endif
-    DynamicLibModel<double>* CppADCGDynamicAtomicTest::MODEL = NULL;
 
     /**
-     * User Defined Atomic AD Functions
+     * User Defined Atomic AD Function
      */
-    bool atomic_use_lib_forward(size_t id,
-                                size_t k,
-                                size_t n,
-                                size_t m,
-                                const vector<bool>& vx,
-                                vector<bool>& vy,
-                                const vector<double>& tx,
-                                vector<double>& ty) {
+    class atomic_use_lib : public CppAD::atomic_base<double> {
+    public:
+        DynamicLibModel<double>* model;
+    public:
 
-        if (k == 0) {
-            CppADCGDynamicAtomicTest::MODEL->ForwardZero(vx, vy, tx, ty);
-            return true;
-        } else if (k == 1) {
-            CppADCGDynamicAtomicTest::MODEL->ForwardOne(tx, ty);
-            return true;
+        atomic_use_lib(DynamicLibModel<double>* model_) :
+            CppAD::atomic_base<double>("custom_function"),
+            model(model_) {
+            option(CppAD::atomic_base<double>::set_sparsity_enum);
         }
 
-        return false;
-    }
-
-    bool atomic_use_lib_reverse(size_t id,
-                                size_t k,
-                                size_t n,
-                                size_t m,
-                                const vector<double>& tx,
-                                const vector<double>& ty,
-                                vector<double>& px,
-                                const vector<double>& py) {
-        if (k == 0) {
-            CppADCGDynamicAtomicTest::MODEL->ReverseOne(tx, ty, px, py);
-            return true;
-        } else if (k == 1) {
-            CppADCGDynamicAtomicTest::MODEL->ReverseTwo(tx, ty, px, py);
-            return true;
-        }
-
-        return false;
-    }
-
-    bool atomic_use_lib_for_jac_sparse(size_t id,
-                                       size_t n,
-                                       size_t m,
-                                       size_t q,
-                                       const CppAD::vector< std::set<size_t> >& r,
-                                       CppAD::vector< std::set<size_t> >& s) {
-        const std::vector<std::set<size_t> > jacSparsity = CppADCGDynamicAtomicTest::MODEL->JacobianSparsitySet();
-        multMatrixMatrixSparsity(jacSparsity, r, s, m, n, q);
-        return true;
-    }
-
-    bool atomic_use_lib_rev_jac_sparse(size_t id,
-                                       size_t n,
-                                       size_t m,
-                                       size_t q,
-                                       CppAD::vector< std::set<size_t> >& rT,
-                                       const CppAD::vector< std::set<size_t> >& sT) {
-        const std::vector<std::set<size_t> > jacSparsity = CppADCGDynamicAtomicTest::MODEL->JacobianSparsitySet();
-        multMatrixMatrixSparsityTrans(sT, jacSparsity, rT, m, n, q);
-        return true;
-    }
-
-    bool atomic_use_lib_rev_hes_sparse(size_t id,
-                                       size_t n,
-                                       size_t m,
-                                       size_t q,
-                                       const CppAD::vector< std::set<size_t> >& r,
-                                       const CppAD::vector<bool>& s,
-                                       CppAD::vector<bool>& t,
-                                       const CppAD::vector< std::set<size_t> >& u,
-                                       CppAD::vector< std::set<size_t> >& v) {
-        const std::vector<std::set<size_t> > jacSparsity = CppADCGDynamicAtomicTest::MODEL->JacobianSparsitySet();
-
-        /**
-         *  V(x)  =  f^1^T(x) U(x)  +  Sum(  s(x)i  f^2(x)  R(x)   )
-         */
-        // f^1^T(x) U(x)
-        multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
-
-        // Sum(  s(x)i  f^2(x)  R(x)   )
-        bool allSelected = true;
-        for (size_t i = 0; i < m; i++) {
-            if (!s[i]) {
-                allSelected = false;
-                break;
+        virtual bool forward(size_t q,
+                             size_t p,
+                             const CppAD::vector<bool>& vx,
+                             CppAD::vector<bool>& vy,
+                             const CppAD::vector<double>& tx,
+                             CppAD::vector<double>& ty) {
+            if (p == 0) {// this should be >=
+                model->ForwardZero(vx, vy, tx, ty);
             }
+            if (p == 1) {// this should be >=
+                model->ForwardOne(tx, ty);
+            }
+
+            return p <= 1;
         }
 
-        std::vector<std::set<size_t> > sparsitySF2R(n);
-        if (allSelected) {
-            sparsitySF2R = CppADCGDynamicAtomicTest::MODEL->HessianSparsitySet();
-        } else {
+        virtual bool reverse(size_t p,
+                             const CppAD::vector<double>& tx,
+                             const CppAD::vector<double>& ty,
+                             CppAD::vector<double>& px,
+                             const CppAD::vector<double>& py) {
+            if (p == 0) {// this should be >=
+                model->ReverseOne(tx, ty, px, py);
+            }
+            if (p == 1) {// this should be >=
+                model->ReverseTwo(tx, ty, px, py);
+            }
+
+            return p <= 1;
+        }
+
+        virtual bool for_sparse_jac(size_t q,
+                                    const CppAD::vector< std::set<size_t> >& r,
+                                    CppAD::vector< std::set<size_t> >& s) {
+            const std::vector<std::set<size_t> > jacSparsity = model->JacobianSparsitySet();
+            multMatrixMatrixSparsity(jacSparsity, r, s, jacSparsity.size(), r.size(), q);
+            return true;
+        }
+
+        virtual bool rev_sparse_jac(size_t q,
+                                    const CppAD::vector< std::set<size_t> >& rT,
+                                    CppAD::vector< std::set<size_t> >& sT) {
+            const std::vector<std::set<size_t> > jacSparsity = model->JacobianSparsitySet();
+            multMatrixMatrixSparsityTrans(rT, jacSparsity, sT, jacSparsity.size(), sT.size(), q);
+            return true;
+        }
+
+        virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
+                                    const CppAD::vector<bool>& s,
+                                    CppAD::vector<bool>& t,
+                                    size_t q,
+                                    const CppAD::vector< std::set<size_t> >& r,
+                                    const CppAD::vector< std::set<size_t> >& u,
+                                    CppAD::vector< std::set<size_t> >& v) {
+            const std::vector<std::set<size_t> > jacSparsity = model->JacobianSparsitySet();
+            size_t m = jacSparsity.size();
+            size_t n = v.size();
+
+            /**
+             *  V(x)  =  f^1^T(x) U(x)  +  Sum(  s(x)i  f^2(x)  R(x)   )
+             */
+            // f^1^T(x) U(x)
+            multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
+
+            // Sum(  s(x)i  f^2(x)  R(x)   )
+            bool allSelected = true;
+            for (size_t i = 0; i < m; i++) {
+                if (!s[i]) {
+                    allSelected = false;
+                    break;
+                }
+            }
+
+            std::vector<std::set<size_t> > sparsitySF2R(n);
+            if (allSelected) {
+                sparsitySF2R = model->HessianSparsitySet();
+            } else {
+                for (size_t i = 0; i < m; i++) {
+                    if (s[i]) {
+                        const std::vector<std::set<size_t> > sparsity = model->HessianSparsitySet(i);
+                        addMatrixSparsity(sparsity, sparsitySF2R);
+                    }
+                }
+            }
+
+            multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q);
+
+            /**
+             * S(x) * f^1(x)
+             */
             for (size_t i = 0; i < m; i++) {
                 if (s[i]) {
-                    const std::vector<std::set<size_t> > sparsity = CppADCGDynamicAtomicTest::MODEL->HessianSparsitySet(i);
-                    addMatrixSparsity(sparsity, sparsitySF2R);
+                    std::set<size_t>::const_iterator it;
+                    for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
+                        size_t j = *it;
+                        t[j] = true;
+                    }
                 }
             }
+
+            return true;
         }
 
-        multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q);
-
-        /**
-         * S(x) * f^1(x)
-         */
-        for (size_t i = 0; i < m; i++) {
-            if (s[i]) {
-                std::set<size_t>::const_iterator it;
-                for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                    size_t j = *it;
-                    t[j] = true;
-                }
-            }
+        virtual ~atomic_use_lib() {
+            delete model;
         }
-
-        return true;
-    }
-
-    // ---------------------------------------------------------------------
-    // Declare the AD<double> routine atomic_usead(id, ax, ay)
-    CPPAD_USER_ATOMIC(atomic_use_lib,
-                      CppAD::vector,
-                      double,
-                      atomic_use_lib_forward,
-                      atomic_use_lib_reverse,
-                      atomic_use_lib_for_jac_sparse,
-                      atomic_use_lib_rev_jac_sparse,
-                      atomic_use_lib_rev_hes_sparse)
+    };
 
 }
 
@@ -276,8 +257,9 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
     vector<AD<double> > ay(m);
 
     // call user function and store atomic_use_lib(x) in au[0] 
-    size_t id = 0; // not used
-    CppAD::atomic_use_lib(id, ax, ay);
+    atomic_use_lib atomicfun(_dynamicLib->model(MODEL_NAME));
+
+    atomicfun(ax, ay);
 
     // create f2: x -> y and stop tape recording
     ADFun<double> f2(ax, ay);
@@ -290,7 +272,7 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
         xOrig[j] = x[j];
 
     vector<CGD> yOrig = _fun->Forward(0, xOrig);
-    vector<double> yInner = CppADCGDynamicAtomicTest::MODEL->ForwardZero(x);
+    vector<double> yInner = atomicfun.model->ForwardZero(x);
     vector<double> yOutter = f2.Forward(0, x);
 
     compareValues(yInner, yOrig);
@@ -319,7 +301,7 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
         tx[j * k1 + 1] = 1;
 
         vector<CGD> y_pOrig = _fun->Forward(1, x_pOrig);
-        vector<double> y_pInner = CppADCGDynamicAtomicTest::MODEL->ForwardOne(tx);
+        vector<double> y_pInner = atomicfun.model->ForwardOne(tx);
         vector<double> y_pOutter = f2.Forward(1, x_p);
 
         x_p[j] = 0;
@@ -352,7 +334,7 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
         wOrig[i] = 1;
 
         vector<CGD> dwOrig = _fun->Reverse(1, wOrig);
-        vector<double> dwInner = CppADCGDynamicAtomicTest::MODEL->ReverseOne(tx, ty, w);
+        vector<double> dwInner = atomicfun.model->ReverseOne(tx, ty, w);
         vector<double> dwOutter = f2.Reverse(1, w);
 
         w[i] = 0;
@@ -391,7 +373,7 @@ TEST_F(CppADCGDynamicAtomicTest, DynamicForRev) {
 
         _fun->Forward(1, x_pOrig);
         vector<CGD> dwOrig = _fun->Reverse(2, pyOrig);
-        vector<double> dwInner = CppADCGDynamicAtomicTest::MODEL->ReverseTwo(tx, ty, py);
+        vector<double> dwInner = atomicfun.model->ReverseTwo(tx, ty, py);
         f2.Forward(1, x_p);
         vector<double> dwOutter = f2.Reverse(2, py);
 
@@ -512,7 +494,7 @@ TEST_F(CppADCGDynamicAtomicTest, multMatrixMatrixSparsityTrans2) {
     sT[0].insert(29);
     sT[1].insert(30);
 
-    std::vector<std::set<size_t> > jac(m); 
+    std::vector<std::set<size_t> > jac(m);
     jac[0].insert(0);
     jac[0].insert(2);
     jac[1].insert(1);
