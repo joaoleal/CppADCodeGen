@@ -33,12 +33,28 @@ namespace CppAD {
     protected:
         // counter used to generate variable IDs
         size_t _idCount;
+        // counter used to generate array variable IDs
+        size_t _idArrayCount;
+        // counter used to generate IDs for atomic functions
+        size_t _idAtomicCount;
         // the independent variables
         std::vector<SourceCodeFragment<Base> *> _independentVariables;
         // all the source code blocks created with the CG<Base> objects (does not include independent variables)
         std::vector<SourceCodeFragment<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
         std::vector<SourceCodeFragment<Base> *> _variableOrder;
+        // maps the ids of the atomic functions to their names (used by this handler only)
+        std::map<size_t, std::string> _atomicFunctions;
+        /**
+         * already used atomic function names (may contain names which were 
+         * used by previous calls to this/other CondeHandlers)
+         */
+        std::set<std::string> _atomicFunctionsSet;
+        /**
+         * the order of the atomic functions(may contain names which were 
+         * used by previous calls to this/other CondeHandlers)
+         */
+        std::vector<std::string>* _atomicFunctionsOrder;
         // a flag indicating if this handler was previously used to generate code
         bool _used;
         // a flag indicating whether or not to reuse the IDs of destroyed variables
@@ -52,7 +68,10 @@ namespace CppAD {
     public:
 
         CodeHandler(size_t varCount = 50) :
-            _idCount(0),
+            _idCount(1),
+            _idArrayCount(1),
+            _idAtomicCount(1),
+            _atomicFunctionsOrder(NULL),
             _used(false),
             _reuseIDs(true),
             _lang(NULL),
@@ -154,6 +173,28 @@ namespace CppAD {
                                   std::vector<CG<Base> >& dependent,
                                   VariableNameGenerator<Base>& nameGen,
                                   const std::string& jobName = "source") {
+            std::vector<std::string> atomicFunctions;
+            generateCode(out, lang, dependent, nameGen, atomicFunctions, jobName);
+        }
+
+        /**
+         * Creates the source code from the operations registered so far.
+         * 
+         * @param out The output stream where the source code is to be printed.
+         * @param lang The targeted language.
+         * @param dependent The dependent variables for which the source code
+         *                  should be generated. By defining this vector the 
+         *                  number of operations in the source code can be 
+         *                  reduced and thus providing a more optimized code.
+         * @param nameGen Provides the rules for variable name creation.
+         * @param atomicFunctions The order of the atomic functions.
+         */
+        virtual void generateCode(std::ostream& out,
+                                  CppAD::Language<Base>& lang,
+                                  std::vector<CG<Base> >& dependent,
+                                  VariableNameGenerator<Base>& nameGen,
+                                  std::vector<std::string>& atomicFunctions,
+                                  const std::string& jobName = "source") {
             double beginTime;
             if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
@@ -162,7 +203,14 @@ namespace CppAD {
             }
 
             _lang = &lang;
-            _idCount = 0;
+            _idCount = 1;
+            _idArrayCount = 1;
+            _idAtomicCount = 1;
+            _atomicFunctionsOrder = &atomicFunctions;
+            _atomicFunctionsSet.clear();
+            for (size_t i = 0; i < atomicFunctions.size(); i++) {
+                _atomicFunctionsSet.insert(atomicFunctions[i]);
+            }
 
             if (_used) {
                 resetCounters();
@@ -173,16 +221,16 @@ namespace CppAD {
              * the first variable IDs are for the independent variables
              */
             for (typename std::vector<SourceCodeFragment<Base> *>::iterator it = _independentVariables.begin(); it != _independentVariables.end(); ++it) {
-                (*it)->setVariableID(++_idCount);
+                (*it)->setVariableID(_idCount++);
             }
 
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 if (it->getSourceCodeFragment() != NULL && it->getSourceCodeFragment()->variableID() == 0) {
-                    it->getSourceCodeFragment()->setVariableID(++_idCount);
+                    it->getSourceCodeFragment()->setVariableID(_idCount++);
                 }
             }
 
-            _minTemporaryVarID = _idCount + 1;
+            _minTemporaryVarID = _idCount;
 
             // determine the number of times each variable is used
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
@@ -213,21 +261,39 @@ namespace CppAD {
                 }
             }
 
-            assert(_idCount == _variableOrder.size() + _independentVariables.size());
+            //assert(_idCount - 1 + _idArrayCount == _variableOrder.size() + _independentVariables.size());
 
             if (_reuseIDs) {
                 reduceTemporaryVariables(dependent);
             }
 
-            nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount);
+            nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1);
+
+            std::map<std::string, size_t> atomicFunctionName2Id;
+            std::map<size_t, std::string>::const_iterator itA;
+            for (itA = _atomicFunctions.begin(); itA != _atomicFunctions.end(); ++itA) {
+                atomicFunctionName2Id[itA->second] = itA->first;
+            }
+
+            std::map<size_t, size_t> atomicFunctionId2Index;
+            for (size_t i = 0; i < _atomicFunctionsOrder->size(); i++) {
+                const std::string& atomicName = (*_atomicFunctionsOrder)[i];
+                std::map<std::string, size_t>::const_iterator it = atomicFunctionName2Id.find(atomicName);
+                if (it != atomicFunctionName2Id.end()) {
+                    atomicFunctionId2Index[it->second] = i;
+                }
+            }
 
             /**
              * Creates the source code for a specific language
              */
             LanguageGenerationData<Base> info(_independentVariables, dependent,
                                               _minTemporaryVarID, _variableOrder,
-                                              nameGen, _reuseIDs);
+                                              nameGen, atomicFunctionId2Index,
+                                              _reuseIDs);
             lang.generateSourceCode(out, info);
+
+            _atomicFunctionsSet.clear();
 
             if (_verbose) {
                 double endTime = system::currentTime();
@@ -243,7 +309,9 @@ namespace CppAD {
             }
             _codeBlocks.clear();
             _independentVariables.clear();
-            _idCount = 0;
+            _idCount = 1;
+            _idArrayCount = 1;
+            _idAtomicCount = 1;
             _used = false;
         }
 
@@ -336,6 +404,10 @@ namespace CppAD {
             }
         }
 
+        virtual void registerAtomicFunction(size_t id, const std::string& name) {
+            _atomicFunctions[id] = name;
+        }
+
         virtual void checkVariableCreation(SourceCodeFragment<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
@@ -349,6 +421,20 @@ namespace CppAD {
                         // dependencies not visited yet
                         checkVariableCreation(arg);
 
+                        /**
+                         * Save atomic function related information
+                         */
+                        if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
+                            assert(arg.arguments().size() > 1);
+                            assert(arg.info().size() > 1);
+                            size_t id = arg.info()[0];
+                            const std::string& atomicName = _atomicFunctions.at(id);
+                            if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
+                                _atomicFunctionsSet.insert(atomicName);
+                                _atomicFunctionsOrder->push_back(atomicName);
+                            }
+                        }
+
                         // make sure new temporary variables are NOT created for
                         // the independent variables and that a dependency did
                         // not use it first
@@ -359,7 +445,19 @@ namespace CppAD {
                                     _lang->requiresVariableArgument(code.operation(), argIndex)) {
                                 addToEvaluationQueue(arg);
                                 if (arg.variableID() == 0) {
-                                    arg.setVariableID(++_idCount);
+                                    if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
+                                        arg.setVariableID(_idAtomicCount);
+                                        _idAtomicCount++;
+                                    } else if (arg.operation() != CGArrayCreationOp) {
+                                        // a single temporary variable
+                                        arg.setVariableID(_idCount);
+                                        _idCount++;
+                                    } else {
+                                        // a temporary array
+                                        size_t arraySize = arg.arguments().size();
+                                        arg.setVariableID(_idArrayCount);
+                                        _idArrayCount += arraySize;
+                                    }
                                 }
                             }
                         }
@@ -401,12 +499,13 @@ namespace CppAD {
                 }
             }
 
-            // location of where temporary variables can be released
+            // where temporary variables can be released
             std::vector<std::vector<SourceCodeFragment<Base>* > > tempVarRelease(_variableOrder.size());
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 SourceCodeFragment<Base>* var = _variableOrder[i];
-                if (isTemporary(*var)) {
-                    tempVarRelease[var->getLastUsageEvaluationOrder() - 1].push_back(var);
+                if (isTemporary(*var) || isTemporaryArray(*var)) {
+                    size_t releaseLocation = var->getLastUsageEvaluationOrder() - 1;
+                    tempVarRelease[releaseLocation].push_back(var);
                 }
             }
 
@@ -415,25 +514,173 @@ namespace CppAD {
              * Redefine temporary variable IDs
              */
             std::vector<size_t> freedVariables; // variable IDs no longer in use
-            _idCount = _minTemporaryVarID - 1;
+            _idCount = _minTemporaryVarID;
+            _idArrayCount = 1;
+            std::map<size_t, size_t> freeArrayStartSpace; // [start] = end
+            std::map<size_t, size_t> freeArrayEndSpace; // [end] = start
 
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 SourceCodeFragment<Base>& var = *_variableOrder[i];
 
                 const std::vector<SourceCodeFragment<Base>* >& released = tempVarRelease[i];
                 for (size_t r = 0; r < released.size(); r++) {
-                    freedVariables.push_back(released[r]->variableID());
+                    if (isTemporary(*released[r])) {
+                        freedVariables.push_back(released[r]->variableID());
+                    } else if (isTemporaryArray(*released[r])) {
+                        addFreeArraySpace(*released[r], freeArrayStartSpace, freeArrayEndSpace);
+                        assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                    }
                 }
 
                 if (isTemporary(var)) {
+                    // a single temporary variable
                     if (freedVariables.empty()) {
-                        var.setVariableID(++_idCount);
+                        var.setVariableID(_idCount);
+                        _idCount++;
                     } else {
                         size_t id = freedVariables.back();
                         freedVariables.pop_back();
                         var.setVariableID(id);
                     }
+                } else if (isTemporaryArray(var)) {
+                    // a temporary array
+                    size_t arrayStart = reserveArraySpace(var, freeArrayStartSpace, freeArrayEndSpace);
+                    assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                    var.setVariableID(arrayStart + 1);
                 }
+
+            }
+        }
+
+        inline static void addFreeArraySpace(const SourceCodeFragment<Base>& released,
+                                             std::map<size_t, size_t>& freeArrayStartSpace,
+                                             std::map<size_t, size_t>& freeArrayEndSpace) {
+            size_t arrayStart = released.variableID() - 1;
+            const size_t arraySize = released.arguments().size();
+            size_t arrayEnd = arrayStart + arraySize - 1;
+
+            std::map<size_t, size_t>::iterator it;
+            if (arrayStart > 0) {
+                it = freeArrayEndSpace.find(arrayStart - 1); // previous
+                if (it != freeArrayEndSpace.end()) {
+                    arrayStart = it->second; // merge space
+                    freeArrayEndSpace.erase(it);
+                    freeArrayStartSpace.erase(arrayStart);
+                }
+            }
+            it = freeArrayStartSpace.find(arrayEnd + 1); // next
+            if (it != freeArrayStartSpace.end()) {
+                arrayEnd = it->second; // merge space 
+                freeArrayStartSpace.erase(it);
+                freeArrayEndSpace.erase(arrayEnd);
+            }
+
+            freeArrayStartSpace[arrayStart] = arrayEnd;
+            freeArrayEndSpace[arrayEnd] = arrayStart;
+        }
+
+        inline size_t reserveArraySpace(const SourceCodeFragment<Base>& newArray,
+                                        std::map<size_t, size_t>& freeArrayStartSpace,
+                                        std::map<size_t, size_t>& freeArrayEndSpace) {
+            size_t arraySize = newArray.arguments().size();
+
+            std::set<size_t> blackList;
+            const std::vector<Argument<Base> >& args = newArray.arguments();
+            for (size_t i = 0; i < args.size(); i++) {
+                const SourceCodeFragment<Base>* argOp = args[i].operation();
+                if (argOp != NULL && argOp->operation() == CGArrayElementOp) {
+                    const SourceCodeFragment<Base>& otherArray = *argOp->arguments()[0].operation();
+                    assert(otherArray.variableID() > 0); // make sure it had already been assigned space
+                    size_t otherArrayStart = otherArray.variableID() - 1;
+                    size_t index = argOp->info()[0];
+                    blackList.insert(otherArrayStart + index);
+                }
+            }
+
+            /**
+             * Find the best location for the new array
+             */
+            std::map<size_t, size_t>::reverse_iterator it;
+            std::map<size_t, size_t>::reverse_iterator itBestFit = freeArrayStartSpace.rend();
+            for (it = freeArrayStartSpace.rbegin(); it != freeArrayStartSpace.rend(); ++it) {
+                size_t start = it->first;
+                size_t end = it->second;
+                size_t space = end - start + 1;
+                if (space < arraySize) {
+                    continue;
+                }
+
+                std::set<size_t>::const_iterator itBlack = blackList.lower_bound(start);
+                if (itBlack != blackList.end() && *itBlack <= end) {
+                    continue; // cannot use this space
+                }
+
+                if (space == arraySize) {
+                    // jackpot
+                    itBestFit = it;
+                    break;
+                } else {
+                    //possible candidate
+                    if (itBestFit == freeArrayStartSpace.rend()) {
+                        itBestFit = it;
+                    } else {
+                        size_t bestSpace = itBestFit->second - itBestFit->first + 1;
+                        if (space < bestSpace) {
+                            // better fit
+                            itBestFit = it;
+                        }
+                    }
+                }
+            }
+
+            if (itBestFit != freeArrayStartSpace.rend()) {
+                /**
+                 * Use available space
+                 */
+                size_t bestStart = itBestFit->first;
+                size_t bestEnd = itBestFit->second;
+                size_t bestSpace = bestEnd - bestStart + 1;
+                freeArrayStartSpace.erase(bestStart);
+                if (bestSpace == arraySize) {
+                    // entire space 
+                    freeArrayEndSpace.erase(bestEnd);
+                } else {
+                    // some space left
+                    size_t newFreeStart = bestStart + arraySize;
+                    freeArrayStartSpace[newFreeStart] = bestEnd;
+                    freeArrayEndSpace.at(bestEnd) = newFreeStart;
+                }
+                return bestStart;
+            } else {
+                /**
+                 * no space available, need more
+                 */
+                // check if there is some free space at the end
+                std::map<size_t, size_t>::iterator itEnd;
+                itEnd = freeArrayEndSpace.find(_idArrayCount - 1);
+                if (itEnd != freeArrayEndSpace.end()) {
+                    // check if it can be used
+                    size_t lastSpotStart = itEnd->second;
+                    size_t lastSpotEnd = itEnd->first;
+                    size_t lastSpotSize = lastSpotEnd - lastSpotStart + 1;
+                    std::set<size_t>::const_iterator itBlack = blackList.lower_bound(lastSpotStart);
+                    if (itBlack == blackList.end()) {
+                        // can use this space
+                        size_t newEnd = lastSpotStart + arraySize - 1;
+
+                        freeArrayEndSpace.erase(itEnd);
+                        freeArrayEndSpace[newEnd] = lastSpotStart;
+                        freeArrayStartSpace[lastSpotStart] = newEnd;
+
+                        _idArrayCount += arraySize - lastSpotSize;
+                        return lastSpotStart;
+                    }
+                }
+
+                // brand new space
+                size_t id = _idArrayCount;
+                _idArrayCount += arraySize;
+                return id - 1;
             }
         }
 
@@ -493,12 +740,24 @@ namespace CppAD {
         }
 
         inline bool isIndependent(const SourceCodeFragment<Base>& arg) const {
+            if (arg.operation() == CGArrayCreationOp ||
+                    arg.operation() == CGAtomicForwardOp ||
+                    arg.operation() == CGAtomicReverseOp)
+                return false;
+
             size_t id = arg.variableID();
             return id > 0 && id <= _independentVariables.size();
         }
 
         inline bool isTemporary(const SourceCodeFragment<Base>& arg) const {
-            return arg.variableID() >= _minTemporaryVarID;
+            return arg.operation() != CGArrayCreationOp &&
+                    arg.operation() != CGAtomicForwardOp &&
+                    arg.operation() != CGAtomicReverseOp &&
+                    arg.variableID() >= _minTemporaryVarID;
+        }
+
+        inline bool isTemporaryArray(const SourceCodeFragment<Base>& arg) const {
+            return arg.operation() == CGArrayCreationOp;
         }
 
         virtual void resetCounters() {
@@ -529,6 +788,7 @@ namespace CppAD {
         CodeHandler& operator=(const CodeHandler&); // not implemented
 
         friend class CG<Base>;
+        friend class CGAtomicFun<Base>;
 
     };
 

@@ -30,6 +30,8 @@ namespace CppAD {
      */
     template<class Base>
     class CLanguage : public Language<Base> {
+    public:
+        static const std::string ATOMICFUN_STRUCT_DEFINITION;
     protected:
         static const std::string _C_COMP_OP_LT;
         static const std::string _C_COMP_OP_LE;
@@ -43,10 +45,12 @@ namespace CppAD {
         const std::string _baseTypeName;
         // line indentation
         const std::string _spaces;
-        //
+        // variable name used for the inlet variable
         std::string _inArgName;
-        //
+        // variable name used for the oulet variable
         std::string _outArgName;
+        // variable name used for the atomic functions array
+        std::string _atomicArgName;
         // output stream for the generated source code
         std::ostringstream _code;
         // creates the variable names
@@ -57,6 +61,8 @@ namespace CppAD {
         size_t _independentSize;
         //
         size_t _minTemporaryVarID;
+        // maps atomic function IDs to their internal index
+        std::map<size_t, size_t> _atomicFunctionId2Index;
         // maps the variable IDs to the their position in the dependent vector
         // (some IDs may be the same as the independent variables when dep = indep)
         std::map<size_t, size_t> _dependentIDs;
@@ -80,6 +86,7 @@ namespace CppAD {
         std::string defaultFuncArgDcl_;
         std::string localFuncArgDcl_;
         std::string localFuncArgs_;
+        std::string auxArrayName_;
 
     public:
 
@@ -94,6 +101,7 @@ namespace CppAD {
             _spaces(spaces, ' '),
             _inArgName("in"),
             _outArgName("out"),
+            _atomicArgName("atomicFun"),
             _nameGen(NULL),
             _independentSize(0),
             _dependent(NULL),
@@ -101,6 +109,30 @@ namespace CppAD {
             _ignoreZeroDepAssign(false),
             _maxAssigmentsPerFunction(0),
             _sources(NULL) {
+        }
+
+        inline const std::string& getArgumentIn() const {
+            return _inArgName;
+        }
+
+        inline void setArgumentIn(const std::string& inArgName) {
+            _inArgName = inArgName;
+        }
+
+        inline const std::string& getArgumentOut() const {
+            return _outArgName;
+        }
+
+        inline void setArgumentOut(const std::string& outArgName) {
+            _outArgName = outArgName;
+        }
+
+        inline const std::string& getArgumentAtomic() const {
+            return _atomicArgName;
+        }
+
+        inline void setArgumentAtomic(const std::string& atomicArgName) {
+            _atomicArgName = atomicArgName;
         }
 
         inline const std::string& getDependentAssignOperation() const {
@@ -134,10 +166,13 @@ namespace CppAD {
             // declare variables
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
 
-            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                                 "There must be one temporary variable");
+            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 2,
+                                 "There must be two temporary variables");
 
             _ss << _spaces << "// auxiliary variables\n";
+            /**
+             * temporary variables
+             */
             if (tmpArg[0].array) {
                 size_t size = _nameGen->getMaxTemporaryVariableID() + 1 - _nameGen->getMinTemporaryVariableID();
                 if (size > 0 || !localOnly) {
@@ -164,6 +199,18 @@ namespace CppAD {
                 _ss << ";\n";
             }
 
+            /**
+             * temporary array variables
+             */
+            size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID();
+            if (arraySize > 0 || !localOnly) {
+                _ss << _spaces << _baseTypeName << " " << tmpArg[1].name << "[" << arraySize << "];\n";
+                if (localOnly && arraySize > 0) {
+                    _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
+                }
+            }
+
+            // clean-up
             std::string code = _ss.str();
             _ss.str("");
 
@@ -200,6 +247,20 @@ namespace CppAD {
             return code;
         }
 
+        inline std::string generateArgumentAtomicDcl() const {
+            return "struct CLangAtomicFun " + _atomicArgName;
+        }
+
+        virtual std::string generateDefaultFunctionArgumentsDcl() const {
+            return _baseTypeName + " const *const * " + _inArgName +
+                    ", " + _baseTypeName + "*const * " + _outArgName +
+                    ", " + generateArgumentAtomicDcl();
+        }
+
+        virtual std::string generateDefaultFunctionArguments() const {
+            return _inArgName + ", " + _outArgName + ", " + _atomicArgName;
+        }
+
         CPPAD_CG_C_LANG_FUNCNAME(abs)
         CPPAD_CG_C_LANG_FUNCNAME(acos)
         CPPAD_CG_C_LANG_FUNCNAME(asin)
@@ -231,12 +292,14 @@ namespace CppAD {
             defaultFuncArgDcl_ = "";
             localFuncArgDcl_ = "";
             localFuncArgs_ = "";
+            auxArrayName_ = "";
 
             // save some info
             _independentSize = info.independent.size();
             _dependent = &info.dependent;
             _nameGen = &info.nameGen;
             _minTemporaryVarID = info.minTemporaryVarID;
+            _atomicFunctionId2Index = info.atomicFunctionId2Index;
             const std::vector<CG<Base> >& dependent = info.dependent;
             const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
 
@@ -268,16 +331,16 @@ namespace CppAD {
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
                                  "There must be at least one dependent and one independent argument");
-            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 1,
-                                 "There must be one temporary variable");
+            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 2,
+                                 "There must be two temporary variables");
 
             if (!_functionName.empty()) {
-                defaultFuncArgDcl_ = _baseTypeName + " const *const * " + _inArgName +
-                        ", " + _baseTypeName + " *const * " + _outArgName;
-
-                localFuncArgDcl_ = defaultFuncArgDcl_ + ", " + argumentDeclaration(tmpArg[0]);
-                localFuncArgs_ = _inArgName + ", " + _outArgName + ", " + tmpArg[0].name;
+                defaultFuncArgDcl_ = generateDefaultFunctionArgumentsDcl();
+                localFuncArgDcl_ = defaultFuncArgDcl_ + ", " + argumentDeclaration(tmpArg[0]) + ", " + argumentDeclaration(tmpArg[1]);
+                localFuncArgs_ = generateDefaultFunctionArguments() + ", " + tmpArg[0].name + ", " + tmpArg[1].name;
             }
+
+            auxArrayName_ = tmpArg[1].name + "p";
 
             /**
              * Determine the dependent variables that result from the same operations
@@ -316,13 +379,18 @@ namespace CppAD {
                     SourceCodeFragment<Base>& op = **it;
                     if (op.getName() == NULL) {
                         if (!isDependent(op)) {
-                            op.setName(_nameGen->generateTemporary(op));
+                            if (requiresVariableName(op) && op.operation() != CGArrayCreationOp) {
+                                op.setName(_nameGen->generateTemporary(op));
+                            } else if (op.operation() == CGArrayCreationOp) {
+                                op.setName(_nameGen->generateTemporaryArray(op));
+                            }
                         }
                     }
                 }
 
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
+                    // check if a new function should start
                     if (assignCount >= _maxAssigmentsPerFunction && multiFunction) {
                         assignCount = 0;
                         saveLocalFunction(localFuncNames);
@@ -335,13 +403,13 @@ namespace CppAD {
                         _temporary[op.variableID()] = &op;
                     }
 
-                    bool condAssign = isCondAssign(op.operation());
-                    if (!condAssign) {
+                    bool createsVar = directlyAssignsVariable(op);
+                    if (createsVar) {
                         _code << _spaces << createVariableName(op) << " ";
                         _code << (isDep ? _depAssignOperation : "=") << " ";
                     }
                     printExpressionNoVarCheck(op);
-                    if (!condAssign) {
+                    if (createsVar) {
                         _code << ";\n";
                     }
 
@@ -358,6 +426,7 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
                                      "The temporary variables must be saved in an array in order to generate multiple functions");
 
+                _code << ATOMICFUN_STRUCT_DEFINITION << "\n\n";
                 // forward declarations
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
                     _code << "void " << localFuncNames[i] << "(" << localFuncArgDcl_ << ");\n";
@@ -410,6 +479,7 @@ namespace CppAD {
             if (createFunction) {
                 if (localFuncNames.empty()) {
                     _ss << "#include <math.h>\n\n"
+                            << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                             << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
                     _nameGen->customFunctionVariableDeclarations(_ss);
                     _ss << generateIndependentVariableDeclaration() << "\n";
@@ -450,10 +520,15 @@ namespace CppAD {
             _ss.str("");
 
             _ss << "#include <math.h>\n\n"
+                    << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                     << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n";
             _nameGen->customFunctionVariableDeclarations(_ss);
             _ss << generateIndependentVariableDeclaration() << "\n";
             _ss << generateDependentVariableDeclaration() << "\n";
+            size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID() - 1;
+            if (arraySize > 0) {
+                _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
+            }
             _nameGen->prepareCustomFunctionVariables(_ss);
             _ss << _code.str();
             _nameGen->finalizeCustomFunctionVariables(_ss);
@@ -466,37 +541,66 @@ namespace CppAD {
             _ss.str("");
         }
 
-        virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) {
-            return op.totalUsageCount() > 1 ||
-                    op.operation() == CGComOpLt ||
-                    op.operation() == CGComOpLe ||
-                    op.operation() == CGComOpEq ||
-                    op.operation() == CGComOpGe ||
-                    op.operation() == CGComOpGt ||
-                    op.operation() == CGComOpNe;
+        virtual bool createsNewVariable(const SourceCodeFragment<Base>& var) const {
+            CGOpCode op = var.operation();
+            return (var.totalUsageCount() > 1 &&
+                    op != CGArrayElementOp) ||
+                    op == CGAtomicForwardOp ||
+                    op == CGAtomicReverseOp ||
+                    op == CGArrayCreationOp ||
+                    op == CGComOpLt ||
+                    op == CGComOpLe ||
+                    op == CGComOpEq ||
+                    op == CGComOpGe ||
+                    op == CGComOpGt ||
+                    op == CGComOpNe;
         }
 
-        virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) {
+        virtual bool requiresVariableName(const SourceCodeFragment<Base>& op) const {
+            return (op.totalUsageCount() > 1 &&
+                    op.operation() != CGAtomicForwardOp &&
+                    op.operation() != CGAtomicReverseOp);
+        }
+
+        virtual bool directlyAssignsVariable(const SourceCodeFragment<Base>& var) const {
+            CGOpCode op = var.operation();
+            return !isCondAssign(op) &&
+                    op != CGArrayCreationOp &&
+                    op != CGAtomicForwardOp &&
+                    op != CGAtomicReverseOp;
+        }
+
+        virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const {
             return op == CGSignOp;
         }
 
         inline const std::string& createVariableName(SourceCodeFragment<Base>& var) {
             assert(var.variableID() > 0);
+            assert(var.operation() != CGAtomicForwardOp && var.operation() != CGAtomicReverseOp);
 
             if (var.getName() == NULL) {
-                if (var.variableID() <= _independentSize) {
-                    var.setName(_nameGen->generateIndependent(var));
+                if (var.operation() != CGArrayCreationOp) {
+                    if (var.variableID() <= _independentSize) {
+                        // independent variable
+                        var.setName(_nameGen->generateIndependent(var));
 
-                } else if (var.variableID() < _minTemporaryVarID) {
-                    std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
-                    assert(it != _dependentIDs.end());
+                    } else if (var.variableID() < _minTemporaryVarID) {
+                        // dependent variable
+                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
+                        assert(it != _dependentIDs.end());
 
-                    size_t index = it->second;
-                    const CG<Base>& dep = (*_dependent)[index];
-                    var.setName(_nameGen->generateDependent(dep, index));
+                        size_t index = it->second;
+                        const CG<Base>& dep = (*_dependent)[index];
+                        var.setName(_nameGen->generateDependent(dep, index));
 
+                    } else {
+                        // temporary variable
+                        if (requiresVariableName(var) && var.operation() != CGArrayCreationOp) {
+                            var.setName(_nameGen->generateTemporary(var));
+                        }
+                    }
                 } else {
-                    var.setName(_nameGen->generateTemporary(var));
+                    var.setName(_nameGen->generateTemporaryArray(var));
                 }
             }
 
@@ -521,15 +625,22 @@ namespace CppAD {
 
         virtual void printExpression(SourceCodeFragment<Base>& op) throw (CGException) {
             if (op.variableID() > 0) {
+                // use variable name
                 _code << createVariableName(op);
-                return;
+            } else {
+                // print expression code
+                printExpressionNoVarCheck(op);
             }
-
-            printExpressionNoVarCheck(op);
         }
 
         virtual void printExpressionNoVarCheck(SourceCodeFragment<Base>& op) throw (CGException) {
             switch (op.operation()) {
+                case CGArrayCreationOp:
+                    printArrayCreationOp(op);
+                    break;
+                case CGArrayElementOp:
+                    printArrayElementOp(op);
+                    break;
                 case CGAbsOp:
                 case CGAcosOp:
                 case CGAsinOp:
@@ -544,6 +655,12 @@ namespace CppAD {
                 case CGTanhOp:
                 case CGTanOp:
                     printUnaryFunction(op);
+                    break;
+                case CGAtomicForwardOp: // atomicFunction.forward(q, p, vx, vy, tx, ty)
+                    printAtomicForwardOp(op);
+                    break;
+                case CGAtomicReverseOp: // atomicFunction.reverse(p, tx, ty, px, py)
+                    printAtomicReverseOp(op);
                     break;
                 case CGAddOp:
                     printOperationAdd(op);
@@ -841,6 +958,76 @@ namespace CppAD {
             }
         }
 
+        virtual void printArrayCreationOp(SourceCodeFragment<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.arguments().size() > 0, "Invalid number of arguments for array creation operation");
+            const std::vector<Argument<Base> >& args = op.arguments();
+
+            _code << _spaces << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(op) << "; // size: " << args.size() << "\n";
+
+            for (size_t i = 0; i < args.size(); i++) {
+                _code << _spaces << auxArrayName_ << "[" << i << "] = ";
+                print(args[i]);
+                _code << ";\n";
+            }
+        }
+
+        virtual void printArrayElementOp(SourceCodeFragment<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for array element operation");
+            CPPADCG_ASSERT_KNOWN(op.arguments()[0].operation() != NULL, "Invalid argument for array element operation");
+            CPPADCG_ASSERT_KNOWN(op.info().size() == 1, "Invalid number of information indexes for array element operation");
+
+            SourceCodeFragment<Base>& arrayOp = *op.arguments()[0].operation();
+            _code << "(" << _nameGen->generateTemporaryArray(arrayOp) << ")[" << op.info()[0] << "]";
+        }
+
+        virtual void printAtomicForwardOp(SourceCodeFragment<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for atomic forward operation");
+            CPPADCG_ASSERT_KNOWN(op.info().size() == 3, "Invalid number of information elements for atomic forward operation");
+            size_t id = op.info()[0];
+            size_t atomicIndex = _atomicFunctionId2Index.at(id);
+            int q = op.info()[1];
+            int p = op.info()[2];
+            SourceCodeFragment<Base>& tx = *op.arguments()[0].operation();
+            SourceCodeFragment<Base>& ty = *op.arguments()[1].operation();
+
+            createVariableName(tx);
+            createVariableName(ty);
+
+            _code << _spaces << "atomicFun.forward(atomicFun.libModel, "
+                    << atomicIndex << ", "
+                    << q << ", "
+                    << p << ", "
+                    << *tx.getName() << ", " << tx.arguments().size() << ", "
+                    << *ty.getName() << ", " << ty.arguments().size() << ");\n";
+        }
+
+        virtual void printAtomicReverseOp(SourceCodeFragment<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 4, "Invalid number of arguments for atomic forward operation");
+            CPPADCG_ASSERT_KNOWN(op.info().size() == 2, "Invalid number of information elements for atomic forward operation");
+            size_t id = op.info()[0];
+            size_t atomicIndex = _atomicFunctionId2Index.at(id);
+            int p = op.info()[1];
+            SourceCodeFragment<Base>& tx = *op.arguments()[0].operation();
+            SourceCodeFragment<Base>& ty = *op.arguments()[1].operation();
+            SourceCodeFragment<Base>& px = *op.arguments()[2].operation();
+            SourceCodeFragment<Base>& py = *op.arguments()[3].operation();
+
+            CPPADCG_ASSERT_KNOWN(tx.arguments().size() == px.arguments().size(), "Invalid array length");
+            CPPADCG_ASSERT_KNOWN(ty.arguments().size() == py.arguments().size(), "Invalid array length");
+
+            createVariableName(tx);
+            createVariableName(ty);
+            createVariableName(px);
+            createVariableName(py);
+
+            _code << _spaces << "atomicFun.reverse(atomicFun.libModel, "
+                    << atomicIndex << ", "
+                    << p << ", "
+                    << *tx.getName() << ", " << *ty.getName() << ", "
+                    << *px.getName() << ", " << *py.getName() << ", "
+                    << tx.arguments().size() << ", " << ty.arguments().size() << ");\n";
+        }
+
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {
             size_t id = arg.variableID();
             return id > _independentSize && id < _minTemporaryVarID;
@@ -931,6 +1118,14 @@ namespace CppAD {
     const std::string CLanguage<Base>::_C_COMP_OP_GT = ">";
     template<class Base>
     const std::string CLanguage<Base>::_C_COMP_OP_NE = "!=";
+
+    template<class Base>
+    const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "struct CLangAtomicFun {\n"
+    "    void* libModel;\n"
+    "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const void* tx, unsigned long int txSize, void* ty, unsigned long int tySize);\n"
+    "    int (*reverse)(void* libModel, int atomicIndex, int p, const void* tx, const void* ty, void* px, const void* py, unsigned long int xSize, unsigned long int ySize);\n"
+    "};";
+
 }
 
 #endif

@@ -27,6 +27,8 @@ namespace CppAD {
     private:
         // the operations used to create this variable (temporary variables only)
         CGOpCode operation_;
+        // additional operation information
+        std::vector<size_t> info_;
         // the code blocks this block depends upon (empty for independent 
         // variables and possibly for the 1st assignment of a dependent variable)
         std::vector<Argument<Base> > arguments_;
@@ -40,7 +42,7 @@ namespace CppAD {
         // the number of times the result of this operation has been used
         size_t use_count_;
         // the last source code order in the call graph that uses the result of
-        // this operations as an argument
+        // this operation as an argument
         size_t last_usage_order_;
         // generated variable name
         std::string* name_;
@@ -107,8 +109,23 @@ namespace CppAD {
             arguments_[3] = arg4;
         }
 
+        inline SourceCodeFragment(CGOpCode op,
+                                  const std::vector<size_t>& info,
+                                  const std::vector<Argument<Base> >& args) :
+            operation_(op),
+            info_(info),
+            arguments_(args),
+            var_id_(0),
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            name_(NULL) {
+        }
+
         SourceCodeFragment(const SourceCodeFragment& orig) :
             operation_(orig.operation_),
+            info_(orig.info_),
             arguments_(orig.arguments_),
             var_id_(0),
             evaluation_order_(0),
@@ -137,12 +154,20 @@ namespace CppAD {
         }
 
         /**
-         * Provides the arguments used in the operation represnted by this
+         * Provides the arguments used in the operation represented by this
          * code fragment.
          * @return the arguments for the operation in this code fragment
          */
         inline const std::vector<Argument<Base> >& arguments() const {
             return arguments_;
+        }
+
+        /**
+         * Provides additional information used in the operation.
+         * @return the additional operation information/options
+         */
+        inline const std::vector<size_t>& info() const {
+            return info_;
         }
 
         /**
@@ -195,6 +220,13 @@ namespace CppAD {
 
         inline void setLastUsageEvaluationOrder(size_t last) {
             last_usage_order_ = last;
+            if (operation_ == CGArrayElementOp) {
+                SourceCodeFragment<Base>* array = arguments_[0].operation();
+                assert(array->operation() == CGArrayCreationOp);
+                if (array->getLastUsageEvaluationOrder() < last) {
+                    array->setLastUsageEvaluationOrder(last);
+                }
+            }
         }
 
         inline void resetHandlerCounters() {

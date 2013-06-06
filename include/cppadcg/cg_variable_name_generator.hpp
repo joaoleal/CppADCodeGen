@@ -28,12 +28,7 @@ namespace CppAD {
             array(false) {
         }
 
-        inline FuncArgument(const std::string & nam) :
-            name(nam),
-            array(true) {
-        }
-
-        inline FuncArgument(const std::string& nam, bool a) :
+        inline FuncArgument(const std::string& nam, bool a = true) :
             name(nam),
             array(a) {
         }
@@ -68,13 +63,17 @@ namespace CppAD {
 
         virtual size_t getMaxTemporaryVariableID() const = 0;
 
+        virtual size_t getMaxTemporaryArrayVariableID() const = 0;
+        
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
         virtual std::string generateIndependent(const SourceCodeFragment<Base>& variable) = 0;
 
         virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
+        
+        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) = 0;
 
-        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) = 0;
+        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) = 0;
 
         virtual void customFunctionVariableDeclarations(std::ostream& out) {
         }

@@ -20,7 +20,7 @@
 namespace CppAD {
 
     template<class Base>
-    const unsigned long int CLangCompileDynamicHelper<Base>::API_VERSION = 3;
+    const unsigned long int CLangCompileDynamicHelper<Base>::API_VERSION = 4;
 
     template<class Base>
     const std::string CLangCompileDynamicHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";

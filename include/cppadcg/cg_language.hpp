@@ -35,6 +35,8 @@ namespace CppAD {
         const std::vector<SourceCodeFragment<Base>*>& variableOrder;
         // Provides the rules for variable name creation
         VariableNameGenerator<Base>& nameGen;
+        // maps atomic function IDs to their internal index
+        const std::map<size_t, size_t> atomicFunctionId2Index;
         // a flag indicating whether or not temporary variable IDs have been recycled
         const bool reuseIDs;
 
@@ -45,12 +47,14 @@ namespace CppAD {
                                size_t minTempVID,
                                const std::vector<SourceCodeFragment<Base>*>& vo,
                                VariableNameGenerator<Base>& ng,
+                               const std::map<size_t, size_t>& atomicId2Index,
                                const bool ri) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),
             variableOrder(vo),
             nameGen(ng),
+            atomicFunctionId2Index(atomicId2Index),
             reuseIDs(ri) {
         }
     };
@@ -65,9 +69,15 @@ namespace CppAD {
     protected:
         virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) = 0;
 
-        virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) = 0;
+        /**
+         * Whether or not a new variable is created as a result of this operation
+         * 
+         * @param op Operation
+         * @return true if a new variable is created
+         */
+        virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) const = 0;
 
-        virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) = 0;
+        virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const = 0;
 
         friend class CodeHandler<Base>;
     };

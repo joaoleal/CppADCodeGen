@@ -71,6 +71,18 @@ namespace CppAD {
          */
         virtual size_t Range() const = 0;
 
+        /**
+         * Defines an atomic function to be used by the compiled code.
+         * It should match an atomic function name previously provided to
+         * create the source.
+         * 
+         * @param atomic The atomic function. This object must only be deleted
+         *               after the model.
+         * @return true if the atomic function is required by the model, false
+         *         if it will never be used.
+         */
+        virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
+
         /// calculate the dependent values (zero order)
         virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) = 0;
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;

@@ -111,6 +111,7 @@ namespace CppAD {
     private:
 
         friend class CodeHandler<Base>;
+        friend class CGAtomicFun<Base>;
 
         template<class Base1, class Base2>
         friend class Evaluator;
@@ -201,7 +202,8 @@ namespace CppAD {
         if (x.isValueDefined()) {
             return Integer(x.getValue());
         } else {
-            assert(false);
+            CppAD::ErrorHandler::Call(false, __LINE__, __FILE__, "Integer()", "No value defined");
+            return 0;
         }
     }
 

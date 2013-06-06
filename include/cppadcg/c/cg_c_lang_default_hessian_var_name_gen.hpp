@@ -77,6 +77,10 @@ namespace CppAD {
             return _nameGen->getMaxTemporaryVariableID();
         }
 
+        virtual size_t getMaxTemporaryArrayVariableID() const {
+            return _nameGen->getMaxTemporaryArrayVariableID();
+        }
+
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
             return _nameGen->generateDependent(variable, index);
         }
@@ -97,8 +101,12 @@ namespace CppAD {
             return _nameGen->generateTemporary(variable);
         }
 
-        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
-            _nameGen->setTemporaryVariableID(minTempID, maxTempID);
+        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) {
+            return _nameGen->generateTemporaryArray(variable);
+        }
+
+        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) {
+            _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID);
         }
 
         inline virtual ~CLangDefaultHessianVarNameGenerator() {

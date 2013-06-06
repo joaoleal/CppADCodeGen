@@ -77,6 +77,7 @@
 #include <cppadcg/cg_debug.hpp>
 #include <cppadcg/cg_operation.hpp>
 #include <cppadcg/cg_argument.hpp>
+#include <cppadcg/cg_atomic_fun.hpp>
 #include <cppadcg/cg_source_code_fragment.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
@@ -106,6 +107,7 @@
 
 // ---------------------------------------------------------------------------
 // C source code generation
+#include <cppadcg/c/cg_c_lang_atomic_fun.hpp>
 #include <cppadcg/c/cg_c_language.hpp>
 #include <cppadcg/c/cg_c_language_double.hpp>
 #include <cppadcg/c/cg_c_lang_default_var_name_gen.hpp>

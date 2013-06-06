@@ -32,6 +32,7 @@ namespace CppAD {
             CppADCGTest(verbose, printValues),
             x(n),
             _dynamicLib(NULL) {
+                this->verbose_ = true;
         }
 
         virtual void SetUp() {

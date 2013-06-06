@@ -42,8 +42,9 @@ namespace CppAD {
                                          const std::vector<std::string>& indepNames,
                                          const std::string& depName,
                                          const std::string& indepName,
-                                         const std::string& tmpName) :
-            CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName),
+                                         const std::string& tmpName,
+                                         const std::string& tmpArrayName) :
+            CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
             depNames_(depNames),
             indepNames_(indepNames) {
         }

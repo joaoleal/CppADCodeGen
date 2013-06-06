@@ -39,33 +39,38 @@ namespace CppAD {
         std::vector<const Base*> _in;
         std::vector<const Base*> _inHess;
         std::vector<Base*> _out;
-        void (*_zero)(Base const*const*, Base * const*);
-        //
-        int (*_forwardOne)(Base const tx[], Base ty[]);
-        //
-        int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[]);
-        //
-        int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[]);
+        CLangAtomicFun _atomicFuncArg;
+        std::vector<atomic_base<Base>* > _atomic;
+        size_t _missingAtomicFunctions;
+        vector<Base> _tx, _ty, _px, _py;
+        // original model function
+        void (*_zero)(Base const*const*, Base * const*, CLangAtomicFun);
+        // first order forward mode
+        int (*_forwardOne)(Base const tx[], Base ty[], CLangAtomicFun);
+        // first order reverse mode
+        int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[], CLangAtomicFun);
+        // second order reverse mode
+        int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[], CLangAtomicFun);
         // jacobian function in the dynamic library
-        void (*_jacobian)(Base const*const*, Base * const*);
+        void (*_jacobian)(Base const*const*, Base * const*, CLangAtomicFun);
         // hessian function in the dynamic library
-        void (*_hessian)(Base const*const*, Base * const*);
+        void (*_hessian)(Base const*const*, Base * const*, CLangAtomicFun);
         //
-        int (*_sparseForwardOne)(unsigned long int, Base const *const *, Base * const *);
+        int (*_sparseForwardOne)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
         //
-        int (*_sparseReverseOne)(unsigned long int, Base const *const *, Base * const *);
+        int (*_sparseReverseOne)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
         //
-        int (*_sparseReverseTwo)(unsigned long int, Base const *const *, Base * const *);
+        int (*_sparseReverseTwo)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
         // sparse jacobian function in the dynamic library
-        void (*_sparseJacobian)(Base const*const*, Base * const*);
+        void (*_sparseJacobian)(Base const*const*, Base * const*, CLangAtomicFun);
         // sparse hessian function in the dynamic library
-        void (*_sparseHessian)(Base const*const*, Base * const*);
+        void (*_sparseHessian)(Base const*const*, Base * const*, CLangAtomicFun);
         //
-        void (*_forwardOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*);
+        void (*_forwardOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
         //
-        void (*_reverseOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*);
+        void (*_reverseOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
         //
-        void (*_reverseTwoSparsity)(unsigned long int, unsigned long int const**, unsigned long int*);
+        void (*_reverseTwoSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
         // jacobian sparsity function in the dynamic library
         void (*_jacobianSparsity)(unsigned long int const** row,
                 unsigned long int const** col,
@@ -78,11 +83,32 @@ namespace CppAD {
                 unsigned long int const** row,
                 unsigned long int const** col,
                 unsigned long int * nnz);
+        void (*_atomicFunctions)(const char*** names,
+                unsigned long int * n);
 
     public:
 
-        const std::string& getName() const {
+        virtual const std::string& getName() const {
             return _name;
+        }
+
+        virtual bool addAtomicFunction(atomic_base<Base>& atomic) {
+            const char** names;
+            unsigned long int n;
+            (*_atomicFunctions)(&names, &n);
+
+            assert(_atomic.size() == n);
+
+            for (unsigned long int i = 0; i < n; i++) {
+                if (atomic.afun_name() == names[i]) {
+                    if (_atomic[i] == NULL) {
+                        _missingAtomicFunctions--;
+                    }
+                    _atomic[i] = &atomic;
+                    return true;
+                }
+            }
+            return false;
         }
 
         // Jacobian sparsity
@@ -245,49 +271,19 @@ namespace CppAD {
         /// calculate the dependent values (zero order)
 
         virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
-
-            _in[0] = &x[0];
             CppAD::vector<Base> dep(_m);
-            _out[0] = &dep[0];
-
-            (*_zero)(&_in[0], &_out[0]);
-
+            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
             return dep;
         }
 
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
-
-            _in[0] = &x[0];
             std::vector<Base> dep(_m);
-            _out[0] = &dep[0];
-
-            (*_zero)(&_in[0], &_out[0]);
-
+            this->ForwardZero(x, dep);
             return dep;
         }
 
         virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
-
-            _in[0] = &x[0];
-            dep.resize(_m);
-            _out[0] = &dep[0];
-
-            (*_zero)(&_in[0], &_out[0]);
+            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
         }
 
         virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) {
@@ -297,12 +293,13 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
 
             _in[0] = x;
             _out[0] = dep;
 
-            (*_zero)(&_in[0], &_out[0]);
+            (*_zero)(&_in[0], &_out[0], _atomicFuncArg);
         }
 
         virtual void ForwardZero(const std::vector<const Base*> &x,
@@ -311,10 +308,11 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             _out[0] = dep;
 
-            (*_zero)(&x[0], &_out[0]);
+            (*_zero)(&x[0], &_out[0], _atomicFuncArg);
         }
 
         virtual void ForwardZero(const CppAD::vector<bool>& vx,
@@ -327,11 +325,12 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(tx.size() == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(ty.size() == _m, "Invalid dependent array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             _in[0] = &tx[0];
             _out[0] = &ty[0];
 
-            (*_zero)(&_in[0], &_out[0]);
+            (*_zero)(&_in[0], &_out[0], _atomicFuncArg);
 
             if (vx.size() > 0) {
                 CPPADCG_ASSERT_KNOWN(vx.size() >= _n, "Invalid vx size");
@@ -353,33 +352,14 @@ namespace CppAD {
         /// calculate entire Jacobian       
 
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
-
-            _in[0] = &x[0];
             std::vector<Base> jac(_m * _n);
-            _out[0] = &jac[0];
-
-            (*_jacobian)(&_in[0], &_out[0]);
-
+            this->Jacobian(&x[0], x.size(), &jac[0], jac.size());
             return jac;
         }
 
         virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_jacobian != NULL, "No Jacobian function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent vector size");
-
-            _in[0] = &x[0];
             jac.resize(_m * _n);
-            _out[0] = &jac[0];
-
-            (*_jacobian)(&_in[0], &_out[0]);
+            this->Jacobian(&x[0], x.size(), &jac[0], jac.size());
         }
 
         virtual void Jacobian(const Base* x, size_t x_size,
@@ -390,66 +370,39 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(jac_size == _m * _n, "Invalid Jacobian array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
 
             _in[0] = x;
             _out[0] = jac;
 
-            (*_jacobian)(&_in[0], &_out[0]);
+            (*_jacobian)(&_in[0], &_out[0], _atomicFuncArg);
         }
 
         /// calculate Hessian for one component of f
 
         virtual std::vector<Base> Hessian(const std::vector<Base> &x,
                                           const std::vector<Base> &w) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-
-            _inHess[0] = &x[0];
-            _inHess[1] = &w[0];
             std::vector<Base> hess(_n * _n);
-            _out[0] = &hess[0];
-
-            (*_hessian)(&_inHess[0], &_out[0]);
-
+            this->Hessian(x, w, hess);
             return hess;
         }
 
         virtual std::vector<Base> Hessian(const std::vector<Base> &x,
                                           size_t i) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(i < _m, "Invalid equation index");
 
             std::vector<Base> w(_m);
             w[i] = 1.0;
-            _inHess[0] = &x[0];
-            _inHess[1] = &w[0];
             std::vector<Base> hess(_n * _n);
-            _out[0] = &hess[0];
-
-            (*_hessian)(&_inHess[0], &_out[0]);
-
+            this->Hessian(x, w, hess);
             return hess;
         }
 
         virtual void Hessian(const std::vector<Base> &x,
                              const std::vector<Base> &w,
                              std::vector<Base>& hess) {
-            CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_hessian != NULL, "No Hessian function defined in the dynamic library");
-            CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
-                                 " please use the variable size methods");
-
-            _inHess[0] = &x[0];
-            _inHess[1] = &w[0];
-            hess.resize(_n * _n);
-            _out[0] = &hess[0];
-
-            (*_hessian)(&_inHess[0], &_out[0]);
+            this->Hessian(&x[0], x.size(), &w[0], w.size(), &hess[0]);
         }
 
         virtual void Hessian(const Base* x, size_t x_size,
@@ -461,12 +414,13 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             _inHess[0] = x;
             _inHess[1] = w;
             _out[0] = hess;
 
-            (*_hessian)(&_inHess[0], &_out[0]);
+            (*_hessian)(&_inHess[0], &_out[0], _atomicFuncArg);
         }
 
         virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) {
@@ -495,8 +449,9 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_forwardOne != NULL, "No forward one function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(tx_size >= (k + 1) * _n, "Invalid tx size");
             CPPADCG_ASSERT_KNOWN(ty_size >= (k + 1) * _m, "Invalid ty size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            int ret = (*_forwardOne)(tx, ty);
+            int ret = (*_forwardOne)(tx, ty, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
         }
@@ -533,8 +488,9 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
             CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
             CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            int ret = (*_reverseOne)(tx, ty, px, py);
+            int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
         }
@@ -572,8 +528,9 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
             CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
             CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            int ret = (*_reverseTwo)(tx, ty, px, py);
+            int ret = (*_reverseTwo)(tx, ty, px, py, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
@@ -593,6 +550,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* row;
             unsigned long int const* col;
@@ -604,7 +562,7 @@ namespace CppAD {
             _in[0] = &x[0];
             _out[0] = &compressed[0];
 
-            (*_sparseJacobian)(&_in[0], &_out[0]);
+            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
 
             createDenseFromSparse(compressed,
                                   _m, _n,
@@ -621,6 +579,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow;
             unsigned long int const* dcol;
@@ -634,7 +593,7 @@ namespace CppAD {
             _in[0] = &x[0];
             _out[0] = &jac[0];
 
-            (*_sparseJacobian)(&_in[0], &_out[0]);
+            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
             std::copy(drow, drow + nnz, row.begin());
             std::copy(dcol, dcol + nnz, col.begin());
         }
@@ -649,6 +608,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow;
             unsigned long int const* dcol;
@@ -661,7 +621,7 @@ namespace CppAD {
             _in[0] = x;
             _out[0] = jac;
 
-            (*_sparseJacobian)(&_in[0], &_out[0]);
+            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
         }
 
         virtual void SparseJacobian(const std::vector<const Base*>& x,
@@ -672,6 +632,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow;
             unsigned long int const* dcol;
@@ -683,7 +644,7 @@ namespace CppAD {
 
             _out[0] = jac;
 
-            (*_sparseJacobian)(&x[0], &_out[0]);
+            (*_sparseJacobian)(&x[0], &_out[0], _atomicFuncArg);
         }
 
         /// calculate sparse Hessians 
@@ -701,6 +662,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* row, *col;
             unsigned long int nnz;
@@ -712,7 +674,7 @@ namespace CppAD {
             _inHess[1] = &w[0];
             _out[0] = &compressed[0];
 
-            (*_sparseHessian)(&_inHess[0], &_out[0]);
+            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
 
             createDenseFromSparse(compressed,
                                   _n, _n,
@@ -730,6 +692,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow, *dcol;
             unsigned long int nnz;
@@ -743,7 +706,7 @@ namespace CppAD {
             _inHess[1] = &w[0];
             _out[0] = &hess[0];
 
-            (*_sparseHessian)(&_inHess[0], &_out[0]);
+            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
             std::copy(drow, drow + nnz, row.begin());
             std::copy(dcol, dcol + nnz, col.begin());
         }
@@ -760,6 +723,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow, *dcol;
             unsigned long int K;
@@ -772,7 +736,7 @@ namespace CppAD {
             _inHess[1] = w;
             _out[0] = hess;
 
-            (*_sparseHessian)(&_inHess[0], &_out[0]);
+            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
         }
 
         virtual void SparseHessian(const std::vector<const Base*>& x,
@@ -785,6 +749,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long int const* drow, *dcol;
             unsigned long int K;
@@ -797,7 +762,7 @@ namespace CppAD {
             _inHess.back() = w;
             _out[0] = hess;
 
-            (*_sparseHessian)(&_inHess[0], &_out[0]);
+            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
         }
 
         virtual ~LinuxDynamicLibModel() {
@@ -818,6 +783,7 @@ namespace CppAD {
             _dynLib(dynLib),
             _m(0),
             _n(0),
+            _missingAtomicFunctions(0),
             _zero(NULL),
             _forwardOne(NULL),
             _reverseOne(NULL),
@@ -896,6 +862,7 @@ namespace CppAD {
             *(void **) (&_jacobianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_JACOBIAN_SPARSITY, false);
             *(void **) (&_hessianSparsity) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY, false);
             *(void **) (&_hessianSparsity2) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_HESSIAN_SPARSITY2, false);
+            *(void **) (&_atomicFunctions) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_ATOMIC_FUNC_NAMES, true);
 
             CPPADCG_ASSERT_KNOWN((_sparseForwardOne == NULL) == (_forwardOneSparsity == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseForwardOne == NULL) == (_forwardOne == NULL), "Missing functions in the dynamic library");
@@ -905,6 +872,20 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN((_sparseReverseTwo == NULL) == (_reverseTwo == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseJacobian == NULL) || (_jacobianSparsity != NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) || (_hessianSparsity != NULL && _hessianSparsity2 != NULL), "Missing functions in the dynamic library");
+
+            /**
+             * Prepare the atomic functions argument
+             */
+            const char** names;
+            unsigned long int n;
+            (*_atomicFunctions)(&names, &n);
+            _atomic.resize(n);
+
+            _atomicFuncArg.libModel = this;
+            _atomicFuncArg.forward = &atomicForward;
+            _atomicFuncArg.reverse = &atomicReverse;
+
+            _missingAtomicFunctions = n;
         }
 
         template <class VectorSet>
@@ -971,6 +952,66 @@ namespace CppAD {
         }
 
     private:
+
+        static int atomicForward(void* libModelIn,
+                                 int atomicIndex,
+                                 int q,
+                                 int p,
+                                 const void* tx, unsigned long int txSize,
+                                 void* ty, unsigned long int tySize) {
+            LinuxDynamicLibModel<Base>* libModel = static_cast<LinuxDynamicLibModel<Base>*> (libModelIn);
+            atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
+            const Base* txb = static_cast<const Base*> (tx);
+            Base* tyb = static_cast<Base*> (ty);
+
+            vector<bool> vx, vy;
+            libModel->_tx.resize(txSize);
+            libModel->_ty.resize(tySize);
+            std::copy(txb, txb + txSize, &libModel->_tx[0]);
+            if (p > 0) {
+                std::copy(tyb, tyb + tySize, &libModel->_ty[0]);
+            }
+
+            bool ret = atomicBase->forward(q, p, vx, vy, libModel->_tx, libModel->_ty);
+            std::copy(&libModel->_ty[0], &libModel->_ty[0] + tySize, tyb);
+
+            return ret;
+        }
+
+        static int atomicReverse(void* libModelIn,
+                                 int atomicIndex,
+                                 int p,
+                                 const void* tx,
+                                 const void* ty,
+                                 void* px,
+                                 const void* py,
+                                 unsigned long int xSize,
+                                 unsigned long int ySize) {
+            LinuxDynamicLibModel<Base>* libModel = static_cast<LinuxDynamicLibModel<Base>*> (libModelIn);
+            atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
+            const Base* txb = static_cast<const Base*> (tx);
+            const Base* tyb = static_cast<const Base*> (ty);
+            Base* pxb = static_cast<Base*> (px);
+            const Base* pyb = static_cast<const Base*> (py);
+
+            libModel->_tx.resize(xSize);
+            libModel->_ty.resize(ySize);
+            libModel->_px.resize(xSize);
+            libModel->_py.resize(ySize);
+
+            std::copy(txb, txb + xSize, &libModel->_tx[0]);
+            std::copy(tyb, tyb + ySize, &libModel->_ty[0]);
+            if (p > 0) {
+                std::copy(pxb, pxb + xSize, &libModel->_px[0]);
+            }
+            std::copy(pyb, pyb + ySize, &libModel->_py[0]);
+
+            bool ret = atomicBase->reverse(p, libModel->_tx, libModel->_ty, libModel->_px, libModel->_py);
+            std::copy(&libModel->_px[0], &libModel->_px[0] + xSize, pxb);
+
+            return ret;
+        }
+
         LinuxDynamicLibModel(const LinuxDynamicLibModel&); // not implemented
 
         LinuxDynamicLibModel& operator=(const LinuxDynamicLibModel&); // not implemented

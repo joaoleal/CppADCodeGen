@@ -27,8 +27,12 @@ namespace CppAD {
         CGAcosOp, // asin(variable)
         CGAddOp, //  a + b
         CGAliasOp, //  alias (reference to another operation)
+        CGArrayCreationOp, // {a, b, c ...}
+        CGArrayElementOp, // x[i]
         CGAsinOp, // asin(variable)
         CGAtanOp, // atan(variable)
+        CGAtomicForwardOp, // atomicFunction.forward(q, p, vx, vy, tx, ty)
+        CGAtomicReverseOp, // atomicFunction.reverse(p, tx, ty, px, py)
         CGComOpLt, // result = left < right? trueCase: falseCase
         CGComOpLe, // result = left <= right? trueCase: falseCase
         CGComOpEq, // result = left == right? trueCase: falseCase

@@ -46,6 +46,7 @@ namespace CppAD {
         static const std::string FUNCTION_REVERSE_ONE_SPARSITY;
         static const std::string FUNCTION_REVERSE_TWO_SPARSITY;
         static const std::string FUNCTION_INFO;
+        static const std::string FUNCTION_ATOMIC_FUNC_NAMES;
     protected:
         static const std::string CONST;
 
@@ -108,6 +109,10 @@ namespace CppAD {
         Position _custom_hess;
         LocalSparsityInfo _hessSparsity;
         std::vector<LocalSparsityInfo> _hessSparsities;
+        /**
+         * The order of the atomic functions
+         */
+        std::vector<std::string> _atomicFunctions;
         /**
          * A string cache for code generation
          */
@@ -457,11 +462,14 @@ namespace CppAD {
 
         virtual VariableNameGenerator<Base>* createVariableNameGenerator(const std::string& depName,
                                                                          const std::string& indepName,
-                                                                         const std::string& tmpName);
+                                                                         const std::string& tmpName,
+                                                                         const std::string& tmpArrayName);
 
         virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
+
+        virtual void generateAtomicFuncNames(std::map<std::string, std::string>& sources);
 
         virtual void generateZeroSource(std::map<std::string, std::string>& sources);
 
@@ -516,7 +524,8 @@ namespace CppAD {
         virtual void generateFunctionDeclarationSource(std::ostringstream& cache,
                                                        const std::string& model_function,
                                                        const std::string& suffix,
-                                                       const std::map<size_t, std::vector<size_t> >& elements);
+                                                       const std::map<size_t, std::vector<size_t> >& elements,
+                                                       const std::string& argsDcl);
 
         virtual void determineJacobianSparsity();
 

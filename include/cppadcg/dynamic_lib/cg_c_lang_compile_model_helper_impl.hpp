@@ -75,13 +75,17 @@ namespace CppAD {
     const std::string CLangCompileModelHelper<Base>::FUNCTION_INFO = "info";
 
     template<class Base>
+    const std::string CLangCompileModelHelper<Base>::FUNCTION_ATOMIC_FUNC_NAMES = "atomic_functions";
+
+    template<class Base>
     const std::string CLangCompileModelHelper<Base>::CONST = "const";
 
     template<class Base>
     VariableNameGenerator<Base>* CLangCompileModelHelper<Base>::createVariableNameGenerator(const std::string& depName,
                                                                                             const std::string& indepName,
-                                                                                            const std::string& tmpName) {
-        return new CLangDefaultVariableNameGenerator<Base > (depName, indepName, tmpName);
+                                                                                            const std::string& tmpName,
+                                                                                            const std::string& tmpArrayName) {
+        return new CLangDefaultVariableNameGenerator<Base > (depName, indepName, tmpName, tmpArrayName);
     }
 
     template<class Base>
@@ -133,6 +137,8 @@ namespace CppAD {
 
         generateInfoSource(sources);
 
+        generateAtomicFuncNames(sources);
+
         compiler.compileSources(sources, posIndepCode, true);
     }
 
@@ -142,7 +148,7 @@ namespace CppAD {
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var", "array"));
 
         _cache.str("");
         _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n"
@@ -151,6 +157,25 @@ namespace CppAD {
                 "   *n = " << _fun.Domain() << ";\n"
                 "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n"
                 "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n"
+                "}\n\n";
+
+        sources[funcName + ".c"] = _cache.str();
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::generateAtomicFuncNames(std::map<std::string, std::string>& sources) {
+        std::string funcName = _name + "_" + FUNCTION_ATOMIC_FUNC_NAMES;
+        size_t n = _atomicFunctions.size();
+        _cache.str("");
+        _cache << "void " << funcName << "(const char*** names, unsigned long int* n) {\n"
+                "   static const char* atomic[" << n << "] = {";
+        for (size_t i = 0; i < n; i++) {
+            if (i > 0)_cache << ", ";
+            _cache << "\"" << _atomicFunctions[i] << "\"";
+        }
+        _cache << "};\n"
+                "   *names = atomic;\n"
+                "   *n = " << n << ";\n"
                 "}\n\n";
 
         sources[funcName + ".c"] = _cache.str();
@@ -177,9 +202,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dep", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dep", "ind", "var", "array"));
 
-        handler.generateCode(code, langC, dep, *nameGen, jobName);
+        handler.generateCode(code, langC, dep, *nameGen, _atomicFunctions, jobName);
     }
 
     template<class Base>
@@ -203,9 +228,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var", "array"));
 
-        handler.generateCode(code, langC, jac, *nameGen, jobName);
+        handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }
 
     template<class Base>
@@ -244,10 +269,10 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var", "array"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
-        handler.generateCode(code, langC, hess, nameGenHess, jobName);
+        handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
     }
 
     template<class Base>
@@ -319,9 +344,9 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var", "array"));
 
-        handler.generateCode(code, langC, jac, *nameGen, jobName);
+        handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }
 
     template<class Base>
@@ -367,12 +392,16 @@ namespace CppAD {
                 maxCompressedSize = it->second.size();
         }
 
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+
         _cache.str("");
         _cache << "#include <stdlib.h>\n"
-                "\n";
-        generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, elements);
+                "\n"
+                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+        generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, elements, argsDcl);
         _cache << "\n"
-                "void " << model_function << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "void " << model_function << "(" << argsDcl << ") {\n"
                 "   " << _baseTypeName << " const * inLocal[2];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
                 "   " << _baseTypeName << " * outLocal[1];\n"
@@ -382,6 +411,11 @@ namespace CppAD {
                 "   inLocal[0] = in[0];\n"
                 "   inLocal[1] = &inLocal1;\n"
                 "   outLocal[0] = compressed;";
+
+        langC.setArgumentIn("inLocal");
+        langC.setArgumentOut("outLocal");
+        std::string argsLocal = langC.generateDefaultFunctionArguments();
+
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
@@ -389,7 +423,7 @@ namespace CppAD {
             assert(els.size() == location.size());
 
             _cache << "\n"
-                    "   " << functionRevFor << "_" << revForSuffix << index << "(inLocal, outLocal);\n";
+                    "   " << functionRevFor << "_" << revForSuffix << index << "(" << argsLocal << ");\n";
             for (size_t e = 0; e < els.size(); e++) {
                 _cache << "   ";
                 set<size_t>::const_iterator itl;
@@ -529,10 +563,10 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var", "array"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
-        handler.generateCode(code, langC, hess, nameGenHess, jobName);
+        handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
     }
 
     template<class Base>
@@ -565,12 +599,15 @@ namespace CppAD {
                 maxCompressedSize = it->second.size();
         }
 
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+
         _cache.str("");
         _cache << "#include <stdlib.h>\n"
-                "\n";
-        generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements);
+                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+        generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements, argsDcl);
         _cache << "\n"
-                "void " << model_function << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "void " << model_function << "(" << argsDcl << ") {\n"
                 "   " << _baseTypeName << " const * inLocal[3];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
                 "   " << _baseTypeName << " * outLocal[1];\n"
@@ -581,6 +618,11 @@ namespace CppAD {
                 "   inLocal[1] = &inLocal1;\n"
                 "   inLocal[2] = in[1];\n"
                 "   outLocal[0] = compressed;";
+
+        langC.setArgumentIn("inLocal");
+        langC.setArgumentOut("outLocal");
+        std::string argsLocal = langC.generateDefaultFunctionArguments();
+
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
@@ -588,7 +630,7 @@ namespace CppAD {
             assert(els.size() == location.size());
 
             _cache << "\n"
-                    "   " << functionRev2 << "_" << rev2Suffix << index << "(inLocal, outLocal);\n";
+                    "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
             for (size_t e = 0; e < els.size(); e++) {
                 _cache << "   ";
                 set<size_t>::const_iterator itl;
@@ -664,7 +706,9 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseForwardOneSources(std::map<std::string, std::string>& sources) {
+#ifndef NDEBUG
         size_t m = _fun.Range();
+#endif
         size_t n = _fun.Domain();
 
         determineJacobianSparsity();
@@ -722,10 +766,10 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "ind", "var"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "ind", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
-            handler.generateCode(code, langC, dyCustom, nameGenHess, jobName);
+            handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, jobName);
         }
 
         _cache.str("");
@@ -747,13 +791,21 @@ namespace CppAD {
         _cache << _name << "_" << FUNCTION_FORWARD_ONE;
         std::string model_function(_cache.str());
 
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string args = langC.generateDefaultFunctionArguments();
+
         _cache.str("");
         _cache << "#include <stdlib.h>\n"
+                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long int pos, " << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long int pos, " << argsDcl << ");\n"
                 "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
                 "\n"
-                "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " ty[]) {\n"
+                "int " << model_function << "("
+                << _baseTypeName << " const tx[], "
+                << _baseTypeName << " ty[], "
+                << langC.generateArgumentAtomicDcl() << ") {\n"
                 "   unsigned long int ePos, ej, i, j, nnz, nnzMax;\n"
                 "   unsigned long int const* pos;\n"
                 "   unsigned long int* tyPos;\n"
@@ -797,7 +849,7 @@ namespace CppAD {
                 "      in[0] = x;\n"
                 "      in[1] = &tx[j * 2 + 1];\n"
                 "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, in, out);\n"
+                "      " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         ty[pos[ePos] * 2 + 1] += compressed[ePos];\n"
@@ -873,10 +925,10 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "ind", "var"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "ind", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "py", n);
 
-            handler.generateCode(code, langC, dwCustom, nameGenHess, jobName);
+            handler.generateCode(code, langC, dwCustom, nameGenHess, _atomicFunctions, jobName);
         }
 
         _cache.str("");
@@ -896,18 +948,24 @@ namespace CppAD {
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_ONE;
         std::string model_function(_cache.str());
-
         _cache.str("");
+
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string args = langC.generateDefaultFunctionArguments();
+
         _cache << "#include <stdlib.h>\n"
+                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long int pos, " << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long int pos, " << argsDcl << ");\n"
                 "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
                 "\n"
                 "int " << model_function << "("
                 << _baseTypeName << " const x[], "
                 << _baseTypeName << " const ty[],"
                 << _baseTypeName << "  px[], "
-                << _baseTypeName << " const py[]) {\n"
+                << _baseTypeName << " const py[], "
+                << langC.generateArgumentAtomicDcl() << ") {\n"
                 "   unsigned long int ei, ePos, i, j, nnz, nnzMax;\n"
                 "   unsigned long int const* pos;\n"
                 "   unsigned long int* pyPos;\n"
@@ -947,7 +1005,7 @@ namespace CppAD {
                 "      in[0] = x;\n"
                 "      in[1] = &py[i];\n"
                 "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, in, out);\n"
+                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         px[pos[ePos]] += compressed[ePos];\n"
@@ -1002,8 +1060,8 @@ namespace CppAD {
             CGBase tx1;
             handler.makeVariable(tx1);
 
-            std::vector<CGBase> w(m); // (k+1)*m is not used because we are not interested in all values
-            handler.makeVariables(w);
+            std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+            handler.makeVariables(py);
 
             // TODO: consider caching the zero order coefficients somehow between calls
             std::vector<CGBase> y = _fun.Forward(0, tx0);
@@ -1011,14 +1069,14 @@ namespace CppAD {
             tx1v[j] = tx1;
             std::vector<CGBase> y_p = _fun.Forward(1, tx1v);
             tx1v[j] = Base(0);
-            std::vector<CGBase> ddw = _fun.Reverse(2, w);
-            assert(ddw.size() == 2 * n);
+            std::vector<CGBase> px = _fun.Reverse(2, py);
+            assert(px.size() == 2 * n);
 
-            std::vector<CGBase> ddwCustom;
+            std::vector<CGBase> pxCustom;
             std::vector<size_t>::const_iterator it2;
             for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
                 size_t jj = *it2;
-                ddwCustom.push_back(ddw[jj * p + 1]); // not interested in all values
+                pxCustom.push_back(px[jj * p + 1]); // not interested in all values
             }
 
             finishedGraphCreation();
@@ -1030,10 +1088,10 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "ind", "var"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "ind", "var", "array"));
             CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
-            handler.generateCode(code, langC, ddwCustom, nameGenRev2, jobName);
+            handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
         }
 
         _cache.str("");
@@ -1053,14 +1111,24 @@ namespace CppAD {
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_TWO;
         std::string model_function(_cache.str());
-
         _cache.str("");
+
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string args = langC.generateDefaultFunctionArguments();
+
         _cache << "#include <stdlib.h>\n"
+                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long int pos, " << _baseTypeName << " const *const * in, " << _baseTypeName << " * const * out);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long int pos, " << argsDcl << ");\n"
                 "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
                 "\n"
-                "int " << model_function << "(" << _baseTypeName << " const tx[], " << _baseTypeName << " const ty[], " << _baseTypeName << " px[], " << _baseTypeName << " const py[]) {\n"
+                "int " << model_function << "("
+                << _baseTypeName << " const tx[], "
+                << _baseTypeName << " const ty[], "
+                << _baseTypeName << " px[], "
+                << _baseTypeName << " const py[], "
+                << langC.generateArgumentAtomicDcl() << ") {\n"
                 "    unsigned long int ej, ePos, i, j, nnz, nnzMax;\n"
                 "    unsigned long int const* pos;\n"
                 "    unsigned long int* txPos;\n"
@@ -1120,7 +1188,7 @@ namespace CppAD {
                 "      in[1] = &tx[j * 2 + 1];\n"
                 "      in[2] = w;\n"
                 "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, in, out);\n"
+                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         px[pos[ePos] * 2] += compressed[ePos];\n"
@@ -1145,20 +1213,26 @@ namespace CppAD {
         /**
          * The function that matches each equation to a directional derivative function
          */
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string args = langC.generateDefaultFunctionArguments();
+
         _cache.str("");
         _cache << _name << "_" << function;
         std::string model_function = _cache.str();
         _cache.str("");
-        generateFunctionDeclarationSource(_cache, model_function, suffix, elements);
+
+        _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+        generateFunctionDeclarationSource(_cache, model_function, suffix, elements, argsDcl);
         _cache << "\n";
         _cache << "int " << model_function << "("
-                "unsigned long int pos, " << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out) {\n"
+                "unsigned long int pos, " << argsDcl << ") {\n"
                 "   switch(pos) {\n";
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             // the size of each sparsity row
             _cache << "      case " << it->first << ":\n"
-                    "         " << model_function << "_" << suffix << it->first << "(in, out);\n"
+                    "         " << model_function << "_" << suffix << it->first << "(" << args << ");\n"
                     "         return 0; // done\n";
         }
         _cache << "      default:\n"
@@ -1181,11 +1255,12 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateFunctionDeclarationSource(std::ostringstream& cache,
                                                                           const std::string& model_function,
                                                                           const std::string& suffix,
-                                                                          const std::map<size_t, std::vector<size_t> >& elements) {
+                                                                          const std::map<size_t, std::vector<size_t> >& elements,
+                                                                          const std::string& argsDcl) {
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
-            cache << "void " << model_function << "_" << suffix << it->first
-                    << "(" << _baseTypeName << " const *const * in, " << _baseTypeName << " *const * out);\n";
+            size_t pos = it->first;
+            cache << "void " << model_function << "_" << suffix << pos << "(" << argsDcl << ");\n";
         }
     }
 

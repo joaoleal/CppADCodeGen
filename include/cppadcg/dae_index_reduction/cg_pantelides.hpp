@@ -864,7 +864,7 @@ namespace CppAD {
              * generate the source code
              */
             CLangCustomVariableNameGenerator<double> nameGen(depNames, indepNames,
-                                                             "res", "ind", "var");
+                                                             "res", "ind", "var", "array");
 
             std::ostringstream code;
             handler.generateCode(code, langC, dep0, nameGen);

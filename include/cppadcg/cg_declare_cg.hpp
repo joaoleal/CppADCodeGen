@@ -23,6 +23,9 @@
 namespace CppAD {
 
     template<class Base>
+    class CGAtomicFun;
+    
+    template<class Base>
     class CodeHandler;
 
     template<class Base>

@@ -33,30 +33,39 @@ namespace CppAD {
         std::string _indepName;
         // array name of the temporary variables
         std::string _tmpName;
+        // array name of the temporary array variables
+        std::string _tmpArrayName;
         // the lowest variable ID used for the temporary variables
         size_t _minTemporaryID;
         // the highest variable ID used for the temporary variables
         size_t _maxTemporaryID;
+        // the highest ID used for the temporary array variables
+        size_t _maxTemporaryArrayID;
     public:
 
         inline CLangDefaultVariableNameGenerator() :
             _depName("dep"),
             _indepName("ind"),
-            _tmpName("var") {
+            _tmpName("var"),
+            _tmpArrayName("array") {
             this->_independent.push_back(FuncArgument(_indepName));
             this->_dependent.push_back(FuncArgument(_depName));
             this->_temporary.push_back(FuncArgument(_tmpName));
+            this->_temporary.push_back(FuncArgument(_tmpArrayName));
         }
 
         inline CLangDefaultVariableNameGenerator(const std::string& depName,
                                                  const std::string& indepName,
-                                                 const std::string& tmpName) :
+                                                 const std::string& tmpName,
+                                                 const std::string& tmpArrayName) :
             _depName(depName),
             _indepName(indepName),
-            _tmpName(tmpName) {
+            _tmpName(tmpName),
+            _tmpArrayName(tmpArrayName) {
             this->_independent.push_back(FuncArgument(_indepName));
             this->_dependent.push_back(FuncArgument(_depName));
             this->_temporary.push_back(FuncArgument(_tmpName));
+            this->_temporary.push_back(FuncArgument(_tmpArrayName));
         }
 
         inline virtual size_t getMinTemporaryVariableID() const {
@@ -65,6 +74,10 @@ namespace CppAD {
 
         inline virtual size_t getMaxTemporaryVariableID() const {
             return _maxTemporaryID;
+        }
+
+        inline virtual size_t getMaxTemporaryArrayVariableID() const {
+            return _maxTemporaryArrayID;
         }
 
         inline virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
@@ -100,9 +113,22 @@ namespace CppAD {
             return _ss.str();
         }
 
-        inline virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID) {
+        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) {
+            _ss.clear();
+            _ss.str("");
+
+            assert(variable.operation() == CGArrayCreationOp);
+            
+            size_t id = variable.variableID();
+            _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
+
+            return _ss.str();
+        }
+
+        inline virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) {
             _minTemporaryID = minTempID;
             _maxTemporaryID = maxTempID;
+            _maxTemporaryArrayID = maxTempArrayID;
 
             // if
             //  _minTemporaryID == _maxTemporaryID + 1
