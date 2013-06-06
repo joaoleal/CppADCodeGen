@@ -478,7 +478,8 @@ namespace CppAD {
              */
             if (createFunction) {
                 if (localFuncNames.empty()) {
-                    _ss << "#include <math.h>\n\n"
+                    _ss << "#include <math.h>\n"
+                            "#include <string.h>\n\n"
                             << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                             << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
                     _nameGen->customFunctionVariableDeclarations(_ss);
@@ -519,7 +520,8 @@ namespace CppAD {
             std::string funcName = _ss.str();
             _ss.str("");
 
-            _ss << "#include <math.h>\n\n"
+            _ss << "#include <math.h>\n"
+                    "#include <string.h>\n\n"
                     << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                     << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n";
             _nameGen->customFunctionVariableDeclarations(_ss);
@@ -961,6 +963,23 @@ namespace CppAD {
         virtual void printArrayCreationOp(SourceCodeFragment<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.arguments().size() > 0, "Invalid number of arguments for array creation operation");
             const std::vector<Argument<Base> >& args = op.arguments();
+
+            if (args.size() > 1 && args[0].parameter() != NULL) {
+                const Base& value = *args[0].parameter();
+                bool sameValue = true;
+                for (size_t i = 1; i < args.size(); i++) {
+                    if (args[i].parameter() == NULL || *args[0].parameter() != value) {
+                        sameValue = false;
+                        break;
+                    }
+                }
+                if (sameValue) {
+                    _code << _spaces << "memset(" << _nameGen->generateTemporaryArray(op) << ", "
+                            << value << ", "
+                            << args.size() << " * sizeof(" << _baseTypeName << "));\n";
+                    return;
+                }
+            }
 
             _code << _spaces << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(op) << "; // size: " << args.size() << "\n";
 

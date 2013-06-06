@@ -34,12 +34,25 @@ namespace CppAD {
     protected:
         atomic_base<Base>& atomicFun_;
         const size_t id_;
+        bool standAlone_;
     public:
 
-        CGAtomicFun(atomic_base<Base>& atomicFun) :
+        /**
+         * Creates a new atomic function wrapper that is responsible for 
+         * defining the dependencies to calls of the user atomic function.
+         * 
+         * @param atomicFun The atomic function to the called by the compiled
+         *                  source.
+         * @param standAlone Whether or not forward and reverse function calls
+         *                   do not require the Taylor coefficients for the 
+         *                   dependent variables (ty) from other forward mode 
+         *                   evaluations.
+         */
+        CGAtomicFun(atomic_base<Base>& atomicFun, bool standAlone = false) :
             atomic_base<CGB>(atomicFun.afun_name().c_str()),
             atomicFun_(atomicFun),
-            id_(createNewId()) {
+            id_(createNewId()),
+            standAlone_(standAlone) {
 
         }
 
@@ -88,7 +101,14 @@ namespace CppAD {
                 assert(handler != NULL);
 
                 SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-                SourceCodeFragment<Base>* tyArray = makeArray(*handler, ty);
+                SourceCodeFragment<Base>* tyArray;
+
+                if (standAlone_ && p > 0) {
+                    tyArray = makeZeroArray(*handler, ty);
+                } else {
+                    tyArray = makeArray(*handler, ty);
+                }
+
                 std::vector<size_t> opInfo(3);
                 opInfo[0] = id_;
                 opInfo[1] = q;
@@ -280,9 +300,15 @@ namespace CppAD {
                 }
 
                 SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-                SourceCodeFragment<Base>* tyArray = makeArray(*handler, ty);
+                SourceCodeFragment<Base>* tyArray;
                 SourceCodeFragment<Base>* pxArray = makeArray(*handler, px);
                 SourceCodeFragment<Base>* pyArray = makeArray(*handler, py);
+
+                if (standAlone_) {
+                    tyArray = makeZeroArray(*handler, ty);
+                } else {
+                    tyArray = makeArray(*handler, ty);
+                }
 
                 std::vector<size_t> opInfo(2);
                 opInfo[0] = id_;
@@ -424,6 +450,16 @@ namespace CppAD {
                 }
             }
             std::vector<Arg> arrayArgs = asArguments(tx);
+            std::vector<size_t> info; // empty
+            SourceCodeFragment<Base>* array = new SourceCodeFragment<Base>(CGArrayCreationOp, info, arrayArgs);
+            handler.manageSourceCodeBlock(array);
+            return array;
+        }
+
+        static inline SourceCodeFragment<Base>* makeZeroArray(CodeHandler<Base>& handler,
+                                                              const vector<CGB>& tx) {
+            vector<CGB> tx2(tx.size());
+            std::vector<Arg> arrayArgs = asArguments(tx2);
             std::vector<size_t> info; // empty
             SourceCodeFragment<Base>* array = new SourceCodeFragment<Base>(CGArrayCreationOp, info, arrayArgs);
             handler.manageSourceCodeBlock(array);
