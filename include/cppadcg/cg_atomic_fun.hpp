@@ -45,8 +45,8 @@ namespace CppAD {
          *                  source.
          * @param standAlone Whether or not forward and reverse function calls
          *                   do not require the Taylor coefficients for the 
-         *                   dependent variables (ty) from other forward mode 
-         *                   evaluations.
+         *                   dependent variables (ty) and the previous
+         *                   evaluation of other forward/reverse modes.
          */
         CGAtomicFun(atomic_base<Base>& atomicFun, bool standAlone = false) :
             atomic_base<CGB>(atomicFun.afun_name().c_str()),
