@@ -23,13 +23,12 @@ namespace CppAD {
         typedef CG<double> CGD;
         typedef AD<CGD> ADCG;
     protected:
-        const std::string name;
-
+        const std::string _name;
     public:
 
         inline CppADCGDynamicTest(const std::string& testName, bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
-            name(testName) {
+            _name(testName) {
         }
 
         inline void compareValues(const std::vector<double>& depCGen,
@@ -48,7 +47,9 @@ namespace CppAD {
         void testDynamic1(std::vector<ADCG>& u,
                           const std::vector<double>& x,
                           std::vector<ADCG> (*modelFunc)(const std::vector<ADCG>&),
-                          size_t maxAssignPerFunc = 100) {
+                          size_t maxAssignPerFunc = 100,
+                          double epsilonR = 1e-14,
+                          double epsilonA = 1e-14) {
             using namespace std;
 
             // use a special object for source code generation
@@ -67,7 +68,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(fun, name + "dynamic");
+            CLangCompileModelHelper<double> compHelp(fun, _name + "dynamic");
 
             compHelp.setCreateForwardZero(true);
             compHelp.setCreateJacobian(true);
@@ -80,7 +81,7 @@ namespace CppAD {
             compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
             GccCompiler<double> compiler;
-            compiler.setSourcesFolder(name + "_sources");
+            compiler.setSourcesFolder(_name + "_sources");
             
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
@@ -88,7 +89,7 @@ namespace CppAD {
             /**
              * test the library
              */
-            DynamicLibModel<double>* model = dynamicLib->model(name + "dynamic");
+            DynamicLibModel<double>* model = dynamicLib->model(_name + "dynamic");
             ASSERT_TRUE(model != NULL);
 
             // dimensions
@@ -105,12 +106,12 @@ namespace CppAD {
             // forward zero
             std::vector<CGD> dep = fun.Forward(0, x2);
             std::vector<double> depCGen = model->ForwardZero(x);
-            compareValues(depCGen, dep);
+            compareValues(depCGen, dep, epsilonR, epsilonA);
 
             // Jacobian
             std::vector<CGD> jac = fun.Jacobian(x2);
             depCGen = model->Jacobian(x);
-            compareValues(depCGen, jac);
+            compareValues(depCGen, jac, epsilonR, epsilonA);
 
             // Hessian
             std::vector<CGD> w2(Z.size(), 1.0);
@@ -118,7 +119,7 @@ namespace CppAD {
 
             std::vector<CGD> hess = fun.Hessian(x2, w2);
             depCGen = model->Hessian(x, w);
-            compareValues(depCGen, hess);
+            compareValues(depCGen, hess, epsilonR, epsilonA);
 
             // sparse Jacobian
             std::vector<double> jacCGen;
@@ -129,7 +130,7 @@ namespace CppAD {
                 jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
             }
 
-            compareValues(jacCGenDense, jac);
+            compareValues(jacCGenDense, jac, epsilonR, epsilonA);
 
             // sparse Hessian
             std::vector<double> hessCGen;
@@ -139,7 +140,7 @@ namespace CppAD {
                 hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
             }
 
-            compareValues(hessCGenDense, hess);
+            compareValues(hessCGenDense, hess, epsilonR, epsilonA);
 
             delete model;
             delete dynamicLib;
@@ -167,7 +168,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(fun, name + "dynamic2");
+            CLangCompileModelHelper<double> compHelp(fun, _name + "dynamic2");
 
             compHelp.setCreateSparseJacobian(true);
             compHelp.setCustomSparseJacobianElements(jacRow, jacCol);
@@ -185,7 +186,7 @@ namespace CppAD {
             /**
              * test the library
              */
-            DynamicLibModel<double>* model = dynamicLib->model(name + "dynamic2");
+            DynamicLibModel<double>* model = dynamicLib->model(_name + "dynamic2");
             ASSERT_TRUE(model != NULL);
 
             // dimensions

@@ -66,6 +66,6 @@ TEST_F(CstrDynamicTest, cstr) {
     for (size_t i = 0; i < x.size(); i++)
         u[i] = x[i];
 
-    this->testDynamic1(u, x, &CstrFunc<CG<double> >);
+    this->testDynamic1(u, x, &CstrFunc<CG<double> >, 1000, 1e-10, 1e-9);
 
 }
