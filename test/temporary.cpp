@@ -93,8 +93,8 @@ TEST_F(CppADCGTempTest, Temporary1) {
 }
 
 TEST_F(CppADCGTempTest, Temporary2) {
-    size_t n = 3;
-    size_t m = 2;
+    size_t n = 4;
+    size_t m = 3;
 
     std::vector<ADCGD> u(n); // independent variable vector 
     u[0] = 1;
@@ -109,7 +109,33 @@ TEST_F(CppADCGTempTest, Temporary2) {
     ADCGD tmp = u[1] * u[2];
     ADCGD tmp1 = tmp + 1;
     Z[1] = tmp1 + tmp1;
+    Z[2] = Z[1] * u[3];
 
     ADFun<CGD> f(u, Z);
+    testModel(f, 1, 0);
+}
+
+TEST_F(CppADCGTempTest, Temporary3) {
+    size_t n = 4;
+    size_t m = 3;
+
+    std::vector<ADCGD> ind(n); // independent variable vector 
+    ind[0] = 1;
+    ind[0] = 2;
+    ind[0] = 3;
+    Independent(ind);
+
+    std::vector<ADCGD> dep(m); // dependent variable vector 
+
+    // model
+    ADCGD tmpu0 = ind[0] + 1;
+    ADCGD tmpu1 = ind[1] + 1;
+    dep[2] = tmpu0 + tmpu1;
+    ADCGD tmp = ind[1] * ind[2];
+    ADCGD tmp1 = tmp + dep[2];
+    dep[0] = tmp1 / 2.0;
+    dep[1] = tmp1 + ind[3];
+
+    ADFun<CGD> f(ind, dep);
     testModel(f, 1, 0);
 }

@@ -246,14 +246,14 @@ namespace CppAD {
                 CG<Base>& var = *it;
                 if (var.getSourceCodeFragment() != NULL) {
                     SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
-                    if (code.use_count_ == 0) {
+                    if (code.usageCount() == 0) {
                         // dependencies not visited yet
                         checkVariableCreation(code);
 
                         // make sure new temporary variables are NOT created for
                         // the independent variables and that a dependency did
                         // not use it first
-                        if ((code.variableID() == 0 || !isIndependent(code)) && code.use_count_ == 0) {
+                        if ((code.variableID() == 0 || !isIndependent(code)) && code.usageCount() == 0) {
                             addToEvaluationQueue(code);
                         }
                     }
@@ -428,7 +428,7 @@ namespace CppAD {
                 if (it->operation() != NULL) {
                     SourceCodeFragment<Base>& arg = *it->operation();
 
-                    if (arg.use_count_ == 0) {
+                    if (arg.usageCount() == 0) {
                         // dependencies not visited yet
                         checkVariableCreation(arg);
 
@@ -446,29 +446,35 @@ namespace CppAD {
                             }
                         }
 
-                        // make sure new temporary variables are NOT created for
-                        // the independent variables and that a dependency did
-                        // not use it first
-                        if ((arg.variableID() == 0 || !isIndependent(arg)) && arg.use_count_ == 0) {
+                    }
+                }
+            }
 
-                            size_t argIndex = it - args.begin();
-                            if (_lang->createsNewVariable(arg) ||
-                                    _lang->requiresVariableArgument(code.operation(), argIndex)) {
-                                addToEvaluationQueue(arg);
-                                if (arg.variableID() == 0) {
-                                    if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
-                                        arg.setVariableID(_idAtomicCount);
-                                        _idAtomicCount++;
-                                    } else if (arg.operation() != CGArrayCreationOp) {
-                                        // a single temporary variable
-                                        arg.setVariableID(_idCount);
-                                        _idCount++;
-                                    } else {
-                                        // a temporary array
-                                        size_t arraySize = arg.arguments().size();
-                                        arg.setVariableID(_idArrayCount);
-                                        _idArrayCount += arraySize;
-                                    }
+            for (it = args.begin(); it != args.end(); ++it) {
+                if (it->operation() != NULL) {
+                    SourceCodeFragment<Base>& arg = *it->operation();
+                    // make sure new temporary variables are NOT created for
+                    // the independent variables and that a dependency did
+                    // not use it first
+                    if ((arg.variableID() == 0 || !isIndependent(arg)) && arg.usageCount() == 0) {
+
+                        size_t argIndex = it - args.begin();
+                        if (_lang->createsNewVariable(arg) ||
+                                _lang->requiresVariableArgument(code.operation(), argIndex)) {
+                            addToEvaluationQueue(arg);
+                            if (arg.variableID() == 0) {
+                                if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
+                                    arg.setVariableID(_idAtomicCount);
+                                    _idAtomicCount++;
+                                } else if (arg.operation() != CGArrayCreationOp) {
+                                    // a single temporary variable
+                                    arg.setVariableID(_idCount);
+                                    _idCount++;
+                                } else {
+                                    // a temporary array
+                                    size_t arraySize = arg.arguments().size();
+                                    arg.setVariableID(_idArrayCount);
+                                    _idArrayCount += arraySize;
                                 }
                             }
                         }

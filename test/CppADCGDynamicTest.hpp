@@ -81,8 +81,8 @@ namespace CppAD {
             compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
             GccCompiler<double> compiler;
-            compiler.setSourcesFolder(_name + "_sources");
-            
+            compiler.setSourcesFolder("sources_" + _name + "_1");
+
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             DynamicLib<double>* dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 
@@ -177,7 +177,7 @@ namespace CppAD {
             compHelp.setCustomSparseHessianElements(hessRow, hessCol);
 
             GccCompiler<double> compiler;
-            compiler.setSourcesFolder("cppadcg_sources_2");
+            compiler.setSourcesFolder("sources_" + _name + "_2");
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             compDynHelp.setLibraryName("cppad_cg_model_2");

@@ -196,8 +196,8 @@ namespace CppAD {
         }
 
         /**
-         * Provides the total number of times the result of this operation is being 
-         * used as an argument for another operation.
+         * Provides the total number of times the result of this operation is
+         * being used as an argument for another operation.
          * @return the total usage count
          */
         inline size_t totalUsageCount() const {
@@ -277,11 +277,23 @@ namespace CppAD {
             case CGAliasOp:
                 os << "alias($1)";
                 break;
+            case CGArrayCreationOp:
+                os << "new $1[" << c.arguments().size() << "]";
+                break;
+            case CGArrayElementOp:
+                os << "$1[" << c.info()[0] << "]";
+                break;
             case CGAsinOp:
                 os << "asin( $1 )";
                 break;
             case CGAtanOp:
                 os << "atan( $1 )";
+                break;
+            case CGAtomicForwardOp:
+                os << "atomicFunction.forward(" << c.info()[0] << ", " << c.info()[1] << ", vx, vy, $1, $2)";
+                break;
+            case CGAtomicReverseOp:
+                os << "atomicFunction.reverse(" << c.info()[0] << ", $1, $2, $3, $4)";
                 break;
             case CGComOpLt:
                 os << "($1 < $2)? $3 : $4";

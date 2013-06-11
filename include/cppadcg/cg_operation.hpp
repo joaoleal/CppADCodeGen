@@ -69,11 +69,23 @@ namespace CppAD {
             case CGAddOp:
                 os << "a+b";
                 break;
+            case CGArrayCreationOp:
+                os << "new array[size]";
+                break;
+            case CGArrayElementOp:
+                os << "array[i]";
+                break;
             case CGAsinOp:
                 os << "asin()";
                 break;
             case CGAtanOp:
                 os << "atan()";
+                break;
+            case CGAtomicForwardOp:
+                os << "atomicFunction.forward(q, p, vx, vy, tx, ty)";
+                break;
+            case CGAtomicReverseOp:
+                os << "atomicFunction.reverse(p, tx, ty, px, py)";
                 break;
             case CGComOpLt:
                 os << "result = left < right? trueCase: falseCase";

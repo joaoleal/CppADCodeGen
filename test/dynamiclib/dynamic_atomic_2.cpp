@@ -106,6 +106,7 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler.setCompileFlags(flags);
+            compiler.setSourcesFolder(MODEL_NAME);
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
             _model = _dynamicLib->model(MODEL_NAME);
@@ -130,7 +131,7 @@ namespace CppAD {
     /**
      * static data
      */
-    const std::string CppADCGDynamicAtomic2Test::MODEL_NAME = "dynamicAtomic";
+    const std::string CppADCGDynamicAtomic2Test::MODEL_NAME = "dynamicAtomic2";
     const size_t CppADCGDynamicAtomic2Test::n = 3;
     const size_t CppADCGDynamicAtomic2Test::m = 4;
 }
