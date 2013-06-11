@@ -106,10 +106,13 @@ ENDFUNCTION()
 ################################################################################
 # create a temporary folder
 ################################################################################
-ADD_CUSTOM_TARGET(create_tmp_folder
-                  COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
-                  COMMAND ${CMAKE_COMMAND} -E make_directory "tmp"
-                  COMMENT "Creating tmp folder")
+FUNCTION(create_temp_folder_target)
+  GET_FILENAME_COMPONENT(folder_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+  ADD_CUSTOM_TARGET("create_tmp_folder_${folder_name}"
+                    COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
+                    COMMAND ${CMAKE_COMMAND} -E make_directory "tmp"
+                    COMMENT "Creating tmp folder")
+ENDFUNCTION()
 
 ################################################################################
 # add test function
@@ -122,8 +125,12 @@ FUNCTION(add_cppadcg_test source_file)
                  # sources:
                  "${source_file}"
                  ${ARGN})
-                 
-  ADD_DEPENDENCIES("${test_target_name}" create_tmp_folder)
+
+  GET_FILENAME_COMPONENT(folder_name ${source_file} ABSOLUTE)
+  GET_FILENAME_COMPONENT(folder_name ${folder_name} PATH)
+  GET_FILENAME_COMPONENT(folder_name ${folder_name} NAME)
+
+  ADD_DEPENDENCIES("${test_target_name}" "create_tmp_folder_${folder_name}")
 
   # Specify MainTest's link libraries
   add_gest_link_libraries(${test_target_name} ON)
@@ -170,37 +177,13 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-add_cppadcg_test(abs.cpp)
-add_cppadcg_test(acos.cpp)
-add_cppadcg_test(add.cpp)
-add_cppadcg_test(asin.cpp)
-add_cppadcg_test(assign.cpp)
-add_cppadcg_test(atan.cpp)
-add_cppadcg_test(atan_2.cpp)
-add_cppadcg_test(compare_change.cpp)
-add_cppadcg_test(cond_exp.cpp)
-add_cppadcg_test(cos.cpp)
-add_cppadcg_test(cosh.cpp)
-add_cppadcg_test(div.cpp)
-add_cppadcg_test(exp.cpp)
-add_cppadcg_test(inputstream.cpp)
-add_cppadcg_test(log.cpp)
-add_cppadcg_test(log_10.cpp)
-add_cppadcg_test(mul.cpp)
-add_cppadcg_test(parameter.cpp)
-add_cppadcg_test(pow.cpp)
-add_cppadcg_test(sin.cpp)
-add_cppadcg_test(sub.cpp)
-add_cppadcg_test(tan.cpp)
-add_cppadcg_test(unary.cpp)
-IF( UNIX )
-    add_cppadcg_test(dynamic.cpp)
-    add_cppadcg_test(dynamic_atomic.cpp)
-    add_cppadcg_test(dynamic_atomic_2.cpp)
-    add_cppadcg_test(dynamic_forward_reverse.cpp)
-    add_cppadcg_test(dynamic_forward_reverse_2.cpp)
-ENDIF()
+create_temp_folder_target()
 
+add_cppadcg_test(inputstream.cpp)
+
+ADD_SUBDIRECTORY(operations)
+ADD_SUBDIRECTORY(models)
+ADD_SUBDIRECTORY(dynamiclib)
 ADD_SUBDIRECTORY(solve)
 ADD_SUBDIRECTORY(dae_index_reduction)
 
