@@ -180,6 +180,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 create_temp_folder_target()
 
 add_cppadcg_test(inputstream.cpp)
+add_cppadcg_test(temporary.cpp)
 
 ADD_SUBDIRECTORY(operations)
 ADD_SUBDIRECTORY(models)

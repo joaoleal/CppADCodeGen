@@ -302,6 +302,17 @@ namespace CppAD {
             }
         }
 
+        size_t getTemporaryVariableCount() const {
+            if (_idCount == 1)
+                return 0; // no code generated
+            else
+                return _idCount - _minTemporaryVarID;
+        }
+
+        size_t getTemporaryArraySize() const {
+            return _idArrayCount - 1;
+        }
+
         virtual void reset() {
             typename std::vector<SourceCodeFragment<Base> *>::iterator itc;
             for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {

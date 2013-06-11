@@ -22,7 +22,6 @@ CppAD::ADFun<T>* AsinFunc(const std::vector<CppAD::AD<T> >& u) {
     using namespace CppAD;
     using namespace std;
     using CppAD::asin;
-    using namespace CppAD;
 
     // a temporary values
     AD<T> x = sin(u[0]);
