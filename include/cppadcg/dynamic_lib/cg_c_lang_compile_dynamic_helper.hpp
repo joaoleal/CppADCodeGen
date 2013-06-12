@@ -28,7 +28,7 @@ namespace CppAD {
     public:
         static const std::string FUNCTION_VERSION;
         static const std::string FUNCTION_MODELS;
-        static const unsigned long int API_VERSION;
+        static const unsigned long API_VERSION;
     protected:
         static const std::string CONST;
     protected:

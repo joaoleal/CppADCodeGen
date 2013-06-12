@@ -20,7 +20,7 @@
 namespace CppAD {
 
     template<class Base>
-    const unsigned long int CLangCompileDynamicHelper<Base>::API_VERSION = 4;
+    const unsigned long CLangCompileDynamicHelper<Base>::API_VERSION = 4;
 
     template<class Base>
     const std::string CLangCompileDynamicHelper<Base>::FUNCTION_VERSION = "cppad_cg_version";
@@ -102,7 +102,7 @@ namespace CppAD {
     template<class Base>
     void CLangCompileDynamicHelper<Base>::generateVerionSource(std::map<std::string, std::string>& sources) {
         _cache.str("");
-        _cache << "unsigned long int " << FUNCTION_VERSION << "() {\n"
+        _cache << "unsigned long " << FUNCTION_VERSION << "() {\n"
                 << "   return " << API_VERSION << "u;\n"
                 << "}\n\n";
 

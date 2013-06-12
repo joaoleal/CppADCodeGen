@@ -56,35 +56,35 @@ namespace CppAD {
         // hessian function in the dynamic library
         void (*_hessian)(Base const*const*, Base * const*, CLangAtomicFun);
         //
-        int (*_sparseForwardOne)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
+        int (*_sparseForwardOne)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
         //
-        int (*_sparseReverseOne)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
+        int (*_sparseReverseOne)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
         //
-        int (*_sparseReverseTwo)(unsigned long int, Base const *const *, Base * const *, CLangAtomicFun);
+        int (*_sparseReverseTwo)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
         // sparse jacobian function in the dynamic library
         void (*_sparseJacobian)(Base const*const*, Base * const*, CLangAtomicFun);
         // sparse hessian function in the dynamic library
         void (*_sparseHessian)(Base const*const*, Base * const*, CLangAtomicFun);
         //
-        void (*_forwardOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
+        void (*_forwardOneSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
         //
-        void (*_reverseOneSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
+        void (*_reverseOneSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
         //
-        void (*_reverseTwoSparsity)(unsigned long int, unsigned long int const**, unsigned long int*, CLangAtomicFun);
+        void (*_reverseTwoSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
         // jacobian sparsity function in the dynamic library
-        void (*_jacobianSparsity)(unsigned long int const** row,
-                unsigned long int const** col,
-                unsigned long int * nnz);
+        void (*_jacobianSparsity)(unsigned long const** row,
+                unsigned long const** col,
+                unsigned long * nnz);
         // hessian sparsity function in the dynamic library
-        void (*_hessianSparsity)(unsigned long int const** row,
-                unsigned long int const** col,
-                unsigned long int * nnz);
-        void (*_hessianSparsity2)(unsigned long int i,
-                unsigned long int const** row,
-                unsigned long int const** col,
-                unsigned long int * nnz);
+        void (*_hessianSparsity)(unsigned long const** row,
+                unsigned long const** col,
+                unsigned long * nnz);
+        void (*_hessianSparsity2)(unsigned long i,
+                unsigned long const** row,
+                unsigned long const** col,
+                unsigned long * nnz);
         void (*_atomicFunctions)(const char*** names,
-                unsigned long int * n);
+                unsigned long * n);
 
     public:
 
@@ -94,12 +94,12 @@ namespace CppAD {
 
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) {
             const char** names;
-            unsigned long int n;
+            unsigned long n;
             (*_atomicFunctions)(&names, &n);
 
             assert(_atomic.size() == n);
 
-            for (unsigned long int i = 0; i < n; i++) {
+            for (unsigned long i = 0; i < n; i++) {
                 if (atomic.afun_name() == names[i]) {
                     if (_atomic[i] == NULL) {
                         _missingAtomicFunctions--;
@@ -117,8 +117,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_jacobianSparsity)(&row, &col, &nnz);
 
             bool set_type = true;
@@ -133,8 +133,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_jacobianSparsity)(&row, &col, &nnz);
 
             std::set<size_t> set_type;
@@ -149,8 +149,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_jacobianSparsity != NULL, "No Jacobian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_jacobianSparsity)(&row, &col, &nnz);
 
             rows.resize(nnz);
@@ -166,8 +166,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity)(&row, &col, &nnz);
 
             bool set_type = true;
@@ -182,8 +182,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity)(&row, &col, &nnz);
 
             std::set<size_t> set_type;
@@ -198,8 +198,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity)(&row, &col, &nnz);
 
             rows.resize(nnz);
@@ -213,8 +213,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity2)(i, &row, &col, &nnz);
 
             bool set_type = true;
@@ -229,8 +229,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity2)(i, &row, &col, &nnz);
 
             std::set<size_t> set_type;
@@ -245,8 +245,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != NULL, "No Hessian sparsity function defined in the dynamic library");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity2)(i, &row, &col, &nnz);
 
             rows.resize(nnz);
@@ -552,9 +552,9 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* row;
-            unsigned long int const* col;
-            unsigned long int nnz;
+            unsigned long const* row;
+            unsigned long const* col;
+            unsigned long nnz;
             (*_jacobianSparsity)(&row, &col, &nnz);
 
             std::vector<Base> compressed(nnz);
@@ -581,9 +581,9 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow;
-            unsigned long int const* dcol;
-            unsigned long int nnz;
+            unsigned long const* drow;
+            unsigned long const* dcol;
+            unsigned long nnz;
             (*_jacobianSparsity)(&drow, &dcol, &nnz);
 
             jac.resize(nnz);
@@ -610,9 +610,9 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow;
-            unsigned long int const* dcol;
-            unsigned long int K;
+            unsigned long const* drow;
+            unsigned long const* dcol;
+            unsigned long K;
             (*_jacobianSparsity)(&drow, &dcol, &K);
             CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Jacobian");
             *row = drow;
@@ -634,9 +634,9 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow;
-            unsigned long int const* dcol;
-            unsigned long int K;
+            unsigned long const* drow;
+            unsigned long const* dcol;
+            unsigned long K;
             (*_jacobianSparsity)(&drow, &dcol, &K);
             CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Jacobian");
             *row = drow;
@@ -664,8 +664,8 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* row, *col;
-            unsigned long int nnz;
+            unsigned long const* row, *col;
+            unsigned long nnz;
             (*_hessianSparsity)(&row, &col, &nnz);
 
             std::vector<Base> compressed(nnz);
@@ -694,8 +694,8 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow, *dcol;
-            unsigned long int nnz;
+            unsigned long const* drow, *dcol;
+            unsigned long nnz;
             (*_hessianSparsity)(&drow, &dcol, &nnz);
 
             hess.resize(nnz);
@@ -725,8 +725,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow, *dcol;
-            unsigned long int K;
+            unsigned long const* drow, *dcol;
+            unsigned long K;
             (*_hessianSparsity)(&drow, &dcol, &K);
             CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Hessian");
             *row = drow;
@@ -751,8 +751,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
-            unsigned long int const* drow, *dcol;
-            unsigned long int K;
+            unsigned long const* drow, *dcol;
+            unsigned long K;
             (*_hessianSparsity)(&drow, &dcol, &K);
             CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Hessian");
             *row = drow;
@@ -817,7 +817,7 @@ namespace CppAD {
             /**
              * Check the data type
              */
-            void (*infoFunc)(const char** baseName, unsigned long int*, unsigned long int*, unsigned int*, unsigned int*);
+            void (*infoFunc)(const char** baseName, unsigned long*, unsigned long*, unsigned int*, unsigned int*);
             *(void **) (&infoFunc) = _dynLib->loadFunction(_name + "_" + CLangCompileModelHelper<Base>::FUNCTION_INFO, error);
             CPPADCG_ASSERT_KNOWN(error.empty(), error.c_str());
 
@@ -877,7 +877,7 @@ namespace CppAD {
              * Prepare the atomic functions argument
              */
             const char** names;
-            unsigned long int n;
+            unsigned long n;
             (*_atomicFunctions)(&names, &n);
             _atomic.resize(n);
 
@@ -891,12 +891,12 @@ namespace CppAD {
         template <class VectorSet>
         inline void loadSparsity(bool set_type,
                                  VectorSet& s,
-                                 unsigned long int nrows, unsigned long int ncols,
-                                 unsigned long int const* rows, unsigned long int const* cols,
-                                 unsigned long int nnz) {
+                                 unsigned long nrows, unsigned long ncols,
+                                 unsigned long const* rows, unsigned long const* cols,
+                                 unsigned long nnz) {
             s.resize(nrows * ncols, false);
 
-            for (unsigned long int i = 0; i < nnz; i++) {
+            for (unsigned long i = 0; i < nnz; i++) {
                 s[rows[i] * ncols + cols[i]] = true;
             }
         }
@@ -904,22 +904,22 @@ namespace CppAD {
         template <class VectorSet>
         inline void loadSparsity(const std::set<size_t>& set_type,
                                  VectorSet& s,
-                                 unsigned long int nrows, unsigned long int ncols,
-                                 unsigned long int const* rows, unsigned long int const* cols,
-                                 unsigned long int nnz) {
+                                 unsigned long nrows, unsigned long ncols,
+                                 unsigned long const* rows, unsigned long const* cols,
+                                 unsigned long nnz) {
 
             // dimension size of result vector
             s.resize(nrows);
 
-            for (unsigned long int i = 0; i < nnz; i++) {
+            for (unsigned long i = 0; i < nnz; i++) {
                 s[rows[i]].insert(cols[i]);
             }
         }
 
         inline void createDenseFromSparse(const std::vector<Base>& compressed,
-                                          unsigned long int nrows, unsigned long int ncols,
-                                          unsigned long int const* rows, unsigned long int const* cols,
-                                          unsigned long int nnz,
+                                          unsigned long nrows, unsigned long ncols,
+                                          unsigned long const* rows, unsigned long const* cols,
+                                          unsigned long nnz,
                                           std::vector<Base>& mat) const {
 
             std::fill(mat.begin(), mat.end(), 0);
@@ -957,8 +957,8 @@ namespace CppAD {
                                  int atomicIndex,
                                  int q,
                                  int p,
-                                 const void* tx, unsigned long int txSize,
-                                 void* ty, unsigned long int tySize) {
+                                 const void* tx, unsigned long txSize,
+                                 void* ty, unsigned long tySize) {
             LinuxDynamicLibModel<Base>* libModel = static_cast<LinuxDynamicLibModel<Base>*> (libModelIn);
             atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
             const Base* txb = static_cast<const Base*> (tx);
@@ -985,8 +985,8 @@ namespace CppAD {
                                  const void* ty,
                                  void* px,
                                  const void* py,
-                                 unsigned long int xSize,
-                                 unsigned long int ySize) {
+                                 unsigned long xSize,
+                                 unsigned long ySize) {
             LinuxDynamicLibModel<Base>* libModel = static_cast<LinuxDynamicLibModel<Base>*> (libModelIn);
             atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
             const Base* txb = static_cast<const Base*> (tx);

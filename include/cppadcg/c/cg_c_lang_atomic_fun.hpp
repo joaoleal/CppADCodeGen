@@ -24,9 +24,9 @@ extern "C" {
                 int q,
                 int p,
                 const void* tx,
-                unsigned long int txSize,
+                unsigned long txSize,
                 void* ty,
-                unsigned long int tySize);
+                unsigned long tySize);
 
         int (*reverse)(void* libModel,
                 int atomicIndex,
@@ -35,8 +35,8 @@ extern "C" {
                 const void* ty,
                 void* px,
                 const void* py,
-                unsigned long int xSize,
-                unsigned long int ySize);
+                unsigned long xSize,
+                unsigned long ySize);
     };
 
 }

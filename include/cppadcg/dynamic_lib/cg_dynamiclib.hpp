@@ -48,7 +48,7 @@ namespace CppAD {
          * 
          * @return the API version
          */
-        virtual unsigned long int getAPIVersion() = 0;
+        virtual unsigned long getAPIVersion() = 0;
 
         /**
          * Provides a pointer to a function in the dynamic library.

@@ -151,7 +151,7 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var", "array"));
 
         _cache.str("");
-        _cache << "void " << funcName << "(const char** baseName, unsigned long int* m, unsigned long int* n, unsigned int* indCount, unsigned int* depCount) {\n"
+        _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
                 "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
                 "   *m = " << _fun.Range() << ";\n"
                 "   *n = " << _fun.Domain() << ";\n"
@@ -167,7 +167,7 @@ namespace CppAD {
         std::string funcName = _name + "_" + FUNCTION_ATOMIC_FUNC_NAMES;
         size_t n = _atomicFunctions.size();
         _cache.str("");
-        _cache << "void " << funcName << "(const char*** names, unsigned long int* n) {\n"
+        _cache << "void " << funcName << "(const char*** names, unsigned long* n) {\n"
                 "   static const char* atomic[" << n << "] = {";
         for (size_t i = 0; i < n; i++) {
             if (i > 0)_cache << ", ";
@@ -799,17 +799,17 @@ namespace CppAD {
         _cache << "#include <stdlib.h>\n"
                 << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long int pos, " << argsDcl << ");\n"
-                "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long pos, " << argsDcl << ");\n"
+                "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
                 "\n"
                 "int " << model_function << "("
                 << _baseTypeName << " const tx[], "
                 << _baseTypeName << " ty[], "
                 << langC.generateArgumentAtomicDcl() << ") {\n"
-                "   unsigned long int ePos, ej, i, j, nnz, nnzMax;\n"
-                "   unsigned long int const* pos;\n"
-                "   unsigned long int* tyPos;\n"
-                "   unsigned long int nnzTy;\n"
+                "   unsigned long ePos, ej, i, j, nnz, nnzMax;\n"
+                "   unsigned long const* pos;\n"
+                "   unsigned long* tyPos;\n"
+                "   unsigned long nnzTy;\n"
                 "   " << _baseTypeName << " const * in[2];\n"
                 "   " << _baseTypeName << "* out[1];\n"
                 "   " << _baseTypeName << " x[" << n << "];\n"
@@ -821,7 +821,7 @@ namespace CppAD {
                 "   for (j = 0; j < " << n << "; j++) {\n"
                 "      if (tx[j * 2 + 1] != 0.0) {\n"
                 "         nnzTy++;\n"
-                "         tyPos = (unsigned long int*) realloc(tyPos, nnzTy * sizeof(unsigned long int));\n"
+                "         tyPos = (unsigned long*) realloc(tyPos, nnzTy * sizeof(unsigned long));\n"
                 "         tyPos[nnzTy - 1] = j;\n"
                 "         " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(j, &pos, &nnz);\n"
                 "         if(nnz > nnzMax)\n"
@@ -957,8 +957,8 @@ namespace CppAD {
         _cache << "#include <stdlib.h>\n"
                 << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long int pos, " << argsDcl << ");\n"
-                "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long pos, " << argsDcl << ");\n"
+                "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
                 "\n"
                 "int " << model_function << "("
                 << _baseTypeName << " const x[], "
@@ -966,10 +966,10 @@ namespace CppAD {
                 << _baseTypeName << "  px[], "
                 << _baseTypeName << " const py[], "
                 << langC.generateArgumentAtomicDcl() << ") {\n"
-                "   unsigned long int ei, ePos, i, j, nnz, nnzMax;\n"
-                "   unsigned long int const* pos;\n"
-                "   unsigned long int* pyPos;\n"
-                "   unsigned long int nnzPy;\n"
+                "   unsigned long ei, ePos, i, j, nnz, nnzMax;\n"
+                "   unsigned long const* pos;\n"
+                "   unsigned long* pyPos;\n"
+                "   unsigned long nnzPy;\n"
                 "   " << _baseTypeName << " const * in[2];\n"
                 "   " << _baseTypeName << "* out[1];\n"
                 "   " << _baseTypeName << "* compressed;\n"
@@ -980,7 +980,7 @@ namespace CppAD {
                 "   for (i = 0; i < " << m << "; i++) {\n"
                 "      if (py[i] != 0.0) {\n"
                 "         nnzPy++;\n"
-                "         pyPos = (unsigned long int*) realloc(pyPos, nnzPy * sizeof(unsigned long int));\n"
+                "         pyPos = (unsigned long*) realloc(pyPos, nnzPy * sizeof(unsigned long));\n"
                 "         pyPos[nnzPy - 1] = i;\n"
                 "         " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(i, &pos, &nnz);\n"
                 "         if(nnz > nnzMax)\n"
@@ -1120,8 +1120,8 @@ namespace CppAD {
         _cache << "#include <stdlib.h>\n"
                 << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n"
-                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long int pos, " << argsDcl << ");\n"
-                "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long int pos, unsigned long int const** elements, unsigned long int* nnz);\n"
+                "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long pos, " << argsDcl << ");\n"
+                "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
                 "\n"
                 "int " << model_function << "("
                 << _baseTypeName << " const tx[], "
@@ -1129,10 +1129,10 @@ namespace CppAD {
                 << _baseTypeName << " px[], "
                 << _baseTypeName << " const py[], "
                 << langC.generateArgumentAtomicDcl() << ") {\n"
-                "    unsigned long int ej, ePos, i, j, nnz, nnzMax;\n"
-                "    unsigned long int const* pos;\n"
-                "    unsigned long int* txPos;\n"
-                "    unsigned long int nnzTx;\n"
+                "    unsigned long ej, ePos, i, j, nnz, nnzMax;\n"
+                "    unsigned long const* pos;\n"
+                "    unsigned long* txPos;\n"
+                "    unsigned long nnzTx;\n"
                 "    " << _baseTypeName << " const * in[3];\n"
                 "    " << _baseTypeName << "* out[1];\n"
                 "    " << _baseTypeName << " x[" << n << "];\n"
@@ -1162,7 +1162,7 @@ namespace CppAD {
                 "   for (j = 0; j < " << n << "; j++) {\n"
                 "      if (tx[j * 2 + 1] != 0.0) {\n"
                 "         nnzTx++;\n"
-                "         txPos = (unsigned long int*) realloc(txPos, nnzTx * sizeof(unsigned long int));\n"
+                "         txPos = (unsigned long*) realloc(txPos, nnzTx * sizeof(unsigned long));\n"
                 "         txPos[nnzTx - 1] = j;\n"
                 "         " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(j, &pos, &nnz);\n"
                 "         if(nnz > nnzMax)\n"
@@ -1226,7 +1226,7 @@ namespace CppAD {
         generateFunctionDeclarationSource(_cache, model_function, suffix, elements, argsDcl);
         _cache << "\n";
         _cache << "int " << model_function << "("
-                "unsigned long int pos, " << argsDcl << ") {\n"
+                "unsigned long pos, " << argsDcl << ") {\n"
                 "   switch(pos) {\n";
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
@@ -1268,11 +1268,11 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateSparsity1DSource(const std::string& function,
                                                                  const std::vector<size_t>& sparsity) {
         _cache << "void " << function << "("
-                "unsigned long int const** sparsity,"
-                " unsigned long int* nnz) {\n";
+                "unsigned long const** sparsity,"
+                " unsigned long* nnz) {\n";
 
         // the size of each sparsity row
-        _cache << "   static unsigned long int const nonzeros[" << sparsity.size() << "] = {";
+        _cache << "   static unsigned long const nonzeros[" << sparsity.size() << "] = {";
         if (!sparsity.empty()) {
             _cache << sparsity[0];
             for (size_t i = 1; i < sparsity.size(); i++) {
@@ -1295,12 +1295,12 @@ namespace CppAD {
         assert(rows.size() == cols.size());
 
         _cache << "void " << function << "("
-                "unsigned long int const** row,"
-                " unsigned long int const** col,"
-                " unsigned long int* nnz) {\n";
+                "unsigned long const** row,"
+                " unsigned long const** col,"
+                " unsigned long* nnz) {\n";
 
         // the size of each sparsity row
-        _cache << "static unsigned long int const rows[" << rows.size() << "] = {";
+        _cache << "static unsigned long const rows[" << rows.size() << "] = {";
         if (!rows.empty()) {
             _cache << rows[0];
             for (size_t i = 1; i < rows.size(); i++) {
@@ -1309,7 +1309,7 @@ namespace CppAD {
         }
         _cache << "};\n";
 
-        _cache << "static unsigned long int const cols[" << cols.size() << "] = {";
+        _cache << "static unsigned long const cols[" << cols.size() << "] = {";
         if (!cols.empty()) {
             _cache << cols[0];
             for (size_t i = 1; i < cols.size(); i++) {
@@ -1328,17 +1328,17 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateSparsity2DSource2(const std::string& function,
                                                                   const std::vector<LocalSparsityInfo>& sparsities) {
         _cache << "void " << function << "("
-                "unsigned long int i,"
-                "unsigned long int const** row,"
-                " unsigned long int const** col,"
-                " unsigned long int* nnz) {\n";
+                "unsigned long i,"
+                "unsigned long const** row,"
+                " unsigned long const** col,"
+                " unsigned long* nnz) {\n";
 
         for (size_t i = 0; i < sparsities.size(); i++) {
             const std::vector<size_t>& rows = sparsities[i].rows;
             const std::vector<size_t>& cols = sparsities[i].cols;
             assert(rows.size() == cols.size());
 
-            _cache << "   static unsigned long int const rows" << i << "[" << rows.size() << "] = {";
+            _cache << "   static unsigned long const rows" << i << "[" << rows.size() << "] = {";
             if (!rows.empty()) {
                 _cache << rows[0];
                 for (size_t i = 1; i < rows.size(); i++) {
@@ -1347,7 +1347,7 @@ namespace CppAD {
             }
             _cache << "};\n";
 
-            _cache << "   static unsigned long int const cols" << i << "[" << cols.size() << "] = {";
+            _cache << "   static unsigned long const cols" << i << "[" << cols.size() << "] = {";
             if (!cols.empty()) {
                 _cache << cols[0];
                 for (size_t i = 1; i < cols.size(); i++) {
@@ -1380,15 +1380,15 @@ namespace CppAD {
                                                                   const std::map<size_t, std::vector<size_t> >& elements) {
 
         _cache << "void " << function << "("
-                "unsigned long int pos,"
-                " unsigned long int const** elements,"
-                " unsigned long int* nnz) {\n";
+                "unsigned long pos,"
+                " unsigned long const** elements,"
+                " unsigned long* nnz) {\n";
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             // the size of each sparsity row
             const std::vector<size_t>& els = it->second;
-            _cache << "   static unsigned long int const elements" << it->first << "[" << els.size() << "] = {";
+            _cache << "   static unsigned long const elements" << it->first << "[" << els.size() << "] = {";
             if (!els.empty()) {
                 _cache << els[0];
                 for (size_t i = 1; i < els.size(); i++) {

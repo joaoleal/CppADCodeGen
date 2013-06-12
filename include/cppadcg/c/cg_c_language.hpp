@@ -1141,8 +1141,8 @@ namespace CppAD {
     template<class Base>
     const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "struct CLangAtomicFun {\n"
     "    void* libModel;\n"
-    "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const void* tx, unsigned long int txSize, void* ty, unsigned long int tySize);\n"
-    "    int (*reverse)(void* libModel, int atomicIndex, int p, const void* tx, const void* ty, void* px, const void* py, unsigned long int xSize, unsigned long int ySize);\n"
+    "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const void* tx, unsigned long txSize, void* ty, unsigned long tySize);\n"
+    "    int (*reverse)(void* libModel, int atomicIndex, int p, const void* tx, const void* ty, void* px, const void* py, unsigned long xSize, unsigned long ySize);\n"
     "};";
 
 }

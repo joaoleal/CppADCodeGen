@@ -33,7 +33,7 @@ namespace CppAD {
         const std::string _dynLibName;
         /// the dynamic library handler
         void* _dynLibHandle;
-        unsigned long int _version; // API version
+        unsigned long _version; // API version
         std::set<std::string> _modelNames;
         std::set<LinuxDynamicLibModel<Base>*> _models;
     public:
@@ -74,7 +74,7 @@ namespace CppAD {
             return m;
         }
 
-        virtual unsigned long int getAPIVersion() {
+        virtual unsigned long getAPIVersion() {
             return _version;
         }
 
@@ -120,7 +120,7 @@ namespace CppAD {
             /**
              * Check the version
              */
-            unsigned long int (*versionFunc)();
+            unsigned long (*versionFunc)();
             *(void **) (&versionFunc) = loadFunction(CLangCompileDynamicHelper<Base>::FUNCTION_VERSION, error);
             CPPADCG_ASSERT_KNOWN(error.empty(), error.c_str());
 
