@@ -48,6 +48,9 @@ namespace CppAD {
 
     template<class Base>
     class DynamicLib;
+    
+    template<class Base>
+    class CGAtomicLibModel;
 
     template<class Base>
     class CLangCompileModelHelper;

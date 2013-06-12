@@ -24,7 +24,14 @@ namespace CppAD {
      */
     template<class Base>
     class DynamicLibModel {
+    protected:
+        CGAtomicLibModel<Base>* _atomic;
     public:
+
+        DynamicLibModel() :
+            _atomic(NULL) {
+        }
+
         /**
          * Provides the name for this model.
          * 
@@ -294,7 +301,8 @@ namespace CppAD {
          * by several arrays.
          * 
          * @param x Contains the several independent variable vectors
-         * @param jac The values of the sparse Jacobian in the order provided by row and col
+         * @param jac The values of the sparse Jacobian in the order provided by
+         *            row and col
          * @param row The row indices of the Jacobian values
          * @param col The column indices of the Jacobian values
          * @param nnz The total number of non-zero elements
@@ -334,7 +342,8 @@ namespace CppAD {
          * @param x Contains the several independent variable vectors
          * @param w The equation multipliers
          * @param w_size The number of equations
-         * @param hess The values of the sparse hessian in the order provided by row and col
+         * @param hess The values of the sparse hessian in the order provided by
+         *             row and col
          * @param row The row indices of the hessian values
          * @param col The column indices of the hessian values
          * @param nnz The total number of non-zero elements
@@ -346,7 +355,22 @@ namespace CppAD {
                                    size_t const** col,
                                    size_t nnz) = 0;
 
+        /**
+         * Provides a wrapper for this compiled model allowing it to be used as
+         * an atomic function. The compiled model must not be deleted while
+         * the atomic function is in used.
+         * 
+         * @return an atomic function wrapper for this model
+         */
+        virtual CGAtomicLibModel<Base>& asAtomic() {
+            if (_atomic == NULL) {
+                _atomic = new CGAtomicLibModel<Base>(*this);
+            }
+            return *_atomic;
+        }
+
         inline virtual ~DynamicLibModel() {
+            delete _atomic;
         };
     };
 

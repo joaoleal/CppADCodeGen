@@ -129,6 +129,9 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
 
+// atomic function
+#include <cppadcg/dynamic_lib/cg_atomic_lib_model.hpp>
+
 // ---------------------------------------------------------------------------
 // automated dynamic library creation for Linux
 #include <cppadcg/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>

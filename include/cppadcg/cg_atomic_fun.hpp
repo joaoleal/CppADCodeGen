@@ -1,9 +1,5 @@
 #ifndef CPPAD_CG_ATOMIC_BASE_INCLUDED
 #define CPPAD_CG_ATOMIC_BASE_INCLUDED
-
-#include "cg_cg.hpp"
-#include "cg_source_code_fragment.hpp"
-
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
