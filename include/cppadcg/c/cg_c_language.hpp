@@ -63,6 +63,8 @@ namespace CppAD {
         size_t _minTemporaryVarID;
         // maps atomic function IDs to their internal index
         std::map<size_t, size_t> _atomicFunctionId2Index;
+        // maps atomic function IDs to their names
+        std::map<size_t, std::string> _atomicFunctionId2Name;
         // maps the variable IDs to the their position in the dependent vector
         // (some IDs may be the same as the independent variables when dep = indep)
         std::map<size_t, size_t> _dependentIDs;
@@ -300,6 +302,7 @@ namespace CppAD {
             _nameGen = &info.nameGen;
             _minTemporaryVarID = info.minTemporaryVarID;
             _atomicFunctionId2Index = info.atomicFunctionId2Index;
+            _atomicFunctionId2Name = info.atomicFunctionId2Name;
             const std::vector<CG<Base> >& dependent = info.dependent;
             const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
 
@@ -1017,7 +1020,9 @@ namespace CppAD {
                     << q << ", "
                     << p << ", "
                     << *tx.getName() << ", " << tx.arguments().size() << ", "
-                    << *ty.getName() << ", " << ty.arguments().size() << ");\n";
+                    << *ty.getName() << ", " << ty.arguments().size() << "); // "
+                    << _atomicFunctionId2Name.at(id)
+                    << "\n";
         }
 
         virtual void printAtomicReverseOp(SourceCodeFragment<Base>& op) {
@@ -1044,7 +1049,9 @@ namespace CppAD {
                     << p << ", "
                     << *tx.getName() << ", " << *ty.getName() << ", "
                     << *px.getName() << ", " << *py.getName() << ", "
-                    << tx.arguments().size() << ", " << ty.arguments().size() << ");\n";
+                    << tx.arguments().size() << ", " << ty.arguments().size() << "); // "
+                    << _atomicFunctionId2Name.at(id)
+                    << "\n";
         }
 
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {

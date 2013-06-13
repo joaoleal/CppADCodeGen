@@ -37,6 +37,8 @@ namespace CppAD {
         VariableNameGenerator<Base>& nameGen;
         // maps atomic function IDs to their internal index
         const std::map<size_t, size_t> atomicFunctionId2Index;
+        // maps atomic function IDs to their names
+        const std::map<size_t, std::string> atomicFunctionId2Name;
         // a flag indicating whether or not temporary variable IDs have been recycled
         const bool reuseIDs;
 
@@ -48,6 +50,7 @@ namespace CppAD {
                                const std::vector<SourceCodeFragment<Base>*>& vo,
                                VariableNameGenerator<Base>& ng,
                                const std::map<size_t, size_t>& atomicId2Index,
+                               const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri) :
             independent(ind),
             dependent(dep),
@@ -55,6 +58,7 @@ namespace CppAD {
             variableOrder(vo),
             nameGen(ng),
             atomicFunctionId2Index(atomicId2Index),
+            atomicFunctionId2Name(atomicId2Name),
             reuseIDs(ri) {
         }
     };

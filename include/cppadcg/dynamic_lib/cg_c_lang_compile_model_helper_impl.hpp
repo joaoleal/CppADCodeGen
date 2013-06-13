@@ -1403,35 +1403,35 @@ namespace CppAD {
             const std::vector<size_t>& rows = sparsities[i].rows;
             const std::vector<size_t>& cols = sparsities[i].cols;
             assert(rows.size() == cols.size());
-
-            _cache << "   static unsigned long const rows" << i << "[" << rows.size() << "] = {";
             if (!rows.empty()) {
+                _cache << "   static unsigned long const rows" << i << "[" << rows.size() << "] = {";
                 _cache << rows[0];
-                for (size_t i = 1; i < rows.size(); i++) {
-                    _cache << "," << rows[i];
+                for (size_t j = 1; j < rows.size(); j++) {
+                    _cache << "," << rows[j];
                 }
-            }
-            _cache << "};\n";
+                _cache << "};\n";
 
-            _cache << "   static unsigned long const cols" << i << "[" << cols.size() << "] = {";
-            if (!cols.empty()) {
+                _cache << "   static unsigned long const cols" << i << "[" << cols.size() << "] = {";
                 _cache << cols[0];
                 for (size_t i = 1; i < cols.size(); i++) {
                     _cache << "," << cols[i];
                 }
+                _cache << "};\n";
             }
-            _cache << "};\n";
         }
 
         _cache << "   switch(i) {\n";
         for (size_t i = 0; i < sparsities.size(); i++) {
             // the size of each sparsity
-            _cache << "   case " << i << ":\n"
-                    "      *row = rows" << i << ";\n"
-                    "      *col = cols" << i << ";\n"
-                    "      *nnz = " << sparsities[i].rows.size() << ";\n"
-                    "      break;\n";
+            if (!sparsities[i].rows.empty()) {
+                _cache << "   case " << i << ":\n"
+                        "      *row = rows" << i << ";\n"
+                        "      *col = cols" << i << ";\n"
+                        "      *nnz = " << sparsities[i].rows.size() << ";\n"
+                        "      break;\n";
+            }
         }
+
         _cache << "   default:\n"
                 "      *row = 0;\n"
                 "      *col = 0;\n"

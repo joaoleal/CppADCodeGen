@@ -276,11 +276,13 @@ namespace CppAD {
             }
 
             std::map<size_t, size_t> atomicFunctionId2Index;
+            std::map<size_t, std::string> atomicFunctionId2Name;
             for (size_t i = 0; i < _atomicFunctionsOrder->size(); i++) {
                 const std::string& atomicName = (*_atomicFunctionsOrder)[i];
                 std::map<std::string, size_t>::const_iterator it = atomicFunctionName2Id.find(atomicName);
                 if (it != atomicFunctionName2Id.end()) {
                     atomicFunctionId2Index[it->second] = i;
+                    atomicFunctionId2Name[it->second] = atomicName;
                 }
             }
 
@@ -289,7 +291,8 @@ namespace CppAD {
              */
             LanguageGenerationData<Base> info(_independentVariables, dependent,
                                               _minTemporaryVarID, _variableOrder,
-                                              nameGen, atomicFunctionId2Index,
+                                              nameGen,
+                                              atomicFunctionId2Index, atomicFunctionId2Name,
                                               _reuseIDs);
             lang.generateSourceCode(out, info);
 
