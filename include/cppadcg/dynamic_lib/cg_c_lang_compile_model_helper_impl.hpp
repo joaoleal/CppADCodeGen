@@ -192,6 +192,11 @@ namespace CppAD {
 
         std::vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < indVars.size(); i++) {
+                indVars[i].setValue(_x[i]);
+            }
+        }
 
         std::vector<CGBase> dep = _fun.Forward(0, indVars);
 
@@ -218,6 +223,11 @@ namespace CppAD {
 
         std::vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < indVars.size(); i++) {
+                indVars[i].setValue(_x[i]);
+            }
+        }
 
         std::vector<CGBase> jac = _fun.Jacobian(indVars);
 
@@ -242,16 +252,27 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        //size_t m = _fun.Range();
+        size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
 
         // independent variables
         std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < n; i++) {
+                indVars[i].setValue(_x[i]);
+            }
+        }
+
         // multipliers
-        std::vector<CGBase> w(_fun.Range());
+        std::vector<CGBase> w(m);
         handler.makeVariables(w);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < m; i++) {
+                w[i].setValue(Base(1.0));
+            }
+        }
 
         std::vector<CGBase> hess = _fun.Hessian(indVars, w);
 
@@ -328,6 +349,11 @@ namespace CppAD {
 
         std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < n; i++) {
+                indVars[i].setValue(_x[i]);
+            }
+        }
 
         std::vector<CGBase> jac(_jacSparsity.rows.size());
         CppAD::sparse_jacobian_work work;
@@ -537,9 +563,20 @@ namespace CppAD {
         // independent variables
         std::vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < n; i++) {
+                indVars[i].setValue(_x[i]);
+            }
+        }
+
         // multipliers
         std::vector<CGBase> w(m);
         handler.makeVariables(w);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < m; i++) {
+                w[i].setValue(Base(1.0));
+            }
+        }
 
         CppAD::sparse_hessian_work work;
         std::vector<CGBase> upperHess(upperHessRows.size());
@@ -740,9 +777,17 @@ namespace CppAD {
 
             std::vector<CGBase> indVars(n);
             handler.makeVariables(indVars);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < n; i++) {
+                    indVars[i].setValue(_x[i]);
+                }
+            }
 
             CGBase dx;
             handler.makeVariable(dx);
+            if (_x.size() > 0) {
+                dx.setValue(Base(1.0));
+            }
 
             // TODO: consider caching the zero order coefficients somehow between calls
             _fun.Forward(0, indVars);
@@ -898,9 +943,17 @@ namespace CppAD {
 
             std::vector<CGBase> indVars(_fun.Domain());
             handler.makeVariables(indVars);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < n; i++) {
+                    indVars[i].setValue(_x[i]);
+                }
+            }
 
             CGBase py;
             handler.makeVariable(py);
+            if (_x.size() > 0) {
+                py.setValue(Base(1.0));
+            }
 
             // TODO: consider caching the zero order coefficients somehow between calls
             _fun.Forward(0, indVars);
@@ -1056,12 +1109,25 @@ namespace CppAD {
 
             std::vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < n; i++) {
+                    tx0[i].setValue(_x[i]);
+                }
+            }
 
             CGBase tx1;
             handler.makeVariable(tx1);
+            if (_x.size() > 0) {
+                tx1.setValue(Base(1.0));
+            }
 
             std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
             handler.makeVariables(py);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < m; i++) {
+                    py[i].setValue(Base(1.0));
+                }
+            }
 
             // TODO: consider caching the zero order coefficients somehow between calls
             std::vector<CGBase> y = _fun.Forward(0, tx0);

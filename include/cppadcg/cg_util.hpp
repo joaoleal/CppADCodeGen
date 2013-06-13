@@ -45,6 +45,17 @@ namespace CppAD {
     }
 
     template<class VectorSet, class Base>
+    inline VectorSet jacobianForwardSparsitySet(ADFun<Base>& fun) {
+        size_t n = fun.Domain();
+
+        VectorSet r(n);
+        for (size_t i = 0; i < n; i++)
+            r[i].insert(i);
+
+        return fun.ForSparseJac(n, r);
+    }
+
+    template<class VectorSet, class Base>
     inline VectorSet jacobianReverseSparsitySet(ADFun<Base>& fun) {
         size_t m = fun.Range();
 
@@ -68,10 +79,30 @@ namespace CppAD {
 
         if (n <= m) {
             // use forward mode 
-            return jacobianForwardSparsity<VectorBool, Base > (fun);
+            return jacobianForwardSparsity<VectorBool, Base> (fun);
         } else {
             // use reverse mode 
-            return jacobianReverseSparsity<VectorBool, Base >(fun);
+            return jacobianReverseSparsity<VectorBool, Base> (fun);
+        }
+    }
+
+    /**
+     * Determines the Jacobian sparsity for a model
+     * 
+     * @param fun The model
+     * @return The Jacobian sparsity
+     */
+    template<class VectorSet, class Base>
+    inline VectorSet jacobianSparsitySet(ADFun<Base>& fun) {
+        size_t m = fun.Range();
+        size_t n = fun.Domain();
+
+        if (n <= m) {
+            // use forward mode 
+            return jacobianForwardSparsitySet<VectorSet, Base> (fun);
+        } else {
+            // use reverse mode 
+            return jacobianReverseSparsitySet<VectorSet, Base> (fun);
         }
     }
 
@@ -189,10 +220,34 @@ namespace CppAD {
         }
     }
 
+    template<class VectorBool, class Base>
+    void zeroOrderDependency(ADFun<Base>& fun,
+                             const VectorBool& vx,
+                             VectorBool& vy) {
+        size_t m = fun.Range();
+        CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size");
+        CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size");
+        
+        typedef vector<std::set<size_t> > VectorSet;
+        
+        const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
+        
+        std::set<size_t>::const_iterator it;
+        for (size_t i = 0; i < m; i++) {
+            for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
+                size_t j = *it;
+                if (vx[j]) {
+                    vy[i] = true;
+                    break;
+                }
+            }
+        }
+    }
+
     template<class VectorSet>
     inline bool isIdentityPattern(const VectorSet& pattern, size_t mRows) {
         assert(pattern.size() >= mRows);
-        
+
         for (size_t i = 0; i < mRows; i++) {
             if (pattern[i].size() != 1 || *pattern[i].begin() != i) {
                 return false;

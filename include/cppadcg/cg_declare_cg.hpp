@@ -23,8 +23,11 @@
 namespace CppAD {
 
     template<class Base>
+    class CGAbstractAtomicFun;
+
+    template<class Base>
     class CGAtomicFun;
-    
+
     template<class Base>
     class CodeHandler;
 
@@ -48,7 +51,7 @@ namespace CppAD {
 
     template<class Base>
     class DynamicLib;
-    
+
     template<class Base>
     class CGAtomicLibModel;
 

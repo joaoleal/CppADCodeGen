@@ -77,7 +77,6 @@
 #include <cppadcg/cg_debug.hpp>
 #include <cppadcg/cg_operation.hpp>
 #include <cppadcg/cg_argument.hpp>
-#include <cppadcg/cg_atomic_fun.hpp>
 #include <cppadcg/cg_source_code_fragment.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
@@ -129,7 +128,10 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
 
-// atomic function
+// atomic function utilities
+#include <cppadcg/cg_abstract_atomic_fun.hpp>
+#include <cppadcg/cg_atomic_fun.hpp>
+#include <cppadcg/cg_atomic_fun_bridge.hpp>
 #include <cppadcg/dynamic_lib/cg_atomic_lib_model.hpp>
 
 // ---------------------------------------------------------------------------

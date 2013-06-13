@@ -805,7 +805,7 @@ namespace CppAD {
         CodeHandler& operator=(const CodeHandler&); // not implemented
 
         friend class CG<Base>;
-        friend class CGAtomicFun<Base>;
+        friend class CGAbstractAtomicFun<Base>;
 
     };
 

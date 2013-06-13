@@ -89,7 +89,14 @@ namespace CppAD {
          * the name of the model
          */
         std::string _name;
+        /**
+         * the name of the data type used in operations
+         */
         const std::string _baseTypeName;
+        /**
+         * Typical values of the independent vector 
+         */
+        std::vector<Base> _x;
         bool _zero;
         bool _jacobian;
         bool _hessian;
@@ -99,12 +106,12 @@ namespace CppAD {
         bool _reverseOne;
         bool _reverseTwo;
         /**
-         * 
+         * Custom Jacobian element indexes 
          */
         Position _custom_jac;
         LocalSparsityInfo _jacSparsity;
         /**
-         * 
+         * Custom Hessian element indexes 
          */
         Position _custom_hess;
         LocalSparsityInfo _hessSparsity;
@@ -121,6 +128,10 @@ namespace CppAD {
          * maximum number of assignments per function (~ lines)
          */
         size_t _maxAssignPerFunc;
+        /**
+         * Whether or not to print some progress information to the standard 
+         * output
+         */
         bool _verbose;
         /**
          * auxiliary variable to measure the elapsed time
@@ -171,6 +182,24 @@ namespace CppAD {
          */
         inline const std::string& getName() const {
             return _name;
+        }
+
+        /**
+         * Defines typical values for the independent variable vector. These 
+         * values can be usefull when there is a need to call atomic functions,
+         * since they may allow to reduce some operations.
+         * 
+         * @param x The typical values. An empty vector removes the currently
+         *          defined values.
+         */
+        template<class VectorBase>
+        inline void setTypicalIndependentValues(const VectorBase& x) {
+            CPPAD_ASSERT_KNOWN(x.size() == 0 || x.size() == _fun.Domain(),
+                               "Invalid independent variable vector size");
+            _x.resize(x.size());
+            for (size_t i = 0; i < x.size(); i++) {
+                _x[i] = x[i];
+            }
         }
 
         /**

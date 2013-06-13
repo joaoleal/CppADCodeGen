@@ -111,7 +111,7 @@ namespace CppAD {
     private:
 
         friend class CodeHandler<Base>;
-        friend class CGAtomicFun<Base>;
+        friend class CGAbstractAtomicFun<Base>;
 
         template<class Base1, class Base2>
         friend class Evaluator;

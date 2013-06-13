@@ -90,7 +90,15 @@ namespace CppAD {
          */
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
 
-        /// calculate the dependent values (zero order)
+        /**
+         * Evaluates the dependent model variables (zero-order).
+         * This method considers that the dynamic library was compiled
+         * using a single array for the independent variables (the default
+         * behaviour).
+         * 
+         * @param x The independent variable vectior
+         * @return The dependent variable vector
+         */
         virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) = 0;
         virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;
 
@@ -98,6 +106,16 @@ namespace CppAD {
                                  CppAD::vector<bool>& vy,
                                  const CppAD::vector<Base> &tx,
                                  CppAD::vector<Base>& ty) = 0;
+
+        /**
+         * Evaluates the dependent model variables (zero-order).
+         * This method considers that the dynamic library was compiled
+         * using a single array for the independent variables (the default
+         * behaviour).
+         * 
+         * @param x The independent variable vectior
+         * @param dep The dependent variable vector
+         */
         virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) = 0;
         virtual void ForwardZero(const Base* x, size_t x_size,
                                  Base* dep, size_t dep_size) = 0;
@@ -116,7 +134,7 @@ namespace CppAD {
         virtual void ForwardZero(const std::vector<const Base*> &x,
                                  Base* dep, size_t dep_size) = 0;
 
-        /// calculate entire Jacobian
+        /// calculate dense Jacobian
         virtual std::vector<Base> Jacobian(const std::vector<Base> &x) = 0;
 
         virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) = 0;
@@ -145,8 +163,8 @@ namespace CppAD {
          * the model is used through a user defined atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
-         * @param tx
-         * @return ty
+         * @param tx The taylor coeficients of the independent variables 
+         * @return The taylor coeficients of the dependent variables 
          */
         virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) = 0;
 
@@ -158,8 +176,8 @@ namespace CppAD {
          * the model is used through a user defined atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
-         * @param tx
-         * @param ty The values of the directional derivatives
+         * @param tx The taylor coeficients of the independent variables 
+         * @param ty The taylor coeficients of the dependent variables 
          */
         virtual void ForwardOne(const CppAD::vector<Base>& tx,
                                 CppAD::vector<Base>& ty) = 0;
@@ -172,8 +190,10 @@ namespace CppAD {
          * the model is used through a user defined atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
-         * @param tx
-         * @param ty The values of the directional derivatives
+         * @param tx The taylor coeficients of the independent variables 
+         * @param tx_size The size of tx
+         * @param ty The taylor coeficients of the dependent variables 
+         * @param ty_size The size of ty
          */
         virtual void ForwardOne(const Base tx[], size_t tx_size,
                                 Base ty[], size_t ty_size) = 0;
