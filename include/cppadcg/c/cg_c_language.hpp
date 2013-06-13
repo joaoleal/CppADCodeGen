@@ -210,6 +210,9 @@ namespace CppAD {
                 if (localOnly && arraySize > 0) {
                     _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
                 }
+                if (arraySize > 0) {
+                    _ss << _spaces << "long int i;\n";
+                }
             }
 
             // clean-up
@@ -481,8 +484,7 @@ namespace CppAD {
              */
             if (createFunction) {
                 if (localFuncNames.empty()) {
-                    _ss << "#include <math.h>\n"
-                            "#include <string.h>\n\n"
+                    _ss << "#include <math.h>\n\n"
                             << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                             << "void " << _functionName << "(" << defaultFuncArgDcl_ << ") {\n";
                     _nameGen->customFunctionVariableDeclarations(_ss);
@@ -523,8 +525,7 @@ namespace CppAD {
             std::string funcName = _ss.str();
             _ss.str("");
 
-            _ss << "#include <math.h>\n"
-                    "#include <string.h>\n\n"
+            _ss << "#include <math.h>\n\n"
                     << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
                     << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n";
             _nameGen->customFunctionVariableDeclarations(_ss);
@@ -977,9 +978,9 @@ namespace CppAD {
                     }
                 }
                 if (sameValue) {
-                    _code << _spaces << "memset(" << _nameGen->generateTemporaryArray(op) << ", "
-                            << value << ", "
-                            << args.size() << " * sizeof(" << _baseTypeName << "));\n";
+                    _code << _spaces << "for(i = 0; i < " << args.size() << "; i++) "
+                            "(" << _nameGen->generateTemporaryArray(op) << ")[i] = " << value << ";\n";
+
                     return;
                 }
             }

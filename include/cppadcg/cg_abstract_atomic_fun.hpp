@@ -96,74 +96,90 @@ namespace CppAD {
                 CodeHandler<Base>* handler = findHandler(tx);
                 assert(handler != NULL);
 
-                SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-                SourceCodeFragment<Base>* tyArray;
-
-                if (standAlone_ && p > 0) {
-                    tyArray = makeZeroArray(*handler, ty);
-                } else {
-                    tyArray = makeArray(*handler, ty);
-                }
-
-                std::vector<size_t> opInfo(3);
-                opInfo[0] = id_;
-                opInfo[1] = q;
-                opInfo[2] = p;
-                std::vector<Argument<Base> > args(2);
-                args[0] = Argument<Base>(*txArray);
-                args[1] = Argument<Base>(*tyArray);
-
-                SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicForwardOp, opInfo, args);
-                handler->manageSourceCodeBlock(atomicOp);
-                handler->registerAtomicFunction(id_, this->afun_name());
-
                 vector<bool> vyLocal;
                 if (p == 0) {
                     vyLocal = vy;
-                } else {
-                    if (p >= 1) {
-                        /**
-                         * Use the jacobian sparsity to determine which elements
-                         * will always be zero
-                         */
-                        size_t m = ty.size() / (p + 1);
-                        size_t n = tx.size() / (p + 1);
+                } else if (p >= 1) {
+                    /**
+                     * Use the jacobian sparsity to determine which elements
+                     * will always be zero
+                     */
+                    size_t m = ty.size() / (p + 1);
+                    size_t n = tx.size() / (p + 1);
 
-                        vector< std::set<size_t> > r(n);
-                        for (size_t j = 0; j < n; j++) {
+                    vector< std::set<size_t> > r(n);
+                    for (size_t j = 0; j < n; j++) {
+                        if (!tx[j * (p + 1) + 1].isParameter() || !tx[j * (p + 1) + 1].IdenticalZero())
                             r[j].insert(0);
-                        }
-                        vector< std::set<size_t> > s(m);
-                        this->for_sparse_jac(1, r, s);
+                    }
+                    vector< std::set<size_t> > s(m);
+                    this->for_sparse_jac(1, r, s);
 
-                        vyLocal.resize(ty.size());
-                        for (size_t i = 0; i < vyLocal.size(); i++) {
-                            vyLocal[i] = true;
-                        }
+                    vyLocal.resize(ty.size());
+                    for (size_t i = 0; i < vyLocal.size(); i++) {
+                        vyLocal[i] = true;
+                    }
 
-                        for (size_t i = 0; i < m; i++) {
-                            vyLocal[i * (p + 1) + 1] = s[i].size() > 0;
+                    for (size_t i = 0; i < m; i++) {
+                        vyLocal[i * (p + 1) + 1] = s[i].size() > 0;
+                    }
+                }
+
+
+                bool allZero = false;
+                if (vyLocal.size() > 0) {
+                    allZero = true;
+                    for (size_t i = 0; i < vyLocal.size(); i++) {
+                        if (vyLocal[i]) {
+                            allZero = false;
+                            break;
                         }
                     }
                 }
 
-                opInfo.resize(1);
-                args.resize(2);
-                for (size_t i = 0; i < ty.size(); i++) {
-                    if (tyb.size() == 0 || vyLocal.size() == 0 || vyLocal[i]) {
-                        opInfo[0] = i;
-                        args[0] = Argument<Base>(*tyArray);
-                        args[1] = Argument<Base>(*atomicOp);
+                if (allZero) {
+                    for (size_t i = 0; i < ty.size(); i++) {
+                        ty[i] = Base(0.0);
+                    }
+                } else {
+                    SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
+                    SourceCodeFragment<Base>* tyArray;
 
-                        ty[i] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
-                        if (valuesDefined) {
-                            ty[i].setValue(tyb[i]);
-                        }
+                    if (standAlone_ && p > 0) {
+                        tyArray = makeZeroArray(*handler, ty);
                     } else {
-                        ty[i] = tyb[i]; // not a variable
+                        tyArray = makeArray(*handler, ty);
+                    }
+
+                    std::vector<size_t> opInfo(3);
+                    opInfo[0] = id_;
+                    opInfo[1] = q;
+                    opInfo[2] = p;
+                    std::vector<Argument<Base> > args(2);
+                    args[0] = Argument<Base>(*txArray);
+                    args[1] = Argument<Base>(*tyArray);
+
+                    SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicForwardOp, opInfo, args);
+                    handler->manageSourceCodeBlock(atomicOp);
+                    handler->registerAtomicFunction(id_, this->afun_name());
+
+                    opInfo.resize(1);
+                    args.resize(2);
+                    for (size_t i = 0; i < ty.size(); i++) {
+                        if (tyb.size() == 0 || vyLocal.size() == 0 || vyLocal[i]) {
+                            opInfo[0] = i;
+                            args[0] = Argument<Base>(*tyArray);
+                            args[1] = Argument<Base>(*atomicOp);
+
+                            ty[i] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
+                            if (valuesDefined) {
+                                ty[i].setValue(tyb[i]);
+                            }
+                        } else {
+                            ty[i] = tyb[i]; // not a variable
+                        }
                     }
                 }
-
             }
 
             return true;
@@ -259,7 +275,9 @@ namespace CppAD {
 
                 vector< std::set<size_t> > rt(m);
                 for (size_t i = 0; i < m; i++) {
-                    rt[i].insert(0);
+                    if (!py[i * (p + 1)].isParameter() || !py[i * (p + 1)].IdenticalZero()) {
+                        rt[i].insert(0);
+                    }
                 }
                 vector< std::set<size_t> > st(n);
                 this->rev_sparse_jac(1, rt, st);
@@ -295,46 +313,63 @@ namespace CppAD {
                     }
                 }
 
-                SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-                SourceCodeFragment<Base>* tyArray;
-                SourceCodeFragment<Base>* pxArray = makeArray(*handler, px);
-                SourceCodeFragment<Base>* pyArray = makeArray(*handler, py);
-
-                if (standAlone_) {
-                    tyArray = makeZeroArray(*handler, ty);
-                } else {
-                    tyArray = makeArray(*handler, ty);
-                }
-
-                std::vector<size_t> opInfo(2);
-                opInfo[0] = id_;
-                opInfo[1] = p;
-                std::vector<Argument<Base> > args(4);
-                args[0] = Argument<Base>(*txArray);
-                args[1] = Argument<Base>(*tyArray);
-                args[2] = Argument<Base>(*pxArray);
-                args[3] = Argument<Base>(*pyArray);
-
-                SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicReverseOp, opInfo, args);
-                handler->manageSourceCodeBlock(atomicOp);
-                handler->registerAtomicFunction(id_, this->afun_name());
-
-                opInfo.resize(1);
-                args.resize(2);
-                for (size_t j = 0; j < px.size(); j++) {
-                    if (pxb.size() == 0 || vxLocal.size() == 0 || vxLocal[j]) {
-                        opInfo[0] = j;
-                        args[0] = Argument<Base>(*pxArray);
-                        args[1] = Argument<Base>(*atomicOp);
-                        px[j] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
-                        if (valuesDefined) {
-                            px[j].setValue(pxb[j]);
+                bool allZero = false;
+                if (vxLocal.size() > 0) {
+                    allZero = true;
+                    for (size_t j = 0; j < vxLocal.size(); j++) {
+                        if (vxLocal[j]) {
+                            allZero = false;
+                            break;
                         }
-                    } else {
-                        px[j] = pxb[j]; // not a variable
                     }
                 }
 
+                if (allZero) {
+                    for (size_t j = 0; j < px.size(); j++) {
+                        px[j] = Base(0.0);
+                    }
+                } else {
+
+                    SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
+                    SourceCodeFragment<Base>* tyArray;
+                    SourceCodeFragment<Base>* pxArray = makeZeroArray(*handler, px);
+                    SourceCodeFragment<Base>* pyArray = makeArray(*handler, py);
+
+                    if (standAlone_) {
+                        tyArray = makeZeroArray(*handler, ty);
+                    } else {
+                        tyArray = makeArray(*handler, ty);
+                    }
+
+                    std::vector<size_t> opInfo(2);
+                    opInfo[0] = id_;
+                    opInfo[1] = p;
+                    std::vector<Argument<Base> > args(4);
+                    args[0] = Argument<Base>(*txArray);
+                    args[1] = Argument<Base>(*tyArray);
+                    args[2] = Argument<Base>(*pxArray);
+                    args[3] = Argument<Base>(*pyArray);
+
+                    SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicReverseOp, opInfo, args);
+                    handler->manageSourceCodeBlock(atomicOp);
+                    handler->registerAtomicFunction(id_, this->afun_name());
+
+                    opInfo.resize(1);
+                    args.resize(2);
+                    for (size_t j = 0; j < px.size(); j++) {
+                        if (pxb.size() == 0 || vxLocal.size() == 0 || vxLocal[j]) {
+                            opInfo[0] = j;
+                            args[0] = Argument<Base>(*pxArray);
+                            args[1] = Argument<Base>(*atomicOp);
+                            px[j] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
+                            if (valuesDefined) {
+                                px[j].setValue(pxb[j]);
+                            }
+                        } else {
+                            px[j] = pxb[j]; // not a variable
+                        }
+                    }
+                }
             }
 
             return true;
