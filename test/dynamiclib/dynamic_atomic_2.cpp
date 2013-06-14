@@ -326,11 +326,4 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     hessOrig = _fun->SparseHessian(xOrig, wOrig);
     hessOutter = _model->SparseHessian(x, stdw);
     compareValues(hessOutter, hessOrig);
-
-
-    // -----------------------------------------------------------------
-    // Free all temporary work space associated with user_atomic objects. 
-    // (If there are future calls to user atomic functions, they will 
-    // create new temporary work space.)
-    CppAD::user_atomic<double>::clear();
 }

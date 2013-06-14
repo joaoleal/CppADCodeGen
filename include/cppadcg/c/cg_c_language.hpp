@@ -972,7 +972,7 @@ namespace CppAD {
                 const Base& value = *args[0].parameter();
                 bool sameValue = true;
                 for (size_t i = 1; i < args.size(); i++) {
-                    if (args[i].parameter() == NULL || *args[0].parameter() != value) {
+                    if (args[i].parameter() == NULL || *args[i].parameter() != value) {
                         sameValue = false;
                         break;
                     }
