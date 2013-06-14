@@ -270,22 +270,6 @@ namespace CppAD {
 
         /// calculate the dependent values (zero order)
 
-        virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) {
-            CppAD::vector<Base> dep(_m);
-            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
-            return dep;
-        }
-
-        virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) {
-            std::vector<Base> dep(_m);
-            this->ForwardZero(x, dep);
-            return dep;
-        }
-
-        virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) {
-            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
-        }
-
         virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
@@ -351,17 +335,6 @@ namespace CppAD {
 
         /// calculate entire Jacobian       
 
-        virtual std::vector<Base> Jacobian(const std::vector<Base> &x) {
-            std::vector<Base> jac(_m * _n);
-            this->Jacobian(&x[0], x.size(), &jac[0], jac.size());
-            return jac;
-        }
-
-        virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) {
-            jac.resize(_m * _n);
-            this->Jacobian(&x[0], x.size(), &jac[0], jac.size());
-        }
-
         virtual void Jacobian(const Base* x, size_t x_size,
                               Base* jac, size_t jac_size) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
@@ -381,30 +354,6 @@ namespace CppAD {
 
         /// calculate Hessian for one component of f
 
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          const std::vector<Base> &w) {
-            std::vector<Base> hess(_n * _n);
-            this->Hessian(x, w, hess);
-            return hess;
-        }
-
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          size_t i) {
-            CPPADCG_ASSERT_KNOWN(i < _m, "Invalid equation index");
-
-            std::vector<Base> w(_m);
-            w[i] = 1.0;
-            std::vector<Base> hess(_n * _n);
-            this->Hessian(x, w, hess);
-            return hess;
-        }
-
-        virtual void Hessian(const std::vector<Base> &x,
-                             const std::vector<Base> &w,
-                             std::vector<Base>& hess) {
-            this->Hessian(&x[0], x.size(), &w[0], w.size(), &hess[0]);
-        }
-
         virtual void Hessian(const Base* x, size_t x_size,
                              const Base* w, size_t w_size,
                              Base* hess) {
@@ -423,24 +372,6 @@ namespace CppAD {
             (*_hessian)(&_inHess[0], &_out[0], _atomicFuncArg);
         }
 
-        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) {
-            const size_t k = 1;
-            CppAD::vector<Base> ty((k + 1) * _m);
-            this->ForwardOne(tx, ty);
-
-            CppAD::vector<Base> dy(_m);
-            for (size_t i = 0; i < _m; i++) {
-                dy[i] = ty[i * (k + 1) + k];
-            }
-
-            return dy;
-        }
-
-        virtual void ForwardOne(const CppAD::vector<Base>& tx,
-                                CppAD::vector<Base>& ty) {
-            this->ForwardOne(&tx[0], tx.size(), &ty[0], ty.size());
-        }
-
         virtual void ForwardOne(const Base tx[], size_t tx_size,
                                 Base ty[], size_t ty_size) {
             const size_t k = 1;
@@ -454,25 +385,6 @@ namespace CppAD {
             int ret = (*_forwardOne)(tx, ty, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
-        }
-
-        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
-                                               const CppAD::vector<Base>& ty,
-                                               const CppAD::vector<Base>& py) {
-            const size_t k = 0;
-            CppAD::vector<Base> px((k + 1) * _n);
-            this->ReverseOne(tx, ty, px, py);
-            return px;
-        }
-
-        virtual void ReverseOne(const CppAD::vector<Base>& tx,
-                                const CppAD::vector<Base>& ty,
-                                CppAD::vector<Base>& px,
-                                const CppAD::vector<Base>& py) {
-            this->ReverseOne(&tx[0], tx.size(),
-                             &ty[0], ty.size(),
-                             &px[0], px.size(),
-                             &py[0], py.size());
         }
 
         virtual void ReverseOne(const Base tx[], size_t tx_size,
@@ -493,25 +405,6 @@ namespace CppAD {
             int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
-        }
-
-        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
-                                               const CppAD::vector<Base>& ty,
-                                               const CppAD::vector<Base>& py) {
-            const size_t k = 1;
-            CppAD::vector<Base> px((k + 1) * _n);
-            this->ReverseTwo(tx, ty, px, py);
-            return px;
-        }
-
-        virtual void ReverseTwo(const CppAD::vector<Base>& tx,
-                                const CppAD::vector<Base>& ty,
-                                CppAD::vector<Base>& px,
-                                const CppAD::vector<Base>& py) {
-            this->ReverseTwo(&tx[0], tx.size(),
-                             &ty[0], ty.size(),
-                             &px[0], px.size(),
-                             &py[0], py.size());
         }
 
         virtual void ReverseTwo(const Base tx[], size_t tx_size,
@@ -538,18 +431,13 @@ namespace CppAD {
 
         /// calculate sparse Jacobians 
 
-        virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) {
-            std::vector<Base> jac(_m * _n);
-            SparseJacobian(x, jac);
-            return jac;
-        }
-
-        virtual void SparseJacobian(const std::vector<Base> &x,
-                                    std::vector<Base>& jac) {
+        virtual void SparseJacobian(const Base* x, size_t x_size,
+                                    Base* jac, size_t jac_size) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
 
             unsigned long const* row;
@@ -557,18 +445,20 @@ namespace CppAD {
             unsigned long nnz;
             (*_jacobianSparsity)(&row, &col, &nnz);
 
-            std::vector<Base> compressed(nnz);
+            CppAD::vector<Base> compressed(nnz);
 
-            _in[0] = &x[0];
-            _out[0] = &compressed[0];
+            if (nnz > 0) {
+                _in[0] = x;
+                _out[0] = &compressed[0];
 
-            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
+                (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
+            }
 
             createDenseFromSparse(compressed,
                                   _m, _n,
                                   row, col,
                                   nnz,
-                                  jac);
+                                  jac, jac_size);
         }
 
         virtual void SparseJacobian(const std::vector<Base> &x,
@@ -590,12 +480,14 @@ namespace CppAD {
             row.resize(nnz);
             col.resize(nnz);
 
-            _in[0] = &x[0];
-            _out[0] = &jac[0];
+            if (nnz > 0) {
+                _in[0] = &x[0];
+                _out[0] = &jac[0];
 
-            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
-            std::copy(drow, drow + nnz, row.begin());
-            std::copy(dcol, dcol + nnz, col.begin());
+                (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
+                std::copy(drow, drow + nnz, row.begin());
+                std::copy(dcol, dcol + nnz, col.begin());
+            }
         }
 
         virtual void SparseJacobian(const Base* x, size_t x_size,
@@ -618,10 +510,12 @@ namespace CppAD {
             *row = drow;
             *col = dcol;
 
-            _in[0] = x;
-            _out[0] = jac;
+            if (nnz > 0) {
+                _in[0] = x;
+                _out[0] = jac;
 
-            (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
+                (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
+            }
         }
 
         virtual void SparseJacobian(const std::vector<const Base*>& x,
@@ -642,24 +536,22 @@ namespace CppAD {
             *row = drow;
             *col = dcol;
 
-            _out[0] = jac;
+            if (nnz > 0) {
+                _out[0] = jac;
 
-            (*_sparseJacobian)(&x[0], &_out[0], _atomicFuncArg);
+                (*_sparseJacobian)(&x[0], &_out[0], _atomicFuncArg);
+            }
         }
 
         /// calculate sparse Hessians 
 
-        virtual std::vector<Base> SparseHessian(const std::vector<Base> &x, const std::vector<Base> &w) {
-            std::vector<Base> hess;
-            SparseHessian(x, w, hess);
-            return hess;
-        }
-
-        virtual void SparseHessian(const std::vector<Base> &x,
-                                   const std::vector<Base> &w,
-                                   std::vector<Base>& hess) {
+        virtual void SparseHessian(const Base* x, size_t x_size,
+                                   const Base* w, size_t w_size,
+                                   Base* hess, size_t hess_size) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
@@ -668,19 +560,20 @@ namespace CppAD {
             unsigned long nnz;
             (*_hessianSparsity)(&row, &col, &nnz);
 
-            std::vector<Base> compressed(nnz);
+            CppAD::vector<Base> compressed(nnz);
+            if (nnz > 0) {
+                _inHess[0] = x;
+                _inHess[1] = w;
+                _out[0] = &compressed[0];
 
-            _inHess[0] = &x[0];
-            _inHess[1] = &w[0];
-            _out[0] = &compressed[0];
-
-            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+                (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+            }
 
             createDenseFromSparse(compressed,
                                   _n, _n,
                                   row, col,
                                   nnz,
-                                  hess);
+                                  hess, hess_size);
         }
 
         virtual void SparseHessian(const std::vector<Base> &x,
@@ -702,13 +595,15 @@ namespace CppAD {
             row.resize(nnz);
             col.resize(nnz);
 
-            _inHess[0] = &x[0];
-            _inHess[1] = &w[0];
-            _out[0] = &hess[0];
+            if (nnz > 0) {
+                _inHess[0] = &x[0];
+                _inHess[1] = &w[0];
+                _out[0] = &hess[0];
 
-            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
-            std::copy(drow, drow + nnz, row.begin());
-            std::copy(dcol, dcol + nnz, col.begin());
+                (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+                std::copy(drow, drow + nnz, row.begin());
+                std::copy(dcol, dcol + nnz, col.begin());
+            }
         }
 
         virtual void SparseHessian(const Base* x, size_t x_size,
@@ -732,11 +627,13 @@ namespace CppAD {
             *row = drow;
             *col = dcol;
 
-            _inHess[0] = x;
-            _inHess[1] = w;
-            _out[0] = hess;
+            if (nnz > 0) {
+                _inHess[0] = x;
+                _inHess[1] = w;
+                _out[0] = hess;
 
-            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+                (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+            }
         }
 
         virtual void SparseHessian(const std::vector<const Base*>& x,
@@ -758,11 +655,13 @@ namespace CppAD {
             *row = drow;
             *col = dcol;
 
-            std::copy(x.begin(), x.end(), _inHess.begin());
-            _inHess.back() = w;
-            _out[0] = hess;
+            if (nnz > 0) {
+                std::copy(x.begin(), x.end(), _inHess.begin());
+                _inHess.back() = w;
+                _out[0] = hess;
 
-            (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+                (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
+            }
         }
 
         virtual ~LinuxDynamicLibModel() {
@@ -916,14 +815,13 @@ namespace CppAD {
             }
         }
 
-        inline void createDenseFromSparse(const std::vector<Base>& compressed,
+        inline void createDenseFromSparse(const CppAD::vector<Base>& compressed,
                                           unsigned long nrows, unsigned long ncols,
                                           unsigned long const* rows, unsigned long const* cols,
                                           unsigned long nnz,
-                                          std::vector<Base>& mat) const {
-
-            std::fill(mat.begin(), mat.end(), 0);
-            mat.resize(nrows * ncols);
+                                          Base* mat, size_t mat_size) const {
+            CPPADCG_ASSERT_KNOWN(mat_size == nrows * ncols, "Invalid matrix size");
+            std::fill(mat, mat + mat_size, 0);
 
             for (size_t i = 0; i < nnz; i++) {
                 mat[rows[i] * ncols + cols[i]] = compressed[i];

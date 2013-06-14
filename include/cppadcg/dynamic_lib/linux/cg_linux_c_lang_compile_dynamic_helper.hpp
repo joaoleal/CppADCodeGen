@@ -20,7 +20,7 @@ namespace CppAD {
 
     template<class Base>
     DynamicLib<Base>* CLangCompileDynamicHelper<Base>::loadDynamicLibrary() {
-        return new LinuxDynamicLib<Base > (_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
+        return new LinuxDynamicLib<Base> (_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
     }
 
 }

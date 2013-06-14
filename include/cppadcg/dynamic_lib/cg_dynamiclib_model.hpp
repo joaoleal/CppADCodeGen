@@ -99,8 +99,12 @@ namespace CppAD {
          * @param x The independent variable vectior
          * @return The dependent variable vector
          */
-        virtual CppAD::vector<Base> ForwardZero(const CppAD::vector<Base> &x) = 0;
-        virtual std::vector<Base> ForwardZero(const std::vector<Base> &x) = 0;
+        template<typename VectorBase>
+        inline VectorBase ForwardZero(const VectorBase& x) {
+            VectorBase dep(Range());
+            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
+            return dep;
+        }
 
         virtual void ForwardZero(const CppAD::vector<bool>& vx,
                                  CppAD::vector<bool>& vy,
@@ -116,7 +120,12 @@ namespace CppAD {
          * @param x The independent variable vectior
          * @param dep The dependent variable vector
          */
-        virtual void ForwardZero(const std::vector<Base> &x, std::vector<Base>& dep) = 0;
+        template<typename VectorBase>
+        inline void ForwardZero(const VectorBase& x, VectorBase& dep) {
+            dep.resize(Range());
+            this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
+        }
+
         virtual void ForwardZero(const Base* x, size_t x_size,
                                  Base* dep, size_t dep_size) = 0;
 
@@ -135,22 +144,52 @@ namespace CppAD {
                                  Base* dep, size_t dep_size) = 0;
 
         /// calculate dense Jacobian
-        virtual std::vector<Base> Jacobian(const std::vector<Base> &x) = 0;
 
-        virtual void Jacobian(const std::vector<Base> &x, std::vector<Base>& jac) = 0;
+        template<typename VectorBase>
+        inline VectorBase Jacobian(const VectorBase& x) {
+            VectorBase jac(Range() * Domain());
+            Jacobian(&x[0], x.size(), &jac[0], jac.size());
+            return jac;
+        }
+
+        template<typename VectorBase>
+        inline void Jacobian(const VectorBase& x, VectorBase& jac) {
+            jac.resize(Range() * Domain());
+            Jacobian(&x[0], x.size(), &jac[0], jac.size());
+        }
+
         virtual void Jacobian(const Base* x, size_t x_size,
                               Base* jac, size_t jac_size) = 0;
 
         /// calculate Hessian for one component of f
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          const std::vector<Base> &w) = 0;
 
-        virtual std::vector<Base> Hessian(const std::vector<Base> &x,
-                                          size_t i) = 0;
+        template<typename VectorBase>
+        inline VectorBase Hessian(const VectorBase& x,
+                                  const VectorBase& w) {
+            VectorBase hess(Domain() * Domain());
+            this->Hessian(x, w, hess);
+            return hess;
+        }
 
-        virtual void Hessian(const std::vector<Base> &x,
-                             const std::vector<Base> &w,
-                             std::vector<Base>& hess) = 0;
+        template<typename VectorBase>
+        inline VectorBase Hessian(const VectorBase& x,
+                                  size_t i) {
+            CPPADCG_ASSERT_KNOWN(i < Range(), "Invalid equation index");
+
+            VectorBase w(Range());
+            w[i] = 1.0;
+            VectorBase hess(Domain() * Domain());
+            this->Hessian(x, w, hess);
+            return hess;
+        }
+
+        template<typename VectorBase>
+        inline void Hessian(const VectorBase& x,
+                            const VectorBase& w,
+                            VectorBase& hess) {
+            this->Hessian(&x[0], x.size(), &w[0], w.size(), &hess[0]);
+        }
+
         virtual void Hessian(const Base* x, size_t x_size,
                              const Base* w, size_t w_size,
                              Base* hess) = 0;
@@ -166,7 +205,21 @@ namespace CppAD {
          * @param tx The taylor coeficients of the independent variables 
          * @return The taylor coeficients of the dependent variables 
          */
-        virtual CppAD::vector<Base> ForwardOne(const CppAD::vector<Base>& tx) = 0;
+        template<typename VectorBase>
+        inline VectorBase ForwardOne(const VectorBase& tx) {
+            size_t m = Range();
+            const size_t k = 1;
+            VectorBase ty((k + 1) * m);
+            
+            this->ForwardOne(tx, ty);
+
+            VectorBase dy(m);
+            for (size_t i = 0; i < m; i++) {
+                dy[i] = ty[i * (k + 1) + k];
+            }
+
+            return dy;
+        }
 
         /**
          * Computes results during a forward mode sweep. 
@@ -179,8 +232,11 @@ namespace CppAD {
          * @param tx The taylor coeficients of the independent variables 
          * @param ty The taylor coeficients of the dependent variables 
          */
-        virtual void ForwardOne(const CppAD::vector<Base>& tx,
-                                CppAD::vector<Base>& ty) = 0;
+        template<typename VectorBase>
+        inline void ForwardOne(const VectorBase& tx,
+                               VectorBase& ty) {
+            this->ForwardOne(&tx[0], tx.size(), &ty[0], ty.size());
+        }
 
         /**
          * Computes results during a forward mode sweep. 
@@ -209,9 +265,15 @@ namespace CppAD {
          * @param py
          * @return px
          */
-        virtual CppAD::vector<Base> ReverseOne(const CppAD::vector<Base>& tx,
-                                               const CppAD::vector<Base>& ty,
-                                               const CppAD::vector<Base>& py) = 0;
+        template<typename VectorBase>
+        inline VectorBase ReverseOne(const VectorBase& tx,
+                                     const VectorBase& ty,
+                                     const VectorBase& py) {
+            const size_t k = 0;
+            VectorBase px((k + 1) * Domain());
+            this->ReverseOne(tx, ty, px, py);
+            return px;
+        }
 
         /**
          * Computes results during a reverse mode sweep for the evaluation of
@@ -224,10 +286,16 @@ namespace CppAD {
          * @param px
          * @param py
          */
-        virtual void ReverseOne(const CppAD::vector<Base>& tx,
-                                const CppAD::vector<Base>& ty,
-                                CppAD::vector<Base>& px,
-                                const CppAD::vector<Base>& py) = 0;
+        template<typename VectorBase>
+        inline void ReverseOne(const VectorBase& tx,
+                               const VectorBase& ty,
+                               VectorBase& px,
+                               const VectorBase& py) {
+            this->ReverseOne(&tx[0], tx.size(),
+                             &ty[0], ty.size(),
+                             &px[0], px.size(),
+                             &py[0], py.size());
+        }
 
         /**
          * Computes results during a reverse mode sweep for the evaluation of
@@ -258,9 +326,15 @@ namespace CppAD {
          * @param py
          * @return px
          */
-        virtual CppAD::vector<Base> ReverseTwo(const CppAD::vector<Base>& tx,
-                                               const CppAD::vector<Base>& ty,
-                                               const CppAD::vector<Base>& py) = 0;
+        template<typename VectorBase>
+        inline VectorBase ReverseTwo(const VectorBase& tx,
+                                     const VectorBase& ty,
+                                     const VectorBase& py) {
+            const size_t k = 1;
+            VectorBase px((k + 1) * Domain());
+            this->ReverseTwo(tx, ty, px, py);
+            return px;
+        }
 
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
@@ -275,10 +349,16 @@ namespace CppAD {
          * @param px
          * @param py
          */
-        virtual void ReverseTwo(const CppAD::vector<Base>& tx,
-                                const CppAD::vector<Base>& ty,
-                                CppAD::vector<Base>& px,
-                                const CppAD::vector<Base>& py) = 0;
+        template<typename VectorBase>
+        inline void ReverseTwo(const VectorBase& tx,
+                               const VectorBase& ty,
+                               VectorBase& px,
+                               const VectorBase& py) {
+            this->ReverseTwo(&tx[0], tx.size(),
+                             &ty[0], ty.size(),
+                             &px[0], px.size(),
+                             &py[0], py.size());
+        }
 
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
@@ -299,10 +379,23 @@ namespace CppAD {
                                 const Base py[], size_t py_size) = 0;
 
         /// calculate sparse Jacobians 
-        virtual std::vector<Base> SparseJacobian(const std::vector<Base> &x) = 0;
 
-        virtual void SparseJacobian(const std::vector<Base> &x,
-                                    std::vector<Base>& jac) = 0;
+        template<typename VectorBase>
+        inline VectorBase SparseJacobian(const VectorBase& x) {
+            VectorBase jac(Range() * Domain());
+            SparseJacobian(x, jac);
+            return jac;
+        }
+
+        template<typename VectorBase>
+        inline void SparseJacobian(const VectorBase& x,
+                                   VectorBase& jac) {
+            jac.resize(Range() * Domain());
+            SparseJacobian(&x[0], x.size(), &jac[0], jac.size());
+        }
+
+        virtual void SparseJacobian(const Base* x, size_t x_size,
+                                    Base* jac, size_t jac_size) = 0;
 
         virtual void SparseJacobian(const std::vector<Base> &x,
                                     std::vector<Base>& jac,
@@ -334,12 +427,26 @@ namespace CppAD {
                                     size_t nnz) = 0;
 
         /// calculate sparse Hessians 
-        virtual std::vector<Base> SparseHessian(const std::vector<Base> &x,
-                                                const std::vector<Base> &w) = 0;
 
-        virtual void SparseHessian(const std::vector<Base> &x,
-                                   const std::vector<Base> &w,
-                                   std::vector<Base>& hess) = 0;
+        template<typename VectorBase>
+        inline VectorBase SparseHessian(const VectorBase& x,
+                                        const VectorBase& w) {
+            VectorBase hess(Domain() * Domain());
+            SparseHessian(x, w, hess);
+            return hess;
+        }
+
+        template<typename VectorBase>
+        inline void SparseHessian(const VectorBase& x,
+                                  const VectorBase& w,
+                                  VectorBase& hess) {
+            hess.resize(Domain() * Domain());
+            SparseHessian(&x[0], x.size(), &w[0], w.size(), &hess[0], hess.size());
+        }
+
+        virtual void SparseHessian(const Base* x, size_t x_size,
+                                   const Base* w, size_t w_size,
+                                   Base* hess, size_t hess_size) = 0;
 
         virtual void SparseHessian(const std::vector<Base> &x,
                                    const std::vector<Base> &w,
