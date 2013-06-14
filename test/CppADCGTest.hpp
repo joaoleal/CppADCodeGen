@@ -27,7 +27,8 @@ namespace CppAD {
 
     class CppADCGTest : public ::testing::Test {
     protected:
-        typedef CppAD::CG<double> CGD;
+        typedef double Base;
+        typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
         bool verbose_;
         bool printValues_;
@@ -139,8 +140,8 @@ namespace CppAD {
 
         template <class T>
         inline void nearEqual(const T &x, const T &y,
-                              const T &r = std::numeric_limits<T>::epsilon() * 10,
-                              const T &a = std::numeric_limits<T>::epsilon() * 10) {
+                              const T &r = std::numeric_limits<T>::epsilon() * 100,
+                              const T &a = std::numeric_limits<T>::epsilon() * 100) {
             //bool ne = CppAD::NearEqual(x, y, r, a);
 
             T zero(0);

@@ -31,38 +31,52 @@ namespace CppAD {
             _name(testName) {
         }
 
-        inline void compareValues(const std::vector<double>& depCGen,
-                                  const std::vector<CppAD::CG<double> >& dep,
-                                  double epsilonR = 1e-14, double epsilonA = 1e-14) {
+        virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
 
-            std::vector<double> depd(dep.size());
+        void testDynamicFull(std::vector<ADCG>& u,
+                             const std::vector<double>& x,
+                             size_t maxAssignPerFunc = 100,
+                             double epsilonR = 1e-14,
+                             double epsilonA = 1e-14) {
+            const std::vector<double> xNorm(x.size(), 1.0);
+            const std::vector<double> eqNorm;
 
-            for (size_t i = 0; i < depd.size(); i++) {
-                depd[i] = dep[i].getValue();
-            }
-
-            CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
+            testDynamicFull(u, x, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
         }
 
-        void testDynamic1(std::vector<ADCG>& u,
-                          const std::vector<double>& x,
-                          std::vector<ADCG> (*modelFunc)(const std::vector<ADCG>&),
-                          size_t maxAssignPerFunc = 100,
-                          double epsilonR = 1e-14,
-                          double epsilonA = 1e-14) {
+        void testDynamicFull(std::vector<ADCG>& u,
+                             const std::vector<double>& x,
+                             const std::vector<double>& xNorm,
+                             const std::vector<double>& eqNorm,
+                             size_t maxAssignPerFunc = 100,
+                             double epsilonR = 1e-14,
+                             double epsilonA = 1e-14) {
+            ASSERT_EQ(u.size(), x.size());
+            ASSERT_EQ(x.size(), xNorm.size());
+
             using namespace std;
 
             // use a special object for source code generation
             CppAD::Independent(u);
 
+            for (size_t i = 0; i < u.size(); i++)
+                u[i] *= xNorm[i];
+
             // dependent variable vector 
-            std::vector<ADCG> Z = (*modelFunc)(u);
+            std::vector<ADCG> Z = model(u);
+
+            if (eqNorm.size() > 0) {
+                ASSERT_EQ(Z.size(), eqNorm.size());
+                for (size_t i = 0; i < Z.size(); i++)
+                    Z[i] /= eqNorm[i];
+            }
 
             /**
              * create the CppAD tape as usual
              */
             // create f: U -> Z and vectors used for derivative calculations
-            ADFun<CGD> fun(u, Z);
+            ADFun<CGD> fun;
+            fun.Dependent(Z);
 
             /**
              * Create the dynamic library
@@ -146,17 +160,16 @@ namespace CppAD {
             delete dynamicLib;
         }
 
-        void testDynamic2(std::vector<ADCG>& u,
-                          const std::vector<double>& x,
-                          std::vector<ADCG> (*modelFunc)(const std::vector<ADCG>&),
-                          const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
-                          const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
+        void testDynamicCustomElements(std::vector<ADCG>& u,
+                                       const std::vector<double>& x,
+                                       const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
+                                       const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
             using namespace std;
 
             CppAD::Independent(u);
 
             // dependent variable vector 
-            std::vector<ADCG> Z = (*modelFunc)(u);
+            std::vector<ADCG> Z = model(u);
 
             /**
              * create the CppAD tape as usual
@@ -230,6 +243,19 @@ namespace CppAD {
 
             delete model;
             delete dynamicLib;
+        }
+
+        inline void compareValues(const std::vector<double>& depCGen,
+                                  const std::vector<CppAD::CG<double> >& dep,
+                                  double epsilonR = 1e-14, double epsilonA = 1e-14) {
+
+            std::vector<double> depd(dep.size());
+
+            for (size_t i = 0; i < depd.size(); i++) {
+                depd[i] = dep[i].getValue();
+            }
+
+            CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
         }
 
     };

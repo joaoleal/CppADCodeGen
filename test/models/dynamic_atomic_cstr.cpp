@@ -12,31 +12,44 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#include "../CppADCGDynamicTest.hpp"
+#include "CppADCGDynamicAtomicTest.hpp"
 #include "cstr.hpp"
-
-using namespace CppAD;
 
 namespace CppAD {
 
-    class CstrDynamicTest : public CppADCGDynamicTest {
+    class CppADCGDynamicAtomicCstrTest : public CppADCGDynamicAtomicTest {
+    protected:
+        static const size_t n;
+        static const size_t m;
     public:
 
-        inline CstrDynamicTest(bool verbose = false, bool printValues = false) :
-            CppADCGDynamicTest("cstr", verbose, printValues) {
+        inline CppADCGDynamicAtomicCstrTest(bool verbose = false, bool printValues = false) :
+            CppADCGDynamicAtomicTest("cstr_atomic", verbose, printValues) {
+            this->verbose_ = false;
         }
 
-        virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) {
-            return CstrFunc<CG<double> >(ind);
+        virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
+            return CstrFunc<CGD>(u);
         }
 
     };
+
+    const size_t CppADCGDynamicAtomicCstrTest::n = 28;
+    const size_t CppADCGDynamicAtomicCstrTest::m = 4;
 }
 
-TEST_F(CstrDynamicTest, cstr) {
-    // independent variable vector
-    std::vector<double> x(28, 1.0);
-    std::vector<double> xNorm(28);
+using namespace CppAD;
+using namespace std;
+
+TEST_F(CppADCGDynamicAtomicCstrTest, DynamicForRev) {
+    using namespace std;
+    using CppAD::vector;
+
+    vector<Base> x(n);
+    for (size_t i = 0; i < n; i++)
+        x[i] = 1.0;
+    
+    vector<Base> xNorm(n);
     xNorm[0] = 0.3; // h
     xNorm[1] = 7.82e3; // Ca
     xNorm[2] = 304.65; // Tr
@@ -68,16 +81,12 @@ TEST_F(CstrDynamicTest, cstr) {
     xNorm[26] = 0.014; //Vj
     xNorm[27] = 1e-7; //cwallr
 
-    std::vector<AD<CG<double> > > u(28);
-    for (size_t i = 0; i < x.size(); i++)
-        u[i] = x[i];
-
-    std::vector<Base> eqNorm(4);
+    vector<Base> eqNorm(m);
     eqNorm[0] = 0.3;
     eqNorm[1] = 7.82e3;
     eqNorm[2] = 304.65;
     eqNorm[3] = 301.15;
 
-    this->testDynamicFull(u, x, xNorm, eqNorm, 1000);
-
+    this->testADFunAtomicLib(x, xNorm, eqNorm, 1e-14, 1e-13);
 }
+
