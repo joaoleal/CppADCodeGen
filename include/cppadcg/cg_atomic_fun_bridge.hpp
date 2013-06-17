@@ -54,9 +54,14 @@ namespace CppAD {
 
         }
 
+        template <class ADVector>
+        void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
+            this->CGAbstractAtomicFun<Base>::operator()(ax, ay, id);
+        }
+
         virtual bool for_sparse_jac(size_t q,
-                                    const vector< std::set<size_t> >& r,
-                                    vector< std::set<size_t> >& s) {
+                                    const vector<std::set<size_t> >& r,
+                                    vector<std::set<size_t> >& s) {
             s = fun_.ForSparseJac(q, r);
             fun_.size_forward_set(0);
             return true;
@@ -71,8 +76,8 @@ namespace CppAD {
         }
 
         virtual bool rev_sparse_jac(size_t q,
-                                    const vector< std::set<size_t> >& rt,
-                                    vector< std::set<size_t> >& st) {
+                                    const vector<std::set<size_t> >& rt,
+                                    vector<std::set<size_t> >& st) {
             st = fun_.RevSparseJac(q, rt, true);
             return true;
         }
@@ -88,9 +93,9 @@ namespace CppAD {
                                     const vector<bool>& s,
                                     vector<bool>& t,
                                     size_t q,
-                                    const vector< std::set<size_t> >& r,
-                                    const vector< std::set<size_t> >& u,
-                                    vector< std::set<size_t> >& v) {
+                                    const vector<std::set<size_t> >& r,
+                                    const vector<std::set<size_t> >& u,
+                                    vector<std::set<size_t> >& v) {
             size_t m = fun_.Range();
             size_t n = fun_.Domain();
 

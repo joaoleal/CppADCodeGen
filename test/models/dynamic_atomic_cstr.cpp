@@ -92,5 +92,9 @@ namespace CppAD {
     TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibAtomicLib) {
         this->testAtomicLibAtomicLib(x, xNorm, eqNorm, 1e-14, 1e-13);
     }
+    
+    TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridge) {
+        this->testAtomicLibModelBridge(x, xNorm, eqNorm, 1e-14, 1e-13);
+    }
 
 }

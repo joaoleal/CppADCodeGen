@@ -40,6 +40,11 @@ namespace CppAD {
             this->option(CppAD::atomic_base<Base>::set_sparsity_enum);
         }
 
+        template <class ADVector>
+        void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
+            this->atomic_base<Base>::operator()(ax, ay, id);
+        }
+
         virtual bool forward(size_t q,
                              size_t p,
                              const vector<bool>& vx,

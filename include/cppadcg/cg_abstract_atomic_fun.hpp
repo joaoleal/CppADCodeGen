@@ -50,6 +50,11 @@ namespace CppAD {
 
         }
 
+        template <class ADVector>
+        void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
+            this->atomic_base<CGB>::operator()(ax, ay, id);
+        }
+
     public:
 
         virtual bool forward(size_t q,
@@ -176,7 +181,7 @@ namespace CppAD {
                                 ty[i].setValue(tyb[i]);
                             }
                         } else {
-                            ty[i] = tyb[i]; // not a variable
+                            ty[i] = tyb[i]; // not a variable (zero)
                         }
                     }
                 }
@@ -366,7 +371,7 @@ namespace CppAD {
                                 px[j].setValue(pxb[j]);
                             }
                         } else {
-                            px[j] = pxb[j]; // not a variable
+                            px[j] = pxb[j]; // not a variable (zero)
                         }
                     }
                 }

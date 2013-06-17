@@ -45,6 +45,11 @@ namespace CppAD {
 
         }
 
+        template <class ADVector>
+        void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
+            this->CGAbstractAtomicFun<Base>::operator()(ax, ay, id);
+        }
+
         virtual bool for_sparse_jac(size_t q,
                                     const vector< std::set<size_t> >& r,
                                     vector< std::set<size_t> >& s) {
