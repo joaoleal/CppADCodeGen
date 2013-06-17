@@ -50,12 +50,12 @@ namespace CppAD {
 
         }
 
+    public:
+
         template <class ADVector>
         void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
             this->atomic_base<CGB>::operator()(ax, ay, id);
         }
-
-    public:
 
         virtual bool forward(size_t q,
                              size_t p,
