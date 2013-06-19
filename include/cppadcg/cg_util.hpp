@@ -133,6 +133,26 @@ namespace CppAD {
         return fun.RevSparseHes(n, s);
     }
 
+    template<class VectorSet, class Base>
+    inline VectorSet hessianSparsitySet(ADFun<Base>& fun) {
+        size_t m = fun.Range();
+        size_t n = fun.Domain();
+
+        /**
+         * Determine the sparsity pattern p for Hessian of w^T F
+         */
+        VectorSet r(n); // identity matrix
+        for (size_t j = 0; j < n; j++)
+            r[j].insert(j);
+        fun.ForSparseJac(n, r);
+
+        VectorSet s(1);
+        for (size_t i = 0; i < m; i++) {
+            s[0].insert(i);
+        }
+        return fun.RevSparseHes(n, s);
+    }
+
     /**
      * Determines the hessian sparsity for a given dependent variable/equation
      * in a model
@@ -159,6 +179,21 @@ namespace CppAD {
 
         std::vector<bool> s(m, false);
         s[i] = true;
+        return fun.RevSparseHes(n, s);
+    }
+
+    template<class VectorSet, class Base>
+    inline VectorSet hessianSparsitySet(ADFun<Base>& fun, size_t i) {
+        size_t n = fun.Domain();
+
+        VectorSet r(n); // identity matrix
+        for (size_t j = 0; j < n; j++)
+            r[j].insert(j);
+        fun.ForSparseJac(n, r);
+
+        VectorSet s(1);
+        s[0].insert(i);
+
         return fun.RevSparseHes(n, s);
     }
 
@@ -227,11 +262,11 @@ namespace CppAD {
         size_t m = fun.Range();
         CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size");
         CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size");
-        
+
         typedef vector<std::set<size_t> > VectorSet;
-        
+
         const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
-        
+
         std::set<size_t>::const_iterator it;
         for (size_t i = 0; i < m; i++) {
             for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
