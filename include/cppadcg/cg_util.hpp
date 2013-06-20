@@ -509,11 +509,11 @@ namespace CppAD {
         if (!name.empty()) {
             std::cout << name << "  sparsity:\n";
         }
-        for (size_t j = 0; j < m; j++) {
-            std::cout << " " << std::setw(width) << j << ": ";
-            for (size_t jj = 0; jj < n; jj++) {
-                if (sparsity[j * n + jj]) {
-                    std::cout << std::setw(width) << jj << " ";
+        for (size_t i = 0; i < m; i++) {
+            std::cout << " " << std::setw(width) << i << ": ";
+            for (size_t j = 0; j < n; j++) {
+                if (sparsity[i * n + j]) {
+                    std::cout << std::setw(width) << j << " ";
                 } else {
                     std::cout << std::setw(width) << " " << " ";
                 }
@@ -522,6 +522,38 @@ namespace CppAD {
         }
         std::cout << std::endl;
     }
+
+    template<class VectorSet>
+    void printSparsityPattern(const VectorSet& sparsity,
+                              const std::string& name) {
+        size_t maxDim = sparsity.size();
+        for (size_t i = 0; i < sparsity.size(); i++) {
+            if (sparsity[i].size() > 0 && *sparsity[i].rbegin() > maxDim) {
+                maxDim = *sparsity[i].rbegin();
+            }
+        }
+
+        size_t width = std::ceil(std::log10(maxDim));
+        if (!name.empty()) {
+            std::cout << name << "  sparsity:\n";
+        }
+        std::set<size_t>::const_iterator it;
+        for (size_t i = 0; i < sparsity.size(); i++) {
+            std::cout << " " << std::setw(width) << i << ": ";
+            long last = -1;
+            for (it = sparsity[i].begin(); it != sparsity[i].end(); ++it) {
+                size_t j = *it;
+                if (j != 0 && long(j) != last + 1) {
+                    std::cout << std::setw((j - last - 1) * (width + 1)) << " ";
+                }
+                std::cout << std::setw(width) << j << " ";
+                last = j;
+            }
+            std::cout << "\n";
+        }
+        std::cout << std::endl;
+    }
+
 }
 
 #endif
