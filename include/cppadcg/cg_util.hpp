@@ -114,7 +114,7 @@ namespace CppAD {
      * @return The sum of the hessian sparsities
      */
     template<class VectorBool, class Base>
-    inline VectorBool hessianSparsity(ADFun<Base>& fun) {
+    inline VectorBool hessianSparsity(ADFun<Base>& fun, bool transpose = false) {
         size_t m = fun.Range();
         size_t n = fun.Domain();
 
@@ -130,11 +130,11 @@ namespace CppAD {
         fun.ForSparseJac(n, r);
 
         std::vector<bool> s(m, true);
-        return fun.RevSparseHes(n, s);
+        return fun.RevSparseHes(n, s, transpose);
     }
 
     template<class VectorSet, class Base>
-    inline VectorSet hessianSparsitySet(ADFun<Base>& fun) {
+    inline VectorSet hessianSparsitySet(ADFun<Base>& fun, bool transpose = false) {
         size_t m = fun.Range();
         size_t n = fun.Domain();
 
@@ -150,7 +150,7 @@ namespace CppAD {
         for (size_t i = 0; i < m; i++) {
             s[0].insert(i);
         }
-        return fun.RevSparseHes(n, s);
+        return fun.RevSparseHes(n, s, transpose);
     }
 
     /**
@@ -162,7 +162,7 @@ namespace CppAD {
      * @return The hessian sparsity
      */
     template<class VectorBool, class Base>
-    inline VectorBool hessianSparsity(ADFun<Base>& fun, size_t i) {
+    inline VectorBool hessianSparsity(ADFun<Base>& fun, size_t i, bool transpose = false) {
         size_t m = fun.Range();
         size_t n = fun.Domain();
 
@@ -179,11 +179,11 @@ namespace CppAD {
 
         std::vector<bool> s(m, false);
         s[i] = true;
-        return fun.RevSparseHes(n, s);
+        return fun.RevSparseHes(n, s, transpose);
     }
 
     template<class VectorSet, class Base>
-    inline VectorSet hessianSparsitySet(ADFun<Base>& fun, size_t i) {
+    inline VectorSet hessianSparsitySet(ADFun<Base>& fun, size_t i, bool transpose = false) {
         size_t n = fun.Domain();
 
         VectorSet r(n); // identity matrix
@@ -194,7 +194,7 @@ namespace CppAD {
         VectorSet s(1);
         s[0].insert(i);
 
-        return fun.RevSparseHes(n, s);
+        return fun.RevSparseHes(n, s, transpose);
     }
 
     template<class VectorBool>
@@ -499,6 +499,28 @@ namespace CppAD {
                 }
             }
         }
+    }
+
+    template<class VectorBool>
+    void printSparsityPattern(const VectorBool& sparsity,
+                              const std::string& name,
+                              size_t m, size_t n) {
+        size_t width = std::ceil(std::log10((m > n) ? m : n));
+        if (!name.empty()) {
+            std::cout << name << "  sparsity:\n";
+        }
+        for (size_t j = 0; j < m; j++) {
+            std::cout << " " << std::setw(width) << j << ": ";
+            for (size_t jj = 0; jj < n; jj++) {
+                if (sparsity[j * n + jj]) {
+                    std::cout << std::setw(width) << jj << " ";
+                } else {
+                    std::cout << std::setw(width) << " " << " ";
+                }
+            }
+            std::cout << "\n";
+        }
+        std::cout << std::endl;
     }
 }
 
