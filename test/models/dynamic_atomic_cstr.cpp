@@ -24,13 +24,17 @@ namespace CppAD {
         vector<Base> x;
         vector<Base> xNorm;
         vector<Base> eqNorm;
+        std::vector<std::set<size_t> > jacInner, hessInner;
+        std::vector<std::set<size_t> > jacOuter, hessOuter;
     public:
 
         inline CppADCGDynamicAtomicCstrTest(bool verbose = false, bool printValues = false) :
             CppADCGDynamicAtomicTest("cstr_atomic", verbose, printValues),
             x(n),
             xNorm(n),
-            eqNorm(m) {
+            eqNorm(m),
+            jacInner(m), hessInner(6),
+            jacOuter(m - 1), hessOuter(6) {
             this->verbose_ = false;
 
             using namespace std;
@@ -74,6 +78,52 @@ namespace CppAD {
             eqNorm[1] = 7.82e3;
             eqNorm[2] = 304.65;
             eqNorm[3] = 301.15;
+
+            /**
+             * Elements for the custom Jacobian/Hessian tests
+             */
+            jacInner[0].insert(0);
+            jacInner[0].insert(1);
+            jacInner[0].insert(2);
+            jacInner[0].insert(3);
+            jacInner[0].insert(5);
+            jacInner[1].insert(0);
+            jacInner[1].insert(1);
+            jacInner[1].insert(2);
+            jacInner[1].insert(3);
+            jacInner[1].insert(5);
+            jacInner[2].insert(0);
+            jacInner[2].insert(1);
+            jacInner[2].insert(2);
+            jacInner[2].insert(3);
+            jacInner[3].insert(0);
+            jacInner[3].insert(2);
+            jacInner[3].insert(3);
+            jacInner[3].insert(4);
+
+            hessInner[0].insert(0); // lower left side (with 1 exception)
+            hessInner[0].insert(1);
+            hessInner[0].insert(2);
+            hessInner[0].insert(3);
+            hessInner[0].insert(5);
+            hessInner[1].insert(1);
+            hessInner[1].insert(2);
+            hessInner[1].insert(3);
+            hessInner[1].insert(5);
+            hessInner[2].insert(2);
+            hessInner[2].insert(3);
+            hessInner[2].insert(5);
+            hessInner[3].insert(3);
+            hessInner[4].insert(3); // flipped
+
+            jacOuter[0] = jacInner[0];
+            jacOuter[1] = jacInner[1];
+            jacOuter[2] = jacInner[2];
+            jacOuter[2].insert(jacInner[3].begin(), jacInner[3].end());
+
+            hessOuter = hessInner; // only lower left side
+            hessOuter[4].erase(3);
+            hessOuter[3].insert(4);
         }
 
         virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
@@ -92,9 +142,25 @@ namespace CppAD {
     TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibAtomicLib) {
         this->testAtomicLibAtomicLib(x, xNorm, eqNorm, 1e-14, 1e-13);
     }
-    
+
     TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridge) {
         this->testAtomicLibModelBridge(x, xNorm, eqNorm, 1e-14, 1e-13);
+    }
+
+    TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridgeCustomRev2) {
+        this->testAtomicLibModelBridgeCustom(x, xNorm, eqNorm,
+                                             jacInner, hessInner,
+                                             jacOuter, hessOuter,
+                                             true,
+                                             1e-14, 1e-13);
+    }
+
+    TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridgeCustomDirect) {
+        this->testAtomicLibModelBridgeCustom(x, xNorm, eqNorm,
+                                             jacInner, hessInner,
+                                             jacOuter, hessOuter,
+                                             false,
+                                             1e-14, 1e-13);
     }
 
 }

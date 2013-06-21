@@ -349,6 +349,34 @@ namespace CppAD {
                                      x, xNorm, eqNorm, epsilonR, epsilonA);
         }
 
+        /**
+         * Test 2 models in the same dynamic library
+         */
+        void testAtomicLibModelBridgeCustom(const CppAD::vector<Base>& x,
+                                            const CppAD::vector<Base>& xNorm,
+                                            const CppAD::vector<Base>& eqNorm,
+                                            const std::vector<std::set<size_t> >& jacInner,
+                                            const std::vector<std::set<size_t> >& hessInner,
+                                            const std::vector<std::set<size_t> >& jacOuter,
+                                            const std::vector<std::set<size_t> >& hessOuter,
+                                            bool createOuterReverse2,
+                                            Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
+            using namespace std;
+
+            prepareAtomicLibModelBridge(x, xNorm, eqNorm,
+                                        jacInner, hessInner,
+                                        jacOuter, hessOuter,
+                                        createOuterReverse2);
+
+            auto_ptr<DynamicLibModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            auto_ptr<DynamicLibModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+
+            test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
+                                              x, xNorm, eqNorm,
+                                              jacOuter, hessOuter,
+                                              epsilonR, epsilonA);
+        }
+
     private:
 
         void test2LevelAtomicLibModel(DynamicLibModel<Base>* modelLib,
@@ -532,6 +560,86 @@ namespace CppAD {
             compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
         }
 
+        void test2LevelAtomicLibModelCustomEls(DynamicLibModel<Base>* modelLib,
+                                               DynamicLibModel<Base>* modelLibOuter,
+                                               const CppAD::vector<Base>& x,
+                                               const CppAD::vector<Base>& xNorm,
+                                               const CppAD::vector<Base>& eqNorm,
+                                               const std::vector<std::set<size_t> >& jacOuter,
+                                               const std::vector<std::set<size_t> >& hessOuter,
+                                               Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
+            ASSERT_EQ(x.size(), xNorm.size());
+
+            using namespace CppAD;
+            using namespace std;
+            using CppAD::vector;
+
+            const size_t n = _fun2->Domain();
+            const size_t m = _fun2->Range();
+
+            modelLibOuter->addAtomicFunction(modelLib->asAtomic());
+
+            /**
+             * Test zero order
+             */
+            vector<CGD> xOrig(n);
+            for (size_t j = 0; j < n; j++)
+                xOrig[j] = x[j];
+
+            vector<CGD> yOrig = _fun2->Forward(0, xOrig);
+            vector<double> yOuter = modelLibOuter->ForwardZero(x);
+
+            compareValues(yOuter, yOrig, epsilonR, epsilonA);
+
+            /**
+             * Jacobian sparsity
+             */
+            const std::vector<bool> jacSparsityOrig = jacobianSparsity < std::vector<bool>, CGD > (*_fun2);
+
+            /**
+             * Sparse jacobian
+             */
+            CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
+            std::vector<size_t> jacOuterRows, jacOuterCols;
+            generateSparsityIndexes(jacOuter, jacOuterRows, jacOuterCols);
+            vector<CGD> jacOrig(jacOuterCols.size());
+            _fun2->SparseJacobianReverse(xOrig, jacSparsityOrig,
+                                         jacOuterRows, jacOuterCols, jacOrig, work);
+
+            std::vector<double> jacOuter(jacOuterRows.size());
+            size_t const* rows, *cols;
+            modelLibOuter->SparseJacobian(&x[0], x.size(), &jacOuter[0], &rows, &cols, jacOuter.size());
+
+            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+
+            /**
+             * Hessian sparsity
+             */
+            const std::vector<bool> hessSparsityOrig = hessianSparsity < std::vector<bool>, CGD > (*_fun2);
+
+            /**
+             * Sparse Hessian
+             */
+            vector<CGD> wOrig(m);
+            vector<double> w(m);
+            for (size_t i = 0; i < m; i++) {
+                wOrig[i] = 1;
+                w[i] = 1;
+            }
+            CppAD::sparse_hessian_work hessWork;
+            std::vector<size_t> hessOuterRows, hessOuterCols;
+            generateSparsityIndexes(hessOuter, hessOuterRows, hessOuterCols);
+            vector<CGD> hessOrig(hessOuterRows.size());
+            _fun2->SparseHessian(xOrig, wOrig, hessSparsityOrig,
+                                 hessOuterRows, hessOuterCols, hessOrig, hessWork);
+
+            vector<double> hessOuter(hessOuterRows.size());
+            modelLibOuter->SparseHessian(&x[0], x.size(), &w[0], w.size(),
+                                         &hessOuter[0], &rows, &cols, hessOuter.size());
+
+            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+        }
+
         void prepareAtomicLib(const CppAD::vector<Base>& x,
                               const CppAD::vector<Base>& xNorm,
                               const CppAD::vector<Base>& eqNorm) {
@@ -573,6 +681,13 @@ namespace CppAD {
             compHelp.setCreateReverseTwo(true);
 
             GccCompiler<double> compiler;
+            std::vector<std::string> flags;
+            flags.push_back("-O0");
+            flags.push_back("-g");
+            flags.push_back("-ggdb");
+            flags.push_back("-D_FORTIFY_SOURCE=2");
+            compiler.setCompileFlags(flags);
+            compiler.setSourcesFolder("sources_atomiclib_" + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
@@ -621,6 +736,13 @@ namespace CppAD {
              * (generate and compile source code)
              */
             GccCompiler<double> compiler1;
+            std::vector<std::string> flags;
+            flags.push_back("-O0");
+            flags.push_back("-g");
+            flags.push_back("-ggdb");
+            flags.push_back("-D_FORTIFY_SOURCE=2");
+            compiler1.setCompileFlags(flags);
+            compiler1.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
             compDynHelp.setLibraryName("innerModel");
@@ -663,6 +785,8 @@ namespace CppAD {
              * (generate and compile source code)
              */
             GccCompiler<double> compiler2;
+            compiler2.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
+            compiler2.setCompileFlags(flags);
 
             CLangCompileDynamicHelper<double> compDynHelp2(compHelp2);
             compDynHelp2.setLibraryName("outterModel");
@@ -677,6 +801,22 @@ namespace CppAD {
         virtual void prepareAtomicLibModelBridge(const CppAD::vector<Base>& x,
                                                  const CppAD::vector<Base>& xNorm,
                                                  const CppAD::vector<Base>& eqNorm) {
+            std::vector<std::set<size_t> > jacInner, hessInner;
+            std::vector<std::set<size_t> > jacOuter, hessOuter;
+            prepareAtomicLibModelBridge(x, xNorm, eqNorm,
+                                        jacInner, hessInner,
+                                        jacOuter, hessOuter,
+                                        true);
+        }
+
+        virtual void prepareAtomicLibModelBridge(const CppAD::vector<Base>& x,
+                                                 const CppAD::vector<Base>& xNorm,
+                                                 const CppAD::vector<Base>& eqNorm,
+                                                 const std::vector<std::set<size_t> >& jacInner,
+                                                 const std::vector<std::set<size_t> >& hessInner,
+                                                 const std::vector<std::set<size_t> >& jacOuter,
+                                                 const std::vector<std::set<size_t> >& hessOuter,
+                                                 bool createOuterReverse2) {
             const size_t n = x.size();
 
             // independent variables
@@ -707,6 +847,12 @@ namespace CppAD {
              * Create the dynamic library model
              */
             CLangCompileModelHelper<double> compHelp1(*_fun, _modelName);
+            if (jacInner.size() > 0) {
+                compHelp1.setCustomSparseJacobianElements(jacInner);
+            }
+            if (hessInner.size() > 0) {
+                compHelp1.setCustomSparseHessianElements(hessInner);
+            }
 
             /**
              * Second compiled model
@@ -719,6 +865,13 @@ namespace CppAD {
             CppAD::Independent(u2);
 
             CGAtomicFunBridge<double> atomicfun(_modelName, *_fun, true);
+            if (jacInner.size() > 0) {
+                atomicfun.setCustomSparseJacobianElements(jacInner);
+            }
+            if (hessInner.size() > 0) {
+                atomicfun.setCustomSparseHessianElements(hessInner);
+            }
+
             std::vector<ADCGD> ZZ(Z.size());
             atomicfun(u2, ZZ);
             std::vector<ADCGD> Z2 = modelOuter(ZZ);
@@ -733,21 +886,35 @@ namespace CppAD {
             compHelp1.setCreateForwardOne(true);
             compHelp1.setCreateReverseOne(true);
             compHelp1.setCreateReverseTwo(true);
+            //compHelp1.setCreateSparseHessian(true); //not really required
 
             compHelp2.setCreateForwardZero(true);
             compHelp2.setCreateForwardOne(true);
             compHelp2.setCreateReverseOne(true);
-            compHelp2.setCreateReverseTwo(true);
+            compHelp2.setCreateReverseTwo(createOuterReverse2);
             compHelp2.setCreateJacobian(true);
             compHelp2.setCreateHessian(true);
             compHelp2.setCreateSparseJacobian(true);
             compHelp2.setCreateSparseHessian(true);
+            if (jacOuter.size() > 0) {
+                compHelp2.setCustomSparseJacobianElements(jacOuter);
+            }
+            if (hessOuter.size() > 0) {
+                compHelp2.setCustomSparseHessianElements(hessOuter);
+            }
 
             /**
              * Create the dynamic library
              * (generate and compile source code)
              */
             GccCompiler<double> compiler;
+            std::vector<std::string> flags;
+            flags.push_back("-O0");
+            flags.push_back("-g");
+            flags.push_back("-ggdb");
+            flags.push_back("-D_FORTIFY_SOURCE=2");
+            compiler.setCompileFlags(flags);
+            compiler.setSourcesFolder(std::string("sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
             compDynHelp.addModel(compHelp2);

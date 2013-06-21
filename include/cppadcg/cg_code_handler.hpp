@@ -89,9 +89,10 @@ namespace CppAD {
             return _reuseIDs;
         }
 
-        inline void makeVariables(std::vector<CG<Base> >& variables) {
-            for (typename std::vector<CG<Base> >::iterator it = variables.begin(); it != variables.end(); ++it) {
-                makeVariable(*it);
+        template<class VectorCG>
+        inline void makeVariables(VectorCG& variables) {
+            for (size_t i = 0; i < variables.size(); i++) {
+                makeVariable(variables[i]);
             }
         }
 

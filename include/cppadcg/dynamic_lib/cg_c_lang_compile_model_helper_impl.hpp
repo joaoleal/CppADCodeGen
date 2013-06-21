@@ -517,38 +517,48 @@ namespace CppAD {
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
-        // make use of the symmetry of the Hessian in order to reduce operations
+        /**
+         * we might have to consider a slightly different order than the one
+         * specified by the user according to the available elements in the sparsity
+         */
+        std::vector<size_t> evalRows, evalCols;
+        determineSecondOrderElements4Eval(evalRows, evalCols);
+
         std::map<size_t, std::map<size_t, size_t> > locations;
-        for (size_t i = 0; i < _hessSparsity.rows.size(); i++) {
-            locations[_hessSparsity.rows[i]][_hessSparsity.cols[i]] = i;
+        for (size_t e = 0; e < evalRows.size(); e++) {
+            locations[evalRows[e]][evalCols[e]] = e;
         }
 
-        std::vector<size_t> upperHessRows, upperHessCols, upperHessOrder;
-        upperHessRows.reserve(_hessSparsity.rows.size() / 2);
-        upperHessCols.reserve(upperHessRows.size());
-        upperHessOrder.reserve(upperHessRows.size());
+        // make use of the symmetry of the Hessian in order to reduce operations
+        std::vector<size_t> lowerHessRows, lowerHessCols, lowerHessOrder;
+        lowerHessRows.reserve(_hessSparsity.rows.size() / 2);
+        lowerHessCols.reserve(lowerHessRows.size());
+        lowerHessOrder.reserve(lowerHessRows.size());
 
         std::map<size_t, size_t> duplicates; // the elements determined using symmetry
-        std::map<size_t, std::map<size_t, size_t> >::const_iterator ii;
-        std::map<size_t, size_t>::const_iterator jj;
-        for (size_t i = 0; i < _hessSparsity.rows.size(); i++) {
+        std::map<size_t, std::map<size_t, size_t> >::const_iterator itJ;
+        std::map<size_t, size_t>::const_iterator itI;
+        for (size_t e = 0; e < evalRows.size(); e++) {
             bool add = true;
-            if (_hessSparsity.rows[i] > _hessSparsity.cols[i]) {
-                ii = locations.find(_hessSparsity.cols[i]);
-                if (ii != locations.end()) {
-                    jj = ii->second.find(_hessSparsity.rows[i]);
-                    if (jj != ii->second.end()) {
-                        size_t k = jj->second;
-                        duplicates[i] = k;
+            size_t i = evalRows[e];
+            size_t j = evalCols[e];
+            if (i < j) {
+                // find the symmetric value
+                itJ = locations.find(j);
+                if (itJ != locations.end()) {
+                    itI = itJ->second.find(i);
+                    if (itI != itJ->second.end()) {
+                        size_t eSim = itI->second;
+                        duplicates[e] = eSim;
                         add = false; // symmetric value being determined
                     }
                 }
             }
 
             if (add) {
-                upperHessRows.push_back(_hessSparsity.rows[i]);
-                upperHessCols.push_back(_hessSparsity.cols[i]);
-                upperHessOrder.push_back(i);
+                lowerHessRows.push_back(i);
+                lowerHessCols.push_back(j);
+                lowerHessOrder.push_back(e);
             }
         }
 
@@ -561,7 +571,7 @@ namespace CppAD {
         handler.setVerbose(_verbose);
 
         // independent variables
-        std::vector<CGBase> indVars(n);
+        vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < n; i++) {
@@ -570,7 +580,7 @@ namespace CppAD {
         }
 
         // multipliers
-        std::vector<CGBase> w(m);
+        vector<CGBase> w(m);
         handler.makeVariables(w);
         if (_x.size() > 0) {
             for (size_t i = 0; i < m; i++) {
@@ -579,12 +589,12 @@ namespace CppAD {
         }
 
         CppAD::sparse_hessian_work work;
-        std::vector<CGBase> upperHess(upperHessRows.size());
-        _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, upperHessRows, upperHessCols, upperHess, work);
+        vector<CGBase> lowerHess(lowerHessRows.size());
+        _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 
         std::vector<CGBase> hess(_hessSparsity.rows.size());
-        for (size_t i = 0; i < upperHessOrder.size(); i++) {
-            hess[upperHessOrder[i]] = upperHess[i];
+        for (size_t i = 0; i < lowerHessOrder.size(); i++) {
+            hess[lowerHessOrder[i]] = lowerHess[i];
         }
 
         // make use of the symmetry of the Hessian in order to reduce operations
@@ -615,22 +625,29 @@ namespace CppAD {
         _cache << _name << "_" << FUNCTION_SPARSE_HESSIAN;
         const string model_function(_cache.str());
 
-        map<size_t, std::vector<size_t> >::const_iterator it;
-
-        map<size_t, std::vector<size_t> > elements;
-        map<size_t, std::vector<set<size_t> > > userHessElLocation; // maps each element to its position in the user hessian
+        /**
+         * we might have to consider a slightly different order than the one
+         * specified by the user according to the available elements in the sparsity
+         */
+        std::vector<size_t> evalRows, evalCols;
+        determineSecondOrderElements4Eval(evalRows, evalCols);
 
         // elements[var]{var}
-        for (size_t e = 0; e < _hessSparsity.rows.size(); e++) {
-            elements[_hessSparsity.cols[e]].push_back(_hessSparsity.rows[e]);
+        map<size_t, std::vector<size_t> > elements;
+        for (size_t e = 0; e < evalRows.size(); e++) {
+            elements[evalRows[e]].push_back(evalCols[e]);
         }
-        userHessElLocation = determineOrderByCol(elements, _hessSparsity);
+
+        // maps each element to its position in the user hessian
+        map<size_t, std::vector<set<size_t> > > userHessElLocation = determineOrderByRow(elements, evalRows, evalCols);
+
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO;
         string functionRev2 = _cache.str();
         string rev2Suffix = "indep";
 
         size_t maxCompressedSize = 0;
+        map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             if (it->second.size() > maxCompressedSize)
                 maxCompressedSize = it->second.size();
@@ -682,6 +699,34 @@ namespace CppAD {
                 "}\n";
         sources[model_function + ".c"] = _cache.str();
         _cache.str("");
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::determineSecondOrderElements4Eval(std::vector<size_t>& evalRows,
+                                                                          std::vector<size_t>& evalCols) {
+        /**
+         * Atomic functions migth not have all the elements and thus there may 
+         * be no symmetry. This will explore symmetry in order to provide the
+         * second order elements requested by the user.
+         */
+        const size_t n = _fun.Domain();
+
+        evalRows.reserve(_hessSparsity.rows.size());
+        evalCols.reserve(_hessSparsity.cols.size());
+
+        for (size_t e = 0; e < _hessSparsity.rows.size(); e++) {
+            size_t i = _hessSparsity.rows[e];
+            size_t j = _hessSparsity.cols[e];
+            if (!_hessSparsity.sparsity[i * n + j] && _hessSparsity.sparsity[j * n + i]) {
+                // only the symmetric value is available
+                // (it can be caused by atomic functions which may only providing a partial hessian)
+                evalRows.push_back(j);
+                evalCols.push_back(i);
+            } else {
+                evalRows.push_back(i);
+                evalCols.push_back(j);
+            }
+        }
     }
 
     template<class Base>
@@ -1082,10 +1127,17 @@ namespace CppAD {
 
         determineHessianSparsity();
 
-        // elements[vars]{equation}
+        /**
+         * we might have to consider a slightly different order than the one
+         * specified by the user according to the available elements in the sparsity
+         */
+        std::vector<size_t> evalRows, evalCols;
+        determineSecondOrderElements4Eval(evalRows, evalCols);
+
+        // elements[var]{vars}
         std::map<size_t, std::vector<size_t> > elements;
-        for (size_t e = 0; e < _hessSparsity.cols.size(); e++) {
-            elements[_hessSparsity.cols[e]].push_back(_hessSparsity.rows[e]);
+        for (size_t e = 0; e < evalCols.size(); e++) {
+            elements[evalRows[e]].push_back(evalCols[e]);
         }
 
         std::vector<CGBase> tx1v(n, Base(0));
@@ -1129,7 +1181,6 @@ namespace CppAD {
                 }
             }
 
-            // TODO: consider caching the zero order coefficients somehow between calls
             std::vector<CGBase> y = _fun.Forward(0, tx0);
 
             tx1v[j] = tx1;
@@ -1501,6 +1552,13 @@ namespace CppAD {
     template<class Base>
     inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                                                 const LocalSparsityInfo& sparsity) {
+        return determineOrderByCol(elements, sparsity.rows, sparsity.cols);
+    }
+
+    template<class Base>
+    inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                                                const std::vector<size_t>& userRows,
+                                                                                                                const std::vector<size_t>& userCols) {
         std::map<size_t, std::vector<std::set<size_t> > > userLocation;
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
@@ -1512,8 +1570,8 @@ namespace CppAD {
 
             for (size_t er = 0; er < els.size(); er++) {
                 size_t row = els[er];
-                for (size_t e = 0; e < sparsity.rows.size(); e++) {
-                    if (sparsity.rows[e] == row && sparsity.cols[e] == col) {
+                for (size_t e = 0; e < userRows.size(); e++) {
+                    if (userRows[e] == row && userCols[e] == col) {
                         userLocationCol[er].insert(e);
                         break;
                     }
@@ -1527,6 +1585,13 @@ namespace CppAD {
     template<class Base>
     inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                                                 const LocalSparsityInfo& sparsity) {
+        return determineOrderByRow(elements, sparsity.rows, sparsity.cols);
+    }
+
+    template<class Base>
+    inline std::map<size_t, std::vector<std::set<size_t> > > CLangCompileModelHelper<Base>::determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                                                const std::vector<size_t>& userRows,
+                                                                                                                const std::vector<size_t>& userCols) {
         std::map<size_t, std::vector<std::set<size_t> > > userLocation;
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
@@ -1538,8 +1603,8 @@ namespace CppAD {
 
             for (size_t ec = 0; ec < els.size(); ec++) {
                 size_t col = els[ec];
-                for (size_t e = 0; e < sparsity.rows.size(); e++) {
-                    if (sparsity.cols[e] == col && sparsity.rows[e] == row) {
+                for (size_t e = 0; e < userRows.size(); e++) {
+                    if (userCols[e] == col && userRows[e] == row) {
                         userLocationRow[ec].insert(e);
                         break;
                     }

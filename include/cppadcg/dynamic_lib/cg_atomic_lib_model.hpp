@@ -126,12 +126,12 @@ namespace CppAD {
             const std::vector<std::set<size_t> > jacSparsity = model_.JacobianSparsitySet();
 
             /**
-             *  V(x)  =  f^1^T(x) U(x)  +  Sum(  s(x)i  f^2(x)  R(x)   )
+             *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R(x)   )
              */
-            // f^1^T(x) U(x)
+            // f'^T(x) U(x)
             CppAD::multMatrixTransMatrixSparsity(jacSparsity, u, v, m, n, q);
 
-            // Sum(  s(x)i  f^2(x)  R(x)   )
+            // Sum(  s(x)i  f''(x)  R(x)   )
             bool allSelected = true;
             for (size_t i = 0; i < m; i++) {
                 if (!s[i]) {
@@ -141,21 +141,21 @@ namespace CppAD {
             }
 
             if (allSelected) {
-                std::vector<std::set<size_t> > sparsitySF2R = model_.HessianSparsitySet();
+                std::vector<std::set<size_t> > sparsitySF2R = model_.HessianSparsitySet(); // f''(x)
                 sparsitySF2R.resize(n);
-                CppAD::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q);
+                CppAD::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R
             } else {
                 std::vector<std::set<size_t> > sparsitySF2R(n);
                 for (size_t i = 0; i < m; i++) {
                     if (s[i]) {
-                        CppAD::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R);
+                        CppAD::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R);// f''_i(x)
                     }
                 }
-                CppAD::multMatrixMatrixSparsity(sparsitySF2R, r, v, n, n, q);
+                CppAD::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R
             }
 
             /**
-             * S(x) * f^1(x)
+             * S(x) * f'(x)
              */
             std::set<size_t>::const_iterator it;
             for (size_t i = 0; i < m; i++) {

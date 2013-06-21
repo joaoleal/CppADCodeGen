@@ -67,6 +67,28 @@ namespace CppAD {
                 defined(true),
                 row(r),
                 col(c) {
+                CPPADCG_ASSERT_KNOWN(r.size() == c.size(), "The number of row indexes must be the same as the number of column indexes.");
+            }
+
+            template<class VectorSet>
+            inline Position(const VectorSet& elements) :
+                defined(true) {
+                size_t nnz = 0;
+                for (size_t i = 0; i < elements.size(); i++) {
+                    nnz += elements[i].size();
+                }
+                row.resize(nnz);
+                col.resize(nnz);
+
+                nnz = 0;
+                std::set<size_t>::const_iterator it;
+                for (size_t i = 0; i < elements.size(); i++) {
+                    for (it = elements[i].begin(); it != elements[i].end(); ++it) {
+                        row[nnz] = i;
+                        col[nnz] = *it;
+                        nnz++;
+                    }
+                }
             }
         };
 
@@ -461,9 +483,19 @@ namespace CppAD {
             _custom_jac = Position(row, col);
         }
 
+        template<class VectorSet>
+        inline void setCustomSparseJacobianElements(const VectorSet& elements) {
+            _custom_jac = Position(elements);
+        }
+
         inline void setCustomSparseHessianElements(const std::vector<size_t>& row,
                                                    const std::vector<size_t>& col) {
             _custom_hess = Position(row, col);
+        }
+
+        template<class VectorSet>
+        inline void setCustomSparseHessianElements(const VectorSet& elements) {
+            _custom_hess = Position(elements);
         }
 
         inline size_t getMaxAssignmentsPerFunc() const {
@@ -520,6 +552,9 @@ namespace CppAD {
 
         virtual void generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources);
 
+        virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
+                                                       std::vector<size_t>& userCols);
+
         virtual void generateSparsity1DSource(const std::string& function,
                                               const std::vector<size_t>& sparsity);
 
@@ -568,8 +603,16 @@ namespace CppAD {
         static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                             const LocalSparsityInfo& sparsity);
 
+        static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByCol(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                            const std::vector<size_t>& userRows,
+                                                                                            const std::vector<size_t>& userCols);
+
         static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                             const LocalSparsityInfo& sparsity);
+
+        static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                            const std::vector<size_t>& userRows,
+                                                                                            const std::vector<size_t>& userCols);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

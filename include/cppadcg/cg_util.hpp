@@ -306,6 +306,11 @@ namespace CppAD {
     }
 
     template<class VectorSet, class VectorSet2>
+    inline void transposePattern(const VectorSet& pattern, VectorSet2& transpose) {
+        transposePattern(pattern, pattern.size(), transpose);
+    }
+
+    template<class VectorSet, class VectorSet2>
     inline void transposePattern(const VectorSet& pattern, size_t mRows, VectorSet2& transpose) {
         assert(pattern.size() >= mRows);
 
@@ -332,6 +337,23 @@ namespace CppAD {
         for (size_t i = 0; i < a.size(); i++) {
             result[i].insert(a[i].begin(), a[i].end());
         }
+    }
+
+    /**
+     * Computes the resulting sparsity from the multiplying of two matrices:
+     * R += A * B
+     * 
+     * @param a The left matrix in the multiplication
+     * @param b The right matrix in the multiplication
+     * @param result the resulting sparsity matrix
+     * @param q The number of columns of B and the result
+     */
+    template<class VectorSet, class VectorSet2>
+    inline void multMatrixMatrixSparsity(const VectorSet& a,
+                                         const VectorSet2& b,
+                                         CppAD::vector< std::set<size_t> >& result,
+                                         size_t q) {
+        multMatrixMatrixSparsity(a, b, result, a.size(), b.size(), q);
     }
 
     /**

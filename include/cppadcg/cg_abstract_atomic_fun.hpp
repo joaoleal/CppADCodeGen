@@ -248,7 +248,9 @@ namespace CppAD {
 
                 for (size_t j = 0; j < n; j++) {
                     vx[j] = !tx[j * (p + 1)].isParameter();
-                    r[j].insert(0);
+                    if (!tx[j * (p + 1) + 1].isParameter() || !tx[j * (p + 1) + 1].IdenticalZero()) {
+                        r[j].insert(0);
+                    }
                 }
                 for (size_t i = 0; i < m; i++) {
                     s[i] = !py[i * (p + 1) + 1].isParameter() || !py[i * (p + 1) + 1].IdenticalZero();
