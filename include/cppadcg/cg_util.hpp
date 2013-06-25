@@ -360,6 +360,8 @@ namespace CppAD {
      * Computes the resulting sparsity from the multiplying of two matrices:
      * R += A * B
      * 
+     * Optimized for when the B matrix has less elements than A.
+     * 
      * @param a The left matrix in the multiplication
      * @param b The right matrix in the multiplication
      * @param result the resulting sparsity matrix
@@ -388,15 +390,19 @@ namespace CppAD {
             }
         }
 
-        VectorSet2 bb = transposePattern(b, n, q);
+        VectorSet2 bt = transposePattern(b, n, q);
+        std::set<size_t>::const_iterator itRowb;
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
-            for (size_t i = 0; i < m; i++) {
-                std::set<size_t>::const_iterator it;
-                for (it = a[i].begin(); it != a[i].end(); ++it) {
-                    if (bb[jj].find(*it) != bb[jj].end()) {
-                        result[i].insert(jj);
-                        break;
+            const std::set<size_t>& colB = bt[jj];
+            if (colB.size() > 0) {
+                for (size_t i = 0; i < m; i++) {
+                    const std::set<size_t>& rowA = a[i];
+                    for (itRowb = colB.begin(); itRowb != colB.end(); ++itRowb) {
+                        if (rowA.find(*itRowb) != rowA.end()) {
+                            result[i].insert(jj);
+                            break;
+                        }
                     }
                 }
             }
@@ -406,6 +412,8 @@ namespace CppAD {
     /**
      * Computes the resulting sparsity from multiplying two matrices:
      * R += A^T * B
+     * 
+     * Optimized for when the B matrix has less elements than A.
      * 
      * @param a The left matrix in the multiplication
      * @param b The right matrix in the multiplication
@@ -451,20 +459,27 @@ namespace CppAD {
             return;
         }
 
-        VectorSet aa = transposePattern(a, m, n);
-        VectorSet2 bb = transposePattern(b, m, q);
+        VectorSet at = transposePattern(a, m, n);
+        VectorSet2 bt = transposePattern(b, m, q);
+        std::set<size_t>::const_iterator itRowb;
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
-            for (size_t i = 0; i < n; i++) {
-                std::set<size_t>::const_iterator it;
-                for (it = aa[i].begin(); it != aa[i].end(); ++it) {
-                    if (bb[jj].find(*it) != bb[jj].end()) {
-                        result[i].insert(jj);
-                        break;
+            const std::set<size_t>& colB = bt[jj];
+            if (colB.size() > 0) {
+                for (size_t i = 0; i < n; i++) {
+                    const std::set<size_t>& rowAt = at[i];
+                    if (rowAt.size() > 0) {
+                        for (itRowb = colB.begin(); itRowb != colB.end(); ++itRowb) {
+                            if (rowAt.find(*itRowb) != rowAt.end()) {
+                                result[i].insert(jj);
+                                break;
+                            }
+                        }
                     }
                 }
             }
         }
+
     }
 
     /**

@@ -141,6 +141,7 @@ namespace CppAD {
             }
 
             if (allSelected) {
+                // TODO: use reverseTwo sparsity instead of the HessianSparsity (they can be different!!!)
                 std::vector<std::set<size_t> > sparsitySF2R = model_.HessianSparsitySet(); // f''(x)
                 sparsitySF2R.resize(n);
                 CppAD::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R
@@ -148,7 +149,7 @@ namespace CppAD {
                 std::vector<std::set<size_t> > sparsitySF2R(n);
                 for (size_t i = 0; i < m; i++) {
                     if (s[i]) {
-                        CppAD::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R);// f''_i(x)
+                        CppAD::addMatrixSparsity(model_.HessianSparsitySet(i), sparsitySF2R); // f''_i(x)
                     }
                 }
                 CppAD::multMatrixTransMatrixSparsity(sparsitySF2R, r, v, n, n, q); // f''^T * R

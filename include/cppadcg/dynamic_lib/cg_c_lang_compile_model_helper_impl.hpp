@@ -738,7 +738,38 @@ namespace CppAD {
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
-        _hessSparsity.sparsity = hessianSparsity < std::vector<bool>, CGBase > (_fun);
+        _hessSparsity.sparsity.resize(n * n);
+        std::fill(_hessSparsity.sparsity.begin(), _hessSparsity.sparsity.end(), false);
+
+        /**
+         * For each individual equation
+         */
+        _hessSparsities.resize(m);
+        for (size_t i = 0; i < m; i++) {
+            LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
+            hessSparsitiesi.sparsity = hessianSparsity < std::vector<bool>, CGBase > (_fun, i);
+
+            if (!_custom_hess.defined) {
+                generateSparsityIndexes(hessSparsitiesi.sparsity, n, n,
+                                        hessSparsitiesi.rows, hessSparsitiesi.cols);
+
+            } else {
+                for (size_t e = 0; e < _custom_hess.row.size(); e++) {
+                    size_t i1 = _custom_hess.row[e];
+                    size_t i2 = _custom_hess.col[e];
+                    if (hessSparsitiesi.sparsity[i1 * n + i2]) {
+                        hessSparsitiesi.rows.push_back(i1);
+                        hessSparsitiesi.cols.push_back(i2);
+                    }
+                }
+            }
+
+            // add to the global sparsity pattern
+            for (size_t i = 0; i < hessSparsitiesi.sparsity.size(); i++) {
+                bool aux = _hessSparsity.sparsity[i] || hessSparsitiesi.sparsity[i];
+                _hessSparsity.sparsity[i] = aux;
+            }
+        }
 
         if (!_custom_hess.defined) {
             generateSparsityIndexes(_hessSparsity.sparsity, n, n,
@@ -747,29 +778,6 @@ namespace CppAD {
         } else {
             _hessSparsity.rows = _custom_hess.row;
             _hessSparsity.cols = _custom_hess.col;
-        }
-
-        /**
-         * For each individual equation
-         */
-        _hessSparsities.resize(m);
-        for (size_t i = 0; i < m; i++) {
-            _hessSparsities[i].sparsity = hessianSparsity < std::vector<bool>, CGBase > (_fun, i);
-
-            if (!_custom_hess.defined) {
-                generateSparsityIndexes(_hessSparsities[i].sparsity, n, n,
-                                        _hessSparsities[i].rows, _hessSparsities[i].cols);
-
-            } else {
-                for (size_t e = 0; e < _custom_hess.row.size(); e++) {
-                    size_t i1 = _custom_hess.row[e];
-                    size_t i2 = _custom_hess.col[e];
-                    if (_hessSparsities[i].sparsity[i1 * n + i2]) {
-                        _hessSparsities[i].rows.push_back(i1);
-                        _hessSparsities[i].cols.push_back(i2);
-                    }
-                }
-            }
         }
     }
 
