@@ -227,7 +227,7 @@ namespace CppAD {
 
         virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
-            CPPADCG_ASSERT_KNOWN(_hessianSparsity != NULL, "No Hessian sparsity function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(_hessianSparsity2 != NULL, "No Hessian sparsity function defined in the dynamic library");
 
             unsigned long const* row, *col;
             unsigned long nnz;
@@ -770,7 +770,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN((_sparseReverseTwo == NULL) == (_reverseTwoSparsity == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseReverseTwo == NULL) == (_reverseTwo == NULL), "Missing functions in the dynamic library");
             CPPADCG_ASSERT_KNOWN((_sparseJacobian == NULL) || (_jacobianSparsity != NULL), "Missing functions in the dynamic library");
-            CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) || (_hessianSparsity != NULL && _hessianSparsity2 != NULL), "Missing functions in the dynamic library");
+            CPPADCG_ASSERT_KNOWN((_sparseHessian == NULL) || (_hessianSparsity != NULL), "Missing functions in the dynamic library");
 
             /**
              * Prepare the atomic functions argument

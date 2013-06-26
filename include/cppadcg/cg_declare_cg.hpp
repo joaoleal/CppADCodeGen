@@ -231,16 +231,17 @@ namespace CppAD {
     template<class VectorBool, class Base>
     inline VectorBool jacobianSparsity(ADFun<Base>& fun);
 
-    template<class VectorBool>
+    template<class VectorBool, class VectorSize>
     inline void generateSparsityIndexes(const VectorBool& sparsity,
                                         size_t m,
                                         size_t n,
-                                        std::vector<size_t>& row,
-                                        std::vector<size_t>& col);
+                                        VectorSize& row,
+                                        VectorSize& col);
 
-    inline void generateSparsityIndexes(const std::vector< std::set<size_t> >& sparsity,
-                                        std::vector<size_t>& row,
-                                        std::vector<size_t>& col);
+    template<class VectorSet, class VectorSize>
+    inline void generateSparsityIndexes(const VectorSet& sparsity,
+                                        VectorSize& row,
+                                        VectorSize& col);
 
     /**
      * Index reduction functions

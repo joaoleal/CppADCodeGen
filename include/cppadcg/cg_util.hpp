@@ -197,12 +197,12 @@ namespace CppAD {
         return fun.RevSparseHes(n, s, transpose);
     }
 
-    template<class VectorBool>
+    template<class VectorBool, class VectorSize>
     inline void generateSparsityIndexes(const VectorBool& sparsity,
                                         size_t m,
                                         size_t n,
-                                        std::vector<size_t>& row,
-                                        std::vector<size_t>& col) {
+                                        VectorSize& row,
+                                        VectorSize& col) {
         assert(sparsity.size() == m * n);
 
         // determine total number of non zeros
@@ -230,28 +230,31 @@ namespace CppAD {
         assert(nnz == row.size());
     }
 
-    inline void generateSparsityIndexes(const std::vector< std::set<size_t> >& sparsity,
-                                        std::vector<size_t>& row,
-                                        std::vector<size_t>& col) {
-        std::vector< std::set<size_t> >::const_iterator rowIt;
+    template<class VectorSet, class VectorSize>
+    inline void generateSparsityIndexes(const VectorSet& sparsity,
+                                        VectorSize& row,
+                                        VectorSize& col) {
+        size_t m = sparsity.size();
 
         // determine total number of non zeros
         size_t nnz = 0;
-        for (rowIt = sparsity.begin(); rowIt != sparsity.end(); ++rowIt) {
-            nnz += rowIt->size();
+        for (size_t i = 0; i < m; i++) {
+            nnz += sparsity[i].size();
         }
 
         row.resize(nnz);
         col.resize(nnz);
+        if (nnz == 0)
+            return;
 
         // save the indexes
         nnz = 0;
-        size_t i = 0;
-        for (rowIt = sparsity.begin(); rowIt != sparsity.end(); ++rowIt, i++) {
-            size_t rownnz = rowIt->size();
-            std::fill(row.begin() + nnz, row.begin() + nnz + rownnz, i);
-            std::copy(rowIt->begin(), rowIt->end(), col.begin() + nnz);
-            nnz += rownnz;
+        for (size_t i = 0; i < m; i++) {
+            const std::set<size_t>& rowSparsity = sparsity[i];
+            size_t rowNnz = rowSparsity.size();
+            std::fill(&row[0] + nnz, &row[0] + nnz + rowNnz, i);
+            std::copy(rowSparsity.begin(), rowSparsity.end(), &col[0] + nnz);
+            nnz += rowNnz;
         }
     }
 

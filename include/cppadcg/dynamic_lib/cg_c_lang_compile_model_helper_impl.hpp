@@ -468,19 +468,17 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::determineJacobianSparsity() {
-        if (!_jacSparsity.sparsity.empty()) {
+        if (_jacSparsity.sparsity.size() > 0) {
             return;
         }
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
 
         /**
          * Determine the sparsity pattern
          */
-        _jacSparsity.sparsity = jacobianSparsity < std::vector<bool>, CGBase > (_fun);
+        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
 
         if (!_custom_jac.defined) {
-            generateSparsityIndexes(_jacSparsity.sparsity, m, n, _jacSparsity.rows, _jacSparsity.cols);
+            generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
 
         } else {
             _jacSparsity.rows = _custom_jac.row;
@@ -709,17 +707,16 @@ namespace CppAD {
          * be no symmetry. This will explore symmetry in order to provide the
          * second order elements requested by the user.
          */
-        const size_t n = _fun.Domain();
-
         evalRows.reserve(_hessSparsity.rows.size());
         evalCols.reserve(_hessSparsity.cols.size());
 
         for (size_t e = 0; e < _hessSparsity.rows.size(); e++) {
             size_t i = _hessSparsity.rows[e];
             size_t j = _hessSparsity.cols[e];
-            if (!_hessSparsity.sparsity[i * n + j] && _hessSparsity.sparsity[j * n + i]) {
+            if (_hessSparsity.sparsity[i].find(j) == _hessSparsity.sparsity[i].end() &&
+                    _hessSparsity.sparsity[j].find(i) != _hessSparsity.sparsity[j].end()) {
                 // only the symmetric value is available
-                // (it can be caused by atomic functions which may only providing a partial hessian)
+                // (it can be caused by atomic functions which may only be providing a partial hessian)
                 evalRows.push_back(j);
                 evalCols.push_back(i);
             } else {
@@ -731,48 +728,52 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::determineHessianSparsity() {
-        if (!_hessSparsity.sparsity.empty()) {
+        if (_hessSparsity.sparsity.size() > 0) {
             return;
         }
 
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
-        _hessSparsity.sparsity.resize(n * n);
-        std::fill(_hessSparsity.sparsity.begin(), _hessSparsity.sparsity.end(), false);
+        if (_hessianByEquation || _reverseTwo) {
+            _hessSparsity.sparsity.resize(n);
 
-        /**
-         * For each individual equation
-         */
-        _hessSparsities.resize(m);
-        for (size_t i = 0; i < m; i++) {
-            LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
-            hessSparsitiesi.sparsity = hessianSparsity < std::vector<bool>, CGBase > (_fun, i);
+            /**
+             * For each individual equation
+             */
+            _hessSparsities.resize(m);
+            for (size_t i = 0; i < m; i++) {
+                LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
+                hessSparsitiesi.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun, i);
 
-            if (!_custom_hess.defined) {
-                generateSparsityIndexes(hessSparsitiesi.sparsity, n, n,
-                                        hessSparsitiesi.rows, hessSparsitiesi.cols);
+                if (!_custom_hess.defined) {
+                    generateSparsityIndexes(hessSparsitiesi.sparsity,
+                                            hessSparsitiesi.rows, hessSparsitiesi.cols);
 
-            } else {
-                for (size_t e = 0; e < _custom_hess.row.size(); e++) {
-                    size_t i1 = _custom_hess.row[e];
-                    size_t i2 = _custom_hess.col[e];
-                    if (hessSparsitiesi.sparsity[i1 * n + i2]) {
-                        hessSparsitiesi.rows.push_back(i1);
-                        hessSparsitiesi.cols.push_back(i2);
+                } else {
+                    size_t nnz = _custom_hess.row.size();
+                    for (size_t e = 0; e < nnz; e++) {
+                        size_t i1 = _custom_hess.row[e];
+                        size_t i2 = _custom_hess.col[e];
+                        if (hessSparsitiesi.sparsity[i1].find(i2) != hessSparsitiesi.sparsity[i1].end()) {
+                            hessSparsitiesi.rows.push_back(i1);
+                            hessSparsitiesi.cols.push_back(i2);
+                        }
                     }
                 }
-            }
 
-            // add to the global sparsity pattern
-            for (size_t i = 0; i < hessSparsitiesi.sparsity.size(); i++) {
-                bool aux = _hessSparsity.sparsity[i] || hessSparsitiesi.sparsity[i];
-                _hessSparsity.sparsity[i] = aux;
+                // add to the global sparsity pattern
+                for (size_t i = 0; i < n; i++) {
+                    _hessSparsity.sparsity[i].insert(hessSparsitiesi.sparsity[i].begin(),
+                                                     hessSparsitiesi.sparsity[i].end());
+                }
             }
+        } else {
+            _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun);
         }
 
         if (!_custom_hess.defined) {
-            generateSparsityIndexes(_hessSparsity.sparsity, n, n,
+            generateSparsityIndexes(_hessSparsity.sparsity,
                                     _hessSparsity.rows, _hessSparsity.cols);
 
         } else {
@@ -789,9 +790,11 @@ namespace CppAD {
         sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY + ".c"] = _cache.str();
         _cache.str("");
 
-        generateSparsity2DSource2(_name + "_" + FUNCTION_HESSIAN_SPARSITY2, _hessSparsities);
-        sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY2 + ".c"] = _cache.str();
-        _cache.str("");
+        if (_hessianByEquation || _reverseTwo) {
+            generateSparsity2DSource2(_name + "_" + FUNCTION_HESSIAN_SPARSITY2, _hessSparsities);
+            sources[_name + "_" + FUNCTION_HESSIAN_SPARSITY2 + ".c"] = _cache.str();
+            _cache.str("");
+        }
     }
 
     template<class Base>

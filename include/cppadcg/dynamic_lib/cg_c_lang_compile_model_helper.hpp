@@ -27,6 +27,7 @@ namespace CppAD {
     class CLangCompileModelHelper {
         typedef CppAD::CG<Base> CGBase;
         typedef CppAD::AD<CGBase> ADCG;
+        typedef CppAD::vector<std::set<size_t> > SparsitySetType;
     public:
         static const std::string FUNCTION_FORWAD_ZERO;
         static const std::string FUNCTION_JACOBIAN;
@@ -97,7 +98,7 @@ namespace CppAD {
          */
         class LocalSparsityInfo {
         public:
-            std::vector<bool> sparsity;
+            SparsitySetType sparsity;
             std::vector<size_t> rows;
             std::vector<size_t> cols;
         };
@@ -124,6 +125,7 @@ namespace CppAD {
         bool _hessian;
         bool _sparseJacobian;
         bool _sparseHessian;
+        bool _hessianByEquation;
         bool _forwardOne;
         bool _reverseOne;
         bool _reverseTwo;
@@ -177,6 +179,7 @@ namespace CppAD {
             _hessian(false),
             _sparseJacobian(false),
             _sparseHessian(false),
+            _hessianByEquation(false),
             _forwardOne(false),
             _reverseOne(false),
             _reverseTwo(false),
@@ -306,6 +309,34 @@ namespace CppAD {
          */
         inline void setCreateSparseHessian(bool create) {
             _sparseHessian = create;
+        }
+
+        /**
+         * Determines whether or not to generate source-code for a function that 
+         * provides the Hessian sparsity pattern for each equation/dependent,
+         * when the sparse hessian creation is enabled.
+         * Even if this flag is set to false the function can still be generated
+         * if the second-order reverse mode is enabled.
+         * 
+         * @return true if source-code for a Hessians sparsities patterns should
+         *         be created, false otherwise
+         */
+        inline bool isCreateHessianSparsityByEquation() const {
+            return _hessianByEquation;
+        }
+
+        /**
+         * Defines whether or not to generate source-code for a function that 
+         * provides the Hessian sparsity pattern for each equation/dependent,
+         * when the sparse hessian creation is enabled.
+         * Even if this flag is set to false the function can still be generated
+         * if the second-order reverse mode is enabled.
+         * 
+         * @param create true if source-code for a Hessians sparsities should be
+         *               created, false otherwise
+         */
+        inline void setCreateHessianSparsityByEquation(bool create) {
+            _hessianByEquation = create;
         }
 
         /**
