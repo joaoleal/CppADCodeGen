@@ -18,5 +18,7 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 
 IF( UNIX )
     add_cppadcg_test(cstr.cpp)
+    add_cppadcg_test(cstr_2.cpp)
     add_cppadcg_test(dynamic_atomic_cstr.cpp)
+    add_cppadcg_test(dynamic_atomic_cstr_nested.cpp)
 ENDIF()

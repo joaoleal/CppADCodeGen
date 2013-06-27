@@ -594,6 +594,34 @@ namespace CppAD {
         std::cout << std::endl;
     }
 
+    inline bool intersects(const std::set<size_t>& a,
+                           const std::set<size_t>& b) {
+        if (a.empty() || b.empty()) {
+            return false;
+        } else if (*a.rbegin() < *b.begin() ||
+                *a.begin() > *b.rbegin()) {
+            return false;
+        }
+
+        if (a.size() < b.size()) {
+            std::set<size_t>::const_iterator ita;
+            for (ita = a.begin(); ita != a.end(); ++ita) {
+                if (b.find(*ita) != b.end()) {
+                    return true;
+                }
+            }
+        } else {
+            std::set<size_t>::const_iterator itb;
+            for (itb = b.begin(); itb != b.end(); ++itb) {
+                if (a.find(*itb) != a.end()) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
 }
 
 #endif

@@ -735,16 +735,138 @@ namespace CppAD {
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
+        _hessSparsity.sparsity.resize(n);
+        _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun);
+
+        SparsitySetType r(n); // identity matrix
+        for (size_t j = 0; j < n; j++)
+            r[j].insert(j);
+        SparsitySetType jac = _fun.ForSparseJac(n, r);
+
+        SparsitySetType s(1);
+        for (size_t i = 0; i < m; i++) {
+            s[0].insert(i);
+        }
+        _hessSparsity.sparsity = _fun.RevSparseHes(n, s, false);
+
         if (_hessianByEquation || _reverseTwo) {
-            _hessSparsity.sparsity.resize(n);
+            std::set<size_t>::const_iterator it;
+
+            std::set<size_t> customVarsInHess;
+            if (_custom_hess.defined) {
+                customVarsInHess.insert(_custom_hess.row.begin(), _custom_hess.row.end());
+                customVarsInHess.insert(_custom_hess.col.begin(), _custom_hess.col.end());
+
+                r = SparsitySetType(n); //clear r
+                for (it = customVarsInHess.begin(); it != customVarsInHess.end(); ++it) {
+                    size_t j = *it;
+                    r[j].insert(j);
+                }
+                jac = _fun.ForSparseJac(n, r);
+            }
+
+            /**
+             * Coloring
+             */
+            CppAD::vector<std::set<size_t> > color2eq(m); // equations for each color
+            CppAD::vector<std::map<size_t, size_t> > colorVar2Eq(m);
+            CppAD::vector<std::set<size_t> > forbidden(m); // used variables for each color
+
+            size_t c_used = 0;
+            for (size_t i = 0; i < m; i++) {
+                const std::set<size_t>& jacRow = jac[i];
+                if (jacRow.size() == 0) {
+                    continue; //nothing to do
+                }
+
+                // consider only the variables present in the Hessian
+                std::set<size_t> jacRowReduced;
+                if (_custom_hess.defined) {
+                    for (it = jacRow.begin(); it != jacRow.end(); ++it) {
+                        size_t j = *it;
+                        if (customVarsInHess.find(j) != customVarsInHess.end())
+                            jacRowReduced.insert(j);
+                    }
+                } else {
+                    jacRowReduced = jacRow;
+                }
+
+                bool newColor = true;
+                size_t colori;
+                for (size_t c = 0; c < c_used; c++) {
+                    std::set<size_t>& forbidden_c = forbidden[c];
+                    if (!intersects(forbidden_c, jacRowReduced)) {
+                        // no intersection
+                        colori = c;
+                        newColor = false;
+                        forbidden_c.insert(jacRowReduced.begin(), jacRowReduced.end());
+                        break;
+                    }
+                }
+
+                if (newColor) {
+                    colori = c_used;
+                    forbidden[c_used] = jacRowReduced;
+                    c_used++;
+                }
+
+                color2eq[colori].insert(i);
+
+                std::map<size_t, size_t>& var2Eq = colorVar2Eq[colori];
+                for (it = jacRowReduced.begin(); it != jacRowReduced.end(); ++it) {
+                    size_t j = *it;
+                    var2Eq[j] = i;
+                }
+            }
 
             /**
              * For each individual equation
              */
             _hessSparsities.resize(m);
             for (size_t i = 0; i < m; i++) {
+                _hessSparsities[i].sparsity.resize(n);
+            }
+
+            for (size_t c = 0; c < c_used; c++) {
+
+                // first-order
+                r = SparsitySetType(n); //clear r
+                for (it = forbidden[c].begin(); it != forbidden[c].end(); ++it) {
+                    size_t j = *it;
+                    r[j].insert(j);
+                }
+                _fun.ForSparseJac(n, r);
+
+                // second-order
+                s[0].clear();
+                const std::set<size_t>& equations = color2eq[c];
+                std::set<size_t>::const_iterator itEq;
+                for (itEq = equations.begin(); itEq != equations.end(); ++itEq) {
+                    size_t i = *itEq;
+                    s[0].insert(i);
+                }
+
+                SparsitySetType sparsityc = _fun.RevSparseHes(n, s, false);
+
+                /**
+                 * Retrieve the individual hessians for each equation
+                 */
+                const std::map<size_t, size_t>& var2Eq = colorVar2Eq[c];
+                const std::set<size_t>& forbidden_c = forbidden[c]; //used variables
+                std::set<size_t>::const_iterator itvar;
+                for (itvar = forbidden_c.begin(); itvar != forbidden_c.end(); ++itvar) {
+                    size_t j = *itvar;
+                    if (sparsityc[j].size() > 0) {
+                        size_t i = var2Eq.at(j);
+                        _hessSparsities[i].sparsity[j].insert(sparsityc[j].begin(),
+                                                              sparsityc[j].end());
+                    }
+                }
+
+            }
+
+            for (size_t i = 0; i < m; i++) {
                 LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
-                hessSparsitiesi.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun, i);
 
                 if (!_custom_hess.defined) {
                     generateSparsityIndexes(hessSparsitiesi.sparsity,
@@ -761,15 +883,8 @@ namespace CppAD {
                         }
                     }
                 }
-
-                // add to the global sparsity pattern
-                for (size_t i = 0; i < n; i++) {
-                    _hessSparsity.sparsity[i].insert(hessSparsitiesi.sparsity[i].begin(),
-                                                     hessSparsitiesi.sparsity[i].end());
-                }
             }
-        } else {
-            _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun);
+
         }
 
         if (!_custom_hess.defined) {
