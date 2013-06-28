@@ -147,6 +147,7 @@ namespace CppAD {
             if (_verbose) {
                 std::cout << std::endl;
             }
+            size_t countWidth = std::ceil(std::log10(sources.size()));
             for (it = sources.begin(); it != sources.end(); ++it) {
                 count++;
                 std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
@@ -154,7 +155,8 @@ namespace CppAD {
                 double beginTime;
                 if (_verbose) {
                     beginTime = system::currentTime();
-                    std::cout << "[" << count << "/" << sources.size() << "] compiling "
+                    std::cout << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count 
+                            << "/" << sources.size() << "] compiling "
                             << std::setw(maxsize + 9) << std::setfill('.') << std::left
                             << ("'" + file + "' ") << " ";
                     std::cout.flush();
