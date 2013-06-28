@@ -84,6 +84,8 @@ namespace CppAD {
         size_t _maxAssigmentsPerFunction;
         //
         std::map<std::string, std::string>* _sources;
+        // the values in the temporary array
+        std::vector<const Argument<Base>*> _tmpArrayValues;
     private:
         std::string defaultFuncArgDcl_;
         std::string localFuncArgDcl_;
@@ -308,6 +310,8 @@ namespace CppAD {
             _atomicFunctionId2Name = info.atomicFunctionId2Name;
             const std::vector<CG<Base> >& dependent = info.dependent;
             const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
+            _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
+            std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
 
             /**
              * generate variable names
@@ -417,6 +421,12 @@ namespace CppAD {
                     printExpressionNoVarCheck(op);
                     if (createsVar) {
                         _code << ";\n";
+                    }
+
+                    if (op.operation() == CGArrayElementOp) {
+                        size_t arrayId = op.arguments()[0].operation()->variableID();
+                        size_t pos = op.info()[0];
+                        _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
                     }
 
                     assignCount++;
@@ -966,31 +976,66 @@ namespace CppAD {
 
         virtual void printArrayCreationOp(SourceCodeFragment<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.arguments().size() > 0, "Invalid number of arguments for array creation operation");
-            const std::vector<Argument<Base> >& args = op.arguments();
 
-            if (args.size() > 1 && args[0].parameter() != NULL) {
+            const size_t id = op.variableID();
+            const std::vector<Argument<Base> >& args = op.arguments();
+            const size_t argSize = args.size();
+
+            if (argSize > 1 && args[0].parameter() != NULL) {
                 const Base& value = *args[0].parameter();
                 bool sameValue = true;
-                for (size_t i = 1; i < args.size(); i++) {
+                for (size_t i = 1; i < argSize; i++) {
                     if (args[i].parameter() == NULL || *args[i].parameter() != value) {
                         sameValue = false;
                         break;
                     }
                 }
                 if (sameValue) {
-                    _code << _spaces << "for(i = 0; i < " << args.size() << "; i++) "
-                            "(" << _nameGen->generateTemporaryArray(op) << ")[i] = " << value << ";\n";
+                    bool assign = false;
+                    for (size_t i = 0; i < argSize; i++) {
+                        const Argument<Base>* oldArg = _tmpArrayValues[id - 1 + i];
+                        if (oldArg == NULL || oldArg->parameter() == NULL || *oldArg->parameter() != value) {
+                            assign = true;
+                            break;
+                        }
+                    }
+                    if (assign) {
+                        _code << _spaces << "for(i = 0; i < " << argSize << "; i++) "
+                                "(" << _nameGen->generateTemporaryArray(op) << ")[i] = " << value << ";\n";
 
+                        for (size_t i = 0; i < argSize; i++) {
+                            _tmpArrayValues[id - 1 + i] = &args[i];
+                        }
+                    }
                     return;
                 }
             }
 
-            _code << _spaces << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(op) << "; // size: " << args.size() << "\n";
+            bool firstElement = true;
+            for (size_t i = 0; i < argSize; i++) {
+                bool newValue = true;
+                if (_tmpArrayValues[id - 1 + i] != NULL) {
+                    const Argument<Base>& oldArg = *_tmpArrayValues[id - 1 + i];
+                    if (oldArg.parameter() != NULL) {
+                        if (args[i].parameter() != NULL) {
+                            newValue = (*args[i].parameter() != *oldArg.parameter());
+                        }
+                    } else {
+                        newValue = (args[i].operation() != oldArg.operation());
+                    }
+                }
 
-            for (size_t i = 0; i < args.size(); i++) {
-                _code << _spaces << auxArrayName_ << "[" << i << "] = ";
-                print(args[i]);
-                _code << ";\n";
+                if (newValue) {
+                    if (firstElement) {
+                        _code << _spaces << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(op) << "; // size: " << args.size() << "\n";
+                        firstElement = false;
+                    }
+                    _code << _spaces << auxArrayName_ << "[" << i << "] = ";
+                    print(args[i]);
+                    _code << ";\n";
+
+                    _tmpArrayValues[id - 1 + i] = &args[i];
+                }
             }
         }
 
@@ -1024,14 +1069,19 @@ namespace CppAD {
                     << *ty.getName() << ", " << ty.arguments().size() << "); // "
                     << _atomicFunctionId2Name.at(id)
                     << "\n";
+
+            /**
+             * the values of ty are now changed
+             */
+            markArrayChanged(ty);
         }
 
         virtual void printAtomicReverseOp(SourceCodeFragment<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.arguments().size() == 4, "Invalid number of arguments for atomic forward operation");
             CPPADCG_ASSERT_KNOWN(op.info().size() == 2, "Invalid number of information elements for atomic forward operation");
             size_t id = op.info()[0];
-            size_t atomicIndex = _atomicFunctionId2Index.at(id);
             int p = op.info()[1];
+            size_t atomicIndex = _atomicFunctionId2Index.at(id);
             SourceCodeFragment<Base>& tx = *op.arguments()[0].operation();
             SourceCodeFragment<Base>& ty = *op.arguments()[1].operation();
             SourceCodeFragment<Base>& px = *op.arguments()[2].operation();
@@ -1053,6 +1103,19 @@ namespace CppAD {
                     << tx.arguments().size() << ", " << ty.arguments().size() << "); // "
                     << _atomicFunctionId2Name.at(id)
                     << "\n";
+
+            /**
+             * the values of px are now changed
+             */
+            markArrayChanged(px);
+        }
+
+        inline void markArrayChanged(SourceCodeFragment<Base>& ty) {
+            size_t id = ty.variableID();
+            size_t tySize = ty.arguments().size();
+            for (size_t i = 0; i < tySize; i++) {
+                _tmpArrayValues[id - 1 + i] = NULL;
+            }
         }
 
         inline bool isDependent(const SourceCodeFragment<Base>& arg) const {

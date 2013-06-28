@@ -535,10 +535,11 @@ namespace CppAD {
              * Redefine temporary variable IDs
              */
             std::vector<size_t> freedVariables; // variable IDs no longer in use
-            _idCount = _minTemporaryVarID;
-            _idArrayCount = 1;
+            std::vector<const Argument<Base>*> tmpArrayValues(_idArrayCount, NULL); //likely values in temporary array
             std::map<size_t, size_t> freeArrayStartSpace; // [start] = end
             std::map<size_t, size_t> freeArrayEndSpace; // [end] = start
+            _idCount = _minTemporaryVarID;
+            _idArrayCount = 1;
 
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 SourceCodeFragment<Base>& var = *_variableOrder[i];
@@ -565,7 +566,7 @@ namespace CppAD {
                     }
                 } else if (isTemporaryArray(var)) {
                     // a temporary array
-                    size_t arrayStart = reserveArraySpace(var, freeArrayStartSpace, freeArrayEndSpace);
+                    size_t arrayStart = reserveArraySpace(var, freeArrayStartSpace, freeArrayEndSpace, tmpArrayValues);
                     assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
                     var.setVariableID(arrayStart + 1);
                 }
@@ -602,7 +603,8 @@ namespace CppAD {
 
         inline size_t reserveArraySpace(const SourceCodeFragment<Base>& newArray,
                                         std::map<size_t, size_t>& freeArrayStartSpace,
-                                        std::map<size_t, size_t>& freeArrayEndSpace) {
+                                        std::map<size_t, size_t>& freeArrayEndSpace,
+                                        std::vector<const Argument<Base>*>& tmpArrayValues) {
             size_t arraySize = newArray.arguments().size();
 
             std::set<size_t> blackList;
@@ -623,6 +625,7 @@ namespace CppAD {
              */
             std::map<size_t, size_t>::reverse_iterator it;
             std::map<size_t, size_t>::reverse_iterator itBestFit = freeArrayStartSpace.rend();
+            size_t bestCommonValues = 0; // the number of values likely to be the same
             for (it = freeArrayStartSpace.rbegin(); it != freeArrayStartSpace.rend(); ++it) {
                 size_t start = it->first;
                 size_t end = it->second;
@@ -636,29 +639,36 @@ namespace CppAD {
                     continue; // cannot use this space
                 }
 
-                if (space == arraySize) {
-                    // jackpot
+                //possible candidate
+                if (itBestFit == freeArrayStartSpace.rend()) {
                     itBestFit = it;
-                    break;
                 } else {
-                    //possible candidate
-                    if (itBestFit == freeArrayStartSpace.rend()) {
+                    size_t bestSpace = itBestFit->second - itBestFit->first + 1;
+
+                    size_t commonVals = 0;
+                    for (size_t i = 0; i < arraySize; i++) {
+                        if (sameElement(tmpArrayValues[start + i], args[i])) {
+                            commonVals++;
+                        }
+                    }
+
+                    if (space < bestSpace || commonVals > bestCommonValues) {
+                        // better fit
                         itBestFit = it;
-                    } else {
-                        size_t bestSpace = itBestFit->second - itBestFit->first + 1;
-                        if (space < bestSpace) {
-                            // better fit
-                            itBestFit = it;
+                        bestCommonValues = commonVals;
+                        if (bestCommonValues == arraySize) {
+                            break; // jackpot
                         }
                     }
                 }
             }
 
+            size_t bestStart = std::numeric_limits<size_t>::max();
             if (itBestFit != freeArrayStartSpace.rend()) {
                 /**
                  * Use available space
                  */
-                size_t bestStart = itBestFit->first;
+                bestStart = itBestFit->first;
                 size_t bestEnd = itBestFit->second;
                 size_t bestSpace = bestEnd - bestStart + 1;
                 freeArrayStartSpace.erase(bestStart);
@@ -671,7 +681,7 @@ namespace CppAD {
                     freeArrayStartSpace[newFreeStart] = bestEnd;
                     freeArrayEndSpace.at(bestEnd) = newFreeStart;
                 }
-                return bestStart;
+
             } else {
                 /**
                  * no space available, need more
@@ -694,15 +704,36 @@ namespace CppAD {
                         freeArrayStartSpace[lastSpotStart] = newEnd;
 
                         _idArrayCount += arraySize - lastSpotSize;
-                        return lastSpotStart;
+                        bestStart = lastSpotStart;
                     }
                 }
-
-                // brand new space
-                size_t id = _idArrayCount;
-                _idArrayCount += arraySize;
-                return id - 1;
+                
+                if (bestStart == std::numeric_limits<size_t>::max()) {
+                    // brand new space
+                    size_t id = _idArrayCount;
+                    _idArrayCount += arraySize;
+                    bestStart = id - 1;
+                }
             }
+
+            for (size_t i = 0; i < arraySize; i++) {
+                tmpArrayValues[bestStart + i] = &args[i];
+            }
+
+            return bestStart;
+        }
+
+        inline static bool sameElement(const Argument<Base>* oldArg, const Argument<Base>& arg) {
+            if (oldArg != NULL) {
+                if (oldArg->parameter() != NULL) {
+                    if (arg.parameter() != NULL) {
+                        return (*arg.parameter() == *oldArg->parameter());
+                    }
+                } else {
+                    return (arg.operation() == oldArg->operation());
+                }
+            }
+            return false;
         }
 
         inline void determineLastTempVarUsage(SourceCodeFragment<Base>& code) {

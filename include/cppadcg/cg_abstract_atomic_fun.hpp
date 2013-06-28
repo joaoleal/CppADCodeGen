@@ -40,8 +40,8 @@ namespace CppAD {
          * @param name The atomic function name.
          * @param standAlone Whether or not forward and reverse function calls
          *                   do not require the Taylor coefficients for the 
-         *                   dependent variables (ty) and the previous
-         *                   evaluation of other forward/reverse modes.
+         *                   dependent variables (ty) and any previous
+         *                   evaluation of other forward/reverse modes. 
          */
         CGAbstractAtomicFun(const std::string& name, bool standAlone = false) :
             atomic_base<CGB>(name.c_str()),
