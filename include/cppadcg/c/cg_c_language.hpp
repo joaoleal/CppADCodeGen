@@ -544,7 +544,8 @@ namespace CppAD {
             size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID() - 1;
             if (arraySize > 0) {
                 _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
-            }
+                _ss << _spaces << "long int i;\n";
+            }           
             _nameGen->prepareCustomFunctionVariables(_ss);
             _ss << _code.str();
             _nameGen->finalizeCustomFunctionVariables(_ss);
