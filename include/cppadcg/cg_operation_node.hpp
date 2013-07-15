@@ -57,11 +57,12 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
+            color_(0),
             name_(NULL) {
         }
 
         inline OperationNode(CGOpCode op,
-                              const Argument<Base>& arg) :
+                             const Argument<Base>& arg) :
             operation_(op),
             arguments_(1),
             var_id_(0),
@@ -69,14 +70,15 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
+            color_(0),
             name_(NULL) {
             assert(arg.getOperation() != NULL);
             arguments_[0] = arg;
         }
 
         inline OperationNode(CGOpCode op,
-                              const Argument<Base>& arg1,
-                              const Argument<Base>& arg2) :
+                             const Argument<Base>& arg1,
+                             const Argument<Base>& arg2) :
             operation_(op),
             arguments_(2),
             var_id_(0),
@@ -84,6 +86,7 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
+            color_(0),
             name_(NULL) {
             assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL);
             arguments_[0] = arg1;
@@ -91,10 +94,10 @@ namespace CppAD {
         }
 
         inline OperationNode(CGOpCode op,
-                              const Argument<Base>& arg1,
-                              const Argument<Base>& arg2,
-                              const Argument<Base>& arg3,
-                              const Argument<Base>& arg4) :
+                             const Argument<Base>& arg1,
+                             const Argument<Base>& arg2,
+                             const Argument<Base>& arg3,
+                             const Argument<Base>& arg4) :
             operation_(op),
             arguments_(4),
             var_id_(0),
@@ -102,6 +105,7 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
+            color_(0),
             name_(NULL) {
             assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
                    arg3.getOperation() != NULL || arg4.getOperation() != NULL);
@@ -112,8 +116,8 @@ namespace CppAD {
         }
 
         inline OperationNode(CGOpCode op,
-                              const std::vector<size_t>& info,
-                              const std::vector<Argument<Base> >& args) :
+                             const std::vector<size_t>& info,
+                             const std::vector<Argument<Base> >& args) :
             operation_(op),
             info_(info),
             arguments_(args),
@@ -122,6 +126,7 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
+            color_(0),
             name_(NULL) {
         }
 
@@ -134,6 +139,7 @@ namespace CppAD {
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(orig.last_usage_order_),
+            color_(orig.color_),
             name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
         }
 
