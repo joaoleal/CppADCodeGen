@@ -98,7 +98,7 @@ namespace CppAD {
         }
 
         virtual std::string generateIndependent(const OperationNode<Base>& independent) {
-            size_t id = independent.variableID();
+            size_t id = independent.getVariableID();
             if (id < _minLevel1ID) {
                 return _nameGen->generateIndependent(independent);
             } else {

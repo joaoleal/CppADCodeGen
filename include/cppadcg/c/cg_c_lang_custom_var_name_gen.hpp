@@ -58,7 +58,7 @@ namespace CppAD {
         }
 
         virtual std::string generateIndependent(const OperationNode<Base>& independent) {
-            size_t index = independent.variableID() - 1;
+            size_t index = independent.getVariableID() - 1;
             if (index < indepNames_.size() && !indepNames_[index].empty()) {
                 return indepNames_[index];
             } else {

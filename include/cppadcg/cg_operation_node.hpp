@@ -174,7 +174,7 @@ namespace CppAD {
          * Provides additional information used in the operation.
          * @return the additional operation information/options
          */
-        inline const std::vector<size_t>& info() const {
+        inline const std::vector<size_t>& getInfo() const {
             return info_;
         }
 
@@ -183,7 +183,7 @@ namespace CppAD {
          * code (zero means that no variable is assigned).
          * @return the variable ID
          */
-        inline size_t variableID() const {
+        inline size_t getVariableID() const {
             return var_id_;
         }
 
@@ -208,7 +208,7 @@ namespace CppAD {
          * being used as an argument for another operation.
          * @return the total usage count
          */
-        inline size_t totalUsageCount() const {
+        inline size_t getTotalUsageCount() const {
             return total_use_count_;
         }
 
@@ -218,7 +218,7 @@ namespace CppAD {
          * 
          * @return the current usage count
          */
-        inline size_t usageCount() const {
+        inline size_t getUsageCount() const {
             return use_count_;
         }
 
@@ -295,7 +295,7 @@ namespace CppAD {
                 os << "new $1[" << c.getArguments().size() << "]";
                 break;
             case CGArrayElementOp:
-                os << "$1[" << c.info()[0] << "]";
+                os << "$1[" << c.getInfo()[0] << "]";
                 break;
             case CGAsinOp:
                 os << "asin( $1 )";
@@ -304,10 +304,10 @@ namespace CppAD {
                 os << "atan( $1 )";
                 break;
             case CGAtomicForwardOp:
-                os << "atomicFunction.forward(" << c.info()[0] << ", " << c.info()[1] << ", vx, vy, $1, $2)";
+                os << "atomicFunction.forward(" << c.getInfo()[0] << ", " << c.getInfo()[1] << ", vx, vy, $1, $2)";
                 break;
             case CGAtomicReverseOp:
-                os << "atomicFunction.reverse(" << c.info()[0] << ", $1, $2, $3, $4)";
+                os << "atomicFunction.reverse(" << c.getInfo()[0] << ", $1, $2, $3, $4)";
                 break;
             case CGComOpLt:
                 os << "($1 < $2)? $3 : $4";

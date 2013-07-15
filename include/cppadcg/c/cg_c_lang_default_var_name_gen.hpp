@@ -93,7 +93,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            size_t id = independent.variableID();
+            size_t id = independent.getVariableID();
             _ss << _indepName << "[" << (id - 1) << "]";
 
             return _ss.str();
@@ -103,7 +103,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            size_t id = variable.variableID();
+            size_t id = variable.getVariableID();
             if (this->_temporary[0].array) {
                 _ss << _tmpName << "[" << (id - this->_minTemporaryID) << "]";
             } else {
@@ -119,7 +119,7 @@ namespace CppAD {
 
             assert(variable.getOperationType() == CGArrayCreationOp);
             
-            size_t id = variable.variableID();
+            size_t id = variable.getVariableID();
             _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
 
             return _ss.str();

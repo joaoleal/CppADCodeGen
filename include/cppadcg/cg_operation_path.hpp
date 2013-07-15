@@ -73,7 +73,7 @@ namespace CppAD {
         if (args.empty())
             return; // nothing to look in
 
-        if (currNode->usageCount() > 0) {
+        if (currNode->getUsageCount() > 0) {
             // already searched inside this node
             // any match would have been saved in found
             std::vector<SourceCodePath> pathsFromNode = findPathsFromNode(found, *currNode);

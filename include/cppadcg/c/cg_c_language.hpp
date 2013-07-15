@@ -361,11 +361,11 @@ namespace CppAD {
             for (size_t i = 0; i < dependent.size(); i++) {
                 OperationNode<Base>* op = dependent[i].getOperationNode();
                 if (op != NULL && op->getOperationType() != CGInvOp) {
-                    size_t varID = op->variableID();
+                    size_t varID = op->getVariableID();
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
                         if (it2 == _dependentIDs.end()) {
-                            _dependentIDs[op->variableID()] = i;
+                            _dependentIDs[op->getVariableID()] = i;
                         } else {
                             // there can be several dependent variables with the same ID
                             dependentDuplicates.insert(i);
@@ -410,7 +410,7 @@ namespace CppAD {
 
                     bool isDep = isDependent(op);
                     if (!isDep) {
-                        _temporary[op.variableID()] = &op;
+                        _temporary[op.getVariableID()] = &op;
                     }
 
                     bool createsVar = directlyAssignsVariable(op);
@@ -424,8 +424,8 @@ namespace CppAD {
                     }
 
                     if (op.getOperationType() == CGArrayElementOp) {
-                        size_t arrayId = op.getArguments()[0].getOperation()->variableID();
-                        size_t pos = op.info()[0];
+                        size_t arrayId = op.getArguments()[0].getOperation()->getVariableID();
+                        size_t pos = op.getInfo()[0];
                         _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
                     }
 
@@ -560,7 +560,7 @@ namespace CppAD {
 
         virtual bool createsNewVariable(const OperationNode<Base>& var) const {
             CGOpCode op = var.getOperationType();
-            return (var.totalUsageCount() > 1 &&
+            return (var.getTotalUsageCount() > 1 &&
                     op != CGArrayElementOp) ||
                     op == CGAtomicForwardOp ||
                     op == CGAtomicReverseOp ||
@@ -574,7 +574,7 @@ namespace CppAD {
         }
 
         virtual bool requiresVariableName(const OperationNode<Base>& op) const {
-            return (op.totalUsageCount() > 1 &&
+            return (op.getTotalUsageCount() > 1 &&
                     op.getOperationType() != CGAtomicForwardOp &&
                     op.getOperationType() != CGAtomicReverseOp);
         }
@@ -592,18 +592,18 @@ namespace CppAD {
         }
 
         inline const std::string& createVariableName(OperationNode<Base>& var) {
-            assert(var.variableID() > 0);
+            assert(var.getVariableID() > 0);
             assert(var.getOperationType() != CGAtomicForwardOp && var.getOperationType() != CGAtomicReverseOp);
 
             if (var.getName() == NULL) {
                 if (var.getOperationType() != CGArrayCreationOp) {
-                    if (var.variableID() <= _independentSize) {
+                    if (var.getVariableID() <= _independentSize) {
                         // independent variable
                         var.setName(_nameGen->generateIndependent(var));
 
-                    } else if (var.variableID() < _minTemporaryVarID) {
+                    } else if (var.getVariableID() < _minTemporaryVarID) {
                         // dependent variable
-                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.variableID());
+                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.getVariableID());
                         assert(it != _dependentIDs.end());
 
                         size_t index = it->second;
@@ -641,7 +641,7 @@ namespace CppAD {
         }
 
         virtual void printExpression(OperationNode<Base>& op) throw (CGException) {
-            if (op.variableID() > 0) {
+            if (op.getVariableID() > 0) {
                 // use variable name
                 _code << createVariableName(op);
             } else {
@@ -789,7 +789,7 @@ namespace CppAD {
         virtual void printSignFunction(OperationNode<Base>& op) throw (CGException) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for sign() function");
             assert(op.getArguments()[0].getOperation() != NULL);
-            assert(op.getArguments()[0].getOperation()->variableID() > 0);
+            assert(op.getArguments()[0].getOperation()->getVariableID() > 0);
 
             OperationNode<Base>& arg = *op.getArguments()[0].getOperation();
 
@@ -829,7 +829,7 @@ namespace CppAD {
 
             const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
-                    opRight->variableID() == 0 &&
+                    opRight->getVariableID() == 0 &&
                     opRight->getOperationType() != CGDivOp &&
                     opRight->getOperationType() != CGMulOp &&
                     !isFunction(opRight->getOperationType());
@@ -853,11 +853,11 @@ namespace CppAD {
 
             const OperationNode<Base>* opLeft = left.getOperation();
             bool encloseLeft = opLeft != NULL &&
-                    opLeft->variableID() == 0 &&
+                    opLeft->getVariableID() == 0 &&
                     !isFunction(opLeft->getOperationType());
             const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
-                    opRight->variableID() == 0 &&
+                    opRight->getVariableID() == 0 &&
                     !isFunction(opRight->getOperationType());
 
             if (encloseLeft) {
@@ -885,13 +885,13 @@ namespace CppAD {
 
             const OperationNode<Base>* opLeft = left.getOperation();
             bool encloseLeft = opLeft != NULL &&
-                    opLeft->variableID() == 0 &&
+                    opLeft->getVariableID() == 0 &&
                     opLeft->getOperationType() != CGDivOp &&
                     opLeft->getOperationType() != CGMulOp &&
                     !isFunction(opLeft->getOperationType());
             const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
-                    opRight->variableID() == 0 &&
+                    opRight->getVariableID() == 0 &&
                     opRight->getOperationType() != CGDivOp &&
                     opRight->getOperationType() != CGMulOp &&
                     !isFunction(opRight->getOperationType());
@@ -920,7 +920,7 @@ namespace CppAD {
 
             const OperationNode<Base>* scf = arg.getOperation();
             bool enclose = scf != NULL &&
-                    scf->variableID() == 0 &&
+                    scf->getVariableID() == 0 &&
                     scf->getOperationType() != CGDivOp &&
                     scf->getOperationType() != CGMulOp &&
                     !isFunction(scf->getOperationType());
@@ -938,7 +938,7 @@ namespace CppAD {
         }
 
         virtual void printConditionalAssignment(OperationNode<Base>& op) {
-            assert(op.variableID() > 0);
+            assert(op.getVariableID() > 0);
 
             const std::vector<Argument<Base> >& args = op.getArguments();
             const Argument<Base> &left = args[0];
@@ -978,7 +978,7 @@ namespace CppAD {
         virtual void printArrayCreationOp(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
 
-            const size_t id = op.variableID();
+            const size_t id = op.getVariableID();
             const std::vector<Argument<Base> >& args = op.getArguments();
             const size_t argSize = args.size();
 
@@ -1043,19 +1043,19 @@ namespace CppAD {
         virtual void printArrayElementOp(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
             CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != NULL, "Invalid argument for array element operation");
-            CPPADCG_ASSERT_KNOWN(op.info().size() == 1, "Invalid number of information indexes for array element operation");
+            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
 
             OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
-            _code << "(" << _nameGen->generateTemporaryArray(arrayOp) << ")[" << op.info()[0] << "]";
+            _code << "(" << _nameGen->generateTemporaryArray(arrayOp) << ")[" << op.getInfo()[0] << "]";
         }
 
         virtual void printAtomicForwardOp(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for atomic forward operation");
-            CPPADCG_ASSERT_KNOWN(op.info().size() == 3, "Invalid number of information elements for atomic forward operation");
-            size_t id = op.info()[0];
+            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation");
+            size_t id = op.getInfo()[0];
             size_t atomicIndex = _atomicFunctionId2Index.at(id);
-            int q = op.info()[1];
-            int p = op.info()[2];
+            int q = op.getInfo()[1];
+            int p = op.getInfo()[2];
             OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
             OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
 
@@ -1079,9 +1079,9 @@ namespace CppAD {
 
         virtual void printAtomicReverseOp(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 4, "Invalid number of arguments for atomic forward operation");
-            CPPADCG_ASSERT_KNOWN(op.info().size() == 2, "Invalid number of information elements for atomic forward operation");
-            size_t id = op.info()[0];
-            int p = op.info()[1];
+            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 2, "Invalid number of information elements for atomic forward operation");
+            size_t id = op.getInfo()[0];
+            int p = op.getInfo()[1];
             size_t atomicIndex = _atomicFunctionId2Index.at(id);
             OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
             OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
@@ -1112,7 +1112,7 @@ namespace CppAD {
         }
 
         inline void markArrayChanged(OperationNode<Base>& ty) {
-            size_t id = ty.variableID();
+            size_t id = ty.getVariableID();
             size_t tySize = ty.getArguments().size();
             for (size_t i = 0; i < tySize; i++) {
                 _tmpArrayValues[id - 1 + i] = NULL;
@@ -1120,7 +1120,7 @@ namespace CppAD {
         }
 
         inline bool isDependent(const OperationNode<Base>& arg) const {
-            size_t id = arg.variableID();
+            size_t id = arg.getVariableID();
             return id > _independentSize && id < _minTemporaryVarID;
         }
 

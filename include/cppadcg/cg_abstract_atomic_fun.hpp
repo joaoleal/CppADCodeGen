@@ -440,7 +440,7 @@ namespace CppAD {
                         if (op == NULL ||
                                 op->getOperationType() != CGArrayElementOp ||
                                 op->getArguments()[0].getOperation() != otherArray ||
-                                op->info()[0] != i) {
+                                op->getInfo()[0] != i) {
                             reuseArray = false;
                             break;
                         }

@@ -226,7 +226,7 @@ namespace CppAD {
             }
 
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                if (it->getOperationNode() != NULL && it->getOperationNode()->variableID() == 0) {
+                if (it->getOperationNode() != NULL && it->getOperationNode()->getVariableID() == 0) {
                     it->getOperationNode()->setVariableID(_idCount++);
                 }
             }
@@ -247,14 +247,14 @@ namespace CppAD {
                 CG<Base>& var = *it;
                 if (var.getOperationNode() != NULL) {
                     OperationNode<Base>& code = *var.getOperationNode();
-                    if (code.usageCount() == 0) {
+                    if (code.getUsageCount() == 0) {
                         // dependencies not visited yet
                         checkVariableCreation(code);
 
                         // make sure new temporary variables are NOT created for
                         // the independent variables and that a dependency did
                         // not use it first
-                        if ((code.variableID() == 0 || !isIndependent(code)) && code.usageCount() == 0) {
+                        if ((code.getVariableID() == 0 || !isIndependent(code)) && code.getUsageCount() == 0) {
                             addToEvaluationQueue(code);
                         }
                     }
@@ -432,7 +432,7 @@ namespace CppAD {
                 if (it->getOperation() != NULL) {
                     OperationNode<Base>& arg = *it->getOperation();
 
-                    if (arg.usageCount() == 0) {
+                    if (arg.getUsageCount() == 0) {
                         // dependencies not visited yet
                         checkVariableCreation(arg);
 
@@ -441,8 +441,8 @@ namespace CppAD {
                          */
                         if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
                             assert(arg.getArguments().size() > 1);
-                            assert(arg.info().size() > 1);
-                            size_t id = arg.info()[0];
+                            assert(arg.getInfo().size() > 1);
+                            size_t id = arg.getInfo()[0];
                             const std::string& atomicName = _atomicFunctions.at(id);
                             if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
                                 _atomicFunctionsSet.insert(atomicName);
@@ -460,13 +460,13 @@ namespace CppAD {
                     // make sure new temporary variables are NOT created for
                     // the independent variables and that a dependency did
                     // not use it first
-                    if ((arg.variableID() == 0 || !isIndependent(arg)) && arg.usageCount() == 0) {
+                    if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
 
                         size_t argIndex = it - args.begin();
                         if (_lang->createsNewVariable(arg) ||
                                 _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
                             addToEvaluationQueue(arg);
-                            if (arg.variableID() == 0) {
+                            if (arg.getVariableID() == 0) {
                                 if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
                                     arg.setVariableID(_idAtomicCount);
                                     _idAtomicCount++;
@@ -547,7 +547,7 @@ namespace CppAD {
                 const std::vector<OperationNode<Base>* >& released = tempVarRelease[i];
                 for (size_t r = 0; r < released.size(); r++) {
                     if (isTemporary(*released[r])) {
-                        freedVariables.push_back(released[r]->variableID());
+                        freedVariables.push_back(released[r]->getVariableID());
                     } else if (isTemporaryArray(*released[r])) {
                         addFreeArraySpace(*released[r], freeArrayStartSpace, freeArrayEndSpace);
                         assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
@@ -577,7 +577,7 @@ namespace CppAD {
         inline static void addFreeArraySpace(const OperationNode<Base>& released,
                                              std::map<size_t, size_t>& freeArrayStartSpace,
                                              std::map<size_t, size_t>& freeArrayEndSpace) {
-            size_t arrayStart = released.variableID() - 1;
+            size_t arrayStart = released.getVariableID() - 1;
             const size_t arraySize = released.getArguments().size();
             size_t arrayEnd = arrayStart + arraySize - 1;
 
@@ -613,9 +613,9 @@ namespace CppAD {
                 const OperationNode<Base>* argOp = args[i].getOperation();
                 if (argOp != NULL && argOp->getOperationType() == CGArrayElementOp) {
                     const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
-                    assert(otherArray.variableID() > 0); // make sure it had already been assigned space
-                    size_t otherArrayStart = otherArray.variableID() - 1;
-                    size_t index = argOp->info()[0];
+                    assert(otherArray.getVariableID() > 0); // make sure it had already been assigned space
+                    size_t otherArrayStart = otherArray.getVariableID() - 1;
+                    size_t index = argOp->getInfo()[0];
                     blackList.insert(otherArrayStart + index);
                 }
             }
@@ -797,7 +797,7 @@ namespace CppAD {
                     arg.getOperationType() == CGAtomicReverseOp)
                 return false;
 
-            size_t id = arg.variableID();
+            size_t id = arg.getVariableID();
             return id > 0 && id <= _independentVariables.size();
         }
 
@@ -805,7 +805,7 @@ namespace CppAD {
             return arg.getOperationType() != CGArrayCreationOp &&
                     arg.getOperationType() != CGAtomicForwardOp &&
                     arg.getOperationType() != CGAtomicReverseOp &&
-                    arg.variableID() >= _minTemporaryVarID;
+                    arg.getVariableID() >= _minTemporaryVarID;
         }
 
         inline bool isTemporaryArray(const OperationNode<Base>& arg) const {
