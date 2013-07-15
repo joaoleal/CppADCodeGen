@@ -259,7 +259,7 @@ namespace CppAD {
         }
 
         inline size_t getColor() const {
-            return name_;
+            return color_;
         }
 
         inline void setColor(size_t color) {
