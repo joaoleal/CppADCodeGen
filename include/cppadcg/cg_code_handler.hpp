@@ -29,7 +29,7 @@ namespace CppAD {
     template<class Base>
     class CodeHandler {
     public:
-        typedef std::vector<SourceCodePathNode<Base> > SourceCodePath;
+        typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     protected:
         // counter used to generate variable IDs
         size_t _idCount;
@@ -38,11 +38,11 @@ namespace CppAD {
         // counter used to generate IDs for atomic functions
         size_t _idAtomicCount;
         // the independent variables
-        std::vector<SourceCodeFragment<Base> *> _independentVariables;
+        std::vector<OperationNode<Base> *> _independentVariables;
         // all the source code blocks created with the CG<Base> objects (does not include independent variables)
-        std::vector<SourceCodeFragment<Base> *> _codeBlocks;
+        std::vector<OperationNode<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
-        std::vector<SourceCodeFragment<Base> *> _variableOrder;
+        std::vector<OperationNode<Base> *> _variableOrder;
         // maps the ids of the atomic functions to their names (used by this handler only)
         std::map<size_t, std::string> _atomicFunctions;
         /**
@@ -105,7 +105,7 @@ namespace CppAD {
         }
 
         inline void makeVariable(CG<Base>& variable) {
-            _independentVariables.push_back(new SourceCodeFragment<Base > (CGInvOp));
+            _independentVariables.push_back(new OperationNode<Base > (CGInvOp));
             variable.makeVariable(*this, _independentVariables.back());
         }
 
@@ -113,10 +113,10 @@ namespace CppAD {
             return _independentVariables.size();
         }
 
-        size_t getIndependentVariableIndex(const SourceCodeFragment<Base>& var) const throw (CGException) {
+        size_t getIndependentVariableIndex(const OperationNode<Base>& var) const throw (CGException) {
             assert(var.operation_ == CGInvOp);
 
-            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it =
+            typename std::vector<OperationNode<Base> *>::const_iterator it =
                     std::find(_independentVariables.begin(), _independentVariables.end(), &var);
             if (it == _independentVariables.end()) {
                 throw CGException("Variable not found in the independent variable vector");
@@ -148,8 +148,8 @@ namespace CppAD {
          * @param max the maximum number of occurences of code to find in root
          * @return the paths from root to code
          */
-        inline std::vector<SourceCodePath> findPaths(SourceCodeFragment<Base>& root,
-                                                     SourceCodeFragment<Base>& code,
+        inline std::vector<SourceCodePath> findPaths(OperationNode<Base>& root,
+                                                     OperationNode<Base>& code,
                                                      size_t max);
 
         inline bool isSolvable(const SourceCodePath& path) throw (CGException);
@@ -221,13 +221,13 @@ namespace CppAD {
             /**
              * the first variable IDs are for the independent variables
              */
-            for (typename std::vector<SourceCodeFragment<Base> *>::iterator it = _independentVariables.begin(); it != _independentVariables.end(); ++it) {
+            for (typename std::vector<OperationNode<Base> *>::iterator it = _independentVariables.begin(); it != _independentVariables.end(); ++it) {
                 (*it)->setVariableID(_idCount++);
             }
 
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                if (it->getSourceCodeFragment() != NULL && it->getSourceCodeFragment()->variableID() == 0) {
-                    it->getSourceCodeFragment()->setVariableID(_idCount++);
+                if (it->getOperationNode() != NULL && it->getOperationNode()->variableID() == 0) {
+                    it->getOperationNode()->setVariableID(_idCount++);
                 }
             }
 
@@ -236,8 +236,8 @@ namespace CppAD {
             // determine the number of times each variable is used
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 CG<Base>& var = *it;
-                if (var.getSourceCodeFragment() != NULL) {
-                    SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
+                if (var.getOperationNode() != NULL) {
+                    OperationNode<Base>& code = *var.getOperationNode();
                     markCodeBlockUsed(code);
                 }
             }
@@ -245,8 +245,8 @@ namespace CppAD {
             // determine the variable creation order
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 CG<Base>& var = *it;
-                if (var.getSourceCodeFragment() != NULL) {
-                    SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
+                if (var.getOperationNode() != NULL) {
+                    OperationNode<Base>& code = *var.getOperationNode();
                     if (code.usageCount() == 0) {
                         // dependencies not visited yet
                         checkVariableCreation(code);
@@ -318,7 +318,7 @@ namespace CppAD {
         }
 
         virtual void reset() {
-            typename std::vector<SourceCodeFragment<Base> *>::iterator itc;
+            typename std::vector<OperationNode<Base> *>::iterator itc;
             for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {
                 delete *itc;
             }
@@ -342,10 +342,10 @@ namespace CppAD {
          * @param code  The variable to solve for
          * @return  The expression for variable
          */
-        inline CG<Base> solveFor(SourceCodeFragment<Base>& expression,
-                                 SourceCodeFragment<Base>& code) throw (CGException);
+        inline CG<Base> solveFor(OperationNode<Base>& expression,
+                                 OperationNode<Base>& code) throw (CGException);
 
-        inline CG<Base> solveFor(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException);
+        inline CG<Base> solveFor(const std::vector<OperationPathNode<Base> >& path) throw (CGException);
 
         /**
          * Eliminates an independent variable by substitution using the provided
@@ -364,8 +364,8 @@ namespace CppAD {
                                           const CG<Base>& dep,
                                           bool removeFromIndeps = true) throw (CGException);
 
-        inline void substituteIndependent(SourceCodeFragment<Base>& indep,
-                                          SourceCodeFragment<Base>& dep,
+        inline void substituteIndependent(OperationNode<Base>& indep,
+                                          OperationNode<Base>& dep,
                                           bool removeFromIndeps = true) throw (CGException);
 
         /**
@@ -375,7 +375,7 @@ namespace CppAD {
          * 
          * @param indep The independent variable
          */
-        inline void undoSubstituteIndependent(SourceCodeFragment<Base>& indep) throw (CGException);
+        inline void undoSubstituteIndependent(OperationNode<Base>& indep) throw (CGException);
 
         /**
          * Finallizes the subtitution of an independent variable by eliminating
@@ -384,7 +384,7 @@ namespace CppAD {
          * 
          * @param indep The independent variable
          */
-        inline void removeIndependent(SourceCodeFragment<Base>& indep) throw (CGException);
+        inline void removeIndependent(OperationNode<Base>& indep) throw (CGException);
 
         inline virtual ~CodeHandler() {
             reset();
@@ -392,7 +392,7 @@ namespace CppAD {
 
     protected:
 
-        virtual void manageSourceCodeBlock(SourceCodeFragment<Base>* code) {
+        virtual void manageSourceCodeBlock(OperationNode<Base>* code) {
             //assert(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
             if (_codeBlocks.capacity() == _codeBlocks.size()) {
                 _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
@@ -401,7 +401,7 @@ namespace CppAD {
             _codeBlocks.push_back(code);
         }
 
-        virtual void markCodeBlockUsed(SourceCodeFragment<Base>& code) {
+        virtual void markCodeBlockUsed(OperationNode<Base>& code) {
             code.total_use_count_++;
 
             if (code.total_use_count_ == 1) {
@@ -411,8 +411,8 @@ namespace CppAD {
 
                 typename std::vector<Argument<Base> >::const_iterator it;
                 for (it = args.begin(); it != args.end(); ++it) {
-                    if (it->operation() != NULL) {
-                        SourceCodeFragment<Base>& arg = *it->operation();
+                    if (it->getOperation() != NULL) {
+                        OperationNode<Base>& arg = *it->getOperation();
                         markCodeBlockUsed(arg);
                     }
                 }
@@ -423,14 +423,14 @@ namespace CppAD {
             _atomicFunctions[id] = name;
         }
 
-        virtual void checkVariableCreation(SourceCodeFragment<Base>& code) {
+        virtual void checkVariableCreation(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
             typename std::vector<Argument<Base> >::const_iterator it;
 
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg = *it->operation();
+                if (it->getOperation() != NULL) {
+                    OperationNode<Base>& arg = *it->getOperation();
 
                     if (arg.usageCount() == 0) {
                         // dependencies not visited yet
@@ -439,8 +439,8 @@ namespace CppAD {
                         /**
                          * Save atomic function related information
                          */
-                        if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
-                            assert(arg.arguments().size() > 1);
+                        if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
+                            assert(arg.getArguments().size() > 1);
                             assert(arg.info().size() > 1);
                             size_t id = arg.info()[0];
                             const std::string& atomicName = _atomicFunctions.at(id);
@@ -455,8 +455,8 @@ namespace CppAD {
             }
 
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg = *it->operation();
+                if (it->getOperation() != NULL) {
+                    OperationNode<Base>& arg = *it->getOperation();
                     // make sure new temporary variables are NOT created for
                     // the independent variables and that a dependency did
                     // not use it first
@@ -464,19 +464,19 @@ namespace CppAD {
 
                         size_t argIndex = it - args.begin();
                         if (_lang->createsNewVariable(arg) ||
-                                _lang->requiresVariableArgument(code.operation(), argIndex)) {
+                                _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
                             addToEvaluationQueue(arg);
                             if (arg.variableID() == 0) {
-                                if (arg.operation() == CGAtomicForwardOp || arg.operation() == CGAtomicReverseOp) {
+                                if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
                                     arg.setVariableID(_idAtomicCount);
                                     _idAtomicCount++;
-                                } else if (arg.operation() != CGArrayCreationOp) {
+                                } else if (arg.getOperationType() != CGArrayCreationOp) {
                                     // a single temporary variable
                                     arg.setVariableID(_idCount);
                                     _idCount++;
                                 } else {
                                     // a temporary array
-                                    size_t arraySize = arg.arguments().size();
+                                    size_t arraySize = arg.getArguments().size();
                                     arg.setVariableID(_idArrayCount);
                                     _idArrayCount += arraySize;
                                 }
@@ -490,7 +490,7 @@ namespace CppAD {
 
         }
 
-        inline void addToEvaluationQueue(SourceCodeFragment<Base>& arg) {
+        inline void addToEvaluationQueue(OperationNode<Base>& arg) {
             if (_variableOrder.size() == _variableOrder.capacity()) {
                 _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
             }
@@ -510,8 +510,8 @@ namespace CppAD {
 
             for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
                 CG<Base>& var = *it;
-                if (var.getSourceCodeFragment() != NULL) {
-                    SourceCodeFragment<Base>& code = *var.getSourceCodeFragment();
+                if (var.getOperationNode() != NULL) {
+                    OperationNode<Base>& code = *var.getOperationNode();
                     if (code.use_count_ == 0) {
                         // dependencies not visited yet
                         determineLastTempVarUsage(code);
@@ -521,9 +521,9 @@ namespace CppAD {
             }
 
             // where temporary variables can be released
-            std::vector<std::vector<SourceCodeFragment<Base>* > > tempVarRelease(_variableOrder.size());
+            std::vector<std::vector<OperationNode<Base>* > > tempVarRelease(_variableOrder.size());
             for (size_t i = 0; i < _variableOrder.size(); i++) {
-                SourceCodeFragment<Base>* var = _variableOrder[i];
+                OperationNode<Base>* var = _variableOrder[i];
                 if (isTemporary(*var) || isTemporaryArray(*var)) {
                     size_t releaseLocation = var->getLastUsageEvaluationOrder() - 1;
                     tempVarRelease[releaseLocation].push_back(var);
@@ -542,9 +542,9 @@ namespace CppAD {
             _idArrayCount = 1;
 
             for (size_t i = 0; i < _variableOrder.size(); i++) {
-                SourceCodeFragment<Base>& var = *_variableOrder[i];
+                OperationNode<Base>& var = *_variableOrder[i];
 
-                const std::vector<SourceCodeFragment<Base>* >& released = tempVarRelease[i];
+                const std::vector<OperationNode<Base>* >& released = tempVarRelease[i];
                 for (size_t r = 0; r < released.size(); r++) {
                     if (isTemporary(*released[r])) {
                         freedVariables.push_back(released[r]->variableID());
@@ -574,11 +574,11 @@ namespace CppAD {
             }
         }
 
-        inline static void addFreeArraySpace(const SourceCodeFragment<Base>& released,
+        inline static void addFreeArraySpace(const OperationNode<Base>& released,
                                              std::map<size_t, size_t>& freeArrayStartSpace,
                                              std::map<size_t, size_t>& freeArrayEndSpace) {
             size_t arrayStart = released.variableID() - 1;
-            const size_t arraySize = released.arguments().size();
+            const size_t arraySize = released.getArguments().size();
             size_t arrayEnd = arrayStart + arraySize - 1;
 
             std::map<size_t, size_t>::iterator it;
@@ -601,18 +601,18 @@ namespace CppAD {
             freeArrayEndSpace[arrayEnd] = arrayStart;
         }
 
-        inline size_t reserveArraySpace(const SourceCodeFragment<Base>& newArray,
+        inline size_t reserveArraySpace(const OperationNode<Base>& newArray,
                                         std::map<size_t, size_t>& freeArrayStartSpace,
                                         std::map<size_t, size_t>& freeArrayEndSpace,
                                         std::vector<const Argument<Base>*>& tmpArrayValues) {
-            size_t arraySize = newArray.arguments().size();
+            size_t arraySize = newArray.getArguments().size();
 
             std::set<size_t> blackList;
-            const std::vector<Argument<Base> >& args = newArray.arguments();
+            const std::vector<Argument<Base> >& args = newArray.getArguments();
             for (size_t i = 0; i < args.size(); i++) {
-                const SourceCodeFragment<Base>* argOp = args[i].operation();
-                if (argOp != NULL && argOp->operation() == CGArrayElementOp) {
-                    const SourceCodeFragment<Base>& otherArray = *argOp->arguments()[0].operation();
+                const OperationNode<Base>* argOp = args[i].getOperation();
+                if (argOp != NULL && argOp->getOperationType() == CGArrayElementOp) {
+                    const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
                     assert(otherArray.variableID() > 0); // make sure it had already been assigned space
                     size_t otherArrayStart = otherArray.variableID() - 1;
                     size_t index = argOp->info()[0];
@@ -725,18 +725,18 @@ namespace CppAD {
 
         inline static bool sameElement(const Argument<Base>* oldArg, const Argument<Base>& arg) {
             if (oldArg != NULL) {
-                if (oldArg->parameter() != NULL) {
-                    if (arg.parameter() != NULL) {
-                        return (*arg.parameter() == *oldArg->parameter());
+                if (oldArg->getParameter() != NULL) {
+                    if (arg.getParameter() != NULL) {
+                        return (*arg.getParameter() == *oldArg->getParameter());
                     }
                 } else {
-                    return (arg.operation() == oldArg->operation());
+                    return (arg.getOperation() == oldArg->getOperation());
                 }
             }
             return false;
         }
 
-        inline void determineLastTempVarUsage(SourceCodeFragment<Base>& code) {
+        inline void determineLastTempVarUsage(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
             typename std::vector<Argument<Base> >::const_iterator it;
@@ -745,8 +745,8 @@ namespace CppAD {
              * count variable usage
              */
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg = *it->operation();
+                if (it->getOperation() != NULL) {
+                    OperationNode<Base>& arg = *it->getOperation();
 
                     if (arg.use_count_ == 0) {
                         // dependencies not visited yet
@@ -763,9 +763,9 @@ namespace CppAD {
         }
 
         inline void resetUsageCount() {
-            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
+            typename std::vector<OperationNode<Base> *>::const_iterator it;
             for (it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
-                SourceCodeFragment<Base>* block = *it;
+                OperationNode<Base>* block = *it;
                 block->use_count_ = 0;
             }
         }
@@ -775,14 +775,14 @@ namespace CppAD {
          * create variables
          * @param code The operation just added to the evaluation order
          */
-        inline void dependentAdded2EvaluationQueue(SourceCodeFragment<Base>& code) {
+        inline void dependentAdded2EvaluationQueue(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
             typename std::vector<Argument<Base> >::const_iterator it;
 
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->operation() != NULL) {
-                    SourceCodeFragment<Base>& arg = *it->operation();
+                if (it->getOperation() != NULL) {
+                    OperationNode<Base>& arg = *it->getOperation();
                     if (arg.getEvaluationOrder() == 0) {
                         arg.setEvaluationOrder(code.getEvaluationOrder());
                         dependentAdded2EvaluationQueue(arg);
@@ -791,32 +791,32 @@ namespace CppAD {
             }
         }
 
-        inline bool isIndependent(const SourceCodeFragment<Base>& arg) const {
-            if (arg.operation() == CGArrayCreationOp ||
-                    arg.operation() == CGAtomicForwardOp ||
-                    arg.operation() == CGAtomicReverseOp)
+        inline bool isIndependent(const OperationNode<Base>& arg) const {
+            if (arg.getOperationType() == CGArrayCreationOp ||
+                    arg.getOperationType() == CGAtomicForwardOp ||
+                    arg.getOperationType() == CGAtomicReverseOp)
                 return false;
 
             size_t id = arg.variableID();
             return id > 0 && id <= _independentVariables.size();
         }
 
-        inline bool isTemporary(const SourceCodeFragment<Base>& arg) const {
-            return arg.operation() != CGArrayCreationOp &&
-                    arg.operation() != CGAtomicForwardOp &&
-                    arg.operation() != CGAtomicReverseOp &&
+        inline bool isTemporary(const OperationNode<Base>& arg) const {
+            return arg.getOperationType() != CGArrayCreationOp &&
+                    arg.getOperationType() != CGAtomicForwardOp &&
+                    arg.getOperationType() != CGAtomicReverseOp &&
                     arg.variableID() >= _minTemporaryVarID;
         }
 
-        inline bool isTemporaryArray(const SourceCodeFragment<Base>& arg) const {
-            return arg.operation() == CGArrayCreationOp;
+        inline bool isTemporaryArray(const OperationNode<Base>& arg) const {
+            return arg.getOperationType() == CGArrayCreationOp;
         }
 
         virtual void resetCounters() {
             _variableOrder.clear();
 
-            for (typename std::vector<SourceCodeFragment<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
-                SourceCodeFragment<Base>* block = *it;
+            for (typename std::vector<OperationNode<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
+                OperationNode<Base>* block = *it;
                 block->resetHandlerCounters();
             }
         }
@@ -826,12 +826,12 @@ namespace CppAD {
          **********************************************************************/
 
         inline void findPaths(SourceCodePath& path2node,
-                              SourceCodeFragment<Base>& code,
+                              OperationNode<Base>& code,
                               std::vector<SourceCodePath>& found,
                               size_t max);
 
         static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
-                                                                    SourceCodeFragment<Base>& node);
+                                                                    OperationNode<Base>& node);
 
     private:
 

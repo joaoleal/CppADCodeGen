@@ -19,12 +19,12 @@ namespace CppAD {
 
     template<class Base>
     inline bool CG<Base>::isVariable() const {
-        return sourceCode_ != NULL;
+        return opNode_ != NULL;
     }
 
     template<class Base>
     inline bool CG<Base>::isParameter() const {
-        return sourceCode_ == NULL;
+        return opNode_ == NULL;
     }
 
     template<class Base>
@@ -62,15 +62,15 @@ namespace CppAD {
 
     template<class Base>
     inline void CG<Base>::makeParameter(const Base &b) {
-        sourceCode_ = NULL;
+        opNode_ = NULL;
         handler_ = NULL;
         setValue(b);
     }
 
     template<class Base>
-    inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, SourceCodeFragment<Base>* operation) {
+    inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation) {
         assert(operation != NULL);
-        sourceCode_ = operation;
+        opNode_ = operation;
         handler_ = &handler;
         delete value_;
         value_ = NULL;
@@ -79,14 +79,14 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline SourceCodeFragment<Base>* CG<Base>::getSourceCodeFragment() const {
-        return sourceCode_;
+    inline OperationNode<Base>* CG<Base>::getOperationNode() const {
+        return opNode_;
     }
 
     template<class Base>
     inline Argument<Base> CG<Base>::argument() const {
-        if (sourceCode_ != NULL)
-            return Argument<Base > (*sourceCode_);
+        if (opNode_ != NULL)
+            return Argument<Base > (*opNode_);
         else
             return Argument<Base > (*value_);
     }

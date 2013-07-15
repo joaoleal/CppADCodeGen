@@ -67,11 +67,11 @@ namespace CppAD {
         
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
-        virtual std::string generateIndependent(const SourceCodeFragment<Base>& variable) = 0;
+        virtual std::string generateIndependent(const OperationNode<Base>& variable) = 0;
 
-        virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) = 0;
+        virtual std::string generateTemporary(const OperationNode<Base>& variable) = 0;
         
-        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) = 0;
+        virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) = 0;
 
         virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) = 0;
 

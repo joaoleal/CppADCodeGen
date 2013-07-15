@@ -77,7 +77,7 @@
 #include <cppadcg/cg_debug.hpp>
 #include <cppadcg/cg_operation.hpp>
 #include <cppadcg/cg_argument.hpp>
-#include <cppadcg/cg_source_code_fragment.hpp>
+#include <cppadcg/cg_operation_node.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
 #include <cppadcg/cg_variable.hpp>
@@ -100,7 +100,7 @@
 // additional utilities
 #include <cppadcg/cg_util.hpp>
 #include <cppadcg/cg_evaluator.hpp>
-#include <cppadcg/cg_source_code_path.hpp>
+#include <cppadcg/cg_operation_path.hpp>
 #include <cppadcg/cg_solver.hpp>
 #include <cppadcg/cg_graph_mod.hpp>
 

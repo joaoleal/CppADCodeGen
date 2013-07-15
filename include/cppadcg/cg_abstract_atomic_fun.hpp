@@ -138,8 +138,8 @@ namespace CppAD {
             CodeHandler<Base>* handler = findHandler(tx);
             assert(handler != NULL);
 
-            SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-            SourceCodeFragment<Base>* tyArray;
+            OperationNode<Base>* txArray = makeArray(*handler, tx);
+            OperationNode<Base>* tyArray;
 
             if (standAlone_ && p > 0) {
                 tyArray = makeZeroArray(*handler, ty);
@@ -155,7 +155,7 @@ namespace CppAD {
             args[0] = Argument<Base>(*txArray);
             args[1] = Argument<Base>(*tyArray);
 
-            SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicForwardOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp, opInfo, args);
             handler->manageSourceCodeBlock(atomicOp);
             handler->registerAtomicFunction(id_, this->afun_name());
 
@@ -167,7 +167,7 @@ namespace CppAD {
                     args[0] = Argument<Base>(*tyArray);
                     args[1] = Argument<Base>(*atomicOp);
 
-                    ty[i] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
+                    ty[i] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
                     if (valuesDefined) {
                         ty[i].setValue(tyb[i]);
                     }
@@ -301,10 +301,10 @@ namespace CppAD {
             }
             assert(handler != NULL);
 
-            SourceCodeFragment<Base>* txArray = makeArray(*handler, tx);
-            SourceCodeFragment<Base>* tyArray;
-            SourceCodeFragment<Base>* pxArray = makeZeroArray(*handler, px);
-            SourceCodeFragment<Base>* pyArray = makeArray(*handler, py);
+            OperationNode<Base>* txArray = makeArray(*handler, tx);
+            OperationNode<Base>* tyArray;
+            OperationNode<Base>* pxArray = makeZeroArray(*handler, px);
+            OperationNode<Base>* pyArray = makeArray(*handler, py);
 
             if (standAlone_) {
                 tyArray = makeZeroArray(*handler, ty);
@@ -321,7 +321,7 @@ namespace CppAD {
             args[2] = Argument<Base>(*pxArray);
             args[3] = Argument<Base>(*pyArray);
 
-            SourceCodeFragment<Base>* atomicOp = new SourceCodeFragment<Base>(CGAtomicReverseOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp, opInfo, args);
             handler->manageSourceCodeBlock(atomicOp);
             handler->registerAtomicFunction(id_, this->afun_name());
 
@@ -332,7 +332,7 @@ namespace CppAD {
                     opInfo[0] = j;
                     args[0] = Argument<Base>(*pxArray);
                     args[1] = Argument<Base>(*atomicOp);
-                    px[j] = CGB(*handler, new SourceCodeFragment<Base>(CGArrayElementOp, opInfo, args));
+                    px[j] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
                     if (valuesDefined) {
                         px[j].setValue(pxb[j]);
                     }
@@ -422,24 +422,24 @@ namespace CppAD {
                 if (tx[i].isParameter()) {
                     arguments[i] = Arg(tx[i].getValue());
                 } else {
-                    arguments[i] = Arg(*tx[i].getSourceCodeFragment());
+                    arguments[i] = Arg(*tx[i].getOperationNode());
                 }
             }
             return arguments;
         }
 
-        static inline SourceCodeFragment<Base>* makeArray(CodeHandler<Base>& handler,
+        static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
                                                           const vector<CGB>& tx) {
             if (tx.size() > 0) {
-                SourceCodeFragment<Base>* op = tx[0].getSourceCodeFragment();
-                if (op != NULL && op->operation() == CGArrayElementOp) {
-                    SourceCodeFragment<Base>* otherArray = op->arguments()[0].operation();
+                OperationNode<Base>* op = tx[0].getOperationNode();
+                if (op != NULL && op->getOperationType() == CGArrayElementOp) {
+                    OperationNode<Base>* otherArray = op->getArguments()[0].getOperation();
                     bool reuseArray = true;
                     for (size_t i = 0; i < tx.size(); i++) {
-                        op = tx[i].getSourceCodeFragment();
+                        op = tx[i].getOperationNode();
                         if (op == NULL ||
-                                op->operation() != CGArrayElementOp ||
-                                op->arguments()[0].operation() != otherArray ||
+                                op->getOperationType() != CGArrayElementOp ||
+                                op->getArguments()[0].getOperation() != otherArray ||
                                 op->info()[0] != i) {
                             reuseArray = false;
                             break;
@@ -452,17 +452,17 @@ namespace CppAD {
             }
             std::vector<Arg> arrayArgs = asArguments(tx);
             std::vector<size_t> info; // empty
-            SourceCodeFragment<Base>* array = new SourceCodeFragment<Base>(CGArrayCreationOp, info, arrayArgs);
+            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
             handler.manageSourceCodeBlock(array);
             return array;
         }
 
-        static inline SourceCodeFragment<Base>* makeZeroArray(CodeHandler<Base>& handler,
+        static inline OperationNode<Base>* makeZeroArray(CodeHandler<Base>& handler,
                                                               const vector<CGB>& tx) {
             vector<CGB> tx2(tx.size());
             std::vector<Arg> arrayArgs = asArguments(tx2);
             std::vector<size_t> info; // empty
-            SourceCodeFragment<Base>* array = new SourceCodeFragment<Base>(CGArrayCreationOp, info, arrayArgs);
+            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
             handler.manageSourceCodeBlock(array);
             return array;
         }

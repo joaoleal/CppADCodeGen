@@ -26,13 +26,13 @@ namespace CppAD {
     class LanguageGenerationData {
     public:
         // The independent variables
-        const std::vector<SourceCodeFragment<Base> *>& independent;
+        const std::vector<OperationNode<Base> *>& independent;
         // The dependent variables
         const std::vector<CG<Base> >& dependent;
         // the lowest ID used for temporary variables
         size_t minTemporaryVarID;
         // The order of the assignment of the variables in the source code
-        const std::vector<SourceCodeFragment<Base>*>& variableOrder;
+        const std::vector<OperationNode<Base>*>& variableOrder;
         // Provides the rules for variable name creation
         VariableNameGenerator<Base>& nameGen;
         // maps atomic function IDs to their internal index
@@ -44,10 +44,10 @@ namespace CppAD {
 
     public:
 
-        LanguageGenerationData(const std::vector<SourceCodeFragment<Base> *>& ind,
+        LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
                                const std::vector<CG<Base> >& dep,
                                size_t minTempVID,
-                               const std::vector<SourceCodeFragment<Base>*>& vo,
+                               const std::vector<OperationNode<Base>*>& vo,
                                VariableNameGenerator<Base>& ng,
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
@@ -79,7 +79,7 @@ namespace CppAD {
          * @param op Operation
          * @return true if a new variable is created
          */
-        virtual bool createsNewVariable(const SourceCodeFragment<Base>& op) const = 0;
+        virtual bool createsNewVariable(const OperationNode<Base>& op) const = 0;
 
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const = 0;
 

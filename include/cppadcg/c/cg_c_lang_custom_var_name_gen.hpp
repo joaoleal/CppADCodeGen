@@ -57,7 +57,7 @@ namespace CppAD {
             }
         }
 
-        virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
+        virtual std::string generateIndependent(const OperationNode<Base>& independent) {
             size_t index = independent.variableID() - 1;
             if (index < indepNames_.size() && !indepNames_[index].empty()) {
                 return indepNames_[index];

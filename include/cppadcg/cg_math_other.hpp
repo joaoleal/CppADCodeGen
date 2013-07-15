@@ -35,7 +35,7 @@ namespace CppAD {
             handler = y.getCodeHandler();
         }
 
-        CG<Base> result(*handler, new SourceCodeFragment<Base>(CGPowOp, x.argument(), y.argument()));
+        CG<Base> result(*handler, new OperationNode<Base>(CGPowOp, x.argument(), y.argument()));
         if (x.isValueDefined() && y.isValueDefined()) {
             result.setValue(pow(x.getValue(), y.getValue()));
         }
@@ -64,7 +64,7 @@ namespace CppAD {
             }
         }
 
-        CG<Base> result(*x.getCodeHandler(), new SourceCodeFragment<Base>(CGSignOp, x.argument()));
+        CG<Base> result(*x.getCodeHandler(), new OperationNode<Base>(CGSignOp, x.argument()));
         if (x.isValueDefined()) {
             if (x.getValue() > Base(0.0)) {
                 result.setValue(Base(1.0));

@@ -38,10 +38,10 @@ namespace CppAD {
     class AD;
 
     template<class Base>
-    class SourceCodeFragment;
+    class OperationNode;
 
     template<class Base>
-    struct SourceCodePathNode;
+    struct OperationPathNode;
 
     template<class Base>
     class CLangCompiler;

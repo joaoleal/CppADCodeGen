@@ -64,7 +64,7 @@ namespace CppAD {
         } else if ((trueCase.isParameter() && falseCase.isParameter() &&
                 trueCase.getValue() == falseCase.getValue()) ||
                 (trueCase.isVariable() && falseCase.isVariable() &&
-                trueCase.getSourceCodeFragment() == falseCase.getSourceCodeFragment())) {
+                trueCase.getOperationNode() == falseCase.getOperationNode())) {
             return trueCase;
         } else {
 
@@ -113,7 +113,7 @@ namespace CppAD {
                     CPPAD_ASSERT_UNKNOWN(0);
             }
 
-            CG<Base> result(*handler, new SourceCodeFragment<Base> (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
+            CG<Base> result(*handler, new OperationNode<Base> (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
 
             if (left.isValueDefined() && right.isValueDefined()) {
                 switch (cop) {

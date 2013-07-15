@@ -18,15 +18,15 @@
 namespace CppAD {
 
     template<class Base>
-    inline CG<Base> CodeHandler<Base>::solveFor(SourceCodeFragment<Base>& expression,
-                                                SourceCodeFragment<Base>& code) throw (CGException) {
+    inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
+                                                OperationNode<Base>& code) throw (CGException) {
         using std::vector;
 
         // find code in expression
         if (&expression == &code)
             return CG<Base > (*this, Argument<Base > (code));
 
-        typedef vector<SourceCodePathNode<Base> > SourceCodePath;
+        typedef vector<OperationPathNode<Base> > SourceCodePath;
 
         vector<SourceCodePath> paths = findPaths(expression, code, 2);
         if (paths.empty()) {
@@ -43,16 +43,16 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException) {
+    inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<Base> >& path) throw (CGException) {
 
         CG<Base> rightHs(0.0);
 
         for (size_t n = 0; n < path.size() - 1; ++n) {
-            const SourceCodePathNode<Base>& pnodeOp = path[n];
+            const OperationPathNode<Base>& pnodeOp = path[n];
             size_t argIndex = path[n + 1].arg_index;
-            const std::vector<Argument<Base> >& args = pnodeOp.node->arguments();
+            const std::vector<Argument<Base> >& args = pnodeOp.node->getArguments();
 
-            CGOpCode op = pnodeOp.node->operation();
+            CGOpCode op = pnodeOp.node->getOperationType();
             switch (op) {
                 case CGMulOp:
                 {
@@ -102,16 +102,16 @@ namespace CppAD {
                     if (argIndex == 0) {
                         // base
                         const Argument<Base>& exponent = args[1];
-                        if (exponent.parameter() != NULL && *exponent.parameter() == Base(0.0)) {
+                        if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(0.0)) {
                             throw CGException("Invalid zero exponent");
-                        } else if (exponent.parameter() != NULL && *exponent.parameter() == Base(1.0)) {
+                        } else if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(1.0)) {
                             continue; // do nothing
                         } else {
                             std::ostringstream ss;
                             ss << "Unable to invert operation '" << op << "'";
                             throw CGException(ss.str());
                             /*
-                            if (exponent.parameter() != NULL && *exponent.parameter() == Base(2.0)) {
+                            if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(2.0)) {
                                 rightHs = sqrt(rightHs); // TODO: should -sqrt(rightHs) somehow be considered???
                             } else {
                                 rightHs = pow(rightHs, Base(1.0) / CG<Base > (*this, exponent));
@@ -156,13 +156,13 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline bool isSolvable(const std::vector<SourceCodePathNode<Base> >& path) throw (CGException) {
+    inline bool isSolvable(const std::vector<OperationPathNode<Base> >& path) throw (CGException) {
         for (size_t n = 0; n < path.size() - 1; ++n) {
-            const SourceCodePathNode<Base>& pnodeOp = path[n];
+            const OperationPathNode<Base>& pnodeOp = path[n];
             size_t argIndex = path[n + 1].arg_index;
-            const std::vector<Argument<Base> >& args = pnodeOp.node->arguments();
+            const std::vector<Argument<Base> >& args = pnodeOp.node->getArguments();
 
-            CGOpCode op = pnodeOp.node->operation();
+            CGOpCode op = pnodeOp.node->getOperationType();
             switch (op) {
                 case CGMulOp:
                 case CGDivOp:
@@ -182,9 +182,9 @@ namespace CppAD {
                     if (argIndex == 0) {
                         // base
                         const Argument<Base>& exponent = args[1];
-                        if (exponent.parameter() != NULL && *exponent.parameter() == Base(0.0)) {
+                        if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(0.0)) {
                             return false;
-                        } else if (exponent.parameter() != NULL && *exponent.parameter() == Base(1.0)) {
+                        } else if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(1.0)) {
                             break;
                         } else {
                             return false;

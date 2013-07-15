@@ -28,7 +28,7 @@ namespace CppAD {
         // the source code handler (NULL for parameters)
         CodeHandler<Base>* handler_;
         // the source code that generated this variable (NULL for parameters)
-        SourceCodeFragment<Base>* sourceCode_;
+        OperationNode<Base>* opNode_;
         // value (constant parameters only)
         Base* value_;
 
@@ -62,7 +62,7 @@ namespace CppAD {
         inline bool IdenticalZero() const throw (CGException);
         inline bool IdenticalOne() const throw (CGException);
 
-        inline SourceCodeFragment<Base>* getSourceCodeFragment() const;
+        inline OperationNode<Base>* getOperationNode() const;
 
         // computed assignment operators
         inline CG<Base>& operator+=(const CG<Base> &right);
@@ -91,7 +91,7 @@ namespace CppAD {
         virtual ~CG();
     protected:
         // creates a temporary variable
-        inline CG(CodeHandler<Base>& handler, SourceCodeFragment<Base>* sourceCode);
+        inline CG(CodeHandler<Base>& handler, OperationNode<Base>* sourceCode);
 
         // 
         /**
@@ -105,7 +105,7 @@ namespace CppAD {
 
         //
         inline void makeParameter(const Base &b);
-        inline void makeVariable(CodeHandler<Base>& handler, SourceCodeFragment<Base>* operation);
+        inline void makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation);
 
         inline Argument<Base> argument() const;
     private:
@@ -215,7 +215,7 @@ namespace CppAD {
         if (v.isParameter()) {
             os << v.getValue();
         } else {
-            os << *v.getSourceCodeFragment();
+            os << *v.getOperationNode();
         }
         return os;
     }
@@ -228,7 +228,7 @@ namespace CppAD {
         if (v.isParameter()) {
             os << v.getValue();
         } else {
-            os << *v.getSourceCodeFragment();
+            os << *v.getOperationNode();
         }
         return os;
     }

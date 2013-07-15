@@ -71,7 +71,7 @@ namespace CppAD {
         // the dependent variable vector
         const std::vector<CG<Base> >* _dependent;
         // the temporary variables that may require a declaration
-        std::map<size_t, SourceCodeFragment<Base>*> _temporary;
+        std::map<size_t, OperationNode<Base>*> _temporary;
         // the operator used for assignment of dependent variables
         std::string _depAssignOperation;
         // whether or not to ignore assignment of constant zero values to dependent variables
@@ -183,16 +183,16 @@ namespace CppAD {
                     _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
                 }
             } else if (_temporary.size() > 0) {
-                typename std::map<size_t, SourceCodeFragment<Base>*>::const_iterator it;
+                typename std::map<size_t, OperationNode<Base>*>::const_iterator it;
 
                 for (it = _temporary.begin(); it != _temporary.end(); ++it) {
-                    SourceCodeFragment<Base>* var = it->second;
+                    OperationNode<Base>* var = it->second;
                     if (var->getName() == NULL) {
                         var->setName(_nameGen->generateTemporary(*var));
                     }
                 }
 
-                SourceCodeFragment<Base>* var1 = _temporary.begin()->second;
+                OperationNode<Base>* var1 = _temporary.begin()->second;
                 const std::string& varName1 = *var1->getName();
                 _ss << _spaces << _baseTypeName << " " << varName1;
 
@@ -309,7 +309,7 @@ namespace CppAD {
             _atomicFunctionId2Index = info.atomicFunctionId2Index;
             _atomicFunctionId2Name = info.atomicFunctionId2Name;
             const std::vector<CG<Base> >& dependent = info.dependent;
-            const std::vector<SourceCodeFragment<Base>*>& variableOrder = info.variableOrder;
+            const std::vector<OperationNode<Base>*>& variableOrder = info.variableOrder;
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
 
@@ -317,9 +317,9 @@ namespace CppAD {
              * generate variable names
              */
             //generate names for the independent variables
-            typename std::vector<SourceCodeFragment<Base> *>::const_iterator it;
+            typename std::vector<OperationNode<Base> *>::const_iterator it;
             for (it = info.independent.begin(); it != info.independent.end(); ++it) {
-                SourceCodeFragment<Base>& op = **it;
+                OperationNode<Base>& op = **it;
                 if (op.getName() == NULL) {
                     op.setName(_nameGen->generateIndependent(op));
                 }
@@ -327,7 +327,7 @@ namespace CppAD {
 
             // generate names for the dependent variables (must be after naming the independent)
             for (size_t i = 0; i < dependent.size(); i++) {
-                SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
+                OperationNode<Base>* op = dependent[i].getOperationNode();
                 if (op != NULL && op->getName() == NULL) {
                     op->setName(_nameGen->generateDependent(dependent[i], i));
                 }
@@ -359,8 +359,8 @@ namespace CppAD {
             std::set<size_t> dependentDuplicates;
 
             for (size_t i = 0; i < dependent.size(); i++) {
-                SourceCodeFragment<Base>* op = dependent[i].getSourceCodeFragment();
-                if (op != NULL && op->operation() != CGInvOp) {
+                OperationNode<Base>* op = dependent[i].getOperationNode();
+                if (op != NULL && op->getOperationType() != CGInvOp) {
                     size_t varID = op->variableID();
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
@@ -386,12 +386,12 @@ namespace CppAD {
             if (variableOrder.size() > 0) {
                 // generate names for temporary variables
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
-                    SourceCodeFragment<Base>& op = **it;
+                    OperationNode<Base>& op = **it;
                     if (op.getName() == NULL) {
                         if (!isDependent(op)) {
-                            if (requiresVariableName(op) && op.operation() != CGArrayCreationOp) {
+                            if (requiresVariableName(op) && op.getOperationType() != CGArrayCreationOp) {
                                 op.setName(_nameGen->generateTemporary(op));
-                            } else if (op.operation() == CGArrayCreationOp) {
+                            } else if (op.getOperationType() == CGArrayCreationOp) {
                                 op.setName(_nameGen->generateTemporaryArray(op));
                             }
                         }
@@ -406,7 +406,7 @@ namespace CppAD {
                         saveLocalFunction(localFuncNames);
                     }
 
-                    SourceCodeFragment<Base>& op = **it;
+                    OperationNode<Base>& op = **it;
 
                     bool isDep = isDependent(op);
                     if (!isDep) {
@@ -423,8 +423,8 @@ namespace CppAD {
                         _code << ";\n";
                     }
 
-                    if (op.operation() == CGArrayElementOp) {
-                        size_t arrayId = op.arguments()[0].operation()->variableID();
+                    if (op.getOperationType() == CGArrayElementOp) {
+                        size_t arrayId = op.getArguments()[0].getOperation()->variableID();
                         size_t pos = op.info()[0];
                         _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
                     }
@@ -466,7 +466,7 @@ namespace CppAD {
                     size_t index = *it;
                     const CG<Base>& dep = (*_dependent)[index];
                     std::string varName = _nameGen->generateDependent(dep, index);
-                    const std::string& origVarName = *dep.getSourceCodeFragment()->getName();
+                    const std::string& origVarName = *dep.getOperationNode()->getName();
 
                     _code << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
                 }
@@ -482,9 +482,9 @@ namespace CppAD {
                         printParameter(dependent[i].getValue());
                         _code << ";\n";
                     }
-                } else if (dependent[i].getSourceCodeFragment()->operation() == CGInvOp) {
+                } else if (dependent[i].getOperationNode()->getOperationType() == CGInvOp) {
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
-                    const std::string& indepName = *dependent[i].getSourceCodeFragment()->getName();
+                    const std::string& indepName = *dependent[i].getOperationNode()->getName();
                     _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
             }
@@ -558,8 +558,8 @@ namespace CppAD {
             _ss.str("");
         }
 
-        virtual bool createsNewVariable(const SourceCodeFragment<Base>& var) const {
-            CGOpCode op = var.operation();
+        virtual bool createsNewVariable(const OperationNode<Base>& var) const {
+            CGOpCode op = var.getOperationType();
             return (var.totalUsageCount() > 1 &&
                     op != CGArrayElementOp) ||
                     op == CGAtomicForwardOp ||
@@ -573,14 +573,14 @@ namespace CppAD {
                     op == CGComOpNe;
         }
 
-        virtual bool requiresVariableName(const SourceCodeFragment<Base>& op) const {
+        virtual bool requiresVariableName(const OperationNode<Base>& op) const {
             return (op.totalUsageCount() > 1 &&
-                    op.operation() != CGAtomicForwardOp &&
-                    op.operation() != CGAtomicReverseOp);
+                    op.getOperationType() != CGAtomicForwardOp &&
+                    op.getOperationType() != CGAtomicReverseOp);
         }
 
-        virtual bool directlyAssignsVariable(const SourceCodeFragment<Base>& var) const {
-            CGOpCode op = var.operation();
+        virtual bool directlyAssignsVariable(const OperationNode<Base>& var) const {
+            CGOpCode op = var.getOperationType();
             return !isCondAssign(op) &&
                     op != CGArrayCreationOp &&
                     op != CGAtomicForwardOp &&
@@ -591,12 +591,12 @@ namespace CppAD {
             return op == CGSignOp;
         }
 
-        inline const std::string& createVariableName(SourceCodeFragment<Base>& var) {
+        inline const std::string& createVariableName(OperationNode<Base>& var) {
             assert(var.variableID() > 0);
-            assert(var.operation() != CGAtomicForwardOp && var.operation() != CGAtomicReverseOp);
+            assert(var.getOperationType() != CGAtomicForwardOp && var.getOperationType() != CGAtomicReverseOp);
 
             if (var.getName() == NULL) {
-                if (var.operation() != CGArrayCreationOp) {
+                if (var.getOperationType() != CGArrayCreationOp) {
                     if (var.variableID() <= _independentSize) {
                         // independent variable
                         var.setName(_nameGen->generateIndependent(var));
@@ -612,7 +612,7 @@ namespace CppAD {
 
                     } else {
                         // temporary variable
-                        if (requiresVariableName(var) && var.operation() != CGArrayCreationOp) {
+                        if (requiresVariableName(var) && var.getOperationType() != CGArrayCreationOp) {
                             var.setName(_nameGen->generateTemporary(var));
                         }
                     }
@@ -624,23 +624,23 @@ namespace CppAD {
             return *var.getName();
         }
 
-        virtual void printIndependentVariableName(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 0, "Invalid number of arguments for independent variable");
+        virtual void printIndependentVariableName(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
 
             _code << _nameGen->generateIndependent(op);
         }
 
         virtual void print(const Argument<Base>& arg) {
-            if (arg.operation() != NULL) {
+            if (arg.getOperation() != NULL) {
                 // expression
-                printExpression(*arg.operation());
+                printExpression(*arg.getOperation());
             } else {
                 // parameter
-                printParameter(*arg.parameter());
+                printParameter(*arg.getParameter());
             }
         }
 
-        virtual void printExpression(SourceCodeFragment<Base>& op) throw (CGException) {
+        virtual void printExpression(OperationNode<Base>& op) throw (CGException) {
             if (op.variableID() > 0) {
                 // use variable name
                 _code << createVariableName(op);
@@ -650,8 +650,8 @@ namespace CppAD {
             }
         }
 
-        virtual void printExpressionNoVarCheck(SourceCodeFragment<Base>& op) throw (CGException) {
-            switch (op.operation()) {
+        virtual void printExpressionNoVarCheck(OperationNode<Base>& op) throw (CGException) {
+            switch (op.getOperationType()) {
                 case CGArrayCreationOp:
                     printArrayCreationOp(op);
                     break;
@@ -717,15 +717,15 @@ namespace CppAD {
                     break;
                 default:
                     std::stringstream ss;
-                    ss << "Unkown operation code '" << op.operation() << "'.";
+                    ss << "Unkown operation code '" << op.getOperationType() << "'.";
                     throw CGException(ss.str());
             }
         }
 
-        virtual void printUnaryFunction(SourceCodeFragment<Base>& op) throw (CGException) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 1, "Invalid number of arguments for unary function");
+        virtual void printUnaryFunction(OperationNode<Base>& op) throw (CGException) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function");
 
-            switch (op.operation()) {
+            switch (op.getOperationType()) {
                 case CGAbsOp:
                     _code << absFuncName();
                     break;
@@ -767,31 +767,31 @@ namespace CppAD {
                     break;
                 default:
                     std::stringstream ss;
-                    ss << "Unkown function name for operation code '" << op.operation() << "'.";
+                    ss << "Unkown function name for operation code '" << op.getOperationType() << "'.";
                     throw CGException(ss.str());
             }
 
             _code << "(";
-            print(op.arguments()[0]);
+            print(op.getArguments()[0]);
             _code << ")";
         }
 
-        virtual void printPowFunction(SourceCodeFragment<Base>& op) throw (CGException) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for pow() function");
+        virtual void printPowFunction(OperationNode<Base>& op) throw (CGException) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
             _code << powFuncName() << "(";
-            print(op.arguments()[0]);
+            print(op.getArguments()[0]);
             _code << ", ";
-            print(op.arguments()[1]);
+            print(op.getArguments()[1]);
             _code << ")";
         }
 
-        virtual void printSignFunction(SourceCodeFragment<Base>& op) throw (CGException) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 1, "Invalid number of arguments for sign() function");
-            assert(op.arguments()[0].operation() != NULL);
-            assert(op.arguments()[0].operation()->variableID() > 0);
+        virtual void printSignFunction(OperationNode<Base>& op) throw (CGException) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for sign() function");
+            assert(op.getArguments()[0].getOperation() != NULL);
+            assert(op.getArguments()[0].getOperation()->variableID() > 0);
 
-            SourceCodeFragment<Base>& arg = *op.arguments()[0].operation();
+            OperationNode<Base>& arg = *op.getArguments()[0].getOperation();
 
             const std::string& argName = createVariableName(arg);
 
@@ -808,31 +808,31 @@ namespace CppAD {
             _code << "))";
         }
 
-        virtual void printOperationAlias(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 1, "Invalid number of arguments for alias");
-            print(op.arguments()[0]);
+        virtual void printOperationAlias(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for alias");
+            print(op.getArguments()[0]);
         }
 
-        virtual void printOperationAdd(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for addition");
+        virtual void printOperationAdd(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition");
 
-            print(op.arguments()[0]);
+            print(op.getArguments()[0]);
             _code << " + ";
-            print(op.arguments()[1]);
+            print(op.getArguments()[1]);
         }
 
-        virtual void printOperationMinus(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for substraction");
+        virtual void printOperationMinus(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for substraction");
 
-            const Argument<Base>& left = op.arguments()[0];
-            const Argument<Base>& right = op.arguments()[1];
+            const Argument<Base>& left = op.getArguments()[0];
+            const Argument<Base>& right = op.getArguments()[1];
 
-            const SourceCodeFragment<Base>* opRight = right.operation();
+            const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    opRight->operation() != CGDivOp &&
-                    opRight->operation() != CGMulOp &&
-                    !isFunction(opRight->operation());
+                    opRight->getOperationType() != CGDivOp &&
+                    opRight->getOperationType() != CGMulOp &&
+                    !isFunction(opRight->getOperationType());
 
             print(left);
             _code << " - ";
@@ -845,20 +845,20 @@ namespace CppAD {
             }
         }
 
-        virtual void printOperationDiv(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for division");
+        virtual void printOperationDiv(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for division");
 
-            const Argument<Base>& left = op.arguments()[0];
-            const Argument<Base>& right = op.arguments()[1];
+            const Argument<Base>& left = op.getArguments()[0];
+            const Argument<Base>& right = op.getArguments()[1];
 
-            const SourceCodeFragment<Base>* opLeft = left.operation();
+            const OperationNode<Base>* opLeft = left.getOperation();
             bool encloseLeft = opLeft != NULL &&
                     opLeft->variableID() == 0 &&
-                    !isFunction(opLeft->operation());
-            const SourceCodeFragment<Base>* opRight = right.operation();
+                    !isFunction(opLeft->getOperationType());
+            const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    !isFunction(opRight->operation());
+                    !isFunction(opRight->getOperationType());
 
             if (encloseLeft) {
                 _code << "(";
@@ -877,24 +877,24 @@ namespace CppAD {
             }
         }
 
-        virtual void printOperationMul(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for multiplication");
+        virtual void printOperationMul(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for multiplication");
 
-            const Argument<Base>& left = op.arguments()[0];
-            const Argument<Base>& right = op.arguments()[1];
+            const Argument<Base>& left = op.getArguments()[0];
+            const Argument<Base>& right = op.getArguments()[1];
 
-            const SourceCodeFragment<Base>* opLeft = left.operation();
+            const OperationNode<Base>* opLeft = left.getOperation();
             bool encloseLeft = opLeft != NULL &&
                     opLeft->variableID() == 0 &&
-                    opLeft->operation() != CGDivOp &&
-                    opLeft->operation() != CGMulOp &&
-                    !isFunction(opLeft->operation());
-            const SourceCodeFragment<Base>* opRight = right.operation();
+                    opLeft->getOperationType() != CGDivOp &&
+                    opLeft->getOperationType() != CGMulOp &&
+                    !isFunction(opLeft->getOperationType());
+            const OperationNode<Base>* opRight = right.getOperation();
             bool encloseRight = opRight != NULL &&
                     opRight->variableID() == 0 &&
-                    opRight->operation() != CGDivOp &&
-                    opRight->operation() != CGMulOp &&
-                    !isFunction(opRight->operation());
+                    opRight->getOperationType() != CGDivOp &&
+                    opRight->getOperationType() != CGMulOp &&
+                    !isFunction(opRight->getOperationType());
 
             if (encloseLeft) {
                 _code << "(";
@@ -913,17 +913,17 @@ namespace CppAD {
             }
         }
 
-        virtual void printOperationUnaryMinus(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 1, "Invalid number of arguments for unary minus");
+        virtual void printOperationUnaryMinus(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary minus");
 
-            const Argument<Base>& arg = op.arguments()[0];
+            const Argument<Base>& arg = op.getArguments()[0];
 
-            const SourceCodeFragment<Base>* scf = arg.operation();
+            const OperationNode<Base>* scf = arg.getOperation();
             bool enclose = scf != NULL &&
                     scf->variableID() == 0 &&
-                    scf->operation() != CGDivOp &&
-                    scf->operation() != CGMulOp &&
-                    !isFunction(scf->operation());
+                    scf->getOperationType() != CGDivOp &&
+                    scf->getOperationType() != CGMulOp &&
+                    !isFunction(scf->getOperationType());
 
             _code << "-";
             if (enclose) {
@@ -937,10 +937,10 @@ namespace CppAD {
             }
         }
 
-        virtual void printConditionalAssignment(SourceCodeFragment<Base>& op) {
+        virtual void printConditionalAssignment(OperationNode<Base>& op) {
             assert(op.variableID() > 0);
 
-            const std::vector<Argument<Base> >& args = op.arguments();
+            const std::vector<Argument<Base> >& args = op.getArguments();
             const Argument<Base> &left = args[0];
             const Argument<Base> &right = args[1];
             const Argument<Base> &trueCase = args[2];
@@ -949,8 +949,8 @@ namespace CppAD {
             bool isDep = isDependent(op);
             const std::string& varName = createVariableName(op);
 
-            if ((trueCase.parameter() != NULL && falseCase.parameter() != NULL && *trueCase.parameter() == *falseCase.parameter()) ||
-                    (trueCase.operation() != NULL && falseCase.operation() != NULL && trueCase.operation() == falseCase.operation())) {
+            if ((trueCase.getParameter() != NULL && falseCase.getParameter() != NULL && *trueCase.getParameter() == *falseCase.getParameter()) ||
+                    (trueCase.getOperation() != NULL && falseCase.getOperation() != NULL && trueCase.getOperation() == falseCase.getOperation())) {
                 // true and false cases are the same
                 _code << _spaces << varName << " ";
                 _code << (isDep ? _depAssignOperation : "=") << " ";
@@ -959,7 +959,7 @@ namespace CppAD {
             } else {
                 _code << _spaces << "if( ";
                 print(left);
-                _code << " " << getComparison(op.operation()) << " ";
+                _code << " " << getComparison(op.getOperationType()) << " ";
                 print(right);
                 _code << " ) {\n";
                 _code << _spaces << _spaces << varName << " ";
@@ -975,18 +975,18 @@ namespace CppAD {
             }
         }
 
-        virtual void printArrayCreationOp(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() > 0, "Invalid number of arguments for array creation operation");
+        virtual void printArrayCreationOp(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
 
             const size_t id = op.variableID();
-            const std::vector<Argument<Base> >& args = op.arguments();
+            const std::vector<Argument<Base> >& args = op.getArguments();
             const size_t argSize = args.size();
 
-            if (argSize > 1 && args[0].parameter() != NULL) {
-                const Base& value = *args[0].parameter();
+            if (argSize > 1 && args[0].getParameter() != NULL) {
+                const Base& value = *args[0].getParameter();
                 bool sameValue = true;
                 for (size_t i = 1; i < argSize; i++) {
-                    if (args[i].parameter() == NULL || *args[i].parameter() != value) {
+                    if (args[i].getParameter() == NULL || *args[i].getParameter() != value) {
                         sameValue = false;
                         break;
                     }
@@ -995,7 +995,7 @@ namespace CppAD {
                     bool assign = false;
                     for (size_t i = 0; i < argSize; i++) {
                         const Argument<Base>* oldArg = _tmpArrayValues[id - 1 + i];
-                        if (oldArg == NULL || oldArg->parameter() == NULL || *oldArg->parameter() != value) {
+                        if (oldArg == NULL || oldArg->getParameter() == NULL || *oldArg->getParameter() != value) {
                             assign = true;
                             break;
                         }
@@ -1017,12 +1017,12 @@ namespace CppAD {
                 bool newValue = true;
                 if (_tmpArrayValues[id - 1 + i] != NULL) {
                     const Argument<Base>& oldArg = *_tmpArrayValues[id - 1 + i];
-                    if (oldArg.parameter() != NULL) {
-                        if (args[i].parameter() != NULL) {
-                            newValue = (*args[i].parameter() != *oldArg.parameter());
+                    if (oldArg.getParameter() != NULL) {
+                        if (args[i].getParameter() != NULL) {
+                            newValue = (*args[i].getParameter() != *oldArg.getParameter());
                         }
                     } else {
-                        newValue = (args[i].operation() != oldArg.operation());
+                        newValue = (args[i].getOperation() != oldArg.getOperation());
                     }
                 }
 
@@ -1040,24 +1040,24 @@ namespace CppAD {
             }
         }
 
-        virtual void printArrayElementOp(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for array element operation");
-            CPPADCG_ASSERT_KNOWN(op.arguments()[0].operation() != NULL, "Invalid argument for array element operation");
+        virtual void printArrayElementOp(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
+            CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != NULL, "Invalid argument for array element operation");
             CPPADCG_ASSERT_KNOWN(op.info().size() == 1, "Invalid number of information indexes for array element operation");
 
-            SourceCodeFragment<Base>& arrayOp = *op.arguments()[0].operation();
+            OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
             _code << "(" << _nameGen->generateTemporaryArray(arrayOp) << ")[" << op.info()[0] << "]";
         }
 
-        virtual void printAtomicForwardOp(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 2, "Invalid number of arguments for atomic forward operation");
+        virtual void printAtomicForwardOp(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for atomic forward operation");
             CPPADCG_ASSERT_KNOWN(op.info().size() == 3, "Invalid number of information elements for atomic forward operation");
             size_t id = op.info()[0];
             size_t atomicIndex = _atomicFunctionId2Index.at(id);
             int q = op.info()[1];
             int p = op.info()[2];
-            SourceCodeFragment<Base>& tx = *op.arguments()[0].operation();
-            SourceCodeFragment<Base>& ty = *op.arguments()[1].operation();
+            OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
+            OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
 
             createVariableName(tx);
             createVariableName(ty);
@@ -1066,8 +1066,8 @@ namespace CppAD {
                     << atomicIndex << ", "
                     << q << ", "
                     << p << ", "
-                    << *tx.getName() << ", " << tx.arguments().size() << ", "
-                    << *ty.getName() << ", " << ty.arguments().size() << "); // "
+                    << *tx.getName() << ", " << tx.getArguments().size() << ", "
+                    << *ty.getName() << ", " << ty.getArguments().size() << "); // "
                     << _atomicFunctionId2Name.at(id)
                     << "\n";
 
@@ -1077,19 +1077,19 @@ namespace CppAD {
             markArrayChanged(ty);
         }
 
-        virtual void printAtomicReverseOp(SourceCodeFragment<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.arguments().size() == 4, "Invalid number of arguments for atomic forward operation");
+        virtual void printAtomicReverseOp(OperationNode<Base>& op) {
+            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 4, "Invalid number of arguments for atomic forward operation");
             CPPADCG_ASSERT_KNOWN(op.info().size() == 2, "Invalid number of information elements for atomic forward operation");
             size_t id = op.info()[0];
             int p = op.info()[1];
             size_t atomicIndex = _atomicFunctionId2Index.at(id);
-            SourceCodeFragment<Base>& tx = *op.arguments()[0].operation();
-            SourceCodeFragment<Base>& ty = *op.arguments()[1].operation();
-            SourceCodeFragment<Base>& px = *op.arguments()[2].operation();
-            SourceCodeFragment<Base>& py = *op.arguments()[3].operation();
+            OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
+            OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
+            OperationNode<Base>& px = *op.getArguments()[2].getOperation();
+            OperationNode<Base>& py = *op.getArguments()[3].getOperation();
 
-            CPPADCG_ASSERT_KNOWN(tx.arguments().size() == px.arguments().size(), "Invalid array length");
-            CPPADCG_ASSERT_KNOWN(ty.arguments().size() == py.arguments().size(), "Invalid array length");
+            CPPADCG_ASSERT_KNOWN(tx.getArguments().size() == px.getArguments().size(), "Invalid array length");
+            CPPADCG_ASSERT_KNOWN(ty.getArguments().size() == py.getArguments().size(), "Invalid array length");
 
             createVariableName(tx);
             createVariableName(ty);
@@ -1101,7 +1101,7 @@ namespace CppAD {
                     << p << ", "
                     << *tx.getName() << ", " << *ty.getName() << ", "
                     << *px.getName() << ", " << *py.getName() << ", "
-                    << tx.arguments().size() << ", " << ty.arguments().size() << "); // "
+                    << tx.getArguments().size() << ", " << ty.getArguments().size() << "); // "
                     << _atomicFunctionId2Name.at(id)
                     << "\n";
 
@@ -1111,15 +1111,15 @@ namespace CppAD {
             markArrayChanged(px);
         }
 
-        inline void markArrayChanged(SourceCodeFragment<Base>& ty) {
+        inline void markArrayChanged(OperationNode<Base>& ty) {
             size_t id = ty.variableID();
-            size_t tySize = ty.arguments().size();
+            size_t tySize = ty.getArguments().size();
             for (size_t i = 0; i < tySize; i++) {
                 _tmpArrayValues[id - 1 + i] = NULL;
             }
         }
 
-        inline bool isDependent(const SourceCodeFragment<Base>& arg) const {
+        inline bool isDependent(const OperationNode<Base>& arg) const {
             size_t id = arg.variableID();
             return id > _independentSize && id < _minTemporaryVarID;
         }

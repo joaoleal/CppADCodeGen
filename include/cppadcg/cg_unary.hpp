@@ -28,7 +28,7 @@ namespace CppAD {
             return CG<Base> (-getValue());
 
         } else {
-            CG<Base> result(*getCodeHandler(), new SourceCodeFragment<Base>(CGUnMinusOp, this->argument()));
+            CG<Base> result(*getCodeHandler(), new OperationNode<Base>(CGUnMinusOp, this->argument()));
             if (isValueDefined()) {
                 result.setValue(-getValue());
             }

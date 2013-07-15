@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_SOURCE_CODE_FRAGMENT_INCLUDED
-#define CPPAD_CG_SOURCE_CODE_FRAGMENT_INCLUDED
+#ifndef CPPAD_CG_EXPRESSION_NODE_INCLUDED
+#define CPPAD_CG_EXPRESSION_NODE_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -23,7 +23,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class SourceCodeFragment {
+    class OperationNode {
     private:
         // the operations used to create this variable (temporary variables only)
         CGOpCode operation_;
@@ -44,11 +44,13 @@ namespace CppAD {
         // the last source code order in the call graph that uses the result of
         // this operation as an argument
         size_t last_usage_order_;
+        //
+        size_t color_;
         // generated variable name
         std::string* name_;
     public:
 
-        inline SourceCodeFragment(CGOpCode op) :
+        inline OperationNode(CGOpCode op) :
             operation_(op),
             var_id_(0),
             evaluation_order_(0),
@@ -58,8 +60,8 @@ namespace CppAD {
             name_(NULL) {
         }
 
-        inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg) :
+        inline OperationNode(CGOpCode op,
+                              const Argument<Base>& arg) :
             operation_(op),
             arguments_(1),
             var_id_(0),
@@ -68,13 +70,13 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(0),
             name_(NULL) {
-            assert(arg.operation() != NULL);
+            assert(arg.getOperation() != NULL);
             arguments_[0] = arg;
         }
 
-        inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg1,
-                                  const Argument<Base>& arg2) :
+        inline OperationNode(CGOpCode op,
+                              const Argument<Base>& arg1,
+                              const Argument<Base>& arg2) :
             operation_(op),
             arguments_(2),
             var_id_(0),
@@ -83,16 +85,16 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(0),
             name_(NULL) {
-            assert(arg1.operation() != NULL || arg2.operation() != NULL);
+            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
         }
 
-        inline SourceCodeFragment(CGOpCode op,
-                                  const Argument<Base>& arg1,
-                                  const Argument<Base>& arg2,
-                                  const Argument<Base>& arg3,
-                                  const Argument<Base>& arg4) :
+        inline OperationNode(CGOpCode op,
+                              const Argument<Base>& arg1,
+                              const Argument<Base>& arg2,
+                              const Argument<Base>& arg3,
+                              const Argument<Base>& arg4) :
             operation_(op),
             arguments_(4),
             var_id_(0),
@@ -101,17 +103,17 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(0),
             name_(NULL) {
-            assert(arg1.operation() != NULL || arg2.operation() != NULL ||
-                   arg3.operation() != NULL || arg4.operation() != NULL);
+            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
+                   arg3.getOperation() != NULL || arg4.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
             arguments_[2] = arg3;
             arguments_[3] = arg4;
         }
 
-        inline SourceCodeFragment(CGOpCode op,
-                                  const std::vector<size_t>& info,
-                                  const std::vector<Argument<Base> >& args) :
+        inline OperationNode(CGOpCode op,
+                              const std::vector<size_t>& info,
+                              const std::vector<Argument<Base> >& args) :
             operation_(op),
             info_(info),
             arguments_(args),
@@ -123,7 +125,7 @@ namespace CppAD {
             name_(NULL) {
         }
 
-        SourceCodeFragment(const SourceCodeFragment& orig) :
+        OperationNode(const OperationNode& orig) :
             operation_(orig.operation_),
             info_(orig.info_),
             arguments_(orig.arguments_),
@@ -144,7 +146,7 @@ namespace CppAD {
             name_ = NULL;
         }
 
-        inline CGOpCode operation() const {
+        inline CGOpCode getOperationType() const {
             return operation_;
         }
 
@@ -158,7 +160,7 @@ namespace CppAD {
          * code fragment.
          * @return the arguments for the operation in this code fragment
          */
-        inline const std::vector<Argument<Base> >& arguments() const {
+        inline const std::vector<Argument<Base> >& getArguments() const {
             return arguments_;
         }
 
@@ -214,6 +216,10 @@ namespace CppAD {
             return use_count_;
         }
 
+        inline void increaseUsageCount() {
+            use_count_++;
+        }
+
         inline size_t getLastUsageEvaluationOrder() const {
             return last_usage_order_;
         }
@@ -221,8 +227,8 @@ namespace CppAD {
         inline void setLastUsageEvaluationOrder(size_t last) {
             last_usage_order_ = last;
             if (operation_ == CGArrayElementOp) {
-                SourceCodeFragment<Base>* array = arguments_[0].operation();
-                assert(array->operation() == CGArrayCreationOp);
+                OperationNode<Base>* array = arguments_[0].getOperation();
+                assert(array->getOperationType() == CGArrayCreationOp);
                 if (array->getLastUsageEvaluationOrder() < last) {
                     array->setLastUsageEvaluationOrder(last);
                 }
@@ -246,14 +252,16 @@ namespace CppAD {
             name_ = new std::string(name);
         }
 
-        inline virtual ~SourceCodeFragment() {
-            delete name_;
+        inline size_t getColor() const {
+            return name_;
         }
 
-    protected:
+        inline void setColor(size_t color) {
+            color_ = color;
+        }
 
-        inline void increaseUsageCount() {
-            use_count_++;
+        inline virtual ~OperationNode() {
+            delete name_;
         }
 
         friend class CodeHandler<Base>;
@@ -263,8 +271,8 @@ namespace CppAD {
     template<class Base>
     inline std::ostream& operator <<(
             std::ostream& os, //< stream to write to
-            const CppAD::SourceCodeFragment<Base>& c) {
-        switch (c.operation()) {
+            const CppAD::OperationNode<Base>& c) {
+        switch (c.getOperationType()) {
             case CGAbsOp:
                 os << "abs( $1 )";
                 break;
@@ -278,7 +286,7 @@ namespace CppAD {
                 os << "alias($1)";
                 break;
             case CGArrayCreationOp:
-                os << "new $1[" << c.arguments().size() << "]";
+                os << "new $1[" << c.getArguments().size() << "]";
                 break;
             case CGArrayElementOp:
                 os << "$1[" << c.info()[0] << "]";

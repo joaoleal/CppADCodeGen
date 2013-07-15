@@ -26,7 +26,7 @@ namespace CppAD {
         const CodeHandler<Base>* handler_;
         const std::vector<CG<Base> > dep_;
         const std::vector<AD<BaseOut > >* indep_;
-        std::map<SourceCodeFragment<Base>*, AD<BaseOut> > evals_;
+        std::map<OperationNode<Base>*, AD<BaseOut> > evals_;
     public:
 
         /**
@@ -83,30 +83,30 @@ namespace CppAD {
                 // parameter
                 return AD<BaseOut> (dep.getValue());
             } else {
-                return evalSourceCodeFragment(*dep.getSourceCodeFragment());
+                return evalOperations(*dep.getOperationNode());
             }
         }
 
         inline AD<BaseOut> evalArg(const Argument<Base>& arg) throw (CGException) {
-            if (arg.operation() != NULL) {
-                return evalSourceCodeFragment(*arg.operation());
+            if (arg.getOperation() != NULL) {
+                return evalOperations(*arg.getOperation());
             } else {
                 // parameter
-                return AD<BaseOut> (*arg.parameter());
+                return AD<BaseOut> (*arg.getParameter());
             }
         }
 
-        inline AD<BaseOut> evalSourceCodeFragment(SourceCodeFragment<Base>& node) throw (CGException) {
+        inline AD<BaseOut> evalOperations(OperationNode<Base>& node) throw (CGException) {
             // check if this node was previously determined
-            typename std::map<SourceCodeFragment<Base>*, AD<BaseOut> >::const_iterator it;
+            typename std::map<OperationNode<Base>*, AD<BaseOut> >::const_iterator it;
             it = evals_.find(&node);
             if (it != evals_.end()) {
                 return it->second;
             }
 
             // first evaluation of this node
-            const std::vector<Argument<Base> >& args = node.arguments();
-            const CGOpCode code = node.operation();
+            const std::vector<Argument<Base> >& args = node.getArguments();
+            const CGOpCode code = node.getOperationType();
             AD<BaseOut> result;
             switch (code) {
                 case CGAbsOp: //  abs(variable)

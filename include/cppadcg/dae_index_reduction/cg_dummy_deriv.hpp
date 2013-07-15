@@ -654,9 +654,9 @@ namespace CppAD {
 
                     handler.substituteIndependent(indep, dep); // removes indep from the list of variables
 
-                    SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
-                    assert(alias != NULL && alias->operation() == CGAliasOp);
-                    dep.getSourceCodeFragment()->makeAlias(alias->arguments()[0]); // not a residual anymore but equal to alias (explicit equation)
+                    OperationNode<Base>* alias = indep.getOperationNode();
+                    assert(alias != NULL && alias->getOperationType() == CGAliasOp);
+                    dep.getOperationNode()->makeAlias(alias->getArguments()[0]); // not a residual anymore but equal to alias (explicit equation)
 
                     // it is now an explicit differential equation
                     newEqInfo[bestEquation].setExplicit(true);
@@ -720,7 +720,7 @@ namespace CppAD {
                                              std::vector<DaeEquationInfo>& eqInfo) throw (CGException) {
             using std::vector;
             using std::map;
-            typedef vector<SourceCodePathNode<Base> > SourceCodePath;
+            typedef vector<OperationPathNode<Base> > SourceCodePath;
 
             assert(eqInfo.size() == this->enodes_.size());
             assert(varInfo.size() == this->reducedFun_->Domain());
@@ -788,7 +788,7 @@ namespace CppAD {
                             CGBase& dep = res0[i]; // the equation residual
                             CGBase& indep = indep0[j->tapeIndex()];
 
-                            vector<SourceCodePath> paths = handler.findPaths(*dep.getSourceCodeFragment(), *indep.getSourceCodeFragment(), 2);
+                            vector<SourceCodePath> paths = handler.findPaths(*dep.getOperationNode(), *indep.getOperationNode(), 2);
                             if (paths.size() == 1 && isSolvable(paths[0])) {
                                 equations[i]->addVariable(j);
                             }
@@ -975,7 +975,7 @@ namespace CppAD {
             using namespace std;
             using std::vector;
             using std::map;
-            typedef vector<SourceCodePathNode<Base> > SourceCodePath;
+            typedef vector<OperationPathNode<Base> > SourceCodePath;
 
             std::vector<bool> localJacSparsity = jacSparsity;
             const size_t n = varInfo.size();
@@ -987,16 +987,16 @@ namespace CppAD {
             CGBase& indep = indep0[j.tapeIndex()];
 
             std::string indepName;
-            if (indep.getSourceCodeFragment()->getName() != NULL) {
-                indepName = *indep.getSourceCodeFragment()->getName();
+            if (indep.getOperationNode()->getName() != NULL) {
+                indepName = *indep.getOperationNode()->getName();
             }
 
 
             try {
                 handler.substituteIndependent(indep, dep, false); // indep not removed from the list of variables yet
 
-                SourceCodeFragment<Base>* alias = indep.getSourceCodeFragment();
-                assert(alias != NULL && alias->operation() == CGAliasOp);
+                OperationNode<Base>* alias = indep.getOperationNode();
+                assert(alias != NULL && alias->getOperationType() == CGAliasOp);
 
                 // it is now an explicit differential equation
                 //newEqInfo[bestEquation].setExplicit(true);
@@ -1053,7 +1053,7 @@ namespace CppAD {
                     for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
                         size_t j = it->first;
                         if (localJacSparsity[n * a.index() + j]) {
-                            vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getSourceCodeFragment(), *indep0[j].getSourceCodeFragment(), 2);
+                            vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode(), 2);
                             if (paths.size() == 1 && isSolvable(paths[0])) {
                                 solvable[j].insert(&a);
                             }
@@ -1081,9 +1081,9 @@ namespace CppAD {
                 }
 
                 if (!ok) {
-                    handler.undoSubstituteIndependent(*indep.getSourceCodeFragment());
+                    handler.undoSubstituteIndependent(*indep.getOperationNode());
                     if (indepName.size() > 0) {
-                        indep.getSourceCodeFragment()->setName(indepName);
+                        indep.getOperationNode()->setName(indepName);
                     }
                     return false;
                 }
@@ -1111,7 +1111,7 @@ namespace CppAD {
             /**
              * Finalize model
              */
-            handler.removeIndependent(*indep.getSourceCodeFragment());
+            handler.removeIndependent(*indep.getOperationNode());
 
             /**
              * Implement the assigment in the graph

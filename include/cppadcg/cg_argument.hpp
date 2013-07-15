@@ -18,7 +18,7 @@
 namespace CppAD {
 
     template<class Base>
-    class SourceCodeFragment;
+    class OperationNode;
 
     /**
      * An argument used by an operation wich can be either a constant value
@@ -29,7 +29,7 @@ namespace CppAD {
     template<class Base>
     class Argument {
     private:
-        SourceCodeFragment<Base>* operation_;
+        OperationNode<Base>* operation_;
         Base* parameter_;
     public:
 
@@ -38,7 +38,7 @@ namespace CppAD {
             parameter_(NULL) {
         }
 
-        inline Argument(SourceCodeFragment<Base>& operation) :
+        inline Argument(OperationNode<Base>& operation) :
             operation_(&operation),
             parameter_(NULL) {
         }
@@ -72,11 +72,11 @@ namespace CppAD {
             return *this;
         }
 
-        inline SourceCodeFragment<Base>* operation() const {
+        inline OperationNode<Base>* getOperation() const {
             return operation_;
         }
 
-        inline Base* parameter() const {
+        inline Base* getParameter() const {
             return parameter_;
         }
 

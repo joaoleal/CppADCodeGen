@@ -23,14 +23,14 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG() :
     handler_(NULL),
-    sourceCode_(NULL),
+    opNode_(NULL),
     value_(new Base(0.0)) {
     }
 
     template <class Base>
-    inline CG<Base>::CG(CodeHandler<Base>& handler, SourceCodeFragment<Base>* sourceCode) :
+    inline CG<Base>::CG(CodeHandler<Base>& handler, OperationNode<Base>* sourceCode) :
     handler_(&handler),
-    sourceCode_(sourceCode),
+    opNode_(sourceCode),
     value_(NULL) {
         assert(sourceCode != NULL);
         handler.manageSourceCodeBlock(sourceCode);
@@ -39,8 +39,8 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG(CodeHandler<Base>& handler, const Argument<Base>& arg) :
     handler_(&handler),
-    sourceCode_(arg.operation()),
-    value_(arg.parameter() != NULL ? new Base(*arg.parameter()) : NULL) {
+    opNode_(arg.getOperation()),
+    value_(arg.getParameter() != NULL ? new Base(*arg.getParameter()) : NULL) {
 
     }
 
@@ -50,7 +50,7 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG(const Base &b) :
     handler_(NULL),
-    sourceCode_(NULL),
+    opNode_(NULL),
     value_(new Base(b)) {
     }
 
@@ -60,7 +60,7 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>::CG(const CG<Base>& orig) :
     handler_(orig.handler_),
-    sourceCode_(orig.sourceCode_),
+    opNode_(orig.opNode_),
     value_(orig.value_ != NULL ? new Base(*orig.value_) : NULL) {
     }
 
@@ -70,7 +70,7 @@ namespace CppAD {
     template <class Base>
     inline CG<Base>& CG<Base>::operator=(const Base &b) {
         handler_ = NULL;
-        sourceCode_ = NULL;
+        opNode_ = NULL;
         if (value_ != NULL) {
             *value_ = b;
         } else {
@@ -85,7 +85,7 @@ namespace CppAD {
             return *this;
         }
         handler_ = rhs.handler_;
-        sourceCode_ = rhs.sourceCode_;
+        opNode_ = rhs.opNode_;
         if (rhs.value_ != NULL) {
             if (value_ != NULL) {
                 *value_ = *rhs.value_;

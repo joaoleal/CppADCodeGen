@@ -27,7 +27,7 @@ namespace CppAD {
         if (var.isParameter()) {
             return CG<double> (fabs(var.getValue()));
         } else {
-            CG<double> result(*var.getCodeHandler(), new SourceCodeFragment<double>(CGAbsOp, var.argument()));
+            CG<double> result(*var.getCodeHandler(), new OperationNode<double>(CGAbsOp, var.argument()));
             if(var.isValueDefined()) {
                 result.setValue(fabs(var.getValue()));
             }

@@ -24,7 +24,7 @@ namespace CppAD {
         } else if (left.isParameter() || right.isParameter()) {
             return false;
         } else {
-            return left.getSourceCodeFragment() == right.getSourceCodeFragment();
+            return left.getOperationNode() == right.getOperationNode();
         }
     }
 
@@ -35,7 +35,7 @@ namespace CppAD {
         } else if (left.isParameter() || right.isParameter()) {
             return true;
         } else {
-            return left.getSourceCodeFragment() != right.getSourceCodeFragment();
+            return left.getOperationNode() != right.getOperationNode();
         }
     }
 

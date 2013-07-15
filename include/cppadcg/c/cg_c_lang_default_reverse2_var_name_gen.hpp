@@ -97,7 +97,7 @@ namespace CppAD {
             return _nameGen->generateDependent(variable, index);
         }
 
-        virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
+        virtual std::string generateIndependent(const OperationNode<Base>& independent) {
             size_t id = independent.variableID();
             if (id < _minLevel1ID) {
                 return _nameGen->generateIndependent(independent);
@@ -113,11 +113,11 @@ namespace CppAD {
             }
         }
 
-        virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
+        virtual std::string generateTemporary(const OperationNode<Base>& variable) {
             return _nameGen->generateTemporary(variable);
         }
 
-        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) {
+        virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) {
             return _nameGen->generateTemporaryArray(variable);
         }
 

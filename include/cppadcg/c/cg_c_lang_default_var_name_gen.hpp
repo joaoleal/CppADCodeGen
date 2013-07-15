@@ -89,7 +89,7 @@ namespace CppAD {
             return _ss.str();
         }
 
-        inline virtual std::string generateIndependent(const SourceCodeFragment<Base>& independent) {
+        inline virtual std::string generateIndependent(const OperationNode<Base>& independent) {
             _ss.clear();
             _ss.str("");
 
@@ -99,7 +99,7 @@ namespace CppAD {
             return _ss.str();
         }
 
-        inline virtual std::string generateTemporary(const SourceCodeFragment<Base>& variable) {
+        inline virtual std::string generateTemporary(const OperationNode<Base>& variable) {
             _ss.clear();
             _ss.str("");
 
@@ -113,11 +113,11 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual std::string generateTemporaryArray(const SourceCodeFragment<Base>& variable) {
+        virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) {
             _ss.clear();
             _ss.str("");
 
-            assert(variable.operation() == CGArrayCreationOp);
+            assert(variable.getOperationType() == CGArrayCreationOp);
             
             size_t id = variable.variableID();
             _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
