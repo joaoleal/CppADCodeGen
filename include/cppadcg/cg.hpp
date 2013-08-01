@@ -29,6 +29,7 @@
 #include <iosfwd>
 #include <iostream>
 #include <limits>
+#include <list>
 #include <map>
 #include <vector>
 #include <set>
@@ -105,6 +106,23 @@
 #include <cppadcg/cg_graph_mod.hpp>
 
 // ---------------------------------------------------------------------------
+// atomic function utilities
+#include <cppadcg/cg_custom_position.hpp>
+#include <cppadcg/cg_base_abstract_atomic_fun.hpp>
+#include <cppadcg/cg_abstract_atomic_fun.hpp>
+#include <cppadcg/cg_atomic_fun.hpp>
+#include <cppadcg/cg_atomic_fun_bridge.hpp>
+#include <cppadcg/dynamic_lib/cg_atomic_lib_model.hpp>
+
+// ---------------------------------------------------------------------------
+// loop/pattern detection
+#include <cppadcg/patterns/cg_index_pattern.hpp>
+#include <cppadcg/patterns/cg_loop_atomic_fun.hpp>
+#include <cppadcg/patterns/cg_equation_pattern.hpp>
+#include <cppadcg/patterns/cg_loop.hpp>
+#include <cppadcg/patterns/cg_dependent_pattern_matcher.hpp>
+
+// ---------------------------------------------------------------------------
 // C source code generation
 #include <cppadcg/c/cg_c_lang_atomic_fun.hpp>
 #include <cppadcg/c/cg_c_language.hpp>
@@ -127,12 +145,6 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
-
-// atomic function utilities
-#include <cppadcg/cg_abstract_atomic_fun.hpp>
-#include <cppadcg/cg_atomic_fun.hpp>
-#include <cppadcg/cg_atomic_fun_bridge.hpp>
-#include <cppadcg/dynamic_lib/cg_atomic_lib_model.hpp>
 
 // ---------------------------------------------------------------------------
 // automated dynamic library creation for Linux

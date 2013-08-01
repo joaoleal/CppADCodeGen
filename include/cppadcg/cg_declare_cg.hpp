@@ -23,6 +23,9 @@
 namespace CppAD {
 
     template<class Base>
+    class BaseAbstractAtomicFun;
+
+    template<class Base>
     class CGAbstractAtomicFun;
 
     template<class Base>
@@ -42,6 +45,23 @@ namespace CppAD {
 
     template<class Base>
     struct OperationPathNode;
+
+    template<class Base>
+    class EquationPattern;
+
+    template<class Base>
+    class DependentPatternMatcher;
+
+    template<class Base>
+    class Loop;
+
+    template<class Base>
+    class LoopAtomicFun;
+
+    template<class Base>
+    class LoopOperationGraph;
+    
+    class IndexPattern;
 
     template<class Base>
     class CLangCompiler;

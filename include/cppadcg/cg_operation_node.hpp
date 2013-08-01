@@ -226,6 +226,10 @@ namespace CppAD {
             use_count_++;
         }
 
+        inline void resetUsageCount() {
+            use_count_ = 0;
+        }
+
         inline size_t getLastUsageEvaluationOrder() const {
             return last_usage_order_;
         }

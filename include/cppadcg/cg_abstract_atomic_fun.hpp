@@ -23,7 +23,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template <class Base>
-    class CGAbstractAtomicFun : public atomic_base<CppAD::CG<Base> > {
+    class CGAbstractAtomicFun : public BaseAbstractAtomicFun<Base> {
     public:
         typedef CppAD::CG<Base> CGB;
         typedef Argument<Base> Arg;
@@ -44,17 +44,26 @@ namespace CppAD {
          *                   evaluation of other forward/reverse modes. 
          */
         CGAbstractAtomicFun(const std::string& name, bool standAlone = false) :
-            atomic_base<CGB>(name.c_str()),
+            BaseAbstractAtomicFun<Base>(name),
             id_(createNewId()),
             standAlone_(standAlone) {
-
+            CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
         }
 
     public:
 
         template <class ADVector>
         void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
-            this->atomic_base<CGB>::operator()(ax, ay, id);
+            this->BaseAbstractAtomicFun<Base>::operator()(ax, ay, id);
+        }
+
+        /**
+         * Provides a unique identifier for this atomic function type.
+         * 
+         * @return a unique identifier ID
+         */
+        size_t getId() const {
+            return id_;
         }
 
         virtual bool forward(size_t q,
@@ -64,13 +73,13 @@ namespace CppAD {
                              const vector<CGB>& tx,
                              vector<CGB>& ty) {
 
-            bool valuesDefined = isValuesDefined(tx);
+            bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
             CPPADCG_ASSERT_KNOWN(valuesDefined || vx.size() == 0,
                                  "Values must be defined in order to call atomic function");
             if (!valuesDefined && vx.size() > 0)
                 return false;
 
-            bool allParameters = isParameters(tx);
+            bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);
             if (allParameters) {
                 vector<Base> tyb;
                 if (!evalForwardValues(q, p, vx, vy, tx, tyb, ty.size()))
@@ -135,16 +144,16 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = findHandler(tx);
+            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
             assert(handler != NULL);
 
-            OperationNode<Base>* txArray = makeArray(*handler, tx);
+            OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
             OperationNode<Base>* tyArray;
 
             if (standAlone_ && p > 0) {
-                tyArray = makeZeroArray(*handler, ty);
+                tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
             } else {
-                tyArray = makeArray(*handler, ty);
+                tyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, ty);
             }
 
             std::vector<size_t> opInfo(3);
@@ -156,8 +165,8 @@ namespace CppAD {
             args[1] = Argument<Base>(*tyArray);
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp, opInfo, args);
-            handler->manageSourceCodeBlock(atomicOp);
-            handler->registerAtomicFunction(id_, this->afun_name());
+            handler->manageOperationNode(atomicOp);
+            handler->registerAtomicFunction(*this);
 
             opInfo.resize(1);
             args.resize(2);
@@ -186,11 +195,11 @@ namespace CppAD {
                              vector<CGB>& px,
                              const vector<CGB>& py) {
 
-            bool allParameters = isParameters(tx);
+            bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);
             if (allParameters) {
-                allParameters = isParameters(ty);
+                allParameters = BaseAbstractAtomicFun<Base>::isParameters(ty);
                 if (allParameters) {
-                    allParameters = isParameters(py);
+                    allParameters = BaseAbstractAtomicFun<Base>::isParameters(py);
                 }
             }
 
@@ -278,11 +287,11 @@ namespace CppAD {
                 return true;
             }
 
-            bool valuesDefined = isValuesDefined(tx);
+            bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
             if (valuesDefined) {
-                valuesDefined = isValuesDefined(ty);
+                valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(ty);
                 if (valuesDefined) {
-                    valuesDefined = isValuesDefined(py);
+                    valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(py);
                 }
             }
 
@@ -292,24 +301,24 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = findHandler(tx);
+            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
             if (handler == NULL) {
-                handler = findHandler(ty);
+                handler = BaseAbstractAtomicFun<Base>::findHandler(ty);
                 if (handler == NULL) {
-                    handler = findHandler(py);
+                    handler = BaseAbstractAtomicFun<Base>::findHandler(py);
                 }
             }
             assert(handler != NULL);
 
-            OperationNode<Base>* txArray = makeArray(*handler, tx);
+            OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
             OperationNode<Base>* tyArray;
-            OperationNode<Base>* pxArray = makeZeroArray(*handler, px);
-            OperationNode<Base>* pyArray = makeArray(*handler, py);
+            OperationNode<Base>* pxArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, px);
+            OperationNode<Base>* pyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, py);
 
             if (standAlone_) {
-                tyArray = makeZeroArray(*handler, ty);
+                tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
             } else {
-                tyArray = makeArray(*handler, ty);
+                tyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, ty);
             }
 
             std::vector<size_t> opInfo(2);
@@ -322,8 +331,8 @@ namespace CppAD {
             args[3] = Argument<Base>(*pyArray);
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp, opInfo, args);
-            handler->manageSourceCodeBlock(atomicOp);
-            handler->registerAtomicFunction(id_, this->afun_name());
+            handler->manageOperationNode(atomicOp);
+            handler->registerAtomicFunction(*this);
 
             opInfo.resize(1);
             args.resize(2);
@@ -332,6 +341,7 @@ namespace CppAD {
                     opInfo[0] = j;
                     args[0] = Argument<Base>(*pxArray);
                     args[1] = Argument<Base>(*atomicOp);
+
                     px[j] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
                     if (valuesDefined) {
                         px[j].setValue(pxb[j]);
@@ -352,7 +362,7 @@ namespace CppAD {
     protected:
 
         /**
-         * Used to evaluate function values and forward mode function vales and
+         * Used to evaluate function values and forward mode function values and
          * derivatives.
          * 
          * @param q Lowerest order for this forward mode calculation.
@@ -389,101 +399,7 @@ namespace CppAD {
                                    vector<Base>& px,
                                    const vector<Base>& py) = 0;
 
-        /**
-         * Provides a unique identifier for this atomic function type.
-         * 
-         * @return a unique identifier ID
-         */
-        size_t getId() const {
-            return id_;
-        }
-
     private:
-
-        static size_t createNewId() {
-            CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
-            static size_t count = 0;
-            count++;
-            return count;
-        }
-
-        static inline CodeHandler<Base>* findHandler(const vector<CGB>& ty) {
-            for (size_t i = 0; i < ty.size(); i++) {
-                if (ty[i].getCodeHandler() != NULL) {
-                    return ty[i].getCodeHandler();
-                }
-            }
-            return NULL;
-        }
-
-        static inline std::vector<Arg> asArguments(const vector<CGB>& tx) {
-            std::vector<Arg> arguments(tx.size());
-            for (size_t i = 0; i < arguments.size(); i++) {
-                if (tx[i].isParameter()) {
-                    arguments[i] = Arg(tx[i].getValue());
-                } else {
-                    arguments[i] = Arg(*tx[i].getOperationNode());
-                }
-            }
-            return arguments;
-        }
-
-        static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
-                                                          const vector<CGB>& tx) {
-            if (tx.size() > 0) {
-                OperationNode<Base>* op = tx[0].getOperationNode();
-                if (op != NULL && op->getOperationType() == CGArrayElementOp) {
-                    OperationNode<Base>* otherArray = op->getArguments()[0].getOperation();
-                    bool reuseArray = true;
-                    for (size_t i = 0; i < tx.size(); i++) {
-                        op = tx[i].getOperationNode();
-                        if (op == NULL ||
-                                op->getOperationType() != CGArrayElementOp ||
-                                op->getArguments()[0].getOperation() != otherArray ||
-                                op->getInfo()[0] != i) {
-                            reuseArray = false;
-                            break;
-                        }
-                    }
-                    if (reuseArray) {
-                        return otherArray;
-                    }
-                }
-            }
-            std::vector<Arg> arrayArgs = asArguments(tx);
-            std::vector<size_t> info; // empty
-            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
-            handler.manageSourceCodeBlock(array);
-            return array;
-        }
-
-        static inline OperationNode<Base>* makeZeroArray(CodeHandler<Base>& handler,
-                                                              const vector<CGB>& tx) {
-            vector<CGB> tx2(tx.size());
-            std::vector<Arg> arrayArgs = asArguments(tx2);
-            std::vector<size_t> info; // empty
-            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
-            handler.manageSourceCodeBlock(array);
-            return array;
-        }
-
-        static inline bool isParameters(const vector<CGB>& tx) {
-            for (size_t i = 0; i < tx.size(); i++) {
-                if (!tx[i].isParameter()) {
-                    return false;
-                }
-            }
-            return true;
-        }
-
-        static inline bool isValuesDefined(const vector<CGB>& tx) {
-            for (size_t i = 0; i < tx.size(); i++) {
-                if (!tx[i].isValueDefined()) {
-                    return false;
-                }
-            }
-            return true;
-        }
 
         inline bool evalForwardValues(size_t q,
                                       size_t p,
@@ -524,6 +440,14 @@ namespace CppAD {
 
             return atomicReverse(p, txb, tyb, pxb, pyb);
         }
+
+        static size_t createNewId() {
+            CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+            static size_t count = 0;
+            count++;
+            return count;
+        }
+
     };
 
 }

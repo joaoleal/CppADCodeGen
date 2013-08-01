@@ -36,12 +36,13 @@ namespace CppAD {
         // Provides the rules for variable name creation
         VariableNameGenerator<Base>& nameGen;
         // maps atomic function IDs to their internal index
-        const std::map<size_t, size_t> atomicFunctionId2Index;
+        const std::map<size_t, size_t>& atomicFunctionId2Index;
         // maps atomic function IDs to their names
-        const std::map<size_t, std::string> atomicFunctionId2Name;
+        const std::map<size_t, std::string>& atomicFunctionId2Name;
         // a flag indicating whether or not temporary variable IDs have been recycled
         const bool reuseIDs;
-
+        // maps loop IDs to the atomic loop functions
+        const std::map<size_t, LoopAtomicFun<Base>*>& loops;
     public:
 
         LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
@@ -51,7 +52,8 @@ namespace CppAD {
                                VariableNameGenerator<Base>& ng,
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
-                               const bool ri) :
+                               const bool ri,
+                               const std::map<size_t, LoopAtomicFun<Base>*>& ls) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),
@@ -59,7 +61,8 @@ namespace CppAD {
             nameGen(ng),
             atomicFunctionId2Index(atomicId2Index),
             atomicFunctionId2Name(atomicId2Name),
-            reuseIDs(ri) {
+            reuseIDs(ri),
+            loops(ls) {
         }
     };
 
@@ -80,7 +83,7 @@ namespace CppAD {
          * @return true if a new variable is created
          */
         virtual bool createsNewVariable(const OperationNode<Base>& op) const = 0;
-
+        
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const = 0;
 
         friend class CodeHandler<Base>;

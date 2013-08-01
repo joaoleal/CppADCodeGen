@@ -44,8 +44,8 @@ namespace CppAD {
     public:
 
         inline CLangDefaultVariableNameGenerator() :
-            _depName("dep"),
-            _indepName("ind"),
+            _depName("y"),
+            _indepName("x"),
             _tmpName("var"),
             _tmpArrayName("array") {
             this->_independent.push_back(FuncArgument(_indepName));
@@ -118,9 +118,31 @@ namespace CppAD {
             _ss.str("");
 
             assert(variable.getOperationType() == CGArrayCreationOp);
-            
+
             size_t id = variable.getVariableID();
             _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
+
+            return _ss.str();
+        }
+
+        virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
+                                                     const LoopAtomicFun<Base>& loop,
+                                                     const IndexPattern& ip) {
+            _ss.clear();
+            _ss.str("");
+
+            _ss << _depName << "[" << createIndexPattern(ip) << "]";
+
+            return _ss.str();
+        }
+
+        virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
+                                                       const LoopAtomicFun<Base>& loop,
+                                                       const IndexPattern& ip) {
+            _ss.clear();
+            _ss.str("");
+
+            _ss << _indepName << "[" << createIndexPattern(ip) << "]"; //(id - 1)
 
             return _ss.str();
         }
@@ -137,6 +159,41 @@ namespace CppAD {
         }
 
         inline virtual ~CLangDefaultVariableNameGenerator() {
+        }
+
+        /***********************************************************************
+         * 
+         **********************************************************************/
+        static inline std::string createIndexPattern(const IndexPattern& ip) {
+            std::stringstream ss;
+            switch (ip.getType()) {
+                case linear:
+                {
+                    const LinearIndexPattern* lip = static_cast<const LinearIndexPattern*> (&ip);
+                    if (lip->getLinearSlope() > 0) {
+                        if (lip->getLinearSlope() != 1) {
+                            ss << lip->getLinearSlope() << " * ";
+                        }
+                        ss << "j";
+                    }
+
+                    if (lip->getLinearConstantTerm() != 0) {
+                        if (lip->getLinearSlope() > 0)
+                            ss << " + ";
+                        ss << lip->getLinearConstantTerm();
+                    }
+                    return ss.str();
+                }
+                case linearNConst:
+
+                    //return ss.str();
+                case random:
+
+                    //return ss.str();
+                default:
+                    assert(false); // should never reach this
+                    return "";
+            }
         }
 
     };

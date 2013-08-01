@@ -33,7 +33,7 @@ namespace CppAD {
     opNode_(sourceCode),
     value_(NULL) {
         assert(sourceCode != NULL);
-        handler.manageSourceCodeBlock(sourceCode);
+        handler.manageOperationNode(sourceCode);
     }
 
     template <class Base>

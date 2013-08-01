@@ -75,7 +75,7 @@ namespace CppAD {
         delete value_;
         value_ = NULL;
 
-        handler.manageSourceCodeBlock(operation);
+        handler.manageOperationNode(operation);
     }
 
     template<class Base>

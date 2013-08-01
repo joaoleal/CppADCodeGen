@@ -156,7 +156,7 @@ namespace CppAD {
 
         std::string spaces = "   ";
         std::string source = "#include <math.h>\n\n"
-                "int " + function + "(const double* ind, double* dep) {\n";
+                "int " + function + "(const double* x, double* y) {\n";
 
         // declare variables
         source += langC.generateTemporaryVariableDeclaration();
@@ -197,11 +197,11 @@ namespace CppAD {
 
             if (verbose_ && printValues_) {
                 for (size_t j = 0; j < ind.size(); j++) {
-                    std::cout << " ind[" << j << "] = " << ind[j] << "\n";
+                    std::cout << " x[" << j << "] = " << ind[j] << "\n";
                 }
 
                 for (size_t j = 0; j < depi.size(); j++) {
-                    std::cout << " dep[" << j << "] = " << depi[j] << "\n";
+                    std::cout << " y[" << j << "] = " << depi[j] << "\n";
                 }
             }
         }
@@ -278,7 +278,7 @@ namespace CppAD {
 
         std::string spaces = "   ";
         std::string source = "#include <math.h>\n\n"
-                "int " + functionJac + "(const double* ind, double* dep) {\n";
+                "int " + functionJac + "(const double* x, double* y) {\n";
 
         // declare variables
         source += langC.generateTemporaryVariableDeclaration();

@@ -121,6 +121,31 @@ namespace CppAD {
             return _nameGen->generateTemporaryArray(variable);
         }
 
+        virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
+                                                     const LoopAtomicFun<Base>& loop,
+                                                     const IndexPattern& ip) {
+            return _nameGen->generateIndexedDependent(var, loop, ip);
+        }
+
+        virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
+                                                       const LoopAtomicFun<Base>& loop,
+                                                       const IndexPattern& ip) {
+            size_t id = independent.getVariableID();
+            if (id < _minLevel1ID) {
+                return _nameGen->generateIndexedIndependent(independent, loop, ip);
+            } else {
+                _ss.clear();
+                _ss.str("");
+                if (id < _minLevel2ID) {
+                    _ss << _level1Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip) << "]"; // id - _minLevel1ID
+                } else {
+                    _ss << _level2Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip) << "]"; // id - _minLevel2ID
+                }
+                return _ss.str();
+            }
+
+        }
+
         virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) {
             _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID);
         }

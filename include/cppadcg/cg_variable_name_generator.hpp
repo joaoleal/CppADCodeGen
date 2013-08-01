@@ -64,14 +64,22 @@ namespace CppAD {
         virtual size_t getMaxTemporaryVariableID() const = 0;
 
         virtual size_t getMaxTemporaryArrayVariableID() const = 0;
-        
+
         virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
 
         virtual std::string generateIndependent(const OperationNode<Base>& variable) = 0;
 
         virtual std::string generateTemporary(const OperationNode<Base>& variable) = 0;
-        
+
         virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) = 0;
+
+        virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
+                                                     const LoopAtomicFun<Base>& loop,
+                                                     const IndexPattern& ip) = 0;
+
+        virtual std::string generateIndexedIndependent(const OperationNode<Base>& var,
+                                                       const LoopAtomicFun<Base>& loop,
+                                                       const IndexPattern& ip) = 0;
 
         virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) = 0;
 

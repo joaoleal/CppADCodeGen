@@ -93,7 +93,6 @@ namespace CppAD {
         // creates a temporary variable
         inline CG(CodeHandler<Base>& handler, OperationNode<Base>* sourceCode);
 
-        // 
         /**
          * creates a variable/parameter from an existing argument 
          * @param handler The code handler.
@@ -112,6 +111,8 @@ namespace CppAD {
 
         friend class CodeHandler<Base>;
         friend class CGAbstractAtomicFun<Base>;
+        friend class Loop<Base>;
+        friend class LoopAtomicFun<Base>;
 
         template<class Base1, class Base2>
         friend class Evaluator;

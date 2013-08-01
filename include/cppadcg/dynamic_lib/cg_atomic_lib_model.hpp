@@ -35,7 +35,7 @@ namespace CppAD {
          * @param model The compiled model.
          */
         CGAtomicLibModel(DynamicLibModel<Base>& model) :
-            atomic_base<Base>(model.getName().c_str()),
+            atomic_base<Base>(model.getName()),
             model_(model) {
             this->option(CppAD::atomic_base<Base>::set_sparsity_enum);
         }

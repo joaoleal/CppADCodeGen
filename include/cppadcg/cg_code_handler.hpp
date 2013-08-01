@@ -39,12 +39,14 @@ namespace CppAD {
         size_t _idAtomicCount;
         // the independent variables
         std::vector<OperationNode<Base> *> _independentVariables;
-        // all the source code blocks created with the CG<Base> objects (does not include independent variables)
+        // all the source code blocks created with the CG<Base> objects
         std::vector<OperationNode<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
         std::vector<OperationNode<Base> *> _variableOrder;
-        // maps the ids of the atomic functions to their names (used by this handler only)
-        std::map<size_t, std::string> _atomicFunctions;
+        // maps the ids of the atomic functions
+        std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
+        // maps the loop ids of the loop atomic functions
+        std::map<size_t, LoopAtomicFun<Base>*> _loops;
         /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
@@ -105,7 +107,7 @@ namespace CppAD {
         }
 
         inline void makeVariable(CG<Base>& variable) {
-            _independentVariables.push_back(new OperationNode<Base > (CGInvOp));
+            _independentVariables.push_back(new OperationNode<Base> (CGInvOp));
             variable.makeVariable(*this, _independentVariables.back());
         }
 
@@ -135,6 +137,58 @@ namespace CppAD {
 
         inline void setVerbose(bool verbose) {
             _verbose = verbose;
+        }
+
+        /**
+         * Provides the name used by an atomic function with a given ID.
+         * 
+         * @param id the atomic function ID.
+         * @return a pointer to the atomic function name if it was registered
+         *         or NULL otherwise
+         */
+        inline const std::string* getAtomicFunctionName(size_t id) const {
+            typename std::map<size_t, CGAbstractAtomicFun<Base>*>::const_iterator it;
+            it = _atomicFunctions.find(id);
+            if (it != _atomicFunctions.end())
+                return &(it->second->afun_name());
+            else
+                return NULL;
+        }
+
+        /**
+         * Provides a map with all the currently registered atomic functions.
+         * 
+         * @return a map with the atomic function ID as key and the atomic 
+         *         function as value
+         */
+        inline const std::map<size_t, CGAbstractAtomicFun<Base>* >& getAtomicFunctions() const {
+            return _atomicFunctions;
+        }
+
+        /**
+         * Provides the name used by a loop atomic function with a given ID.
+         * 
+         * @param id the atomic function ID.
+         * @return a pointer to the atomic loop function name if it was
+         *         registered or NULL otherwise
+         */
+        inline const std::string* getLoopName(size_t id) const {
+            typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator it;
+            it = _loops.find(id);
+            if (it != _loops.end())
+                return &(it->second->afun_name());
+            else
+                return NULL;
+        }
+
+        /**
+         * Provides a map with all the currently registered atomic loop
+         * functions.
+         * 
+         * @return a map with the loop ID as key and the atomic function as value
+         */
+        inline const std::map<size_t, LoopAtomicFun<Base>* >& getLoopAtomicFunctions() const {
+            return _loops;
         }
 
         /***********************************************************************
@@ -243,8 +297,9 @@ namespace CppAD {
             }
 
             // determine the variable creation order
-            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                CG<Base>& var = *it;
+
+            for (size_t i = 0; i < dependent.size(); i++) {
+                CG<Base>& var = dependent[i];
                 if (var.getOperationNode() != NULL) {
                     OperationNode<Base>& code = *var.getOperationNode();
                     if (code.getUsageCount() == 0) {
@@ -255,7 +310,10 @@ namespace CppAD {
                         // the independent variables and that a dependency did
                         // not use it first
                         if ((code.getVariableID() == 0 || !isIndependent(code)) && code.getUsageCount() == 0) {
-                            addToEvaluationQueue(code);
+                            // make sure loop results are not added to the evaluation queue
+                            // (what must be added is the loop)
+                            if (code.getOperationType() != CGLoopResultOp || code.getInfo()[0] != i)
+                                addToEvaluationQueue(code);
                         }
                     }
                     code.increaseUsageCount();
@@ -271,9 +329,9 @@ namespace CppAD {
             nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1);
 
             std::map<std::string, size_t> atomicFunctionName2Id;
-            std::map<size_t, std::string>::const_iterator itA;
+            typename std::map<size_t, CGAbstractAtomicFun<Base>*>::iterator itA;
             for (itA = _atomicFunctions.begin(); itA != _atomicFunctions.end(); ++itA) {
-                atomicFunctionName2Id[itA->second] = itA->first;
+                atomicFunctionName2Id[itA->second->afun_name()] = itA->first;
             }
 
             std::map<size_t, size_t> atomicFunctionId2Index;
@@ -294,7 +352,8 @@ namespace CppAD {
                                               _minTemporaryVarID, _variableOrder,
                                               nameGen,
                                               atomicFunctionId2Index, atomicFunctionId2Name,
-                                              _reuseIDs);
+                                              _reuseIDs,
+                                              _loops);
             lang.generateSourceCode(out, info);
 
             _atomicFunctionsSet.clear();
@@ -328,6 +387,23 @@ namespace CppAD {
             _idArrayCount = 1;
             _idAtomicCount = 1;
             _used = false;
+        }
+
+        /***********************************************************************
+         *                        Loop management
+         **********************************************************************/
+        virtual void prepareLoops(std::vector<CG<Base> >& dependent) {
+            size_t i = 0;
+            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it, i++) {
+                CG<Base>& var = *it;
+                if (var.getOperationNode() != NULL) {
+                    OperationNode<Base>& node = *var.getOperationNode();
+                    CGOpCode op = node.getOperationType();
+                    if (op == CGLoopResultOp) {
+                        insertLoopOperations(i, node);
+                    }
+                }
+            }
         }
 
         /***********************************************************************
@@ -392,7 +468,7 @@ namespace CppAD {
 
     protected:
 
-        virtual void manageSourceCodeBlock(OperationNode<Base>* code) {
+        virtual void manageOperationNode(OperationNode<Base>* code) {
             //assert(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
             if (_codeBlocks.capacity() == _codeBlocks.size()) {
                 _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
@@ -404,7 +480,7 @@ namespace CppAD {
         virtual void markCodeBlockUsed(OperationNode<Base>& code) {
             code.total_use_count_++;
 
-            if (code.total_use_count_ == 1) {
+            if (code.getTotalUsageCount() == 1) {
                 // first time this operation is visited
 
                 const std::vector<Argument<Base> >& args = code.arguments_;
@@ -419,10 +495,57 @@ namespace CppAD {
             }
         }
 
-        virtual void registerAtomicFunction(size_t id, const std::string& name) {
-            _atomicFunctions[id] = name;
+        virtual void registerAtomicFunction(CGAbstractAtomicFun<Base>& atomic) {
+            _atomicFunctions[atomic.getId()] = &atomic;
         }
 
+        /***********************************************************************
+         *                        Loop management
+         **********************************************************************/
+        virtual void registerLoop(LoopAtomicFun<Base>& loop) {
+            _loops[loop.getLoopId()] = &loop;
+        }
+
+        virtual void insertLoopOperations(size_t i, OperationNode<Base>& loopResult) {
+            assert(loopResult.getArguments().size() == 1);
+            assert(loopResult.getArguments()[0].getOperation() != NULL);
+
+            OperationNode<Base>& loop = *loopResult.getArguments()[0].getOperation();
+
+            assert(loop.getOperationType() == CGLoopForwardOp || loop.getOperationType() == CGLoopReverseOp);
+            assert(loop.getInfo().size() == 4);
+
+            size_t loopId = loop.getInfo()[0];
+            size_t p = loop.getInfo()[3];
+
+            LoopAtomicFun<Base>* loopAtomic = _loops.at(loopId);
+
+            if (loop.getOperationType() == CGLoopForwardOp) {
+                if (p == 0) {
+                    LoopOperationGraph<Base>* graph = loopAtomic->getForwardOperationGraph();
+                    if (graph == NULL) {
+                        graph = loopAtomic->generateForwardGraph(*this, p, loop.getArguments());
+                        assert(graph != NULL);
+                    }
+                    //size_t tapeIndex = loopAtomic->getTapeDependentIndex(i);
+                    //OperationNode<Base>* indexDep = graph->indexedResults[tapeIndex];
+
+                    loopResult.arguments_.clear();
+                    loopResult.arguments_.push_back(Argument<Base>(*graph->loopEnd));
+                    loopResult.info_.clear();
+                    loopResult.info_.push_back(i);
+                } else {
+                    assert(false); // TODO
+                }
+            } else {
+                assert(false); // TODO
+            }
+
+        }
+
+        /***********************************************************************
+         * 
+         **********************************************************************/
         virtual void checkVariableCreation(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
@@ -443,7 +566,7 @@ namespace CppAD {
                             assert(arg.getArguments().size() > 1);
                             assert(arg.getInfo().size() > 1);
                             size_t id = arg.getInfo()[0];
-                            const std::string& atomicName = _atomicFunctions.at(id);
+                            const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
                             if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
                                 _atomicFunctionsSet.insert(atomicName);
                                 _atomicFunctionsOrder->push_back(atomicName);
@@ -461,24 +584,37 @@ namespace CppAD {
                     // the independent variables and that a dependency did
                     // not use it first
                     if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
-
-                        size_t argIndex = it - args.begin();
-                        if (_lang->createsNewVariable(arg) ||
-                                _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
-                            addToEvaluationQueue(arg);
-                            if (arg.getVariableID() == 0) {
-                                if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
-                                    arg.setVariableID(_idAtomicCount);
-                                    _idAtomicCount++;
-                                } else if (arg.getOperationType() != CGArrayCreationOp) {
-                                    // a single temporary variable
-                                    arg.setVariableID(_idCount);
-                                    _idCount++;
-                                } else {
-                                    // a temporary array
-                                    size_t arraySize = arg.getArguments().size();
-                                    arg.setVariableID(_idArrayCount);
-                                    _idArrayCount += arraySize;
+                        if (arg.getOperationType() == CGLoopIndexedIndepOp) {
+                            // ID value not really used but must be non-zero
+                            arg.setVariableID(1);
+                        } else {
+                            size_t argIndex = it - args.begin();
+                            if (arg.getOperationType() == CGLoopStartOp || arg.getOperationType() == CGLoopEndOp) {
+                                if (arg.getVariableID() == 0) {
+                                    addToEvaluationQueue(arg);
+                                    // ID value not really used but must be non-zero
+                                    arg.setVariableID(1);
+                                }
+                            } else if (_lang->createsNewVariable(arg) ||
+                                    _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+                                addToEvaluationQueue(arg);
+                                if (arg.getVariableID() == 0) {
+                                    if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
+                                        arg.setVariableID(_idAtomicCount);
+                                        _idAtomicCount++;
+                                    } else if (arg.getOperationType() == CGLoopIndexedDepOp) {
+                                        // ID value not really used but must be non-zero
+                                        arg.setVariableID(1);
+                                    } else if (arg.getOperationType() == CGArrayCreationOp) {
+                                        // a temporary array
+                                        size_t arraySize = arg.getArguments().size();
+                                        arg.setVariableID(_idArrayCount);
+                                        _idArrayCount += arraySize;
+                                    } else {
+                                        // a single temporary variable
+                                        arg.setVariableID(_idCount);
+                                        _idCount++;
+                                    }
                                 }
                             }
                         }
@@ -647,7 +783,7 @@ namespace CppAD {
 
                     size_t commonVals = 0;
                     for (size_t i = 0; i < arraySize; i++) {
-                        if (sameElement(tmpArrayValues[start + i], args[i])) {
+                        if (isSameArrayElement(tmpArrayValues[start + i], args[i])) {
                             commonVals++;
                         }
                     }
@@ -707,7 +843,7 @@ namespace CppAD {
                         bestStart = lastSpotStart;
                     }
                 }
-                
+
                 if (bestStart == std::numeric_limits<size_t>::max()) {
                     // brand new space
                     size_t id = _idArrayCount;
@@ -723,7 +859,7 @@ namespace CppAD {
             return bestStart;
         }
 
-        inline static bool sameElement(const Argument<Base>* oldArg, const Argument<Base>& arg) {
+        inline static bool isSameArrayElement(const Argument<Base>* oldArg, const Argument<Base>& arg) {
             if (oldArg != NULL) {
                 if (oldArg->getParameter() != NULL) {
                     if (arg.getParameter() != NULL) {
@@ -841,6 +977,8 @@ namespace CppAD {
 
         friend class CG<Base>;
         friend class CGAbstractAtomicFun<Base>;
+        friend class BaseAbstractAtomicFun<Base>;
+        friend class LoopAtomicFun<Base>;
 
     };
 

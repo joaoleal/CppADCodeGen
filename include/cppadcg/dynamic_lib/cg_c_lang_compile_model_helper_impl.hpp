@@ -91,6 +91,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler,
                                                        bool posIndepCode) {
+        generateLoops();
+
         std::map<std::string, std::string> sources;
         if (_zero) {
             generateZeroSource(sources);
@@ -143,18 +145,60 @@ namespace CppAD {
     }
 
     template<class Base>
+    void CLangCompileModelHelper<Base>::generateLoops() {
+        if (_relatedDepCandidates.empty()) {
+            return; //nothing to do
+        }
+
+        startingGraphCreation("Loop detection");
+
+        CodeHandler<Base> handler;
+        handler.setVerbose(_verbose);
+
+        std::vector<CGBase> xx(_funOrig.Domain());
+        handler.makeVariables(xx);
+        if (_x.size() > 0) {
+            for (size_t i = 0; i < xx.size(); i++) {
+                xx[i].setValue(_x[i]);
+            }
+        }
+
+        std::vector<CGBase> yy = _funOrig.Forward(0, xx);
+
+        DependentPatternMatcher<Base> matcher(_relatedDepCandidates);
+        std::vector<Loop<Base>*> loops = matcher.findLoops(yy, xx);
+        std::cout << "loops: " << loops.size() << std::endl;
+
+        if (loops.size() > 0) {
+            std::vector<EquationPattern<double>*> equations = matcher.getEquationPatterns();
+            std::cout << "equation patterns: " << equations.size() << std::endl;
+
+            _funLoops = matcher.createNewTape(yy, xx);
+            _fun = _funLoops;
+
+            // clean-up
+            for (size_t l = 0; l < loops.size(); l++) {
+                _loopAtomics.insert(loops[l]->releaseAtomicFunction());
+                delete loops[l];
+            }
+        }
+
+        finishedGraphCreation();
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::generateInfoSource(std::map<std::string, std::string>& sources) {
         const char* localBaseName = typeid (Base).name();
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("dep", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("y", "x", "var", "array"));
 
         _cache.str("");
         _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
                 "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
-                "   *m = " << _fun.Range() << ";\n"
-                "   *n = " << _fun.Domain() << ";\n"
+                "   *m = " << _fun->Range() << ";\n"
+                "   *n = " << _fun->Domain() << ";\n"
                 "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n"
                 "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n"
                 "}\n\n";
@@ -190,7 +234,7 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> indVars(_fun.Domain());
+        std::vector<CGBase> indVars(_fun->Domain());
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < indVars.size(); i++) {
@@ -198,7 +242,9 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> dep = _fun.Forward(0, indVars);
+        std::vector<CGBase> dep = _fun->Forward(0, indVars);
+        if (_funLoops == _fun)
+            handler.prepareLoops(dep);
 
         finishedGraphCreation();
 
@@ -207,7 +253,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dep", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("y", "x", "var", "array"));
 
         handler.generateCode(code, langC, dep, *nameGen, _atomicFunctions, jobName);
     }
@@ -221,7 +267,7 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> indVars(_fun.Domain());
+        std::vector<CGBase> indVars(_fun->Domain());
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < indVars.size(); i++) {
@@ -229,7 +275,7 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> jac = _fun.Jacobian(indVars);
+        std::vector<CGBase> jac = _fun->Jacobian(indVars);
 
         finishedGraphCreation();
 
@@ -238,7 +284,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "x", "var", "array"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }
@@ -252,8 +298,8 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
 
         // independent variables
@@ -274,7 +320,7 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> hess = _fun.Hessian(indVars, w);
+        std::vector<CGBase> hess = _fun->Hessian(indVars, w);
 
         // make use of the symmetry of the Hessian in order to reduce operations
         for (size_t i = 0; i < n; i++) {
@@ -290,7 +336,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "x", "var", "array"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
@@ -298,8 +344,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         /**
          * Determine the sparsity pattern
@@ -339,8 +385,8 @@ namespace CppAD {
                                                                      bool forward) {
         const std::string jobName = "sparse Jacobian";
 
-        //size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        //size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         startingGraphCreation(jobName);
 
@@ -358,9 +404,9 @@ namespace CppAD {
         std::vector<CGBase> jac(_jacSparsity.rows.size());
         CppAD::sparse_jacobian_work work;
         if (forward) {
-            _fun.SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
+            _fun->SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         } else {
-            _fun.SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
+            _fun->SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         }
 
         finishedGraphCreation();
@@ -370,7 +416,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "x", "var", "array"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }
@@ -378,8 +424,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
                                                                            bool forward) {
-        //size_t m = _fun.Range();
-        //size_t n = _fun.Domain();
+        //size_t m = _fun->Range();
+        //size_t n = _fun->Domain();
         using namespace std;
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
@@ -475,7 +521,7 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
+        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (*_fun);
 
         if (!_custom_jac.defined) {
             generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
@@ -512,8 +558,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) {
         const std::string jobName = "sparse Hessian";
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         /**
          * we might have to consider a slightly different order than the one
@@ -588,7 +634,7 @@ namespace CppAD {
 
         CppAD::sparse_hessian_work work;
         vector<CGBase> lowerHess(lowerHessRows.size());
-        _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
+        _fun->SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 
         std::vector<CGBase> hess(_hessSparsity.rows.size());
         for (size_t i = 0; i < lowerHessOrder.size(); i++) {
@@ -608,7 +654,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "ind", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess", "x", "var", "array"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
@@ -616,8 +662,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) {
-        //size_t m = _fun.Range();
-        //size_t n = _fun.Domain();
+        //size_t m = _fun->Range();
+        //size_t n = _fun->Domain();
         using namespace std;
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_HESSIAN;
@@ -732,22 +778,22 @@ namespace CppAD {
             return;
         }
 
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         _hessSparsity.sparsity.resize(n);
-        _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (_fun);
+        _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (*_fun);
 
         SparsitySetType r(n); // identity matrix
         for (size_t j = 0; j < n; j++)
             r[j].insert(j);
-        SparsitySetType jac = _fun.ForSparseJac(n, r);
+        SparsitySetType jac = _fun->ForSparseJac(n, r);
 
         SparsitySetType s(1);
         for (size_t i = 0; i < m; i++) {
             s[0].insert(i);
         }
-        _hessSparsity.sparsity = _fun.RevSparseHes(n, s, false);
+        _hessSparsity.sparsity = _fun->RevSparseHes(n, s, false);
 
         if (_hessianByEquation || _reverseTwo) {
             std::set<size_t>::const_iterator it;
@@ -762,7 +808,7 @@ namespace CppAD {
                     size_t j = *it;
                     r[j].insert(j);
                 }
-                jac = _fun.ForSparseJac(n, r);
+                jac = _fun->ForSparseJac(n, r);
             }
 
             /**
@@ -835,7 +881,7 @@ namespace CppAD {
                     size_t j = *it;
                     r[j].insert(j);
                 }
-                _fun.ForSparseJac(n, r);
+                _fun->ForSparseJac(n, r);
 
                 // second-order
                 s[0].clear();
@@ -846,7 +892,7 @@ namespace CppAD {
                     s[0].insert(i);
                 }
 
-                SparsitySetType sparsityc = _fun.RevSparseHes(n, s, false);
+                SparsitySetType sparsityc = _fun->RevSparseHes(n, s, false);
 
                 /**
                  * Retrieve the individual hessians for each equation
@@ -915,9 +961,9 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseForwardOneSources(std::map<std::string, std::string>& sources) {
 #ifndef NDEBUG
-        size_t m = _fun.Range();
+        size_t m = _fun->Range();
 #endif
-        size_t n = _fun.Domain();
+        size_t n = _fun->Domain();
 
         determineJacobianSparsity();
 
@@ -961,9 +1007,9 @@ namespace CppAD {
             }
 
             // TODO: consider caching the zero order coefficients somehow between calls
-            _fun.Forward(0, indVars);
+            _fun->Forward(0, indVars);
             dxv[j] = dx;
-            std::vector<CGBase> dy = _fun.Forward(1, dxv);
+            std::vector<CGBase> dy = _fun->Forward(1, dxv);
             dxv[j] = Base(0);
             assert(dy.size() == m);
 
@@ -982,7 +1028,7 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "ind", "var", "array"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "x", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
             handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, jobName);
@@ -1000,8 +1046,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateForwardOneSources(std::map<std::string, std::string>& sources) {
 
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_FORWARD_ONE;
@@ -1082,8 +1128,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseReverseOneSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         determineJacobianSparsity();
 
@@ -1112,7 +1158,7 @@ namespace CppAD {
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
 
-            std::vector<CGBase> indVars(_fun.Domain());
+            std::vector<CGBase> indVars(_fun->Domain());
             handler.makeVariables(indVars);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -1127,10 +1173,10 @@ namespace CppAD {
             }
 
             // TODO: consider caching the zero order coefficients somehow between calls
-            _fun.Forward(0, indVars);
+            _fun->Forward(0, indVars);
 
             w[i] = py;
-            std::vector<CGBase> dw = _fun.Reverse(1, w);
+            std::vector<CGBase> dw = _fun->Reverse(1, w);
             assert(dw.size() == n);
             w[i] = Base(0);
 
@@ -1149,7 +1195,7 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "ind", "var", "array"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "x", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "py", n);
 
             handler.generateCode(code, langC, dwCustom, nameGenHess, _atomicFunctions, jobName);
@@ -1166,8 +1212,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateReverseOneSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_ONE;
@@ -1246,8 +1292,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) {
-        const size_t m = _fun.Range();
-        const size_t n = _fun.Domain();
+        const size_t m = _fun->Range();
+        const size_t n = _fun->Domain();
         //const size_t k = 1;
         const size_t p = 2;
 
@@ -1307,12 +1353,12 @@ namespace CppAD {
                 }
             }
 
-            std::vector<CGBase> y = _fun.Forward(0, tx0);
+            std::vector<CGBase> y = _fun->Forward(0, tx0);
 
             tx1v[j] = tx1;
-            std::vector<CGBase> y_p = _fun.Forward(1, tx1v);
+            std::vector<CGBase> y_p = _fun->Forward(1, tx1v);
             tx1v[j] = Base(0);
-            std::vector<CGBase> px = _fun.Reverse(2, py);
+            std::vector<CGBase> px = _fun->Reverse(2, py);
             assert(px.size() == 2 * n);
 
             std::vector<CGBase> pxCustom;
@@ -1331,7 +1377,7 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "ind", "var", "array"));
+            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
             CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
             handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
@@ -1348,8 +1394,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateReverseTwoSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun.Range();
-        size_t n = _fun.Domain();
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_TWO;

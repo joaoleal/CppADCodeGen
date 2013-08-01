@@ -107,7 +107,15 @@ namespace CppAD {
         /**
          * the  model
          */
-        ADFun<CGBase>& _fun;
+        ADFun<CGBase>& _funOrig;
+        /**
+         * Altered model with loops
+         */
+        ADFun<CGBase>* _funLoops;
+        /**
+         * work  model
+         */
+        ADFun<CGBase>* _fun;
         /**
          * the name of the model
          */
@@ -161,6 +169,14 @@ namespace CppAD {
          * auxiliary variable to measure the elapsed time
          */
         double _beginTime;
+        /**
+         * 
+         */
+        std::vector<std::set<size_t> > _relatedDepCandidates;
+        /**
+         * 
+         */
+        std::set<LoopAtomicFun<Base>* > _loopAtomics;
     public:
 
         /**
@@ -171,7 +187,9 @@ namespace CppAD {
          * @param model The model name (must be a valid C function name)
          */
         CLangCompileModelHelper(ADFun<CppAD::CG<Base> >& fun, const std::string& model) :
-            _fun(fun),
+            _funOrig(fun),
+            _funLoops(NULL),
+            _fun(&fun),
             _name(model),
             _baseTypeName(CLangCompileModelHelper<Base>::baseTypeName()),
             _zero(true),
@@ -219,12 +237,20 @@ namespace CppAD {
          */
         template<class VectorBase>
         inline void setTypicalIndependentValues(const VectorBase& x) {
-            CPPAD_ASSERT_KNOWN(x.size() == 0 || x.size() == _fun.Domain(),
+            CPPAD_ASSERT_KNOWN(x.size() == 0 || x.size() == _fun->Domain(),
                                "Invalid independent variable vector size");
             _x.resize(x.size());
             for (size_t i = 0; i < x.size(); i++) {
                 _x[i] = x[i];
             }
+        }
+
+        inline void setRelatedDependents(const std::vector<std::set<size_t> >& relatedDepCandidates) {
+            _relatedDepCandidates = relatedDepCandidates;
+        }
+
+        inline const std::vector<std::set<size_t> >& getRelatedDependents() const {
+            return _relatedDepCandidates;
         }
 
         /**
@@ -538,7 +564,13 @@ namespace CppAD {
         }
 
         inline virtual ~CLangCompileModelHelper() {
-        };
+            delete _funLoops;
+
+            typename std::set<LoopAtomicFun<Base>* >::const_iterator it;
+            for (it = _loopAtomics.begin(); it != _loopAtomics.end(); ++it) {
+                delete *it;
+            }
+        }
 
         static inline std::string baseTypeName();
 
@@ -558,6 +590,8 @@ namespace CppAD {
                                                                          const std::string& tmpArrayName);
 
         virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode);
+
+        virtual void generateLoops();
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
 

@@ -55,7 +55,14 @@ namespace CppAD {
         CGSubOp, //  a - b
         CGTanhOp, //  tanh(variable)
         CGTanOp, //  tan(variable)
-        CGUnMinusOp // -(a)
+        CGUnMinusOp, // -(a)
+        CGLoopForwardOp, // for() { forward(q, p, vx, vy, tx, ty) }
+        CGLoopReverseOp, // for() { reverse(p, tx, ty, px, py) }
+        CGLoopResultOp, // output from a loop (no index assigned yet)
+        CGLoopStartOp, // for() {}
+        CGLoopIndexedIndepOp, // indexed independent used by a loop
+        CGLoopIndexedDepOp, // indexed output from a loop
+        CGLoopEndOp // endfor
     };
 
     inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
@@ -153,6 +160,27 @@ namespace CppAD {
                 break;
             case CGUnMinusOp:
                 os << "-(a)";
+                break;
+            case CGLoopForwardOp:
+                os << "for() { forward(q, p, vx, vy, tx, ty) }";
+                break;
+            case CGLoopReverseOp:
+                os << "for() { reverse(p, tx, ty, px, py) }";
+                break;
+            case CGLoopResultOp:
+                os << " dep <- loop";
+                break;
+            case CGLoopStartOp:
+                os << "for";
+                break;
+            case CGLoopIndexedIndepOp:
+                os << "loopIndexedDep";
+                break;
+            case CGLoopIndexedDepOp:
+                os << "loopIndexedIndep";
+                break;
+            case CGLoopEndOp:
+                os << "endfor";
                 break;
             default:
                 os << "\?\?\?\?()";
