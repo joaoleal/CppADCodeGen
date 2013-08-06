@@ -86,6 +86,8 @@
 #include <cppadcg/cg_variable_name_generator.hpp>
 #include <cppadcg/cg_language.hpp>
 #include <cppadcg/cg_code_handler.hpp>
+#include <cppadcg/patterns/cg_loop_position.hpp>
+#include <cppadcg/cg_code_handler_loops.hpp>
 #include <cppadcg/cg_arithmetic.hpp>
 #include <cppadcg/cg_arithmetic_assign.hpp>
 #include <cppadcg/cg_math.hpp>

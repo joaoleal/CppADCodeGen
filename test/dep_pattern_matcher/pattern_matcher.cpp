@@ -29,14 +29,15 @@ namespace CppAD {
 
         void testPattern(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
                          size_t m,
+                         size_t n,
                          size_t repeat,
                          size_t n_loops = 1,
                          bool createDynLib = false,
                          std::string name = "") {
             using namespace CppAD;
 
-            size_t m2 = repeat * m;
-            size_t n2 = m2;
+            //size_t m2 = repeat * m;
+            size_t n2 = repeat * n;
 
             /**
              * Tape model
@@ -58,16 +59,22 @@ namespace CppAD {
         }
 
         void testPatternWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                    const std::vector<CGAbstractAtomicFun<Base>*>& atoms,
+                                    const std::vector<atomic_base<Base>* >& atoms,
                                     size_t m,
+                                    size_t n,
                                     size_t repeat,
                                     size_t n_loops = 1,
                                     bool createDynLib = false,
                                     std::string name = "") {
             using namespace CppAD;
 
-            size_t m2 = repeat * m;
-            size_t n2 = m2;
+            std::vector<CGAbstractAtomicFun<double>*> atomics(atoms.size());
+            for (size_t a = 0; a < atoms.size(); a++) {
+                atomics[a] = new CGAtomicFun<Base>(*atoms[a], true);
+            }
+
+            //size_t m2 = repeat * m;
+            size_t n2 = repeat * n;
 
             /**
              * Tape model
@@ -77,15 +84,19 @@ namespace CppAD {
                 x[j] = 0.5;
             CppAD::Independent(x);
 
-            std::vector<ADCGD> y = (*model)(x, repeat, atoms);
+            std::vector<ADCGD> y = (*model)(x, repeat, atomics);
 
             ADFun<CGD> fun;
             fun.Dependent(y);
 
             if (createDynLib)
-                testSourceCodeGen(fun, m, repeat, name);
+                testSourceCodeGen(fun, m, repeat, name, atoms);
             else
                 testResults(fun, m, repeat, n_loops);
+
+            for (size_t a = 0; a < atomics.size(); a++) {
+                delete atomics[a];
+            }
         }
 
     private:
@@ -137,41 +148,152 @@ namespace CppAD {
 
         void testSourceCodeGen(ADFun<CGD>& fun,
                                size_t m, size_t repeat,
-                               const std::string& name) {
+                               const std::string& name,
+                               const std::vector<atomic_base<Base>*>& atoms = std::vector<atomic_base<Base>*>()) {
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
+            std::vector<double> xTypical(fun.Domain(), 1.0);
             /**
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(fun, name + "dynamic");
-            compHelp.setRelatedDependents(relatedDepCandidates);
+            CLangCompileModelHelper<double> compHelpL(fun, name + "DynamicWithLoops");
+            compHelpL.setCreateForwardZero(true);
+            compHelpL.setCreateJacobian(false);
+            compHelpL.setCreateHessian(false);
+            compHelpL.setCreateSparseJacobian(true);
+            compHelpL.setCreateSparseHessian(false);
+            compHelpL.setCreateForwardOne(false);
+            compHelpL.setCreateReverseOne(false);
+            compHelpL.setCreateReverseTwo(false);
+            //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
+            compHelpL.setRelatedDependents(relatedDepCandidates);
+            compHelpL.setTypicalIndependentValues(xTypical);
 
+            GccCompiler<double> compiler;
+            compiler.setSourcesFolder("sources_" + name + "_1");
+
+            CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
+            std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
+            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(name + "DynamicWithLoops"));
+            for (size_t i = 0; i < atoms.size(); i++)
+                modelL->addAtomicFunction(*atoms[i]);
+            /**
+             * Without the loops
+             */
+            CLangCompileModelHelper<double> compHelp(fun, name + "DynamicNoLoops");
             compHelp.setCreateForwardZero(true);
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
-            compHelp.setCreateSparseJacobian(false);
+            compHelp.setCreateSparseJacobian(true);
             compHelp.setCreateSparseHessian(false);
             compHelp.setCreateForwardOne(false);
             compHelp.setCreateReverseOne(false);
             compHelp.setCreateReverseTwo(false);
             //compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
-            GccCompiler<double> compiler;
             compiler.setSourcesFolder("sources_" + name + "_1");
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
+            compDynHelp.setLibraryName("modellibNoLoops");
             std::auto_ptr<DynamicLib<double> > dynamicLib(compDynHelp.createDynamicLibrary(compiler));
 
             /**
-             * test the library
+             * reference library
              */
-            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(name + "dynamic"));
+            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(name + "DynamicNoLoops"));
+            for (size_t i = 0; i < atoms.size(); i++)
+                model->addAtomicFunction(*atoms[i]);
+
+            /**
+             * Compare results
+             */
+            size_t nFull = modelL->Domain();
+            ASSERT_EQ(modelL->Domain(), model->Domain());
+            ASSERT_EQ(modelL->Range(), model->Range());
+
+            std::vector<double> x(nFull);
+            for (size_t j = 0; j < nFull; j++) {
+                x[j] = j + 1;
+            }
+
+            if (compHelp.isCreateForwardZero()) {
+                std::vector<double> yl = modelL->ForwardZero(x);
+                std::vector<double> y = model->ForwardZero(x);
+                compareValues(yl, y);
+            }
+
+            if (compHelp.isCreateSparseJacobian()) {
+                compareVectorSetValues(modelL->JacobianSparsitySet(),
+                                       model->JacobianSparsitySet());
+
+                std::vector<double> jacl, jac;
+                std::vector<size_t> rowsl, colsl, rows, cols;
+                modelL->SparseJacobian(x, jacl, rowsl, colsl);
+                model->SparseJacobian(x, jac, rows, cols);
+
+                compareValues(jacl, jac);
+            }
+
         }
     };
 }
 
 using namespace CppAD;
+
+std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 4;
+    size_t m2 = repeat * m;
+
+    assert(x.size() == m2);
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = cos(x[i * m]) + x[1] * log(x[2]);
+        y[i * m + 1] = x[i * m + 1] * x[i * m];
+        y[i * m + 2] = x[i * m + 1] * x[i * m + 2];
+        y[i * m + 3] = 5;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, DependentPatternMatcher4Eq) {
+    using namespace CppAD;
+    size_t m = 4;
+    size_t n = 4;
+
+    testPattern(model4Eq, m, n, 6);
+
+    testPattern(model4Eq, m, n, 6, 1, true, "model4Eq");
+}
+
+std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = cos(x[i * m]);
+        y[i * m + 1] = x[i * m + 1] * x[i * m];
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
+    using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
+
+    testPattern(model0, m, n, 6);
+
+    testPattern(model0, m, n, 6, 1, true, "model0");
+}
 
 std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
@@ -190,36 +312,12 @@ std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {
 
 TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
 
-    testPattern(model1, 2, 6);
+    testPattern(model1, m, n, 6);
 
-    testPattern(model1, 2, 6, 1, true, "model1");
-}
-
-std::vector<ADCGD> model2(std::vector<ADCGD>& x, size_t repeat) {
-    size_t m = 3;
-    size_t m2 = repeat * m;
-
-    assert(x.size() == m2);
-
-    // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]) + x[1] * x[2];
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
-        y[i * m + 2] = x[i * m + 1] * x[i * m + 2];
-    }
-
-    return y;
-}
-
-TEST_F(CppADCGPatternTest, DependentPatternMatcher3Eq) {
-    using namespace CppAD;
-
-    testPattern(model2, 3, 6);
-
-    testPattern(model2, 3, 6, 1, true, "model2");
+    testPattern(model1, m, n, 6, 1, true, "model1");
 }
 
 std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
@@ -240,10 +338,12 @@ std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
 
 TEST_F(CppADCGPatternTest, DependentPatternMatcherCommonTmp) {
     using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
 
-    testPattern(model3, 2, 6);
+    testPattern(model3, m, n, 6);
 
-    testPattern(model3, 2, 6, 1, true, "model3");
+    testPattern(model3, m, n, 6, 1, true, "model3");
 }
 
 std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
@@ -265,9 +365,12 @@ std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
 TEST_F(CppADCGPatternTest, DependentPatternMatcher4) {
     using namespace CppAD;
 
-    testPattern(model4, 2, 6);
+    size_t m = 2;
+    size_t n = 2;
 
-    testPattern(model4, 2, 6, 1, true, "model4");
+    testPattern(model4, m, n, 6);
+
+    testPattern(model4, m, n, 6, 1, true, "model4");
 }
 
 std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
@@ -294,9 +397,12 @@ std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
 TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
     using namespace CppAD;
 
-    testPattern(model5, 2, 6, 2);
+    size_t m = 2;
+    size_t n = 2;
 
-    testPattern(model5, 2, 6, 2, true, "model5");
+    testPattern(model5, m, n, 6, 2);
+
+    testPattern(model5, m, n, 6, 2, true, "model5");
 }
 
 std::vector<ADCGD> model6(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
@@ -322,22 +428,26 @@ std::vector<ADCGD> model6(std::vector<ADCGD>& x, size_t repeat, const std::vecto
     return y;
 }
 
+void atomicFunction(const std::vector<AD<double> >& x, std::vector<AD<double> >& y) {
+    y[0] = x[1] * x[0];
+}
+
 TEST_F(CppADCGPatternTest, DependentPatternMatcherAtomic) {
     using namespace CppAD;
 
-    // create atomic function
-    std::vector<ADCGD> y(1);
-    std::vector<ADCGD> x(2);
-    CppAD::Independent(x);
-    y[0] = x[1] * x[0];
-    CppAD::ADFun<CGD> funAtomic;
-    funAtomic.Dependent(y);
+    size_t m = 2;
+    size_t n = 2;
 
-    CGAtomicFunBridge<double> atomicfun("atomicFunc", funAtomic, true);
-    std::vector<CGAbstractAtomicFun<double>*> atomics(1);
+    // create atomic function
+    std::vector<AD<double> > y(1);
+    std::vector<AD<double> > x(2);
+
+    checkpoint<double> atomicfun("atomicFunc", atomicFunction, x, y);
+    std::vector<atomic_base<double>*> atomics(1);
     atomics[0] = &atomicfun;
 
-    testPatternWithAtomics(model6, atomics, 2, 6);
 
-    testPatternWithAtomics(model6, atomics, 2, 6, 1, true, "model6");
+    testPatternWithAtomics(model6, atomics, m, n, 6);
+
+    testPatternWithAtomics(model6, atomics, m, n, 6, 1, true, "modelAtomic");
 }

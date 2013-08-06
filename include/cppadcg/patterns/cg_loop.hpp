@@ -670,7 +670,7 @@ namespace CppAD {
             typedef AD<CGB> ADCGB;
             assert(independents.size() > 0);
             assert(independents[0].getCodeHandler() != NULL);
-            const CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
+            CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
 
             /**
              * create the new/clone operations for the first iteration only
@@ -762,7 +762,6 @@ namespace CppAD {
             std::sort(nonIndexedCloneOrder.begin(), nonIndexedCloneOrder.end(), nonIndexedSorter);
 
 
-
             // loop independents
             CppAD::Independent(loopIndeps);
 
@@ -792,7 +791,7 @@ namespace CppAD {
             }
 
             /**
-             * create the tape for the first iteration
+             * create the tape
              */
             Evaluator<Base, CGB> evaluator1stIt(handler_, deps);
 
@@ -804,9 +803,32 @@ namespace CppAD {
 
             std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps);
 
-            std::auto_ptr<ADFun<CGB> >fun(new ADFun<CGB>());
-            fun->Dependent(newDeps);
+            std::auto_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
+            funIndexed->Dependent(newDeps);
 
+            /*******************************************************************
+             * Create the tape for the temporary variables
+             *****************************************************************
+            std::vector<CGB> tempVars(independentsTemp_.size());
+            j = 0;
+            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
+                OperationNode<Base>* origTmp = temporaryClone2Orig_.at(itt->first);
+                tempVars[j] = CGB(origHandler, Argument<Base>(*origTmp));
+            }
+
+            std::vector<ADCGB> origIndeps(independents.size());
+            CppAD::Independent(origIndeps);
+
+            Evaluator<Base, CGB> evaluatorTemps(origHandler, tempVars);
+
+            // load any atomic function used in the original model
+            evaluatorTemps.addAtomicFunctions(atomics);
+
+            std::vector<ADCGB> newTempVars = evaluatorTemps.evaluate(origIndeps);
+
+            std::auto_ptr<ADFun<CGB> >funTemporary(new ADFun<CGB>());
+            funTemporary->Dependent(newTempVars);
+             */
             /*******************************************************************
              * create the atomic loop function
              ******************************************************************/
@@ -839,6 +861,8 @@ namespace CppAD {
             for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
                 const OperationNode<Base>* tmpClone = itt->first;
                 const std::set<OperationNode<Base>*>& origIndeps = tempClone2Indeps_.at(tmpClone);
+                assert(!origIndeps.empty());
+
                 typename std::set<OperationNode<Base>*>::const_iterator ito;
                 for (ito = origIndeps.begin(); ito != origIndeps.end(); ++ito) {
                     size_t origIndex = origModelIndepOrder.at(*ito);
@@ -847,7 +871,8 @@ namespace CppAD {
                 temporaryOrigVarOrder[j] = temporaryClone2Orig_.at(tmpClone);
             }
 
-            loopAtomic_ = new LoopAtomicFun<Base>("loop", fun.release(), ////// TODO: improve loop name
+            loopAtomic_ = new LoopAtomicFun<Base>("loop", ////// TODO: improve loop name
+                    funIndexed.release(),
                     iterationCount,
                     dependentOrigIndexes,
                     indexedIndependents,
@@ -1009,7 +1034,7 @@ namespace CppAD {
             return *cloneOp;
         }
 
-        void findIndependents(OperationNode<Base>& node, std::set<OperationNode<Base>*> indeps) {
+        void findIndependents(OperationNode<Base>& node, std::set<OperationNode<Base>*>& indeps) {
             // TODO: improve to avoid visiting the same nodes!!!
             const std::vector<Argument<Base> >& args = node.getArguments();
 

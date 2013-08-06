@@ -22,6 +22,9 @@
 // forward declarations
 namespace CppAD {
 
+    /***************************************************************************
+     * Atomics
+     **************************************************************************/
     template<class Base>
     class BaseAbstractAtomicFun;
 
@@ -31,6 +34,9 @@ namespace CppAD {
     template<class Base>
     class CGAtomicFun;
 
+    /***************************************************************************
+     * Core
+     **************************************************************************/
     template<class Base>
     class CodeHandler;
 
@@ -46,6 +52,9 @@ namespace CppAD {
     template<class Base>
     struct OperationPathNode;
 
+    /***************************************************************************
+     * Loops
+     **************************************************************************/
     template<class Base>
     class EquationPattern;
 
@@ -59,9 +68,16 @@ namespace CppAD {
     class LoopAtomicFun;
 
     template<class Base>
-    class LoopOperationGraph;
-    
+    class JacOrigElementLoopInfo;
+
+    template<class Base>
+    class JacTapeElementLoopInfo;
+
     class IndexPattern;
+
+    /***************************************************************************
+     * Dynamic model compilation
+     **************************************************************************/
 
     template<class Base>
     class CLangCompiler;
@@ -89,9 +105,9 @@ namespace CppAD {
     class LinuxDynamicLib;
 #endif
 
-    /**
+    /***************************************************************************
      * Index reduction classes
-     */
+     **************************************************************************/
     template<class Base>
     class Enode;
 
@@ -101,9 +117,9 @@ namespace CppAD {
     template<class Base, class Base2>
     class Evaluator;
 
-    /**
+    /***************************************************************************
      * 
-     */
+     **************************************************************************/
     // order determining functions, see ordered.hpp
     template<class Base>
     bool GreaterThanZero(const CG<Base> &x);
@@ -245,9 +261,9 @@ namespace CppAD {
     template<class Base>
     inline CG<Base> tanh(const CG<Base>& var);
 
-    /**
+    /***************************************************************************
      * Utility functions
-     */
+     **************************************************************************/
     template<class VectorBool, class Base>
     inline VectorBool jacobianSparsity(ADFun<Base>& fun);
 

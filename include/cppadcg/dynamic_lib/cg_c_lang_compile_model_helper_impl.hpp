@@ -409,6 +409,10 @@ namespace CppAD {
             _fun->SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
         }
 
+        if (_funLoops == _fun) {
+            prepareSparseJacobianWithLoops(handler, jac);
+        }
+
         finishedGraphCreation();
 
         CLanguage<Base> langC(_baseTypeName);
@@ -419,6 +423,106 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "x", "var", "array"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
+                                                                       std::vector<CGBase>& jac) {
+        size_t nnz = _jacSparsity.rows.size();
+        // loop -> equation pattern -> tape independent -> orig independent(temporaries only) -> iteration = position
+        std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
+
+        /**
+         * 
+         * TODO: just checking jac for CGLoopResultOp is not enough!!!!
+         * 
+         */
+        for (size_t e = 0; e < nnz; e++) {
+            OperationNode<Base>* jacNode = jac[e].getOperationNode();
+            if (jacNode != NULL && jacNode->getOperationType() == CGLoopResultOp) {
+                OperationNode<Base>* loopNode = jacNode->getArguments()[0].getOperation();
+                size_t loopId = loopNode->getInfo()[0];
+                //size_t p = loopNode->getInfo()[3];
+                assert(loopNode->getInfo()[3] == 1);
+
+                LoopAtomicFun<Base>* loop = handler.getLoop(loopId);
+                assert(loop != NULL);
+                std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& lRawIndexes = jacIndexPatterns[loop];
+
+                size_t i = _jacSparsity.rows[e];
+                size_t j = _jacSparsity.cols[e];
+
+                const LoopPosition& depPos = loop->getTapeDependentIndex(i);
+                size_t tapeI = depPos.tape;
+                if (!loop->isIndependentVariablesFullyDetached(tapeI)) {
+                    throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
+                }
+                size_t iteration = depPos.atomic / loop->getTapeDependentCount();
+
+                // must get a single tape independent index!!!!!
+                std::set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, j);
+                assert(tapeJs.size() == 1);
+                size_t tapeJ = *tapeJs.begin();
+
+                JacTapeElementLoopInfo<Base>& rawLoopIJ = lRawIndexes[tapeI][tapeJ];
+
+                // check if it is a temporary
+                if (loop->isTemporary(tapeJ)) {
+                    size_t nIndexed = loop->getIndexedIndepIndexes().size();
+                    size_t nNonIndexed = loop->getNonIndexedIndepIndexes().size();
+                    const std::vector<LoopPositionTmp>& tmps = loop->getTemporaryIndependents();
+                    const LoopPositionTmp& pos = tmps[tapeJ - nIndexed - nNonIndexed];
+
+                    JacOrigElementLoopInfo<Base>& jacElement = rawLoopIJ.origIndep2Info[j];
+                    if (loopNode->getOperationType() == CGLoopForwardOp)
+                        jacElement.arg = loopNode->getArguments()[pos.atomic * 2 + 1]; // args = [tx]
+                    else //CGLoopReverseOp
+                        jacElement.arg = Argument<Base>(*jacNode); // args = [ x , py ] ////////////////////// TODO!!!
+
+                    jacElement.jacIndexes.resize(loop->getIterationCount(), nnz);
+                    jacElement.jacIndexes[iteration] = e;
+
+                } else {
+                    JacOrigElementLoopInfo<Base>& jacElement = rawLoopIJ.origIndep2Info[0];
+                    jacElement.arg = Argument<Base>(Base(1));
+                    jacElement.jacIndexes.resize(loop->getIterationCount(), nnz);
+                    jacElement.jacIndexes[iteration] = e;
+                }
+            }
+        }
+
+        typename std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >::iterator itl;
+        for (itl = jacIndexPatterns.begin(); itl != jacIndexPatterns.end(); ++itl) {
+            //LoopAtomicFun<Base>* loop = itl->first;
+            //size_t iterations = loop->getIterationCount();
+
+            typename std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >::iterator itI;
+            for (itI = itl->second.begin(); itI != itl->second.end(); ++itI) {
+
+                typename std::map<size_t, JacTapeElementLoopInfo<Base> >::iterator itJ;
+                for (itJ = itI->second.begin(); itJ != itI->second.end(); ++itJ) {
+                    JacTapeElementLoopInfo<Base>& jacEleInfo = itJ->second;
+
+                    typename std::map<size_t, JacOrigElementLoopInfo<Base> >::iterator itO;
+                    for (itO = jacEleInfo.origIndep2Info.begin(); itO != jacEleInfo.origIndep2Info.end(); ++itO) {
+                        JacOrigElementLoopInfo<Base>& origEleInfo = itO->second;
+
+                        // make sure all element are requested
+                        std::vector<size_t>::const_iterator ite;
+                        for (ite = origEleInfo.jacIndexes.begin(); ite != origEleInfo.jacIndexes.end(); ++ite) {
+                            if (*ite == nnz) {
+                                throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
+                            }
+                        }
+
+                        origEleInfo.jacPattern = IndexPattern::detect(origEleInfo.jacIndexes); ///////////// must delete object
+                        // TODO: consider clearing origEleInfo.jacIndexes
+                    }
+                }
+            }
+        }
+
+        handler.prepareLoops(jac, jacIndexPatterns);
     }
 
     template<class Base>

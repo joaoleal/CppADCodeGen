@@ -608,6 +608,9 @@ namespace CppAD {
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources,
                                                   bool forward);
 
+        virtual void prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
+                                                    std::vector<CGBase>& jac);
+
         virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
                                                         bool forward);
 

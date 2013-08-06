@@ -52,31 +52,6 @@ namespace CppAD {
 
     protected:
 
-        static inline CodeHandler<Base>* findHandler(const vector<CGB>& ty) {
-            for (size_t i = 0; i < ty.size(); i++) {
-                if (ty[i].getCodeHandler() != NULL) {
-                    return ty[i].getCodeHandler();
-                }
-            }
-            return NULL;
-        }
-
-        static inline Arg asArgument(const CGB& tx) {
-            if (tx.isParameter()) {
-                return Arg(tx.getValue());
-            } else {
-                return Arg(*tx.getOperationNode());
-            }
-        }
-
-        static inline std::vector<Arg> asArguments(const vector<CGB>& tx) {
-            std::vector<Arg> arguments(tx.size());
-            for (size_t i = 0; i < arguments.size(); i++) {
-                arguments[i] = asArgument(tx[i]);
-            }
-            return arguments;
-        }
-
         static inline void appendAsArguments(typename std::vector<Arg>::iterator begin, const vector<CGB>& tx) {
             std::vector<Arg> arguments(tx.size());
             typename std::vector<Arg>::iterator it = begin;

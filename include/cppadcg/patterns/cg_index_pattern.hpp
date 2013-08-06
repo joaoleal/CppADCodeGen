@@ -22,7 +22,7 @@ namespace CppAD {
      */
     enum IndexPatternType {
         linear,
-        linearNConst,
+        linear2Sections,
         random
     };
 
@@ -36,7 +36,8 @@ namespace CppAD {
         inline virtual ~IndexPattern() {
         }
 
-        static inline IndexPattern* detect(const vector<size_t>& indexes);
+        template<class VectorSizeT>
+        static inline IndexPattern* detect(const VectorSizeT& indexes);
     };
 
     /**
@@ -45,10 +46,10 @@ namespace CppAD {
     class LinearIndexPattern : public IndexPattern {
     protected:
         long a_;
-        size_t b_;
+        long b_;
     public:
 
-        inline LinearIndexPattern(long a, size_t b) :
+        inline LinearIndexPattern(long a, long b) :
             a_(a), b_(b) {
         }
 
@@ -56,7 +57,7 @@ namespace CppAD {
             return a_;
         }
 
-        inline size_t getLinearConstantTerm() const {
+        inline long getLinearConstantTerm() const {
             return b_;
         }
 
@@ -71,30 +72,38 @@ namespace CppAD {
     /**
      * Linear pattern followed by a constant index
      */
-    class LinearNconstIndexPattern : public LinearIndexPattern {
+    class Linear2SectionsIndexPattern : public IndexPattern {
     protected:
-        size_t max_; // end of the linear section
-        size_t i_; // value after max
+        LinearIndexPattern linear1_;
+        LinearIndexPattern linear2_;
+        size_t itSplit_; // the start of the second linear section
     public:
 
-        inline LinearNconstIndexPattern(long a, size_t b, size_t max, size_t i) :
-            LinearIndexPattern(a, b),
-            max_(max), i_(i) {
+        inline Linear2SectionsIndexPattern(long a1, size_t b1,
+                                           long a2, size_t b2,
+                                           size_t itSplit) :
+            linear1_(a1, b1),
+            linear2_(a2, b2),
+            itSplit_(itSplit) {
         }
 
-        inline size_t getLinearSectionEnd() const {
-            return max_;
+        inline size_t getItrationSplit() const {
+            return itSplit_;
         }
 
-        inline size_t getConstSectionValue() const {
-            return i_;
+        const LinearIndexPattern& getLinearSection1() const {
+            return linear1_;
+        }
+
+        const LinearIndexPattern& getLinearSection2() const {
+            return linear2_;
         }
 
         inline virtual IndexPatternType getType() const {
-            return linearNConst;
+            return linear2Sections;
         }
 
-        inline virtual ~LinearNconstIndexPattern() {
+        inline virtual ~Linear2SectionsIndexPattern() {
         }
     };
 
@@ -112,11 +121,12 @@ namespace CppAD {
         }
     };
 
-    IndexPattern* IndexPattern::detect(const vector<size_t>& indexes) {
+    template<class VectorSizeT>
+    IndexPattern* IndexPattern::detect(const VectorSizeT& indexes) {
         assert(indexes.size() > 1);
 
-        size_t b = indexes[0];
         long a = long(indexes[1]) - indexes[0];
+        long b = indexes[0];
         size_t lastLinear = indexes.size();
         for (size_t pos = 2; pos < indexes.size(); pos++) {
             if (indexes[pos] != a * pos + b) {
@@ -129,17 +139,18 @@ namespace CppAD {
             return new LinearIndexPattern(a, b);
         }
 
-        // maybe it is constant after a linear part
-        bool constIndex = true;
-        for (size_t pos = lastLinear; pos < indexes.size(); pos++) {
-            if (indexes[pos] != indexes[lastLinear]) {
-                constIndex = false;
+        // maybe there are 2 linear sections
+        long a2 = long(indexes[lastLinear + 1]) - indexes[lastLinear];
+        long b2 = indexes[lastLinear] - a2 * lastLinear;
+        size_t lastLinear2 = indexes.size();
+        for (size_t pos = lastLinear + 2; pos < indexes.size(); pos++) {
+            if (indexes[pos] != a2 * pos + b2) {
+                lastLinear = pos;
                 break;
             }
         }
-
-        if (constIndex) {
-            return new LinearNconstIndexPattern(a, b, lastLinear, indexes[lastLinear]);
+        if (lastLinear2 == indexes.size()) {
+            return new Linear2SectionsIndexPattern(a, b, a2, b2, lastLinear);
         }
 
         return new RandomIndexPattern();

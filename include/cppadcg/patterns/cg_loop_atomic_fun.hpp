@@ -18,65 +18,6 @@
 namespace CppAD {
 
     /**
-     * Independent variable positions
-     */
-    class LoopPosition {
-    public:
-        size_t tape;
-        size_t atomic;
-        size_t original;
-
-        inline LoopPosition() :
-            tape(-1),
-            atomic(-1),
-            original(-1) {
-        }
-
-        inline LoopPosition(size_t t, size_t a, size_t o) :
-            tape(t),
-            atomic(a),
-            original(o) {
-        }
-    };
-
-    /**
-     * Temporary variable positions
-     */
-    class LoopPositionTmp {
-    public:
-        size_t tape;
-        size_t atomic;
-        // the independent variables that this temporary variable depends on
-        std::set<size_t> originalIndeps;
-
-        inline LoopPositionTmp() :
-            tape(-1),
-            atomic(-1) {
-        }
-
-        inline LoopPositionTmp(size_t t, size_t a, const std::set<size_t>& o) :
-            tape(t),
-            atomic(a),
-            originalIndeps(o) {
-        }
-    };
-
-    template<class Base>
-    class LoopOperationGraph {
-    public:
-        OperationNode<Base>* loopStart;
-        OperationNode<Base>* loopEnd;
-        std::vector<OperationNode<Base>*> indexedResults; // y, jac, hess...
-        std::vector<OperationNode<Base>*> indexedIndependents;
-
-        LoopOperationGraph() :
-            loopStart(NULL),
-            loopEnd(NULL) {
-
-        }
-    };
-
-    /**
      * An atomic function for source code generation within loops
      * 
      * @author Joao Leal
@@ -96,6 +37,11 @@ namespace CppAD {
          * Number of loop iterations
          */
         const size_t iterationCount_;
+        /**
+         * the total number of dependent variables of the atomic function
+         * (NOT the tape)
+         */
+        const size_t mFull_;
         /**
          * the total number of independent variables of the atomic function
          * (NOT the tape)
@@ -128,7 +74,8 @@ namespace CppAD {
          */
         std::map<size_t, size_t> indepOrig2full_;
         /**
-         * 
+         * Maps the original dependent variable indexes to their positions in 
+         * the loop
          */
         std::map<size_t, LoopPosition*> depOrigIndexes_;
         /**
@@ -139,14 +86,25 @@ namespace CppAD {
          * 
          */
         vector<IndexPattern*> depIndexPatterns_;
-
-        vector<std::set<size_t> > jacTape_;
+        /**
+         * Jacobian sparsity pattern of the tape
+         */
+        vector<std::set<size_t> > jacTapeSparsity_;
         CustomPosition custom_jac_;
         vector<std::set<size_t> > hessTape_;
         std::map<size_t, vector<std::set<size_t> > > eqHessTape_;
         std::map<size_t, vector<std::set<size_t> > > hess_;
         CustomPosition custom_hess_;
-        LoopOperationGraph<Base>* graphForward_;
+        /**
+         * 
+         */
+        std::map<size_t, bool> equationFullyDetached_;
+        /**
+         * Maps original model independent index to the possitions it may be
+         * associated with in the tape (also includes temporary variables)
+         * for a given tape equation (equation -> orig index -> tape indexes)
+         */
+        std::vector<std::map<size_t, std::set<size_t> > > orig2Tape_;
     public:
 
         /**
@@ -154,6 +112,12 @@ namespace CppAD {
          * dependencies to calls of a user atomic function.
          * 
          * @param name The atomic function name.
+         * @param fun
+         * @param iterationCount
+         * @param dependentOrigIndexes
+         * @param indexedIndepOrigIndexes
+         * @param nonIndexedIndepOrigIndexes
+         * @param temporaryIndependents
          */
         LoopAtomicFun(const std::string& name,
                       ADFun<CGB>* fun,
@@ -166,13 +130,13 @@ namespace CppAD {
             loopId_(createNewLoopId()),
             fun_(fun),
             iterationCount_(iterationCount),
+            mFull_(iterationCount * dependentOrigIndexes.size()),
             nFull_(0),
             m_(dependentOrigIndexes.size()),
             dependentIndexes_(m_, std::vector<LoopPosition>(iterationCount)),
             indexedIndepIndexes_(indexedIndepOrigIndexes.size(), std::vector<LoopPosition>(iterationCount)),
             nonIndexedIndepIndexes_(nonIndexedIndepOrigIndexes.size()),
-            temporaryIndependents_(temporaryIndependents.size()),
-            graphForward_(NULL) {
+            temporaryIndependents_(temporaryIndependents.size()) {
             CPPADCG_ASSERT_KNOWN(fun != NULL, "fun cannot be NULL");
 
             /**
@@ -189,8 +153,6 @@ namespace CppAD {
             /**
              * independents
              */
-
-
             size_t nIndexed = indexedIndepOrigIndexes.size();
 
             // indexed
@@ -229,11 +191,11 @@ namespace CppAD {
             // temporary
             size_t fullStart = indepOrig2full_.size();
             for (size_t j = 0; j < temporaryIndependents.size(); j++) {
+                assert(!temporaryIndependents[j].empty());
                 temporaryIndependents_[j] = LoopPositionTmp(nIndexed + nNonIndexed + j, fullStart + j, temporaryIndependents[j]);
             }
 
             nFull_ = fullStart + temporaryIndependents_.size();
-
         }
 
         template <class ADVector>
@@ -254,12 +216,24 @@ namespace CppAD {
             return iterationCount_;
         }
 
+        inline ADFun<CGB>* getTape() const {
+            return fun_;
+        }
+
         inline size_t getLoopDependentCount() const {
-            return m_ * iterationCount_;
+            return mFull_;
         }
 
         inline size_t getLoopIndependentCount() const {
             return nFull_;
+        }
+
+        inline size_t getTapeDependentCount() const {
+            return m_;
+        }
+
+        inline size_t getTapeIndependentCount() const {
+            return fun_->Domain();
         }
 
         /**
@@ -299,8 +273,8 @@ namespace CppAD {
             return indepOrig2full_;
         }
 
-        inline size_t getTapeDependentIndex(size_t originalDepIndex) const {
-            return depOrigIndexes_.at(originalDepIndex)->tape;
+        inline const LoopPosition& getTapeDependentIndex(size_t originalDepIndex) const {
+            return *depOrigIndexes_.at(originalDepIndex);
         }
 
         virtual vector<CGB> insertIntoModel(const std::vector<CGB>& independents,
@@ -328,18 +302,17 @@ namespace CppAD {
             opInfo[1] = nFull_;
             opInfo[2] = getLoopDependentCount();
             opInfo[3] = 0; // zero-order
-            std::vector<Argument<Base> > args = BaseAbstractAtomicFun<Base>::asArguments(x);
+            std::vector<Argument<Base> > args = asArguments(x);
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this); // is this really required?
 
-            size_t mFull = getLoopDependentCount();
-            vector<CGB> y(mFull);
+            vector<CGB> y(mFull_);
 
             opInfo.resize(1);
             args.resize(1);
-            for (size_t i = 0; i < mFull; i++) {
+            for (size_t i = 0; i < mFull_; i++) {
                 opInfo[0] = i;
                 args[0] = Argument<Base>(*atomicOp);
 
@@ -380,77 +353,131 @@ namespace CppAD {
             return indepIndexPatterns_;
         }
 
-        inline LoopOperationGraph<Base>* getForwardOperationGraph() const {
-            return graphForward_;
+        inline bool isTemporary(size_t tapeIndex) const {
+            size_t nIndexed = indexedIndepIndexes_.size();
+            size_t nNonIndexed = nonIndexedIndepIndexes_.size();
+
+            return nIndexed + nNonIndexed <= tapeIndex;
         }
 
-        virtual LoopOperationGraph<Base>* generateForwardGraph(CodeHandler<Base>& handler,
-                                                               size_t p,
-                                                               const std::vector<Argument<Base> >& args) {
-            assert(graphForward_ == NULL);
+        /**
+         * Checks if all variables of an equation pattern are completelly
+         * unrelated, that is, if all variables in the original are only
+         * associated with indexed tape independents or non-indexed tape 
+         * independents.
+         * 
+         * @param the index of the equation pattern in the tape.
+         * @return true if all variables for the equation pattern are 
+         *         completelly unrelated
+         */
+        inline bool isIndependentVariablesFullyDetached(size_t d) {
+            assert(d < m_);
 
-            //size_t mTape = fun_->Range();
-            size_t nTape = fun_->Domain();
-            std::vector<size_t> startEndInfo(2);
-            startEndInfo[0] = loopId_;
-            startEndInfo[1] = iterationCount_;
-
-            std::vector<size_t> info(1);
-
-            graphForward_ = new LoopOperationGraph<Base>();
-            std::vector<Argument<Base> > startArgs(temporaryIndependents_.size());
-            for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
-                const LoopPositionTmp& pos = temporaryIndependents_[j];
-                startArgs[j] = args[pos.atomic];
+            std::map<size_t, bool>::const_iterator iteqd = equationFullyDetached_.find(d);
+            if (iteqd != equationFullyDetached_.end()) {
+                return iteqd->second;
             }
 
-            graphForward_->loopStart = new OperationNode<Base>(CGLoopStartOp, startEndInfo, startArgs);
-            handler.manageOperationNode(graphForward_->loopStart);
+            equationFullyDetached_[d] = false;
 
-            // indexed independents
+            // iteration -> orignal index -> indexed
+            std::vector < std::map<size_t, bool> > origIndexedIndependents(iterationCount_);
+            const std::set<size_t>& eqJac = jacTapeSparsity_[d];
+
             size_t nIndexed = indexedIndepIndexes_.size();
-            graphForward_->indexedIndependents.resize(nIndexed);
-            vector<CGB> tx(nTape);
-            std::vector<Argument<Base> > indexedArgs(iterationCount_ + 1);
-            indexedArgs[0] = Argument<Base>(*graphForward_->loopStart);
-            for (size_t j = 0; j < nIndexed; j++) {
-                for (size_t it = 0; it < iterationCount_; it++) {
-                    //assert(args[j].getOperation() != NULL);
-                    indexedArgs[it + 1] = args[indexedIndepIndexes_[j][it].atomic];
-                }
-                info[0] = j;
-                graphForward_->indexedIndependents[j] = new OperationNode<Base>(CGLoopIndexedIndepOp, info, indexedArgs);
-                tx[j] = CGB(handler, graphForward_->indexedIndependents[j]);
-            }
-            // non indexed
             size_t nNonIndexed = nonIndexedIndepIndexes_.size();
-            for (size_t j = 0; j < nNonIndexed; j++) {
-                tx[nIndexed + j] = CGB(handler, args[nonIndexedIndepIndexes_[j].atomic]);
+
+            std::map<size_t, bool>::const_iterator itIndexed;
+            std::set<size_t>::const_iterator itj;
+            for (itj = eqJac.begin(); itj != eqJac.end(); ++itj) {
+                size_t j1 = *itj; // tape independent index
+                if (j1 < nIndexed) {
+                    // indexed independents
+                    for (size_t it = 0; it < iterationCount_; it++) {
+                        size_t origj = indexedIndepIndexes_[j1][it].original;
+                        itIndexed = origIndexedIndependents[it].find(origj);
+                        if (itIndexed != origIndexedIndependents[it].end()) {
+                            return false;
+                        }
+                        origIndexedIndependents[it][origj] = true; // indexed
+                    }
+
+                } else if (j1 < nIndexed + nNonIndexed) {
+                    // the index does not change
+                    size_t origj = nonIndexedIndepIndexes_[j1 - nIndexed].original;
+                    for (size_t it = 0; it < iterationCount_; it++) {
+                        itIndexed = origIndexedIndependents[it].find(origj);
+                        if (itIndexed != origIndexedIndependents[it].end() && itIndexed->second) {
+                            return false;
+                        }
+                        origIndexedIndependents[it][origj] = false; // not indexed
+                    }
+                } else {
+                    // temporary variables (the index does not change)
+                    const std::set<size_t>& origs = temporaryIndependents_[j1 - (nIndexed + nNonIndexed)].originalIndeps;
+                    std::set<size_t>::const_iterator itoj;
+                    for (itoj = origs.begin(); itoj != origs.end(); ++itoj) {
+                        size_t origj = *itoj;
+                        for (size_t it = 0; it < iterationCount_; it++) {
+                            itIndexed = origIndexedIndependents[it].find(origj);
+                            if (itIndexed != origIndexedIndependents[it].end() && itIndexed->second) {
+                                return false;
+                            }
+                            origIndexedIndependents[it][origj] = false; // not indexed
+                        }
+                    }
+                }
+
             }
-            // temporaries
-            for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
-                tx[nIndexed + nNonIndexed + j] = CGB(handler, args[temporaryIndependents_[j].atomic]);
+
+            equationFullyDetached_[d] = true;
+            return true;
+        }
+
+        std::set<size_t> getIndependentTapeIndexes(size_t tapeI, size_t origIndep) {
+            assert(tapeI < m_);
+
+            if (orig2Tape_.empty()) {
+                orig2Tape_.resize(m_);
+
+                size_t nIndexed = indexedIndepIndexes_.size();
+                size_t nNonIndexed = nonIndexedIndepIndexes_.size();
+
+                if (jacTapeSparsity_.size() == 0) {
+                    determineFullJacobianSparsity();
+                }
+
+                for (size_t i = 0; i < m_; i++) {
+                    const std::set<size_t>& row = jacTapeSparsity_[i];
+                    std::set<size_t>::const_iterator itr;
+                    for (itr = row.begin(); itr != row.end(); ++itr) {
+                        size_t j = *itr;
+
+                        if (j < nIndexed) {
+                            // indexed
+                            for (size_t it = 0; it < iterationCount_; it++) {
+                                const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                                orig2Tape_[i][pos.original].insert(pos.tape);
+                            }
+                        } else if (j < nIndexed + nNonIndexed) {
+                            // non-indexed
+                            const LoopPosition& pos = nonIndexedIndepIndexes_[j - nIndexed];
+                            orig2Tape_[i][pos.original].insert(pos.tape);
+                        } else {
+                            // temporaries
+                            const LoopPositionTmp& pos = temporaryIndependents_[j - (nIndexed + nNonIndexed)];
+                            const std::set<size_t>& origs = pos.originalIndeps;
+                            std::set<size_t>::const_iterator ito;
+                            for (ito = origs.begin(); ito != origs.end(); ++ito) {
+                                orig2Tape_[i][*ito].insert(pos.tape);
+                            }
+                        }
+                    }
+                }
+
             }
 
-            vector<CGB> ty = fun_->Forward(p, tx);
-
-            size_t ty_size = ty.size();
-            graphForward_->indexedResults.resize(ty_size);
-            std::vector<Argument<Base> > endArgs(ty_size);
-            indexedArgs.resize(1);
-            for (size_t i = 0; i < ty_size; i++) {
-                indexedArgs[0] = Argument<Base>(*ty[i].getOperationNode());
-                info[0] = i;
-                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
-                graphForward_->indexedResults[i] = yIndexed;
-                handler.manageOperationNode(yIndexed);
-                endArgs[i] = Argument<Base>(*yIndexed);
-            }
-
-            graphForward_->loopEnd = new OperationNode<Base>(CGLoopEndOp, startEndInfo, endArgs);
-            handler.manageOperationNode(graphForward_->loopEnd);
-
-            return graphForward_;
+            return orig2Tape_[tapeI].at(origIndep);
         }
 
         virtual bool forward(size_t q,
@@ -463,21 +490,16 @@ namespace CppAD {
             bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
 
             if (vx.size() > 0) {
-                size_t mFull = this->getLoopDependentCount();
                 CPPADCG_ASSERT_KNOWN(vx.size() >= nFull_, "Invalid vx size");
-                CPPADCG_ASSERT_KNOWN(vy.size() >= mFull, "Invalid vy size");
-                determineFullJacobianSparsity(true);
+                CPPADCG_ASSERT_KNOWN(vy.size() >= mFull_, "Invalid vy size");
 
-                const vector<std::set<size_t> >& jacSparsity = custom_jac_.getFullElements();
-                for (size_t i = 0; i < mFull; i++) {
-                    std::set<size_t>::const_iterator it;
-                    for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                        size_t j = *it;
-                        if (vx[j]) {
-                            vy[i] = true;
-                            break;
-                        }
-                    }
+                for (size_t i = 0; i < mFull_; i++) {
+                    /**
+                     * all dependents must be considered a variable
+                     * (otherwise CppAD will remember constants and will not 
+                     *  make the association with the loop results)
+                     */
+                    vy[i] = true;
                 }
             }
 
@@ -546,15 +568,15 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
+            CodeHandler<Base>* handler = findHandler(tx);
             assert(handler != NULL);
 
-            std::vector<Argument<Base> > args = BaseAbstractAtomicFun<Base>::asArguments(tx);
+            std::vector<Argument<Base> > args = asArguments(tx);
 
             std::vector<size_t> opInfo(4);
             opInfo[0] = loopId_;
-            opInfo[1] = nFull_;
-            opInfo[2] = getLoopDependentCount();
+            opInfo[1] = mFull_;
+            opInfo[2] = nFull_;
             opInfo[3] = p;
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
@@ -693,11 +715,11 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
+            CodeHandler<Base>* handler = findHandler(tx);
             if (handler == NULL) {
-                handler = BaseAbstractAtomicFun<Base>::findHandler(ty);
+                handler = findHandler(ty);
                 if (handler == NULL) {
-                    handler = BaseAbstractAtomicFun<Base>::findHandler(py);
+                    handler = findHandler(py);
                 }
             }
             assert(handler != NULL);
@@ -708,8 +730,8 @@ namespace CppAD {
 
             std::vector<size_t> opInfo(4);
             opInfo[0] = loopId_;
-            opInfo[1] = nFull_;
-            opInfo[2] = getLoopDependentCount();
+            opInfo[1] = mFull_;
+            opInfo[2] = nFull_;
             opInfo[3] = p;
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopReverseOp, opInfo, args);
@@ -775,8 +797,6 @@ namespace CppAD {
                                     const vector<std::set<size_t> >& r,
                                     const vector<std::set<size_t> >& u,
                                     vector<std::set<size_t> >& v) {
-            size_t m = iterationCount_ * m_;
-
             for (size_t i = 0; i < nFull_; i++) {
                 v[i].clear();
             }
@@ -790,11 +810,11 @@ namespace CppAD {
              *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R(x)   )
              */
             // f'^T(x) U(x)
-            CppAD::multMatrixTransMatrixSparsity(jacSparsity, u, v, m, nFull_, q);
+            CppAD::multMatrixTransMatrixSparsity(jacSparsity, u, v, mFull_, nFull_, q);
 
             // Sum(  s(x)i  f''(x)  R(x)   )
             bool allSelected = true;
-            for (size_t i = 0; i < m; i++) {
+            for (size_t i = 0; i < mFull_; i++) {
                 if (!s[i]) {
                     allSelected = false;
                     break;
@@ -809,7 +829,7 @@ namespace CppAD {
                 CppAD::multMatrixTransMatrixSparsity(sF2, r, v, nFull_, nFull_, q); // f''^T * R
             } else {
                 vector<std::set<size_t> > sparsitySF2R(nFull_);
-                for (size_t i = 0; i < m; i++) {
+                for (size_t i = 0; i < mFull_; i++) {
                     if (s[i]) {
                         std::map<size_t, vector<std::set<size_t> > >::const_iterator itH = hess_.find(i);
                         const vector<std::set<size_t> >* spari;
@@ -830,7 +850,7 @@ namespace CppAD {
              * S(x) * f'(x)
              */
             std::set<size_t>::const_iterator it;
-            for (size_t i = 0; i < m; i++) {
+            for (size_t i = 0; i < mFull_; i++) {
                 if (s[i]) {
                     for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
                         size_t j = *it;
@@ -850,17 +870,20 @@ namespace CppAD {
             for (size_t i = 0; i < depIndexPatterns_.size(); i++) {
                 delete depIndexPatterns_[i];
             }
-            delete graphForward_;
         }
 
     protected:
 
+        void determineFullJacobianSparsity() {
+            determineFullJacobianSparsity(m_ < fun_->Domain());
+        }
+
         void determineFullJacobianSparsity(bool forward) {
             if (forward) {
-                jacTape_ = CppAD::jacobianForwardSparsitySet<vector<std::set<size_t> > >(*fun_);
+                jacTapeSparsity_ = CppAD::jacobianForwardSparsitySet<vector<std::set<size_t> > >(*fun_);
                 fun_->size_forward_set(0);
             } else {
-                jacTape_ = CppAD::jacobianReverseSparsitySet<vector<std::set<size_t> > >(*fun_);
+                jacTapeSparsity_ = CppAD::jacobianReverseSparsitySet<vector<std::set<size_t> > >(*fun_);
             }
             size_t mFull = iterationCount_ * m_;
             vector<std::set<size_t> > fullJac(mFull);
@@ -868,7 +891,7 @@ namespace CppAD {
             for (size_t it = 0; it < iterationCount_; it++) {
                 for (size_t d = 0; d < m_; d++) {
                     size_t i = it * m_ + d;
-                    const std::set<size_t>& firstitd = jacTape_[d];
+                    const std::set<size_t>& firstitd = jacTapeSparsity_[d];
 
                     std::set<size_t>::const_iterator itj1;
                     for (itj1 = firstitd.begin(); itj1 != firstitd.end(); ++itj1) {
@@ -883,16 +906,15 @@ namespace CppAD {
         }
 
         inline void determineFullHessianSparsity() {
-            size_t mTape = fun_->Range();
             size_t nTape = fun_->Domain();
-            assert(m_ == mTape);
+            assert(m_ == fun_->Range());
 
             /**
              * Make sure that an independent of the original model is not used
              * by more than one indexed tape independent and/or a nonindexed
              * independent.
              */
-            for (size_t d = 0; d < mTape; d++) {
+            for (size_t d = 0; d < m_; d++) {
                 bool detachedVars = isIndependentVariablesFullyDetached(d);
                 if (!detachedVars) {
                     throw CGException("Unable exploit the hessian structure of a loop where the independent variables are not fully detached");
@@ -926,11 +948,10 @@ namespace CppAD {
         }
 
         inline vector<std::set<size_t> >& determineFullHessianSparsity(size_t i) {
-            size_t mTape = fun_->Range();
             size_t nTape = fun_->Domain();
-            assert(m_ == mTape);
+            assert(m_ == fun_->Range());
             size_t iteration = i / iterationCount_;
-            size_t d = iteration * mTape + (i % iterationCount_); // tape equation/dependent
+            size_t d = iteration * m_ + (i % iterationCount_); // tape equation/dependent
 
             /**
              * Make sure that an independent of the original model is not used
@@ -964,62 +985,6 @@ namespace CppAD {
             }
 
             return fullHessi;
-        }
-
-        /**
-         * Checks if an independent of the original model is NOT used by more
-         * than one indexed tape independent and/or a nonindexed independent.
-         */
-        inline bool isIndependentVariablesFullyDetached(size_t d) const {
-            std::set<size_t> origIndexedIndependents;
-            const std::set<size_t>& eqJac = jacTape_[d];
-
-            /**
-             ****************************************************************** 
-             ******************************************************************
-             *          TODO : temporaries also depend on independents
-             * 
-             ******************************************************************* 
-             ******************************************************************* 
-             */
-            size_t nIndexed = indexedIndepIndexes_.size();
-            size_t nNonIndexed = nonIndexedIndepIndexes_.size();
-
-            std::set<size_t>::const_iterator itj;
-            for (itj = eqJac.begin(); itj != eqJac.end(); ++itj) {
-                size_t j1 = *itj; // tape independent index
-                if (j1 < nIndexed) {
-                    // indexed 
-                    for (size_t it = 0; it < iterationCount_; it++) {
-                        size_t origj = indexedIndepIndexes_[j1][it].original;
-                        if (origIndexedIndependents.find(origj) != origIndexedIndependents.end()) {
-                            return false;
-                        }
-                        origIndexedIndependents.insert(origj);
-                    }
-                } else {
-
-                    if (j1 < nIndexed + nNonIndexed) {
-                        // the index does not change
-                        size_t origj = nonIndexedIndepIndexes_[j1 - nIndexed].original;
-                        if (origIndexedIndependents.find(origj) != origIndexedIndependents.end()) {
-                            return false;
-                        }
-                    } else {
-                        // temporary variables (the index does not change)
-                        const std::set<size_t>& origs = temporaryIndependents_[j1 - (nIndexed + nNonIndexed)].originalIndeps;
-                        std::set<size_t>::const_iterator itoj;
-                        for (itoj = origs.begin(); itoj != origs.end(); ++itoj) {
-                            size_t origj = *itoj;
-                            if (origIndexedIndependents.find(origj) != origIndexedIndependents.end()) {
-                                return false;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return true;
         }
 
         /**
@@ -1085,7 +1050,6 @@ namespace CppAD {
                            vector<Base>& ty) {
 
             if (p == 0) {
-                //size_t mTape = fun_->Range();
                 size_t nTape = fun_->Domain();
 
                 vector<CGB> xTape(nTape);
@@ -1116,6 +1080,50 @@ namespace CppAD {
                     for (size_t i = 0; i < dependentIndexes_.size(); i++) {
                         const LoopPosition& pos = dependentIndexes_[i][it];
                         ty[pos.atomic] = yTape[pos.tape].getValue();
+                    }
+                }
+
+                return true;
+            } else if (p == 1) {
+                size_t nTape = fun_->Domain();
+
+                vector<CGB> xTape(nTape);
+                vector<CGB> txTape(nTape * 2);
+
+                for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                    const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                    xTape[pos.tape] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                }
+
+                for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                    const LoopPositionTmp& pos = temporaryIndependents_[j];
+                    xTape[pos.tape] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                }
+
+                /**
+                 * loop...
+                 */
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    // place indexed independents
+                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        xTape[pos.tape] = tx[pos.atomic * 2];
+                        txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                        txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                    }
+
+                    fun_->Forward(0, xTape);
+                    vector<CGB> tyTape = fun_->Forward(1, txTape);
+
+                    // place dependents
+                    for (size_t i = 0; i < dependentIndexes_.size(); i++) {
+                        const LoopPosition& pos = dependentIndexes_[i][it];
+                        ty[pos.atomic * 2] = tyTape[pos.tape * 2].getValue();
+                        ty[pos.atomic * 2 + 1] = tyTape[pos.tape * 2 + 1].getValue();
                     }
                 }
 

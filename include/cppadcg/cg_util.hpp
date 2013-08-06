@@ -622,6 +622,40 @@ namespace CppAD {
         return false;
     }
 
+    /**
+     * Finds the first non-null code handler
+     * 
+     * @param ty The array to search in
+     * @return The first code handler found or NULL if none was found
+     */
+    template<class Base>
+    inline CodeHandler<Base>* findHandler(const vector<CG<Base> >& ty) {
+        for (size_t i = 0; i < ty.size(); i++) {
+            if (ty[i].getCodeHandler() != NULL) {
+                return ty[i].getCodeHandler();
+            }
+        }
+        return NULL;
+    }
+
+    template<class Base>
+    inline Argument<Base> asArgument(const CG<Base>& tx) {
+        if (tx.isParameter()) {
+            return Argument<Base>(tx.getValue());
+        } else {
+            return Argument<Base>(*tx.getOperationNode());
+        }
+    }
+
+    template<class Base>
+    inline std::vector<Argument<Base> > asArguments(const vector<CG<Base> >& tx) {
+        std::vector<Argument<Base> > arguments(tx.size());
+        for (size_t i = 0; i < arguments.size(); i++) {
+            arguments[i] = asArgument(tx[i]);
+        }
+        return arguments;
+    }
+
 }
 
 #endif

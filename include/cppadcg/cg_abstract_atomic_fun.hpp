@@ -144,7 +144,7 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
+            CodeHandler<Base>* handler = findHandler(tx);
             assert(handler != NULL);
 
             OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
@@ -301,11 +301,11 @@ namespace CppAD {
                     return false;
             }
 
-            CodeHandler<Base>* handler = BaseAbstractAtomicFun<Base>::findHandler(tx);
+            CodeHandler<Base>* handler = findHandler(tx);
             if (handler == NULL) {
-                handler = BaseAbstractAtomicFun<Base>::findHandler(ty);
+                handler = findHandler(ty);
                 if (handler == NULL) {
-                    handler = BaseAbstractAtomicFun<Base>::findHandler(py);
+                    handler = findHandler(py);
                 }
             }
             assert(handler != NULL);

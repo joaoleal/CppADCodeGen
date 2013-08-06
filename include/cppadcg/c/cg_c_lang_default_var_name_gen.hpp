@@ -169,22 +169,17 @@ namespace CppAD {
             switch (ip.getType()) {
                 case linear:
                 {
-                    const LinearIndexPattern* lip = static_cast<const LinearIndexPattern*> (&ip);
-                    if (lip->getLinearSlope() > 0) {
-                        if (lip->getLinearSlope() != 1) {
-                            ss << lip->getLinearSlope() << " * ";
-                        }
-                        ss << "j";
-                    }
-
-                    if (lip->getLinearConstantTerm() != 0) {
-                        if (lip->getLinearSlope() > 0)
-                            ss << " + ";
-                        ss << lip->getLinearConstantTerm();
-                    }
+                    const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
+                    return createLinearIndexPattern(lip);
+                }
+                case linear2Sections:
+                {
+                    const Linear2SectionsIndexPattern* lip = static_cast<const Linear2SectionsIndexPattern*> (&ip);
+                    ss << "(j<" << lip->getItrationSplit() << ")? "
+                            << createLinearIndexPattern(lip->getLinearSection1()) << ": "
+                            << createLinearIndexPattern(lip->getLinearSection2());
                     return ss.str();
                 }
-                case linearNConst:
 
                     //return ss.str();
                 case random:
@@ -194,6 +189,23 @@ namespace CppAD {
                     assert(false); // should never reach this
                     return "";
             }
+        }
+
+        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip) {
+            std::stringstream ss;
+            if (lip.getLinearSlope() > 0) {
+                if (lip.getLinearSlope() != 1) {
+                    ss << lip.getLinearSlope() << " * ";
+                }
+                ss << "j";
+            }
+
+            if (lip.getLinearConstantTerm() != 0) {
+                if (lip.getLinearSlope() > 0)
+                    ss << " + ";
+                ss << lip.getLinearConstantTerm();
+            }
+            return ss.str();
         }
 
     };

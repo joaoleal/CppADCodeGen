@@ -89,6 +89,7 @@ namespace CppAD {
         // the values in the temporary array
         std::vector<const Argument<Base>*> _tmpArrayValues;
         const std::map<size_t, LoopAtomicFun<Base>*>* _loops;
+        const std::vector<IndexPattern*>* _loopDependentIndexPatterns;
         LoopAtomicFun<Base>* _currentLoop;
     private:
         std::string defaultFuncArgDcl_;
@@ -118,6 +119,7 @@ namespace CppAD {
             _maxAssigmentsPerFunction(0),
             _sources(NULL),
             _loops(NULL),
+            _loopDependentIndexPatterns(NULL),
             _currentLoop(NULL) {
         }
 
@@ -326,6 +328,7 @@ namespace CppAD {
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
             _loops = &info.loops;
+            _loopDependentIndexPatterns = &info.loopDependentIndexPatterns;
 
             /**
              * generate variable names
@@ -415,7 +418,7 @@ namespace CppAD {
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     // check if a new function should start
-                    if (assignCount >= _maxAssigmentsPerFunction && multiFunction) {
+                    if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoop == NULL) {
                         assignCount = 0;
                         saveLocalFunction(localFuncNames);
                     }
@@ -630,8 +633,8 @@ namespace CppAD {
                     var.setName(_nameGen->generateTemporaryArray(var));
                 } else if (var.getOperationType() == CGLoopIndexedDepOp) {
                     assert(_currentLoop != NULL);
-                    size_t i = var.getInfo()[0];
-                    IndexPattern* ip = _currentLoop->getDependentIndexPatterns()[i];
+                    size_t pos = var.getInfo()[0];
+                    IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
                     var.setName(_nameGen->generateIndexedDependent(var, *_currentLoop, *ip));
                 } else if (var.getOperationType() == CGLoopIndexedIndepOp) {
                     assert(_currentLoop != NULL);

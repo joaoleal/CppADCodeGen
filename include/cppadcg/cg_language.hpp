@@ -43,6 +43,8 @@ namespace CppAD {
         const bool reuseIDs;
         // maps loop IDs to the atomic loop functions
         const std::map<size_t, LoopAtomicFun<Base>*>& loops;
+        //
+        const std::vector<IndexPattern*>& loopDependentIndexPatterns;
     public:
 
         LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
@@ -53,7 +55,8 @@ namespace CppAD {
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri,
-                               const std::map<size_t, LoopAtomicFun<Base>*>& ls) :
+                               const std::map<size_t, LoopAtomicFun<Base>*>& ls,
+                               const std::vector<IndexPattern*>& dependentIndexPatterns) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),
@@ -62,7 +65,8 @@ namespace CppAD {
             atomicFunctionId2Index(atomicId2Index),
             atomicFunctionId2Name(atomicId2Name),
             reuseIDs(ri),
-            loops(ls) {
+            loops(ls),
+            loopDependentIndexPatterns(dependentIndexPatterns){
         }
     };
 
@@ -83,7 +87,7 @@ namespace CppAD {
          * @return true if a new variable is created
          */
         virtual bool createsNewVariable(const OperationNode<Base>& op) const = 0;
-        
+
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const = 0;
 
         friend class CodeHandler<Base>;
