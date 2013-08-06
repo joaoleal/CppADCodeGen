@@ -89,7 +89,7 @@ namespace CppAD {
         // the values in the temporary array
         std::vector<const Argument<Base>*> _tmpArrayValues;
         const std::map<size_t, LoopAtomicFun<Base>*>* _loops;
-        const std::vector<IndexPattern*>* _loopDependentIndexPatterns;
+        const std::vector<const IndexPattern*>* _loopDependentIndexPatterns;
         LoopAtomicFun<Base>* _currentLoop;
     private:
         std::string defaultFuncArgDcl_;
@@ -634,12 +634,12 @@ namespace CppAD {
                 } else if (var.getOperationType() == CGLoopIndexedDepOp) {
                     assert(_currentLoop != NULL);
                     size_t pos = var.getInfo()[0];
-                    IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
+                    const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
                     var.setName(_nameGen->generateIndexedDependent(var, *_currentLoop, *ip));
                 } else if (var.getOperationType() == CGLoopIndexedIndepOp) {
                     assert(_currentLoop != NULL);
                     size_t j = var.getInfo()[0];
-                    IndexPattern* ip = _currentLoop->getIndependentIndexPatterns()[j];
+                    const IndexPattern* ip = _currentLoop->getIndependentIndexPatterns()[j];
                     var.setName(_nameGen->generateIndexedIndependent(var, *_currentLoop, *ip));
                 } else {
                     if (var.getVariableID() <= _independentSize) {

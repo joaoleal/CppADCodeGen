@@ -1,9 +1,5 @@
 #ifndef CPPAD_CG_DEPENDENT_PATTERN_MATCHER_INCLUDED
 #define CPPAD_CG_DEPENDENT_PATTERN_MATCHER_INCLUDED
-
-#include "cg_loop.hpp"
-#include "cg_loop_atomic_fun.hpp"
-
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis

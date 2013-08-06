@@ -44,7 +44,7 @@ namespace CppAD {
         // maps loop IDs to the atomic loop functions
         const std::map<size_t, LoopAtomicFun<Base>*>& loops;
         //
-        const std::vector<IndexPattern*>& loopDependentIndexPatterns;
+        const std::vector<const IndexPattern*>& loopDependentIndexPatterns;
     public:
 
         LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
@@ -56,7 +56,7 @@ namespace CppAD {
                                const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri,
                                const std::map<size_t, LoopAtomicFun<Base>*>& ls,
-                               const std::vector<IndexPattern*>& dependentIndexPatterns) :
+                               const std::vector<const IndexPattern*>& dependentIndexPatterns) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),

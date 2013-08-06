@@ -68,7 +68,7 @@ namespace CppAD {
     class LoopAtomicFun;
 
     template<class Base>
-    class JacOrigElementLoopInfo;
+    class JacOrigElementIndepLoopInfo;
 
     template<class Base>
     class JacTapeElementLoopInfo;

@@ -95,7 +95,7 @@ namespace CppAD {
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopData*> _loops;
         //
-        std::vector<IndexPattern*> _loopDependentIndexPatterns;
+        std::vector<const IndexPattern*> _loopDependentIndexPatterns;
         /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
@@ -554,7 +554,7 @@ namespace CppAD {
         virtual void insertLoopOperations(size_t i, OperationNode<Base>& loopResult,
                                           const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns);
 
-        virtual LoopOperationGraph* generateLoopForwardGraph(LoopAtomicFun<Base>& atomic,
+        virtual LoopOperationGraph* generateLoopForward0Graph(LoopAtomicFun<Base>& atomic,
                                                              size_t p,
                                                              const std::vector<Argument<Base> >& args);
 
@@ -566,7 +566,8 @@ namespace CppAD {
         virtual LoopOperationGraph* generateForward1Graph(LoopAtomicFun<Base>& atomic,
                                                           LoopOperationGraph* graphForward1,
                                                           size_t indep,
-                                                          const std::map<size_t, JacTapeElementLoopInfo<Base> >& jacRow,
+                                                          const std::map<size_t, JacTapeElementLoopInfo<Base> >& jacCol,
+                                                          std::map<const IndexPattern*, CG<Base> >& jacColVals,
                                                           const std::vector<Argument<Base> >& args,
                                                           bool variableTx1);
 

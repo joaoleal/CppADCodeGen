@@ -241,35 +241,6 @@ namespace CppAD {
 
 using namespace CppAD;
 
-std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
-    size_t m = 4;
-    size_t m2 = repeat * m;
-
-    assert(x.size() == m2);
-
-    // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]) + x[1] * log(x[2]);
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
-        y[i * m + 2] = x[i * m + 1] * x[i * m + 2];
-        y[i * m + 3] = 5;
-    }
-
-    return y;
-}
-
-TEST_F(CppADCGPatternTest, DependentPatternMatcher4Eq) {
-    using namespace CppAD;
-    size_t m = 4;
-    size_t n = 4;
-
-    testPattern(model4Eq, m, n, 6);
-
-    testPattern(model4Eq, m, n, 6, 1, true, "model4Eq");
-}
-
 std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t m2 = repeat * m;
@@ -320,7 +291,36 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     testPattern(model1, m, n, 6, 1, true, "model1");
 }
 
-std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 4;
+    size_t m2 = repeat * m;
+
+    assert(x.size() == m2);
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = cos(x[i * m]) + x[1] * log(x[2]);
+        y[i * m + 1] = x[i * m + 1] * x[i * m];
+        y[i * m + 2] = x[i * m + 1] * x[i * m + 2];
+        y[i * m + 3] = 5;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, Matcher4Eq) {
+    using namespace CppAD;
+    size_t m = 4;
+    size_t n = 4;
+
+    testPattern(model4Eq, m, n, 6);
+
+    testPattern(model4Eq, m, n, 6, 1, true, "model4Eq");
+}
+
+std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t m2 = repeat * m;
 
@@ -336,14 +336,41 @@ std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
     return y;
 }
 
-TEST_F(CppADCGPatternTest, DependentPatternMatcherCommonTmp) {
+TEST_F(CppADCGPatternTest, CommonTmp) {
     using namespace CppAD;
     size_t m = 2;
     size_t n = 2;
 
-    testPattern(model3, m, n, 6);
+    testPattern(modelCommonTmp, m, n, 6);
 
-    testPattern(model3, m, n, 6, 1, true, "model3");
+    testPattern(modelCommonTmp, m, n, 6, 1, true, "modelCommonTmp");
+}
+
+std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = x[1] * x[1];
+    ADCGD tmp2 = 2.5 * x[1];
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = tmp1 * cos(x[i * m]) / tmp2;
+        y[i * m + 1] = x[i * m + 1] * x[i * m];
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, CommonTmp2) {
+    using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
+
+    testPattern(modelCommonTmp2, m, n, 6);
+
+    testPattern(modelCommonTmp2, m, n, 6, 1, true, "modelCommonTmp2");
 }
 
 std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
@@ -362,7 +389,7 @@ std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
     return y;
 }
 
-TEST_F(CppADCGPatternTest, DependentPatternMatcher4) {
+TEST_F(CppADCGPatternTest, IndexedTmp) {
     using namespace CppAD;
 
     size_t m = 2;
@@ -370,7 +397,7 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher4) {
 
     testPattern(model4, m, n, 6);
 
-    testPattern(model4, m, n, 6, 1, true, "model4");
+    testPattern(model4, m, n, 6, 1, true, "indexedTmp");
 }
 
 std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
@@ -405,7 +432,7 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
     testPattern(model5, m, n, 6, 2, true, "model5");
 }
 
-std::vector<ADCGD> model6(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
+std::vector<ADCGD> modelAtomic(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
     size_t m = 2;
     size_t m2 = repeat * m;
 
@@ -432,7 +459,7 @@ void atomicFunction(const std::vector<AD<double> >& x, std::vector<AD<double> >&
     y[0] = x[1] * x[0];
 }
 
-TEST_F(CppADCGPatternTest, DependentPatternMatcherAtomic) {
+TEST_F(CppADCGPatternTest, Atomic) {
     using namespace CppAD;
 
     size_t m = 2;
@@ -447,7 +474,7 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcherAtomic) {
     atomics[0] = &atomicfun;
 
 
-    testPatternWithAtomics(model6, atomics, m, n, 6);
+    testPatternWithAtomics(modelAtomic, atomics, m, n, 6);
 
-    testPatternWithAtomics(model6, atomics, m, n, 6, 1, true, "modelAtomic");
+    testPatternWithAtomics(modelAtomic, atomics, m, n, 6, 1, true, "modelAtomic");
 }
