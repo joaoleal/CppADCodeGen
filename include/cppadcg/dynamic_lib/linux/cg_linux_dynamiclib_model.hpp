@@ -277,7 +277,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
 
             _in[0] = x;
@@ -292,7 +292,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_zero != NULL, "No zero order forward function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             _out[0] = dep;
 
@@ -309,7 +309,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(tx.size() == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(ty.size() == _m, "Invalid dependent array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             _in[0] = &tx[0];
             _out[0] = &ty[0];
@@ -343,7 +343,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(jac_size == _m * _n, "Invalid Jacobian array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
 
             _in[0] = x;
@@ -363,7 +363,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             _inHess[0] = x;
             _inHess[1] = w;
@@ -380,7 +380,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_forwardOne != NULL, "No forward one function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(tx_size >= (k + 1) * _n, "Invalid tx size");
             CPPADCG_ASSERT_KNOWN(ty_size >= (k + 1) * _m, "Invalid ty size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             int ret = (*_forwardOne)(tx, ty, _atomicFuncArg);
 
@@ -400,7 +400,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
             CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
             CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
 
@@ -421,7 +421,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
             CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
             CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             int ret = (*_reverseTwo)(tx, ty, px, py, _atomicFuncArg);
 
@@ -438,7 +438,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* row;
             unsigned long const* col;
@@ -469,7 +469,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow;
             unsigned long const* dcol;
@@ -500,7 +500,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow;
             unsigned long const* dcol;
@@ -526,7 +526,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseJacobian != NULL, "No sparse Jacobian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow;
             unsigned long const* dcol;
@@ -554,7 +554,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* row, *col;
             unsigned long nnz;
@@ -585,7 +585,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow, *dcol;
             unsigned long nnz;
@@ -618,7 +618,7 @@ namespace CppAD {
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow, *dcol;
             unsigned long K;
@@ -646,7 +646,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
             CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
             CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
-            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some of atomic functions used by the compiled model have been specified yet");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
             unsigned long const* drow, *dcol;
             unsigned long K;
