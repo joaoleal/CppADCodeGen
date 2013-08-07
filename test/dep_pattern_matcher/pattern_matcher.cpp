@@ -52,10 +52,12 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            if (createDynLib)
-                testSourceCodeGen(fun, m, repeat, name);
-            else
+            if (createDynLib) {
+                testSourceCodeGen(fun, m, repeat, name, FORWARD);
+                testSourceCodeGen(fun, m, repeat, name, REVERSE);
+            } else {
                 testResults(fun, m, repeat, n_loops);
+            }
         }
 
         void testPatternWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
@@ -89,10 +91,12 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            if (createDynLib)
-                testSourceCodeGen(fun, m, repeat, name, atoms);
-            else
+            if (createDynLib) {
+                testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD);
+                testSourceCodeGen(fun, m, repeat, name, atoms, REVERSE);
+            } else {
                 testResults(fun, m, repeat, n_loops);
+            }
 
             for (size_t a = 0; a < atomics.size(); a++) {
                 delete atomics[a];
@@ -149,16 +153,30 @@ namespace CppAD {
         void testSourceCodeGen(ADFun<CGD>& fun,
                                size_t m, size_t repeat,
                                const std::string& name,
-                               const std::vector<atomic_base<Base>*>& atoms = std::vector<atomic_base<Base>*>()) {
+                               JacobianADMode jacMode) {
+            std::vector<atomic_base<Base>*> atoms;
+            testSourceCodeGen(fun, m, repeat, name, atoms, jacMode);
+        }
+
+        void testSourceCodeGen(ADFun<CGD>& fun,
+                               size_t m, size_t repeat,
+                               const std::string& name,
+                               const std::vector<atomic_base<Base>*>& atoms,
+                               JacobianADMode jacMode) {
+
+            std::string libBaseName = name;
+            if (jacMode == FORWARD)libBaseName += "F";
+            else if (jacMode == REVERSE)libBaseName += "R";
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
-            std::vector<double> xTypical(fun.Domain(), 1.0);
+            std::vector<double> xTypical(fun.Domain(), 0.9);
             /**
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelpL(fun, name + "DynamicWithLoops");
+            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "DynamicWithLoops");
             compHelpL.setCreateForwardZero(true);
+            compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
             compHelpL.setCreateHessian(false);
             compHelpL.setCreateSparseJacobian(true);
@@ -171,18 +189,19 @@ namespace CppAD {
             compHelpL.setTypicalIndependentValues(xTypical);
 
             GccCompiler<double> compiler;
-            compiler.setSourcesFolder("sources_" + name + "_1");
+            compiler.setSourcesFolder("sources_" + libBaseName + "_1");
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
-            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(name + "DynamicWithLoops"));
+            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(libBaseName + "DynamicWithLoops"));
             for (size_t i = 0; i < atoms.size(); i++)
                 modelL->addAtomicFunction(*atoms[i]);
             /**
              * Without the loops
              */
-            CLangCompileModelHelper<double> compHelp(fun, name + "DynamicNoLoops");
+            CLangCompileModelHelper<double> compHelp(fun, libBaseName + "DynamicNoLoops");
             compHelp.setCreateForwardZero(true);
+            compHelp.setJacobianADMode(jacMode);
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
             compHelp.setCreateSparseJacobian(true);
@@ -192,7 +211,7 @@ namespace CppAD {
             compHelp.setCreateReverseTwo(false);
             //compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
-            compiler.setSourcesFolder("sources_" + name + "_1");
+            compiler.setSourcesFolder("sources_" + libBaseName + "_1");
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             compDynHelp.setLibraryName("modellibNoLoops");
@@ -201,7 +220,7 @@ namespace CppAD {
             /**
              * reference library
              */
-            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(name + "DynamicNoLoops"));
+            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(libBaseName + "DynamicNoLoops"));
             for (size_t i = 0; i < atoms.size(); i++)
                 model->addAtomicFunction(*atoms[i]);
 
@@ -240,6 +259,33 @@ namespace CppAD {
 }
 
 using namespace CppAD;
+
+std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = x[1] * sin(x[1] + 4);
+    ADCGD tmp2 = 2.5 * x[1];
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = tmp1 * cos(x[i * m]) / tmp2;
+        y[i * m + 1] = x[i * m + 1] * x[i * m];
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, CommonTmp2) {
+    using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
+
+    testPattern(modelCommonTmp2, m, n, 6);
+
+    testPattern(modelCommonTmp2, m, n, 6, 1, true, "modelCommonTmp2");
+}
 
 std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
@@ -344,33 +390,6 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
     testPattern(modelCommonTmp, m, n, 6);
 
     testPattern(modelCommonTmp, m, n, 6, 1, true, "modelCommonTmp");
-}
-
-std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
-    size_t m = 2;
-    size_t m2 = repeat * m;
-
-    // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    ADCGD tmp1 = x[1] * x[1];
-    ADCGD tmp2 = 2.5 * x[1];
-    for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = tmp1 * cos(x[i * m]) / tmp2;
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
-    }
-
-    return y;
-}
-
-TEST_F(CppADCGPatternTest, CommonTmp2) {
-    using namespace CppAD;
-    size_t m = 2;
-    size_t n = 2;
-
-    testPattern(modelCommonTmp2, m, n, 6);
-
-    testPattern(modelCommonTmp2, m, n, 6, 1, true, "modelCommonTmp2");
 }
 
 std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {

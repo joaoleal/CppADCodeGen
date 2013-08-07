@@ -298,6 +298,15 @@ namespace CppAD {
     enum JacobianADMode {
         FORWARD, REVERSE, AUTOMATIC
     };
+
+    /**
+     * Index pattern types
+     */
+    enum IndexPatternType {
+        LINEAR,
+        LINEAR2SECTIONS,
+        RANDOM
+    };
 }
 
 #endif

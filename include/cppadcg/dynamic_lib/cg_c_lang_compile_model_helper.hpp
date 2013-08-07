@@ -621,20 +621,47 @@ namespace CppAD {
 
         virtual void generateZeroSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateJacobianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateHessianSource(std::map<std::string, std::string>& sources);
+        /***********************************************************************
+         * Jacobian
+         **********************************************************************/
+
+        virtual void generateJacobianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources,
                                                   bool forward);
 
+        /**
+         * Loops
+         */
         virtual void prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                     std::vector<CGBase>& jac);
 
+        virtual OperationNode<Base>* findSparseJacLoopResult(CodeHandler<Base>& handler,
+                                                             size_t e,
+                                                             size_t nnz,
+                                                             OperationNode<Base>* jacNode,
+                                                             std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns,
+                                                             std::vector<JacOrigElementLoopInfo<Base> >& garbageCollection);
+
+        virtual OperationNode<Base>* handleSparseJacLoopResult(CodeHandler<Base>& handler,
+                                                               size_t e,
+                                                               size_t nnz,
+                                                               OperationNode<Base>* jacNode,
+                                                               std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns,
+                                                               Argument<Base> arg,
+                                                               std::vector<JacOrigElementLoopInfo<Base> >& garbageCollection);
+
         virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
                                                         bool forward);
+
+        /***********************************************************************
+         * Hessian
+         **********************************************************************/
+
+        virtual void generateHessianSource(std::map<std::string, std::string>& sources);
 
         virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
 
@@ -644,6 +671,10 @@ namespace CppAD {
 
         virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                        std::vector<size_t>& userCols);
+
+        /***********************************************************************
+         * Sparsities for forward/reverse
+         **********************************************************************/
 
         virtual void generateSparsity1DSource(const std::string& function,
                                               const std::vector<size_t>& sparsity);
@@ -657,13 +688,25 @@ namespace CppAD {
         virtual void generateSparsity1DSource2(const std::string& function,
                                                const std::map<size_t, std::vector<size_t> >& rows);
 
+        /***********************************************************************
+         * Forward 1 mode
+         **********************************************************************/
+
         virtual void generateSparseForwardOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateForwardOneSources(std::map<std::string, std::string>& sources);
 
+        /***********************************************************************
+         * Reverse 1 mode
+         **********************************************************************/
+
         virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateReverseOneSources(std::map<std::string, std::string>& sources);
+
+        /***********************************************************************
+         * Reverse 2 mode
+         **********************************************************************/
 
         virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources);
 
@@ -680,6 +723,10 @@ namespace CppAD {
                                                        const std::string& suffix,
                                                        const std::map<size_t, std::vector<size_t> >& elements,
                                                        const std::string& argsDcl);
+
+        /***********************************************************************
+         * Sparsities
+         **********************************************************************/
 
         virtual void determineJacobianSparsity();
 

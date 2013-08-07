@@ -167,12 +167,12 @@ namespace CppAD {
         static inline std::string createIndexPattern(const IndexPattern& ip) {
             std::stringstream ss;
             switch (ip.getType()) {
-                case linear:
+                case LINEAR:
                 {
                     const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
                     return createLinearIndexPattern(lip);
                 }
-                case linear2Sections:
+                case LINEAR2SECTIONS:
                 {
                     const Linear2SectionsIndexPattern* lip = static_cast<const Linear2SectionsIndexPattern*> (&ip);
                     ss << "(j<" << lip->getItrationSplit() << ")? "
@@ -182,7 +182,7 @@ namespace CppAD {
                 }
 
                     //return ss.str();
-                case random:
+                case RANDOM:
 
                     //return ss.str();
                 default:

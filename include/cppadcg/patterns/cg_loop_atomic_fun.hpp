@@ -1173,6 +1173,50 @@ namespace CppAD {
                            const vector<Base>& ty,
                            vector<Base>& px,
                            const vector<Base>& py) {
+            if (p == 0) {
+                size_t nTape = fun_->Domain();
+
+                vector<CGB> xTape(nTape);
+                vector<CGB> pyTape(m_);
+
+                for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                    const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                    xTape[pos.tape] = tx[pos.atomic];
+                }
+
+                for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                    const LoopPositionTmp& pos = temporaryIndependents_[j];
+                    xTape[pos.tape] = tx[pos.atomic];
+                }
+
+                /**
+                 * loop...
+                 */
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    // place indexed independents
+                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        xTape[pos.tape] = tx[pos.atomic];
+                    }
+
+                    for (size_t i = 0; i < m_; i++) {
+                        const LoopPosition& pos = dependentIndexes_[i][it];
+                        pyTape[pos.tape] = py[pos.atomic];
+                    }
+
+                    vector<CGB> tyTape = fun_->Forward(0, xTape);
+                    vector<CGB> pxTape = fun_->Reverse(1, pyTape);
+
+                    // place dependents
+                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        px[pos.atomic] = pxTape[pos.tape].getValue();
+                    }
+                }
+
+                return true;
+            }
+
             return false;
         }
 

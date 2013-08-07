@@ -145,6 +145,7 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_loops.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
 

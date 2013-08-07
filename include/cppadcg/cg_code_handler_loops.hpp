@@ -101,45 +101,47 @@ namespace CppAD {
 
     template<class Base>
     void CodeHandler<Base>::prepareLoops(std::vector<CG<Base> >& dependent) {
+
         std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
-        prepareLoops(dependent, jacIndexPatterns);
+        std::map<OperationNode<Base>*, OperationNode<Base>*> loopDependents;
+        for (size_t i = 0; i < dependent.size(); i++) {
+            if (dependent[i].getOperationNode() != NULL) {
+                OperationNode<Base>* result = dependent[i].getOperationNode();
+                if (result->getOperationType() == CGLoopResultOp) {
+                    OperationNode<Base>* loop = result->getArguments()[0].getOperation();
+                    loopDependents[result] = loop;
+                }
+            }
+        }
+
+        prepareLoops(loopDependents, jacIndexPatterns);
     }
 
     template<class Base>
-    void CodeHandler<Base>::prepareLoops(std::vector<CG<Base> >& dependent,
+    void CodeHandler<Base>::prepareLoops(const std::map<OperationNode<Base>*, OperationNode<Base>*>& loopDependents,
                                          const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns) {
-        /**
-         * Identify first order patterns
-         */
-        std::map<LoopAtomicFun<Base>*, std::vector<std::map<size_t, IndexPattern*> > > jac;
+        typename std::map<OperationNode<Base>*, OperationNode<Base>*>::const_iterator it;
+        for (it = loopDependents.begin(); it != loopDependents.end(); ++it) {
+            OperationNode<Base>* result = it->first;
+            OperationNode<Base>* loop = it->second;
 
-        size_t i = 0;
-        for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it, i++) {
-            CG<Base>& var = *it;
-            if (var.getOperationNode() != NULL) {
-                OperationNode<Base>& node = *var.getOperationNode();
-                CGOpCode op = node.getOperationType();
-                if (op == CGLoopResultOp) {
-                    insertLoopOperations(i, node, jacIndexPatterns);
-                }
-            }
+            insertLoopOperations(*result, *loop, jacIndexPatterns);
         }
     }
 
     template<class Base>
-    void CodeHandler<Base>::insertLoopOperations(size_t i, OperationNode<Base>& loopResult,
+    void CodeHandler<Base>::insertLoopOperations(OperationNode<Base>& loopResult,
+                                                 OperationNode<Base>& loop,
                                                  const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns) {
-        assert(loopResult.getArguments().size() == 1);
-        assert(loopResult.getArguments()[0].getOperation() != NULL);
-
-        OperationNode<Base>& loop = *loopResult.getArguments()[0].getOperation();
-
         assert(loop.getOperationType() == CGLoopForwardOp || loop.getOperationType() == CGLoopReverseOp);
         assert(loop.getInfo().size() == 4);
 
         size_t loopId = loop.getInfo()[0];
         size_t p = loop.getInfo()[3];
 
+        loopResult.operation_ = CGLoopResultOp;
+        loopResult.arguments_.clear();
+        loopResult.info_.clear();
         LoopData* loopData = _loops.at(loopId);
 
         if (loop.getOperationType() == CGLoopForwardOp) {
@@ -151,22 +153,14 @@ namespace CppAD {
                     loopData->graphForward0 = generateLoopForward0Graph(*loopData->atomic, p, loop.getArguments());
                     assert(loopData->graphForward0 != NULL);
                 }
-                //size_t tapeIndex = loopAtomic->getTapeDependentIndex(i);
-                //OperationNode<Base>* indexDep = graph->indexedResults[tapeIndex];
 
-                loopResult.arguments_.clear();
                 loopResult.arguments_.push_back(Argument<Base>(*loopData->graphForward0->loopEnd));
-                loopResult.info_.clear();
-                loopResult.info_.push_back(i);
 
             } else if (p == 1) {
                 generateForward1Graph(*loopData, jacIndexPatterns.at(loopData->atomic), loop.getArguments(), false); //////////////
                 assert(loopData->graphForward1 != NULL);
 
-                loopResult.arguments_.clear();
                 loopResult.arguments_.push_back(Argument<Base>(*loopData->graphForward1->loopEnd));
-                loopResult.info_.clear();
-                loopResult.info_.push_back(i);
             } else {
                 assert(false); // TODO
             }
@@ -174,14 +168,11 @@ namespace CppAD {
             /**
              * Reverse mode
              */
-            if (p == 1) {
+            if (p == 0) {
                 generateReverse1Graph(*loopData, jacIndexPatterns.at(loopData->atomic), loop.getArguments(), false); //////////////
                 assert(loopData->graphReverse1 != NULL);
 
-                loopResult.arguments_.clear();
                 loopResult.arguments_.push_back(Argument<Base>(*loopData->graphReverse1->loopEnd));
-                loopResult.info_.clear();
-                loopResult.info_.push_back(i);
             } else {
                 assert(false); // TODO
             }
@@ -268,9 +259,13 @@ namespace CppAD {
         //size_t mFull = atomic->getLoopDependentCount();
         //size_t nFull = atomic->getLoopIndependentCount();
         //size_t m = atomic->getTapeDependentCount();
-        size_t n = atomic->getTapeIndependentCount();
+        //size_t n = atomic->getTapeIndependentCount();
+        const std::vector<std::vector<LoopPosition> >& indexIndep = atomic->getIndexedIndepIndexes();
+        const std::vector<LoopPosition>& nonindexIndep = atomic->getNonIndexedIndepIndexes();
+        const std::vector<LoopPositionTmp>& tempIndep = atomic->getTemporaryIndependents();
 
         // transpose jac
+        // loop -> tape independent -> equation pattern -> orig independent(temporaries only) -> iteration = position
         std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > jacT;
         typename std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >::const_iterator itr;
         for (itr = jac.begin(); itr != jac.end(); ++itr) {
@@ -289,18 +284,50 @@ namespace CppAD {
 
         std::map<const IndexPattern*, CG<Base> > jacVals;
 
-        for (size_t j = 0; j < n; j++) {
+        // indexed
+        for (size_t jTape = 0; jTape < indexIndep.size(); jTape++) {
             for (size_t it = 0; it < iterationCount; it++) {
-                const Argument<Base>& argTx1 = args[j * n + 1];
+                const LoopPosition& pos = indexIndep[jTape][it];
+                const Argument<Base>& argTx1 = args[pos.atomic * 2 + 1];
                 if (argTx1.getParameter() == NULL || !IdenticalZero(*argTx1.getParameter())) {
-                    if (loopData.graphForward1Indeps.find(j) == loopData.graphForward1Indeps.end()) {
-                        loopData.graphForward1 = generateForward1Graph(*atomic, loopData.graphForward1, j, jacT.at(j), jacVals, args, variableTx1);
-                        loopData.graphForward1Indeps.insert(j);
+                    if (loopData.graphForward1Indeps.find(jTape) == loopData.graphForward1Indeps.end()) {
+                        loopData.graphForward1 = generateForward1Graph(*atomic, loopData.graphForward1, jTape, jacT.at(jTape), jacVals, args, variableTx1);
+                        loopData.graphForward1Indeps.insert(jTape);
                     }
                     break;
                 }
             }
         }
+
+        // non-indexed
+        for (size_t j = 0; j < nonindexIndep.size(); j++) {
+            const LoopPosition& pos = nonindexIndep[j];
+            size_t jTape = indexIndep.size() + j;
+            const Argument<Base>& argTx1 = args[pos.atomic * 2 + 1];
+            if (argTx1.getParameter() == NULL || !IdenticalZero(*argTx1.getParameter())) {
+                if (loopData.graphForward1Indeps.find(jTape) == loopData.graphForward1Indeps.end()) {
+                    loopData.graphForward1 = generateForward1Graph(*atomic, loopData.graphForward1, jTape, jacT.at(jTape), jacVals, args, variableTx1);
+                    loopData.graphForward1Indeps.insert(jTape);
+                }
+                break;
+            }
+        }
+
+        // temporary
+        for (size_t j = 0; j < tempIndep.size(); j++) {
+            const LoopPositionTmp& pos = tempIndep[j];
+            size_t jTape = indexIndep.size() + nonindexIndep.size() + j;
+            const Argument<Base>& argTx1 = args[pos.atomic * 2 + 1];
+            if (argTx1.getParameter() == NULL || !IdenticalZero(*argTx1.getParameter())) {
+                if (loopData.graphForward1Indeps.find(jTape) == loopData.graphForward1Indeps.end()) {
+                    loopData.graphForward1 = generateForward1Graph(*atomic, loopData.graphForward1, jTape, jacT.at(jTape), jacVals, args, variableTx1);
+                    loopData.graphForward1Indeps.insert(jTape);
+                }
+                break;
+            }
+        }
+
+        assert(loopData.graphForward1 != NULL);
 
         std::vector<Argument<Base> > tyIndexedArgs(1);
         std::vector<size_t> info(1);
@@ -326,7 +353,7 @@ namespace CppAD {
     template<class Base>
     typename CodeHandler<Base>::LoopOperationGraph* CodeHandler<Base>::generateForward1Graph(LoopAtomicFun<Base>& atomic,
                                                                                              LoopOperationGraph* graphForward1,
-                                                                                             size_t indep,
+                                                                                             size_t jTape,
                                                                                              const std::map<size_t, JacTapeElementLoopInfo<Base> >& jacCol,
                                                                                              std::map<const IndexPattern*, CG<Base> >& jacColVals,
                                                                                              const std::vector<Argument<Base> >& args,
@@ -402,17 +429,15 @@ namespace CppAD {
         }
 
         if (variableTx1)
-            tx[indep * 2 + 1] = CGB(*this, Argument<Base>(*graphForward1->indexedTx1[indep])); /////////////////indep?????
+            tx[jTape * 2 + 1] = CGB(*this, Argument<Base>(*graphForward1->indexedTx1[jTape]));
         else
-            tx[indep * 2 + 1] = Base(1);
+            tx[jTape * 2 + 1] = Base(1);
         vector<CGB> ty = fun->Forward(1, tx);
 
         graphForward1->indexedResults.reserve(graphForward1->indexedResults.size() + jacCol.size());
         graphForward1->loopEnd->arguments_.reserve(graphForward1->loopEnd->arguments_.size() + jacCol.size());
-        std::vector<size_t> info(1);
 
         typename std::map<size_t, JacTapeElementLoopInfo<Base> >::const_iterator itJac;
-        std::vector<Argument<Base> > tyIndexedArgs(1);
         for (itJac = jacCol.begin(); itJac != jacCol.end(); ++itJac) {
             size_t tapeJ = itJac->first;
             const JacTapeElementLoopInfo<Base>& jacTapeInfo = itJac->second;
@@ -436,8 +461,6 @@ namespace CppAD {
                 }
             }
         }
-
-
 
         /**
          * TODO:
@@ -492,6 +515,8 @@ namespace CppAD {
                                                                                              const std::vector<Argument<Base> >& args,
                                                                                              bool variablePy) {
         typedef CppAD::CG<Base> CGB;
+
+        std::map<const IndexPattern*, CG<Base> > jacRowVals;
 
         size_t iterationCount = atomic.getIterationCount();
         size_t m = atomic.getTapeDependentCount();
@@ -564,35 +589,49 @@ namespace CppAD {
 
         graphReverse1->indexedResults.reserve(graphReverse1->indexedResults.size() + jacRow.size());
         graphReverse1->loopEnd->arguments_.reserve(graphReverse1->loopEnd->arguments_.size() + jacRow.size());
-        std::vector<size_t> info(1);
 
-        std::vector<Argument<Base> > pxIndexedArgs(1);
         typename std::map<size_t, JacTapeElementLoopInfo<Base> >::const_iterator itJac;
         for (itJac = jacRow.begin(); itJac != jacRow.end(); ++itJac) {
             size_t j = itJac->first;
-            const JacTapeElementLoopInfo<Base>& jacTapeEle = itJac->second;
+            const JacTapeElementLoopInfo<Base>& jacTapeInfo = itJac->second;
 
-            typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::const_iterator ito;
-            for (ito = jacTapeEle.origIndep2Info.begin(); ito != jacTapeEle.origIndep2Info.end(); ++ito) {
-                const JacOrigElementIndepLoopInfo<Base>& origEle = ito->second;
+            typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::const_iterator itO;
+            for (itO = jacTapeInfo.origIndep2Info.begin(); itO != jacTapeInfo.origIndep2Info.end(); ++itO) {
+                const JacOrigElementIndepLoopInfo<Base>& origInfo = itO->second;
 
-                pxIndexedArgs[0] = asArgument(px[j]);
-                info[0] = _loopDependentIndexPatterns.size(); // dependent index pattern location
+                if (origInfo.arg.getOperation() != NULL && origInfo.arg.getOperation()->getOperationType() != CGInvOp) {
+                    graphReverse1->loopStart->arguments_.push_back(origInfo.arg);
+                }
 
+                const IndexPattern* ip = origInfo.origJacElement->jacPattern;
 
-                /**
-                 *
-                 * TODO!!!!!!!!!!!!!!!!!
-                 *                  
-                 */
-
-                _loopDependentIndexPatterns.push_back(origEle.origJacElement->jacPattern);
-                OperationNode<Base>* pxIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, pxIndexedArgs);
-                manageOperationNode(pxIndexed);
-
-                graphReverse1->indexedResults.push_back(pxIndexed); // is this really needed?????????????????
-                graphReverse1->loopEnd->arguments_.push_back(Argument<Base>(*pxIndexed));
+                CGB py = CGB(*this, origInfo.arg);
+                typename std::map<const IndexPattern*, CGB>::iterator itJacEl = jacRowVals.find(ip);
+                if (itJacEl == jacRowVals.end()) {
+                    jacRowVals[ip] = px[j] * py;
+                } else {
+                    itJacEl->second += px[j] * py;
+                }
             }
+        }
+
+        std::vector<Argument<Base> > pxIndexedArgs(1);
+        std::vector<size_t> info(1);
+
+        typename std::map<const IndexPattern*, CG<Base> >::const_iterator itv;
+        for (itv = jacRowVals.begin(); itv != jacRowVals.end(); ++itv) {
+            const IndexPattern* ip = itv->first;
+
+            pxIndexedArgs[0] = asArgument(itv->second);
+
+            info[0] = _loopDependentIndexPatterns.size(); // dependent index pattern location
+            _loopDependentIndexPatterns.push_back(ip);
+
+            OperationNode<Base>* pxIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, pxIndexedArgs);
+            manageOperationNode(pxIndexed);
+
+            graphReverse1->indexedResults.push_back(pxIndexed); // is this really needed?????????????????
+            graphReverse1->loopEnd->arguments_.push_back(Argument<Base>(*pxIndexed));
         }
 
         /**

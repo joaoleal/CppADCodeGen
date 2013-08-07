@@ -351,7 +351,7 @@ namespace CppAD {
                         if ((code.getVariableID() == 0 || !isIndependent(code)) && code.getUsageCount() == 0) {
                             // make sure loop results are not added to the evaluation queue
                             // (what must be added is the loop)
-                            if (code.getOperationType() != CGLoopResultOp || code.getInfo()[0] != i)
+                            if (code.getOperationType() != CGLoopResultOp)
                                 addToEvaluationQueue(code);
                         }
                     }
@@ -448,7 +448,7 @@ namespace CppAD {
          **********************************************************************/
         virtual void prepareLoops(std::vector<CG<Base> >& dependent);
 
-        virtual void prepareLoops(std::vector<CG<Base> >& dependent,
+        virtual void prepareLoops(const std::map<OperationNode<Base>*, OperationNode<Base>*>& loopDependents,
                                   const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns);
 
         LoopAtomicFun<Base>* getLoop(size_t loopId) const;
@@ -551,12 +551,13 @@ namespace CppAD {
          **********************************************************************/
         virtual void registerLoop(LoopAtomicFun<Base>& loop);
 
-        virtual void insertLoopOperations(size_t i, OperationNode<Base>& loopResult,
+        virtual void insertLoopOperations(OperationNode<Base>& loopResult,
+                                          OperationNode<Base>& loop,
                                           const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns);
 
         virtual LoopOperationGraph* generateLoopForward0Graph(LoopAtomicFun<Base>& atomic,
-                                                             size_t p,
-                                                             const std::vector<Argument<Base> >& args);
+                                                              size_t p,
+                                                              const std::vector<Argument<Base> >& args);
 
         virtual void generateForward1Graph(LoopData& loopData,
                                            const std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& jac,

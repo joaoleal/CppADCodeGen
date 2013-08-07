@@ -18,15 +18,6 @@
 namespace CppAD {
 
     /**
-     * Index pattern types
-     */
-    enum IndexPatternType {
-        linear,
-        linear2Sections,
-        random
-    };
-
-    /**
      * Generic index pattern
      */
     class IndexPattern {
@@ -62,7 +53,7 @@ namespace CppAD {
         }
 
         inline virtual IndexPatternType getType() const {
-            return linear;
+            return LINEAR;
         }
 
         inline virtual ~LinearIndexPattern() {
@@ -100,7 +91,7 @@ namespace CppAD {
         }
 
         inline virtual IndexPatternType getType() const {
-            return linear2Sections;
+            return LINEAR2SECTIONS;
         }
 
         inline virtual ~Linear2SectionsIndexPattern() {
@@ -114,7 +105,7 @@ namespace CppAD {
     public:
 
         inline virtual IndexPatternType getType() const {
-            return random;
+            return RANDOM;
         }
 
         inline virtual ~RandomIndexPattern() {

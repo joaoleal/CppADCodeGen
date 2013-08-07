@@ -274,7 +274,7 @@ namespace CppAD {
                 indVars[i].setValue(_x[i]);
             }
         }
-        
+
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -441,135 +441,6 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac", "x", "var", "array"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
-    }
-
-    template<class Base>
-    void CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
-                                                                       std::vector<CGBase>& jac) {
-        size_t nnz = _jacSparsity.rows.size();
-        // loop -> equation pattern -> tape independent -> orig independent(temporaries only) -> iteration = position
-        std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
-
-        /**
-         * 
-         * TODO: just checking jac for CGLoopResultOp is not enough!!!!
-         * 
-         */
-        std::vector<JacOrigElementLoopInfo<Base> > garbageCollection;
-        garbageCollection.reserve(nnz);
-
-        for (size_t e = 0; e < nnz; e++) {
-            OperationNode<Base>* jacNode = jac[e].getOperationNode();
-            if (jacNode != NULL && jacNode->getOperationType() == CGLoopResultOp) {
-                OperationNode<Base>* loopNode = jacNode->getArguments()[0].getOperation();
-                size_t loopId = loopNode->getInfo()[0];
-                //size_t p = loopNode->getInfo()[3];
-                assert(loopNode->getInfo()[3] == 1);
-
-                LoopAtomicFun<Base>* loop = handler.getLoop(loopId);
-                assert(loop != NULL);
-                std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& lRawIndexes = jacIndexPatterns[loop];
-
-                size_t i = _jacSparsity.rows[e];
-                size_t j = _jacSparsity.cols[e];
-
-                const LoopPosition& depPos = loop->getTapeDependentIndex(i);
-                size_t tapeI = depPos.tape;
-                if (!loop->isIndependentVariablesFullyDetached(tapeI)) {
-                    throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
-                }
-                size_t iteration = depPos.atomic / loop->getTapeDependentCount();
-
-                // must get a single tape independent index!!!!!
-                std::set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, j);
-                assert(tapeJs.size() >= 1); // if >1 then the independent is used by several temporary variables
-
-                JacOrigElementLoopInfo<Base>* origJacEl = NULL;
-                JacTapeElementLoopInfo<Base>& ref = lRawIndexes[tapeI][*tapeJs.begin()];
-                if (ref.origIndep2Info.size() != 0) {
-                    bool isTemporary = loop->isTemporary(*tapeJs.begin());
-                    size_t jRef = 0;
-                    if (isTemporary) {
-                        jRef = j;
-                    }
-                    typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::const_iterator it;
-                    it = ref.origIndep2Info.find(jRef);
-                    if (it != ref.origIndep2Info.end()) {
-                        origJacEl = it->second.origJacElement;
-                    }
-                }
-
-                if (origJacEl == NULL) {
-                    // the vector will never allocate more space so this is safe:
-                    garbageCollection.resize(garbageCollection.size() + 1);
-                    origJacEl = &garbageCollection.back();
-                    origJacEl->jacIndexes.resize(loop->getIterationCount(), nnz);
-                }
-                origJacEl->jacIndexes[iteration] = e;
-
-
-                std::set<size_t>::const_iterator itTapeJ;
-                for (itTapeJ = tapeJs.begin(); itTapeJ != tapeJs.end(); ++itTapeJ) {
-                    size_t tapeJ = *itTapeJ;
-
-                    JacTapeElementLoopInfo<Base>& rawLoopIJ = lRawIndexes[tapeI][tapeJ];
-                    JacOrigElementIndepLoopInfo<Base>* tapeJacElement;
-                    // check if it is a temporary
-                    if (loop->isTemporary(tapeJ)) {
-                        size_t nIndexed = loop->getIndexedIndepIndexes().size();
-                        size_t nNonIndexed = loop->getNonIndexedIndepIndexes().size();
-                        const std::vector<LoopPositionTmp>& tmps = loop->getTemporaryIndependents();
-                        const LoopPositionTmp& pos = tmps[tapeJ - nIndexed - nNonIndexed];
-
-                        tapeJacElement = &rawLoopIJ.origIndep2Info[j];
-                        if (loopNode->getOperationType() == CGLoopForwardOp)
-                            tapeJacElement->arg = loopNode->getArguments()[pos.atomic * 2 + 1]; // args = [tx]
-                        else //CGLoopReverseOp
-                            tapeJacElement->arg = Argument<Base>(*jacNode); // args = [ x , py ] ////////////////////// TODO!!!
-
-                    } else {
-                        tapeJacElement = &rawLoopIJ.origIndep2Info[0];
-                        tapeJacElement->arg = Argument<Base>(Base(1));
-                    }
-
-                    tapeJacElement->origJacElement = origJacEl;
-                }
-            }
-        }
-
-        typename std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >::iterator itl;
-        for (itl = jacIndexPatterns.begin(); itl != jacIndexPatterns.end(); ++itl) {
-            //LoopAtomicFun<Base>* loop = itl->first;
-            //size_t iterations = loop->getIterationCount();
-
-            typename std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >::iterator itI;
-            for (itI = itl->second.begin(); itI != itl->second.end(); ++itI) {
-
-                typename std::map<size_t, JacTapeElementLoopInfo<Base> >::iterator itJ;
-                for (itJ = itI->second.begin(); itJ != itI->second.end(); ++itJ) {
-                    JacTapeElementLoopInfo<Base>& jacEleInfo = itJ->second;
-
-                    typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::iterator itO;
-                    for (itO = jacEleInfo.origIndep2Info.begin(); itO != jacEleInfo.origIndep2Info.end(); ++itO) {
-                        JacOrigElementIndepLoopInfo<Base>& tapeEleInfo = itO->second;
-                        JacOrigElementLoopInfo<Base>* orig = tapeEleInfo.origJacElement;
-
-                        // make sure all element are requested
-                        std::vector<size_t>::const_iterator ite;
-                        for (ite = orig->jacIndexes.begin(); ite != orig->jacIndexes.end(); ++ite) {
-                            if (*ite == nnz) {
-                                throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
-                            }
-                        }
-
-                        orig->jacPattern = IndexPattern::detect(orig->jacIndexes); ///////////// must delete object
-                        // TODO: consider clearing origEleInfo.jacIndexes
-                    }
-                }
-            }
-        }
-
-        handler.prepareLoops(jac, jacIndexPatterns);
     }
 
     template<class Base>
