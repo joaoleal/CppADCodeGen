@@ -137,6 +137,7 @@ namespace CppAD {
         bool _forwardOne;
         bool _reverseOne;
         bool _reverseTwo;
+        JacobianADMode _jacMode;
         /**
          * Custom Jacobian element indexes 
          */
@@ -201,6 +202,7 @@ namespace CppAD {
             _forwardOne(false),
             _reverseOne(false),
             _reverseTwo(false),
+            _jacMode(Automatic),
             _maxAssignPerFunc(20000),
             _beginTime(0) {
 
@@ -273,6 +275,26 @@ namespace CppAD {
          */
         inline void setCreateHessian(bool create) {
             _hessian = create;
+        }
+
+        /**
+         * Provides the Automatic Differentiation mode used to generate the
+         * source code for the Jacobian
+         * 
+         * @return the Automatic Differentiation mode
+         */
+        inline JacobianADMode getJacobianADMode() const {
+            return _jacMode;
+        }
+
+        /**
+         * Defines the Automatic Differentiation mode used to generate the
+         * source code for the Jacobian
+         * 
+         * @param mode the Automatic Differentiation mode
+         */
+        inline void setJacobianADMode(JacobianADMode mode) {
+            _jacMode = mode;
         }
 
         /**

@@ -287,6 +287,17 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j);
+
+    /***************************************************************************
+     * Enums
+     **************************************************************************/
+
+    /**
+     * Automatic Differentiation modes used to determine the Jacobian
+     */
+    enum JacobianADMode {
+        Forward, Reverse, Automatic
+    };
 }
 
 #endif

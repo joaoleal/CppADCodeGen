@@ -274,8 +274,18 @@ namespace CppAD {
                 indVars[i].setValue(_x[i]);
             }
         }
+        
+        size_t m = _fun->Range();
+        size_t n = _fun->Domain();
 
-        std::vector<CGBase> jac = _fun->Jacobian(indVars);
+        std::vector<CGBase> jac(n * m);
+        if (_jacMode == Automatic) {
+            jac = _fun->Jacobian(indVars);
+        } else if (_jacMode == Forward) {
+            JacobianFor(*_fun, indVars, jac);
+        } else {
+            JacobianRev(*_fun, indVars, jac);
+        }
 
         finishedGraphCreation();
 
@@ -352,31 +362,39 @@ namespace CppAD {
          */
         determineJacobianSparsity();
 
-        /**
-         * Estimate the work load of forward vs reverse mode
-         */
-        size_t workForward;
-        size_t workReverse;
-        if (_custom_jac.defined) {
-            std::set<size_t> rows, cols;
-            rows.insert(_jacSparsity.rows.begin(), _jacSparsity.rows.end());
-            workReverse = rows.size();
-            cols.insert(_jacSparsity.cols.begin(), _jacSparsity.cols.end());
-            workForward = cols.size();
+        bool forwardMode;
+
+        if (_jacMode == Automatic) {
+            /**
+             * Estimate the work load of forward vs reverse mode
+             */
+            size_t workForward;
+            size_t workReverse;
+            if (_custom_jac.defined) {
+                std::set<size_t> rows, cols;
+                rows.insert(_jacSparsity.rows.begin(), _jacSparsity.rows.end());
+                workReverse = rows.size();
+                cols.insert(_jacSparsity.cols.begin(), _jacSparsity.cols.end());
+                workForward = cols.size();
+            } else {
+                workReverse = m;
+                workForward = n;
+            }
+
+            forwardMode = workForward <= workReverse;
         } else {
-            workReverse = m;
-            workForward = n;
+            forwardMode = _jacMode == Forward;
         }
 
         /**
          * call the appropriate method for source code generation
          */
-        if (_forwardOne && workForward <= workReverse) {
+        if (_forwardOne && forwardMode) {
             generateSparseJacobianForRevSource(sources, true);
-        } else if (_reverseOne && workForward >= workReverse) {
+        } else if (_reverseOne && !forwardMode) {
             generateSparseJacobianForRevSource(sources, false);
         } else {
-            generateSparseJacobianSource(sources, workForward <= workReverse);
+            generateSparseJacobianSource(sources, forwardMode);
         }
     }
 
