@@ -279,9 +279,9 @@ namespace CppAD {
         size_t n = _fun->Domain();
 
         std::vector<CGBase> jac(n * m);
-        if (_jacMode == Automatic) {
+        if (_jacMode == AUTOMATIC) {
             jac = _fun->Jacobian(indVars);
-        } else if (_jacMode == Forward) {
+        } else if (_jacMode == FORWARD) {
             JacobianFor(*_fun, indVars, jac);
         } else {
             JacobianRev(*_fun, indVars, jac);
@@ -364,7 +364,7 @@ namespace CppAD {
 
         bool forwardMode;
 
-        if (_jacMode == Automatic) {
+        if (_jacMode == AUTOMATIC) {
             /**
              * Estimate the work load of forward vs reverse mode
              */
@@ -383,7 +383,7 @@ namespace CppAD {
 
             forwardMode = workForward <= workReverse;
         } else {
-            forwardMode = _jacMode == Forward;
+            forwardMode = _jacMode == FORWARD;
         }
 
         /**

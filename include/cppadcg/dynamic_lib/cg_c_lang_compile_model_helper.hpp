@@ -202,7 +202,7 @@ namespace CppAD {
             _forwardOne(false),
             _reverseOne(false),
             _reverseTwo(false),
-            _jacMode(Automatic),
+            _jacMode(AUTOMATIC),
             _maxAssignPerFunc(20000),
             _beginTime(0) {
 

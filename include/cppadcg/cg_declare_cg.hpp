@@ -296,7 +296,7 @@ namespace CppAD {
      * Automatic Differentiation modes used to determine the Jacobian
      */
     enum JacobianADMode {
-        Forward, Reverse, Automatic
+        FORWARD, REVERSE, AUTOMATIC
     };
 }
 
