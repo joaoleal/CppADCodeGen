@@ -264,7 +264,7 @@ namespace CppAD {
             std::vector<size_t> startEndInfo(2);
             startEndInfo[0] = loopFunc->getLoopId();
             startEndInfo[1] = loopFunc->getIterationCount();
-            std::vector<Argument<Base> > startArgs; ////////////////////// must find non-indexed nodes
+            std::vector<Argument<Base> > startArgs;
             OperationNode<Base>* loopStart = new OperationNode<Base>(CGLoopStartOp, startEndInfo, startArgs);
             handler.manageOperationNodeMemory(loopStart);
 
@@ -327,16 +327,10 @@ namespace CppAD {
                     dep[e] = handler.createCG(Argument<Base>(*loopEnd));
                 }
             }
+
+            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
         }
 
-        /**
-         * for each loop:
-         *  ĺoop start/end
-         * jac operations (1st iteration) become arguments of the loop end
-         * put new operations in jac values -> an alias for the end of the loop
-         * 
-         * replace loop results with an actual result from an atomic loop evaluation
-         */
     }
 
     template<class Base>
@@ -359,62 +353,6 @@ namespace CppAD {
             }
         }
 
-    }
-
-    template<class Base>
-    OperationNode<Base>* CLangCompileModelHelper<Base>::findSparseJacLoopResult(OperationNode<Base>* jacNode,
-                                                                                std::map<OperationNode<Base>*, std::map<size_t, Argument<Base> > >& pxArgs) {
-        // this is only used for the reverse mode
-        if (jacNode == NULL)
-            return NULL;
-
-        const std::vector<Argument<Base> >& args = jacNode->getArguments();
-        if (jacNode->getOperationType() == CGAddOp) {
-            OperationNode<Base>* loop1 = findSparseJacLoopResult(args[0].getOperation(), pxArgs);
-            OperationNode<Base>* loop2 = findSparseJacLoopResult(args[1].getOperation(), pxArgs);
-            assert(loop1 == NULL || loop2 == NULL || loop1 == loop2);
-            if (loop1 != NULL)
-                return loop1;
-            else
-                return loop2;
-        }
-
-        OperationNode<Base>* resultNode;
-        Argument<Base> argPx;
-        if (jacNode->getOperationType() == CGMulOp) {
-            // TODO: maybe also consider args[1]
-            resultNode = args[0].getOperation();
-            argPx = args[1];
-        } else if (jacNode->getOperationType() == CGLoopAtomicResultOp) {
-            resultNode = jacNode;
-            argPx = Argument<Base>(Base(1.0));
-        } else {
-            return NULL;
-        }
-
-        if (resultNode != NULL && resultNode->getOperationType() == CGLoopAtomicResultOp) {
-            size_t atomicJ = resultNode->getInfo()[0]; // temporary variable
-            OperationNode<Base>* loopNode = resultNode->getArguments()[0].getOperation();
-
-            typename std::map<OperationNode<Base>*, std::map<size_t, Argument<Base> > >::iterator itPxs;
-            itPxs = pxArgs.find(loopNode);
-            if (itPxs == pxArgs.end()) {
-                pxArgs[loopNode][atomicJ] = argPx;
-            } else {
-                std::map<size_t, Argument<Base> >& pxs = itPxs->second;
-                typename std::map<size_t, Argument<Base> > ::iterator itpx = pxs.find(atomicJ);
-                if (itpx == pxs.end()) {
-                    pxs[atomicJ] = argPx;
-                } else {
-                    OperationNode<Base>* addNode = new OperationNode<Base>(CGAddOp, itpx->second, argPx); /////////// manager.handleNode()
-                    itpx->second = Argument<Base>(*addNode);
-                }
-            }
-
-            return loopNode;
-        }
-
-        return NULL;
     }
 
     template<class Base>
@@ -583,6 +521,67 @@ namespace CppAD {
         return x;
     }
 
+    template<class Base>
+    void CLangCompileModelHelper<Base>::moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
+                                                                  OperationNode<Base>& loopEnd) {
+        //EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
+        std::set<OperationNode<Base>*> nonIndexed;
+
+        const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
+        for (size_t i = 0; i < endArgs.size(); i++) {
+            assert(endArgs[i].getOperation() != NULL);
+            findNonIndexedNodes(*endArgs[i].getOperation(), nonIndexed);
+        }
+
+        std::vector<Argument<Base> >& startArgs = loopStart.getArguments();
+        assert(startArgs.empty());
+
+        startArgs.resize(nonIndexed.size());
+        size_t i = 0;
+        typename std::set<OperationNode<Base>*>::const_iterator it;
+        for (it = nonIndexed.begin(); it != nonIndexed.end(); ++it, i++) {
+            startArgs[i] = Argument<Base>(**it);
+        }
+    }
+
+    template<class Base>
+    bool CLangCompileModelHelper<Base>::findNonIndexedNodes(OperationNode<Base>& node,
+                                                            std::set<OperationNode<Base>*>& nonIndexed) {
+        if (node.getColor() > 0)
+            return node.getColor() == 1;
+
+        if (node.getOperationType() == CGLoopIndexedIndepOp) {
+            node.setColor(2);
+            return false; // does NOT depend on an index
+        }
+
+        const std::vector<Argument<Base> >& args = node.getArguments();
+        size_t size = args.size();
+
+        bool indexedPath = false; // whether or not this node depends on indexed independents
+        bool nonIndexedArgs = false; // whether or not there are non indexed arguments
+        for (size_t a = 0; a < size; a++) {
+            OperationNode<Base>* arg = args[a].getOperation();
+            if (arg != NULL) {
+                bool nonIndexedArg = findNonIndexedNodes(*arg, nonIndexed);
+                nonIndexedArgs |= nonIndexedArg;
+                indexedPath |= !nonIndexedArg;
+            }
+        }
+
+        node.setColor(indexedPath ? 2 : 1);
+
+        if (indexedPath && nonIndexedArgs) {
+            for (size_t a = 0; a < size; a++) {
+                OperationNode<Base>* arg = args[a].getOperation();
+                if (arg != NULL && arg->getColor() == 1 && arg->getOperationType() != CGInvOp) {
+                    nonIndexed.insert(arg);
+                }
+            }
+        }
+
+        return !indexedPath;
+    }
 }
 
 #endif

@@ -807,29 +807,6 @@ namespace CppAD {
             funIndexed->Dependent(newDeps);
 
             /*******************************************************************
-             * Create the tape for the temporary variables
-             *****************************************************************
-            std::vector<CGB> tempVars(independentsTemp_.size());
-            j = 0;
-            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
-                OperationNode<Base>* origTmp = temporaryClone2Orig_.at(itt->first);
-                tempVars[j] = CGB(origHandler, Argument<Base>(*origTmp));
-            }
-
-            std::vector<ADCGB> origIndeps(independents.size());
-            CppAD::Independent(origIndeps);
-
-            Evaluator<Base, CGB> evaluatorTemps(origHandler, tempVars);
-
-            // load any atomic function used in the original model
-            evaluatorTemps.addAtomicFunctions(atomics);
-
-            std::vector<ADCGB> newTempVars = evaluatorTemps.evaluate(origIndeps);
-
-            std::auto_ptr<ADFun<CGB> >funTemporary(new ADFun<CGB>());
-            funTemporary->Dependent(newTempVars);
-             */
-            /*******************************************************************
              * create the atomic loop function
              ******************************************************************/
             std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount));

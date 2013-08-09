@@ -651,9 +651,6 @@ namespace CppAD {
                                          OperationNode<Base>* node,
                                          std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
 
-        virtual OperationNode<Base>* findSparseJacLoopResult(OperationNode<Base>* jacNode,
-                                                             std::map<OperationNode<Base>*, std::map<size_t, Argument<Base> > >& pxArgs);
-
         /***********************************************************************
          * Hessian
          **********************************************************************/
@@ -756,6 +753,12 @@ namespace CppAD {
                                         std::vector<CGBase>& jac,
                                         std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > >& evaluations,
                                         std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes);
+
+        static inline void moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
+                                                     OperationNode<Base>& loopEnd);
+
+        static inline bool findNonIndexedNodes(OperationNode<Base>& node,
+                                               std::set<OperationNode<Base>*>& nonIndexed);
 
         static inline vector<CG<Base> > evalLoopTape(CodeHandler<Base>& handler,
                                                      LoopAtomicFun<Base>& atomic,
