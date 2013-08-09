@@ -24,12 +24,12 @@ namespace CppAD {
     template<class Base>
     class IndexedDependentLoopInfo {
     public:
-        std::vector<size_t> jacIndexes;
-        std::vector<CG<Base> > origJacVals;
-        IndexPattern* jacPattern;
+        std::vector<size_t> indexes;
+        std::vector<CG<Base> > origVals;
+        IndexPattern* pattern;
 
         inline IndexedDependentLoopInfo() :
-            jacPattern(NULL) {
+            pattern(NULL) {
         }
     };
 
@@ -98,11 +98,11 @@ namespace CppAD {
                 origEl = &garbageCollection.back();
                 depInfo[depPos.tape] = origEl;
             }
-            origEl->jacIndexes.resize(loop->getIterationCount());
-            origEl->origJacVals.resize(loop->getIterationCount());
-            origEl->jacIndexes[iteration] = i;
-            origEl->origJacVals[iteration] = y[i];
-            origEl->jacPattern = loop->getDependentIndexPatterns()[depPos.tape];
+            origEl->indexes.resize(loop->getIterationCount());
+            origEl->origVals.resize(loop->getIterationCount());
+            origEl->indexes[iteration] = i;
+            origEl->origVals[iteration] = y[i];
+            origEl->pattern = loop->getDependentIndexPatterns()[depPos.tape];
         }
 
         prepareLoops(handler, y, evaluations1it, dependentIndexes);
@@ -181,13 +181,13 @@ namespace CppAD {
                 // the vector will never allocate more space so this is safe:
                 garbageCollection.resize(garbageCollection.size() + 1);
                 origJacEl = &garbageCollection.back();
-                origJacEl->jacIndexes.resize(loop->getIterationCount(), nnz);
-                origJacEl->origJacVals.resize(loop->getIterationCount());
+                origJacEl->indexes.resize(loop->getIterationCount(), nnz);
+                origJacEl->origVals.resize(loop->getIterationCount());
                 ref.origIndep2Info[jRef].origJacElement = origJacEl;
                 dependentIndexes[loop].push_back(origJacEl);
             }
-            origJacEl->jacIndexes[iteration] = e;
-            origJacEl->origJacVals[iteration] = jac[e];
+            origJacEl->indexes[iteration] = e;
+            origJacEl->origVals[iteration] = jac[e];
 
             if (iteration == 0) {
                 typename std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >::const_iterator itE;
@@ -232,14 +232,14 @@ namespace CppAD {
 
                         // make sure all element are requested
                         std::vector<size_t>::const_iterator ite;
-                        for (ite = orig->jacIndexes.begin(); ite != orig->jacIndexes.end(); ++ite) {
+                        for (ite = orig->indexes.begin(); ite != orig->indexes.end(); ++ite) {
                             if (*ite == nnz) {
                                 throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
                             }
                         }
 
-                        orig->jacPattern = IndexPattern::detect(orig->jacIndexes);
-                        handler.manageLoopDependentIndexPattern(orig->jacPattern);
+                        orig->pattern = IndexPattern::detect(orig->indexes);
+                        handler.manageLoopDependentIndexPattern(orig->pattern);
                     }
                 }
             }
@@ -309,9 +309,9 @@ namespace CppAD {
             for (size_t i = 0; i < dep_size; i++) {
                 IndexedDependentLoopInfo<Base>& depInfo = *dependents[i];
 
-                assert(depInfo.origJacVals[0].getOperationNode() != NULL);
-                indexedArgs[0] = Argument<Base>(*depInfo.origJacVals[0].getOperationNode()); // value from first iteration!
-                info[0] = handler.addLoopDependentIndexPattern(*depInfo.jacPattern); // dependent index pattern location
+                assert(depInfo.origVals[0].getOperationNode() != NULL);
+                indexedArgs[0] = Argument<Base>(*depInfo.origVals[0].getOperationNode()); // value from first iteration!
+                info[0] = handler.addLoopDependentIndexPattern(*depInfo.pattern); // dependent index pattern location
 
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
@@ -322,8 +322,8 @@ namespace CppAD {
             handler.manageOperationNodeMemory(loopEnd);
 
             for (size_t i = 0; i < dep_size; i++) {
-                for (size_t it = 0; it < dependents[i]->jacIndexes.size(); it++) {
-                    size_t e = dependents[i]->jacIndexes[it];
+                for (size_t it = 0; it < dependents[i]->indexes.size(); it++) {
+                    size_t e = dependents[i]->indexes[it];
                     dep[e] = handler.createCG(Argument<Base>(*loopEnd));
                 }
             }
