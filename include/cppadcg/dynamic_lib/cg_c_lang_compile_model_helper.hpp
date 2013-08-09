@@ -619,8 +619,14 @@ namespace CppAD {
 
         virtual void generateAtomicFuncNames(std::map<std::string, std::string>& sources);
 
+        /***********************************************************************
+         * zero order (the orginal model)
+         **********************************************************************/
+
         virtual void generateZeroSource(std::map<std::string, std::string>& sources);
 
+        virtual void prepareForward0WithLoops(CodeHandler<Base>& handler,
+                                              std::vector<CGBase>& y);
 
         /***********************************************************************
          * Jacobian
@@ -633,29 +639,20 @@ namespace CppAD {
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources,
                                                   bool forward);
 
+        virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
+                                                        bool forward);
         /**
          * Loops
          */
         virtual void prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                     std::vector<CGBase>& jac);
 
-        virtual OperationNode<Base>* findSparseJacLoopResult(CodeHandler<Base>& handler,
-                                                             size_t e,
-                                                             size_t nnz,
-                                                             OperationNode<Base>* jacNode,
-                                                             std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns,
-                                                             std::vector<JacOrigElementLoopInfo<Base> >& garbageCollection);
+        virtual void findLoopEvaluations(CodeHandler<Base>& handler,
+                                         OperationNode<Base>* node,
+                                         std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
 
-        virtual OperationNode<Base>* handleSparseJacLoopResult(CodeHandler<Base>& handler,
-                                                               size_t e,
-                                                               size_t nnz,
-                                                               OperationNode<Base>* jacNode,
-                                                               std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns,
-                                                               Argument<Base> arg,
-                                                               std::vector<JacOrigElementLoopInfo<Base> >& garbageCollection);
-
-        virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
-                                                        bool forward);
+        virtual OperationNode<Base>* findSparseJacLoopResult(OperationNode<Base>* jacNode,
+                                                             std::map<OperationNode<Base>*, std::map<size_t, Argument<Base> > >& pxArgs);
 
         /***********************************************************************
          * Hessian
@@ -750,6 +747,41 @@ namespace CppAD {
         static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                             const std::vector<size_t>& userRows,
                                                                                             const std::vector<size_t>& userCols);
+
+        /***********************************************************************
+         * Loops
+         **********************************************************************/
+
+        static inline void prepareLoops(CodeHandler<Base>& handler,
+                                        std::vector<CGBase>& jac,
+                                        std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > >& evaluations,
+                                        std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes);
+
+        static inline vector<CG<Base> > evalLoopTape(CodeHandler<Base>& handler,
+                                                     LoopAtomicFun<Base>& atomic,
+                                                     const OperationNode<Base>& loopEvalNode,
+                                                     const vector<OperationNode<Base>*>& indexedIndependents);
+
+        static inline vector<CG<Base> > generateLoopForward0Graph(CodeHandler<Base>& handler,
+                                                                  LoopAtomicFun<Base>& atomic,
+                                                                  const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                  const std::vector<Argument<Base> >& args);
+
+        static inline vector<CG<Base> > generateForward1Graph(CodeHandler<Base>& handler,
+                                                              LoopAtomicFun<Base>& atomic,
+                                                              const vector<OperationNode<Base>*>& indexedIndependents,
+                                                              const std::vector<Argument<Base> >& argsAtomic);
+
+        static inline vector<CG<Base> > generateReverse1Graph(CodeHandler<Base>& handler,
+                                                              LoopAtomicFun<Base>& atomic,
+                                                              const vector<OperationNode<Base>*>& indexedIndependents,
+                                                              const std::vector<Argument<Base> >& argsAtomic);
+
+        static inline vector<CG<Base> > createLoopGraphIndependentVector(CodeHandler<Base>& handler,
+                                                                         LoopAtomicFun<Base>& atomic,
+                                                                         const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                         const std::vector<Argument<Base> >& argsAtomic,
+                                                                         size_t p);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

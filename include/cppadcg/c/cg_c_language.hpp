@@ -344,9 +344,9 @@ namespace CppAD {
 
             // generate names for the dependent variables (must be after naming the independent)
             for (size_t i = 0; i < dependent.size(); i++) {
-                OperationNode<Base>* op = dependent[i].getOperationNode();
-                if (op != NULL && op->getName() == NULL) {
-                    op->setName(_nameGen->generateDependent(dependent[i], i));
+                OperationNode<Base>* node = dependent[i].getOperationNode();
+                if (node != NULL && node->getOperationType() != CGLoopEndOp && node->getName() == NULL) {
+                    node->setName(_nameGen->generateDependent(dependent[i], i));
                 }
             }
 
@@ -376,16 +376,19 @@ namespace CppAD {
             std::set<size_t> dependentDuplicates;
 
             for (size_t i = 0; i < dependent.size(); i++) {
-                OperationNode<Base>* op = dependent[i].getOperationNode();
-                if (op != NULL && op->getOperationType() != CGInvOp) {
-                    size_t varID = op->getVariableID();
-                    if (varID > 0) {
-                        std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
-                        if (it2 == _dependentIDs.end()) {
-                            _dependentIDs[op->getVariableID()] = i;
-                        } else {
-                            // there can be several dependent variables with the same ID
-                            dependentDuplicates.insert(i);
+                OperationNode<Base>* node = dependent[i].getOperationNode();
+                if (node != NULL) {
+                    CGOpCode type = node->getOperationType();
+                    if (type != CGInvOp && type != CGLoopEndOp) {
+                        size_t varID = node->getVariableID();
+                        if (varID > 0) {
+                            std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
+                            if (it2 == _dependentIDs.end()) {
+                                _dependentIDs[node->getVariableID()] = i;
+                            } else {
+                                // there can be several dependent variables with the same ID
+                                dependentDuplicates.insert(i);
+                            }
                         }
                     }
                 }
@@ -620,25 +623,26 @@ namespace CppAD {
         }
 
         inline const std::string& createVariableName(OperationNode<Base>& var) {
+            CGOpCode op = var.getOperationType();
             assert(var.getVariableID() > 0);
-            assert(var.getOperationType() != CGAtomicForwardOp);
-            assert(var.getOperationType() != CGAtomicReverseOp);
-            assert(var.getOperationType() != CGLoopForwardOp);
-            assert(var.getOperationType() != CGLoopReverseOp);
-            assert(var.getOperationType() != CGLoopStartOp);
-            assert(var.getOperationType() != CGLoopEndOp);
+            assert(op != CGAtomicForwardOp);
+            assert(op != CGAtomicReverseOp);
+            assert(op != CGLoopForwardOp);
+            assert(op != CGLoopReverseOp);
+            assert(op != CGLoopStartOp);
+            assert(op != CGLoopEndOp);
 
             if (var.getName() == NULL) {
-                if (var.getOperationType() == CGArrayCreationOp) {
+                if (op == CGArrayCreationOp) {
                     var.setName(_nameGen->generateTemporaryArray(var));
-                } else if (var.getOperationType() == CGLoopIndexedDepOp) {
+                } else if (op == CGLoopIndexedDepOp) {
                     assert(_currentLoop != NULL);
                     size_t pos = var.getInfo()[0];
                     const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
                     var.setName(_nameGen->generateIndexedDependent(var, *_currentLoop, *ip));
-                } else if (var.getOperationType() == CGLoopIndexedIndepOp) {
+                } else if (op == CGLoopIndexedIndepOp) {
                     assert(_currentLoop != NULL);
-                    size_t j = var.getInfo()[0];
+                    size_t j = var.getInfo()[1];
                     const IndexPattern* ip = _currentLoop->getIndependentIndexPatterns()[j];
                     var.setName(_nameGen->generateIndexedIndependent(var, *_currentLoop, *ip));
                 } else {
@@ -760,8 +764,9 @@ namespace CppAD {
                     printOperationUnaryMinus(node);
                     break;
 
-                case CGLoopResultOp:
-                    break; //no-op
+                case CGLoopAtomicResultOp:
+                    printOperationAlias(node); // just follow the argument
+                    break;
                 case CGLoopStartOp:
                     printLoopStart(node);
                     break;

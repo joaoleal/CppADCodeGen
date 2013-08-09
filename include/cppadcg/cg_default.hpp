@@ -28,12 +28,12 @@ namespace CppAD {
     }
 
     template <class Base>
-    inline CG<Base>::CG(CodeHandler<Base>& handler, OperationNode<Base>* sourceCode) :
+    inline CG<Base>::CG(CodeHandler<Base>& handler, OperationNode<Base>* node) :
     handler_(&handler),
-    opNode_(sourceCode),
+    opNode_(node),
     value_(NULL) {
-        assert(sourceCode != NULL);
-        handler.manageOperationNode(sourceCode);
+        assert(node != NULL);
+        handler.manageOperationNode(node);
     }
 
     template <class Base>

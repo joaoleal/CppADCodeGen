@@ -31,53 +31,6 @@ namespace CppAD {
     public:
         typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     protected:
-
-        /**
-         * Operation graph for a loop
-         */
-        class LoopOperationGraph {
-        public:
-            OperationNode<Base>* loopStart;
-            OperationNode<Base>* loopEnd;
-            std::vector<OperationNode<Base>*> indexedResults; // y, jac, hess...
-            std::vector<OperationNode<Base>*> indexedIndependents;
-            std::vector<OperationNode<Base>*> indexedPy;
-            std::vector<OperationNode<Base>*> indexedTx1;
-
-            LoopOperationGraph() :
-                loopStart(NULL),
-                loopEnd(NULL) {
-
-            }
-        };
-
-        /**
-         * Data associated with a loop
-         */
-        class LoopData {
-        public:
-            LoopAtomicFun<Base> * const atomic;
-            LoopOperationGraph* graphForward0;
-            LoopOperationGraph* graphForward1;
-            LoopOperationGraph* graphReverse1;
-            std::set<size_t> graphReverse1Deps;
-            std::set<size_t> graphForward1Indeps;
-        public:
-
-            LoopData(LoopAtomicFun<Base>& l) :
-                atomic(&l),
-                graphForward0(NULL),
-                graphForward1(NULL),
-                graphReverse1(NULL) {
-            }
-
-            virtual ~LoopData() {
-                delete graphForward0;
-                delete graphForward1;
-                delete graphReverse1;
-            }
-        };
-    protected:
         // counter used to generate variable IDs
         size_t _idCount;
         // counter used to generate array variable IDs
@@ -93,9 +46,10 @@ namespace CppAD {
         // maps the ids of the atomic functions
         std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
         // maps the loop ids of the loop atomic functions
-        std::map<size_t, LoopData*> _loops;
+        std::map<size_t, LoopAtomicFun<Base>*> _loops;
         //
         std::vector<const IndexPattern*> _loopDependentIndexPatterns;
+        std::vector<const IndexPattern*> _loopDependentIndexPatternManaged;
         /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
@@ -222,10 +176,10 @@ namespace CppAD {
          *         registered or NULL otherwise
          */
         inline const std::string* getLoopName(size_t id) const {
-            typename std::map<size_t, LoopData*>::const_iterator it;
+            typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator it;
             it = _loops.find(id);
             if (it != _loops.end())
-                return &(it->second->atomic->afun_name());
+                return &(it->second->afun_name());
             else
                 return NULL;
         }
@@ -349,10 +303,7 @@ namespace CppAD {
                         // the independent variables and that a dependency did
                         // not use it first
                         if ((code.getVariableID() == 0 || !isIndependent(code)) && code.getUsageCount() == 0) {
-                            // make sure loop results are not added to the evaluation queue
-                            // (what must be added is the loop)
-                            if (code.getOperationType() != CGLoopResultOp)
-                                addToEvaluationQueue(code);
+                            addToEvaluationQueue(code);
                         }
                     }
                     code.increaseUsageCount();
@@ -384,12 +335,6 @@ namespace CppAD {
                 }
             }
 
-            std::map<size_t, LoopAtomicFun<Base>*> loops;
-            typename std::map<size_t, LoopData*>::const_iterator itl;
-            for (itl = _loops.begin(); itl != _loops.end(); ++itl) {
-                loops[itl->first] = itl->second->atomic;
-            }
-
             /**
              * Creates the source code for a specific language
              */
@@ -398,7 +343,7 @@ namespace CppAD {
                                               nameGen,
                                               atomicFunctionId2Index, atomicFunctionId2Name,
                                               _reuseIDs,
-                                              loops,
+                                              _loops,
                                               _loopDependentIndexPatterns);
             lang.generateSourceCode(out, info);
 
@@ -433,25 +378,37 @@ namespace CppAD {
             _idArrayCount = 1;
             _idAtomicCount = 1;
 
-            typename std::map<size_t, LoopData*>::const_iterator itl;
-            for (itl = _loops.begin(); itl != _loops.end(); ++itl) {
-                delete itl->second;
-            }
             _loops.clear();
             _loopDependentIndexPatterns.clear();
+
+            std::vector<const IndexPattern*>::const_iterator itip;
+            for (itip = _loopDependentIndexPatternManaged.begin(); itip != _loopDependentIndexPatternManaged.end(); ++itip) {
+                delete *itip;
+            }
+            _loopDependentIndexPatternManaged.clear();
 
             _used = false;
         }
 
         /***********************************************************************
+         *                        Value generation
+         **********************************************************************/
+        CG<Base> createCG(const Argument<Base>& arg) {
+            return CG<Base>(*this, arg);
+        }
+
+        CG<Base> createCG(OperationNode<Base>* node) {
+            return CG<Base>(*this, node);
+        }
+
+        /***********************************************************************
          *                        Loop management
          **********************************************************************/
-        virtual void prepareLoops(std::vector<CG<Base> >& dependent);
-
-        virtual void prepareLoops(const std::map<OperationNode<Base>*, OperationNode<Base>*>& loopDependents,
-                                  const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns);
-
         LoopAtomicFun<Base>* getLoop(size_t loopId) const;
+
+        size_t addLoopDependentIndexPattern(const IndexPattern& jacPattern);
+
+        void manageLoopDependentIndexPattern(const IndexPattern* pattern);
 
         /***********************************************************************
          *                   Operation graph manipulation
@@ -509,6 +466,25 @@ namespace CppAD {
          */
         inline void removeIndependent(OperationNode<Base>& indep) throw (CGException);
 
+        /**
+         * Adds an operation node to the list of nodes to be deleted when this
+         * handler is destroyed.
+         * 
+         * @param code The operation node to be managed.
+         * @return true if the node was successfuly added to the list or
+         *         false if it had already been previously added.
+         */
+        inline bool manageOperationNodeMemory(OperationNode<Base>* code) {
+            if (std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()) {
+                manageOperationNode(code);
+                return false;
+            }
+            return true;
+        }
+
+        /**
+         * Destructor
+         */
         inline virtual ~CodeHandler() {
             reset();
         }
@@ -550,44 +526,6 @@ namespace CppAD {
          *                        Loop management
          **********************************************************************/
         virtual void registerLoop(LoopAtomicFun<Base>& loop);
-
-        virtual void insertLoopOperations(OperationNode<Base>& loopResult,
-                                          OperationNode<Base>& loop,
-                                          const std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >& jacIndexPatterns);
-
-        virtual LoopOperationGraph* generateLoopForward0Graph(LoopAtomicFun<Base>& atomic,
-                                                              size_t p,
-                                                              const std::vector<Argument<Base> >& args);
-
-        virtual void generateForward1Graph(LoopData& loopData,
-                                           const std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& jac,
-                                           const std::vector<Argument<Base> >& args,
-                                           bool variableTx1);
-
-        virtual LoopOperationGraph* generateForward1Graph(LoopAtomicFun<Base>& atomic,
-                                                          LoopOperationGraph* graphForward1,
-                                                          size_t indep,
-                                                          const std::map<size_t, JacTapeElementLoopInfo<Base> >& jacCol,
-                                                          std::map<const IndexPattern*, CG<Base> >& jacColVals,
-                                                          const std::vector<Argument<Base> >& args,
-                                                          bool variableTx1);
-
-        virtual void generateReverse1Graph(LoopData& loopData,
-                                           const std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& jac,
-                                           const std::vector<Argument<Base> >& args,
-                                           bool variablePy);
-
-        virtual LoopOperationGraph* generateReverse1Graph(LoopAtomicFun<Base>& atomic,
-                                                          LoopOperationGraph* graphReverse1,
-                                                          size_t dep,
-                                                          const std::map<size_t, JacTapeElementLoopInfo<Base> >& jacRow,
-                                                          const std::vector<Argument<Base> >& args,
-                                                          bool variablePy);
-
-        inline vector<CG<Base> > createLoopGraphIndependentVector(LoopAtomicFun<Base>& atomic,
-                                                                  LoopOperationGraph& graph,
-                                                                  const std::vector<Argument<Base> >& args,
-                                                                  size_t p);
 
         /***********************************************************************
          * 

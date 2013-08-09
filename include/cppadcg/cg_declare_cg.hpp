@@ -68,6 +68,9 @@ namespace CppAD {
     class LoopAtomicFun;
 
     template<class Base>
+    class IndexedDependentLoopInfo;
+
+    template<class Base>
     class JacOrigElementIndepLoopInfo;
 
     template<class Base>

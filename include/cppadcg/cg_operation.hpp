@@ -58,7 +58,7 @@ namespace CppAD {
         CGUnMinusOp, // -(a)
         CGLoopForwardOp, // for() { forward(q, p, vx, vy, tx, ty) }
         CGLoopReverseOp, // for() { reverse(p, tx, ty, px, py) }
-        CGLoopResultOp, // output from a loop (no index assigned yet)
+        CGLoopAtomicResultOp, // output from a loop atomic function evaluation
         CGLoopStartOp, // for() {}
         CGLoopIndexedIndepOp, // indexed independent used by a loop
         CGLoopIndexedDepOp, // indexed output from a loop
@@ -167,7 +167,7 @@ namespace CppAD {
             case CGLoopReverseOp:
                 os << "for() { reverse(p, tx, ty, px, py) }";
                 break;
-            case CGLoopResultOp:
+            case CGLoopAtomicResultOp:
                 os << " dep <- loop";
                 break;
             case CGLoopStartOp:

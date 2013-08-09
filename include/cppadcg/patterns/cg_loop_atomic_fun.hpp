@@ -294,14 +294,16 @@ namespace CppAD {
             size_t nTmps = temporaryOrigVarOrder.size();
             for (size_t j = 0; j < nTmps; j++) {
                 OperationNode<Base>* tmp = temporaryOrigVarOrder[j];
-                x[indepOrig2full_.size() + j] = CG<Base> (*handler, Argument<Base>(*tmp));
+                x[indepOrig2full_.size() + j] = handler->createCG(Argument<Base>(*tmp));
             }
 
-            std::vector<size_t> opInfo(4);
+            std::vector<size_t> opInfo(6);
             opInfo[0] = loopId_;
             opInfo[1] = nFull_;
-            opInfo[2] = getLoopDependentCount();
+            opInfo[2] = mFull_;
             opInfo[3] = 0; // zero-order
+            opInfo[4] = mFull_; // dimension of results of this atomic function call
+            opInfo[5] = m_; // dimension of results relative to the tape
             std::vector<Argument<Base> > args = asArguments(x);
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
@@ -316,7 +318,7 @@ namespace CppAD {
                 opInfo[0] = i;
                 args[0] = Argument<Base>(*atomicOp);
 
-                y[i] = CGB(*handler, new OperationNode<Base>(CGLoopResultOp, opInfo, args));
+                y[i] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
             }
 
             return y;
@@ -573,24 +575,37 @@ namespace CppAD {
 
             std::vector<Argument<Base> > args = asArguments(tx);
 
-            std::vector<size_t> opInfo(4);
+            std::vector<size_t> opInfo(6);
             opInfo[0] = loopId_;
             opInfo[1] = mFull_;
             opInfo[2] = nFull_;
             opInfo[3] = p;
+            opInfo[4] = ty.size(); // dimension of results of this atomic function call
+            opInfo[5] = m_ * (p + 1); // dimension of results relative to the tape
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this);
 
-            opInfo.resize(1);
+            vector<size_t> tapeIndex(ty.size());
+            for (size_t k = 0; k <= p; k++) {
+                for (size_t j = 0; j < dependentIndexes_.size(); j++) {
+                    for (size_t it = 0; it < iterationCount_; it++) {
+                        const LoopPosition& pos = dependentIndexes_[j][it];
+                        tapeIndex[pos.atomic * (p + 1) + k] = pos.tape * (p + 1) + k;
+                    }
+                }
+            }
+
+            opInfo.resize(2);
             args.resize(1);
             args[0] = Argument<Base>(*atomicOp);
 
             for (size_t i = 0; i < ty.size(); i++) {
                 if (vyLocal.size() == 0 || vyLocal[i]) {
-                    opInfo[0] = i;
-                    ty[i] = CGB(*handler, new OperationNode<Base>(CGLoopResultOp, opInfo, args));
+                    opInfo[0] = i; // atomic index
+                    opInfo[1] = tapeIndex[i]; // tape index
+                    ty[i] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
                     if (valuesDefined) {
                         ty[i].setValue(tyb[i]);
                     }
@@ -728,23 +743,44 @@ namespace CppAD {
             BaseAbstractAtomicFun<Base>::appendAsArguments(args.begin(), tx);
             BaseAbstractAtomicFun<Base>::appendAsArguments(args.begin() + tx.size(), py);
 
-            std::vector<size_t> opInfo(4);
+            std::vector<size_t> opInfo(6);
             opInfo[0] = loopId_;
             opInfo[1] = mFull_;
             opInfo[2] = nFull_;
             opInfo[3] = p;
+            opInfo[4] = px.size(); // dimension of results of this atomic function call
+            opInfo[5] = getTapeIndependentCount()*(p + 1); // dimension of results of this atomic function call
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopReverseOp, opInfo, args);
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this);
 
-            opInfo.resize(1);
+            vector<size_t> tapeIndex(px.size());
+            for (size_t k = 0; k <= p; k++) {
+                for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                    for (size_t it = 0; it < iterationCount_; it++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        tapeIndex[pos.atomic * (p + 1) + k] = pos.tape * (p + 1) + k;
+                    }
+                }
+                for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                    const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                    tapeIndex[pos.atomic * (p + 1) + k] = pos.tape * (p + 1) + k;
+                }
+                for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                    const LoopPositionTmp& pos = temporaryIndependents_[j];
+                    tapeIndex[pos.atomic * (p + 1) + k] = pos.tape * (p + 1) + k;
+                }
+            }
+
+            opInfo.resize(2);
             args.resize(1);
             args[0] = Argument<Base>(*atomicOp);
             for (size_t j = 0; j < px.size(); j++) {
                 if (vxLocal[j]) {
-                    opInfo[0] = j;
-                    px[j] = CGB(*handler, new OperationNode<Base>(CGLoopResultOp, opInfo, args));
+                    opInfo[0] = j; //atomic index
+                    opInfo[1] = tapeIndex[j]; //tape index
+                    px[j] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
                     if (valuesDefined) {
                         px[j].setValue(pxb[j]);
                     }
@@ -1204,13 +1240,13 @@ namespace CppAD {
                         pyTape[pos.tape] = py[pos.atomic];
                     }
 
-                    vector<CGB> tyTape = fun_->Forward(0, xTape);
+                    fun_->Forward(0, xTape);
                     vector<CGB> pxTape = fun_->Reverse(1, pyTape);
 
                     // place dependents
                     for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
                         const LoopPosition& pos = indexedIndepIndexes_[j][it];
-                        px[pos.atomic] = pxTape[pos.tape].getValue();
+                        px[pos.atomic] = pxTape[pos.tape].getValue(); // should it be += ?
                     }
                 }
 

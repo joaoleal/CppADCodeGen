@@ -263,7 +263,7 @@ namespace CppAD {
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
                     result = log(evalArg(args[0]));
                     break;
-                case CGLoopResultOp:
+                case CGLoopAtomicResultOp:
                 {
                     const std::vector<size_t>& info = node.getInfo();
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for loop result");
@@ -412,7 +412,7 @@ namespace CppAD {
             const std::vector<size_t>& info = node.getInfo();
             const std::vector<Argument<Base> >& args = node.getArguments();
             CPPADCG_ASSERT_KNOWN(args.size() > 0, "Invalid number of arguments for atomic forward mode");
-            CPPADCG_ASSERT_KNOWN(info.size() == 4, "Invalid number of information data for atomic forward mode");
+            CPPADCG_ASSERT_KNOWN(info.size() == 6, "Invalid number of information data for atomic forward mode");
 
             // find the loop atomic function
             size_t loopId = info[0];

@@ -170,11 +170,19 @@ namespace CppAD {
             return arguments_;
         }
 
+        inline std::vector<Argument<Base> >& getArguments() {
+            return arguments_;
+        }
+
         /**
          * Provides additional information used in the operation.
          * @return the additional operation information/options
          */
         inline const std::vector<size_t>& getInfo() const {
+            return info_;
+        }
+
+        inline std::vector<size_t>& getInfo() {
             return info_;
         }
 

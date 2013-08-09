@@ -271,7 +271,7 @@ std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
     ADCGD tmp2 = 2.5 * x[1];
     for (size_t i = 0; i < repeat; i++) {
         y[i * m] = tmp1 * cos(x[i * m]) / tmp2;
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
+        y[i * m + 1] = x[i * m + 1] * log(x[i * m]);
     }
 
     return y;

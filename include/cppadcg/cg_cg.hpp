@@ -90,15 +90,21 @@ namespace CppAD {
         // destructor
         virtual ~CG();
     protected:
-        // creates a temporary variable
-        inline CG(CodeHandler<Base>& handler, OperationNode<Base>* sourceCode);
+        /**
+         * Creates a variable resulting from the evaluation of node
+         * 
+         * @param handler The code handler.
+         * @param node The source code node. The deletion of this node will be
+         *             managed by the provided handler.
+         */
+        inline CG(CodeHandler<Base>& handler, OperationNode<Base>* node);
 
         /**
-         * creates a variable/parameter from an existing argument 
+         * Creates a variable/parameter from an existing argument 
+         * 
          * @param handler The code handler.
-         * @param arg  An argument that may be a parameter or a variable. 
-         *              (source code fragments are assumed to already be managed
-         *              by the handler)
+         * @param arg An argument that may be a parameter or a variable. 
+         *            (the node is assumed to already be managed by the handler)
          */
         inline CG(CodeHandler<Base>& handler, const Argument<Base>& arg);
 

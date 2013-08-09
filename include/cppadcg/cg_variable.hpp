@@ -86,9 +86,9 @@ namespace CppAD {
     template<class Base>
     inline Argument<Base> CG<Base>::argument() const {
         if (opNode_ != NULL)
-            return Argument<Base > (*opNode_);
+            return Argument<Base> (*opNode_);
         else
-            return Argument<Base > (*value_);
+            return Argument<Base> (*value_);
     }
 }
 

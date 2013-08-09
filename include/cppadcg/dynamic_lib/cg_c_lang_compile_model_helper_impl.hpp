@@ -244,7 +244,7 @@ namespace CppAD {
 
         std::vector<CGBase> dep = _fun->Forward(0, indVars);
         if (_funLoops == _fun)
-            handler.prepareLoops(dep);
+            prepareForward0WithLoops(handler, dep);
 
         finishedGraphCreation();
 
