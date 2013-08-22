@@ -258,6 +258,18 @@ namespace CppAD {
         }
     }
 
+    template<class VectorSet, class VectorSize>
+    inline void generateSparsitySet(const VectorSize& row,
+                                    const VectorSize& col,
+                                    VectorSet& sparsity) {
+        assert(row.size() == col.size());
+
+        size_t nnz = row.size();
+        for (size_t e = 0; e < nnz; e++) {
+            sparsity[row[e]].insert(col[e]);
+        }
+    }
+
     template<class VectorBool, class Base>
     void zeroOrderDependency(ADFun<Base>& fun,
                              const VectorBool& vx,
@@ -592,6 +604,16 @@ namespace CppAD {
             std::cout << "\n";
         }
         std::cout << std::endl;
+    }
+
+    template<class VectorSize>
+    void printSparsityPattern(const VectorSize& row,
+                              const VectorSize& col,
+                              const std::string& name,
+                              size_t m) {
+        vector<std::set<size_t> > sparsity(m);
+        generateSparsitySet(row, col, sparsity);
+        printSparsityPattern(sparsity, name);
     }
 
     inline bool intersects(const std::set<size_t>& a,

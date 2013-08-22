@@ -448,16 +448,28 @@ namespace CppAD {
         /**
          * Provides the iteration number of an indexed independent
          */
-        inline size_t getIterationOfIndexedIndep(size_t tapeJ, size_t origJ) const {
+        inline std::set<size_t> getIterationsOfIndexedIndep(size_t tapeJ, size_t origJ) const {
             assert(tapeJ < indexedIndepIndexes_.size());
-            const std::vector<LoopPosition>& positions = indexedIndepIndexes_[tapeJ];
-            for (size_t iter = 0; iter < iterationCount_; iter++) {
-                if (positions[iter].original == origJ)
-                    return iter;
+            assert(indepIndexPatterns_[tapeJ] != NULL);
+
+            bool strictlyMonotone = false;
+            if (indepIndexPatterns_[tapeJ]->getType() == LINEAR) {
+                const LinearIndexPattern* linearPattern = static_cast<const LinearIndexPattern*> (indepIndexPatterns_[tapeJ]);
+                strictlyMonotone = linearPattern->getLinearSlope() != 0;
             }
 
-            assert(false);
-            return -1; // should never get here
+            std::set<size_t> iterations;
+            const std::vector<LoopPosition>& positions = indexedIndepIndexes_[tapeJ];
+            for (size_t iter = 0; iter < iterationCount_; iter++) {
+                if (positions[iter].original == origJ) {
+                    iterations.insert(iter);
+                    if (strictlyMonotone) {
+                        break;
+                    }
+                }
+            }
+
+            return iterations;
         }
 
         inline const std::map<size_t, size_t>& getAtomicIndependentLocations(size_t atomicJ) const {

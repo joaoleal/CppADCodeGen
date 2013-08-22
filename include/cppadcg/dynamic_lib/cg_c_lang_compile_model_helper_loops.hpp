@@ -414,7 +414,10 @@ namespace CppAD {
         // loop -> loop atomic evaluation -> results
         map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
 
-
+#if 0
+        printSparsityPattern(_hessSparsity.rows, _hessSparsity.cols,
+                             "hessian", _fun->Domain());
+#endif
 
         for (size_t e = 0; e < nnz; e++) {
             CGBase& hessVal = hess[e];
@@ -523,11 +526,27 @@ namespace CppAD {
             bool indexed1 = loop->isIndexedIndependent(*tapeJ1s.begin());
             bool indexed2 = loop->isIndexedIndependent(*tapeJ2s.begin());
             if (indexed1 || indexed2) {
+                std::set<size_t> iterations;
                 if (indexed1) {
-                    iteration = loop->getIterationOfIndexedIndep(*tapeJ1s.begin(), j1);
-                } else {
-                    iteration = loop->getIterationOfIndexedIndep(*tapeJ2s.begin(), j2);
+                    iterations = loop->getIterationsOfIndexedIndep(*tapeJ1s.begin(), j1);
+                    assert(!iterations.empty());
                 }
+
+                if (!indexed1 || (iterations.size() > 1 && indexed2)) {
+                    std::set<size_t> iterations2 = loop->getIterationsOfIndexedIndep(*tapeJ2s.begin(), j2);
+                    if (iterations.empty()) {
+                        iterations = iterations2;
+                    } else {
+                        std::set<size_t> intersection;
+                        std::set_intersection(iterations.begin(), iterations.end(),
+                                              iterations2.begin(), iterations2.end(),
+                                              std::inserter(intersection, intersection.end()));
+
+                        iterations.swap(intersection);
+                    }
+                }
+                assert(iterations.size() == 1);
+                iteration = *iterations.begin();
                 //size_t iteration = depPos.atomic / loop->getTapeDependentCount();
 
                 origHessEl->indexes[iteration] = e;

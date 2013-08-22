@@ -285,3 +285,47 @@ TEST_F(CppADCGPatternTest, Atomic) {
 
     testLibCreationWithAtomics(modelAtomic, atomics, m, n, 6, "modelAtomic");
 }
+
+std::vector<ADCGD> modelAtomic2(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
+    size_t m = 1;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    CGAbstractAtomicFun<Base>& atomic0 = *atoms[0];
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    std::vector<ADCGD> ax(2), ay(1);
+
+    for (size_t i = 0; i < repeat; i++) {
+        ax[0] = x[i * n];
+        if (i < repeat / 2) {
+            ax[1] = x[i * n + 1];
+        }
+        atomic0(ax, ay);
+        y[i * m] = ay[0];
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, Atomic2) {
+    using namespace CppAD;
+
+    size_t m = 1;
+    size_t n = 2;
+
+    // create atomic function
+    std::vector<AD<double> > y(1);
+    std::vector<AD<double> > x(2);
+
+    checkpoint<double> atomicfun("atomicFunc2", atomicFunction, x, y);
+    std::vector<atomic_base<double>*> atomics(1);
+    atomics[0] = &atomicfun;
+
+
+    testPatternDetectionWithAtomics(modelAtomic2, atomics, m, n, 6);
+
+    testLibCreationWithAtomics(modelAtomic2, atomics, m, n, 6, "modelAtomic2");
+}
