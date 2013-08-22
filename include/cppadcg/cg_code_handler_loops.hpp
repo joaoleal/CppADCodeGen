@@ -23,6 +23,11 @@ namespace CppAD {
     }
 
     template<class Base>
+    const std::map<size_t, LoopAtomicFun<Base>*>& CodeHandler<Base>::getLoops() const {
+        return _loops;
+    }
+
+    template<class Base>
     LoopAtomicFun<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
         typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator it = _loops.find(loopId);
         if (it != _loops.end()) {

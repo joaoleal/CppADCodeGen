@@ -404,6 +404,9 @@ namespace CppAD {
         /***********************************************************************
          *                        Loop management
          **********************************************************************/
+
+        const std::map<size_t, LoopAtomicFun<Base>*>& getLoops() const;
+
         LoopAtomicFun<Base>* getLoop(size_t loopId) const;
 
         size_t addLoopDependentIndexPattern(const IndexPattern& jacPattern);

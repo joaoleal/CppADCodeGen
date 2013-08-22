@@ -428,19 +428,13 @@ namespace CppAD {
 
                     OperationNode<Base>& op = **it;
 
-                    bool isDep = isDependent(op);
-                    if (!isDep) {
-                        _temporary[op.getVariableID()] = &op;
-                    }
-
                     bool createsVar = directlyAssignsVariable(op);
                     if (createsVar) {
-                        _code << _indentation << createVariableName(op) << " ";
-                        _code << (isDep ? _depAssignOperation : "=") << " ";
+                        printAssigmentStart(op);
                     }
                     printExpressionNoVarCheck(op);
                     if (createsVar) {
-                        _code << ";\n";
+                        printAssigmentEnd(op);
                     }
 
                     if (op.getOperationType() == CGArrayElementOp) {
@@ -493,16 +487,24 @@ namespace CppAD {
             }
 
             // constant dependent variables 
-            _code << _spaces << "// dependent variables without operations\n";
+            bool commentWritten = false;
             for (size_t i = 0; i < dependent.size(); i++) {
                 if (dependent[i].isParameter()) {
                     if (!_ignoreZeroDepAssign || !dependent[i].IdenticalZero()) {
+                        if (!commentWritten) {
+                            _code << _spaces << "// dependent variables without operations\n";
+                            commentWritten = true;
+                        }
                         std::string varName = _nameGen->generateDependent(dependent[i], i);
                         _code << _spaces << varName << " " << _depAssignOperation << " ";
                         printParameter(dependent[i].getValue());
                         _code << ";\n";
                     }
                 } else if (dependent[i].getOperationNode()->getOperationType() == CGInvOp) {
+                    if (!commentWritten) {
+                        _code << _spaces << "// dependent variables without operations\n";
+                        commentWritten = true;
+                    }
                     std::string varName = _nameGen->generateDependent(dependent[i], i);
                     const std::string& indepName = *dependent[i].getOperationNode()->getName();
                     _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
@@ -540,6 +542,36 @@ namespace CppAD {
             } else {
                 out << _code.str();
             }
+        }
+
+        inline virtual void printAssigmentStart(OperationNode<Base>& op) {
+            printAssigmentStart(op, createVariableName(op), isDependent(op));
+        }
+
+        inline virtual void printAssigmentStart(OperationNode<Base>& op, const std::string& varName, bool isDep) {
+            if (!isDep) {
+                _temporary[op.getVariableID()] = &op;
+            }
+
+            _code << _indentation << varName << " ";
+            if (isDep) {
+                if (op.getOperationType() == CGLoopIndexedDepOp) {
+                    if (op.getInfo()[1] == 0) {
+                        _code << "=";
+                    } else {
+                        _code << "+=";
+                    }
+                } else {
+                    _code << _depAssignOperation;
+                }
+            } else {
+                _code << "=";
+            }
+            _code << " ";
+        }
+
+        inline virtual void printAssigmentEnd(OperationNode<Base>& op) {
+            _code << ";\n";
         }
 
         virtual std::string argumentDeclaration(const FuncArgument& funcArg) const {
@@ -584,17 +616,26 @@ namespace CppAD {
 
         virtual bool createsNewVariable(const OperationNode<Base>& var) const {
             CGOpCode op = var.getOperationType();
-            return (var.getTotalUsageCount() > 1 && op != CGArrayElementOp) ||
-                    op == CGArrayCreationOp ||
-                    op == CGAtomicForwardOp ||
-                    op == CGAtomicReverseOp ||
-                    op == CGComOpLt ||
-                    op == CGComOpLe ||
-                    op == CGComOpEq ||
-                    op == CGComOpGe ||
-                    op == CGComOpGt ||
-                    op == CGComOpNe ||
-                    op == CGLoopIndexedDepOp;
+            if (var.getTotalUsageCount() > 1) {
+                if (op == CGLoopAtomicResultOp) {
+                    const OperationNode<Base>* opArg = var.getArguments()[0].getOperation();
+                    return opArg != NULL && opArg->getOperationType() != CGLoopIndexedIndepOp
+                            && opArg->getOperationType() != CGInvOp;
+                } else {
+                    return op != CGArrayElementOp;
+                }
+            } else {
+                return op == CGArrayCreationOp ||
+                        op == CGAtomicForwardOp ||
+                        op == CGAtomicReverseOp ||
+                        op == CGComOpLt ||
+                        op == CGComOpLe ||
+                        op == CGComOpEq ||
+                        op == CGComOpGe ||
+                        op == CGComOpGt ||
+                        op == CGComOpNe ||
+                        op == CGLoopIndexedDepOp;
+            }
         }
 
         virtual bool requiresVariableName(const OperationNode<Base>& var) const {
@@ -642,9 +683,17 @@ namespace CppAD {
                     var.setName(_nameGen->generateIndexedDependent(var, *_currentLoop, *ip));
                 } else if (op == CGLoopIndexedIndepOp) {
                     assert(_currentLoop != NULL);
-                    size_t j = var.getInfo()[1];
-                    const IndexPattern* ip = _currentLoop->getIndependentIndexPatterns()[j];
+                    bool isX = var.getInfo()[0] == 0;
+                    size_t ij = var.getInfo()[1];
+
+                    const IndexPattern* ip;
+                    if (isX) {
+                        ip = _currentLoop->getIndependentIndexPatterns()[ij];
+                    } else {
+                        ip = _currentLoop->getDependentIndexPatterns()[ij];
+                    }
                     var.setName(_nameGen->generateIndexedIndependent(var, *_currentLoop, *ip));
+
                 } else {
                     if (var.getVariableID() <= _independentSize) {
                         // independent variable
@@ -1016,25 +1065,24 @@ namespace CppAD {
             if ((trueCase.getParameter() != NULL && falseCase.getParameter() != NULL && *trueCase.getParameter() == *falseCase.getParameter()) ||
                     (trueCase.getOperation() != NULL && falseCase.getOperation() != NULL && trueCase.getOperation() == falseCase.getOperation())) {
                 // true and false cases are the same
-                _code << _indentation << varName << " ";
-                _code << (isDep ? _depAssignOperation : "=") << " ";
+                printAssigmentStart(op, varName, isDep);
                 print(trueCase);
-                _code << ";\n";
+                printAssigmentEnd(op);
             } else {
                 _code << _indentation << "if( ";
                 print(left);
                 _code << " " << getComparison(op.getOperationType()) << " ";
                 print(right);
                 _code << " ) {\n";
-                _code << _indentation << _spaces << varName << " ";
-                _code << (isDep ? _depAssignOperation : "=") << " ";
+                _code << _spaces;
+                printAssigmentStart(op, varName, isDep);
                 print(trueCase);
-                _code << ";\n";
+                printAssigmentEnd(op);
                 _code << _indentation << "} else {\n";
-                _code << _indentation << _spaces << varName << " ";
-                _code << (isDep ? _depAssignOperation : "=") << " ";
+                _code << _spaces;
+                printAssigmentStart(op, varName, isDep);
                 print(falseCase);
-                _code << ";\n";
+                printAssigmentEnd(op);
                 _code << _indentation << "}\n";
             }
         }
@@ -1197,7 +1245,6 @@ namespace CppAD {
         virtual void printLoopEnd(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 2, "Invalid number of information elements for loop end operation");
 
-            // CGLoopIndexedIndepOp
             _code << _spaces << "}\n";
             _indentation = _spaces;
             _currentLoop = NULL;

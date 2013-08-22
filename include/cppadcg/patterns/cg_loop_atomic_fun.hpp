@@ -105,6 +105,10 @@ namespace CppAD {
          * for a given tape equation (equation -> orig index -> tape indexes)
          */
         std::vector<std::map<size_t, std::set<size_t> > > orig2Tape_;
+        /**
+         * atomic independent index -> tape indexes -> iteration (iteration count for a non indexed indepdendents)
+         */
+        std::map<size_t, std::map<size_t, size_t> > atomicIndepInfo_;
     public:
 
         /**
@@ -169,6 +173,7 @@ namespace CppAD {
                     }
 
                     indexedIndepIndexes_[j][it] = LoopPosition(j, full, orig);
+                    atomicIndepInfo_[full][j] = it;
                 }
             }
 
@@ -186,13 +191,16 @@ namespace CppAD {
                 }
 
                 nonIndexedIndepIndexes_[j] = LoopPosition(nIndexed + j, full, orig);
+                atomicIndepInfo_[full][j] = iterationCount_;
             }
 
             // temporary
             size_t fullStart = indepOrig2full_.size();
             for (size_t j = 0; j < temporaryIndependents.size(); j++) {
                 assert(!temporaryIndependents[j].empty());
-                temporaryIndependents_[j] = LoopPositionTmp(nIndexed + nNonIndexed + j, fullStart + j, temporaryIndependents[j]);
+                size_t full = fullStart + j;
+                temporaryIndependents_[j] = LoopPositionTmp(nIndexed + nNonIndexed + j, full, temporaryIndependents[j]);
+                atomicIndepInfo_[full][j] = iterationCount_;
             }
 
             nFull_ = fullStart + temporaryIndependents_.size();
@@ -273,8 +281,18 @@ namespace CppAD {
             return indepOrig2full_;
         }
 
-        inline const LoopPosition& getTapeDependentIndex(size_t originalDepIndex) const {
-            return *depOrigIndexes_.at(originalDepIndex);
+        /**
+         * Provides the locations where a dependent variable is used
+         * 
+         * @param origI the dependent variable index in the original model
+         * @return the locations where a dependent variable is used
+         */
+        inline const LoopPosition& getTapeDependentIndex(size_t origI) const {
+            return *depOrigIndexes_.at(origI);
+        }
+
+        inline const std::map<size_t, LoopPosition*>& getOriginalDependentIndexes() const {
+            return depOrigIndexes_;
         }
 
         virtual vector<CGB> insertIntoModel(const std::vector<CGB>& independents,
@@ -362,6 +380,90 @@ namespace CppAD {
             return nIndexed + nNonIndexed <= tapeIndex;
         }
 
+        inline bool isIndexedIndependent(size_t tapeJ) const {
+            return tapeJ < indexedIndepIndexes_.size();
+        }
+
+        std::set<size_t> getIndependentTapeIndexes(size_t origJ) {
+            std::set<size_t> indexes;
+            for (size_t i = 0; i < m_; i++) {
+                std::set<size_t> tapeIndexes = getIndependentTapeIndexes(i, origJ);
+                indexes.insert(tapeIndexes.begin(), tapeIndexes.end());
+            }
+
+            return indexes;
+        }
+
+        std::set<size_t> getIndependentTapeIndexes(size_t tapeI, size_t origJ) {
+            assert(tapeI < m_);
+
+            if (orig2Tape_.empty()) {
+                orig2Tape_.resize(m_);
+
+                size_t nIndexed = indexedIndepIndexes_.size();
+                size_t nNonIndexed = nonIndexedIndepIndexes_.size();
+
+                if (jacTapeSparsity_.size() == 0) {
+                    determineFullJacobianSparsity();
+                }
+
+                for (size_t i = 0; i < m_; i++) {
+                    const std::set<size_t>& row = jacTapeSparsity_[i];
+                    std::set<size_t>::const_iterator itr;
+                    for (itr = row.begin(); itr != row.end(); ++itr) {
+                        size_t j = *itr;
+
+                        if (j < nIndexed) {
+                            // indexed
+                            for (size_t it = 0; it < iterationCount_; it++) {
+                                const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                                orig2Tape_[i][pos.original].insert(pos.tape);
+                            }
+                        } else if (j < nIndexed + nNonIndexed) {
+                            // non-indexed
+                            const LoopPosition& pos = nonIndexedIndepIndexes_[j - nIndexed];
+                            orig2Tape_[i][pos.original].insert(pos.tape);
+                        } else {
+                            // temporaries
+                            const LoopPositionTmp& pos = temporaryIndependents_[j - (nIndexed + nNonIndexed)];
+                            const std::set<size_t>& origs = pos.originalIndeps;
+                            std::set<size_t>::const_iterator ito;
+                            for (ito = origs.begin(); ito != origs.end(); ++ito) {
+                                orig2Tape_[i][*ito].insert(pos.tape);
+                            }
+                        }
+                    }
+                }
+
+            }
+
+            std::map<size_t, std::set<size_t> >::const_iterator it = orig2Tape_[tapeI].find(origJ);
+            if (it != orig2Tape_[tapeI].end()) {
+                return it->second;
+            } else {
+                return std::set<size_t>();
+            }
+        }
+
+        /**
+         * Provides the iteration number of an indexed independent
+         */
+        inline size_t getIterationOfIndexedIndep(size_t tapeJ, size_t origJ) const {
+            assert(tapeJ < indexedIndepIndexes_.size());
+            const std::vector<LoopPosition>& positions = indexedIndepIndexes_[tapeJ];
+            for (size_t iter = 0; iter < iterationCount_; iter++) {
+                if (positions[iter].original == origJ)
+                    return iter;
+            }
+
+            assert(false);
+            return -1; // should never get here
+        }
+
+        inline const std::map<size_t, size_t>& getAtomicIndependentLocations(size_t atomicJ) const {
+            return atomicIndepInfo_.at(atomicJ);
+        }
+
         /**
          * Checks if all variables of an equation pattern are completelly
          * unrelated, that is, if all variables in the original are only
@@ -436,50 +538,72 @@ namespace CppAD {
             return true;
         }
 
-        std::set<size_t> getIndependentTapeIndexes(size_t tapeI, size_t origIndep) {
-            assert(tapeI < m_);
+        /**
+         * Necessary condition for second order loop element generation
+         * BUT NOT sufficient.
+         * 
+         * @return 
+         */
+        inline bool isTapeIndependentsFullyDetached2ndOrder() {
+            size_t nIndexed = indexedIndepIndexes_.size();
+            size_t nNonIndexed = nonIndexedIndepIndexes_.size();
 
-            if (orig2Tape_.empty()) {
-                orig2Tape_.resize(m_);
-
-                size_t nIndexed = indexedIndepIndexes_.size();
-                size_t nNonIndexed = nonIndexedIndepIndexes_.size();
-
-                if (jacTapeSparsity_.size() == 0) {
-                    determineFullJacobianSparsity();
-                }
-
-                for (size_t i = 0; i < m_; i++) {
-                    const std::set<size_t>& row = jacTapeSparsity_[i];
-                    std::set<size_t>::const_iterator itr;
-                    for (itr = row.begin(); itr != row.end(); ++itr) {
-                        size_t j = *itr;
-
-                        if (j < nIndexed) {
-                            // indexed
-                            for (size_t it = 0; it < iterationCount_; it++) {
-                                const LoopPosition& pos = indexedIndepIndexes_[j][it];
-                                orig2Tape_[i][pos.original].insert(pos.tape);
-                            }
-                        } else if (j < nIndexed + nNonIndexed) {
-                            // non-indexed
-                            const LoopPosition& pos = nonIndexedIndepIndexes_[j - nIndexed];
-                            orig2Tape_[i][pos.original].insert(pos.tape);
-                        } else {
-                            // temporaries
-                            const LoopPositionTmp& pos = temporaryIndependents_[j - (nIndexed + nNonIndexed)];
-                            const std::set<size_t>& origs = pos.originalIndeps;
-                            std::set<size_t>::const_iterator ito;
-                            for (ito = origs.begin(); ito != origs.end(); ++ito) {
-                                orig2Tape_[i][*ito].insert(pos.tape);
-                            }
-                        }
-                    }
-                }
-
+            if (hessTape_.size() == 0) {
+                hessTape_ = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(*fun_); // f''(x)
             }
 
-            return orig2Tape_[tapeI].at(origIndep);
+            // orignal index -> index pattern
+            std::map<size_t, IndexPattern*> patterns;
+
+            std::map<size_t, IndexPattern*>::const_iterator itIndexed;
+
+            size_t nTape = fun_->Domain();
+            for (size_t j1 = 0; j1 < nTape; j1++) {
+                if (hessTape_[j1].size() == 0)
+                    continue;
+
+                if (j1 < nIndexed) {
+                    // indexed independents
+                    for (size_t it = 0; it < iterationCount_; it++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j1][it];
+                        itIndexed = patterns.find(pos.original);
+                        if (itIndexed == patterns.end()) {
+                            patterns[pos.original] = indepIndexPatterns_[pos.tape];
+                        } else if (itIndexed->second != indepIndexPatterns_[pos.tape]) {
+                            return false;
+                        }
+                    }
+
+                } else if (j1 < nIndexed + nNonIndexed) {
+                    // the index does not change
+                    const LoopPosition& pos = nonIndexedIndepIndexes_[j1 - nIndexed];
+                    itIndexed = patterns.find(pos.original);
+                    if (itIndexed == patterns.end()) {
+                        patterns[pos.original] = NULL; // not indexed
+                    } else if (itIndexed->second != NULL) {
+                        return false;
+                    }
+                } else {
+                    // temporary variables (the index does not change)
+                    const LoopPositionTmp& pos = temporaryIndependents_[j1 - (nIndexed + nNonIndexed)];
+                    const std::set<size_t>& origs = pos.originalIndeps;
+                    std::set<size_t>::const_iterator itoj;
+                    for (itoj = origs.begin(); itoj != origs.end(); ++itoj) {
+                        size_t origj = *itoj;
+
+                        itIndexed = patterns.find(origj);
+                        if (itIndexed == patterns.end()) {
+                            patterns[origj] = NULL; // not indexed
+                        } else if (itIndexed->second != NULL) {
+                            return false;
+                        }
+
+                    }
+
+                }
+            }
+
+            return true;
         }
 
         virtual bool forward(size_t q,
@@ -507,15 +631,7 @@ namespace CppAD {
 
             bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);
             if (allParameters) {
-                vector<Base> tyb;
-                if (!evalForwardValues(q, p, tx, tyb, ty.size()))
-                    return false;
-
-                assert(tyb.size() == ty.size());
-                for (size_t i = 0; i < ty.size(); i++) {
-                    ty[i] = tyb[i];
-                }
-                return true;
+                return atomicForward(q, p, tx, ty);
             }
 
             vector<bool> vyLocal;
@@ -564,9 +680,10 @@ namespace CppAD {
                 }
             }
 
-            vector<Base> tyb;
+            vector<CGB> tyLoop;
             if (valuesDefined) {
-                if (!evalForwardValues(q, p, tx, tyb, ty.size()))
+                tyLoop.resize(ty.size());
+                if (!atomicForward(q, p, tx, tyLoop))
                     return false;
             }
 
@@ -606,11 +723,11 @@ namespace CppAD {
                     opInfo[0] = i; // atomic index
                     opInfo[1] = tapeIndex[i]; // tape index
                     ty[i] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
-                    if (valuesDefined) {
-                        ty[i].setValue(tyb[i]);
+                    if (tyLoop.size() > 0 && tyLoop[i].isValueDefined()) {
+                        ty[i].setValue(tyLoop[i].getValue());
                     }
                 } else {
-                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[i]), "Invalid value");
+                    CPPADCG_ASSERT_KNOWN(tyLoop.size() == 0 || IdenticalZero(tyLoop[i]), "Invalid value");
                     ty[i] = 0; // not a variable (zero)
                 }
             }
@@ -633,87 +750,7 @@ namespace CppAD {
             }
 
             if (allParameters) {
-                vector<Base> pxb;
-
-                if (!evalReverseValues(p, tx, ty, pxb, py))
-                    return false;
-
-                assert(pxb.size() == px.size());
-
-                for (size_t i = 0; i < px.size(); i++) {
-                    px[i] = pxb[i];
-                }
-                return true;
-            }
-
-            /**
-             * Use the jacobian sparsity to determine which elements
-             * will always be zero
-             */
-            vector<bool> vxLocal(px.size());
-            for (size_t j = 0; j < vxLocal.size(); j++) {
-                vxLocal[j] = true;
-            }
-
-            // k == 0
-            size_t m = ty.size() / (p + 1);
-            size_t n = tx.size() / (p + 1);
-
-            vector< std::set<size_t> > rt(m);
-            for (size_t i = 0; i < m; i++) {
-                if (!py[i * (p + 1)].isParameter() || !py[i * (p + 1)].IdenticalZero()) {
-                    rt[i].insert(0);
-                }
-            }
-            vector< std::set<size_t> > st(n);
-            this->rev_sparse_jac(1, rt, st);
-
-            for (size_t j = 0; j < n; j++) {
-                vxLocal[j * (p + 1) + p] = st[j].size() > 0;
-            }
-
-            if (p >= 1) {
-                /**
-                 * Use the hessian sparsity to determine which elements
-                 * will always be zero
-                 */
-                vector<bool> vx(n);
-                vector<bool> s(m);
-                vector<bool> t(n);
-                vector< std::set<size_t> > r(n);
-                vector< std::set<size_t> > u(m);
-                vector< std::set<size_t> > v(n);
-
-                for (size_t j = 0; j < n; j++) {
-                    vx[j] = !tx[j * (p + 1)].isParameter();
-                    if (!tx[j * (p + 1) + 1].isParameter() || !tx[j * (p + 1) + 1].IdenticalZero()) {
-                        r[j].insert(0);
-                    }
-                }
-                for (size_t i = 0; i < m; i++) {
-                    s[i] = !py[i * (p + 1) + 1].isParameter() || !py[i * (p + 1) + 1].IdenticalZero();
-                }
-
-                this->rev_sparse_hes(vx, s, t, 1, r, u, v);
-
-                for (size_t j = 0; j < n; j++) {
-                    vxLocal[j * (p + 1) + p - 1] = v[j].size() > 0;
-                }
-            }
-
-            bool allZero = true;
-            for (size_t j = 0; j < vxLocal.size(); j++) {
-                if (vxLocal[j]) {
-                    allZero = false;
-                    break;
-                }
-            }
-
-            if (allZero) {
-                for (size_t j = 0; j < px.size(); j++) {
-                    px[j] = Base(0.0);
-                }
-                return true;
+                return atomicReverse(p, tx, ty, px, py);
             }
 
             bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
@@ -724,10 +761,9 @@ namespace CppAD {
                 }
             }
 
-            vector<Base> pxb;
-            if (valuesDefined) {
-                if (!evalReverseValues(p, tx, ty, pxb, py))
-                    return false;
+            vector<CGB> pxLoop(px.size());
+            if (!atomicReverse(p, tx, ty, pxLoop, py)) {
+                return false;
             }
 
             CodeHandler<Base>* handler = findHandler(tx);
@@ -777,17 +813,18 @@ namespace CppAD {
             args.resize(1);
             args[0] = Argument<Base>(*atomicOp);
             for (size_t j = 0; j < px.size(); j++) {
-                if (vxLocal[j]) {
+                if (!pxLoop[j].isParameter() || !IdenticalZero(pxLoop[j].getValue())) {
                     opInfo[0] = j; //atomic index
                     opInfo[1] = tapeIndex[j]; //tape index
                     px[j] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
-                    if (valuesDefined) {
-                        px[j].setValue(pxb[j]);
+                    if (pxLoop[j].isValueDefined()) {
+                        px[j].setValue(pxLoop[j].getValue());
                     }
                 } else {
-                    // CPPADCG_ASSERT_KNOWN(pxb.size() == 0 || IdenticalZero(pxb[j]), "Invalid value");
-                    // pxb[j] might be non-zero but it is not required (it might have been used to determine other pxbs)
-                    px[j] = Base(0); // not a variable (zero)
+                    // only zero values are provided as a constant results 
+                    // because for all other constant values the dependency 
+                    // on the atomic function must be known
+                    px[j] = Base(0);
                 }
             }
 
@@ -957,8 +994,9 @@ namespace CppAD {
                 }
             }
 
-
-            hessTape_ = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(*fun_); // f''(x)
+            if (hessTape_.size() == 0) {
+                hessTape_ = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(*fun_); // f''(x)
+            }
 
             vector<std::set<size_t> > fullHess(nFull_);
 
@@ -1053,21 +1091,6 @@ namespace CppAD {
             return count;
         }
 
-        inline bool evalForwardValues(size_t q,
-                                      size_t p,
-                                      const vector<CGB>& tx,
-                                      vector<Base>& tyb,
-                                      size_t ty_size) {
-            vector<Base> txb(tx.size());
-            tyb.resize(ty_size);
-
-            for (size_t i = 0; i < txb.size(); i++) {
-                txb[i] = tx[i].getValue();
-            }
-
-            return atomicForward(q, p, txb, tyb);
-        }
-
         /**
          * Used to evaluate function values and forward mode function values and
          * derivatives.
@@ -1082,8 +1105,8 @@ namespace CppAD {
          */
         bool atomicForward(size_t q,
                            size_t p,
-                           const vector<Base>& tx,
-                           vector<Base>& ty) {
+                           const vector<CGB>& tx,
+                           vector<CGB>& ty) {
 
             if (p == 0) {
                 size_t nTape = fun_->Domain();
@@ -1115,7 +1138,7 @@ namespace CppAD {
                     // place dependents
                     for (size_t i = 0; i < dependentIndexes_.size(); i++) {
                         const LoopPosition& pos = dependentIndexes_[i][it];
-                        ty[pos.atomic] = yTape[pos.tape].getValue();
+                        ty[pos.atomic] = yTape[pos.tape];
                     }
                 }
 
@@ -1158,8 +1181,8 @@ namespace CppAD {
                     // place dependents
                     for (size_t i = 0; i < dependentIndexes_.size(); i++) {
                         const LoopPosition& pos = dependentIndexes_[i][it];
-                        ty[pos.atomic * 2] = tyTape[pos.tape * 2].getValue();
-                        ty[pos.atomic * 2 + 1] = tyTape[pos.tape * 2 + 1].getValue();
+                        ty[pos.atomic * 2] = tyTape[pos.tape * 2];
+                        ty[pos.atomic * 2 + 1] = tyTape[pos.tape * 2 + 1];
                     }
                 }
 
@@ -1167,29 +1190,6 @@ namespace CppAD {
             }
 
             return false;
-        }
-
-        inline bool evalReverseValues(size_t p,
-                                      const vector<CGB>& tx,
-                                      const vector<CGB>& ty,
-                                      vector<Base>& pxb,
-                                      const vector<CGB>& py) {
-            vector<Base> txb(tx.size());
-            vector<Base> tyb(ty.size());
-            pxb.resize(tx.size());
-            vector<Base> pyb(py.size());
-
-            for (size_t i = 0; i < txb.size(); i++) {
-                txb[i] = tx[i].getValue();
-            }
-            for (size_t i = 0; i < tyb.size(); i++) {
-                tyb[i] = ty[i].getValue();
-            }
-            for (size_t i = 0; i < pyb.size(); i++) {
-                pyb[i] = py[i].getValue();
-            }
-
-            return atomicReverse(p, txb, tyb, pxb, pyb);
         }
 
         /**
@@ -1205,16 +1205,17 @@ namespace CppAD {
          * @return true on success, false otherwise
          */
         bool atomicReverse(size_t p,
-                           const vector<Base>& tx,
-                           const vector<Base>& ty,
-                           vector<Base>& px,
-                           const vector<Base>& py) {
+                           const vector<CGB>& tx,
+                           const vector<CGB>& ty,
+                           vector<CGB>& px,
+                           const vector<CGB>& py) {
             if (p == 0) {
                 size_t nTape = fun_->Domain();
 
                 vector<CGB> xTape(nTape);
                 vector<CGB> pyTape(m_);
 
+                // place non-indexed independents
                 for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
                     const LoopPosition& pos = nonIndexedIndepIndexes_[j];
                     xTape[pos.tape] = tx[pos.atomic];
@@ -1235,18 +1236,95 @@ namespace CppAD {
                         xTape[pos.tape] = tx[pos.atomic];
                     }
 
+                    fun_->Forward(0, xTape);
+
                     for (size_t i = 0; i < m_; i++) {
                         const LoopPosition& pos = dependentIndexes_[i][it];
                         pyTape[pos.tape] = py[pos.atomic];
                     }
 
-                    fun_->Forward(0, xTape);
                     vector<CGB> pxTape = fun_->Reverse(1, pyTape);
 
                     // place dependents
                     for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
                         const LoopPosition& pos = indexedIndepIndexes_[j][it];
-                        px[pos.atomic] = pxTape[pos.tape].getValue(); // should it be += ?
+                        px[pos.atomic] += pxTape[pos.tape];
+                    }
+                    for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                        px[pos.atomic] += pxTape[pos.tape];
+                    }
+                    for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                        const LoopPositionTmp& pos = temporaryIndependents_[j];
+                        px[pos.atomic] += pxTape[pos.tape];
+                    }
+                }
+
+                return true;
+
+            } else if (p == 1) {
+                size_t mTape = fun_->Range();
+                size_t nTape = fun_->Domain();
+
+                vector<CGB> xTape(nTape);
+                vector<CGB> txTape(nTape * 2);
+                vector<CGB> pyTape(mTape * 2);
+
+                for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                    const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                    xTape[pos.tape] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                }
+
+                for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                    const LoopPositionTmp& pos = temporaryIndependents_[j];
+                    xTape[pos.tape] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                    txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                }
+
+                for (size_t e = 0; e < px.size(); e++) {
+                    px[e] = Base(0);
+                }
+
+                /**
+                 * loop...
+                 */
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    // place indexed independents
+                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        xTape[pos.tape] = tx[pos.atomic * 2];
+                        txTape[pos.tape * 2] = tx[pos.atomic * 2];
+                        txTape[pos.tape * 2 + 1] = tx[pos.atomic * 2 + 1];
+                    }
+
+                    for (size_t i = 0; i < dependentIndexes_.size(); i++) {
+                        const LoopPosition& pos = dependentIndexes_[i][it];
+                        pyTape[pos.tape * 2] = py[pos.atomic * 2];
+                        pyTape[pos.tape * 2 + 1] = py[pos.atomic * 2 + 1];
+                    }
+
+                    fun_->Forward(0, xTape);
+                    fun_->Forward(1, txTape);
+                    vector<CGB> pxTape = fun_->Reverse(2, pyTape);
+
+                    // place dependents
+                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                        px[pos.atomic * 2] += pxTape[pos.tape * 2];
+                        px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
+                    }
+                    for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                        const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                        px[pos.atomic * 2] += pxTape[pos.tape * 2];
+                        px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
+                    }
+                    for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                        const LoopPositionTmp& pos = temporaryIndependents_[j];
+                        px[pos.atomic * 2] += pxTape[pos.tape * 2];
+                        px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
                     }
                 }
 

@@ -651,6 +651,12 @@ namespace CppAD {
                                          OperationNode<Base>* node,
                                          std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
 
+        virtual void findLoopEvaluations(CodeHandler<Base>& handler,
+                                         LoopAtomicFun<Base>* loop,
+                                         OperationNode<Base>* node,
+                                         std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
+
+
         /***********************************************************************
          * Hessian
          **********************************************************************/
@@ -665,6 +671,21 @@ namespace CppAD {
 
         virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                        std::vector<size_t>& userCols);
+
+        /**
+         * Loops
+         */
+        virtual std::vector<CGBase> prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
+                                                                  vector<CGBase>& indVars,
+                                                                  vector<CGBase>& w,
+                                                                  const std::vector<size_t>& lowerHessRows,
+                                                                  const std::vector<size_t>& lowerHessCols,
+                                                                  const std::vector<size_t>& lowerHessOrder,
+                                                                  const std::map<size_t, size_t>& duplicates);
+
+        virtual void prepareSparseHessianForLoop(CodeHandler<Base>& handler,
+                                                 LoopAtomicFun<Base>* loop,
+                                                 std::vector<CGBase>& hess);
 
         /***********************************************************************
          * Sparsities for forward/reverse
@@ -752,7 +773,8 @@ namespace CppAD {
         static inline void prepareLoops(CodeHandler<Base>& handler,
                                         std::vector<CGBase>& jac,
                                         std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > >& evaluations,
-                                        std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes);
+                                        std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes,
+                                        size_t assignOrAdd = 0);
 
         static inline void moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
                                                      OperationNode<Base>& loopEnd);
@@ -780,11 +802,23 @@ namespace CppAD {
                                                               const vector<OperationNode<Base>*>& indexedIndependents,
                                                               const std::vector<Argument<Base> >& argsAtomic);
 
+        static inline vector<CG<Base> > generateReverse2Graph(CodeHandler<Base>& handler,
+                                                              LoopAtomicFun<Base>& atomic,
+                                                              const vector<OperationNode<Base>*>& indexedIndependents,
+                                                              const std::vector<Argument<Base> >& argsAtomic);
+
         static inline vector<CG<Base> > createLoopGraphIndependentVector(CodeHandler<Base>& handler,
                                                                          LoopAtomicFun<Base>& atomic,
                                                                          const vector<OperationNode<Base>*>& indexedIndependents,
                                                                          const std::vector<Argument<Base> >& argsAtomic,
                                                                          size_t p);
+
+
+        static inline vector<CG<Base> > createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
+                                                                            LoopAtomicFun<Base>& atomic,
+                                                                            const vector<CG<Base> >& x,
+                                                                            const std::vector<Argument<Base> >& argsAtomic,
+                                                                            size_t p);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

@@ -111,12 +111,12 @@ namespace CppAD {
             return _nameGen->generateIndexedDependent(var, loop, ip);
         }
 
-        virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
+        virtual std::string generateIndexedIndependent(const OperationNode<Base>& indexedIndep,
                                                        const LoopAtomicFun<Base>& loop,
                                                        const IndexPattern& ip) {
-            size_t id = independent.getVariableID();
-            if (id < _minMultiplierID) {
-                return _nameGen->generateIndexedIndependent(independent, loop, ip);
+            bool isX = indexedIndep.getInfo()[0] == 0;
+            if (isX) {
+                return _nameGen->generateIndexedIndependent(indexedIndep, loop, ip);
             }
 
             _ss.clear();

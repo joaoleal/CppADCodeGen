@@ -654,19 +654,28 @@ namespace CppAD {
             }
         }
 
-        CppAD::sparse_hessian_work work;
-        vector<CGBase> lowerHess(lowerHessRows.size());
-        _fun->SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
-
         std::vector<CGBase> hess(_hessSparsity.rows.size());
-        for (size_t i = 0; i < lowerHessOrder.size(); i++) {
-            hess[lowerHessOrder[i]] = lowerHess[i];
-        }
+        if (_funLoops != _fun) {
+            CppAD::sparse_hessian_work work;
+            vector<CGBase> lowerHess(lowerHessRows.size());
+            _fun->SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 
-        // make use of the symmetry of the Hessian in order to reduce operations
-        std::map<size_t, size_t>::const_iterator it2;
-        for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-            hess[it2->first] = hess[it2->second];
+            for (size_t i = 0; i < lowerHessOrder.size(); i++) {
+                hess[lowerHessOrder[i]] = lowerHess[i];
+            }
+
+            // make use of the symmetry of the Hessian in order to reduce operations
+            std::map<size_t, size_t>::const_iterator it2;
+            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+                hess[it2->first] = hess[it2->second];
+            }
+        } else {
+            /**
+             * with loops
+             */
+            hess = prepareSparseHessianWithLoops(handler, indVars, w,
+                                                 lowerHessRows, lowerHessCols, lowerHessOrder,
+                                                 duplicates);
         }
 
         finishedGraphCreation();
@@ -803,9 +812,9 @@ namespace CppAD {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
-        _hessSparsity.sparsity.resize(n);
-        _hessSparsity.sparsity = hessianSparsitySet<SparsitySetType, CGBase> (*_fun);
-
+        /**
+         * sparsity for the sum of the hessians of all equations
+         */
         SparsitySetType r(n); // identity matrix
         for (size_t j = 0; j < n; j++)
             r[j].insert(j);
@@ -816,8 +825,13 @@ namespace CppAD {
             s[0].insert(i);
         }
         _hessSparsity.sparsity = _fun->RevSparseHes(n, s, false);
+        //printSparsityPattern(_hessSparsity.sparsity, "hessian");
 
         if (_hessianByEquation || _reverseTwo) {
+            /**
+             * sparsity for the hessian of each equations
+             */
+
             std::set<size_t>::const_iterator it;
 
             std::set<size_t> customVarsInHess;

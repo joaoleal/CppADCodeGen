@@ -34,19 +34,9 @@ namespace CppAD {
     };
 
     template<class Base>
-    class JacOrigElementIndepLoopInfo {
-    public:
-        IndexedDependentLoopInfo<Base>* origJacElement; // original model jacobian element
-
-        inline JacOrigElementIndepLoopInfo() :
-            origJacElement(NULL) {
-        }
-    };
-
-    template<class Base>
     class JacTapeElementLoopInfo {
     public:
-        std::map<size_t, JacOrigElementIndepLoopInfo<Base> > origIndep2Info;
+        std::map<size_t, IndexedDependentLoopInfo<Base>* > origIndep2Info;
     };
 
     /***************************************************************************
@@ -56,13 +46,15 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
                                                                  std::vector<CGBase>& y) {
+        using namespace std;
+        using CppAD::vector;
 
         std::vector<IndexedDependentLoopInfo<Base> > garbageCollection(y.size()); ////////// <- rethink this!!!!!!!
         garbageCollection.resize(y.size());
 
-        std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
+        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
         // loop -> loop atomic evaluation -> results
-        std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
+        map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
 
         for (size_t i = 0; i < y.size(); i++) {
             OperationNode<Base>* node = y[i].getOperationNode();
@@ -72,11 +64,13 @@ namespace CppAD {
 
             OperationNode<Base>* loopEvalNode = node->getArguments()[0].getOperation();
 
+#ifndef NDEBUG
             CGOpCode loopOpType = loopEvalNode->getOperationType();
-            size_t loopId = loopEvalNode->getInfo()[0];
-            //size_t p = loopNode->getInfo()[3];
-            assert(loopOpType == CGLoopForwardOp && loopEvalNode->getInfo()[3] == 0);
+            size_t p = loopEvalNode->getInfo()[3];
+            assert(loopOpType == CGLoopForwardOp && p == 0);
+#endif
 
+            size_t loopId = loopEvalNode->getInfo()[0];
             LoopAtomicFun<Base>* loop = handler.getLoop(loopId);
             assert(loop != NULL);
 
@@ -111,6 +105,9 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                                        std::vector<CGBase>& jac) {
+        using namespace std;
+        using CppAD::vector;
+
         size_t nnz = _jacSparsity.rows.size();
 
         std::vector<IndexedDependentLoopInfo<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
@@ -120,38 +117,58 @@ namespace CppAD {
          * Generate index patterns for the jacobian elements resulting from loops
          */
         // loop -> equation pattern -> tape independent -> orig independent(temporaries only) -> iteration = position
-        std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
+        map<LoopAtomicFun<Base>*, map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
 
-        std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
+        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
         // loop -> loop atomic evaluation -> results
-        std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
+        map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
 
 
         for (size_t e = 0; e < nnz; e++) {
-            // find LOOP + get loop results
-
-            // loop evaluation -> results
-            std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> > evals;
-            findLoopEvaluations(handler, jac[e].getOperationNode(), evals);
-
-            if (evals.empty())
-                continue;
-
-            assert(evals.size() == 1);
-            OperationNode<Base>* loopEvalNode = evals.begin()->first;
-
-            CGOpCode loopOpType = loopEvalNode->getOperationType();
-            size_t loopId = loopEvalNode->getInfo()[0];
-            //size_t p = loopNode->getInfo()[3];
-            assert((loopOpType == CGLoopForwardOp && loopEvalNode->getInfo()[3] == 1) ||
-                   (loopOpType == CGLoopReverseOp && loopEvalNode->getInfo()[3] == 0));
-
-            LoopAtomicFun<Base>* loop = handler.getLoop(loopId);
-            assert(loop != NULL);
-            std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >& lRawIndexes = jacIndexPatterns[loop];
-
             size_t i = _jacSparsity.rows[e];
             size_t j = _jacSparsity.cols[e];
+            CGBase& jacVal = jac[e];
+
+            // find LOOP + get loop results
+            LoopAtomicFun<Base>* loop = NULL;
+
+            // loop evaluation -> results
+            map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> > evals;
+            findLoopEvaluations(handler, jacVal.getOperationNode(), evals);
+
+            if (evals.empty()) {
+                // no choice but to check all loops
+                const std::map<size_t, LoopAtomicFun<Base>*>& loops = handler.getLoops();
+                typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator itl;
+                for (itl = loops.begin(); itl != loops.end(); ++itl) {
+                    LoopAtomicFun<Base>* l = itl->second;
+                    const std::map<size_t, LoopPosition*>& depIndexes = l->getOriginalDependentIndexes();
+                    std::map<size_t, LoopPosition*>::const_iterator iti = depIndexes.find(i);
+                    if (iti != depIndexes.end()) {
+                        loop = l;
+                        break;
+                    }
+                }
+
+                if (loop == NULL)
+                    continue; // result in jacobian is not related with a loop
+            } else {
+                assert(evals.size() == 1);
+                OperationNode<Base>* loopEvalNode = evals.begin()->first;
+
+#ifndef NDEBUG
+                CGOpCode loopOpType = loopEvalNode->getOperationType();
+                size_t p = loopEvalNode->getInfo()[3];
+                assert((loopOpType == CGLoopForwardOp && p == 1) ||
+                       (loopOpType == CGLoopReverseOp && p == 0));
+#endif
+
+                size_t loopId = loopEvalNode->getInfo()[0];
+                loop = handler.getLoop(loopId);
+                assert(loop != NULL);
+            }
+
+            map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > >& lRawIndexes = jacIndexPatterns[loop];
 
             const LoopPosition& depPos = loop->getTapeDependentIndex(i);
             size_t tapeI = depPos.tape;
@@ -160,8 +177,7 @@ namespace CppAD {
             }
             size_t iteration = depPos.atomic / loop->getTapeDependentCount();
 
-            // must get a single tape independent index!!!!!
-            std::set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, j);
+            set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, j);
             assert(tapeJs.size() >= 1); // if >1 then the independent is used by several temporary variables
 
             bool isTemporary = loop->isTemporary(*tapeJs.begin());
@@ -170,10 +186,10 @@ namespace CppAD {
             IndexedDependentLoopInfo<Base>* origJacEl = NULL;
             JacTapeElementLoopInfo<Base>& ref = lRawIndexes[tapeI][*tapeJs.begin()];
             if (ref.origIndep2Info.size() != 0) {
-                typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::const_iterator it;
+                typename map<size_t, IndexedDependentLoopInfo<Base>* >::const_iterator it;
                 it = ref.origIndep2Info.find(jRef);
                 if (it != ref.origIndep2Info.end()) {
-                    origJacEl = it->second.origJacElement;
+                    origJacEl = it->second;
                 }
             }
 
@@ -183,30 +199,29 @@ namespace CppAD {
                 origJacEl = &garbageCollection.back();
                 origJacEl->indexes.resize(loop->getIterationCount(), nnz);
                 origJacEl->origVals.resize(loop->getIterationCount());
-                ref.origIndep2Info[jRef].origJacElement = origJacEl;
+                ref.origIndep2Info[jRef] = origJacEl;
                 dependentIndexes[loop].push_back(origJacEl);
             }
             origJacEl->indexes[iteration] = e;
-            origJacEl->origVals[iteration] = jac[e];
+            origJacEl->origVals[iteration] = jacVal;
 
             if (iteration == 0) {
-                typename std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >::const_iterator itE;
-                for (itE = evals.begin(); itE != evals.end(); ++itE) {
-                    OperationNode<Base>* loopEvalNode = itE->first;
-                    const std::map<size_t, OperationNode<Base>*>& results = itE->second;
+                if (evals.size() > 0) {
+                    typename map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> >::const_iterator itE;
+                    for (itE = evals.begin(); itE != evals.end(); ++itE) {
+                        OperationNode<Base>* loopEvalNode = itE->first;
+                        const map<size_t, OperationNode<Base>*>& results = itE->second;
 
-                    size_t loopId = loopEvalNode->getInfo()[0];
-                    size_t result_size = loopEvalNode->getInfo()[5]; // tape result size
-                    LoopAtomicFun<Base>* loop = handler.getLoop(loopId);
-                    assert(loop != NULL);
+                        vector<OperationNode<Base>*>& allLoopEvalResults = evaluations1it[loop][loopEvalNode];
 
-                    vector<OperationNode<Base>*>& allLoopEvalResults = evaluations1it[loop][loopEvalNode];
-                    allLoopEvalResults.resize(result_size);
+                        size_t result_size = loopEvalNode->getInfo()[5]; // tape result size
+                        allLoopEvalResults.resize(result_size);
 
-                    typename std::map<size_t, OperationNode<Base>*>::const_iterator itR;
-                    for (itR = results.begin(); itR != results.end(); ++itR) {
-                        size_t tapeIndex = itR->second->getInfo()[1];
-                        allLoopEvalResults[tapeIndex] = itR->second;
+                        typename map<size_t, OperationNode<Base>*>::const_iterator itR;
+                        for (itR = results.begin(); itR != results.end(); ++itR) {
+                            size_t tapeIndex = itR->second->getInfo()[1];
+                            allLoopEvalResults[tapeIndex] = itR->second;
+                        }
                     }
                 }
             }
@@ -215,22 +230,21 @@ namespace CppAD {
         /**
          * Generate index patterns for the dependent variables
          */
-        typename std::map<LoopAtomicFun<Base>*, std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > > >::iterator itl;
+        typename map<LoopAtomicFun<Base>*, map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > > >::iterator itl;
         for (itl = jacIndexPatterns.begin(); itl != jacIndexPatterns.end(); ++itl) {
 
-            typename std::map<size_t, std::map<size_t, JacTapeElementLoopInfo<Base> > >::iterator itI;
+            typename map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > >::iterator itI;
             for (itI = itl->second.begin(); itI != itl->second.end(); ++itI) {
 
-                typename std::map<size_t, JacTapeElementLoopInfo<Base> >::iterator itJ;
+                typename map<size_t, JacTapeElementLoopInfo<Base> >::iterator itJ;
                 for (itJ = itI->second.begin(); itJ != itI->second.end(); ++itJ) {
                     JacTapeElementLoopInfo<Base>& jacEleInfo = itJ->second;
 
-                    typename std::map<size_t, JacOrigElementIndepLoopInfo<Base> >::iterator itO;
+                    typename map<size_t, IndexedDependentLoopInfo<Base>* >::iterator itO;
                     for (itO = jacEleInfo.origIndep2Info.begin(); itO != jacEleInfo.origIndep2Info.end(); ++itO) {
-                        JacOrigElementIndepLoopInfo<Base>& tapeEleInfo = itO->second;
-                        IndexedDependentLoopInfo<Base>* orig = tapeEleInfo.origJacElement;
+                        IndexedDependentLoopInfo<Base>* orig = itO->second;
 
-                        // make sure all element are requested
+                        // make sure all elements are requested
                         std::vector<size_t>::const_iterator ite;
                         for (ite = orig->indexes.begin(); ite != orig->indexes.end(); ++ite) {
                             if (*ite == nnz) {
@@ -249,10 +263,348 @@ namespace CppAD {
     }
 
     template<class Base>
+    std::vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
+                                                                                        vector<CGBase>& indVars,
+                                                                                        vector<CGBase>& w,
+                                                                                        const std::vector<size_t>& lowerHessRows,
+                                                                                        const std::vector<size_t>& lowerHessCols,
+                                                                                        const std::vector<size_t>& lowerHessOrder,
+                                                                                        const std::map<size_t, size_t>& duplicates) {
+        size_t m = _fun->Range();
+        //size_t n = _fun->Domain();
+
+        std::vector<CGBase> hess(_hessSparsity.rows.size());
+
+        /**
+         * loops
+         */
+        size_t mLoopTotal = 0;
+        std::vector<bool> eqLoop(m, false);
+
+        std::map<LoopAtomicFun<Base>*, std::vector<CGBase> > loopHess; // hessian elements only for the equation in a given loop
+
+        typename std::set<LoopAtomicFun<Base>* >::const_iterator itl;
+        for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
+            LoopAtomicFun<Base>* loop = *itl;
+            size_t iterations = loop->getIterationCount();
+
+            mLoopTotal += loop->getLoopDependentCount();
+
+            vector<CGBase> wLoop(m);
+            for (size_t i = 0; i < m; i++) {
+                wLoop[i] = Base(0);
+            }
+
+            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
+            for (size_t i = 0; i < depIndexes.size(); i++) {
+                for (size_t iter = 0; iter < iterations; iter++) {
+                    const LoopPosition& pos = depIndexes[i][iter];
+                    eqLoop[pos.original] = true;
+                    wLoop[pos.original] = w[pos.original];
+                }
+            }
+
+            CppAD::sparse_hessian_work work;
+            vector<CGBase> lowerHess(lowerHessRows.size());
+            _fun->SparseHessian(indVars, wLoop, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
+
+            std::vector<CGBase>& hessLoopl = loopHess[loop];
+            hessLoopl.resize(_hessSparsity.rows.size());
+            for (size_t e = 0; e < lowerHessOrder.size(); e++) {
+                hessLoopl[lowerHessOrder[e]] = lowerHess[e];
+            }
+
+            // make use of the symmetry of the Hessian in order to reduce operations
+            std::map<size_t, size_t>::const_iterator it2;
+            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+                hessLoopl[it2->first] = hessLoopl[it2->second];
+            }
+
+            prepareSparseHessianForLoop(handler, loop, hessLoopl);
+
+            for (size_t e = 0; e < hess.size(); e++) {
+                hess[e] += hessLoopl[e];
+            }
+        }
+
+        if (mLoopTotal < m) {
+            /**
+             * equations not in loops
+             */
+            vector<CGBase> ww(m);
+            for (size_t i = 0; i < m; i++) {
+                ww[i] = eqLoop[i] ? Base(0) : w[i];
+            }
+
+            CppAD::sparse_hessian_work work;
+            vector<CGBase> lowerHess(lowerHessRows.size());
+            _fun->SparseHessian(indVars, ww, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
+
+            std::vector<CGBase> hessNoLoops(_hessSparsity.rows.size());
+            for (size_t i = 0; i < lowerHessOrder.size(); i++) {
+                hessNoLoops[lowerHessOrder[i]] = lowerHess[i];
+            }
+
+            // make use of the symmetry of the Hessian in order to reduce operations
+            std::map<size_t, size_t>::const_iterator it2;
+            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+                hessNoLoops[it2->first] = hessNoLoops[it2->second];
+            }
+
+            for (size_t e = 0; e < hess.size(); e++) {
+                hess[e] += hessNoLoops[e];
+            }
+        }
+
+        return hess;
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::prepareSparseHessianForLoop(CodeHandler<Base>& handler,
+                                                                    LoopAtomicFun<Base>* loop,
+                                                                    std::vector<CGBase>& hess) {
+        using namespace std;
+        using CppAD::vector;
+
+        size_t iterationCount = loop->getIterationCount();
+        size_t nnz = _hessSparsity.rows.size();
+
+        if (!loop->isTapeIndependentsFullyDetached2ndOrder()) {
+            throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
+        }
+
+        /**
+         * Determine the Hessian pattern for the equations in the loop
+         */
+        vector<std::set<size_t> > loopHessPattern;
+        {
+            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
+
+            size_t n = _fun->Domain();
+
+            /**
+             * Determine the sparsity pattern p for Hessian of w^T F
+             */
+            vector<std::set<size_t> > r(n); // identity matrix
+            for (size_t j = 0; j < n; j++)
+                r[j].insert(j);
+            _fun->ForSparseJac(n, r);
+
+            vector<std::set<size_t> > s(1);
+            for (size_t i = 0; i < depIndexes.size(); i++) {
+                for (size_t it = 0; it < iterationCount; it++) {
+                    s[0].insert(depIndexes[i][it].original);
+                }
+            }
+
+            loopHessPattern = _fun->RevSparseHes(n, s, false);
+        }
+
+        std::vector<IndexedDependentLoopInfo<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
+        garbageCollection.reserve(nnz);
+
+        /**
+         * Generate index patterns for the hessian elements resulting from loops
+         */
+        // loop -> tape independent 1 -> orig independent(temporaries only) 1 ->
+        //      -> tape independent 2 -> orig independent(temporaries only) 2 -> iteration = position
+        map<size_t, map<size_t, map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > > > > hessIndexPatterns;
+
+        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
+        // loop -> loop atomic evaluation -> results
+        map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
+
+
+
+        for (size_t e = 0; e < nnz; e++) {
+            CGBase& hessVal = hess[e];
+            if (IdenticalZero(hessVal))
+                continue;
+
+            // loop evaluation -> results
+            map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> > evals;
+            findLoopEvaluations(handler, loop, hessVal.getOperationNode(), evals); ////////////
+
+            if (evals.empty())
+                continue;
+
+            //size_t iteration = iterationCount;
+            if (evals.size() > 1 || evals.begin()->second.size() > 1) {
+                throw CGException("Unable to generate expression for an hessian element which "
+                                  "is either associated with multiple indexed independents "
+                                  "or an indepedent with constant index.");
+            }
+            /*
+                        typename map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> >::const_iterator itEval;
+                        for (itEval = evals.begin(); itEval != evals.end(); ++itEval) {
+                            OperationNode<Base>* loopEvalNode = itEval->first;
+                            CGOpCode loopOpType = loopEvalNode->getOperationType();
+                            size_t p = loopEvalNode->getInfo()[3];
+
+                            if (loopOpType == CGLoopReverseOp && p == 1) {
+                                typename map<size_t, OperationNode<Base>*>::const_iterator itRes;
+                                for (itRes = itEval->second.begin(); itRes != itEval->second.end(); ++itRes) {
+                                    size_t jAtomic = itRes->first / 2;
+
+                                    const std::map<size_t, size_t>& tapeJ2iter = loop->getAtomicIndependentLocations(jAtomic);
+                                    std::map<size_t, size_t>::const_iterator t2i;
+                                    for (t2i = tapeJ2iter.begin(); t2i != tapeJ2iter.end(); ++t2i) {
+                                        // jTape can appear only linearly in the model and 
+                                        // therefore it might not influence the hessian element
+                                        size_t jTape = t2i->first;
+                                        size_t iteration = t2i->second;
+
+                                    }
+
+                                    if (!loop->isIndexed(jTape)) {
+                                        throw CGException("Found an hessian element which is not indexed! "
+                                                          "Hessian elements must correspond to indexed independent variables.");
+                                    }
+
+
+                                    //iteration = loop->getIterationOfIndexedIndep(jAtomic, origJ);
+                                }
+                            }
+                        }
+             */
+#ifndef NDEBUG
+            {
+                OperationNode<Base>* loopEvalNode = evals.begin()->first;
+
+                CGOpCode loopOpType = loopEvalNode->getOperationType();
+                size_t loopId = loopEvalNode->getInfo()[0];
+                //size_t p = loopNode->getInfo()[3];
+                assert(loopOpType == CGLoopReverseOp && loopEvalNode->getInfo()[3] == 1);
+
+                assert(loop == handler.getLoop(loopId));
+            }
+#endif
+            size_t j1 = _hessSparsity.rows[e];
+            size_t j2 = _hessSparsity.cols[e];
+
+            set<size_t> tapeJ1s = loop->getIndependentTapeIndexes(j1);
+            assert(tapeJ1s.size() >= 1); // if >1 then the independent is used by several temporary variables
+
+            bool isTemporary1 = loop->isTemporary(*tapeJ1s.begin());
+            size_t jRef1 = isTemporary1 ? j1 : 0;
+
+
+            set<size_t> tapeJ2s = loop->getIndependentTapeIndexes(j2);
+            assert(tapeJ2s.size() >= 1); // if >1 then the independent is used by several temporary variables
+
+            bool isTemporary2 = loop->isTemporary(*tapeJ2s.begin());
+            size_t jRef2 = isTemporary2 ? j2 : 0;
+
+            IndexedDependentLoopInfo<Base>* origHessEl = NULL;
+            map<size_t, IndexedDependentLoopInfo<Base>* >& ref = hessIndexPatterns[*tapeJ1s.begin()][jRef1][*tapeJ2s.begin()];
+            if (ref.size() != 0) {
+                typename map<size_t, IndexedDependentLoopInfo<Base>* >::const_iterator it;
+                it = ref.find(jRef2);
+                if (it != ref.end()) {
+                    origHessEl = it->second;
+                }
+            }
+
+            if (origHessEl == NULL) {
+                // the vector will never allocate more space so this is safe:
+                garbageCollection.resize(garbageCollection.size() + 1);
+                origHessEl = &garbageCollection.back();
+                origHessEl->indexes.resize(loop->getIterationCount(), nnz);
+                origHessEl->origVals.resize(loop->getIterationCount());
+                ref[jRef1] = origHessEl;
+                dependentIndexes[loop].push_back(origHessEl);
+            }
+
+            /**
+             * Determine the iteration
+             */
+            size_t iteration;
+
+            bool indexed1 = loop->isIndexedIndependent(*tapeJ1s.begin());
+            bool indexed2 = loop->isIndexedIndependent(*tapeJ2s.begin());
+            if (indexed1 || indexed2) {
+                if (indexed1) {
+                    iteration = loop->getIterationOfIndexedIndep(*tapeJ1s.begin(), j1);
+                } else {
+                    iteration = loop->getIterationOfIndexedIndep(*tapeJ2s.begin(), j2);
+                }
+                //size_t iteration = depPos.atomic / loop->getTapeDependentCount();
+
+                origHessEl->indexes[iteration] = e;
+                origHessEl->origVals[iteration] = hessVal;
+            } else {
+                iteration = 0; // it is actually present in all iterations!!!
+
+                for (size_t iter = 0; iter < iterationCount; iter++) {
+                    origHessEl->indexes[iter] = e;
+                    origHessEl->origVals[iter] = hessVal;
+                }
+            }
+
+            if (iteration == 0) {
+                typename map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> >::const_iterator itE;
+                for (itE = evals.begin(); itE != evals.end(); ++itE) {
+                    OperationNode<Base>* loopEvalNode = itE->first;
+                    const map<size_t, OperationNode<Base>*>& results = itE->second;
+
+                    size_t result_size = loopEvalNode->getInfo()[5]; // tape result size
+#ifndef NDEBUG
+                    size_t loopId = loopEvalNode->getInfo()[0];
+                    assert(handler.getLoop(loopId) == loop);
+#endif
+                    vector<OperationNode<Base>*>& allLoopEvalResults = evaluations1it[loop][loopEvalNode];
+                    allLoopEvalResults.resize(result_size);
+
+                    typename map<size_t, OperationNode<Base>*>::const_iterator itR;
+                    for (itR = results.begin(); itR != results.end(); ++itR) {
+                        size_t tapeIndex = itR->second->getInfo()[1];
+                        allLoopEvalResults[tapeIndex] = itR->second;
+                    }
+                }
+            }
+        }
+
+        /**
+         * Generate index patterns for the dependent variables
+         */
+        typename map<size_t, map<size_t, map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > > > >::iterator itJ1;
+        for (itJ1 = hessIndexPatterns.begin(); itJ1 != hessIndexPatterns.end(); ++itJ1) {
+
+            typename map<size_t, map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > > >::iterator itO1;
+            for (itO1 = itJ1->second.begin(); itO1 != itJ1->second.end(); ++itO1) {
+
+                typename map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > >::iterator itJ2;
+                for (itJ2 = itO1->second.begin(); itJ2 != itO1->second.end(); ++itJ2) {
+
+                    typename map<size_t, IndexedDependentLoopInfo<Base>* >::iterator itO2;
+                    for (itO2 = itJ2->second.begin(); itO2 != itJ2->second.end(); ++itO2) {
+                        IndexedDependentLoopInfo<Base>* orig = itO2->second;
+
+                        // make sure all element are requested
+                        std::vector<size_t>::const_iterator ite;
+                        for (ite = orig->indexes.begin(); ite != orig->indexes.end(); ++ite) {
+                            if (*ite == nnz) {
+                                throw CGException("All hessian elements must be requested for all iterations");
+                            }
+                        }
+
+                        orig->pattern = IndexPattern::detect(orig->indexes);
+                        handler.manageLoopDependentIndexPattern(orig->pattern);
+                    }
+                }
+            }
+        }
+
+        size_t assignOrAdd = 1; // add
+        prepareLoops(handler, hess, evaluations1it, dependentIndexes, assignOrAdd);
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::prepareLoops(CodeHandler<Base>& handler,
                                                      std::vector<CGBase>& dep,
                                                      std::map<LoopAtomicFun<Base>*, std::map<OperationNode<Base>*, vector<OperationNode<Base>*> > >& evaluations1it,
-                                                     std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes) {
+                                                     std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes,
+                                                     size_t assignOrAdd) {
         /**
          * insert the loops into the operation graph
          */
@@ -274,7 +626,7 @@ namespace CppAD {
             std::vector<Argument<Base> > xIndexedArgs(1);
             xIndexedArgs[0] = Argument<Base>(*loopStart);
             std::vector<size_t> info(2);
-            info[0] = 0;
+            info[0] = 0; // tx
             for (size_t j = 0; j < nIndexed; j++) {
                 info[1] = j;
                 indexedIndependents[j] = new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs);
@@ -289,13 +641,15 @@ namespace CppAD {
                 vector<OperationNode<Base>*>& resultNodes1it = itE->second;
 
                 // evaluate tape 1st iteration (generate the operation graph)
-                vector<CG<Base> > newTapeResults1it = evalLoopTape(handler, *loopFunc, *loopEvalNode, indexedIndependents);
+                if (loopEvalNode != NULL) {
+                    vector<CG<Base> > newTapeResults1it = evalLoopTape(handler, *loopFunc, *loopEvalNode, indexedIndependents);
 
-                assert(resultNodes1it.size() == newTapeResults1it.size());
-                for (size_t j = 0; j < resultNodes1it.size(); j++) {
-                    if (resultNodes1it[j] != NULL) {
-                        assert(resultNodes1it[j]->getOperationType() == CGLoopAtomicResultOp);
-                        resultNodes1it[j]->getArguments()[0] = asArgument(newTapeResults1it[j]);
+                    assert(resultNodes1it.size() == newTapeResults1it.size());
+                    for (size_t j = 0; j < resultNodes1it.size(); j++) {
+                        if (resultNodes1it[j] != NULL) {
+                            assert(resultNodes1it[j]->getOperationType() == CGLoopAtomicResultOp);
+                            resultNodes1it[j]->getArguments()[0] = asArgument(newTapeResults1it[j]);
+                        }
                     }
                 }
             }
@@ -309,9 +663,9 @@ namespace CppAD {
             for (size_t i = 0; i < dep_size; i++) {
                 IndexedDependentLoopInfo<Base>& depInfo = *dependents[i];
 
-                assert(depInfo.origVals[0].getOperationNode() != NULL);
-                indexedArgs[0] = Argument<Base>(*depInfo.origVals[0].getOperationNode()); // value from first iteration!
+                indexedArgs[0] = asArgument(depInfo.origVals[0]); // value from first iteration!
                 info[0] = handler.addLoopDependentIndexPattern(*depInfo.pattern); // dependent index pattern location
+                info[1] = assignOrAdd;
 
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
@@ -356,6 +710,31 @@ namespace CppAD {
     }
 
     template<class Base>
+    void CLangCompileModelHelper<Base>::findLoopEvaluations(CodeHandler<Base>& handler,
+                                                            LoopAtomicFun<Base>* loop,
+                                                            OperationNode<Base>* node,
+                                                            std::map<OperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals) {
+        if (node == NULL) {
+            return;
+        }
+
+        CGOpCode op = node->getOperationType();
+        if (op == CGLoopAtomicResultOp) {
+            size_t pos = node->getInfo()[0];
+            OperationNode<Base>* loopEvalNode = node->getArguments()[0].getOperation();
+            size_t loopId = loopEvalNode->getInfo()[0];
+            if (loopId == loop->getLoopId()) {
+                evals[loopEvalNode][pos] = node;
+            }
+        } else {
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            for (size_t a = 0; a < args.size(); a++) {
+                findLoopEvaluations(handler, loop, args[a].getOperation(), evals);
+            }
+        }
+    }
+
+    template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::evalLoopTape(CodeHandler<Base>& handler,
                                                                   LoopAtomicFun<Base>& atomic,
                                                                   const OperationNode<Base>& loopEvalNode,
@@ -380,9 +759,12 @@ namespace CppAD {
              */
             if (p == 0) {
                 return generateReverse1Graph(handler, atomic, indexedIndependents, loopEvalNode.getArguments());
+            } else if (p == 1) {
+                return generateReverse2Graph(handler, atomic, indexedIndependents, loopEvalNode.getArguments());
             }
         }
-        assert(false); // TODO
+
+        throw CGException("Unable to generate operation graph for loop: not implemented yet!");
     }
 
     template<class Base>
@@ -407,44 +789,17 @@ namespace CppAD {
                                                                            const std::vector<Argument<Base> >& argsAtomic) {//argsAtomic = [txAtomic]
         typedef CppAD::CG<Base> CGB;
 
-        //size_t m = atomic.getTapeDependentCount();
-        const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = atomic.getIndexedIndepIndexes();
-        const std::vector<LoopPosition>& nonIndexedIndepIndexes = atomic.getNonIndexedIndepIndexes();
-        const std::vector<LoopPositionTmp>& temporaryIndependents = atomic.getTemporaryIndependents();
-
-
         ADFun<CGB>* fun = atomic.getTape();
-
-        //size_t mTape = fun->Range();
-        size_t nTape = fun->Domain();
-        size_t nIndexed = indexedIndepIndexes.size();
-        size_t nNonIndexed = nonIndexedIndepIndexes.size();
-        size_t nTmp = temporaryIndependents.size();
 
         // zero order
         vector<CGB> x = createLoopGraphIndependentVector(handler, atomic, indexedIndependents, argsAtomic, 1);
-        assert(x.size() == nTape);
+        assert(x.size() == fun->Domain());
 
         fun->Forward(0, x);
 
         // forward first order
-        vector<CGB> tx(nTape * 2);
-        for (size_t j = 0; j < nTape; j++) {
-            tx[j * 2] = x[j];
-        }
-
-        for (size_t j = 0; j < nIndexed; j++) {
-            const LoopPosition& pos = indexedIndepIndexes[j][0];
-            tx[pos.tape * 2 + 1] = handler.createCG(argsAtomic[pos.atomic * 2 + 1]);
-        }
-        for (size_t j = 0; j < nNonIndexed; j++) {
-            const LoopPosition& pos = nonIndexedIndepIndexes[j];
-            tx[pos.tape * 2 + 1] = handler.createCG(argsAtomic[pos.atomic * 2 + 1]);
-        }
-        for (size_t j = 0; j < nTmp; j++) {
-            const LoopPositionTmp& pos = temporaryIndependents[j];
-            tx[pos.tape * 2 + 1] = handler.createCG(argsAtomic[pos.atomic * 2 + 1]);
-        }
+        vector<CGB> tx = createLoopGraphIndependentVectorTx2(handler, atomic, x, argsAtomic, 1);
+        assert(tx.size() == fun->Domain() * 2);
 
         vector<CGB> ty = fun->Forward(1, tx);
 
@@ -476,7 +831,7 @@ namespace CppAD {
                 py[i] = handler.createCG(argsAtomic[nFull + i]);
             } else {
                 std::vector<size_t> info(2);
-                info[0] = 1;
+                info[0] = 1; // py
                 info[1] = i;
                 std::vector<Argument<Base> > emptyArgs;
                 OperationNode<Base>* indexedPy = new OperationNode<Base>(CGLoopIndexedIndepOp, info, emptyArgs);
@@ -485,6 +840,50 @@ namespace CppAD {
         }
 
         vector<CGB> px = fun->Reverse(1, py);
+
+        return px;
+    }
+
+    template<class Base>
+    vector<CG<Base> > CLangCompileModelHelper<Base>::generateReverse2Graph(CodeHandler<Base>& handler,
+                                                                           LoopAtomicFun<Base>& atomic,
+                                                                           const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                           const std::vector<Argument<Base> >& argsAtomic) { //argsAtomic = [txAtomic pyAtomic]
+        typedef CppAD::CG<Base> CGB;
+
+        size_t m = atomic.getTapeDependentCount();
+        size_t nFull = atomic.getLoopIndependentCount();
+
+        ADFun<CGB>* fun = atomic.getTape();
+
+        // zero order
+        vector<CGB> x = createLoopGraphIndependentVector(handler, atomic, indexedIndependents, argsAtomic, 1);
+        assert(x.size() == fun->Domain());
+
+        fun->Forward(0, x);
+
+        // forward first order
+        vector<CGB> tx = createLoopGraphIndependentVectorTx2(handler, atomic, x, argsAtomic, 1);
+        assert(tx.size() == fun->Domain() * 2);
+
+        fun->Forward(1, tx);
+
+        // reverse second order
+        vector<CGB> py(2 * m);
+        for (size_t i = 0; i < 2 * m; i++) {
+            if (argsAtomic[nFull * 2 + i].getOperation() == NULL) {
+                py[i] = handler.createCG(argsAtomic[nFull * 2 + i]);
+            } else {
+                std::vector<size_t> info(2);
+                info[0] = 1; // py
+                info[1] = i / 2; // TODO: improve this
+                std::vector<Argument<Base> > emptyArgs;
+                OperationNode<Base>* indexedPy = new OperationNode<Base>(CGLoopIndexedIndepOp, info, emptyArgs);
+                py[i] = handler.createCG(indexedPy);
+            }
+        }
+
+        vector<CGB> px = fun->Reverse(2, py);
 
         return px;
     }
@@ -519,6 +918,47 @@ namespace CppAD {
             x[nIndexed + nNonIndexed + j] = handler.createCG(argsAtomic[temporaryIndependents[j].atomic * (p + 1)]);
         }
         return x;
+    }
+
+    template<class Base>
+    vector<CG<Base> > CLangCompileModelHelper<Base>::createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
+                                                                                         LoopAtomicFun<Base>& atomic,
+                                                                                         const vector<CG<Base> >& x,
+                                                                                         const std::vector<Argument<Base> >& argsAtomic,
+                                                                                         size_t p) {
+        typedef CppAD::CG<Base> CGB;
+
+        const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = atomic.getIndexedIndepIndexes();
+        const std::vector<LoopPosition>& nonIndexedIndepIndexes = atomic.getNonIndexedIndepIndexes();
+        const std::vector<LoopPositionTmp>& temporaryIndependents = atomic.getTemporaryIndependents();
+
+        ADFun<CGB>* fun = atomic.getTape();
+        size_t nTape = fun->Domain();
+        size_t nIndexed = indexedIndepIndexes.size();
+        size_t nNonIndexed = nonIndexedIndepIndexes.size();
+        size_t nTmp = temporaryIndependents.size();
+
+        vector<CGB> tx(nTape * 2);
+        for (size_t j = 0; j < nTape; j++) {
+            tx[j * 2] = x[j];
+        }
+
+        size_t k1 = p + 1;
+
+        for (size_t j = 0; j < nIndexed; j++) {
+            const LoopPosition& pos = indexedIndepIndexes[j][0];
+            tx[pos.tape * k1 + 1] = handler.createCG(argsAtomic[pos.atomic * k1 + 1]);
+        }
+        for (size_t j = 0; j < nNonIndexed; j++) {
+            const LoopPosition& pos = nonIndexedIndepIndexes[j];
+            tx[pos.tape * k1 + 1] = handler.createCG(argsAtomic[pos.atomic * k1 + 1]);
+        }
+        for (size_t j = 0; j < nTmp; j++) {
+            const LoopPositionTmp& pos = temporaryIndependents[j];
+            tx[pos.tape * k1 + 1] = handler.createCG(argsAtomic[pos.atomic * k1 + 1]);
+        }
+
+        return tx;
     }
 
     template<class Base>

@@ -180,7 +180,7 @@ namespace CppAD {
             compHelpL.setCreateJacobian(false);
             compHelpL.setCreateHessian(false);
             compHelpL.setCreateSparseJacobian(true);
-            compHelpL.setCreateSparseHessian(false);
+            compHelpL.setCreateSparseHessian(true);
             compHelpL.setCreateForwardOne(false);
             compHelpL.setCreateReverseOne(false);
             compHelpL.setCreateReverseTwo(false);
@@ -205,7 +205,7 @@ namespace CppAD {
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
             compHelp.setCreateSparseJacobian(true);
-            compHelp.setCreateSparseHessian(false);
+            compHelp.setCreateSparseHessian(true);
             compHelp.setCreateForwardOne(false);
             compHelp.setCreateReverseOne(false);
             compHelp.setCreateReverseTwo(false);
@@ -236,12 +236,14 @@ namespace CppAD {
                 x[j] = j + 1;
             }
 
+            // test model (zero-order)
             if (compHelp.isCreateForwardZero()) {
                 std::vector<double> yl = modelL->ForwardZero(x);
                 std::vector<double> y = model->ForwardZero(x);
                 compareValues(yl, y);
             }
 
+            // test jacobian
             if (compHelp.isCreateSparseJacobian()) {
                 compareVectorSetValues(modelL->JacobianSparsitySet(),
                                        model->JacobianSparsitySet());
@@ -254,6 +256,22 @@ namespace CppAD {
                 compareValues(jacl, jac);
             }
 
+            // test hessian
+            if (compHelp.isCreateSparseHessian()) {
+                compareVectorSetValues(modelL->HessianSparsitySet(),
+                                       model->HessianSparsitySet());
+
+                std::vector<double> w(m * repeat);
+                for (size_t i = 0; i < w.size(); i++) {
+                    w[i] = 0.5 * (i + 1);
+                }
+                std::vector<double> hessl, hess;
+                std::vector<size_t> rowsl, colsl, rows, cols;
+                modelL->SparseHessian(x, w, hessl, rowsl, colsl);
+                model->SparseHessian(x, w, hess, rows, cols);
+
+                compareValues(hessl, hess);
+            }
         }
     };
 }
@@ -262,6 +280,7 @@ using namespace CppAD;
 
 std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
@@ -270,8 +289,8 @@ std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
     ADCGD tmp1 = x[1] * sin(x[1] + 4);
     ADCGD tmp2 = 2.5 * x[1];
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = tmp1 * cos(x[i * m]) / tmp2;
-        y[i * m + 1] = x[i * m + 1] * log(x[i * m]);
+        y[i * m] = tmp1 * cos(x[i * n]) / tmp2;
+        y[i * m + 1] = x[i * n + 1] * log(x[i * n]);
     }
 
     return y;
@@ -289,14 +308,15 @@ TEST_F(CppADCGPatternTest, CommonTmp2) {
 
 std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
     std::vector<ADCGD> y(m2);
 
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]);
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
+        y[i * m] = cos(x[i * n]);
+        y[i * m + 1] = x[i * n + 1] * x[i * n];
     }
 
     return y;
@@ -314,14 +334,15 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
 
 std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
     std::vector<ADCGD> y(m2);
 
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]) + x[1] * x[2];
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
+        y[i * m] = cos(x[i * n]) + x[1] * x[2];
+        y[i * m + 1] = x[i * n + 1] * x[i * n];
     }
 
     return y;
@@ -339,17 +360,18 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
 
 std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 4;
+    size_t n = 4;
     size_t m2 = repeat * m;
 
-    assert(x.size() == m2);
+    assert(x.size() == n * repeat);
 
     // dependent variable vector 
     std::vector<ADCGD> y(m2);
 
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]) + x[1] * log(x[2]);
-        y[i * m + 1] = x[i * m + 1] * x[i * m];
-        y[i * m + 2] = x[i * m + 1] * x[i * m + 2];
+        y[i * m] = cos(x[i * n]) + 3 * x[1] * log(x[2]);
+        y[i * m + 1] = x[i * n + 1] * x[i * n];
+        y[i * m + 2] = x[i * n + 1] * x[i * n + 2];
         y[i * m + 3] = 5;
     }
 
@@ -368,6 +390,7 @@ TEST_F(CppADCGPatternTest, Matcher4Eq) {
 
 std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
@@ -375,8 +398,8 @@ std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
 
     ADCGD tmp = x[1] * x[2];
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]) + tmp;
-        y[i * m + 1] = x[i * m + 1] * x[i * m] + tmp;
+        y[i * m] = cos(x[i * n]) + tmp;
+        y[i * m + 1] = x[i * n + 1] * x[i * n] + tmp;
     }
 
     return y;
@@ -394,6 +417,7 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
 
 std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
@@ -401,8 +425,8 @@ std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
 
     for (size_t i = 0; i < repeat; i++) {
         ADCGD tmp = x[1] * x[i];
-        y[i * m] = cos(x[i * m]) + tmp;
-        y[i * m + 1] = x[i * m + 1] * x[i * m] + tmp;
+        y[i * m] = cos(x[i * n]) + tmp;
+        y[i * m + 1] = x[i * n + 1] * x[i * n] + tmp;
     }
 
     return y;
@@ -421,6 +445,7 @@ TEST_F(CppADCGPatternTest, IndexedTmp) {
 
 std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     // dependent variable vector 
@@ -428,11 +453,11 @@ std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
 
     for (size_t i = 0; i < repeat; i++) {
         ADCGD tmp = x[1] * x[i];
-        y[i * m] = cos(x[i * m]) + tmp;
+        y[i * m] = cos(x[i * n]) + tmp;
 
         if (i == 1) {
             for (size_t i2 = 0; i2 < repeat; i2++) {
-                y[i2 * m + 1] = x[i2 * m + 1] * x[i2 * m] + tmp;
+                y[i2 * m + 1] = x[i2 * n + 1] * x[i2 * n] + tmp;
             }
         }
     }
@@ -453,6 +478,7 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
 
 std::vector<ADCGD> modelAtomic(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
     size_t m = 2;
+    size_t n = 2;
     size_t m2 = repeat * m;
 
     CGAbstractAtomicFun<Base>& atomic0 = *atoms[0];
@@ -463,10 +489,10 @@ std::vector<ADCGD> modelAtomic(std::vector<ADCGD>& x, size_t repeat, const std::
     std::vector<ADCGD> ax(2), ay(1);
 
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * m]);
+        y[i * m] = cos(x[i * n]);
 
-        ax[0] = x[i * m];
-        ax[1] = x[i * m + 1];
+        ax[0] = x[i * n];
+        ax[1] = x[i * n + 1];
         atomic0(ax, ay);
         y[i * m + 1] = ay[0];
     }
