@@ -1,5 +1,5 @@
-#ifndef CPPADCGOO_TEST_DISTILLATION_INCLUDED
-#define CPPADCGOO_TEST_DISTILLATION_INCLUDED
+#ifndef CPPAD_CG_TEST_DISTILLATION_INCLUDED
+#define CPPAD_CG_TEST_DISTILLATION_INCLUDED
 
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:

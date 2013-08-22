@@ -1,5 +1,5 @@
-#ifndef CPPADCGOO_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
-#define CPPADCGOO_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
+#ifndef CPPAD_CG_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
+#define CPPAD_CG_TEST_CPPADCGDYNAMICATOMICTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis

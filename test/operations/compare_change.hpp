@@ -1,5 +1,5 @@
-#ifndef CPPADCGOO_COMPARE_CHANGE_INCLUDED
-#define CPPADCGOO_COMPARE_CHANGE_INCLUDED
+#ifndef CPPAD_CG_COMPARE_CHANGE_INCLUDED
+#define CPPAD_CG_COMPARE_CHANGE_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis

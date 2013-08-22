@@ -1,5 +1,5 @@
-#ifndef CPPADCGOO_TEST_PARAMETER_INCLUDED
-#define CPPADCGOO_TEST_PARAMETER_INCLUDED
+#ifndef CPPAD_CG_TEST_PARAMETER_INCLUDED
+#define CPPAD_CG_TEST_PARAMETER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis

@@ -1,5 +1,5 @@
-#ifndef CPPADCGOO_CPPADCGOPERATIONTESTIMPL_HPP
-#define	CPPADCGOO_CPPADCGOPERATIONTESTIMPL_HPP
+#ifndef CPPAD_CG_CPPADCGOPERATIONTESTIMPL_HPP
+#define	CPPAD_CG_CPPADCGOPERATIONTESTIMPL_HPP
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis

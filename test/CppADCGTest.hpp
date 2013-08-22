@@ -20,8 +20,8 @@
 #include <cppad/memory_leak.hpp>
 #include <cppad/near_equal.hpp>
 
-#ifndef CPPADCGOO_CPPADCGTEST_HPP
-#define	CPPADCGOO_CPPADCGTEST_HPP
+#ifndef CPPAD_CG_CPPADCGTEST_HPP
+#define	CPPAD_CG_CPPADCGTEST_HPP
 
 namespace CppAD {
 

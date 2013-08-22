@@ -12,8 +12,8 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#ifndef CPPADCGOO_CPPADCGINDEXREDUCTIONTEST_HPP
-#define	CPPADCGOO_CPPADCGINDEXREDUCTIONTEST_HPP
+#ifndef CPPAD_CG_CPPADCGINDEXREDUCTIONTEST_HPP
+#define	CPPAD_CG_CPPADCGINDEXREDUCTIONTEST_HPP
 
 #include "../CppADCGTest.hpp"
 
