@@ -785,7 +785,9 @@ namespace CppAD {
         static inline vector<CG<Base> > evalLoopTape(CodeHandler<Base>& handler,
                                                      LoopAtomicFun<Base>& atomic,
                                                      const OperationNode<Base>& loopEvalNode,
-                                                     const vector<OperationNode<Base>*>& indexedIndependents);
+                                                     const vector<OperationNode<Base>*>& indexedIndependents,
+                                                     vector<OperationNode<Base>* >& indexedIndependents2,
+                                                     OperationNode<Base>* loopStart);
 
         static inline vector<CG<Base> > generateLoopForward0Graph(CodeHandler<Base>& handler,
                                                                   LoopAtomicFun<Base>& atomic,
@@ -795,17 +797,22 @@ namespace CppAD {
         static inline vector<CG<Base> > generateForward1Graph(CodeHandler<Base>& handler,
                                                               LoopAtomicFun<Base>& atomic,
                                                               const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              const std::vector<Argument<Base> >& argsAtomic);
+                                                              vector<OperationNode<Base>*>& indexedIndependents2,
+                                                              const std::vector<Argument<Base> >& argsAtomic,
+                                                              OperationNode<Base>* loopStart);
 
         static inline vector<CG<Base> > generateReverse1Graph(CodeHandler<Base>& handler,
                                                               LoopAtomicFun<Base>& atomic,
                                                               const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              const std::vector<Argument<Base> >& argsAtomic);
+                                                              const std::vector<Argument<Base> >& argsAtomic,
+                                                              OperationNode<Base>* loopStart);
 
         static inline vector<CG<Base> > generateReverse2Graph(CodeHandler<Base>& handler,
                                                               LoopAtomicFun<Base>& atomic,
                                                               const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              const std::vector<Argument<Base> >& argsAtomic);
+                                                              vector<OperationNode<Base>*>& indexedIndependents2,
+                                                              const std::vector<Argument<Base> >& argsAtomic,
+                                                              OperationNode<Base>* loopStart);
 
         static inline vector<CG<Base> > createLoopGraphIndependentVector(CodeHandler<Base>& handler,
                                                                          LoopAtomicFun<Base>& atomic,
@@ -817,8 +824,10 @@ namespace CppAD {
         static inline vector<CG<Base> > createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
                                                                             LoopAtomicFun<Base>& atomic,
                                                                             const vector<CG<Base> >& x,
+                                                                            vector<OperationNode<Base>*>& indexedIndependents2,
                                                                             const std::vector<Argument<Base> >& argsAtomic,
-                                                                            size_t p);
+                                                                            size_t p,
+                                                                            OperationNode<Base>* loopStart);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

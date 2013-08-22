@@ -108,6 +108,66 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     testLibCreation(model1, m, n, 6, "model1", jacobian, hessian);
 }
 
+std::vector<ADCGD> model2(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 1;
+    size_t n = 2;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(repeat * m);
+
+    ADCGD ax0;
+    ADCGD ax1;
+    for (size_t i = 0; i < repeat; i++) {
+        if (i < repeat / 2) {
+            ax0 = x[i * n];
+            ax1 = x[i * n + 1];
+        }
+        y[i * m] = ax0 + ax0 * ax1;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, model2) {
+    using namespace CppAD;
+
+    size_t m = 1;
+    size_t n = 2;
+
+    testPatternDetection(model2, m, n, 6);
+
+    testLibCreation(model2, m, n, 6, "model2");
+}
+
+std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 1;
+    size_t n = 2;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(repeat * m);
+
+    ADCGD ax1;
+    for (size_t i = 0; i < repeat; i++) {
+        if (i < repeat / 2) {
+            ax1 = x[i * n + 1];
+        }
+        y[i * m] = x[0] + x[0] * ax1 * ax1;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, model3) {
+    using namespace CppAD;
+
+    size_t m = 1;
+    size_t n = 2;
+
+    testPatternDetection(model3, m, n, 6);
+
+    testLibCreation(model3, m, n, 6, "model3");
+}
+
 std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 4;
     size_t n = 4;
@@ -246,9 +306,7 @@ std::vector<ADCGD> modelAtomic(std::vector<ADCGD>& x, size_t repeat, const std::
     CGAbstractAtomicFun<Base>& atomic0 = *atoms[0];
 
     // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    std::vector<ADCGD> ax(2), ay(1);
+    std::vector<ADCGD> y(m2), ax(2), ay(1);
 
     for (size_t i = 0; i < repeat; i++) {
         y[i * m] = cos(x[i * n]);
@@ -273,9 +331,7 @@ TEST_F(CppADCGPatternTest, Atomic) {
     size_t n = 2;
 
     // create atomic function
-    std::vector<AD<double> > y(1);
-    std::vector<AD<double> > x(2);
-
+    std::vector<AD<double> > y(1), x(2);
     checkpoint<double> atomicfun("atomicFunc", atomicFunction, x, y);
     std::vector<atomic_base<double>*> atomics(1);
     atomics[0] = &atomicfun;
@@ -294,9 +350,7 @@ std::vector<ADCGD> modelAtomic2(std::vector<ADCGD>& x, size_t repeat, const std:
     CGAbstractAtomicFun<Base>& atomic0 = *atoms[0];
 
     // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    std::vector<ADCGD> ax(2), ay(1);
+    std::vector<ADCGD> y(m2), ax(2), ay(1);
 
     for (size_t i = 0; i < repeat; i++) {
         ax[0] = x[i * n];
@@ -317,9 +371,7 @@ TEST_F(CppADCGPatternTest, Atomic2) {
     size_t n = 2;
 
     // create atomic function
-    std::vector<AD<double> > y(1);
-    std::vector<AD<double> > x(2);
-
+    std::vector<AD<double> > y(1), x(2);
     checkpoint<double> atomicfun("atomicFunc2", atomicFunction, x, y);
     std::vector<atomic_base<double>*> atomics(1);
     atomics[0] = &atomicfun;

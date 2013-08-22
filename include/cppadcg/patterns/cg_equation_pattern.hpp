@@ -212,7 +212,9 @@ namespace CppAD {
         bool comparePath(const CG<Base>& dep1,
                          const CG<Base>& dep2) {
             if (dep1.getCodeHandler() != dep2.getCodeHandler()) {
-                return false; // should it be an error?
+                if (dep1.getCodeHandler() != NULL && dep2.getCodeHandler() != NULL)
+                    throw CGException("Only one code handler allowed");
+                return false;
             }
 
             if (dep1.isParameter() && dep2.isParameter()) {
