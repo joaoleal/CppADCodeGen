@@ -29,16 +29,23 @@ namespace CppAD {
 
         template<class VectorSizeT>
         static inline IndexPattern* detect(const VectorSizeT& indexes);
+
+        IndexPattern* detect(const std::map<size_t, size_t>& indexes);
     };
 
     /**
-     * Linear pattern
+     * Linear pattern y = a * x + b
      */
     class LinearIndexPattern : public IndexPattern {
     protected:
+        // slope
         long a_;
+        // constant term
         long b_;
     public:
+
+        inline LinearIndexPattern() {
+        }
 
         inline LinearIndexPattern(long a, long b) :
             a_(a), b_(b) {
@@ -63,38 +70,27 @@ namespace CppAD {
     /**
      * Linear pattern followed by a constant index
      */
-    class Linear2SectionsIndexPattern : public IndexPattern {
+    class LinearSectionsIndexPattern : public IndexPattern {
     protected:
-        LinearIndexPattern linear1_;
-        LinearIndexPattern linear2_;
-        size_t itSplit_; // the start of the second linear section
+        /**
+         * maps the start of the linear section (first x) to the linear pattern
+         */
+        std::map<size_t, LinearIndexPattern> sections_;
     public:
 
-        inline Linear2SectionsIndexPattern(long a1, size_t b1,
-                                           long a2, size_t b2,
-                                           size_t itSplit) :
-            linear1_(a1, b1),
-            linear2_(a2, b2),
-            itSplit_(itSplit) {
+        inline LinearSectionsIndexPattern(const std::map<size_t, LinearIndexPattern>& sections) :
+            sections_(sections) {
         }
 
-        inline size_t getItrationSplit() const {
-            return itSplit_;
-        }
-
-        const LinearIndexPattern& getLinearSection1() const {
-            return linear1_;
-        }
-
-        const LinearIndexPattern& getLinearSection2() const {
-            return linear2_;
+        const std::map<size_t, LinearIndexPattern>& getLinearSections() const {
+            return sections_;
         }
 
         inline virtual IndexPatternType getType() const {
-            return LINEAR2SECTIONS;
+            return LINEARSECTIONS;
         }
 
-        inline virtual ~Linear2SectionsIndexPattern() {
+        inline virtual ~LinearSectionsIndexPattern() {
         }
     };
 
@@ -116,35 +112,85 @@ namespace CppAD {
     IndexPattern* IndexPattern::detect(const VectorSizeT& indexes) {
         assert(indexes.size() > 1);
 
-        long a = long(indexes[1]) - indexes[0];
-        long b = indexes[0];
-        size_t lastLinear = indexes.size();
-        for (size_t pos = 2; pos < indexes.size(); pos++) {
-            if (indexes[pos] != a * pos + b) {
-                lastLinear = pos;
-                break;
+        std::map<size_t, LinearIndexPattern> linearSections;
+        size_t xStart = 0;
+        while (xStart != indexes.size()) {
+            long a, b;
+            size_t lastLinear;
+            if (xStart + 1 == indexes.size()) {
+                a = 0;
+                b = indexes[xStart];
+                lastLinear = xStart + 1;
+            } else {
+                a = long(indexes[xStart + 1]) - indexes[xStart];
+                b = long(indexes[xStart]) - a * xStart;
+                lastLinear = indexes.size();
+                for (size_t x = xStart + 2; x < indexes.size(); x++) {
+                    if (indexes[x] != a * x + b) {
+                        lastLinear = x;
+                        break;
+                    }
+                }
             }
+
+            linearSections[xStart] = LinearIndexPattern(a, b);
+            xStart = lastLinear;
         }
 
-        if (lastLinear == indexes.size()) {
-            return new LinearIndexPattern(a, b);
+        if (linearSections.size() == 1) {
+            return new LinearIndexPattern(linearSections.begin()->second);
+        } else if (linearSections.size() <= 3 ||
+                (linearSections.size() < indexes.size() / 4 && linearSections.size() < 10)) {
+            return new LinearSectionsIndexPattern(linearSections);
+        } else {
+            throw CGException("Random index patterns not implemented yet!");
+            return new RandomIndexPattern();
         }
 
-        // maybe there are 2 linear sections
-        long a2 = long(indexes[lastLinear + 1]) - indexes[lastLinear];
-        long b2 = indexes[lastLinear] - a2 * lastLinear;
-        size_t lastLinear2 = indexes.size();
-        for (size_t pos = lastLinear + 2; pos < indexes.size(); pos++) {
-            if (indexes[pos] != a2 * pos + b2) {
-                lastLinear = pos;
-                break;
+    }
+
+    IndexPattern* IndexPattern::detect(const std::map<size_t, size_t>& indexes) {
+        assert(!indexes.empty());
+
+        std::map<size_t, LinearIndexPattern> linearSections;
+
+        std::map<size_t, size_t>::const_iterator pStart = indexes.begin();
+        while (pStart != indexes.end()) {
+            std::map<size_t, size_t>::const_iterator pNextSection = indexes.end();
+            std::map<size_t, size_t>::const_iterator p1 = pStart;
+            ++p1;
+            long a, b;
+            if (p1 == indexes.end()) {
+                a = 0;
+                b = pStart->second;
+                pNextSection = p1;
+            } else {
+                a = long(p1->first) - pStart->first;
+                b = long(pStart->second) - a * pStart->first;
+
+                for (std::map<size_t, size_t>::const_iterator itp = p1; itp != indexes.end(); ++itp) {
+                    size_t x = itp->first;
+                    size_t y = itp->second;
+                    if (y != a * x + b) {
+                        pNextSection = itp;
+                        break;
+                    }
+                }
             }
-        }
-        if (lastLinear2 == indexes.size()) {
-            return new Linear2SectionsIndexPattern(a, b, a2, b2, lastLinear);
+
+            linearSections[pStart->first] = LinearIndexPattern(a, b);
+            pStart = pNextSection;
         }
 
-        return new RandomIndexPattern();
+        if (linearSections.size() == 1) {
+            return new LinearIndexPattern(linearSections.begin()->second);
+        } else if (linearSections.size() <= 3 ||
+                (linearSections.size() < indexes.size() / 4 && linearSections.size() < 10)) {
+            return new LinearSectionsIndexPattern(linearSections);
+        } else {
+            throw CGException("Random index patterns not implemented yet!");
+            return new RandomIndexPattern();
+        }
     }
 
 }

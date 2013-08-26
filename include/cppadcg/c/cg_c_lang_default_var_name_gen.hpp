@@ -131,7 +131,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            _ss << _depName << "[" << createIndexPattern(ip) << "]";
+            _ss << _depName << "[" << createIndexPattern(ip, "j") << "]";
 
             return _ss.str();
         }
@@ -142,7 +142,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            _ss << _indepName << "[" << createIndexPattern(ip) << "]"; //(id - 1)
+            _ss << _indepName << "[" << createIndexPattern(ip, "j") << "]";
 
             return _ss.str();
         }
@@ -164,26 +164,40 @@ namespace CppAD {
         /***********************************************************************
          * 
          **********************************************************************/
-        static inline std::string createIndexPattern(const IndexPattern& ip) {
+        static inline std::string createIndexPattern(const IndexPattern& ip,
+                                                     const std::string& indexName) {
             std::stringstream ss;
             switch (ip.getType()) {
                 case LINEAR:
                 {
                     const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
-                    return createLinearIndexPattern(lip);
+                    return createLinearIndexPattern(lip, indexName);
                 }
-                case LINEAR2SECTIONS:
+                case LINEARSECTIONS:
                 {
-                    const Linear2SectionsIndexPattern* lip = static_cast<const Linear2SectionsIndexPattern*> (&ip);
-                    ss << "(j<" << lip->getItrationSplit() << ")? "
-                            << createLinearIndexPattern(lip->getLinearSection1()) << ": "
-                            << createLinearIndexPattern(lip->getLinearSection2());
+                    const LinearSectionsIndexPattern* lip = static_cast<const LinearSectionsIndexPattern*> (&ip);
+                    const std::map<size_t, LinearIndexPattern>& sections = lip->getLinearSections();
+                    size_t sSize = sections.size();
+                    assert(sSize > 1);
+
+                    std::map<size_t, LinearIndexPattern>::const_iterator its = sections.begin();
+                    const LinearIndexPattern* lp = NULL;
+                    for (size_t s = 0; s < sSize - 1; s++) {
+                        lp = &its->second;
+                        ++its;
+                        size_t xStart = its->first;
+
+                        ss << "(" << indexName << "<" << xStart << ")? "
+                                << createLinearIndexPattern(*lp, indexName) << ": ";
+                    }
+                    ss << createLinearIndexPattern(its->second, indexName);
+
                     return ss.str();
                 }
 
                     //return ss.str();
                 case RANDOM:
-
+                    throw CGException("Not implemented yet");
                     //return ss.str();
                 default:
                     assert(false); // should never reach this
@@ -191,13 +205,14 @@ namespace CppAD {
             }
         }
 
-        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip) {
+        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip,
+                                                           const std::string& indexName) {
             std::stringstream ss;
             if (lip.getLinearSlope() > 0) {
                 if (lip.getLinearSlope() != 1) {
                     ss << lip.getLinearSlope() << " * ";
                 }
-                ss << "j";
+                ss << indexName;
             }
 
             if (lip.getLinearConstantTerm() != 0) {

@@ -137,9 +137,9 @@ namespace CppAD {
                 _ss.clear();
                 _ss.str("");
                 if (id < _minLevel2ID) {
-                    _ss << _level1Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip) << "]"; // id - _minLevel1ID
+                    _ss << _level1Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
                 } else {
-                    _ss << _level2Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip) << "]"; // id - _minLevel2ID
+                    _ss << _level2Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
                 }
                 return _ss.str();
             }

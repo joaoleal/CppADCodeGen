@@ -307,7 +307,7 @@ namespace CppAD {
      */
     enum IndexPatternType {
         LINEAR,
-        LINEAR2SECTIONS,
+        LINEARSECTIONS,
         RANDOM
     };
 }

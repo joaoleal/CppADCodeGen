@@ -373,6 +373,21 @@ namespace CppAD {
             throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
         }
 
+        std::vector<IndexedDependentLoopInfo<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
+        garbageCollection.reserve(nnz);
+
+        /**
+         * Generate index patterns for the hessian elements resulting from loops
+         */
+        // loop -> tape independent 1 -> orig independent(temporaries only) 1 ->
+        //      -> tape independent 2 -> orig independent(temporaries only) 2 -> iteration = position
+        map<size_t, map<size_t, map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > > > > hessIndexPatterns;
+
+        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
+        // loop -> loop atomic evaluation -> results
+        map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
+
+#if 0
         /**
          * Determine the Hessian pattern for the equations in the loop
          */
@@ -400,23 +415,7 @@ namespace CppAD {
             loopHessPattern = _fun->RevSparseHes(n, s, false);
         }
 
-        std::vector<IndexedDependentLoopInfo<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
-        garbageCollection.reserve(nnz);
-
-        /**
-         * Generate index patterns for the hessian elements resulting from loops
-         */
-        // loop -> tape independent 1 -> orig independent(temporaries only) 1 ->
-        //      -> tape independent 2 -> orig independent(temporaries only) 2 -> iteration = position
-        map<size_t, map<size_t, map<size_t, map<size_t, IndexedDependentLoopInfo<Base>* > > > > hessIndexPatterns;
-
-        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
-        // loop -> loop atomic evaluation -> results
-        map<LoopAtomicFun<Base>*, map<OperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
-
-#if 0
-        printSparsityPattern(_hessSparsity.rows, _hessSparsity.cols,
-                             "hessian", _fun->Domain());
+        printSparsityPattern(loopHessPattern, "hessian");
 #endif
 
         for (size_t e = 0; e < nnz; e++) {
@@ -424,14 +423,13 @@ namespace CppAD {
             if (IdenticalZero(hessVal))
                 continue;
 
-            // loop evaluation -> results
+            // loop evaluation -> result argument index -> results
             map<OperationNode<Base>*, map<size_t, OperationNode<Base>*> > evals;
             findLoopEvaluations(handler, loop, hessVal.getOperationNode(), evals); ////////////
 
             if (evals.empty())
                 continue;
 
-            //size_t iteration = iterationCount;
             if (evals.size() > 1 || evals.begin()->second.size() > 1) {
                 throw CGException("Unable to generate expression for an hessian element which "
                                   "is either associated with multiple indexed independents "
@@ -473,20 +471,24 @@ namespace CppAD {
 #ifndef NDEBUG
             {
                 OperationNode<Base>* loopEvalNode = evals.begin()->first;
-
                 CGOpCode loopOpType = loopEvalNode->getOperationType();
                 size_t loopId = loopEvalNode->getInfo()[0];
-                //size_t p = loopNode->getInfo()[3];
-                assert(loopOpType == CGLoopReverseOp && loopEvalNode->getInfo()[3] == 1);
-
+                size_t p = loopEvalNode->getInfo()[3];
+                assert(loopOpType == CGLoopReverseOp && p == 1);
                 assert(loop == handler.getLoop(loopId));
             }
 #endif
             size_t j1 = _hessSparsity.rows[e];
             size_t j2 = _hessSparsity.cols[e];
 
+            /**
+             * If tapeJ1s.size()>1 then the independent is used by several
+             * temporary variables. We know that it is NOT a mix of 
+             * temporaries and indexed independents because this situation
+             * is checked before.
+             */
             set<size_t> tapeJ1s = loop->getIndependentTapeIndexes(j1);
-            assert(tapeJ1s.size() >= 1); // if >1 then the independent is used by several temporary variables
+            assert(tapeJ1s.size() >= 1);
 
             bool isTemporary1 = loop->isTemporary(*tapeJ1s.begin());
             size_t jRef1 = isTemporary1 ? j1 : 0;
@@ -514,7 +516,7 @@ namespace CppAD {
                 origHessEl = &garbageCollection.back();
                 origHessEl->indexes.resize(loop->getIterationCount(), nnz);
                 origHessEl->origVals.resize(loop->getIterationCount());
-                ref[jRef1] = origHessEl;
+                ref[jRef2] = origHessEl;
                 dependentIndexes[loop].push_back(origHessEl);
             }
 

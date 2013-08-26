@@ -121,7 +121,7 @@ namespace CppAD {
 
             _ss.clear();
             _ss.str("");
-            _ss << _multName << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip) << "]";
+            _ss << _multName << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
             return _ss.str();
         }
 

@@ -762,7 +762,8 @@ namespace CppAD {
             }
 
             if (allParameters) {
-                return atomicReverse(p, tx, ty, px, py);
+                vector<std::set<size_t> > pxIterations(px.size());
+                return atomicReverse(p, tx, ty, px, pxIterations, py);
             }
 
             bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
@@ -774,7 +775,8 @@ namespace CppAD {
             }
 
             vector<CGB> pxLoop(px.size());
-            if (!atomicReverse(p, tx, ty, pxLoop, py)) {
+            vector<std::set<size_t> > pxIterations(px.size());
+            if (!atomicReverse(p, tx, ty, pxLoop, pxIterations, py)) {
                 return false;
             }
 
@@ -821,13 +823,17 @@ namespace CppAD {
                 }
             }
 
-            opInfo.resize(2);
             args.resize(1);
             args[0] = Argument<Base>(*atomicOp);
             for (size_t j = 0; j < px.size(); j++) {
                 if (!pxLoop[j].isParameter() || !IdenticalZero(pxLoop[j].getValue())) {
+                    opInfo.resize(2);
                     opInfo[0] = j; //atomic index
                     opInfo[1] = tapeIndex[j]; //tape index
+                    // iterations
+                    for (std::set<size_t>::const_iterator itIt = pxIterations[j].begin(); itIt != pxIterations[j].end(); ++itIt)
+                        opInfo.push_back(*itIt);
+
                     px[j] = handler->createCG(new OperationNode<Base>(CGLoopAtomicResultOp, opInfo, args));
                     if (pxLoop[j].isValueDefined()) {
                         px[j].setValue(pxLoop[j].getValue());
@@ -1220,7 +1226,10 @@ namespace CppAD {
                            const vector<CGB>& tx,
                            const vector<CGB>& ty,
                            vector<CGB>& px,
+                           vector<std::set<size_t> >& pxIterations,
                            const vector<CGB>& py) {
+            assert(pxIterations.size() == px.size());
+
             if (p == 0) {
                 size_t nTape = fun_->Domain();
 
@@ -1261,14 +1270,17 @@ namespace CppAD {
                     for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
                         const LoopPosition& pos = indexedIndepIndexes_[j][it];
                         px[pos.atomic] += pxTape[pos.tape];
+                        pxIterations[pos.atomic].insert(it);
                     }
                     for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
                         const LoopPosition& pos = nonIndexedIndepIndexes_[j];
                         px[pos.atomic] += pxTape[pos.tape];
+                        pxIterations[pos.atomic].insert(it);
                     }
                     for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
                         const LoopPositionTmp& pos = temporaryIndependents_[j];
                         px[pos.atomic] += pxTape[pos.tape];
+                        pxIterations[pos.atomic].insert(it);
                     }
                 }
 
@@ -1327,16 +1339,22 @@ namespace CppAD {
                         const LoopPosition& pos = indexedIndepIndexes_[j][it];
                         px[pos.atomic * 2] += pxTape[pos.tape * 2];
                         px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
+                        pxIterations[pos.atomic * 2].insert(it);
+                        pxIterations[pos.atomic * 2 + 1].insert(it);
                     }
                     for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
                         const LoopPosition& pos = nonIndexedIndepIndexes_[j];
                         px[pos.atomic * 2] += pxTape[pos.tape * 2];
                         px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
+                        pxIterations[pos.atomic * 2].insert(it);
+                        pxIterations[pos.atomic * 2 + 1].insert(it);
                     }
                     for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
                         const LoopPositionTmp& pos = temporaryIndependents_[j];
                         px[pos.atomic * 2] += pxTape[pos.tape * 2];
                         px[pos.atomic * 2 + 1] += pxTape[pos.tape * 2 + 1];
+                        pxIterations[pos.atomic * 2].insert(it);
+                        pxIterations[pos.atomic * 2 + 1].insert(it);
                     }
                 }
 
