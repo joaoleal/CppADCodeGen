@@ -126,23 +126,21 @@ namespace CppAD {
         }
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                     const LoopAtomicFun<Base>& loop,
                                                      const IndexPattern& ip) {
             _ss.clear();
             _ss.str("");
 
-            _ss << _depName << "[" << createIndexPattern(ip, "j") << "]";
+            _ss << _depName << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
 
             return _ss.str();
         }
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
-                                                       const LoopAtomicFun<Base>& loop,
                                                        const IndexPattern& ip) {
             _ss.clear();
             _ss.str("");
 
-            _ss << _indepName << "[" << createIndexPattern(ip, "j") << "]";
+            _ss << _indepName << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
 
             return _ss.str();
         }
@@ -159,68 +157,6 @@ namespace CppAD {
         }
 
         inline virtual ~CLangDefaultVariableNameGenerator() {
-        }
-
-        /***********************************************************************
-         * 
-         **********************************************************************/
-        static inline std::string createIndexPattern(const IndexPattern& ip,
-                                                     const std::string& indexName) {
-            std::stringstream ss;
-            switch (ip.getType()) {
-                case LINEAR:
-                {
-                    const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
-                    return createLinearIndexPattern(lip, indexName);
-                }
-                case LINEARSECTIONS:
-                {
-                    const LinearSectionsIndexPattern* lip = static_cast<const LinearSectionsIndexPattern*> (&ip);
-                    const std::map<size_t, LinearIndexPattern>& sections = lip->getLinearSections();
-                    size_t sSize = sections.size();
-                    assert(sSize > 1);
-
-                    std::map<size_t, LinearIndexPattern>::const_iterator its = sections.begin();
-                    const LinearIndexPattern* lp = NULL;
-                    for (size_t s = 0; s < sSize - 1; s++) {
-                        lp = &its->second;
-                        ++its;
-                        size_t xStart = its->first;
-
-                        ss << "(" << indexName << "<" << xStart << ")? "
-                                << createLinearIndexPattern(*lp, indexName) << ": ";
-                    }
-                    ss << createLinearIndexPattern(its->second, indexName);
-
-                    return ss.str();
-                }
-
-                    //return ss.str();
-                case RANDOM:
-                    throw CGException("Not implemented yet");
-                    //return ss.str();
-                default:
-                    assert(false); // should never reach this
-                    return "";
-            }
-        }
-
-        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip,
-                                                           const std::string& indexName) {
-            std::stringstream ss;
-            if (lip.getLinearSlope() > 0) {
-                if (lip.getLinearSlope() != 1) {
-                    ss << lip.getLinearSlope() << " * ";
-                }
-                ss << indexName;
-            }
-
-            if (lip.getLinearConstantTerm() != 0) {
-                if (lip.getLinearSlope() > 0)
-                    ss << " + ";
-                ss << lip.getLinearConstantTerm();
-            }
-            return ss.str();
         }
 
     };

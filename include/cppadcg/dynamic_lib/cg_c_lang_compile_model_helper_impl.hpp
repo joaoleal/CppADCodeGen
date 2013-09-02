@@ -1348,6 +1348,15 @@ namespace CppAD {
             elements[evalRows[e]].push_back(evalCols[e]);
         }
 
+
+        if (_funLoops == _fun) {
+            /**
+             * with loops
+             */
+            prepareSparseReverseTwoWithLoops(sources, elements);
+            return;
+        }
+
         std::vector<CGBase> tx1v(n, Base(0));
 
         /**

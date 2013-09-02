@@ -186,7 +186,7 @@ add_cppadcg_test(mult_sparsity_pattern.cpp)
 ADD_SUBDIRECTORY(operations)
 ADD_SUBDIRECTORY(models)
 ADD_SUBDIRECTORY(dynamiclib)
-ADD_SUBDIRECTORY(dep_pattern_matcher)
+ADD_SUBDIRECTORY(patterns)
 ADD_SUBDIRECTORY(solve)
 ADD_SUBDIRECTORY(dae_index_reduction)
 

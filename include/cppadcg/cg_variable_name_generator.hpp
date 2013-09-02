@@ -74,11 +74,9 @@ namespace CppAD {
         virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) = 0;
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                     const LoopAtomicFun<Base>& loop,
                                                      const IndexPattern& ip) = 0;
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& var,
-                                                       const LoopAtomicFun<Base>& loop,
                                                        const IndexPattern& ip) = 0;
 
         virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) = 0;

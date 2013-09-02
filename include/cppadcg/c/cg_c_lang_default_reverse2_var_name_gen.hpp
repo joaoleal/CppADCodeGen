@@ -122,24 +122,22 @@ namespace CppAD {
         }
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                     const LoopAtomicFun<Base>& loop,
                                                      const IndexPattern& ip) {
-            return _nameGen->generateIndexedDependent(var, loop, ip);
+            return _nameGen->generateIndexedDependent(var, ip);
         }
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
-                                                       const LoopAtomicFun<Base>& loop,
                                                        const IndexPattern& ip) {
-            size_t id = independent.getVariableID();
-            if (id < _minLevel1ID) {
-                return _nameGen->generateIndexedIndependent(independent, loop, ip);
+            size_t varType = independent.getInfo()[0];
+            if (varType == 0) {
+                return _nameGen->generateIndexedIndependent(independent, ip);
             } else {
                 _ss.clear();
                 _ss.str("");
-                if (id < _minLevel2ID) {
-                    _ss << _level1Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
+                if (varType == 1) {
+                    _ss << _level1Name << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
                 } else {
-                    _ss << _level2Name << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
+                    _ss << _level2Name << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
                 }
                 return _ss.str();
             }

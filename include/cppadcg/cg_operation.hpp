@@ -56,6 +56,8 @@ namespace CppAD {
         CGTanhOp, //  tanh(variable)
         CGTanOp, //  tan(variable)
         CGUnMinusOp, // -(a)
+        CGIndexOp, // an integer index
+        CGIndexAssignOp, // assigment of an integer index to an index pattern expression
         CGLoopForwardOp, // for() { forward(q, p, vx, vy, tx, ty) }
         CGLoopReverseOp, // for() { reverse(p, tx, ty, px, py) }
         CGLoopAtomicResultOp, // output from a loop atomic function evaluation
@@ -160,6 +162,12 @@ namespace CppAD {
                 break;
             case CGUnMinusOp:
                 os << "-(a)";
+                break;
+            case CGIndexOp:
+                os << "index";
+                break;
+            case CGIndexAssignOp:
+                os << "index = expression()";
                 break;
             case CGLoopForwardOp:
                 os << "for() { forward(q, p, vx, vy, tx, ty) }";

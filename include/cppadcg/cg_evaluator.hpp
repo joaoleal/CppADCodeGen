@@ -409,34 +409,26 @@ namespace CppAD {
                 throw CGException("Evaluator can only handle zero forward mode for atomic loop functions");
             }
 
-            const std::vector<size_t>& info = node.getInfo();
+            const LoopEvaluationOperationNode<Base>& loopForNode = static_cast<LoopEvaluationOperationNode<Base>&> (node);
             const std::vector<Argument<Base> >& args = node.getArguments();
             CPPADCG_ASSERT_KNOWN(args.size() > 0, "Invalid number of arguments for atomic forward mode");
-            CPPADCG_ASSERT_KNOWN(info.size() == 6, "Invalid number of information data for atomic forward mode");
 
-            // find the loop atomic function
-            size_t loopId = info[0];
-            //size_t nFull = info[1];
-            assert(args.size() == info[1]);
-            size_t mFull = info[2];
-            size_t p = info[3];
+            assert(args.size() == loopForNode.getLoopAtomicFun().getLoopIndependentCount());
+            size_t mFull = loopForNode.getLoopAtomicFun().getLoopDependentCount();
+            size_t p = loopForNode.getOrder();
 
-            typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator itaf = loopFunctions_.find(loopId);
+            typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator itaf = loopFunctions_.find(loopForNode.getLoopAtomicFun().getLoopId());
             atomic_base<BaseOut>* atomicFunction = NULL;
             if (itaf != loopFunctions_.end()) {
                 atomicFunction = itaf->second;
             }
-
+            
             if (atomicFunction == NULL) {
-                std::stringstream ss;
-                ss << "No atomic loop function defined in the evaluator for ";
-                const std::string* atomName = handler_.getLoopName(loopId);
-                if (atomName != NULL) {
-                    ss << "'" << *atomName << "'";
-                } else
-                    ss << "id '" << loopId << "'";
-                throw CGException(ss.str());
-            }
+                    std::stringstream ss;
+                    ss << "No atomic loop function defined in the evaluator for "
+                            "'" << loopForNode.getLoopAtomicFun().afun_name() << "'";
+                    throw CGException(ss.str());
+                }
 
             if (p != 0) {
                 throw CGException("Evaluator can only handle zero forward mode for atomic loop functions");

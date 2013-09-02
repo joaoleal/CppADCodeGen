@@ -106,22 +106,20 @@ namespace CppAD {
         }
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                     const LoopAtomicFun<Base>& loop,
                                                      const IndexPattern& ip) {
-            return _nameGen->generateIndexedDependent(var, loop, ip);
+            return _nameGen->generateIndexedDependent(var, ip);
         }
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& indexedIndep,
-                                                       const LoopAtomicFun<Base>& loop,
                                                        const IndexPattern& ip) {
             bool isX = indexedIndep.getInfo()[0] == 0;
             if (isX) {
-                return _nameGen->generateIndexedIndependent(indexedIndep, loop, ip);
+                return _nameGen->generateIndexedIndependent(indexedIndep, ip);
             }
 
             _ss.clear();
             _ss.str("");
-            _ss << _multName << "[" << CLangDefaultVariableNameGenerator<Base>::createIndexPattern(ip, "j") << "]";
+            _ss << _multName << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
             return _ss.str();
         }
 

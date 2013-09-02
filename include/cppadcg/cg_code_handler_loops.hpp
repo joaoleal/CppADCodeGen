@@ -56,6 +56,20 @@ namespace CppAD {
         }
         _loopDependentIndexPatternManaged.push_back(pattern);
     }
+
+    template<class Base>
+    size_t CodeHandler<Base>::addLoopIndependentIndexPattern(const IndexPattern& pattern, size_t hint) {
+        size_t size = _loopIndependentIndexPatterns.size();
+        if (hint < size && _loopIndependentIndexPatterns[hint] == &pattern) {
+            return hint;
+        }
+        if (_loopIndependentIndexPatterns.capacity() == size) {
+            _loopIndependentIndexPatterns.reserve((size * 3) / 2 + 1);
+        }
+        _loopIndependentIndexPatterns.push_back(&pattern);
+
+        return size;
+    }
 }
 
 #endif

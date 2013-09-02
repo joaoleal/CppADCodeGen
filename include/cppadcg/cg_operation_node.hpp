@@ -130,19 +130,6 @@ namespace CppAD {
             name_(NULL) {
         }
 
-        OperationNode(const OperationNode& orig) :
-            operation_(orig.operation_),
-            info_(orig.info_),
-            arguments_(orig.arguments_),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(orig.last_usage_order_),
-            color_(orig.color_),
-            name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
-        }
-
         inline void makeAlias(const Argument<Base>& other) {
             operation_ = CGAliasOp;
             arguments_.resize(1);
@@ -280,6 +267,21 @@ namespace CppAD {
 
         inline virtual ~OperationNode() {
             delete name_;
+        }
+
+    private:
+
+        OperationNode(const OperationNode& orig) :
+            operation_(orig.operation_),
+            info_(orig.info_),
+            arguments_(orig.arguments_),
+            var_id_(0),
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(orig.last_usage_order_),
+            color_(orig.color_),
+            name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
         }
 
         friend class CodeHandler<Base>;

@@ -48,8 +48,11 @@ namespace CppAD {
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopAtomicFun<Base>*> _loops;
         //
+        std::set<const Index*> _indexes;
+        //
         std::vector<const IndexPattern*> _loopDependentIndexPatterns;
         std::vector<const IndexPattern*> _loopDependentIndexPatternManaged;
+        std::vector<const IndexPattern*> _loopIndependentIndexPatterns;
         /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
@@ -103,10 +106,14 @@ namespace CppAD {
 
         inline void makeVariables(std::vector<AD<CG<Base> > >& variables) {
             for (typename std::vector<AD<CG<Base> > >::iterator it = variables.begin(); it != variables.end(); ++it) {
-                CG<Base> v;
-                makeVariable(v); // make it a codegen variable
-                *it = v; // variable[i] id now the same as v
+                makeVariable(*it);
             }
+        }
+
+        inline void makeVariable(AD<CG<Base> >& variable) {
+            CG<Base> v;
+            makeVariable(v); // make it a codegen variable
+            variable = v; // variable id now the same as v
         }
 
         inline void makeVariable(CG<Base>& variable) {
@@ -256,6 +263,7 @@ namespace CppAD {
             _idAtomicCount = 1;
             _atomicFunctionsOrder = &atomicFunctions;
             _atomicFunctionsSet.clear();
+            _indexes.clear();
             for (size_t i = 0; i < atomicFunctions.size(); i++) {
                 _atomicFunctionsSet.insert(atomicFunctions[i]);
             }
@@ -343,8 +351,8 @@ namespace CppAD {
                                               nameGen,
                                               atomicFunctionId2Index, atomicFunctionId2Name,
                                               _reuseIDs,
-                                              _loops,
-                                              _loopDependentIndexPatterns);
+                                              _indexes,
+                                              _loopDependentIndexPatterns, _loopIndependentIndexPatterns);
             lang.generateSourceCode(out, info);
 
             _atomicFunctionsSet.clear();
@@ -379,7 +387,9 @@ namespace CppAD {
             _idAtomicCount = 1;
 
             _loops.clear();
+            _indexes.clear();
             _loopDependentIndexPatterns.clear();
+            _loopIndependentIndexPatterns.clear();
 
             std::vector<const IndexPattern*>::const_iterator itip;
             for (itip = _loopDependentIndexPatternManaged.begin(); itip != _loopDependentIndexPatternManaged.end(); ++itip) {
@@ -412,6 +422,8 @@ namespace CppAD {
         size_t addLoopDependentIndexPattern(const IndexPattern& jacPattern);
 
         void manageLoopDependentIndexPattern(const IndexPattern* pattern);
+
+        size_t addLoopIndependentIndexPattern(const IndexPattern& pattern, size_t hint);
 
         /***********************************************************************
          *                   Operation graph manipulation
@@ -516,6 +528,14 @@ namespace CppAD {
                     if (it->getOperation() != NULL) {
                         OperationNode<Base>& arg = *it->getOperation();
                         markCodeBlockUsed(arg);
+                    }
+                }
+
+                if (code.getOperationType() == CGIndexOp) {
+                    const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
+                    // indexes that don't depend on a loop start or an index assignment are declared elsewhere
+                    if (inode.getArguments().size() > 0) {
+                        _indexes.insert(&inode.getIndex());
                     }
                 }
             }
@@ -644,7 +664,7 @@ namespace CppAD {
             }
 
             // where temporary variables can be released
-            std::vector<std::vector<OperationNode<Base>* > > tempVarRelease(_variableOrder.size());
+            vector<std::vector<OperationNode<Base>* > > tempVarRelease(_variableOrder.size());
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 OperationNode<Base>* var = _variableOrder[i];
                 if (isTemporary(*var) || isTemporaryArray(*var)) {
@@ -925,9 +945,12 @@ namespace CppAD {
         }
 
         inline bool isTemporary(const OperationNode<Base>& arg) const {
-            return arg.getOperationType() != CGArrayCreationOp &&
-                    arg.getOperationType() != CGAtomicForwardOp &&
-                    arg.getOperationType() != CGAtomicReverseOp &&
+            CGOpCode op = arg.getOperationType();
+            return op != CGArrayCreationOp &&
+                    op != CGAtomicForwardOp &&
+                    op != CGAtomicReverseOp &&
+                    op != CGIndexOp &&
+                    op != CGIndexAssignOp &&
                     arg.getVariableID() >= _minTemporaryVarID;
         }
 

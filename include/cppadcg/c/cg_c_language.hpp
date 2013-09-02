@@ -88,9 +88,11 @@ namespace CppAD {
         std::map<std::string, std::string>* _sources;
         // the values in the temporary array
         std::vector<const Argument<Base>*> _tmpArrayValues;
-        const std::map<size_t, LoopAtomicFun<Base>*>* _loops;
+        const std::set<const Index*>* _indexes;
         const std::vector<const IndexPattern*>* _loopDependentIndexPatterns;
-        LoopAtomicFun<Base>* _currentLoop;
+        const std::vector<const IndexPattern*>* _loopIndependentIndexPatterns;
+        std::vector<const LoopNodeInfo<Base>*> _currentLoopsUserDefined;
+        std::vector<const LoopNodeInfo<Base>*> _currentLoops;
     private:
         std::string defaultFuncArgDcl_;
         std::string localFuncArgDcl_;
@@ -118,9 +120,9 @@ namespace CppAD {
             _ignoreZeroDepAssign(false),
             _maxAssigmentsPerFunction(0),
             _sources(NULL),
-            _loops(NULL),
+            _indexes(NULL),
             _loopDependentIndexPatterns(NULL),
-            _currentLoop(NULL) {
+            _loopIndependentIndexPatterns(NULL) {
         }
 
         inline const std::string& getArgumentIn() const {
@@ -170,6 +172,15 @@ namespace CppAD {
         virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction, std::map<std::string, std::string>* sources) {
             _maxAssigmentsPerFunction = maxAssigmentsPerFunction;
             _sources = sources;
+        }
+
+        virtual void setCurrentLoop(LoopAtomicFun<Base>* loop) {
+            if (loop == NULL) {
+                _currentLoopsUserDefined.clear();
+            } else {
+                _currentLoopsUserDefined.resize(1);
+                _currentLoopsUserDefined[0] = loop;
+            }
         }
 
         virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false) {
@@ -226,9 +237,7 @@ namespace CppAD {
             }
 
             // loop indexes
-            if (_loops->size() > 0) {
-                _ss << _spaces << "unsigned long j;\n";
-            }
+            createIndexDeclaration();
 
             // clean-up
             std::string code = _ss.str();
@@ -281,6 +290,8 @@ namespace CppAD {
             return _inArgName + ", " + _outArgName + ", " + _atomicArgName;
         }
 
+        inline void createIndexDeclaration();
+
         CPPAD_CG_C_LANG_FUNCNAME(abs)
         CPPAD_CG_C_LANG_FUNCNAME(acos)
         CPPAD_CG_C_LANG_FUNCNAME(asin)
@@ -299,6 +310,15 @@ namespace CppAD {
         inline virtual ~CLanguage() {
         }
 
+        /***********************************************************************
+         * index patterns
+         **********************************************************************/
+        static inline std::string createIndexPattern(const IndexPattern& ip);
+
+        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip);
+
+        static inline std::string createLinear2IndexPattern(const Linear2IndexPattern& lip);
+
     protected:
 
         virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) {
@@ -314,7 +334,7 @@ namespace CppAD {
             localFuncArgDcl_ = "";
             localFuncArgs_ = "";
             auxArrayName_ = "";
-            _currentLoop = NULL;
+            _currentLoops = _currentLoopsUserDefined;
 
             // save some info
             _independentSize = info.independent.size();
@@ -327,8 +347,9 @@ namespace CppAD {
             const std::vector<OperationNode<Base>*>& variableOrder = info.variableOrder;
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
-            _loops = &info.loops;
+            _indexes = &info.indexes;
             _loopDependentIndexPatterns = &info.loopDependentIndexPatterns;
+            _loopIndependentIndexPatterns = &info.loopIndependentIndexPatterns;
 
             /**
              * generate variable names
@@ -361,7 +382,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(tmpArg.size() == 2,
                                  "There must be two temporary variables");
 
-            if (!_functionName.empty()) {
+            if (createFunction) {
                 defaultFuncArgDcl_ = generateDefaultFunctionArgumentsDcl();
                 localFuncArgDcl_ = defaultFuncArgDcl_ + ", " + argumentDeclaration(tmpArg[0]) + ", " + argumentDeclaration(tmpArg[1]);
                 localFuncArgs_ = generateDefaultFunctionArguments() + ", " + tmpArg[0].name + ", " + tmpArg[1].name;
@@ -418,22 +439,25 @@ namespace CppAD {
                     }
                 }
 
+                /**
+                 * Source generation magic!
+                 */
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     // check if a new function should start
-                    if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoop == NULL) {
+                    if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoops.empty()) {
                         assignCount = 0;
                         saveLocalFunction(localFuncNames);
                     }
 
                     OperationNode<Base>& op = **it;
 
-                    bool createsVar = directlyAssignsVariable(op);
-                    if (createsVar) {
+                    bool createsVar = directlyAssignsVariable(op); // do we need to do the assigment here?
+                    if (!createsVar) {
                         printAssigmentStart(op);
                     }
                     printExpressionNoVarCheck(op);
-                    if (createsVar) {
+                    if (!createsVar) {
                         printAssigmentEnd(op);
                     }
 
@@ -598,10 +622,10 @@ namespace CppAD {
                 _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
                 _ss << _spaces << "unsigned long i;\n";
             }
-            // loop index
-            if (_loops->size() > 0) {
-                _ss << _spaces << "unsigned long j;\n";
-            }
+
+            // loop indexes
+            createIndexDeclaration();
+
             _nameGen->prepareCustomFunctionVariables(_ss);
             _ss << _code.str();
             _nameGen->finalizeCustomFunctionVariables(_ss);
@@ -622,7 +646,7 @@ namespace CppAD {
                     return opArg != NULL && opArg->getOperationType() != CGLoopIndexedIndepOp
                             && opArg->getOperationType() != CGInvOp;
                 } else {
-                    return op != CGArrayElementOp;
+                    return op != CGArrayElementOp && op != CGIndexOp;
                 }
             } else {
                 return op == CGArrayCreationOp ||
@@ -634,7 +658,8 @@ namespace CppAD {
                         op == CGComOpGe ||
                         op == CGComOpGt ||
                         op == CGComOpNe ||
-                        op == CGLoopIndexedDepOp;
+                        op == CGLoopIndexedDepOp ||
+                        op == CGIndexAssignOp;
             }
         }
 
@@ -644,19 +669,29 @@ namespace CppAD {
                     op != CGAtomicForwardOp &&
                     op != CGAtomicReverseOp &&
                     op != CGLoopStartOp &&
-                    op != CGLoopEndOp);
+                    op != CGLoopEndOp &&
+                    op != CGIndexOp &&
+                    op != CGIndexAssignOp);
         }
 
+        /**
+         * Whether or not this operation assign its expression to a variable by
+         * itself.
+         * 
+         * @param var the operation node
+         * @return 
+         */
         virtual bool directlyAssignsVariable(const OperationNode<Base>& var) const {
             CGOpCode op = var.getOperationType();
-            return !isCondAssign(op) &&
-                    op != CGArrayCreationOp &&
-                    op != CGAtomicForwardOp &&
-                    op != CGAtomicReverseOp &&
-                    op != CGLoopForwardOp &&
-                    op != CGLoopReverseOp &&
-                    op != CGLoopStartOp &&
-                    op != CGLoopEndOp;
+            return isCondAssign(op) ||
+                    op == CGArrayCreationOp ||
+                    op == CGAtomicForwardOp ||
+                    op == CGAtomicReverseOp ||
+                    op == CGLoopForwardOp ||
+                    op == CGLoopReverseOp ||
+                    op == CGLoopStartOp ||
+                    op == CGLoopEndOp ||
+                    op == CGIndexAssignOp;
         }
 
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const {
@@ -672,27 +707,23 @@ namespace CppAD {
             assert(op != CGLoopReverseOp);
             assert(op != CGLoopStartOp);
             assert(op != CGLoopEndOp);
+            assert(op != CGIndexOp);
+            assert(op != CGIndexAssignOp);
 
             if (var.getName() == NULL) {
                 if (op == CGArrayCreationOp) {
                     var.setName(_nameGen->generateTemporaryArray(var));
                 } else if (op == CGLoopIndexedDepOp) {
-                    assert(_currentLoop != NULL);
+                    assert(!_currentLoops.empty());
                     size_t pos = var.getInfo()[0];
                     const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
-                    var.setName(_nameGen->generateIndexedDependent(var, *_currentLoop, *ip));
-                } else if (op == CGLoopIndexedIndepOp) {
-                    assert(_currentLoop != NULL);
-                    bool isX = var.getInfo()[0] == 0;
-                    size_t ij = var.getInfo()[1];
+                    var.setName(_nameGen->generateIndexedDependent(var, *ip));
 
-                    const IndexPattern* ip;
-                    if (isX) {
-                        ip = _currentLoop->getIndependentIndexPatterns()[ij];
-                    } else {
-                        ip = _currentLoop->getDependentIndexPatterns()[ij];
-                    }
-                    var.setName(_nameGen->generateIndexedIndependent(var, *_currentLoop, *ip));
+                } else if (op == CGLoopIndexedIndepOp) {
+                    assert(!_currentLoops.empty());
+                    size_t pos = var.getInfo()[1];
+                    const IndexPattern* ip = (*_loopIndependentIndexPatterns)[pos];
+                    var.setName(_nameGen->generateIndexedIndependent(var, *ip));
 
                 } else {
                     if (var.getVariableID() <= _independentSize) {
@@ -811,6 +842,12 @@ namespace CppAD {
 
                 case CGUnMinusOp:
                     printOperationUnaryMinus(node);
+                    break;
+
+                case CGIndexOp:
+                    break; // nothing to do
+                case CGIndexAssignOp:
+                    printIndexAssign(node);
                     break;
 
                 case CGLoopAtomicResultOp:
@@ -1232,41 +1269,66 @@ namespace CppAD {
         }
 
         virtual void printLoopStart(OperationNode<Base>& node) {
-            CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 2, "Invalid number of information elements for loop start operation");
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopStartOp, "Invalid node type");
 
-            size_t loopId = node.getInfo()[0];
-            size_t iterationCount = node.getInfo()[1];
-            _currentLoop = _loops->at(loopId);
+            LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
+            const LoopNodeInfo<Base>& loopInfo = lnode.getLoopInfo();
 
+            _currentLoops.push_back(&loopInfo);
+
+            const std::string& jj = loopInfo.getIndex().getName();
+            std::string iterationCount;
+            if (loopInfo.getIterationCountNode() != NULL) {
+                iterationCount = loopInfo.getIterationCountNode()->getIndex().getName();
+            } else {
+                std::ostringstream oss;
+                oss << loopInfo.getIterationCount();
+                iterationCount = oss.str();
+            }
+
+            _code << _spaces << "for("
+                    << jj << " = 0; "
+                    << jj << " < " << iterationCount << "; "
+                    << jj << "++) {\n";
             _indentation = _spaces + _spaces;
-            _code << _spaces << "for(j = 0; j < " << iterationCount << "; j++) {\n";
         }
 
         virtual void printLoopEnd(OperationNode<Base>& node) {
-            CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 2, "Invalid number of information elements for loop end operation");
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopEndOp, "Invalid node type");
 
             _code << _spaces << "}\n";
             _indentation = _spaces;
-            _currentLoop = NULL;
+            _currentLoops.pop_back();
         }
 
         virtual void printLoopIndexedDep(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for loop indexed dependent operation");
-            CPPADCG_ASSERT_KNOWN(_currentLoop != NULL, "Not inside a loop");
+            CPPADCG_ASSERT_KNOWN(!_currentLoops.empty(), "Not inside a loop");
 
             // CGLoopIndexedDepOp
             print(node.getArguments()[0]);
         }
 
         virtual void printLoopIndexedIndep(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
             CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 1, "Invalid number of information elements for loop indexed independent operation");
-            CPPADCG_ASSERT_KNOWN(_currentLoop != NULL, "Not inside a loop");
+            CPPADCG_ASSERT_KNOWN(!_currentLoops.empty(), "Not inside a loop");
 
             // CGLoopIndexedIndepOp
-            size_t j = node.getInfo()[0];
-            IndexPattern* ip = _currentLoop->getIndependentIndexPatterns()[j];
+            size_t pos = node.getInfo()[1];
+            const IndexPattern* ip = (*_loopIndependentIndexPatterns)[pos];
+            _code << _nameGen->generateIndexedIndependent(node, *ip);
+        }
 
-            _code << _nameGen->generateIndexedIndependent(node, *_currentLoop, *ip);
+        virtual void printIndexAssign(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGIndexAssignOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of argumets for an index assigment operation");
+
+            IndexAssignOperationNode<Base>& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
+
+            const IndexPattern& ip = inode.getIndexPattern();
+            _code << _indentation << inode.getIndex().getName()
+                    << " = " << createIndexPattern(ip) << ";\n";
         }
 
         inline bool isDependent(const OperationNode<Base>& arg) const {

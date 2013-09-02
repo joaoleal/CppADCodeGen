@@ -79,6 +79,13 @@
 #include <cppadcg/cg_operation.hpp>
 #include <cppadcg/cg_argument.hpp>
 #include <cppadcg/cg_operation_node.hpp>
+#include <cppadcg/nodes/cg_index_operation_node.hpp>
+#include <cppadcg/nodes/cg_index_assign_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_end_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_evaluation_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_forward_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_reverse_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_start_operation_node.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
 #include <cppadcg/cg_variable.hpp>
@@ -118,7 +125,16 @@
 
 // ---------------------------------------------------------------------------
 // loop/pattern detection
-#include <cppadcg/patterns/cg_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_index.hpp>
+#include <cppadcg/patterns/index/cg_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_linear_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_linear2_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_sectioned_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_plane_2d_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_random_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_index_pattern_impl.hpp>
+#include <cppadcg/patterns/cg_loop_node_info.hpp>
+#include <cppadcg/patterns/cg_custom_loop_node_info.hpp>
 #include <cppadcg/patterns/cg_loop_atomic_fun.hpp>
 #include <cppadcg/patterns/cg_equation_pattern.hpp>
 #include <cppadcg/patterns/cg_loop.hpp>
@@ -128,6 +144,7 @@
 // C source code generation
 #include <cppadcg/c/cg_c_lang_atomic_fun.hpp>
 #include <cppadcg/c/cg_c_language.hpp>
+#include <cppadcg/c/cg_c_language_index_patterns.hpp>
 #include <cppadcg/c/cg_c_language_double.hpp>
 #include <cppadcg/c/cg_c_lang_default_var_name_gen.hpp>
 #include <cppadcg/c/cg_c_lang_default_hessian_var_name_gen.hpp>
@@ -145,7 +162,11 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_loops.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_for0.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_jac.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_hess.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_rev2.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
 

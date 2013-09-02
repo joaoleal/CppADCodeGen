@@ -23,12 +23,13 @@ namespace CppAD {
      * @author Joao Leal
      */
     template <class Base>
-    class LoopAtomicFun : public BaseAbstractAtomicFun<Base> {
+    class LoopAtomicFun : public BaseAbstractAtomicFun<Base>, public LoopNodeInfo<Base> {
     public:
         typedef CppAD::CG<Base> CGB;
         typedef Argument<Base> Arg;
+    public:
+        static const Index ITERATION_INDEX;
     protected:
-        const size_t loopId_;
         /**
          * The tape for a single loop iteration
          */
@@ -131,7 +132,6 @@ namespace CppAD {
                       const std::vector<size_t>& nonIndexedIndepOrigIndexes,
                       const std::vector<std::set<size_t> >& temporaryIndependents) :
             BaseAbstractAtomicFun<Base>(name),
-            loopId_(createNewLoopId()),
             fun_(fun),
             iterationCount_(iterationCount),
             mFull_(iterationCount * dependentOrigIndexes.size()),
@@ -211,16 +211,19 @@ namespace CppAD {
             this->atomic_base<CGB>::operator()(ax, ay, id);
         }
 
-        /**
-         * Provides a unique identifier for this loop.
-         * 
-         * @return a unique identifier ID
-         */
-        inline size_t getLoopId() const {
-            return loopId_;
+        virtual const std::string* getLoopName() const {
+            return &this->afun_name();
         }
 
-        inline size_t getIterationCount() const {
+        virtual inline const Index& getIndex() const {
+            return ITERATION_INDEX;
+        }
+
+        virtual inline const IndexOperationNode<Base>* getIterationCountNode() const {
+            return NULL;
+        }
+
+        virtual inline const size_t getIterationCount() const {
             return iterationCount_;
         }
 
@@ -315,22 +318,15 @@ namespace CppAD {
                 x[indepOrig2full_.size() + j] = handler->createCG(Argument<Base>(*tmp));
             }
 
-            std::vector<size_t> opInfo(6);
-            opInfo[0] = loopId_;
-            opInfo[1] = nFull_;
-            opInfo[2] = mFull_;
-            opInfo[3] = 0; // zero-order
-            opInfo[4] = mFull_; // dimension of results of this atomic function call
-            opInfo[5] = m_; // dimension of results relative to the tape
             std::vector<Argument<Base> > args = asArguments(x);
 
-            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new LoopForwardOperationNode<Base>(*this, 0, mFull_, m_, args);
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this); // is this really required?
 
             vector<CGB> y(mFull_);
 
-            opInfo.resize(1);
+            std::vector<size_t> opInfo(1);
             args.resize(1);
             for (size_t i = 0; i < mFull_; i++) {
                 opInfo[0] = i;
@@ -352,7 +348,7 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     indexes[it] = indexedIndepIndexes_[j][it].original;
                 }
-                indepIndexPatterns_[j] = IndexPattern::detect(indexes);
+                indepIndexPatterns_[j] = IndexPattern::detect(ITERATION_INDEX, indexes);
             }
 
             depIndexPatterns_.resize(dependentIndexes_.size());
@@ -361,7 +357,7 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     indexes[it] = dependentIndexes_[j][it].original;
                 }
-                depIndexPatterns_[j] = IndexPattern::detect(indexes);
+                depIndexPatterns_[j] = IndexPattern::detect(ITERATION_INDEX, indexes);
             }
         }
 
@@ -704,15 +700,7 @@ namespace CppAD {
 
             std::vector<Argument<Base> > args = asArguments(tx);
 
-            std::vector<size_t> opInfo(6);
-            opInfo[0] = loopId_;
-            opInfo[1] = mFull_;
-            opInfo[2] = nFull_;
-            opInfo[3] = p;
-            opInfo[4] = ty.size(); // dimension of results of this atomic function call
-            opInfo[5] = m_ * (p + 1); // dimension of results relative to the tape
-
-            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopForwardOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new LoopForwardOperationNode<Base>(*this, p, ty.size(), m_ * (p + 1), args);
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this);
 
@@ -726,7 +714,7 @@ namespace CppAD {
                 }
             }
 
-            opInfo.resize(2);
+            std::vector<size_t> opInfo(2);
             args.resize(1);
             args[0] = Argument<Base>(*atomicOp);
 
@@ -789,19 +777,8 @@ namespace CppAD {
             }
             assert(handler != NULL);
 
-            std::vector<Argument<Base> > args(tx.size() + py.size());
-            BaseAbstractAtomicFun<Base>::appendAsArguments(args.begin(), tx);
-            BaseAbstractAtomicFun<Base>::appendAsArguments(args.begin() + tx.size(), py);
-
-            std::vector<size_t> opInfo(6);
-            opInfo[0] = loopId_;
-            opInfo[1] = mFull_;
-            opInfo[2] = nFull_;
-            opInfo[3] = p;
-            opInfo[4] = px.size(); // dimension of results of this atomic function call
-            opInfo[5] = getTapeIndependentCount()*(p + 1); // dimension of results of this atomic function call
-
-            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGLoopReverseOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new LoopReverseOperationNode<Base>(*this, p, px.size(), getTapeIndependentCount()*(p + 1),
+                    asArguments(tx), asArguments(py));
             handler->manageOperationNode(atomicOp);
             handler->registerLoop(*this);
 
@@ -823,8 +800,9 @@ namespace CppAD {
                 }
             }
 
-            args.resize(1);
+            std::vector<Argument<Base> > args(1);
             args[0] = Argument<Base>(*atomicOp);
+            std::vector<size_t> opInfo(2);
             for (size_t j = 0; j < px.size(); j++) {
                 if (!pxLoop[j].isParameter() || !IdenticalZero(pxLoop[j].getValue())) {
                     opInfo.resize(2);
@@ -1042,8 +1020,8 @@ namespace CppAD {
         inline vector<std::set<size_t> >& determineFullHessianSparsity(size_t i) {
             size_t nTape = fun_->Domain();
             assert(m_ == fun_->Range());
-            size_t iteration = i / iterationCount_;
-            size_t d = iteration * m_ + (i % iterationCount_); // tape equation/dependent
+            size_t iteration = i / m_;
+            size_t d = i % m_; // tape equation/dependent
 
             /**
              * Make sure that an independent of the original model is not used
@@ -1054,8 +1032,11 @@ namespace CppAD {
             if (!detachedVars) {
                 throw CGException("Unable to exploit the hessian structure of a loop where the independent variables are not fully detached");
             }
-
-            const vector<std::set<size_t> >& hessd = eqHessTape_[d] = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(*fun_, d); // f''_i(x)
+            std::map<size_t, vector<std::set<size_t> > >::const_iterator eqHIt = eqHessTape_.find(d);
+            if (eqHIt == eqHessTape_.end()) {
+                eqHessTape_[d] = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(*fun_, d); // f''_i(x)
+            }
+            const vector<std::set<size_t> >& hessd = eqHessTape_[d]; // f''_i(x)
 
             vector<std::set<size_t> >& fullHessi = hess_[i];
             fullHessi.resize(nFull_);
@@ -1101,13 +1082,6 @@ namespace CppAD {
         }
 
     private:
-
-        static size_t createNewLoopId() {
-            CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
-            static size_t count = 0;
-            count++;
-            return count;
-        }
 
         /**
          * Used to evaluate function values and forward mode function values and
@@ -1257,30 +1231,35 @@ namespace CppAD {
                         xTape[pos.tape] = tx[pos.atomic];
                     }
 
-                    fun_->Forward(0, xTape);
-
+                    bool nonZeroPy = false;
                     for (size_t i = 0; i < m_; i++) {
                         const LoopPosition& pos = dependentIndexes_[i][it];
-                        pyTape[pos.tape] = py[pos.atomic];
+                        const CGB& pyi = py[pos.atomic];
+                        pyTape[pos.tape] = pyi;
+                        nonZeroPy |= !IdenticalZero(pyi);
                     }
 
-                    vector<CGB> pxTape = fun_->Reverse(1, pyTape);
+                    if (nonZeroPy) {
+                        fun_->Forward(0, xTape);
 
-                    // place dependents
-                    for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
-                        const LoopPosition& pos = indexedIndepIndexes_[j][it];
-                        px[pos.atomic] += pxTape[pos.tape];
-                        pxIterations[pos.atomic].insert(it);
-                    }
-                    for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
-                        const LoopPosition& pos = nonIndexedIndepIndexes_[j];
-                        px[pos.atomic] += pxTape[pos.tape];
-                        pxIterations[pos.atomic].insert(it);
-                    }
-                    for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
-                        const LoopPositionTmp& pos = temporaryIndependents_[j];
-                        px[pos.atomic] += pxTape[pos.tape];
-                        pxIterations[pos.atomic].insert(it);
+                        vector<CGB> pxTape = fun_->Reverse(1, pyTape);
+
+                        // place dependents
+                        for (size_t j = 0; j < indexedIndepIndexes_.size(); j++) {
+                            const LoopPosition& pos = indexedIndepIndexes_[j][it];
+                            px[pos.atomic] += pxTape[pos.tape];
+                            pxIterations[pos.atomic].insert(it);
+                        }
+                        for (size_t j = 0; j < nonIndexedIndepIndexes_.size(); j++) {
+                            const LoopPosition& pos = nonIndexedIndepIndexes_[j];
+                            px[pos.atomic] += pxTape[pos.tape];
+                            pxIterations[pos.atomic].insert(it);
+                        }
+                        for (size_t j = 0; j < temporaryIndependents_.size(); j++) {
+                            const LoopPositionTmp& pos = temporaryIndependents_[j];
+                            px[pos.atomic] += pxTape[pos.tape];
+                            pxIterations[pos.atomic].insert(it);
+                        }
                     }
                 }
 
@@ -1366,6 +1345,8 @@ namespace CppAD {
 
     };
 
+    template<class Base>
+    const Index LoopAtomicFun<Base>::ITERATION_INDEX("j");
 }
 
 #endif

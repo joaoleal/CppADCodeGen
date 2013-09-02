@@ -47,10 +47,34 @@ namespace CppAD {
     class AD;
 
     template<class Base>
+    struct OperationPathNode;
+
+    /***************************************************************************
+     * Nodes
+     **************************************************************************/
+    template<class Base>
     class OperationNode;
 
     template<class Base>
-    struct OperationPathNode;
+    class IndexOperationNode;
+
+    template<class Base>
+    class IndexAssignOperationNode;
+
+    template<class Base>
+    class LoopStartOperationNode;
+
+    template<class Base>
+    class LoopEndOperationNode;
+
+    template<class Base>
+    class LoopEvaluationOperationNode;
+
+    template<class Base>
+    class LoopForwardOperationNode;
+
+    template<class Base>
+    class LoopReverseOperationNode;
 
     /***************************************************************************
      * Loops
@@ -68,6 +92,9 @@ namespace CppAD {
     class LoopAtomicFun;
 
     template<class Base>
+    class LoopNodeInfo;
+
+    template<class Base>
     class IndexedDependentLoopInfo;
 
     template<class Base>
@@ -75,6 +102,11 @@ namespace CppAD {
 
     template<class Base>
     class JacTapeElementLoopInfo;
+
+    template<class Base>
+    class GroupLoopRev2ColInfo;
+
+    class Index;
 
     class IndexPattern;
 
@@ -306,9 +338,11 @@ namespace CppAD {
      * Index pattern types
      */
     enum IndexPatternType {
-        LINEAR,
-        LINEARSECTIONS,
-        RANDOM
+        LINEAR, // y = x * a + b
+        LINEAR2, // y = x / a + b
+        SECTIONED, // several index patterns
+        RANDOM,
+        PLANE2D // y = f(x) + f(z)
     };
 }
 

@@ -41,10 +41,12 @@ namespace CppAD {
         const std::map<size_t, std::string>& atomicFunctionId2Name;
         // a flag indicating whether or not temporary variable IDs have been recycled
         const bool reuseIDs;
-        // maps loop IDs to the atomic loop functions
-        const std::map<size_t, LoopAtomicFun<Base>*>& loops;
+        //
+        const std::set<const Index*>& indexes;
         //
         const std::vector<const IndexPattern*>& loopDependentIndexPatterns;
+        //
+        const std::vector<const IndexPattern*>& loopIndependentIndexPatterns;
     public:
 
         LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
@@ -55,8 +57,9 @@ namespace CppAD {
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri,
-                               const std::map<size_t, LoopAtomicFun<Base>*>& ls,
-                               const std::vector<const IndexPattern*>& dependentIndexPatterns) :
+                               const std::set<const Index*>& indexs,
+                               const std::vector<const IndexPattern*>& dependentIndexPatterns,
+                               const std::vector<const IndexPattern*>& independentIndexPatterns) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),
@@ -65,8 +68,9 @@ namespace CppAD {
             atomicFunctionId2Index(atomicId2Index),
             atomicFunctionId2Name(atomicId2Name),
             reuseIDs(ri),
-            loops(ls),
-            loopDependentIndexPatterns(dependentIndexPatterns){
+            indexes(indexs),
+            loopDependentIndexPatterns(dependentIndexPatterns),
+            loopIndependentIndexPatterns(independentIndexPatterns) {
         }
     };
 

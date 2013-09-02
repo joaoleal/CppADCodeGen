@@ -678,6 +678,41 @@ namespace CppAD {
         return arguments;
     }
 
+    /**
+     * Smart vector of pointers.
+     * Deletes all vector values on destruction.
+     */
+    template<class Base>
+    class SmartVectorPointer {
+    public:
+        std::vector<Base*> v;
+
+        ~SmartVectorPointer() {
+            for (size_t i = 0; i < v.size(); i++) {
+                delete v[i];
+            }
+        }
+    };
+
+    template<class Key, class Value>
+    class SmartMapValuePointer {
+    public:
+        std::map<Key, Value*> m;
+
+        std::map<Key, Value*> release() {
+            std::map<Key, Value*> result;
+            result.swap(m);
+            return result;
+        }
+
+        ~SmartMapValuePointer() {
+            typename std::map<Key, Value*>::const_iterator it;
+            for (it = m.begin(); it != m.end(); ++it) {
+                delete it->second;
+            }
+        }
+    };
+
 }
 
 #endif
