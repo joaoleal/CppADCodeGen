@@ -106,14 +106,6 @@ namespace CppAD {
             generateHessianSource(sources);
         }
 
-        if (_sparseJacobian) {
-            generateSparseJacobianSource(sources);
-        }
-
-        if (_sparseHessian) {
-            generateSparseHessianSource(sources);
-        }
-
         if (_forwardOne) {
             generateSparseForwardOneSources(sources);
             generateForwardOneSources(sources);
@@ -127,6 +119,14 @@ namespace CppAD {
         if (_reverseTwo) {
             generateSparseReverseTwoSources(sources);
             generateReverseTwoSources(sources);
+        }
+
+        if (_sparseJacobian) {
+            generateSparseJacobianSource(sources);
+        }
+
+        if (_sparseHessian) {
+            generateSparseHessianSource(sources);
         }
 
         if (_sparseJacobian || _forwardOne || _reverseOne) {
@@ -716,15 +716,46 @@ namespace CppAD {
         // maps each element to its position in the user hessian
         map<size_t, std::vector<set<size_t> > > userHessElLocation = determineOrderByRow(elements, evalRows, evalCols);
 
-        _cache.str("");
-        _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO;
-        string functionRev2 = _cache.str();
+        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
         string rev2Suffix = "indep";
 
-        size_t maxCompressedSize = 0;
+        /**
+         * determine to which functions we can provide the hessian row directly
+         * without needing a temporary array (compressed)
+         */
+        map<size_t, bool> ordered;
         map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
-            if (it->second.size() > maxCompressedSize)
+            size_t index = it->first;
+            const std::vector<size_t>& els = it->second;
+            const std::vector<set<size_t> >& location = userHessElLocation.at(index);
+            assert(els.size() == location.size());
+            assert(els.size() > 0);
+
+            bool passed = true;
+            size_t hessRowStart = *location[0].begin();
+            for (size_t e = 0; e < els.size(); e++) {
+                if (location[e].size() > 1) {
+                    passed = false; // too many elements
+                    break;
+                }
+                if (*location[e].begin() != hessRowStart + e) {
+                    passed = false; // wrong order
+                    break;
+                }
+            }
+            ordered[index] = passed;
+        }
+        assert(elements.size() == ordered.size());
+
+        /**
+         * determine the maximum size of the temporary array
+         */
+        size_t maxCompressedSize = 0;
+
+        map<size_t, bool>::const_iterator itOrd;
+        for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
+            if (it->second.size() > maxCompressedSize && !itOrd->second)
                 maxCompressedSize = it->second.size();
         }
 
@@ -739,35 +770,48 @@ namespace CppAD {
                 "void " << model_function << "(" << argsDcl << ") {\n"
                 "   " << _baseTypeName << " const * inLocal[3];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
-                "   " << _baseTypeName << " * outLocal[1];\n"
-                "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
-                "   " << _baseTypeName << " * hess = out[0];\n"
+                "   " << _baseTypeName << " * outLocal[1];\n";
+        if (maxCompressedSize > 0) {
+            _cache << "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n";
+        }
+        _cache << "   " << _baseTypeName << " * hess = out[0];\n"
                 "\n"
                 "   inLocal[0] = in[0];\n"
                 "   inLocal[1] = &inLocal1;\n"
-                "   inLocal[2] = in[1];\n"
-                "   outLocal[0] = compressed;";
+                "   inLocal[2] = in[1];\n";
+        if (maxCompressedSize > 0) {
+            _cache << "   outLocal[0] = compressed;";
+        }
 
         langC.setArgumentIn("inLocal");
         langC.setArgumentOut("outLocal");
         std::string argsLocal = langC.generateDefaultFunctionArguments();
-
-        for (it = elements.begin(); it != elements.end(); ++it) {
+        bool lastCompressed = true;
+        for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userHessElLocation.at(index);
             assert(els.size() == location.size());
+            assert(els.size() > 0);
 
-            _cache << "\n"
-                    "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
-            for (size_t e = 0; e < els.size(); e++) {
-                _cache << "   ";
-                set<size_t>::const_iterator itl;
-                for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                    _cache << "hess[" << (*itl) << "] = ";
-                }
-                _cache << "compressed[" << e << "];\n";
+            _cache << "\n";
+            if (itOrd->second) {
+                _cache << "   outLocal[0] = &hess[" << *location[0].begin() << "];\n";
+            } else if (!lastCompressed) {
+                _cache << "   outLocal[0] = compressed;\n";
             }
+            _cache << "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
+            if (!itOrd->second) {
+                for (size_t e = 0; e < els.size(); e++) {
+                    _cache << "   ";
+                    set<size_t>::const_iterator itl;
+                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                        _cache << "hess[" << (*itl) << "] = ";
+                    }
+                    _cache << "compressed[" << e << "];\n";
+                }
+            }
+            lastCompressed = !itOrd->second;
         }
 
         _cache << "\n"
