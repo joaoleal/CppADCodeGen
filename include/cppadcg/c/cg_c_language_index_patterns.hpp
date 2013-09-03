@@ -21,7 +21,7 @@ namespace CppAD {
     inline void CLanguage<Base>::createIndexDeclaration() {
         if (_indexes->empty())
             return;
-        
+
         _ss << _spaces << "unsigned long";
         std::set<const Index*>::const_iterator iti;
         for (iti = _indexes->begin(); iti != _indexes->end(); ++iti) {
@@ -40,11 +40,6 @@ namespace CppAD {
             {
                 const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
                 return createLinearIndexPattern(lip);
-            }
-            case LINEAR2: // y = x / a + b
-            {
-                const Linear2IndexPattern& lip = static_cast<const Linear2IndexPattern&> (ip);
-                return createLinear2IndexPattern(lip);
             }
             case SECTIONED:
             {
@@ -98,38 +93,37 @@ namespace CppAD {
     inline std::string CLanguage<Base>::createLinearIndexPattern(const LinearIndexPattern& lip) {
         assert(lip.getIndexes().size() == 1);
 
+        long dy = lip.getLinearSlopeDy();
+        long dx = lip.getLinearSlopeDx();
+        long b = lip.getLinearConstantTerm();
+        long xOffset = lip.getXOffset();
+
         std::stringstream ss;
-        if (lip.getLinearSlope() != 0) {
-            if (lip.getLinearSlope() != 1) {
-                ss << lip.getLinearSlope() << " * ";
+        if (dy != 0) {
+            if (xOffset != 0) {
+                ss << "(";
             }
             ss << lip.getIndexes()[0]->getName();
+            if (xOffset != 0) {
+                ss << " - " << xOffset << ")";
+            }
+
+            if (dx != 1) {
+                ss << " / " << dx;
+            }
+            if (dy != 1) {
+                ss << " * " << dy;
+            }
         }
 
-        if (lip.getLinearConstantTerm() != 0) {
-            if (lip.getLinearSlope() != 0)
+        if (b != 0) {
+            if (dy != 0)
                 ss << " + ";
-            ss << lip.getLinearConstantTerm();
+            ss << b;
         }
         return ss.str();
     }
 
-    template<class Base>
-    inline std::string CLanguage<Base>::createLinear2IndexPattern(const Linear2IndexPattern& lip) {
-        assert(lip.getIndexes().size() == 1);
-
-        std::stringstream ss;
-
-        ss << lip.getIndexes()[0]->getName();
-        if (lip.getInverseLinearSlope() != 1) {
-            ss << " / " << lip.getInverseLinearSlope();
-        }
-
-        if (lip.getLinearConstantTerm() != 0) {
-            ss << " + " << lip.getLinearConstantTerm();
-        }
-        return ss.str();
-    }
 }
 
 #endif

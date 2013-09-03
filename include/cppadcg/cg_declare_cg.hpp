@@ -105,6 +105,9 @@ namespace CppAD {
 
     template<class Base>
     class GroupLoopRev2ColInfo;
+    
+    template<class Base>
+    class LoopRev2ValInfo;
 
     class Index;
 
@@ -338,8 +341,7 @@ namespace CppAD {
      * Index pattern types
      */
     enum IndexPatternType {
-        LINEAR, // y = x * a + b
-        LINEAR2, // y = x / a + b
+        LINEAR, // y = (x / dx) * dy + b
         SECTIONED, // several index patterns
         RANDOM,
         PLANE2D // y = f(x) + f(z)

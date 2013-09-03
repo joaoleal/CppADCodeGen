@@ -63,6 +63,8 @@ namespace CppAD {
 
             IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(LoopAtomicFun<Base>::ITERATION_INDEX, *loopStart);
             handler.manageOperationNodeMemory(iterationIndexOp);
+            std::set<IndexOperationNode<Base>*> indexesOps;
+            indexesOps.insert(iterationIndexOp);
 
             // indexed independents
             vector<OperationNode<Base>* >& indexedIndependents = loopIndexedIndependents[loopFunc]; // zero order
@@ -84,7 +86,7 @@ namespace CppAD {
                 indexedLoopResults[i] = std::make_pair(dependents[i]->origVals[0],
                                                        dependents[i]->pattern);
             }
-            OperationNode<Base>* loopEnd = createLoopEnd(handler, indexedLoopResults, *loopFunc, assignOrAdd);
+            OperationNode<Base>* loopEnd = createLoopEnd(handler, indexedLoopResults, indexesOps, *loopFunc, assignOrAdd);
 
             /**
              * change the dependents (must depend directly on the loop)
@@ -99,7 +101,7 @@ namespace CppAD {
             /**
              * move no-nindexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
+            moveNonIndexedOutsideLoop(*loopStart, *loopEnd, LoopAtomicFun<Base>::ITERATION_INDEX);
         }
 
     }
@@ -156,17 +158,24 @@ namespace CppAD {
     template<class Base>
     OperationNode<Base>* CLangCompileModelHelper<Base>::createLoopEnd(CodeHandler<Base>& handler,
                                                                       const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                                      const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                                       const LoopNodeInfo<Base>& loopInfo,
                                                                       size_t assignOrAdd) {
         std::vector<Argument<Base> > endArgs;
-        std::vector<Argument<Base> > indexedArgs(1);
+        std::vector<Argument<Base> > indexedArgs(1 + indexesOps.size());
         std::vector<size_t> info(2);
 
         size_t dep_size = indexedLoopResults.size();
         for (size_t i = 0; i < dep_size; i++) {
             const std::pair<CG<Base>, IndexPattern*>& depInfo = indexedLoopResults[i];
+            indexedArgs.resize(1);
 
             indexedArgs[0] = asArgument(depInfo.first); // indexed expression
+            typename std::set<IndexOperationNode<Base>*>::const_iterator itIndexOp;
+            for (itIndexOp = indexesOps.begin(); itIndexOp != indexesOps.end(); ++itIndexOp) {
+                indexedArgs.push_back(Argument<Base>(**itIndexOp)); // dependency on the index
+            }
+
             info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
             info[1] = assignOrAdd;
 
@@ -499,14 +508,15 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
-                                                                  OperationNode<Base>& loopEnd) {
+                                                                  OperationNode<Base>& loopEnd,
+                                                                  const Index& loopIndex) {
         //EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
         std::set<OperationNode<Base>*> nonIndexed;
 
         const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
         for (size_t i = 0; i < endArgs.size(); i++) {
             assert(endArgs[i].getOperation() != NULL);
-            findNonIndexedNodes(*endArgs[i].getOperation(), nonIndexed);
+            findNonIndexedNodes(*endArgs[i].getOperation(), nonIndexed, loopIndex);
         }
 
         std::vector<Argument<Base> >& startArgs = loopStart.getArguments();
@@ -522,13 +532,17 @@ namespace CppAD {
 
     template<class Base>
     bool CLangCompileModelHelper<Base>::findNonIndexedNodes(OperationNode<Base>& node,
-                                                            std::set<OperationNode<Base>*>& nonIndexed) {
+                                                            std::set<OperationNode<Base>*>& nonIndexed,
+                                                            const Index& loopIndex) {
         if (node.getColor() > 0)
             return node.getColor() == 1;
 
-        if (node.getOperationType() == CGLoopIndexedIndepOp) {
-            node.setColor(2);
-            return false; // does NOT depend on an index
+        if (node.getOperationType() == CGIndexOp) {
+            IndexOperationNode<Base>& indexNode = static_cast<IndexOperationNode<Base>&> (node);
+            if (&indexNode.getIndex() == &loopIndex) {
+                node.setColor(2);
+                return false; // depends on the loop index
+            }
         }
 
         const std::vector<Argument<Base> >& args = node.getArguments();
@@ -539,7 +553,7 @@ namespace CppAD {
         for (size_t a = 0; a < size; a++) {
             OperationNode<Base>* arg = args[a].getOperation();
             if (arg != NULL) {
-                bool nonIndexedArg = findNonIndexedNodes(*arg, nonIndexed);
+                bool nonIndexedArg = findNonIndexedNodes(*arg, nonIndexed, loopIndex);
                 nonIndexedArgs |= nonIndexedArg;
                 indexedPath |= !nonIndexedArg;
             }
@@ -550,7 +564,9 @@ namespace CppAD {
         if (indexedPath && nonIndexedArgs) {
             for (size_t a = 0; a < size; a++) {
                 OperationNode<Base>* arg = args[a].getOperation();
-                if (arg != NULL && arg->getColor() == 1 && arg->getOperationType() != CGInvOp) {
+                if (arg != NULL && arg->getColor() == 1 && // must be a non indexed expression
+                        arg->getOperationType() != CGInvOp) {// no point in moving just one variable outside
+
                     nonIndexed.insert(arg);
                 }
             }

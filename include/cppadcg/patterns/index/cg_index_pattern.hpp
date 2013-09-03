@@ -46,21 +46,23 @@ namespace CppAD {
          *   static methods
          **********************************************************************/
         /**
-         * Detects the index pattern for the provided points
+         * Detects the index pattern for the provided points (y = f(x))
          * 
-         * @param indexes maps the independents to the dependents (indexes[x] = y )
+         * @param indexX the index of the independents (x)
+         * @param x2y maps the independents to the dependents (indexes[x] = y )
          * @return the generated index pattern (must be deleted by user)
          */
         template<class VectorSizeT>
-        static inline IndexPattern* detect(const Index& index, const VectorSizeT& indexes);
+        static inline IndexPattern* detect(const Index& indexX, const VectorSizeT& x2y);
 
         /**
-         * Detects the index pattern for the provided points
+         * Detects the index pattern for the provided points (y = f(x))
          * 
-         * @param indexes maps the independents to the dependents (x,y)
+         * @param indexX the index of the independents (x)
+         * @param x2y maps the independents to the dependents (x,y)
          * @return the generated index pattern (must be deleted by user)
          */
-        static inline IndexPattern* detect(const Index& index, const std::map<size_t, size_t>& indexes);
+        static inline IndexPattern* detect(const Index& indexX, const std::map<size_t, size_t>& x2y);
     };
 
 }

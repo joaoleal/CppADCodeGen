@@ -126,7 +126,7 @@ namespace CppAD {
 
             std::auto_ptr<IndexPattern> fx;
             // try to detect a pattern for the initial iteration index based on jrow
-            std::map<size_t, IndexPattern*> startSections = detectLinear2Sections(indexX, x2zStart, 2);
+            std::map<size_t, IndexPattern*> startSections = SectionedIndexPattern::detectLinearSections(indexX, x2zStart, 2);
             if (startSections.empty()) {
                 return NULL; // does not fit the pattern
             }
@@ -160,54 +160,6 @@ namespace CppAD {
             }
 
             return new Plane2DIndexPattern(fx.release(), fy.release());
-        }
-
-        static inline std::map<size_t, IndexPattern*> detectLinear2Sections(const Index& index,
-                                                                            const std::map<size_t, size_t>& indexes,
-                                                                            size_t maxCount = 0) {
-            SmartMapValuePointer<size_t, IndexPattern> linearSections;
-
-            std::map<size_t, size_t>::const_iterator pStart = indexes.begin();
-            while (pStart != indexes.end()) {
-                std::map<size_t, size_t>::const_iterator pNextSection = indexes.end();
-                std::map<size_t, size_t>::const_iterator p1 = pStart;
-                ++p1;
-                long a, b;
-                if (p1 == indexes.end()) {
-                    // failed: need at least 2 points
-                    return std::map<size_t, IndexPattern*>(); // empty
-                } else {
-                    if (p1->second == pStart->second) {
-                        // failed: a would be infinity
-                        return std::map<size_t, IndexPattern*>(); // empty
-                    } else if (p1->first == pStart->first) {
-                        // failed: a would be zero
-                        return std::map<size_t, IndexPattern*>(); // empty
-                    }
-                    // y = x / a + b
-                    a = (long(p1->first) - pStart->first) / (long(p1->second) - pStart->second);
-                    b = long(pStart->second) - pStart->first / a;
-
-                    for (std::map<size_t, size_t>::const_iterator itp = p1; itp != indexes.end(); ++itp) {
-                        size_t x = itp->first;
-                        size_t y = itp->second;
-                        if (y != x / a + b) {
-                            pNextSection = itp;
-                            break;
-                        }
-                    }
-                }
-
-                linearSections.m[pStart->first] = new Linear2IndexPattern(index, a, b);
-                pStart = pNextSection;
-
-                if (linearSections.m.size() == maxCount && pStart != indexes.end()) {
-                    // over the limit -> stop
-                    return std::map<size_t, IndexPattern*>(); // empty
-                }
-            }
-
-            return linearSections.release();
         }
 
     };

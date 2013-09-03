@@ -54,28 +54,31 @@ namespace CppAD {
                                                                            size_t maxCount = 0) {
             assert(indexes.size() > 1);
 
+            long dx = 1;
+            long xOffset = 0;
+
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
             size_t xStart = 0;
             while (xStart != indexes.size()) {
-                long a, b;
+                long dy, b;
                 size_t lastLinear;
                 if (xStart + 1 == indexes.size()) {
-                    a = 0;
+                    dy = 0;
                     b = indexes[xStart];
                     lastLinear = xStart + 1;
                 } else {
-                    a = long(indexes[xStart + 1]) - indexes[xStart];
-                    b = long(indexes[xStart]) - a * xStart;
+                    dy = long(indexes[xStart + 1]) - indexes[xStart];
+                    b = long(indexes[xStart]) - dy * xStart;
                     lastLinear = indexes.size();
                     for (size_t x = xStart + 2; x < indexes.size(); x++) {
-                        if (indexes[x] != a * x + b) {
+                        if (indexes[x] != dy * x + b) {
                             lastLinear = x;
                             break;
                         }
                     }
                 }
 
-                linearSections.m[xStart] = new LinearIndexPattern(index, a, b);
+                linearSections.m[xStart] = new LinearIndexPattern(index, xOffset, dy, dx, b);
                 xStart = lastLinear;
 
                 if (linearSections.m.size() == maxCount && xStart != indexes.size()) {
@@ -86,52 +89,6 @@ namespace CppAD {
 
             return linearSections.release();
         }
-
-        /*
-        static inline std::map<size_t, IndexPattern*> detectLinearSections(const Index& index,
-                                                                           const std::map<size_t, size_t>& indexes,
-                                                                           size_t maxCount = 0) {
-            assert(!indexes.empty());
-
-            SmartMapValuePointer<size_t, IndexPattern> linearSections;
-
-            std::map<size_t, size_t>::const_iterator pStart = indexes.begin();
-            while (pStart != indexes.end()) {
-                std::map<size_t, size_t>::const_iterator pNextSection = indexes.end();
-                std::map<size_t, size_t>::const_iterator p1 = pStart;
-                ++p1;
-                long a, b;
-                if (p1 == indexes.end()) {
-                    a = 0;
-                    b = pStart->second;
-                    pNextSection = p1;
-                } else {
-                    // y = a * x + b
-                    a = (long(p1->second) - pStart->second) / (long(p1->first) - pStart->first);
-                    b = long(pStart->second) - a * pStart->first;
-
-                    for (std::map<size_t, size_t>::const_iterator itp = p1; itp != indexes.end(); ++itp) {
-                        size_t x = itp->first;
-                        size_t y = itp->second;
-                        if (y != a * x + b) {
-                            pNextSection = itp;
-                            break;
-                        }
-                    }
-                }
-
-                linearSections.m[pStart->first] = new LinearIndexPattern(index, a, b);
-                pStart = pNextSection;
-
-                if (linearSections.m.size() == maxCount && pStart != indexes.end()) {
-                    // over the limit -> stop
-                    return std::map<size_t, IndexPattern*>(); // empty
-                }
-            }
-
-            return linearSections.m;
-        }
-         */
 
         static inline std::map<size_t, IndexPattern*> detectLinearSections(const Index& index,
                                                                            const std::map<size_t, size_t>& x2y,
@@ -144,52 +101,43 @@ namespace CppAD {
                 std::map<size_t, size_t>::const_iterator p1 = pStart;
                 ++p1;
 
-                bool linearType1;
-
-                long a, b;
+                long xOffset, dy, dx, b;
                 if (p1 == x2y.end()) {
-                    linearType1 = true;
-                    a = 0;
+                    xOffset = 0;
+                    dy = 0;
+                    dx = 1;
                     b = pStart->second;
                     pNextSection = p1;
 
                 } else {
-                    long dx = long(p1->first) - pStart->first;
-                    long dy = long(p1->second) - pStart->second;
+                    long x0 = pStart->first;
+                    long y0 = pStart->second;
 
-                    linearType1 = (dy == 0) || (dx <= dy);
-
-                    if (linearType1) {
-                        // y = a * x + b
-                        a = dy / dx;
-                        b = long(pStart->second) - a * pStart->first;
+                    dy = long(p1->second) - y0;
+                    if (dy != 0) {
+                        dx = long(p1->first) - x0;
+                        xOffset = x0 % dx;
+                        // y = ((x - offset) / dx) * dy + b
+                        b = y0 - ((x0 - xOffset) / dx) * dy;
                     } else {
-                        // y = x / a + b
-                        a = dx / dy;
-                        b = long(pStart->second) - pStart->first / a;
+                        dx = 1;
+                        xOffset = 0;
+                        b = y0;
                     }
 
                     for (std::map<size_t, size_t>::const_iterator itp = p1; itp != x2y.end(); ++itp) {
                         size_t x = itp->first;
                         size_t y = itp->second;
-                        bool valid;
-                        if (linearType1)
-                            valid = (y == x * a + b);
-                        else
-                            valid = (y == x / a + b);
 
-                        if (!valid) {
+                        if (y != ((x - xOffset) / dx) * dy + b) {
                             pNextSection = itp;
                             break;
                         }
                     }
                 }
 
-                if (linearType1) {
-                    linearSections.m[pStart->first] = new LinearIndexPattern(index, a, b);
-                } else {
-                    linearSections.m[pStart->first] = new Linear2IndexPattern(index, a, b);
-                }
+                linearSections.m[pStart->first] = new LinearIndexPattern(index, xOffset, dy, dx, b);
+
                 pStart = pNextSection;
 
                 if (linearSections.m.size() == maxCount && pStart != x2y.end()) {

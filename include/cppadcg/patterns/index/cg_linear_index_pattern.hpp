@@ -18,24 +18,36 @@
 namespace CppAD {
 
     /**
-     * Linear pattern y = a * x + b
+     * Linear pattern y = ((x - offset) / dx) * dy + b
      */
     class LinearIndexPattern : public IndexPattern {
     protected:
+        long xOffset_;
         // slope
-        long a_;
+        long dy_;
+        long dx_;
         // constant term
         long b_;
     public:
 
-        inline LinearIndexPattern(const Index& index, long a, long b) :
+        inline LinearIndexPattern(const Index& index, long xOffset, long dy, long dx, long b) :
             IndexPattern(index),
-            a_(a),
+            xOffset_(xOffset),
+            dy_(dy),
+            dx_(dx),
             b_(b) {
         }
 
-        inline long getLinearSlope() const {
-            return a_;
+        inline long getXOffset()const {
+            return xOffset_;
+        }
+
+        inline long getLinearSlopeDy() const {
+            return dy_;
+        }
+
+        inline long getLinearSlopeDx() const {
+            return dx_;
         }
 
         inline long getLinearConstantTerm() const {

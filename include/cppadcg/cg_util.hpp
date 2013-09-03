@@ -713,6 +713,20 @@ namespace CppAD {
         }
     };
 
+    /**
+     * 
+     */
+    template<class Key, class Value>
+    void mapKeys(const std::map<Key, Value>& map, std::vector<Key>& keys) {
+        keys.resize(map.size());
+
+        size_t i = 0;
+        typename std::map<Key, Value>::const_iterator it;
+        for (it = map.begin(); it != map.end(); ++it, i++) {
+            keys[i] = it->first;
+        }
+    }
+
 }
 
 #endif

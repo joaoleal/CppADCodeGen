@@ -693,12 +693,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) {
-        //size_t m = _fun->Range();
-        //size_t n = _fun->Domain();
         using namespace std;
-        _cache.str("");
-        _cache << _name << "_" << FUNCTION_SPARSE_HESSIAN;
-        const string model_function(_cache.str());
 
         /**
          * we might have to consider a slightly different order than the one
@@ -715,9 +710,6 @@ namespace CppAD {
 
         // maps each element to its position in the user hessian
         map<size_t, std::vector<set<size_t> > > userHessElLocation = determineOrderByRow(elements, evalRows, evalCols);
-
-        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
-        string rev2Suffix = "indep";
 
         /**
          * determine to which functions we can provide the hessian row directly
@@ -758,6 +750,18 @@ namespace CppAD {
             if (it->second.size() > maxCompressedSize && !itOrd->second)
                 maxCompressedSize = it->second.size();
         }
+
+        if (_funLoops == _fun) {
+            /**
+             * with loops
+             */
+            generateSparseHessianWithLoopsSourceFromRev2(sources, userHessElLocation, ordered, maxCompressedSize);
+            return;
+        }
+
+        string model_function = _name + "_" + FUNCTION_SPARSE_HESSIAN;
+        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
+        string rev2Suffix = "indep";
 
         CLanguage<Base> langC(_baseTypeName);
         std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
@@ -1386,19 +1390,18 @@ namespace CppAD {
         std::vector<size_t> evalRows, evalCols;
         determineSecondOrderElements4Eval(evalRows, evalCols);
 
-        // elements[var]{vars}
-        std::map<size_t, std::vector<size_t> > elements;
-        for (size_t e = 0; e < evalCols.size(); e++) {
-            elements[evalRows[e]].push_back(evalCols[e]);
-        }
-
-
         if (_funLoops == _fun) {
             /**
              * with loops
              */
-            prepareSparseReverseTwoWithLoops(sources, elements);
+            prepareSparseReverseTwoWithLoops(sources, evalRows, evalCols);
             return;
+        }
+
+        // elements[var]{vars}
+        std::map<size_t, std::vector<size_t> > elements;
+        for (size_t e = 0; e < evalCols.size(); e++) {
+            elements[evalRows[e]].push_back(evalCols[e]);
         }
 
         std::vector<CGBase> tx1v(n, Base(0));
@@ -1630,12 +1633,13 @@ namespace CppAD {
     }
 
     template<class Base>
+    template<class T>
     void CLangCompileModelHelper<Base>::generateFunctionDeclarationSource(std::ostringstream& cache,
                                                                           const std::string& model_function,
                                                                           const std::string& suffix,
-                                                                          const std::map<size_t, std::vector<size_t> >& elements,
+                                                                          const std::map<size_t, T>& elements,
                                                                           const std::string& argsDcl) {
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        typename std::map<size_t, T>::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t pos = it->first;
             cache << "void " << model_function << "_" << suffix << pos << "(" << argsDcl << ");\n";

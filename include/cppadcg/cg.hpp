@@ -128,7 +128,6 @@
 #include <cppadcg/patterns/index/cg_index.hpp>
 #include <cppadcg/patterns/index/cg_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_linear_index_pattern.hpp>
-#include <cppadcg/patterns/index/cg_linear2_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_sectioned_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_plane_2d_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_random_index_pattern.hpp>
@@ -167,6 +166,7 @@
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_jac.hpp>
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_hess.hpp>
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_rev2.hpp>
+#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_hess_r2.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
 #include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
 

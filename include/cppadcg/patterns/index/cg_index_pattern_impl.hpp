@@ -18,11 +18,11 @@
 namespace CppAD {
 
     template<class VectorSizeT>
-    IndexPattern* IndexPattern::detect(const Index& index, const VectorSizeT& indexes) {
-        assert(indexes.size() > 1);
+    IndexPattern* IndexPattern::detect(const Index& indexX, const VectorSizeT& x2y) {
+        assert(x2y.size() > 1);
 
-        size_t maxCount = std::min(std::max(3ul, indexes.size() / 4), 8ul);
-        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(index, indexes, maxCount);
+        size_t maxCount = std::min(std::max(3ul, x2y.size() / 4), 8ul);
+        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(indexX, x2y, maxCount);
 
         if (linearSections.size() == 1) {
             return linearSections.begin()->second;
@@ -30,16 +30,16 @@ namespace CppAD {
             return new SectionedIndexPattern(linearSections);
         } else {
             throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern(index);
+            return new RandomIndexPattern(indexX);
         }
 
     }
 
-    IndexPattern* IndexPattern::detect(const Index& index, const std::map<size_t, size_t>& indexes) {
-        assert(!indexes.empty());
+    IndexPattern* IndexPattern::detect(const Index& indexX, const std::map<size_t, size_t>& x2y) {
+        assert(!x2y.empty());
 
-        size_t maxCount = std::min(std::max(3ul, indexes.size() / 4), 8ul);
-        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(index, indexes, maxCount);
+        size_t maxCount = std::min(std::max(3ul, x2y.size() / 4), 8ul);
+        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(indexX, x2y, maxCount);
 
         if (linearSections.size() == 1) {
             return linearSections.begin()->second;
@@ -47,7 +47,7 @@ namespace CppAD {
             return new SectionedIndexPattern(linearSections);
         } else {
             throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern(index);
+            return new RandomIndexPattern(indexX);
         }
     }
 

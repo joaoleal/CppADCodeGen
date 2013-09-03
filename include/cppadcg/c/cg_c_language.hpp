@@ -317,8 +317,6 @@ namespace CppAD {
 
         static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip);
 
-        static inline std::string createLinear2IndexPattern(const Linear2IndexPattern& lip);
-
     protected:
 
         virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) {
@@ -367,7 +365,15 @@ namespace CppAD {
             for (size_t i = 0; i < dependent.size(); i++) {
                 OperationNode<Base>* node = dependent[i].getOperationNode();
                 if (node != NULL && node->getOperationType() != CGLoopEndOp && node->getName() == NULL) {
-                    node->setName(_nameGen->generateDependent(dependent[i], i));
+                    if (node->getOperationType() == CGLoopIndexedDepOp) {
+                        assert(!_currentLoops.empty());
+                        size_t pos = node->getInfo()[0];
+                        const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
+                        node->setName(_nameGen->generateIndexedDependent(*node, *ip));
+
+                    } else {
+                        node->setName(_nameGen->generateDependent(dependent[i], i));
+                    }
                 }
             }
 
@@ -1302,7 +1308,7 @@ namespace CppAD {
         }
 
         virtual void printLoopIndexedDep(OperationNode<Base>& node) {
-            CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for loop indexed dependent operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation");
             CPPADCG_ASSERT_KNOWN(!_currentLoops.empty(), "Not inside a loop");
 
             // CGLoopIndexedDepOp

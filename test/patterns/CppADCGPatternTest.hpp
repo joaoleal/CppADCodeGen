@@ -90,7 +90,7 @@ namespace CppAD {
                 testSourceCodeGen(fun, m, repeat, libName, REVERSE, MUST_PASS, IGNORE);
             }
             if (hessian) {
-                //testSourceCodeGen(fun, m, repeat, libName, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, libName, FORWARD, IGNORE, MUST_PASS, true);
             }
         }
 
@@ -161,7 +161,7 @@ namespace CppAD {
 
             testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD);
             testSourceCodeGen(fun, m, repeat, name, atoms, REVERSE);
-            //testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
+            testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
 
             for (size_t a = 0; a < atomics.size(); a++) {
                 delete atomics[a];

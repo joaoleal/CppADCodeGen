@@ -451,7 +451,7 @@ namespace CppAD {
             bool strictlyMonotone = false;
             if (indepIndexPatterns_[tapeJ]->getType() == LINEAR) {
                 const LinearIndexPattern* linearPattern = static_cast<const LinearIndexPattern*> (indepIndexPatterns_[tapeJ]);
-                strictlyMonotone = linearPattern->getLinearSlope() != 0;
+                strictlyMonotone = linearPattern->getLinearSlopeDy() != 0;
             }
 
             std::set<size_t> iterations;

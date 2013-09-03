@@ -179,6 +179,13 @@ namespace CppAD {
          * 
          */
         std::set<LoopAtomicFun<Base>* > _loopAtomics;
+        /**
+         * 
+         */
+        std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > > _loopRev2Groups;
+        typedef std::pair<size_t, size_t> Compressed2JColType;
+        // elements[var]{compressed location, original column index}
+        std::map<size_t, std::vector<Compressed2JColType> > _nonLoopRev2Elements;
     public:
 
         /**
@@ -593,6 +600,18 @@ namespace CppAD {
             for (it = _loopAtomics.begin(); it != _loopAtomics.end(); ++it) {
                 delete *it;
             }
+
+            typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
+            for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
+                typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
+                for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
+                    const vector<GroupLoopRev2ColInfo<Base>*>& groups = itjg->second;
+                    for (size_t g = 0; g < groups.size(); g++) {
+                        delete groups[g];
+                    }
+                }
+            }
+
         }
 
         static inline std::string baseTypeName();
@@ -648,14 +667,14 @@ namespace CppAD {
         virtual void prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                     std::vector<CGBase>& jac);
 
-        virtual void findLoopEvaluations(CodeHandler<Base>& handler,
-                                         OperationNode<Base>* node,
-                                         std::map<LoopEvaluationOperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
+        static void findLoopEvaluations(CodeHandler<Base>& handler,
+                                        OperationNode<Base>* node,
+                                        std::map<LoopEvaluationOperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
 
-        virtual void findLoopEvaluations(CodeHandler<Base>& handler,
-                                         LoopAtomicFun<Base>* loop,
-                                         OperationNode<Base>* node,
-                                         std::map<LoopEvaluationOperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
+        static void findLoopEvaluations(CodeHandler<Base>& handler,
+                                        LoopAtomicFun<Base>* loop,
+                                        OperationNode<Base>* node,
+                                        std::map<LoopEvaluationOperationNode<Base>*, std::map<size_t, OperationNode<Base>*> >& evals);
 
 
         /***********************************************************************
@@ -694,6 +713,19 @@ namespace CppAD {
                                                                                 const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                                 const std::map<size_t, std::vector<size_t> >& elements,
                                                                                 size_t maxCompressedSize);
+
+        inline virtual void generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
+                                                                         const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
+                                                                         const std::map<size_t, bool>& ordered,
+                                                                         size_t maxCompressedSize);
+
+        inline virtual void generateFunctionDeclarationSourceLoopRev2(std::ostringstream& cache,
+                                                                      CLanguage<Base>& langC);
+
+        inline virtual void generateFunctionNameLoopRev2(std::ostringstream& cache,
+                                                         const LoopAtomicFun<Base>& loop,
+                                                         const TapeVarType& jTape1,
+                                                         size_t g);
 
         /***********************************************************************
          * Sparsities for forward/reverse
@@ -741,22 +773,24 @@ namespace CppAD {
                                                              const std::map<size_t, std::vector<size_t> >& elements,
                                                              std::map<std::string, std::string>& sources);
 
-        virtual void generateFunctionDeclarationSource(std::ostringstream& cache,
-                                                       const std::string& model_function,
-                                                       const std::string& suffix,
-                                                       const std::map<size_t, std::vector<size_t> >& elements,
-                                                       const std::string& argsDcl);
+        template<class T>
+        void generateFunctionDeclarationSource(std::ostringstream& cache,
+                                               const std::string& model_function,
+                                               const std::string& suffix,
+                                               const std::map<size_t, T>& elements,
+                                               const std::string& argsDcl);
 
         /**
          * Loops
          */
         virtual void prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
-                                                      const std::map<size_t, std::vector<size_t> >& elements);
+                                                      const std::vector<size_t>& evalRows,
+                                                      const std::vector<size_t>& evalCols);
 
         virtual void prepareSparseReverseTwoSourcesForLoop(std::map<std::string, std::string>& sources,
                                                            CodeHandler<Base>& handler,
                                                            LoopAtomicFun<Base>& loop,
-                                                           std::map<size_t, std::vector<std::pair<size_t, CppAD::CG<Base> > > >& hess);
+                                                           std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& hess);
 
         std::string generateSparseReverseTwoWithLoopsVarGroupSource(const std::string& functionName,
                                                                     const std::string& jobName,
@@ -811,6 +845,7 @@ namespace CppAD {
 
         static inline OperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
                                                          const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                         const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                          const LoopNodeInfo<Base>& loopInfo,
                                                          size_t assignOrAdd);
 
@@ -822,10 +857,12 @@ namespace CppAD {
                                                            vector<OperationNode<Base>* >& indexedIndependents2);
 
         static inline void moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
-                                                     OperationNode<Base>& loopEnd);
+                                                     OperationNode<Base>& loopEnd,
+                                                     const Index& loopIndex);
 
         static inline bool findNonIndexedNodes(OperationNode<Base>& node,
-                                               std::set<OperationNode<Base>*>& nonIndexed);
+                                               std::set<OperationNode<Base>*>& nonIndexed,
+                                               const Index& loopIndex);
 
         static inline vector<CG<Base> > evalLoopTape(CodeHandler<Base>& handler,
                                                      LoopEvaluationOperationNode<Base>& loopEvalNode,
