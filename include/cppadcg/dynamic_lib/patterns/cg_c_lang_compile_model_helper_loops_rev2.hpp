@@ -800,9 +800,18 @@ namespace CppAD {
         /**
          * generate the expressions inside the loop
          */
+        size_t nIndexed = loop.getIndexedIndepIndexes().size();
         vector<CGBase> indexedIndependents;
-        vector<CGBase> indexedIndependents2(n);
-        indexedIndependents2[group.refJrow] = tx1;
+        vector<CGBase> indexedIndependents2(nIndexed);
+
+        std::set<size_t> tapeJrows = loop.getIndependentTapeIndexes(group.refJrow);
+        std::set<size_t>::const_iterator itJrows;
+        for (itJrows = tapeJrows.begin(); itJrows != tapeJrows.end(); ++itJrows) {
+            size_t tapeJ = *itJrows;
+            if (tapeJ < nIndexed)
+                indexedIndependents2[tapeJ] = tx1;
+        }
+
 
         replaceAtomicLoopWithExpression(handler, loop, iterationIndexOp, evaluations, indexedIndependents, indexedIndependents2);
 
