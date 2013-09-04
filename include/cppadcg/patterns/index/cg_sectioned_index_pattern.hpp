@@ -52,7 +52,7 @@ namespace CppAD {
         static inline std::map<size_t, IndexPattern*> detectLinearSections(const Index& index,
                                                                            const VectorSizeT& indexes,
                                                                            size_t maxCount = 0) {
-            assert(indexes.size() > 1);
+            assert(indexes.size() > 0);
 
             long dx = 1;
             long xOffset = 0;

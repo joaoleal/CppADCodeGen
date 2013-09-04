@@ -45,7 +45,7 @@ namespace CppAD {
 
         virtual const Index& getIndex() const = 0;
 
-        virtual const IndexOperationNode<Base>* getIterationCountNode() const = 0;
+        virtual IndexOperationNode<Base>* getIterationCountNode() const = 0;
 
         virtual const size_t getIterationCount() const = 0;
 

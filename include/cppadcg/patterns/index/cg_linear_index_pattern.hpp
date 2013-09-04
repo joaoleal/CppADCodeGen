@@ -54,6 +54,10 @@ namespace CppAD {
             return b_;
         }
 
+        inline void setLinearConstantTerm(long b) {
+            b_ = b;
+        }
+
         inline virtual IndexPatternType getType() const {
             return LINEAR;
         }

@@ -19,7 +19,7 @@ namespace CppAD {
 
     template<class VectorSizeT>
     IndexPattern* IndexPattern::detect(const Index& indexX, const VectorSizeT& x2y) {
-        assert(x2y.size() > 1);
+        assert(x2y.size() > 0);
 
         size_t maxCount = std::min(std::max(3ul, x2y.size() / 4), 8ul);
         std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(indexX, x2y, maxCount);

@@ -516,13 +516,13 @@ namespace CppAD {
         }
 
         std::vector<Argument<Base> >& startArgs = loopStart.getArguments();
-        assert(startArgs.empty());
 
-        startArgs.resize(nonIndexed.size());
+        size_t sas = startArgs.size();
+        startArgs.resize(sas + nonIndexed.size());
         size_t i = 0;
         typename std::set<OperationNode<Base>*>::const_iterator it;
         for (it = nonIndexed.begin(); it != nonIndexed.end(); ++it, i++) {
-            startArgs[i] = Argument<Base>(**it);
+            startArgs[sas + i] = Argument<Base>(**it);
         }
     }
 

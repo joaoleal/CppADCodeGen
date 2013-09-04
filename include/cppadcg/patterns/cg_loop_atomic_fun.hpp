@@ -219,7 +219,7 @@ namespace CppAD {
             return ITERATION_INDEX;
         }
 
-        virtual inline const IndexOperationNode<Base>* getIterationCountNode() const {
+        virtual inline IndexOperationNode<Base>* getIterationCountNode() const {
             return NULL;
         }
 

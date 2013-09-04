@@ -74,8 +74,7 @@ namespace CppAD {
                 if (pip.getPattern2() != NULL) {
                     if (pip.getPattern1() != NULL)
                         index += " + ";
-                    index += createIndexPattern(*pip.getPattern2()); // indexName!!!!!!!!!
-                    throw CGException("Not implemented yet");
+                    index += createIndexPattern(*pip.getPattern2());
                 }
 
                 return index;

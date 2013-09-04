@@ -30,12 +30,12 @@ namespace CppAD {
          * Number of loop iterations
          */
         const size_t iterationCount_;
-        const IndexOperationNode<Base>* iterationCountNode_; // CGIndexOp
+        IndexOperationNode<Base>* iterationCountNode_; // CGIndexOp
 
     public:
 
         inline CustomLoopNodeInfo(const Index& index,
-                                  const IndexOperationNode<Base>& iterationCountNode) :
+                                  IndexOperationNode<Base>& iterationCountNode) :
             index_(index),
             iterationCount_(0),
             iterationCountNode_(&iterationCountNode) {
@@ -56,7 +56,7 @@ namespace CppAD {
             return index_;
         }
 
-        virtual inline const IndexOperationNode<Base>* getIterationCountNode() const {
+        virtual inline IndexOperationNode<Base>* getIterationCountNode() const {
             return iterationCountNode_;
         }
 

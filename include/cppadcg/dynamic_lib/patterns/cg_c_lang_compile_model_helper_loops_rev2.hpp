@@ -669,7 +669,7 @@ namespace CppAD {
                         jrow2litCount[jrow] = itJrow2Count->second.size();
                     }
 
-                    indexLocalItCountPattern.reset(IndexPattern::detect(indexLocalItCount, jrow2litCount));
+                    indexLocalItCountPattern.reset(IndexPattern::detect(indexJrow, jrow2litCount));
                 }
 
                 /**
@@ -900,10 +900,6 @@ namespace CppAD {
 
         // code inside the loop
         _cache << code.str();
-
-        if (createsLoop) {
-            _cache << "}\n";
-        }
 
         nameGenRev2.finalizeCustomFunctionVariables(_cache);
         _cache << "}\n\n";

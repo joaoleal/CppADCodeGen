@@ -107,12 +107,12 @@ namespace CppAD {
                 size_t x = itx2y2z->first;
                 const std::map<size_t, size_t>& y2z = itx2y2z->second;
 
-                size_t zFirst = y2z.begin()->first;
+                size_t zFirst = y2z.begin()->second;
                 x2zStart[x] = zFirst;
 
                 std::map<size_t, size_t>::const_iterator ity2z;
-                size_t localIt = 0;
-                for (ity2z = y2z.begin(); ity2z != y2z.end(); ++ity2z, localIt++) {
+
+                for (ity2z = y2z.begin(); ity2z != y2z.end(); ++ity2z) {
                     size_t y = ity2z->first;
                     size_t offset = ity2z->second - zFirst;
                     std::map<size_t, size_t>::const_iterator itY2zOffset = y2zOffset.find(y);
@@ -124,8 +124,11 @@ namespace CppAD {
                 }
             }
 
+            /**
+             * try to detect a pattern for the initial iteration index based on jrow
+             */
             std::auto_ptr<IndexPattern> fx;
-            // try to detect a pattern for the initial iteration index based on jrow
+
             std::map<size_t, IndexPattern*> startSections = SectionedIndexPattern::detectLinearSections(indexX, x2zStart, 2);
             if (startSections.empty()) {
                 return NULL; // does not fit the pattern
@@ -157,6 +160,19 @@ namespace CppAD {
                 fy = std::auto_ptr<IndexPattern> (sections.begin()->second);
             } else {
                 fy = std::auto_ptr<IndexPattern> (new SectionedIndexPattern(sections));
+            }
+
+            if (fx->getType() == LINEAR && fy->getType() == LINEAR) {
+                LinearIndexPattern* ipx = static_cast<LinearIndexPattern*> (fx.get());
+                LinearIndexPattern* ipy = static_cast<LinearIndexPattern*> (fy.get());
+
+                if (ipx->getLinearSlopeDy() == 0 && ipy->getLinearSlopeDy() == 0) {
+                    /**
+                     * only need to keep one
+                     */
+                    ipx->setLinearConstantTerm(ipx->getLinearConstantTerm() + ipy->getLinearConstantTerm());
+                    fy.reset();
+                }
             }
 
             return new Plane2DIndexPattern(fx.release(), fy.release());

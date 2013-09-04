@@ -31,6 +31,9 @@ namespace CppAD {
         inline LoopStartOperationNode(const LoopNodeInfo<Base>& info) :
             OperationNode<Base>(CGLoopStartOp),
             loopInfo_(info) {
+            if (info.getIterationCountNode() != NULL) {
+                this->getArguments().push_back(Argument<Base>(*loopInfo_.getIterationCountNode()));
+            }
         }
 
         inline const LoopNodeInfo<Base>& getLoopInfo() const {
