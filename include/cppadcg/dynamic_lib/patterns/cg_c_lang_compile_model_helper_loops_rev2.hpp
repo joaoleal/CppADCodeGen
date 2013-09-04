@@ -96,8 +96,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
-                                                                         const std::vector<size_t>& evalRows,
-                                                                         const std::vector<size_t>& evalCols) {
+                                                                         const std::map<size_t, std::vector<size_t> >& elements) {
         size_t m = _fun->Range();
         size_t n = _fun->Domain();
 
@@ -132,10 +131,17 @@ namespace CppAD {
              */
             // elements[var]{vars}
             std::map<size_t, std::vector<Compressed2JColType> > loopElements;
-            for (size_t e = 0; e < evalCols.size(); e++) {
-                const std::set<size_t>& row = loopHessSparsity[evalRows[e]];
-                if (row.find(evalCols[e]) != row.end()) {
-                    loopElements[evalRows[e]].push_back(Compressed2JColType(e, evalCols[e]));
+
+            std::map<size_t, std::vector<size_t> >::const_iterator itJrow2jcols;
+            for (itJrow2jcols = elements.begin(); itJrow2jcols != elements.end(); ++itJrow2jcols) {
+                size_t jrow = itJrow2jcols->first;
+                const std::vector<size_t>& jcols = itJrow2jcols->second;
+                const std::set<size_t>& row = loopHessSparsity[jrow];
+
+                for (size_t e = 0; e < jcols.size(); e++) {
+                    if (row.find(jcols[e]) != row.end()) {
+                        loopElements[jrow].push_back(Compressed2JColType(e, jcols[e]));
+                    }
                 }
             }
 
@@ -215,7 +221,7 @@ namespace CppAD {
                 finishedGraphCreation();
             }
 
-            prepareSparseReverseTwoSourcesForLoop(sources, handler, *loop, hess);
+            prepareSparseReverseTwoSourcesForLoop(sources, handler, *loop, hess, tx1);
         }
 
         if (mLoopTotal < m) {
@@ -234,13 +240,18 @@ namespace CppAD {
             /**
              * determine the sparsity using only the equations not in loops
              */
-            for (size_t e = 0; e < evalCols.size(); e++) {
-                const std::set<size_t>& row = nonLoopHessSparsity[evalRows[e]];
-                if (row.find(evalCols[e]) != row.end()) {
-                    _nonLoopRev2Elements[evalRows[e]].push_back(Compressed2JColType(e, evalCols[e]));
+            std::map<size_t, std::vector<size_t> >::const_iterator itJrow2jcols;
+            for (itJrow2jcols = elements.begin(); itJrow2jcols != elements.end(); ++itJrow2jcols) {
+                size_t jrow = itJrow2jcols->first;
+                const std::vector<size_t>& jcols = itJrow2jcols->second;
+                const std::set<size_t>& row = nonLoopHessSparsity[jrow];
+
+                for (size_t e = 0; e < jcols.size(); e++) {
+                    if (row.find(jcols[e]) != row.end()) {
+                        _nonLoopRev2Elements[jrow].push_back(Compressed2JColType(e, jcols[e]));
+                    }
                 }
             }
-
 
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
@@ -309,9 +320,9 @@ namespace CppAD {
                 CLanguage<Base> langC(_baseTypeName);
                 langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
                 _cache.str("");
-                _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "noloop_indep" << j;
+                _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_noloop_indep" << j;
                 langC.setGenerateFunction(_cache.str());
-                langC.setDependentAssignOperation("+=");
+                langC.setDependentAssignOperation("+="); // TODO: this is a bug!!!
 
                 std::ostringstream code;
                 std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
@@ -321,13 +332,16 @@ namespace CppAD {
             }
 
         }
+
+        generateGlobalReverseTwoWithLoopsFunctionSource(elements, sources);
     }
 
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseReverseTwoSourcesForLoop(std::map<std::string, std::string>& sources,
                                                                               CodeHandler<Base>& handler,
                                                                               LoopAtomicFun<Base>& loop,
-                                                                              std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& rev2) {
+                                                                              std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& rev2,
+                                                                              const CGBase& tx1) {
         using namespace std;
         using CppAD::vector;
 
@@ -675,7 +689,7 @@ namespace CppAD {
                         typename std::map<TapeVarType, LoopRev2GroupValInfo<Base> >::const_iterator itVar;
                         for (itVar = itIt->second.begin(); itVar != itIt->second.end(); ++itVar) {
                             const TapeVarType& el = itVar->first;
-                            el2jrow2localIt2Pos[el][jrow][localIt] = itVar->second.compressedLoc; //localIt
+                            el2jrow2localIt2Pos[el][jrow][localIt] = itVar->second.compressedLoc;
                         }
 
                     }
@@ -714,7 +728,8 @@ namespace CppAD {
                                                                                      *itPattern.get(),
                                                                                      indexLocalItCountPattern.get(),
                                                                                      loopDepIndexes.m,
-                                                                                     evaluations[jTape1][group.refIteration]);
+                                                                                     evaluations[jTape1][group.refIteration],
+                                                                                     tx1);
 
                 sources[functionName + ".c"] = source;
             }
@@ -735,7 +750,8 @@ namespace CppAD {
                                                                                                const IndexPattern& itPattern,
                                                                                                const IndexPattern* itCountPattern,
                                                                                                const std::map<TapeVarType, Plane2DIndexPattern*>& loopDepIndexes,
-                                                                                               std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations) {
+                                                                                               std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations,
+                                                                                               const CGBase& tx1) {
         size_t n = _fun->Domain();
 
         /**
@@ -784,8 +800,9 @@ namespace CppAD {
         /**
          * generate the expressions inside the loop
          */
-        vector<OperationNode<Base>* > indexedIndependents;
-        vector<OperationNode<Base>* > indexedIndependents2;
+        vector<CGBase> indexedIndependents;
+        vector<CGBase> indexedIndependents2(n);
+        indexedIndependents2[group.refJrow] = tx1;
 
         replaceAtomicLoopWithExpression(handler, loop, iterationIndexOp, evaluations, indexedIndependents, indexedIndependents2);
 
@@ -896,107 +913,109 @@ namespace CppAD {
         return source;
     }
 
-    /**
-     * 
-     * @param modelFunction
-     * @param functionRev2
-     * @param rev2Suffix
-     * @param userHessElLocation maps each element to its position in the user hessian
-     * @param elements  elements[var]{var}
-     * @return 
-     */
     template<class Base>
-    std::string CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2WithLoops(const std::string& modelFunction,
-                                                                                            const std::string& functionRev2,
-                                                                                            const std::string& rev2Suffix,
-                                                                                            const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
-                                                                                            const std::map<size_t, std::vector<size_t> >& elements,
-                                                                                            size_t maxCompressedSize) {
+    void CLangCompileModelHelper<Base>::generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                                        std::map<std::string, std::string>& sources) {
 
-        //size_t m = _fun->Range();
-        //size_t n = _fun->Domain();
-        using namespace std;
-        /*
-                CLanguage<Base> langC(_baseTypeName);
-                std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        // functions for each row
+        std::map<size_t, std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > > > functions;
 
-                _cache.str("");
-                _cache << "#include <stdlib.h>\n"
-                        << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
-                generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements, argsDcl);
-                _cache << "\n"
-                        "void " << modelFunction << "(" << argsDcl << ") {\n"
-                        "   " << _baseTypeName << " const * inLocal[3];\n"
-                        "   " << _baseTypeName << " inLocal1 = 1;\n"
-                        "   " << _baseTypeName << " * outLocal[1];\n"
-                        "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
-                        "   " << _baseTypeName << " * hess = out[0];\n"
-                        "\n"
-                        "   inLocal[0] = in[0];\n"
-                        "   inLocal[1] = &inLocal1;\n"
-                        "   inLocal[2] = in[1];\n"
-                        "   outLocal[0] = compressed;";
+        typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
+        for (itlj1g = _loopRev2Groups.begin(); itlj1g != _loopRev2Groups.end(); ++itlj1g) {
+            LoopAtomicFun<Base>* loop = itlj1g->first;
 
-                langC.setArgumentIn("inLocal");
-                langC.setArgumentOut("outLocal");
-                std::string argsLocal = langC.generateDefaultFunctionArguments();
+            typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
+            for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
+                const TapeVarType& jTape1 = itj1g->first;
 
-                for (loops) {
-                    for (it = elements.begin(); it != elements.end(); ++it) {
-                        size_t index = it->first; ////// check if there are elements for the loop
-                        const std::vector<size_t>& els = it->second;
-                        const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-                        assert(els.size() == location.size());
+                const vector<GroupLoopRev2ColInfo<Base>* >& groups = itj1g->second;
+                for (size_t g = 0; g < groups.size(); g++) {
+                    GroupLoopRev2ColInfo<Base>* group = groups[g];
 
-
-
-
-
-                        _cache << "\n"
-                                "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
-                        for (size_t e = 0; e < els.size(); e++) {
-                            _cache << "   ";
-                            set<size_t>::const_iterator itl;
-                            for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                                _cache << "hess[" << (*itl) << "] = ";
-                            }
-                            _cache << "compressed[" << e << "];\n";
-                        }
+                    std::map<size_t, std::map<size_t, size_t> >::const_iterator itJrow;
+                    for (itJrow = group->jrow2localIt2ModelIt.begin(); itJrow != group->jrow2localIt2ModelIt.end(); ++itJrow) {
+                        size_t jrow = itJrow->first;
+                        functions[jrow][loop][jTape1][g] = group;
                     }
+
                 }
+            }
+        }
 
-
-                 // hessian elements comming from equations not in loops
-
-                for (it = elements.begin(); it != elements.end(); ++it) {
-                    size_t index = it->first; ////// check if there are elements for the loop
-                    const std::vector<size_t>& els = it->second;
-                    const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-                    assert(els.size() == location.size());
-
-                    _cache << "\n"
-                            "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
-                    for (size_t e = 0; e < els.size(); e++) {
-                        _cache << "   ";
-                        set<size_t>::const_iterator itl;
-                        for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-
-                            _cache << "hess[" << (*itl) << "] += "; // notice the +=
-                        }
-                        _cache << "compressed[" << e << "];\n";
-                    }
-                }
-
-                _cache << "\n"
-                        "}\n";
-
-
-                _cache.str("");
-                std::string source = _cache.str();
-                _cache.str("");
-                return source;
+        /**
+         * The function that matches each equation to a directional derivative function
          */
-        return ""; //TODO
+        CLanguage<Base> langC(_baseTypeName);
+        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string args = langC.generateDefaultFunctionArguments();
+        std::string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
+        std::string noLoopFunc = functionRev2 + "_noloop_indep";
+
+        _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+                "\n";
+        generateFunctionDeclarationSource(_cache, functionRev2, "_noloop_indep", _nonLoopRev2Elements, argsDcl);
+        generateFunctionDeclarationSourceLoopRev2(_cache, langC);
+        _cache << "\n";
+        _cache << "int " << functionRev2 <<
+                "(unsigned long pos, " << argsDcl << ") {\n"
+                "   \n"
+                "   switch(pos) {\n";
+        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        for (it = elements.begin(); it != elements.end(); ++it) {
+            size_t jrow = it->first;
+            // the size of each sparsity row
+            _cache << "      case " << jrow << ":\n";
+
+            /**
+             * contributions from equations not in loops
+             */
+            std::map<size_t, std::vector<Compressed2JColType> >::const_iterator itnl = _nonLoopRev2Elements.find(jrow);
+            if (itnl != _nonLoopRev2Elements.end()) {
+                _cache << "         " << noLoopFunc << jrow << "(" << args << ");\n";
+            }
+
+            /**
+             * contributions from equations in loops
+             */
+            const std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >& rowFunctions = functions[jrow];
+
+            typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
+            for (itlj1g = rowFunctions.begin(); itlj1g != rowFunctions.end(); ++itlj1g) {
+                LoopAtomicFun<Base>* loop = itlj1g->first;
+
+                typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
+                for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
+                    const TapeVarType& jTape1 = itj1g->first;
+
+                    typename std::map<size_t, GroupLoopRev2ColInfo<Base>* >::const_iterator itg;
+                    for (itg = itj1g->second.begin(); itg != itj1g->second.end(); ++itg) {
+                        size_t g = itg->first;
+                        _cache << "         ";
+                        generateFunctionNameLoopRev2(_cache, *loop, jTape1, g);
+                        _cache << "(" << jrow << ", " << args << ");\n";
+                    }
+                }
+            }
+
+            /**
+             * return all OK
+             */
+            _cache << "         return 0; // done\n";
+        }
+        _cache << "      default:\n"
+                "         return 1; // error\n"
+                "   };\n";
+
+        _cache << "}\n";
+        sources[functionRev2 + ".c"] = _cache.str();
+        _cache.str("");
+
+        /**
+         * Sparsity
+         */
+        generateSparsity1DSource2(_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY, elements);
+        sources[_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY + ".c"] = _cache.str();
+        _cache.str("");
     }
 
     template<class Base>

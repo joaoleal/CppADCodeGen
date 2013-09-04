@@ -707,12 +707,8 @@ namespace CppAD {
                                                  LoopAtomicFun<Base>* loop,
                                                  std::vector<CGBase>& hess);
 
-        inline virtual std::string generateSparseHessianSourceFromRev2WithLoops(const std::string& modelFunction,
-                                                                                const std::string& functionRev2,
-                                                                                const std::string& rev2Suffix,
-                                                                                const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
-                                                                                const std::map<size_t, std::vector<size_t> >& elements,
-                                                                                size_t maxCompressedSize);
+        void generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
+                                                             std::map<std::string, std::string>& sources);
 
         inline virtual void generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
                                                                          const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
@@ -784,13 +780,13 @@ namespace CppAD {
          * Loops
          */
         virtual void prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
-                                                      const std::vector<size_t>& evalRows,
-                                                      const std::vector<size_t>& evalCols);
+                                                      const std::map<size_t, std::vector<size_t> >& elements);
 
         virtual void prepareSparseReverseTwoSourcesForLoop(std::map<std::string, std::string>& sources,
                                                            CodeHandler<Base>& handler,
                                                            LoopAtomicFun<Base>& loop,
-                                                           std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& hess);
+                                                           std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& hess,
+                                                           const CGBase& tx1);
 
         std::string generateSparseReverseTwoWithLoopsVarGroupSource(const std::string& functionName,
                                                                     const std::string& jobName,
@@ -804,7 +800,8 @@ namespace CppAD {
                                                                     const IndexPattern& itPattern,
                                                                     const IndexPattern* itCountPattern,
                                                                     const std::map<TapeVarType, Plane2DIndexPattern*>& loopDepIndexes,
-                                                                    std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations);
+                                                                    std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations,
+                                                                    const CGBase& tx1);
 
         /***********************************************************************
          * Sparsities
@@ -853,8 +850,8 @@ namespace CppAD {
                                                            LoopAtomicFun<Base>& loopFunc,
                                                            IndexOperationNode<Base>& iterationIndexOp,
                                                            std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations1it,
-                                                           vector<OperationNode<Base>* >& indexedIndependents,
-                                                           vector<OperationNode<Base>* >& indexedIndependents2);
+                                                           vector<CGBase>& indexedIndependents,
+                                                           vector<CGBase>& indexedIndependents2);
 
         static inline void moveNonIndexedOutsideLoop(OperationNode<Base>& loopStart,
                                                      OperationNode<Base>& loopEnd,
@@ -864,51 +861,51 @@ namespace CppAD {
                                                std::set<OperationNode<Base>*>& nonIndexed,
                                                const Index& loopIndex);
 
-        static inline vector<CG<Base> > evalLoopTape(CodeHandler<Base>& handler,
-                                                     LoopEvaluationOperationNode<Base>& loopEvalNode,
-                                                     const vector<OperationNode<Base>*>& indexedIndependents,
-                                                     vector<OperationNode<Base>* >& indexedIndependents2,
-                                                     IndexOperationNode<Base>& iterationIndexOp);
+        static inline vector<CGBase> evalLoopTape(CodeHandler<Base>& handler,
+                                                  LoopEvaluationOperationNode<Base>& loopEvalNode,
+                                                  const vector<CGBase>& indexedIndependents,
+                                                  vector<CGBase>& indexedIndependents2,
+                                                  IndexOperationNode<Base>& iterationIndexOp);
 
-        static inline vector<CG<Base> > generateLoopForward0Graph(CodeHandler<Base>& handler,
-                                                                  LoopAtomicFun<Base>& atomic,
-                                                                  const vector<OperationNode<Base>*>& indexedIndependents,
-                                                                  const std::vector<Argument<Base> >& args);
+        static inline vector<CGBase> generateLoopForward0Graph(CodeHandler<Base>& handler,
+                                                               LoopAtomicFun<Base>& atomic,
+                                                               const vector<CGBase>& indexedIndependents,
+                                                               const std::vector<Argument<Base> >& args);
 
-        static inline vector<CG<Base> > generateForward1Graph(CodeHandler<Base>& handler,
-                                                              LoopAtomicFun<Base>& atomic,
-                                                              const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              vector<OperationNode<Base>*>& indexedIndependents2,
-                                                              const std::vector<Argument<Base> >& argsAtomic,
-                                                              IndexOperationNode<Base>& iterationIndexOp);
+        static inline vector<CGBase> generateForward1Graph(CodeHandler<Base>& handler,
+                                                           LoopAtomicFun<Base>& atomic,
+                                                           const vector<CGBase>& indexedIndependents,
+                                                           vector<CGBase>& indexedIndependents2,
+                                                           const std::vector<Argument<Base> >& argsAtomic,
+                                                           IndexOperationNode<Base>& iterationIndexOp);
 
-        static inline vector<CG<Base> > generateReverse1Graph(CodeHandler<Base>& handler,
-                                                              LoopAtomicFun<Base>& atomic,
-                                                              const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              const std::vector<Argument<Base> >& argsAtomic,
-                                                              IndexOperationNode<Base>& iterationIndexOp);
+        static inline vector<CGBase> generateReverse1Graph(CodeHandler<Base>& handler,
+                                                           LoopAtomicFun<Base>& atomic,
+                                                           const vector<CGBase>& indexedIndependents,
+                                                           const std::vector<Argument<Base> >& argsAtomic,
+                                                           IndexOperationNode<Base>& iterationIndexOp);
 
-        static inline vector<CG<Base> > generateReverse2Graph(CodeHandler<Base>& handler,
-                                                              LoopAtomicFun<Base>& atomic,
-                                                              const vector<OperationNode<Base>*>& indexedIndependents,
-                                                              vector<OperationNode<Base>*>& indexedIndependents2,
-                                                              const std::vector<Argument<Base> >& argsAtomic,
-                                                              IndexOperationNode<Base>& iterationIndexOp);
+        static inline vector<CGBase> generateReverse2Graph(CodeHandler<Base>& handler,
+                                                           LoopAtomicFun<Base>& atomic,
+                                                           const vector<CGBase>& indexedIndependents,
+                                                           vector<CGBase>& indexedIndependents2,
+                                                           const std::vector<Argument<Base> >& argsAtomic,
+                                                           IndexOperationNode<Base>& iterationIndexOp);
 
-        static inline vector<CG<Base> > createLoopGraphIndependentVector(CodeHandler<Base>& handler,
+        static inline vector<CGBase> createLoopGraphIndependentVector(CodeHandler<Base>& handler,
+                                                                      LoopAtomicFun<Base>& atomic,
+                                                                      const vector<CGBase>& indexedIndependents,
+                                                                      const std::vector<Argument<Base> >& argsAtomic,
+                                                                      size_t p);
+
+
+        static inline vector<CGBase> createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
                                                                          LoopAtomicFun<Base>& atomic,
-                                                                         const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                         const vector<CGBase>& x,
+                                                                         vector<CGBase>& indexedIndependents2,
                                                                          const std::vector<Argument<Base> >& argsAtomic,
-                                                                         size_t p);
-
-
-        static inline vector<CG<Base> > createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
-                                                                            LoopAtomicFun<Base>& atomic,
-                                                                            const vector<CG<Base> >& x,
-                                                                            vector<OperationNode<Base>*>& indexedIndependents2,
-                                                                            const std::vector<Argument<Base> >& argsAtomic,
-                                                                            size_t p,
-                                                                            IndexOperationNode<Base>& iterationIndexOp);
+                                                                         size_t p,
+                                                                         IndexOperationNode<Base>& iterationIndexOp);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

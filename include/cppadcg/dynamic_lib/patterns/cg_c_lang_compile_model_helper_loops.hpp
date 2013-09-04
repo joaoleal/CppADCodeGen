@@ -44,8 +44,8 @@ namespace CppAD {
                                                      std::map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes,
                                                      size_t assignOrAdd) {
 
-        std::map<LoopAtomicFun<Base>*, vector<OperationNode<Base>* > > loopIndexedIndependents;
-        std::map<LoopAtomicFun<Base>*, vector<OperationNode<Base>* > > loopIndexedIndependents2;
+        std::map<LoopAtomicFun<Base>*, vector<CGBase> > loopIndexedIndependents;
+        std::map<LoopAtomicFun<Base>*, vector<CGBase> > loopIndexedIndependents2;
 
         /**
          * insert the loops into the operation graph
@@ -67,8 +67,8 @@ namespace CppAD {
             indexesOps.insert(iterationIndexOp);
 
             // indexed independents
-            vector<OperationNode<Base>* >& indexedIndependents = loopIndexedIndependents[loopFunc]; // zero order
-            vector<OperationNode<Base>* >& indexedIndependents2 = loopIndexedIndependents2[loopFunc]; // first order
+            vector<CGBase>& indexedIndependents = loopIndexedIndependents[loopFunc]; // zero order
+            vector<CGBase>& indexedIndependents2 = loopIndexedIndependents2[loopFunc]; // first order
 
             /**
              * generate the expressions inside the loop
@@ -111,8 +111,8 @@ namespace CppAD {
                                                                         LoopAtomicFun<Base>& loopFunc,
                                                                         IndexOperationNode<Base>& iterationIndexOp,
                                                                         std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations1it,
-                                                                        vector<OperationNode<Base>* >& indexedIndependents,
-                                                                        vector<OperationNode<Base>* >& indexedIndependents2) {
+                                                                        vector<CGBase>& indexedIndependents,
+                                                                        vector<CGBase>& indexedIndependents2) {
         /**
          * insert the loops into the operation graph
          */
@@ -127,15 +127,14 @@ namespace CppAD {
             info[0] = 0; // tx
             for (size_t j = 0; j < nIndexed; j++) {
                 info[1] = handler.addLoopIndependentIndexPattern(*loopFunc.getIndependentIndexPatterns()[j], j);
-                indexedIndependents[j] = new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs);
-                handler.manageOperationNodeMemory(indexedIndependents[j]);
+                indexedIndependents[j] = handler.createCG(new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs));
             }
         }
 
-        typename std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >::iterator itE;
+        typename std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >::const_iterator itE;
         for (itE = evaluations1it.begin(); itE != evaluations1it.end(); ++itE) {
             LoopEvaluationOperationNode<Base>* loopEvalNode = itE->first;
-            vector<OperationNode<Base>*>& resultNodes1it = itE->second;
+            const vector<OperationNode<Base>*>& resultNodes1it = itE->second;
 
             // evaluate tape 1st iteration (generate the operation graph)
             if (loopEvalNode != NULL) {
@@ -247,8 +246,8 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::evalLoopTape(CodeHandler<Base>& handler,
                                                                   LoopEvaluationOperationNode<Base>& loopEvalNode,
-                                                                  const vector<OperationNode<Base>*>& indexedIndependents,
-                                                                  vector<OperationNode<Base>* >& indexedIndependents2,
+                                                                  const vector<CGBase>& indexedIndependents,
+                                                                  vector<CGBase>& indexedIndependents2,
                                                                   IndexOperationNode<Base>& iterationIndexOp) {
         assert(loopEvalNode.getOperationType() == CGLoopForwardOp || loopEvalNode.getOperationType() == CGLoopReverseOp);
 
@@ -287,7 +286,7 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::generateLoopForward0Graph(CodeHandler<Base>& handler,
                                                                                LoopAtomicFun<Base>& atomic,
-                                                                               const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                               const vector<CGBase>& indexedIndependents,
                                                                                const std::vector<Argument<Base> >& args) {
         typedef CppAD::CG<Base> CGB;
 
@@ -302,8 +301,8 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::generateForward1Graph(CodeHandler<Base>& handler,
                                                                            LoopAtomicFun<Base>& atomic,
-                                                                           const vector<OperationNode<Base>*>& indexedIndependents,
-                                                                           vector<OperationNode<Base>*>& indexedIndependents2,
+                                                                           const vector<CGBase>& indexedIndependents,
+                                                                           vector<CGBase>& indexedIndependents2,
                                                                            const std::vector<Argument<Base> >& argsAtomic, //argsAtomic = [txAtomic]
                                                                            IndexOperationNode<Base>& iterationIndexOp) {
         typedef CppAD::CG<Base> CGB;
@@ -328,7 +327,7 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::generateReverse1Graph(CodeHandler<Base>& handler,
                                                                            LoopAtomicFun<Base>& atomic,
-                                                                           const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                           const vector<CGBase>& indexedIndependents,
                                                                            const std::vector<Argument<Base> >& argsAtomic, //argsAtomic = [txAtomic pyAtomic]
                                                                            IndexOperationNode<Base>& iterationIndexOp) {
         typedef CppAD::CG<Base> CGB;
@@ -368,8 +367,8 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::generateReverse2Graph(CodeHandler<Base>& handler,
                                                                            LoopAtomicFun<Base>& atomic,
-                                                                           const vector<OperationNode<Base>*>& indexedIndependents,
-                                                                           vector<OperationNode<Base>*>& indexedIndependents2,
+                                                                           const vector<CGBase>& indexedIndependents,
+                                                                           vector<CGBase>& indexedIndependents2,
                                                                            const std::vector<Argument<Base> >& argsAtomic, //argsAtomic = [txAtomic pyAtomic]
                                                                            IndexOperationNode<Base>& iterationIndexOp) {
         typedef CppAD::CG<Base> CGB;
@@ -416,11 +415,9 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::createLoopGraphIndependentVector(CodeHandler<Base>& handler,
                                                                                       LoopAtomicFun<Base>& atomic,
-                                                                                      const vector<OperationNode<Base>*>& indexedIndependents,
+                                                                                      const vector<CGBase>& indexedIndependents,
                                                                                       const std::vector<Argument<Base> >& argsAtomic,
                                                                                       size_t p) {
-        typedef CppAD::CG<Base> CGB;
-
         const std::vector<LoopPositionTmp>& temporaryIndependents = atomic.getTemporaryIndependents();
         const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = atomic.getIndexedIndepIndexes();
         const std::vector<LoopPosition>& nonIndexedIndepIndexes = atomic.getNonIndexedIndepIndexes();
@@ -430,9 +427,9 @@ namespace CppAD {
         size_t nTape = nIndexed + nNonIndexed + temporaryIndependents.size();
 
         // indexed independents
-        vector<CGB> x(nTape);
+        vector<CGBase> x(nTape);
         for (size_t j = 0; j < nIndexed; j++) {
-            x[j] = handler.createCG(Argument<Base>(*indexedIndependents[j]));
+            x[j] = indexedIndependents[j];
         }
         // non indexed
         for (size_t j = 0; j < nNonIndexed; j++) {
@@ -448,8 +445,8 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::createLoopGraphIndependentVectorTx2(CodeHandler<Base>& handler,
                                                                                          LoopAtomicFun<Base>& atomic,
-                                                                                         const vector<CG<Base> >& x,
-                                                                                         vector<OperationNode<Base>*>& indexedIndependents2,
+                                                                                         const vector<CGBase>& x,
+                                                                                         vector<CGBase>& indexedIndependents2,
                                                                                          const std::vector<Argument<Base> >& argsAtomic,
                                                                                          size_t p,
                                                                                          IndexOperationNode<Base>& iterationIndexOp) {
@@ -468,8 +465,7 @@ namespace CppAD {
             info[0] = 1; // tx1
             for (size_t j = 0; j < nIndexed; j++) {
                 info[1] = handler.addLoopIndependentIndexPattern(*atomic.getIndependentIndexPatterns()[j], j);
-                indexedIndependents2[j] = new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs);
-                handler.manageOperationNodeMemory(indexedIndependents2[j]);
+                indexedIndependents2[j] = handler.createCG(new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs));
             }
         }
 
@@ -491,7 +487,7 @@ namespace CppAD {
             if (argsAtomic[pos.atomic * k1 + 1].getOperation() == NULL) {
                 tx[pos.tape * k1 + 1] = handler.createCG(argsAtomic[pos.atomic * k1 + 1]);
             } else {
-                tx[pos.tape * k1 + 1] = handler.createCG(Argument<Base>(*indexedIndependents2[j]));
+                tx[pos.tape * k1 + 1] = indexedIndependents2[j];
             }
         }
         for (size_t j = 0; j < nNonIndexed; j++) {

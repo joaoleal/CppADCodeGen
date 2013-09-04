@@ -1390,18 +1390,18 @@ namespace CppAD {
         std::vector<size_t> evalRows, evalCols;
         determineSecondOrderElements4Eval(evalRows, evalCols);
 
-        if (_funLoops == _fun) {
-            /**
-             * with loops
-             */
-            prepareSparseReverseTwoWithLoops(sources, evalRows, evalCols);
-            return;
-        }
-
         // elements[var]{vars}
         std::map<size_t, std::vector<size_t> > elements;
         for (size_t e = 0; e < evalCols.size(); e++) {
             elements[evalRows[e]].push_back(evalCols[e]);
+        }
+
+        if (_funLoops == _fun) {
+            /**
+             * with loops
+             */
+            prepareSparseReverseTwoWithLoops(sources, elements);
+            return;
         }
 
         std::vector<CGBase> tx1v(n, Base(0));
@@ -1568,8 +1568,13 @@ namespace CppAD {
                 "      in[0] = x;\n"
                 "      in[1] = &tx[j * 2 + 1];\n"
                 "      in[2] = w;\n"
-                "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, " << args << ");\n"
+                "      out[0] = compressed;\n";
+        if (_funLoops == _fun) {
+            _cache << "      for(ePos = 0; ePos < nnz; ePos++)\n"
+                    "         compressed[ePos] = 0;\n"
+                    "\n";
+        }
+        _cache << "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(j, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         px[pos[ePos] * 2] += compressed[ePos];\n"

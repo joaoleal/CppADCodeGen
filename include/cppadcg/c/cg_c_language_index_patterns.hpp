@@ -114,6 +114,8 @@ namespace CppAD {
             if (dy != 1) {
                 ss << " * " << dy;
             }
+        } else if (b == 0) {
+            ss << "0"; // when dy == 0 and b == 0
         }
 
         if (b != 0) {

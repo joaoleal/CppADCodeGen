@@ -138,9 +138,9 @@ namespace CppAD {
                                         const std::string& name) {
             using namespace CppAD;
 
-            std::vector<CGAbstractAtomicFun<double>*> atomics(atoms.size());
+            SmartVectorPointer<CGAbstractAtomicFun<double> > atomics(atoms.size());
             for (size_t a = 0; a < atoms.size(); a++) {
-                atomics[a] = new CGAtomicFun<Base>(*atoms[a], true);
+                atomics.v[a] = new CGAtomicFun<Base>(*atoms[a], true);
             }
 
             //size_t m2 = repeat * m;
@@ -154,7 +154,7 @@ namespace CppAD {
                 x[j] = 0.5;
             CppAD::Independent(x);
 
-            std::vector<ADCGD> y = (*model)(x, repeat, atomics);
+            std::vector<ADCGD> y = (*model)(x, repeat, atomics.v);
 
             ADFun<CGD> fun;
             fun.Dependent(y);
@@ -162,10 +162,6 @@ namespace CppAD {
             testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD);
             testSourceCodeGen(fun, m, repeat, name, atoms, REVERSE);
             testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
-
-            for (size_t a = 0; a < atomics.size(); a++) {
-                delete atomics[a];
-            }
         }
 
     private:
@@ -264,6 +260,12 @@ namespace CppAD {
             compHelpL.setTypicalIndependentValues(xTypical);
 
             GccCompiler<double> compiler;
+            std::vector<std::string> flags;
+            flags.push_back("-O0");
+            flags.push_back("-g");
+            flags.push_back("-ggdb");
+            flags.push_back("-D_FORTIFY_SOURCE=2");
+            compiler.setCompileFlags(flags);
             compiler.setSourcesFolder("sources_" + libBaseName + "_1");
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
@@ -358,12 +360,12 @@ namespace CppAD {
                 compHelpL.setRelatedDependents(relatedDepCandidates);
                 compHelpL.setTypicalIndependentValues(xTypical);
 
-                GccCompiler<double> compiler;
-                compiler.setSourcesFolder("sources_" + libBaseName + "_1");
+                GccCompiler<double> compiler2;
+                compiler2.setSourcesFolder("sources_" + libBaseName + "_1");
 
                 CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
                 std::auto_ptr<DynamicLib<double> > dynamicLibL;
-                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler)), CGException);
+                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler2)), CGException);
             }
 
             if (hessian == MUST_FAIL) {
@@ -374,12 +376,12 @@ namespace CppAD {
                 compHelpL.setRelatedDependents(relatedDepCandidates);
                 compHelpL.setTypicalIndependentValues(xTypical);
 
-                GccCompiler<double> compiler;
-                compiler.setSourcesFolder("sources_" + libBaseName + "_1");
+                GccCompiler<double> compiler2;
+                compiler2.setSourcesFolder("sources_" + libBaseName + "_1");
 
                 CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
                 std::auto_ptr<DynamicLib<double> > dynamicLibL;
-                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler)), CGException);
+                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler2)), CGException);
             }
         }
     };

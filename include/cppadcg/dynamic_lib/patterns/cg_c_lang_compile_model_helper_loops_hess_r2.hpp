@@ -90,10 +90,10 @@ namespace CppAD {
 
         string model_function = _name + "_" + FUNCTION_SPARSE_HESSIAN;
         string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
-        string nlRev2Suffix = "noloop_indep";
+        string nlRev2Suffix = "_noloop_indep";
 
         CLanguage<Base> langC(_baseTypeName);
-        std::string loopFArgs = "in, outLocal, " + langC.getArgumentAtomic();
+        std::string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
         std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
         _cache.str("");
