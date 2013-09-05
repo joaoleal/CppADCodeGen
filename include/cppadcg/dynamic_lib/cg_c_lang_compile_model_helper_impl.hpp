@@ -165,22 +165,20 @@ namespace CppAD {
 
         std::vector<CGBase> yy = _funOrig.Forward(0, xx);
 
-        DependentPatternMatcher<Base> matcher(_relatedDepCandidates);
-        std::vector<Loop<Base>*> loops = matcher.findLoops(yy, xx);
-        std::cout << "loops: " << loops.size() << std::endl;
-
-        if (loops.size() > 0) {
-            std::vector<EquationPattern<double>*> equations = matcher.getEquationPatterns();
-            std::cout << "equation patterns: " << equations.size() << std::endl;
-
-            _funLoops = matcher.createNewTape(yy, xx);
+        DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx);
+        _funLoops = matcher.generateTape();
+        if (_funLoops != NULL) {
             _fun = _funLoops;
 
-            // clean-up
+            const std::vector<Loop<Base>*>& loops = matcher.getLoops();
             for (size_t l = 0; l < loops.size(); l++) {
                 _loopAtomics.insert(loops[l]->releaseAtomicFunction());
-                delete loops[l];
             }
+        }
+
+        if (_verbose) {
+            std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
+            std::cout << "loops: " << matcher.getLoops().size() << std::endl;
         }
 
         finishedGraphCreation();

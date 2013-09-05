@@ -24,6 +24,8 @@ namespace CppAD {
     class DependentPatternMatcher {
     private:
         const std::vector<std::set<size_t> >& relatedDepCandidates_;
+        const std::vector<CG<Base> >& dependents_;
+        std::vector<CG<Base> >& independents_;
         std::vector<EquationPattern<Base>*> equations_;
         EquationPattern<Base>* eqCurr_;
         std::map<size_t, EquationPattern<Base>*> dep2Equation_;
@@ -34,8 +36,23 @@ namespace CppAD {
         size_t idCounter_;
     public:
 
-        DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates) :
-            relatedDepCandidates_(relatedDepCandidates) {
+        /**
+         * Creates a new DependentPatternMatcher
+         * 
+         * @param relatedDepCandidates Groups of dependent variable indexes that
+         *                             are believed to have the same expression
+         *                             pattern.
+         * @param dependents The dependent variable values
+         * @param independents The independent variable values
+         */
+        DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
+                                const std::vector<CG<Base> >& dependents,
+                                std::vector<CG<Base> >& independents) :
+            relatedDepCandidates_(relatedDepCandidates),
+            dependents_(dependents),
+            independents_(independents) {
+            assert(independents_.size() > 0);
+            assert(independents_[0].getCodeHandler() != NULL);
             equations_.reserve(relatedDepCandidates_.size());
         }
 
@@ -43,12 +60,53 @@ namespace CppAD {
             return equations_;
         }
 
-        virtual std::vector<Loop<Base>*> findLoops(const std::vector<CG<Base> >& dependents,
-                                                   std::vector<CG<Base> >& independents) throw (CGException) {
+        const std::vector<Loop<Base>*>& getLoops() const {
+            return loops_;
+        }
+
+        /**
+         * Detects common equation patterns and generates a new tape for the
+         * model using loops.
+         * 
+         * This tape contains references to atomic functions that must be
+         * kept until the end of the tape usage. Either keep this object or 
+         * get the atomic functions from each loop object
+         * (getLoops()[...]->releaseAtomicFunction()).
+         * 
+         * This method should only be called once!
+         * 
+         * @return The new tape with loops or NULL if no loops were detected
+         */
+        virtual ADFun<CG<Base> >* generateTape() {
+            // find l
+            findLoops();
+
+            if (loops_.size() > 0) {
+                return createNewTape();
+            } else {
+                return NULL;
+            }
+        }
+
+        virtual ~DependentPatternMatcher() {
+            for (size_t l = 0; l < loops_.size(); l++) {
+                delete loops_[l];
+            }
+        }
+
+    private:
+
+        /**
+         * Attempts to detect common patterns in the equations and generate 
+         * loops from these patterns.
+         * 
+         * @return information about the detected loops (must be deleted by the user)
+         */
+        virtual std::vector<Loop<Base>*> findLoops() throw (CGException) {
             /**
              * Determine the equation patterns
              */
-            findRelatedVariables(dependents, independents);
+            findRelatedVariables(dependents_, independents_);
 
             const size_t eq_size = equations_.size();
             for (size_t e = 0; e < eq_size; e++) {
@@ -61,7 +119,7 @@ namespace CppAD {
             }
 
             // assign a unique Id to each node
-            assignIds(dependents);
+            assignIds(dependents_);
             id2Deps.resize(idCounter_ + 1);
 
             loops_.reserve(eq_size);
@@ -79,7 +137,7 @@ namespace CppAD {
                 std::set<size_t>::const_iterator depIt;
 
                 for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                    OperationNode<Base>* node = dependents[*depIt].getOperationNode();
+                    OperationNode<Base>* node = dependents_[*depIt].getOperationNode();
                     // will define the dependents associared with each operation
                     markOperationsWithDependent(node, *depIt);
                 }
@@ -90,14 +148,14 @@ namespace CppAD {
                 sharedTemps_.clear();
                 for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
                     //// called too many times to get the same shared variables??????
-                    findSharedTemporaries(dependents[*depIt], *depIt);
+                    findSharedTemporaries(dependents_[*depIt], *depIt);
                 }
 
                 /**
                  * clean-up
                  */
                 for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                    OperationNode<Base>* node = dependents[*depIt].getOperationNode();
+                    OperationNode<Base>* node = dependents_[*depIt].getOperationNode();
                     // must uncolor
                     EquationPattern<Base>::uncolor(node);
                     // must reset usage count
@@ -296,32 +354,31 @@ namespace CppAD {
              */
             size_t l_size = loops_.size();
             for (size_t l = 0; l < l_size; l++) {
-                loops_[l]->createAtomicLoopFunction(dependents, independents, dep2Equation_);
+                loops_[l]->createAtomicLoopFunction(dependents_, independents_, dep2Equation_);
             }
 
             return loops_;
         }
 
         /**
-         * creates a new tape for the model with the loops
+         * Creates a new tape for the model with the previously detected loops.
+         * 
+         * @return The new tape with the loops
          */
-        virtual ADFun<CG<Base> >* createNewTape(const std::vector<CG<Base> >& dependents,
-                                                std::vector<CG<Base> >& independents) {
-            assert(independents.size() > 0);
-            assert(independents[0].getCodeHandler() != NULL);
-            CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
+        virtual ADFun<CG<Base> >* createNewTape() {
+            CodeHandler<Base>& origHandler = *independents_[0].getCodeHandler();
 
             /**
              * Create the new tape
              */
             size_t l_size = loops_.size();
 
-            std::vector<CG<Base> > newDeps = dependents;
+            std::vector<CG<Base> > newDeps = dependents_;
             for (size_t l = 0; l < l_size; l++) {
                 Loop<Base>* loop = loops_[l];
                 LoopAtomicFun<Base>* atomic = loop->getAtomicFunction();
 
-                vector<CG<Base> > loopDeps = atomic->insertIntoModel(independents, loop->temporaryOrigVarOrder);
+                vector<CG<Base> > loopDeps = atomic->insertIntoModel(independents_, loop->temporaryOrigVarOrder);
 
                 // place dependents
                 const std::vector<std::vector<LoopPosition> >& ldeps = atomic->getDependentIndexes();
@@ -344,10 +401,10 @@ namespace CppAD {
                 evaluator.addLoop(atomic->getLoopId(), *atomic);
             }
 
-            std::vector<AD<CG<Base> > > x(independents.size());
+            std::vector<AD<CG<Base> > > x(independents_.size());
             for (size_t j = 0; j < x.size(); j++) {
-                if (independents[j].isValueDefined())
-                    x[j] = independents[j].getValue();
+                if (independents_[j].isValueDefined())
+                    x[j] = independents_[j].getValue();
             }
 
             CppAD::Independent(x);
@@ -367,11 +424,6 @@ namespace CppAD {
 
             return tapeWithLoops.release();
         }
-
-        virtual ~DependentPatternMatcher() {
-        }
-
-    private:
 
         std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CG<Base> >& dependents,
                                                                  const std::vector<CG<Base> >& independents) {

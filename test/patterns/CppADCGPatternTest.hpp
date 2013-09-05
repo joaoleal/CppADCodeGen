@@ -195,22 +195,15 @@ namespace CppAD {
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-            DependentPatternMatcher<double> matcher(relatedDepCandidates);
+            DependentPatternMatcher<double> matcher(relatedDepCandidates, yy, xx);
 
-            std::vector<Loop<Base>*> loops = matcher.findLoops(yy, xx);
-            std::cout << "loops: " << loops.size() << std::endl;
-            ASSERT_EQ(loops.size(), n_loops);
+            std::auto_ptr<ADFun<CG<Base> > > newTape(matcher.generateTape());
 
-            std::vector<EquationPattern<double>*> equations = matcher.getEquationPatterns();
-            std::cout << "equation patterns: " << equations.size() << std::endl;
-            ASSERT_EQ(equations.size(), m);
+            //std::cout << "loops: " << matcher.getLoops().size() << std::endl;
+            ASSERT_EQ(matcher.getLoops().size(), n_loops);
 
-            std::auto_ptr<ADFun<CG<Base> > > newTape(matcher.createNewTape(yy, xx));
-
-            // clean-up
-            for (size_t l = 0; l < loops.size(); l++) {
-                delete loops[l];
-            }
+            //std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
+            ASSERT_EQ(matcher.getEquationPatterns().size(), m);
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,
