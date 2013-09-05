@@ -39,6 +39,8 @@ namespace CppAD {
         size_t _idAtomicCount;
         // the independent variables
         std::vector<OperationNode<Base> *> _independentVariables;
+        // the current dependent variables
+        std::vector<CG<Base> >* _dependents;
         // all the source code blocks created with the CG<Base> objects
         std::vector<OperationNode<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
@@ -51,7 +53,7 @@ namespace CppAD {
         std::set<const Index*> _indexes;
         //
         std::vector<const IndexPattern*> _loopDependentIndexPatterns;
-        std::vector<const IndexPattern*> _loopDependentIndexPatternManaged;
+        std::vector<const IndexPattern*> _loopDependentIndexPatternManaged; // garbage collection
         std::vector<const IndexPattern*> _loopIndependentIndexPatterns;
         /**
          * already used atomic function names (may contain names which were 
@@ -79,6 +81,7 @@ namespace CppAD {
             _idCount(1),
             _idArrayCount(1),
             _idAtomicCount(1),
+            _dependents(NULL),
             _atomicFunctionsOrder(NULL),
             _used(false),
             _reuseIDs(true),
@@ -126,7 +129,7 @@ namespace CppAD {
         }
 
         size_t getIndependentVariableIndex(const OperationNode<Base>& var) const throw (CGException) {
-            assert(var.operation_ == CGInvOp);
+            assert(var.getOperationType() == CGInvOp);
 
             typename std::vector<OperationNode<Base> *>::const_iterator it =
                     std::find(_independentVariables.begin(), _independentVariables.end(), &var);
@@ -261,6 +264,7 @@ namespace CppAD {
             _idCount = 1;
             _idArrayCount = 1;
             _idAtomicCount = 1;
+            _dependents = &dependent;
             _atomicFunctionsOrder = &atomicFunctions;
             _atomicFunctionsSet.clear();
             _indexes.clear();
@@ -537,6 +541,15 @@ namespace CppAD {
                     if (inode.getArguments().size() > 0) {
                         _indexes.insert(&inode.getIndex());
                     }
+                } else if (code.getOperationType() == CGDependentRefOp) {
+                    assert(code.getInfo().size() == 1);
+                    size_t depIndex = code.getInfo()[0];
+
+                    assert(_dependents->size() > depIndex);
+                    OperationNode<Base>* depNode = (*_dependents)[depIndex].getOperationNode();
+                    assert(depNode != NULL && depNode->getOperationType() != CGInvOp);
+
+                    code.setVariableID(depNode->getVariableID());
                 }
             }
         }
@@ -593,14 +606,14 @@ namespace CppAD {
                     if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
                         if (arg.getOperationType() == CGLoopIndexedIndepOp) {
                             // ID value not really used but must be non-zero
-                            arg.setVariableID(1);
+                            arg.setVariableID(std::numeric_limits<size_t>::max());
                         } else {
                             size_t argIndex = it - args.begin();
                             if (arg.getOperationType() == CGLoopStartOp || arg.getOperationType() == CGLoopEndOp) {
                                 if (arg.getVariableID() == 0) {
                                     addToEvaluationQueue(arg);
                                     // ID value not really used but must be non-zero
-                                    arg.setVariableID(1);
+                                    arg.setVariableID(std::numeric_limits<size_t>::max());
                                 }
                             } else if (_lang->createsNewVariable(arg) ||
                                     _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
@@ -611,7 +624,7 @@ namespace CppAD {
                                         _idAtomicCount++;
                                     } else if (arg.getOperationType() == CGLoopIndexedDepOp) {
                                         // ID value not really used but must be non-zero
-                                        arg.setVariableID(1);
+                                        arg.setVariableID(std::numeric_limits<size_t>::max());
                                     } else if (arg.getOperationType() == CGArrayCreationOp) {
                                         // a temporary array
                                         size_t arraySize = arg.getArguments().size();
@@ -949,6 +962,8 @@ namespace CppAD {
             return op != CGArrayCreationOp &&
                     op != CGAtomicForwardOp &&
                     op != CGAtomicReverseOp &&
+                    op != CGLoopStartOp &&
+                    op != CGLoopEndOp &&
                     op != CGIndexOp &&
                     op != CGIndexAssignOp &&
                     arg.getVariableID() >= _minTemporaryVarID;

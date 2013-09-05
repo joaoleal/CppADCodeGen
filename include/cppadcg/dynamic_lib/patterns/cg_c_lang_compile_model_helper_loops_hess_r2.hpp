@@ -90,7 +90,7 @@ namespace CppAD {
 
         string model_function = _name + "_" + FUNCTION_SPARSE_HESSIAN;
         string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
-        string nlRev2Suffix = "_noloop_indep";
+        string nlRev2Suffix = "noloop_indep";
 
         CLanguage<Base> langC(_baseTypeName);
         std::string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
@@ -127,9 +127,47 @@ namespace CppAD {
          */
         _cache << "   for(" << itName << " = 0; " << itName << " < " << _hessSparsity.rows.size() << "; " << itName << "++) {\n"
                 "      hess[" << itName << "] = 0;\n"
-                "   }\n"
-                "\n";
+                "   }\n";
 
+        /**
+         * contributions from equations NOT belonging to loops
+         * (must come before the loop related values because of the assigments)
+         */
+        langC.setArgumentIn("inLocal");
+        langC.setArgumentOut("outLocal");
+        std::string argsLocal = langC.generateDefaultFunctionArguments();
+
+        bool lastCompressed = true;
+        map<size_t, std::vector<Compressed2JColType> >::const_iterator it;
+        for (it = _nonLoopRev2Elements.begin(); it != _nonLoopRev2Elements.end(); ++it) {
+            size_t index = it->first;
+            const std::vector<Compressed2JColType>& els = it->second;
+            const std::vector<set<size_t> >& location = userHessElLocation.at(index);
+            assert(els.size() == location.size());
+            assert(els.size() > 0);
+            bool rowOrdered = jrowOrdered.at(index);
+
+            _cache << "\n";
+            if (rowOrdered) {
+                _cache << "   outLocal[0] = &hess[" << *location[0].begin() << "];\n";
+            } else if (!lastCompressed) {
+                _cache << "   outLocal[0] = compressed;\n";
+            }
+            _cache << "   " << functionRev2 << "_" << nlRev2Suffix << index << "(" << argsLocal << ");\n";
+            if (!rowOrdered) {
+                for (size_t e = 0; e < els.size(); e++) {
+                    _cache << "   ";
+                    set<size_t>::const_iterator itl;
+                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                        _cache << "hess[" << (*itl) << "] += compressed[" << e << "];\n";
+                    }
+                }
+            }
+            lastCompressed = !rowOrdered;
+        }
+        
+        _cache << "\n";
+        
         /**
          * loop related values
          */
@@ -138,7 +176,7 @@ namespace CppAD {
         typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> >::const_iterator itjg2;
         typename std::map<size_t, GroupLoopRev2ColInfo<Base>*>::const_iterator itg;
 
-        bool lastCompressed = true;
+        lastCompressed = true;
         for (itItljg2 = loopCalls.begin(); itItljg2 != loopCalls.end(); ++itItljg2) {
             size_t itCount = itItljg2->first;
             if (itCount > 1) {
@@ -187,44 +225,6 @@ namespace CppAD {
             if (itCount > 1) {
                 _cache << "   }\n";
             }
-        }
-
-        /**
-         * 
-         * 
-         */
-
-        langC.setArgumentIn("inLocal");
-        langC.setArgumentOut("outLocal");
-        std::string argsLocal = langC.generateDefaultFunctionArguments();
-
-        lastCompressed = true;
-        map<size_t, std::vector<Compressed2JColType> >::const_iterator it;
-        for (it = _nonLoopRev2Elements.begin(); it != _nonLoopRev2Elements.end(); ++it) {
-            size_t index = it->first;
-            const std::vector<Compressed2JColType>& els = it->second;
-            const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-            assert(els.size() == location.size());
-            assert(els.size() > 0);
-            bool rowOrdered = jrowOrdered.at(index);
-            
-            _cache << "\n";
-            if (rowOrdered) {
-                _cache << "   outLocal[0] = &hess[" << *location[0].begin() << "];\n";
-            } else if (!lastCompressed) {
-                _cache << "   outLocal[0] = compressed;\n";
-            }
-            _cache << "   " << functionRev2 << "_" << nlRev2Suffix << index << "(" << argsLocal << ");\n";
-            if (!rowOrdered) {
-                for (size_t e = 0; e < els.size(); e++) {
-                    _cache << "   ";
-                    set<size_t>::const_iterator itl;
-                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                        _cache << "hess[" << (*itl) << "] += compressed[" << e << "];\n";
-                    }
-                }
-            }
-            lastCompressed = !rowOrdered;
         }
 
         _cache << "\n"

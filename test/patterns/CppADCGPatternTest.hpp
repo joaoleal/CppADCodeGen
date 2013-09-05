@@ -64,6 +64,7 @@ namespace CppAD {
                              size_t m,
                              size_t n,
                              size_t repeat,
+                             size_t mExtra,
                              const std::string& libName,
                              bool jacobian = true,
                              bool hessian = true) {
@@ -85,12 +86,12 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testSourceCodeGen(fun, m, repeat, libName, FORWARD, jacobian ? MUST_PASS : MUST_FAIL, hessian ? MUST_PASS : MUST_FAIL);
+            testSourceCodeGen(fun, m, repeat, mExtra, libName, FORWARD, jacobian ? MUST_PASS : MUST_FAIL, hessian ? MUST_PASS : MUST_FAIL);
             if (jacobian) {
-                testSourceCodeGen(fun, m, repeat, libName, REVERSE, MUST_PASS, IGNORE);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, REVERSE, MUST_PASS, IGNORE);
             }
             if (hessian) {
-                testSourceCodeGen(fun, m, repeat, libName, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, FORWARD, IGNORE, MUST_PASS, true);
             }
         }
 
@@ -159,9 +160,10 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD);
-            testSourceCodeGen(fun, m, repeat, name, atoms, REVERSE);
-            testSourceCodeGen(fun, m, repeat, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
+            size_t mExtra = 0;
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, FORWARD);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, REVERSE);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
         }
 
     private:
@@ -213,17 +215,19 @@ namespace CppAD {
 
         void testSourceCodeGen(ADFun<CGD>& fun,
                                size_t m, size_t repeat,
+                               size_t mExtra,
                                const std::string& name,
                                JacobianADMode jacMode,
                                TEST_TYPE jacobian = MUST_PASS,
                                TEST_TYPE hessian = MUST_PASS,
                                bool reverseTwo = false) {
             std::vector<atomic_base<Base>*> atoms;
-            testSourceCodeGen(fun, m, repeat, name, atoms, jacMode, jacobian, hessian, reverseTwo);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, jacMode, jacobian, hessian, reverseTwo);
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,
                                size_t m, size_t repeat,
+                               size_t mExtra,
                                const std::string& name,
                                const std::vector<atomic_base<Base>*>& atoms,
                                JacobianADMode jacMode,
@@ -245,7 +249,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "DynamicWithLoops");
+            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");
             compHelpL.setCreateForwardZero(true);
             compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
@@ -270,13 +274,13 @@ namespace CppAD {
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
-            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(libBaseName + "DynamicWithLoops"));
+            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(libBaseName + "Loops"));
             for (size_t i = 0; i < atoms.size(); i++)
                 modelL->addAtomicFunction(*atoms[i]);
             /**
              * Without the loops
              */
-            CLangCompileModelHelper<double> compHelp(fun, libBaseName + "DynamicNoLoops");
+            CLangCompileModelHelper<double> compHelp(fun, libBaseName + "NoLoops");
             compHelp.setCreateForwardZero(true);
             compHelp.setJacobianADMode(jacMode);
             compHelp.setCreateJacobian(false);
@@ -291,13 +295,13 @@ namespace CppAD {
             compiler.setSourcesFolder("sources_" + libBaseName + "_1");
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
-            compDynHelp.setLibraryName("modellibNoLoops");
+            compDynHelp.setLibraryName("modelLibNoLoops");
             std::auto_ptr<DynamicLib<double> > dynamicLib(compDynHelp.createDynamicLibrary(compiler));
 
             /**
              * reference library
              */
-            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(libBaseName + "DynamicNoLoops"));
+            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(libBaseName + "NoLoops"));
             for (size_t i = 0; i < atoms.size(); i++)
                 model->addAtomicFunction(*atoms[i]);
 
@@ -338,7 +342,7 @@ namespace CppAD {
                 compareVectorSetValues(modelL->HessianSparsitySet(),
                                        model->HessianSparsitySet());
 
-                std::vector<double> w(m * repeat);
+                std::vector<double> w(m * repeat + mExtra);
                 for (size_t i = 0; i < w.size(); i++) {
                     w[i] = 0.5 * (i + 1);
                 }
@@ -353,7 +357,7 @@ namespace CppAD {
 
             if (jacobian == MUST_FAIL) {
                 /** Make sure it fails */
-                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "DynamicWithLoopsJacFail");
+                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "LoopsJacFail");
                 compHelpL.setCreateForwardZero(false);
                 compHelpL.setJacobianADMode(jacMode);
                 compHelpL.setCreateSparseJacobian(true);
@@ -370,7 +374,7 @@ namespace CppAD {
 
             if (hessian == MUST_FAIL) {
                 /** Make sure it fails */
-                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "DynamicWithLoopsHessFail");
+                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "LoopsHessFail");
                 compHelpL.setCreateForwardZero(false);
                 compHelpL.setCreateSparseHessian(true);
                 compHelpL.setRelatedDependents(relatedDepCandidates);

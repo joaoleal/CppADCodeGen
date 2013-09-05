@@ -253,9 +253,6 @@ namespace CppAD {
                 }
             }
 
-            CodeHandler<Base> handler;
-            handler.setVerbose(_verbose);
-
             std::vector<CGBase> tx1v(n, Base(0));
 
             /**
@@ -272,6 +269,9 @@ namespace CppAD {
 
                 startingGraphCreation(jobName);
 
+                CodeHandler<Base> handler;
+                handler.setVerbose(_verbose);
+
                 std::vector<CGBase> tx0(n);
                 handler.makeVariables(tx0);
                 if (_x.size() > 0) {
@@ -287,11 +287,14 @@ namespace CppAD {
                 }
 
                 std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+                handler.makeVariables(py);
+
+                std::vector<CGBase> pyNoLoop(m);
                 for (size_t i = 0; i < m; i++) {
                     if (!eqLoop[i]) {
-                        handler.makeVariable(py[i]);
+                        pyNoLoop[i] = py[i];
                         if (_x.size() > 0) {
-                            py[i].setValue(Base(1.0));
+                            pyNoLoop[i].setValue(Base(1.0));
                         }
                     }
                 }
@@ -301,7 +304,7 @@ namespace CppAD {
                 tx1v[j] = tx1;
                 _fun->Forward(1, tx1v);
                 tx1v[j] = Base(0);
-                std::vector<CGBase> px = _fun->Reverse(2, py);
+                std::vector<CGBase> px = _fun->Reverse(2, pyNoLoop);
                 assert(px.size() == 2 * n);
 
                 std::vector<CGBase> pxCustom(cols.size());
@@ -322,7 +325,6 @@ namespace CppAD {
                 _cache.str("");
                 _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_noloop_indep" << j;
                 langC.setGenerateFunction(_cache.str());
-                langC.setDependentAssignOperation("+="); // TODO: this is a bug!!!
 
                 std::ostringstream code;
                 std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
@@ -956,9 +958,10 @@ namespace CppAD {
         std::string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
         std::string noLoopFunc = functionRev2 + "_noloop_indep";
 
+        _cache.str("");
         _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                 "\n";
-        generateFunctionDeclarationSource(_cache, functionRev2, "_noloop_indep", _nonLoopRev2Elements, argsDcl);
+        generateFunctionDeclarationSource(_cache, functionRev2, "noloop_indep", _nonLoopRev2Elements, argsDcl);
         generateFunctionDeclarationSourceLoopRev2(_cache, langC);
         _cache << "\n";
         _cache << "int " << functionRev2 <<
@@ -972,7 +975,8 @@ namespace CppAD {
             _cache << "      case " << jrow << ":\n";
 
             /**
-             * contributions from equations not in loops
+             * contributions from equations not in loops 
+             * (must come before contributions from loops because of the assigments)
              */
             std::map<size_t, std::vector<Compressed2JColType> >::const_iterator itnl = _nonLoopRev2Elements.find(jrow);
             if (itnl != _nonLoopRev2Elements.end()) {

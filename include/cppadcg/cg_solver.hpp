@@ -24,7 +24,7 @@ namespace CppAD {
 
         // find code in expression
         if (&expression == &code)
-            return CG<Base > (*this, Argument<Base > (code));
+            return CG<Base > (*this, Argument<Base> (code));
 
         typedef vector<OperationPathNode<Base> > SourceCodePath;
 

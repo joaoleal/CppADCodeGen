@@ -34,20 +34,57 @@ namespace CppAD {
 
         std::vector<CGBase> hess(_hessSparsity.rows.size());
 
-        /**
-         * loops
-         */
         size_t mLoopTotal = 0;
         std::vector<bool> eqLoop(m, false);
-
-        std::map<LoopAtomicFun<Base>*, std::vector<CGBase> > loopHess; // hessian elements only for the equation in a given loop
-
         typename std::set<LoopAtomicFun<Base>* >::const_iterator itl;
         for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
             LoopAtomicFun<Base>* loop = *itl;
-            size_t iterations = loop->getIterationCount();
 
+            size_t iterations = loop->getIterationCount();
             mLoopTotal += loop->getLoopDependentCount();
+
+            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
+            for (size_t i = 0; i < depIndexes.size(); i++) {
+                for (size_t iter = 0; iter < iterations; iter++) {
+                    const LoopPosition& pos = depIndexes[i][iter];
+                    eqLoop[pos.original] = true;
+                }
+            }
+        }
+
+        if (mLoopTotal < m) {
+            /**
+             * equations not in loops
+             *  (must come before the loops because of the assigments to hess!)
+             */
+            vector<CGBase> ww(m);
+            for (size_t i = 0; i < m; i++) {
+                ww[i] = eqLoop[i] ? Base(0) : w[i];
+            }
+
+            CppAD::sparse_hessian_work work;
+            vector<CGBase> lowerHess(lowerHessRows.size());
+            _fun->SparseHessian(indVars, ww, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
+
+            for (size_t i = 0; i < lowerHessOrder.size(); i++) {
+                hess[lowerHessOrder[i]] = lowerHess[i];
+            }
+
+            // make use of the symmetry of the Hessian in order to reduce operations
+            std::map<size_t, size_t>::const_iterator it2;
+            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+                hess[it2->first] = hess[it2->second];
+            }
+        }
+
+        /**
+         * loops
+         */
+        std::map<LoopAtomicFun<Base>*, std::vector<CGBase> > loopHess; // hessian elements only for the equation in a given loop
+
+        for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
+            LoopAtomicFun<Base>* loop = *itl;
+            size_t iterations = loop->getIterationCount();
 
             vector<CGBase> wLoop(m);
             for (size_t i = 0; i < m; i++) {
@@ -58,7 +95,6 @@ namespace CppAD {
             for (size_t i = 0; i < depIndexes.size(); i++) {
                 for (size_t iter = 0; iter < iterations; iter++) {
                     const LoopPosition& pos = depIndexes[i][iter];
-                    eqLoop[pos.original] = true;
                     wLoop[pos.original] = w[pos.original];
                 }
             }
@@ -83,35 +119,6 @@ namespace CppAD {
 
             for (size_t e = 0; e < hess.size(); e++) {
                 hess[e] += hessLoopl[e];
-            }
-        }
-
-        if (mLoopTotal < m) {
-            /**
-             * equations not in loops
-             */
-            vector<CGBase> ww(m);
-            for (size_t i = 0; i < m; i++) {
-                ww[i] = eqLoop[i] ? Base(0) : w[i];
-            }
-
-            CppAD::sparse_hessian_work work;
-            vector<CGBase> lowerHess(lowerHessRows.size());
-            _fun->SparseHessian(indVars, ww, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
-
-            std::vector<CGBase> hessNoLoops(_hessSparsity.rows.size());
-            for (size_t i = 0; i < lowerHessOrder.size(); i++) {
-                hessNoLoops[lowerHessOrder[i]] = lowerHess[i];
-            }
-
-            // make use of the symmetry of the Hessian in order to reduce operations
-            std::map<size_t, size_t>::const_iterator it2;
-            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-                hessNoLoops[it2->first] = hessNoLoops[it2->second];
-            }
-
-            for (size_t e = 0; e < hess.size(); e++) {
-                hess[e] += hessNoLoops[e];
             }
         }
 
@@ -194,7 +201,7 @@ namespace CppAD {
                                   "is either associated with multiple indexed independents "
                                   "or an indepedent with constant index.");
             }
-            
+
 #ifndef NDEBUG
             {
                 LoopEvaluationOperationNode<Base>* loopEvalNode = evals.begin()->first;

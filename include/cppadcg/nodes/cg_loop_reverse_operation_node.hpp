@@ -18,7 +18,10 @@
 namespace CppAD {
 
     /**
-     * A loop end operation node
+     * A reverse mode operation node for the evaluation of the a model in a loop.
+     * 
+     * This is a custom OperationNode class and therefore cannot be transformed
+     * into any other node type (makeAlias() and setOperation() might not work).
      * 
      * @author Joao Leal
      */

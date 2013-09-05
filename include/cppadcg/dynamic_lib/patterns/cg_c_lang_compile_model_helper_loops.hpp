@@ -91,10 +91,15 @@ namespace CppAD {
             /**
              * change the dependents (must depend directly on the loop)
              */
+            std::vector<size_t> info(1);
+            std::vector<Argument<Base> > args(1);
             for (size_t i = 0; i < dep_size; i++) {
                 for (size_t it = 0; it < dependents[i]->indexes.size(); it++) {
+                    // an additional alias variable is required so that each dependent variable can have its own ID
                     size_t e = dependents[i]->indexes[it];
-                    dep[e] = handler.createCG(Argument<Base>(*loopEnd));
+                    info[0] = e;
+                    args[0] = Argument<Base>(*loopEnd);
+                    dep[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, info, args));
                 }
             }
 

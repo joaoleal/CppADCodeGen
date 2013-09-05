@@ -24,6 +24,8 @@ namespace CppAD {
      */
     template<class Base>
     class OperationNode {
+    public:
+        static const std::set<CGOpCode> CUSTOM_NODE_CLASS;
     private:
         // the operations used to create this variable (temporary variables only)
         CGOpCode operation_;
@@ -131,6 +133,8 @@ namespace CppAD {
         }
 
         inline void makeAlias(const Argument<Base>& other) {
+            assert(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
+
             operation_ = CGAliasOp;
             arguments_.resize(1);
             arguments_[0] = other;
@@ -144,6 +148,8 @@ namespace CppAD {
         }
 
         inline void setOperation(CGOpCode op, const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
+            assert(op == operation_ || CUSTOM_NODE_CLASS.find(op) == CUSTOM_NODE_CLASS.end()); // cannot transform into a node with a custom class
+
             operation_ = op;
             arguments_ = arguments;
         }
@@ -271,6 +277,8 @@ namespace CppAD {
 
     private:
 
+        static inline std::set<CGOpCode> makeCustomNodeClassesSet();
+
         OperationNode(const OperationNode& orig) :
             operation_(orig.operation_),
             info_(orig.info_),
@@ -287,6 +295,21 @@ namespace CppAD {
         friend class CodeHandler<Base>;
 
     };
+
+    template<class Base>
+    inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() {
+        std::set<CGOpCode> s;
+        s.insert(CGIndexAssignOp);
+        s.insert(CGIndexOp);
+        s.insert(CGLoopForwardOp);
+        s.insert(CGLoopReverseOp);
+        s.insert(CGLoopStartOp);
+        s.insert(CGLoopEndOp);
+        return s;
+    }
+
+    template<class Base>
+    const std::set<CGOpCode> OperationNode<Base>::CUSTOM_NODE_CLASS = makeCustomNodeClassesSet();
 
     template<class Base>
     inline std::ostream& operator <<(

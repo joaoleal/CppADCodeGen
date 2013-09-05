@@ -446,7 +446,7 @@ namespace CppAD {
                 }
 
                 /**
-                 * Source generation magic!
+                 * Source code generation magic!
                  */
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
@@ -457,6 +457,11 @@ namespace CppAD {
                     }
 
                     OperationNode<Base>& op = **it;
+
+                    // a dependent variable assigned by a loop does require any source code (its done inside the loop)
+                    if (op.getOperationType() == CGDependentRefOp) {
+                        continue; // nothing to do (this operation is right hand side only)
+                    }
 
                     bool createsVar = directlyAssignsVariable(op); // do we need to do the assigment here?
                     if (!createsVar) {
