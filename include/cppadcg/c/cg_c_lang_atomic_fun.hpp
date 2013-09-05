@@ -17,8 +17,15 @@
 
 extern "C" {
 
+    /**
+     * Holds function pointers that the compiled code uses to call atomic functions.
+     */
     struct CLangAtomicFun {
+        /**
+         * A pointer to the compiled model object (e.g. LinuxDynamicLibModel)
+         */
         void* libModel;
+        
         int (*forward)(void* libModel,
                 int atomicIndex,
                 int q,

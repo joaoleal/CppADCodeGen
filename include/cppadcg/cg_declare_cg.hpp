@@ -98,9 +98,6 @@ namespace CppAD {
     class IndexedDependentLoopInfo;
 
     template<class Base>
-    class JacOrigElementIndepLoopInfo;
-
-    template<class Base>
     class JacTapeElementLoopInfo;
 
     template<class Base>

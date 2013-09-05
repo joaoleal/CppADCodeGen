@@ -10,6 +10,9 @@
 # directory used by autoconf to cache information for future runs
 autom4te.cache
 
+# doxygen output
+doxydoc
+
 # doxygen errors
 doxygen.err
 
