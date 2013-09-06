@@ -690,6 +690,7 @@ namespace CppAD {
             compiler.setSourcesFolder("sources_atomiclib_" + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
+            compDynHelp.setVerbose(this->verbose_);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
         }
 
@@ -745,6 +746,7 @@ namespace CppAD {
             compiler1.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
+            compDynHelp.setVerbose(this->verbose_);
             compDynHelp.setLibraryName("innerModel");
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler1);
             _modelLib = _dynamicLib->model(_modelName);
@@ -789,6 +791,7 @@ namespace CppAD {
             compiler2.setCompileFlags(flags);
 
             CLangCompileDynamicHelper<double> compDynHelp2(compHelp2);
+            compDynHelp2.setVerbose(this->verbose_);
             compDynHelp2.setLibraryName("outterModel");
             _dynamicLib2 = compDynHelp2.createDynamicLibrary(compiler2);
 
@@ -917,6 +920,7 @@ namespace CppAD {
             compiler.setSourcesFolder(std::string("sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
+            compDynHelp.setVerbose(this->verbose_);
             compDynHelp.addModel(compHelp2);
             _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
 

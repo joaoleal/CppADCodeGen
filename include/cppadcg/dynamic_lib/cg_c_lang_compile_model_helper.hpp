@@ -95,13 +95,34 @@ namespace CppAD {
         };
 
         /**
-         * 
+         * Saves sparsity information in more than one format
          */
         class LocalSparsityInfo {
         public:
+            /**
+             * Calculated sparsity from the model
+             * (may differ from the requested sparsity)
+             */
             SparsitySetType sparsity;
+            // rows (in a custom order)
             std::vector<size_t> rows;
+            // columns (in a custom order)
             std::vector<size_t> cols;
+        };
+
+        /**
+         * Used for coloring
+         */
+        class Color {
+        public:
+            /// all row with this color
+            std::set<size_t> rows;
+            /// maps column indexes to the corresponding row
+            std::map<size_t, size_t> column2Row;
+            /// maps row indexes to the corresponding columns
+            std::map<size_t, std::set<size_t> > row2Columns;
+            /// used columns
+            std::set<size_t> forbiddenRows;
         };
 
     protected:
@@ -149,6 +170,9 @@ namespace CppAD {
          */
         Position _custom_hess;
         LocalSparsityInfo _hessSparsity;
+        /**
+         * hessian sparsity from the model for each equation
+         */
         std::vector<LocalSparsityInfo> _hessSparsities;
         /**
          * The order of the atomic functions
@@ -812,6 +836,18 @@ namespace CppAD {
         virtual void generateJacobianSparsitySource(std::map<std::string, std::string>& sources);
 
         virtual void determineHessianSparsity();
+
+        /**
+         * Determines groups of rows from a sparsity pattern which do not share
+         * the same columns
+         * 
+         * @param columns the column indexes of interest (all others are ignored);
+         *                an empty set means all columns
+         * @param sparsity The sparsity pattern to color
+         * @return the colors
+         */
+        inline vector<CLangCompileModelHelper<Base>::Color> colorByRow(const std::set<size_t>& columns,
+                                                                       const SparsitySetType& sparsity);
 
         virtual void generateHessianSparsitySource(std::map<std::string, std::string>& sources);
 

@@ -417,6 +417,7 @@ namespace CppAD {
             }
         }
 
+        //printSparsityPattern(_jacSparsity.sparsity, "jac sparsity");
         std::vector<CGBase> jac(_jacSparsity.rows.size());
         CppAD::sparse_jacobian_work work;
         if (forward) {
@@ -896,56 +897,7 @@ namespace CppAD {
             /**
              * Coloring
              */
-            CppAD::vector<std::set<size_t> > color2eq(m); // equations for each color
-            CppAD::vector<std::map<size_t, size_t> > colorVar2Eq(m);
-            CppAD::vector<std::set<size_t> > forbidden(m); // used variables for each color
-
-            size_t c_used = 0;
-            for (size_t i = 0; i < m; i++) {
-                const std::set<size_t>& jacRow = jac[i];
-                if (jacRow.size() == 0) {
-                    continue; //nothing to do
-                }
-
-                // consider only the variables present in the Hessian
-                std::set<size_t> jacRowReduced;
-                if (_custom_hess.defined) {
-                    for (it = jacRow.begin(); it != jacRow.end(); ++it) {
-                        size_t j = *it;
-                        if (customVarsInHess.find(j) != customVarsInHess.end())
-                            jacRowReduced.insert(j);
-                    }
-                } else {
-                    jacRowReduced = jacRow;
-                }
-
-                bool newColor = true;
-                size_t colori;
-                for (size_t c = 0; c < c_used; c++) {
-                    std::set<size_t>& forbidden_c = forbidden[c];
-                    if (!intersects(forbidden_c, jacRowReduced)) {
-                        // no intersection
-                        colori = c;
-                        newColor = false;
-                        forbidden_c.insert(jacRowReduced.begin(), jacRowReduced.end());
-                        break;
-                    }
-                }
-
-                if (newColor) {
-                    colori = c_used;
-                    forbidden[c_used] = jacRowReduced;
-                    c_used++;
-                }
-
-                color2eq[colori].insert(i);
-
-                std::map<size_t, size_t>& var2Eq = colorVar2Eq[colori];
-                for (it = jacRowReduced.begin(); it != jacRowReduced.end(); ++it) {
-                    size_t j = *it;
-                    var2Eq[j] = i;
-                }
-            }
+            const CppAD::vector<Color> colors = colorByRow(customVarsInHess, jac);
 
             /**
              * For each individual equation
@@ -955,11 +907,12 @@ namespace CppAD {
                 _hessSparsities[i].sparsity.resize(n);
             }
 
-            for (size_t c = 0; c < c_used; c++) {
+            for (size_t c = 0; c < colors.size(); c++) {
+                const Color& color = colors[c];
 
                 // first-order
                 r = SparsitySetType(n); //clear r
-                for (it = forbidden[c].begin(); it != forbidden[c].end(); ++it) {
+                for (it = color.forbiddenRows.begin(); it != color.forbiddenRows.end(); ++it) {
                     size_t j = *it;
                     r[j].insert(j);
                 }
@@ -967,7 +920,7 @@ namespace CppAD {
 
                 // second-order
                 s[0].clear();
-                const std::set<size_t>& equations = color2eq[c];
+                const std::set<size_t>& equations = color.rows;
                 std::set<size_t>::const_iterator itEq;
                 for (itEq = equations.begin(); itEq != equations.end(); ++itEq) {
                     size_t i = *itEq;
@@ -979,8 +932,8 @@ namespace CppAD {
                 /**
                  * Retrieve the individual hessians for each equation
                  */
-                const std::map<size_t, size_t>& var2Eq = colorVar2Eq[c];
-                const std::set<size_t>& forbidden_c = forbidden[c]; //used variables
+                const std::map<size_t, size_t>& var2Eq = color.column2Row;
+                const std::set<size_t>& forbidden_c = color.forbiddenRows; //used variables
                 std::set<size_t>::const_iterator itvar;
                 for (itvar = forbidden_c.begin(); itvar != forbidden_c.end(); ++itvar) {
                     size_t j = *itvar;
@@ -1023,6 +976,68 @@ namespace CppAD {
             _hessSparsity.rows = _custom_hess.row;
             _hessSparsity.cols = _custom_hess.col;
         }
+    }
+
+    template<class Base>
+    vector<typename CLangCompileModelHelper<Base>::Color> CLangCompileModelHelper<Base>::colorByRow(const std::set<size_t>& columns,
+                                                                                                    const SparsitySetType& sparsity) {
+        CppAD::vector<Color> colors(sparsity.size()); // reserve the maximum size to avoid reallocating more space later
+
+        std::set<size_t>::const_iterator it;
+
+        /**
+         * try not match the columns of each row to a color which did not have
+         * those columns yet 
+         */
+        size_t c_used = 0;
+        for (size_t i = 0; i < sparsity.size(); i++) {
+            const std::set<size_t>& row = sparsity[i];
+            if (row.size() == 0) {
+                continue; //nothing to do
+            }
+
+            // consider only the columns present in the sparsity pattern
+            std::set<size_t> rowReduced;
+            if (_custom_hess.defined) {
+                for (it = row.begin(); it != row.end(); ++it) {
+                    size_t j = *it;
+                    if (columns.find(j) != columns.end())
+                        rowReduced.insert(j);
+                }
+            } else {
+                rowReduced = row;
+            }
+
+            bool newColor = true;
+            size_t colori;
+            for (size_t c = 0; c < c_used; c++) {
+                std::set<size_t>& forbidden_c = colors[c].forbiddenRows;
+                if (!intersects(forbidden_c, rowReduced)) {
+                    // no intersection
+                    colori = c;
+                    newColor = false;
+                    forbidden_c.insert(rowReduced.begin(), rowReduced.end());
+                    break;
+                }
+            }
+
+            if (newColor) {
+                colori = c_used;
+                colors[c_used].forbiddenRows = rowReduced;
+                c_used++;
+            }
+
+            colors[colori].rows.insert(i);
+
+            for (it = rowReduced.begin(); it != rowReduced.end(); ++it) {
+                size_t j = *it;
+                colors[colori].column2Row[j] = i;
+                colors[colori].row2Columns[i].insert(j);
+            }
+        }
+
+        colors.resize(c_used); //reduce size
+        return colors;
     }
 
     template<class Base>
@@ -1404,8 +1419,111 @@ namespace CppAD {
 
         std::vector<CGBase> tx1v(n, Base(0));
 
+        std::set<size_t> customVarsInHess;
+        if (_custom_hess.defined) {
+            customVarsInHess.insert(_custom_hess.row.begin(), _custom_hess.row.end());
+            customVarsInHess.insert(_custom_hess.col.begin(), _custom_hess.col.end());
+        }
+
         /**
-         * Generate one function for each dependent variable
+         * Coloring
+         */
+        const CppAD::vector<Color> colors = colorByRow(customVarsInHess, _hessSparsity.sparsity);
+
+        for (size_t c = 0; c < colors.size(); c++) {
+            const Color& color = colors[c];
+
+            _cache.str("");
+            _cache << "model (reverse two, indep " << *color.rows.begin();
+            std::set<size_t>::const_iterator iti = color.rows.begin();
+            size_t count = 1;
+            for (++iti; iti != color.rows.end() && count < 3; ++iti, count++) {
+                _cache << " + " << *iti;
+            }
+            if (color.rows.size() > count) {
+                _cache << *color.rows.begin() << " + {" << (color.rows.size() - count) << " others})";
+            }
+            _cache << ")";
+
+            const std::string jobName = _cache.str();
+
+            startingGraphCreation(jobName);
+
+            CodeHandler<Base> handler;
+            handler.setVerbose(_verbose);
+
+            std::vector<CGBase> tx0(n);
+            handler.makeVariables(tx0);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < n; i++) {
+                    tx0[i].setValue(_x[i]);
+                }
+            }
+
+            CGBase tx1;
+            handler.makeVariable(tx1);
+            if (_x.size() > 0) {
+                tx1.setValue(Base(1.0));
+            }
+
+            std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+            handler.makeVariables(py);
+            if (_x.size() > 0) {
+                for (size_t i = 0; i < m; i++) {
+                    py[i].setValue(Base(1.0));
+                }
+            }
+
+            _fun->Forward(0, tx0);
+
+            for (std::set<size_t>::const_iterator itj = color.forbiddenRows.begin(); itj != color.forbiddenRows.end(); ++itj) {
+                size_t j = *itj;
+                tx1v[j] = tx1;
+            }
+            _fun->Forward(1, tx1v);
+
+            // restore values
+            for (std::set<size_t>::const_iterator itj = color.forbiddenRows.begin(); itj != color.forbiddenRows.end(); ++itj) {
+                size_t j = *itj;
+                tx1v[j] = Base(0);
+            }
+
+            std::vector<CGBase> px = _fun->Reverse(2, py);
+            assert(px.size() == 2 * n);
+
+            finishedGraphCreation();
+
+
+            std::map<size_t, std::set<size_t> >::const_iterator itr2c;
+            for (itr2c = color.row2Columns.begin(); itr2c != color.row2Columns.end(); ++itr2c) {
+                size_t j = itr2c->first;
+                const std::set<size_t>& cols = itr2c->second;
+
+                std::vector<CGBase> pxCustom(cols.size());
+                std::set<size_t>::const_iterator it2;
+                size_t e = 0;
+                for (it2 = cols.begin(); it2 != cols.end(); ++it2, e++) {
+                    size_t jj = *it2;
+                    pxCustom[e] = px[jj * p + 1]; // not interested in all values
+                }
+
+                CLanguage<Base> langC(_baseTypeName);
+                langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+                _cache.str("");
+                _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_indep" << j;
+                langC.setGenerateFunction(_cache.str());
+
+                std::ostringstream code;
+                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
+                CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
+
+                handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
+            }
+
+        }
+
+        /**
+         * Generate one function for each independent variable
          */
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
@@ -1443,10 +1561,10 @@ namespace CppAD {
                 }
             }
 
-            std::vector<CGBase> y = _fun->Forward(0, tx0);
+            _fun->Forward(0, tx0);
 
             tx1v[j] = tx1;
-            std::vector<CGBase> y_p = _fun->Forward(1, tx1v);
+            _fun->Forward(1, tx1v);
             tx1v[j] = Base(0);
             std::vector<CGBase> px = _fun->Reverse(2, py);
             assert(px.size() == 2 * n);

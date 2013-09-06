@@ -24,6 +24,7 @@ std::vector<CppAD::AD<T> > CstrFunc(const std::vector<CppAD::AD<T> >& ind) {
     // dependent variable vector 
     std::vector< AD<T> > dep(4);
 
+    // temporary variables
     std::vector< AD<T> > var(17);
 
     var[0] = ind[8] * ind[10];

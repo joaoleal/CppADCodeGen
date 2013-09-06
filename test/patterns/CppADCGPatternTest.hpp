@@ -101,6 +101,21 @@ namespace CppAD {
                                              size_t n,
                                              size_t repeat,
                                              size_t n_loops = 1) {
+            size_t n2 = repeat * n;
+            std::vector<Base> x(n2);
+            for (size_t j = 0; j < n2; j++)
+                x[j] = 0.5;
+
+            testPatternDetectionWithAtomics(model, atoms, m, x, repeat, n_loops);
+        }
+
+        void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
+                                             const std::vector<atomic_base<Base>* >& atoms,
+                                             size_t m,
+                                             const std::vector<Base>& xb,
+                                             size_t repeat,
+                                             size_t n_loops = 1) {
+
             using namespace CppAD;
 
             std::vector<CGAbstractAtomicFun<double>*> atomics(atoms.size());
@@ -109,14 +124,14 @@ namespace CppAD {
             }
 
             //size_t m2 = repeat * m;
-            size_t n2 = repeat * n;
+            size_t n2 = xb.size();
 
             /**
              * Tape model
              */
             std::vector<ADCGD> x(n2);
             for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
+                x[j] = xb[j];
             CppAD::Independent(x);
 
             std::vector<ADCGD> y = (*model)(x, repeat, atomics);
@@ -137,6 +152,20 @@ namespace CppAD {
                                         size_t n,
                                         size_t repeat,
                                         const std::string& name) {
+            size_t n2 = repeat * n;
+            std::vector<Base> x(n2);
+            for (size_t j = 0; j < n2; j++)
+                x[j] = 0.5;
+
+            testLibCreationWithAtomics(model, atoms, m, x, repeat, name);
+        }
+
+        void testLibCreationWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
+                                        const std::vector<atomic_base<Base>* >& atoms,
+                                        size_t m,
+                                        const std::vector<Base>& xb,
+                                        size_t repeat,
+                                        const std::string& name) {
             using namespace CppAD;
 
             SmartVectorPointer<CGAbstractAtomicFun<double> > atomics(atoms.size());
@@ -145,14 +174,14 @@ namespace CppAD {
             }
 
             //size_t m2 = repeat * m;
-            size_t n2 = repeat * n;
+            size_t n2 = xb.size();
 
             /**
              * Tape model
              */
             std::vector<ADCGD> x(n2);
             for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
+                x[j] = xb[j];
             CppAD::Independent(x);
 
             std::vector<ADCGD> y = (*model)(x, repeat, atomics.v);
