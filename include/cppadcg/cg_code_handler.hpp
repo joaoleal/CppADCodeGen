@@ -964,6 +964,8 @@ namespace CppAD {
                     op != CGAtomicReverseOp &&
                     op != CGLoopStartOp &&
                     op != CGLoopEndOp &&
+                    op != CGLoopIndexedDepOp &&
+                    op != CGLoopIndexedIndepOp &&
                     op != CGIndexOp &&
                     op != CGIndexAssignOp &&
                     arg.getVariableID() >= _minTemporaryVarID;

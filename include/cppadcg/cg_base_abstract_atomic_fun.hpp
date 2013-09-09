@@ -66,7 +66,12 @@ namespace CppAD {
 
         static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
                                                      const vector<CGB>& tx) {
-            if (tx.size() > 0) {
+            if (false && tx.size() > 0) {
+                /**
+                 * Cannot reuse arrays yet! :(
+                 * the usage of the new array elements would have to depend on
+                 * the last usage of all the elements in tx
+                 */
                 OperationNode<Base>* op = tx[0].getOperationNode();
                 if (op != NULL && op->getOperationType() == CGArrayElementOp) {
                     OperationNode<Base>* otherArray = op->getArguments()[0].getOperation();

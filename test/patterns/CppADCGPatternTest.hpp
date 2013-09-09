@@ -68,17 +68,30 @@ namespace CppAD {
                              const std::string& libName,
                              bool jacobian = true,
                              bool hessian = true) {
-            using namespace CppAD;
-
-            //size_t m2 = repeat * m;
             size_t n2 = repeat * n;
+            std::vector<Base> x(n2);
+            for (size_t j = 0; j < n2; j++)
+                x[j] = 0.5;
+
+            testLibCreation(model, m, repeat, mExtra, libName, x, jacobian, hessian);
+        }
+
+        void testLibCreation(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
+                             size_t m,
+                             size_t repeat,
+                             size_t mExtra,
+                             const std::string& libName,
+                             const std::vector<Base>& xb,
+                             bool jacobian = true,
+                             bool hessian = true) {
+            using namespace CppAD;
 
             /**
              * Tape model
              */
-            std::vector<ADCGD> x(n2);
-            for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
+            std::vector<ADCGD> x(xb.size());
+            for (size_t j = 0; j < xb.size(); j++)
+                x[j] = xb[j];
             CppAD::Independent(x);
 
             std::vector<ADCGD> y = (*model)(x, repeat);
@@ -86,12 +99,12 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testSourceCodeGen(fun, m, repeat, mExtra, libName, FORWARD, jacobian ? MUST_PASS : MUST_FAIL, hessian ? MUST_PASS : MUST_FAIL);
+            testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, jacobian ? MUST_PASS : MUST_FAIL, hessian ? MUST_PASS : MUST_FAIL);
             if (jacobian) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, REVERSE, MUST_PASS, IGNORE);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
             }
             if (hessian) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
         }
 
@@ -165,7 +178,9 @@ namespace CppAD {
                                         size_t m,
                                         const std::vector<Base>& xb,
                                         size_t repeat,
-                                        const std::string& name) {
+                                        const std::string& name,
+                                        bool jacobian = true,
+                                        bool hessian = true) {
             using namespace CppAD;
 
             SmartVectorPointer<CGAbstractAtomicFun<double> > atomics(atoms.size());
@@ -190,9 +205,13 @@ namespace CppAD {
             fun.Dependent(y);
 
             size_t mExtra = 0;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, FORWARD);
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, REVERSE);
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, FORWARD, IGNORE, MUST_PASS, true);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, jacobian ? MUST_PASS : MUST_FAIL, hessian ? MUST_PASS : MUST_FAIL);
+            if (jacobian) {
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
+            }
+            if (hessian) {
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
+            }
         }
 
     private:
@@ -239,12 +258,13 @@ namespace CppAD {
                                size_t m, size_t repeat,
                                size_t mExtra,
                                const std::string& name,
+                               const std::vector<Base>& xTypical,
                                JacobianADMode jacMode,
                                TEST_TYPE jacobian = MUST_PASS,
                                TEST_TYPE hessian = MUST_PASS,
                                bool reverseTwo = false) {
             std::vector<atomic_base<Base>*> atoms;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, jacMode, jacobian, hessian, reverseTwo);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xTypical, jacMode, jacobian, hessian, reverseTwo);
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,
@@ -252,6 +272,7 @@ namespace CppAD {
                                size_t mExtra,
                                const std::string& name,
                                const std::vector<atomic_base<Base>*>& atoms,
+                               const std::vector<Base>& xTypical,
                                JacobianADMode jacMode,
                                TEST_TYPE jacobian = MUST_PASS,
                                TEST_TYPE hessian = MUST_PASS,
@@ -266,7 +287,7 @@ namespace CppAD {
                 libBaseName += "rev2";
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
-            std::vector<double> xTypical(fun.Domain(), 0.9);
+            assert(fun.Domain() == xTypical.size());
             /**
              * Create the dynamic library
              * (generate and compile source code)

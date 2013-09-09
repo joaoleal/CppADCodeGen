@@ -484,6 +484,14 @@ namespace CppAD {
                 }
             }
 
+            /**
+             * Determine the independents that don't change from iteration to
+             * iteration
+             */
+            for (size_t eq = 0; eq < equations_.size(); eq++) {
+                equations_[eq]->detectNonIndexedIndependents();
+            }
+
             return equations_;
         }
 

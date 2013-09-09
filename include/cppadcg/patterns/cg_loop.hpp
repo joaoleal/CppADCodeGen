@@ -64,11 +64,6 @@ namespace CppAD {
          */
         IndexedIndependent<Base> indexedOpIndep;
         /**
-         * Which argument positions of operations (from the reference dependent)
-         * use independent variables without an index
-         */
-        std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependents;
-        /**
          * Which dependents (equation indexes) must be evaluated at the same 
          * time due to shared temporary variables
          */
@@ -712,10 +707,6 @@ namespace CppAD {
                 origModelIndepOrder[independents[j].getOperationNode()] = j;
             }
 
-            std::vector<ADCGB> loopIndeps(independentsIndexed_.size() +
-                                          independentsNonIndexed_.size() +
-                                          independentsTemp_.size());
-
             // indexed independents
             assert(indexedIndep2clone_.size() == independentsIndexed_.size());
 
@@ -740,29 +731,26 @@ namespace CppAD {
                 /////////////////////////////////////////////////////////////////////////////////////
             }
 
-            // non-indexed independents
-            std::vector<const OperationNode<Base>*> nonIndexedCloneOrder;
-            nonIndexedCloneOrder.reserve(orig2ConstIndepClone_.size());
+            // original indep index -> non-indexed independent clones
+            std::map<size_t, const OperationNode<Base>*> nonIndexedCloneOrder;
 
             // [tape variable] = original independent index
-            std::vector<size_t> nonIndexedIndependents(orig2ConstIndepClone_.size());
             std::map<const OperationNode<Base>*, const OperationNode<Base>*> clones2ConstIndep;
             typename std::map<const OperationNode<Base>*, OperationNode<Base>*>::const_iterator itc;
-            for (itc = orig2ConstIndepClone_.begin(); itc != orig2ConstIndepClone_.end(); ++itc) {
+            size_t s = 0;
+            for (itc = orig2ConstIndepClone_.begin(); itc != orig2ConstIndepClone_.end(); ++itc, s++) {
                 const OperationNode<Base>* orig = itc->first;
                 OperationNode<Base>* clone = itc->second;
 
-                size_t s = nonIndexedCloneOrder.size();
+                size_t j = origModelIndepOrder.at(orig);
                 clones2ConstIndep[clone] = orig;
-                nonIndexedCloneOrder.push_back(clone);
-                nonIndexedIndependents[s] = origModelIndepOrder.at(orig);
+                nonIndexedCloneOrder[j] = clone;
             }
 
-            struct NonIndexedIndepSorter nonIndexedSorter(clones2ConstIndep, origModelIndepOrder);
-            std::sort(nonIndexedCloneOrder.begin(), nonIndexedCloneOrder.end(), nonIndexedSorter);
-
-
-            // loop independents
+            // tape independent array
+            std::vector<ADCGB> loopIndeps(independentsIndexed_.size() +
+                                          independentsNonIndexed_.size() +
+                                          independentsTemp_.size());
             CppAD::Independent(loopIndeps);
 
             size_t nIndexed = indexedCloneOrder.size();
@@ -779,15 +767,18 @@ namespace CppAD {
                 localIndeps[localIndex] = loopIndeps[j];
             }
 
-            for (size_t j = 0; j < nNonIndexed; j++) {
-                size_t localIndex = independentsNonIndexed_.at(nonIndexedCloneOrder[j]);
-                localIndeps[localIndex] = loopIndeps[nIndexed + j];
+            s = 0;
+            typename std::map<size_t, const OperationNode<Base>*>::const_iterator origJ2CloneIt;
+            for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
+                size_t localIndex = independentsNonIndexed_.at(origJ2CloneIt->second);
+                localIndeps[localIndex] = loopIndeps[nIndexed + s];
             }
+
+            s = 0;
             typename std::map<const OperationNode<Base>*, size_t>::const_iterator itt;
-            size_t j = 0;
-            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
+            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
                 size_t localIndex = itt->second;
-                localIndeps[localIndex] = loopIndeps[nIndexed + nNonIndexed + j];
+                localIndeps[localIndex] = loopIndeps[nIndexed + nNonIndexed + s];
             }
 
             /**
@@ -834,7 +825,7 @@ namespace CppAD {
             std::vector<std::set<size_t> > temporaryIndependents(nTmpIndexed);
 
             temporaryOrigVarOrder.resize(independentsTemp_.size());
-            j = 0;
+            size_t j = 0;
             for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
                 const OperationNode<Base>* tmpClone = itt->first;
                 const std::set<OperationNode<Base>*>& origIndeps = tempClone2Indeps_.at(tmpClone);
@@ -846,6 +837,12 @@ namespace CppAD {
                     temporaryIndependents[j].insert(origIndex);
                 }
                 temporaryOrigVarOrder[j] = temporaryClone2Orig_.at(tmpClone);
+            }
+
+            std::vector<size_t> nonIndexedIndependents(orig2ConstIndepClone_.size());
+            s = 0;
+            for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
+                nonIndexedIndependents[s] = origJ2CloneIt->first;
             }
 
             loopAtomic_ = new LoopAtomicFun<Base>("loop", ////// TODO: improve loop name
@@ -1076,36 +1073,6 @@ namespace CppAD {
                     else if (index1 > index2)
                         return false;
                 }
-
-                assert(false); // should never get here
-                return false;
-            }
-        };
-
-        /**
-         * structure used to sort the loop's non-indexed independent variables
-         */
-        struct NonIndexedIndepSorter {
-            const std::map<const OperationNode<Base>*, const OperationNode<Base>*> clones2ConstIndep;
-            const std::map<const OperationNode<Base>*, size_t>& origModelIndepOrder;
-
-            NonIndexedIndepSorter(const std::map<const OperationNode<Base>*, const OperationNode<Base>*>& clones2ConstIndep_,
-                                  const std::map<const OperationNode<Base>*, size_t>& origModelIndepOrder_) :
-                clones2ConstIndep(clones2ConstIndep_),
-                origModelIndepOrder(origModelIndepOrder_) {
-            }
-
-            bool operator()(const OperationNode<Base>* node1,
-                    const OperationNode<Base>* node2) {
-                const OperationNode<Base>* origIndep1 = clones2ConstIndep.at(node1);
-                const OperationNode<Base>* origIndep2 = clones2ConstIndep.at(node2);
-
-                size_t index1 = origModelIndepOrder.at(origIndep1);
-                size_t index2 = origModelIndepOrder.at(origIndep2);
-                if (index1 < index2)
-                    return true;
-                else if (index1 > index2)
-                    return false;
 
                 assert(false); // should never get here
                 return false;

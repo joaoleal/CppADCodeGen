@@ -562,6 +562,12 @@ namespace CppAD {
 
         node.setColor(indexedPath ? 2 : 1);
 
+        if (node.getOperationType() == CGArrayElementOp ||
+                node.getOperationType() == CGAtomicForwardOp ||
+                node.getOperationType() == CGAtomicReverseOp) {
+            return !indexedPath; // should not move array creation elements outside the loop
+        }
+
         if (indexedPath && nonIndexedArgs) {
             for (size_t a = 0; a < size; a++) {
                 OperationNode<Base>* arg = args[a].getOperation();

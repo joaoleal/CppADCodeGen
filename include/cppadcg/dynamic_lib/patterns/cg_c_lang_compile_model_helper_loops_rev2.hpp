@@ -314,6 +314,9 @@ namespace CppAD {
                     size_t jj = it2->second;
                     CGBase& val = px[jj * 2 + 1]; // not interested in all values
                     if (!IdenticalZero(val)) {
+                        if (pxCustom.size() <= e) {
+                            pxCustom.resize(e + 1);
+                        }
                         pxCustom[e] = val;
                     }
                 }

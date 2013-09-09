@@ -18,16 +18,6 @@
 namespace CppAD {
 
     /***************************************************************************
-     *  Utility classes
-     **************************************************************************/
-
-    template<class Base>
-    class JacTapeElementLoopInfo {
-    public:
-        std::map<size_t, IndexedDependentLoopInfo<Base>* > origIndep2Info;
-    };
-
-    /***************************************************************************
      *  Methods related with loop insertion into the operation graph
      **************************************************************************/
 
@@ -46,7 +36,7 @@ namespace CppAD {
          * Generate index patterns for the jacobian elements resulting from loops
          */
         // loop -> equation pattern -> tape independent -> orig independent(temporaries only) -> iteration = position
-        map<LoopAtomicFun<Base>*, map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > > > jacIndexPatterns;
+        map<LoopAtomicFun<Base>*, map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > > > jacIndexPatterns;
 
         map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
         // loop -> loop atomic evaluation -> results
@@ -94,7 +84,7 @@ namespace CppAD {
                 loop = &loopEvalNode->getLoopAtomicFun();
             }
 
-            map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > >& lRawIndexes = jacIndexPatterns[loop];
+            map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > >& lRawIndexes = jacIndexPatterns[loop];
 
             const LoopPosition& depPos = loop->getTapeDependentIndex(i);
             size_t tapeI = depPos.tape;
@@ -109,14 +99,14 @@ namespace CppAD {
             bool isTemporary = loop->isTemporary(*tapeJs.begin());
             size_t jRef = isTemporary ? j : 0;
 
+            TapeVarType tapeJ(*tapeJs.begin(), jRef);
+
             IndexedDependentLoopInfo<Base>* origJacEl = NULL;
-            JacTapeElementLoopInfo<Base>& ref = lRawIndexes[tapeI][*tapeJs.begin()];
-            if (ref.origIndep2Info.size() != 0) {
-                typename map<size_t, IndexedDependentLoopInfo<Base>* >::const_iterator it;
-                it = ref.origIndep2Info.find(jRef);
-                if (it != ref.origIndep2Info.end()) {
-                    origJacEl = it->second;
-                }
+            map<TapeVarType, IndexedDependentLoopInfo<Base>* >& ref = lRawIndexes[tapeI];
+            typename map<TapeVarType, IndexedDependentLoopInfo<Base>* >::const_iterator it;
+            it = ref.find(tapeJ);
+            if (it != ref.end()) {
+                origJacEl = it->second;
             }
 
             if (origJacEl == NULL) {
@@ -125,7 +115,7 @@ namespace CppAD {
                 origJacEl = &garbageCollection.back();
                 origJacEl->indexes.resize(loop->getIterationCount(), nnz);
                 origJacEl->origVals.resize(loop->getIterationCount());
-                ref.origIndep2Info[jRef] = origJacEl;
+                ref[tapeJ] = origJacEl;
                 dependentIndexes[loop].push_back(origJacEl);
             }
             origJacEl->indexes[iteration] = e;
@@ -156,31 +146,30 @@ namespace CppAD {
         /**
          * Generate index patterns for the dependent variables
          */
-        typename map<LoopAtomicFun<Base>*, map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > > >::iterator itl;
+        // loop loops :)
+        typename map<LoopAtomicFun<Base>*, map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > > >::iterator itl;
         for (itl = jacIndexPatterns.begin(); itl != jacIndexPatterns.end(); ++itl) {
 
-            typename map<size_t, map<size_t, JacTapeElementLoopInfo<Base> > >::iterator itI;
+            // loop equation patterns
+            typename map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > >::iterator itI;
             for (itI = itl->second.begin(); itI != itl->second.end(); ++itI) {
 
-                typename map<size_t, JacTapeElementLoopInfo<Base> >::iterator itJ;
+                // loop tape variables
+                typename map<TapeVarType, IndexedDependentLoopInfo<Base>* >::iterator itJ;
                 for (itJ = itI->second.begin(); itJ != itI->second.end(); ++itJ) {
-                    JacTapeElementLoopInfo<Base>& jacEleInfo = itJ->second;
+                    IndexedDependentLoopInfo<Base>* jacEleInfo = itJ->second;
 
-                    typename map<size_t, IndexedDependentLoopInfo<Base>* >::iterator itO;
-                    for (itO = jacEleInfo.origIndep2Info.begin(); itO != jacEleInfo.origIndep2Info.end(); ++itO) {
-                        IndexedDependentLoopInfo<Base>* orig = itO->second;
-
-                        // make sure all elements are requested
-                        std::vector<size_t>::const_iterator ite;
-                        for (ite = orig->indexes.begin(); ite != orig->indexes.end(); ++ite) {
-                            if (*ite == nnz) {
-                                throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
-                            }
+                    // make sure all elements are requested for all iterations
+                    std::vector<size_t>::const_iterator ite;
+                    for (ite = jacEleInfo->indexes.begin(); ite != jacEleInfo->indexes.end(); ++ite) {
+                        if (*ite == nnz) {
+                            throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
                         }
-
-                        orig->pattern = IndexPattern::detect(LoopAtomicFun<Base>::ITERATION_INDEX, orig->indexes);
-                        handler.manageLoopDependentIndexPattern(orig->pattern);
                     }
+
+                    jacEleInfo->pattern = IndexPattern::detect(LoopAtomicFun<Base>::ITERATION_INDEX, jacEleInfo->indexes);
+                    handler.manageLoopDependentIndexPattern(jacEleInfo->pattern);
+
                 }
             }
         }

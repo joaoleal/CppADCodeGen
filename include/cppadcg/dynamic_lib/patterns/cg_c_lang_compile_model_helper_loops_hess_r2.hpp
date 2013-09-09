@@ -143,7 +143,7 @@ namespace CppAD {
             size_t index = it->first;
             const std::vector<Compressed2JColType>& els = it->second;
             const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-            assert(els.size() == location.size());
+            assert(els.size() <= location.size()); // it can be lower because not all elements have to be assigned
             assert(els.size() > 0);
             bool rowOrdered = jrowOrdered.at(index);
 
@@ -165,9 +165,9 @@ namespace CppAD {
             }
             lastCompressed = !rowOrdered;
         }
-        
+
         _cache << "\n";
-        
+
         /**
          * loop related values
          */

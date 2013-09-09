@@ -148,13 +148,7 @@ namespace CppAD {
             assert(handler != NULL);
 
             OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
-            OperationNode<Base>* tyArray;
-
-            if (standAlone_ && p > 0) {
-                tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
-            } else {
-                tyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, ty);
-            }
+            OperationNode<Base>* tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
 
             std::vector<size_t> opInfo(3);
             opInfo[0] = id_;
