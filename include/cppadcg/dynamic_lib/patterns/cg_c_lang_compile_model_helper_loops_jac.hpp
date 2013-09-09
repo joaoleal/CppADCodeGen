@@ -41,7 +41,8 @@ namespace CppAD {
         map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
         // loop -> loop atomic evaluation -> results
         map<LoopAtomicFun<Base>*, map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
-
+        
+        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
 
         for (size_t e = 0; e < nnz; e++) {
             size_t i = _jacSparsity.rows[e];
@@ -93,7 +94,7 @@ namespace CppAD {
             }
             size_t iteration = depPos.atomic / loop->getTapeDependentCount();
 
-            set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, j);
+            set<size_t> tapeJs = loop->getIndependentTapeIndexes(tapeI, iteration, j);
             assert(tapeJs.size() >= 1); // if >1 then the independent is used by several temporary variables
 
             bool isTemporary = loop->isTemporary(*tapeJs.begin());
@@ -149,21 +150,47 @@ namespace CppAD {
         // loop loops :)
         typename map<LoopAtomicFun<Base>*, map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > > >::iterator itl;
         for (itl = jacIndexPatterns.begin(); itl != jacIndexPatterns.end(); ++itl) {
+            LoopAtomicFun<Base>* loop = itl->first;
 
             // loop equation patterns
             typename map<size_t, map<TapeVarType, IndexedDependentLoopInfo<Base>* > >::iterator itI;
             for (itI = itl->second.begin(); itI != itl->second.end(); ++itI) {
+                size_t i = itI->first;
 
                 // loop tape variables
                 typename map<TapeVarType, IndexedDependentLoopInfo<Base>* >::iterator itJ;
                 for (itJ = itI->second.begin(); itJ != itI->second.end(); ++itJ) {
+                    const TapeVarType& j = itJ->first;
                     IndexedDependentLoopInfo<Base>* jacEleInfo = itJ->second;
 
                     // make sure all elements are requested for all iterations
-                    std::vector<size_t>::const_iterator ite;
-                    for (ite = jacEleInfo->indexes.begin(); ite != jacEleInfo->indexes.end(); ++ite) {
-                        if (*ite == nnz) {
-                            throw CGException("All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations");
+                    for (size_t it = 0; it < jacEleInfo->indexes.size(); ++it) {
+                        size_t e = jacEleInfo->indexes[it];
+                        if (e == nnz) {
+                            const LoopPosition& eqPos = loop->getDependentIndexes()[i][it];
+                            std::ostringstream ss;
+                            ss << "All jacobian elements of an equation pattern (equation in a loop) must be requested for all iterations.\n";
+                            if (loop->isIndexedIndependent(j.first)) {
+                                ss << "Indexed variable (";
+                                const std::vector<LoopPosition>& indexPos = loop->getIndexedIndepIndexes()[j.first];
+                                for (size_t it2 = 0; it2 < indexPos.size(); it2++) {
+                                    if (it2 > 0)
+                                        ss << ", ";
+                                    ss << indexPos[it2].original;
+                                }
+                                ss << ")";
+                            } else {
+                                ss << "Non-indexed variable (";
+                                if (loop->isTemporary(j.first)) {
+                                    ss << j.second;
+                                } else {
+                                    ss << j.first;
+                                }
+                                ss << ")";
+                            }
+
+                            ss << " was NOT requested for equation " << eqPos.original << " (iteration " << it << ").";
+                            throw CGException(ss.str());
                         }
                     }
 

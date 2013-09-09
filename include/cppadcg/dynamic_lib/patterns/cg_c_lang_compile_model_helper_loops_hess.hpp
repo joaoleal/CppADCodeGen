@@ -214,7 +214,9 @@ namespace CppAD {
 
             /**
              * If tapeJ1s.size()>1 then the independent is used by several
-             * temporary variables. We know that it is NOT a mix of 
+             * temporary variables OR by several independent variables in 
+             * different iterations.
+             * We know that it is NOT a mix of 
              * temporaries and indexed independents because this situation
              * is checked before.
              */

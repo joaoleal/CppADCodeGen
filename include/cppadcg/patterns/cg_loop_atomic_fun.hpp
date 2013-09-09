@@ -103,9 +103,9 @@ namespace CppAD {
         /**
          * Maps original model independent index to the possitions it may be
          * associated with in the tape (also includes temporary variables)
-         * for a given tape equation (equation -> orig index -> tape indexes)
+         * for a given tape equation (equation -> orig index -> iteration -> tape indexes)
          */
-        std::vector<std::map<size_t, std::set<size_t> > > orig2Tape_;
+        std::vector<std::map<size_t, std::vector<std::set<size_t> > > > orig2Tape_;
         /**
          * atomic independent index -> tape indexes -> iteration (iteration count for a non indexed indepdendents)
          */
@@ -369,28 +369,30 @@ namespace CppAD {
             return indepIndexPatterns_;
         }
 
-        inline bool isTemporary(size_t tapeIndex) const {
+        inline bool isTemporary(size_t tapeJ) const {
             size_t nIndexed = indexedIndepIndexes_.size();
             size_t nNonIndexed = nonIndexedIndepIndexes_.size();
 
-            return nIndexed + nNonIndexed <= tapeIndex;
+            return nIndexed + nNonIndexed <= tapeJ;
         }
 
         inline bool isIndexedIndependent(size_t tapeJ) const {
             return tapeJ < indexedIndepIndexes_.size();
         }
 
-        std::set<size_t> getIndependentTapeIndexes(size_t origJ) {
+        inline std::set<size_t> getIndependentTapeIndexes(size_t origJ) {
             std::set<size_t> indexes;
             for (size_t i = 0; i < m_; i++) {
-                std::set<size_t> tapeIndexes = getIndependentTapeIndexes(i, origJ);
-                indexes.insert(tapeIndexes.begin(), tapeIndexes.end());
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    std::set<size_t> tapeIndexes = getIndependentTapeIndexes(i, it, origJ);
+                    indexes.insert(tapeIndexes.begin(), tapeIndexes.end());
+                }
             }
 
             return indexes;
         }
 
-        std::set<size_t> getIndependentTapeIndexes(size_t tapeI, size_t origJ) {
+        inline std::set<size_t> getIndependentTapeIndexes(size_t tapeI, size_t iteration, size_t origJ) {
             assert(tapeI < m_);
 
             if (orig2Tape_.empty()) {
@@ -413,19 +415,26 @@ namespace CppAD {
                             // indexed
                             for (size_t it = 0; it < iterationCount_; it++) {
                                 const LoopPosition& pos = indexedIndepIndexes_[j][it];
-                                orig2Tape_[i][pos.original].insert(pos.tape);
+                                orig2Tape_[i][pos.original].resize(iterationCount_);
+                                orig2Tape_[i][pos.original][it].insert(pos.tape);
                             }
                         } else if (j < nIndexed + nNonIndexed) {
                             // non-indexed
                             const LoopPosition& pos = nonIndexedIndepIndexes_[j - nIndexed];
-                            orig2Tape_[i][pos.original].insert(pos.tape);
+                            for (size_t it = 0; it < iterationCount_; it++) {
+                                orig2Tape_[i][pos.original].resize(iterationCount_);
+                                orig2Tape_[i][pos.original][it].insert(pos.tape);
+                            }
                         } else {
                             // temporaries
                             const LoopPositionTmp& pos = temporaryIndependents_[j - (nIndexed + nNonIndexed)];
                             const std::set<size_t>& origs = pos.originalIndeps;
                             std::set<size_t>::const_iterator ito;
                             for (ito = origs.begin(); ito != origs.end(); ++ito) {
-                                orig2Tape_[i][*ito].insert(pos.tape);
+                                for (size_t it = 0; it < iterationCount_; it++) {
+                                    orig2Tape_[i][*ito].resize(iterationCount_);
+                                    orig2Tape_[i][*ito][it].insert(pos.tape);
+                                }
                             }
                         }
                     }
@@ -433,9 +442,9 @@ namespace CppAD {
 
             }
 
-            std::map<size_t, std::set<size_t> >::const_iterator it = orig2Tape_[tapeI].find(origJ);
+            std::map<size_t, std::vector<std::set<size_t> > >::const_iterator it = orig2Tape_[tapeI].find(origJ);
             if (it != orig2Tape_[tapeI].end()) {
-                return it->second;
+                return it->second.at(iteration);
             } else {
                 return std::set<size_t>();
             }
