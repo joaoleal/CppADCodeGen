@@ -58,7 +58,7 @@ namespace CppAD {
             /**
              * make the loop start
              */
-            OperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*loopFunc);
+            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*loopFunc);
             handler.manageOperationNodeMemory(loopStart);
 
             IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(LoopAtomicFun<Base>::ITERATION_INDEX, *loopStart);
@@ -86,7 +86,7 @@ namespace CppAD {
                 indexedLoopResults[i] = std::make_pair(dependents[i]->origVals[0],
                                                        dependents[i]->pattern);
             }
-            OperationNode<Base>* loopEnd = createLoopEnd(handler, indexedLoopResults, indexesOps, *loopFunc, assignOrAdd);
+            OperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, *loopFunc, assignOrAdd);
 
             /**
              * change the dependents (must depend directly on the loop)
@@ -161,6 +161,7 @@ namespace CppAD {
 
     template<class Base>
     OperationNode<Base>* CLangCompileModelHelper<Base>::createLoopEnd(CodeHandler<Base>& handler,
+                                                                      LoopStartOperationNode<Base>& loopStart,
                                                                       const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                                       const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                                       const LoopNodeInfo<Base>& loopInfo,
@@ -188,7 +189,7 @@ namespace CppAD {
             endArgs.push_back(Argument<Base>(*yIndexed));
         }
 
-        OperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopInfo, endArgs);
+        OperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopInfo, loopStart, endArgs);
         handler.manageOperationNodeMemory(loopEnd);
 
         return loopEnd;

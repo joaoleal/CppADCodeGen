@@ -877,6 +877,7 @@ namespace CppAD {
                                         size_t assignOrAdd = 0);
 
         static inline OperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
+                                                         LoopStartOperationNode<Base>& loopStart,
                                                          const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                          const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                          const LoopNodeInfo<Base>& loopInfo,

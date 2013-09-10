@@ -49,7 +49,7 @@ namespace CppAD {
         std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopAtomicFun<Base>*> _loops;
-        //
+        // the used indexes
         std::set<const Index*> _indexes;
         //
         std::vector<const IndexPattern*> _loopDependentIndexPatterns;
@@ -69,6 +69,12 @@ namespace CppAD {
         bool _used;
         // a flag indicating whether or not to reuse the IDs of destroyed variables
         bool _reuseIDs;
+        // the used variables inside a loop from the outside (for different loop depths)
+        std::vector<std::set<OperationNode<Base>*> > _loopOuterVars;
+        // the current loop depth (-1 means no loop)
+        int _loopDepth;
+        // the evaluation order of the loop start for each loop depth
+        std::vector<size_t> _loopStartEvalOrder;
         // the language used for source code generation
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
@@ -85,6 +91,7 @@ namespace CppAD {
             _atomicFunctionsOrder(NULL),
             _used(false),
             _reuseIDs(true),
+            _loopDepth(-1),
             _lang(NULL),
             _minTemporaryVarID(0),
             _verbose(false) {
@@ -268,6 +275,9 @@ namespace CppAD {
             _atomicFunctionsOrder = &atomicFunctions;
             _atomicFunctionsSet.clear();
             _indexes.clear();
+            _loopOuterVars.clear();
+            _loopDepth = -1;
+            _loopStartEvalOrder.clear();
             for (size_t i = 0; i < atomicFunctions.size(); i++) {
                 _atomicFunctionsSet.insert(atomicFunctions[i]);
             }
@@ -892,14 +902,29 @@ namespace CppAD {
             return false;
         }
 
+        /**
+         * Determines when each temporary variable is last used in the
+         * evaluation order
+         * 
+         * @param code The current node to determine the number of usages
+         */
         inline void determineLastTempVarUsage(OperationNode<Base>& code) {
-            const std::vector<Argument<Base> >& args = code.arguments_;
+            if (code.getOperationType() == CGLoopEndOp) {
+                LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (code);
+                _loopDepth++;
+                _loopOuterVars.resize(_loopDepth + 1);
+                _loopStartEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
 
-            typename std::vector<Argument<Base> >::const_iterator it;
+            } else if (code.getOperationType() == CGLoopStartOp) {
+                _loopDepth--; // leaving the currrent loop
+            }
 
             /**
              * count variable usage
              */
+            const std::vector<Argument<Base> >& args = code.arguments_;
+
+            typename std::vector<Argument<Base> >::const_iterator it;
             for (it = args.begin(); it != args.end(); ++it) {
                 if (it->getOperation() != NULL) {
                     OperationNode<Base>& arg = *it->getOperation();
@@ -914,8 +939,36 @@ namespace CppAD {
                     if (arg.getLastUsageEvaluationOrder() < code.getEvaluationOrder()) {
                         arg.setLastUsageEvaluationOrder(code.getEvaluationOrder());
                     }
+
+                    if (_loopDepth >= 0 &&
+                            arg.getEvaluationOrder() < _loopStartEvalOrder[_loopDepth] &&
+                            isTemporary(arg)) {
+                        // outer variable used inside the loop
+                        _loopOuterVars[_loopDepth].insert(&arg);
+                    }
                 }
             }
+
+            if (code.getOperationType() == CGLoopEndOp) {
+                /**
+                 * temporary variables from outside the loop which are used
+                 * whithin the loop cannot be overwritten inside that loop
+                 */
+                const std::set<OperationNode<Base>*>& outerLoopUsages = _loopOuterVars.back();
+                typename std::set<OperationNode<Base>*>::const_iterator it;
+                for (it = outerLoopUsages.begin(); it != outerLoopUsages.end(); ++it) {
+                    OperationNode<Base>* outerVar = *it;
+                    outerVar->setLastUsageEvaluationOrder(code.getEvaluationOrder());
+                }
+
+                _loopDepth--;
+                _loopOuterVars.pop_back();
+                _loopStartEvalOrder.pop_back();
+
+            } else if (code.getOperationType() == CGLoopStartOp) {
+                _loopDepth++; // comming back to the loop
+            }
+
         }
 
         inline void resetUsageCount() {

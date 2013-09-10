@@ -762,7 +762,7 @@ namespace CppAD {
         /**
          * determine if a loop should be created
          */
-        OperationNode<Base>* loopStart = NULL;
+        LoopStartOperationNode<Base>* loopStart = NULL;
 
         std::map<size_t, std::set<size_t> > localIterCount2Jrows;
 
@@ -845,7 +845,7 @@ namespace CppAD {
                 indexedLoopResults[i] = std::make_pair(val, itDepIndex->second);
             }
 
-            OperationNode<Base>* loopEnd = createLoopEnd(handler, indexedLoopResults, indexesOps, *loopNodeInfo.get(), assignOrAdd);
+            OperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, *loopNodeInfo.get(), assignOrAdd);
 
             /**
              * change the dependents (must depend directly on the loop)

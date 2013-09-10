@@ -28,13 +28,26 @@ namespace CppAD {
     template<class Base>
     class LoopEndOperationNode : public OperationNode<Base> {
     private:
+        LoopStartOperationNode<Base>& loopStart_;
         const LoopNodeInfo<Base>& loopInfo_;
     public:
 
         inline LoopEndOperationNode(const LoopNodeInfo<Base>& info,
+                                    LoopStartOperationNode<Base>& loopStart,
                                     const std::vector<Argument<Base> >& endArgs) :
-            OperationNode<Base>(CGLoopEndOp, std::vector<size_t>(0), endArgs),
+            OperationNode<Base>(CGLoopEndOp, std::vector<size_t>(0), createArguments(loopStart, endArgs)),
+            loopStart_(loopStart),
             loopInfo_(info) {
+        }
+
+        inline const LoopStartOperationNode<Base>& getLoopStart() const {
+#ifndef NDEBUG
+            const std::vector<Argument<Base> >& args = this->getArguments();
+            CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument");
+            CPPADCG_ASSERT_KNOWN(args[0].getOperation() == &loopStart_, "The first argument must be the loop start operation");
+#endif
+
+            return loopStart_;
         }
 
         inline const LoopNodeInfo<Base>& getLoopInfo() const {
@@ -42,6 +55,16 @@ namespace CppAD {
         }
 
         inline virtual ~LoopEndOperationNode() {
+        }
+
+    private:
+
+        static inline std::vector<Argument<Base> > createArguments(LoopStartOperationNode<Base>& lstart,
+                                                                   const std::vector<Argument<Base> >& endArgs) {
+            std::vector<Argument<Base> > args(1 + endArgs.size());
+            args[0] = Argument<Base>(lstart);
+            std::copy(endArgs.begin(), endArgs.end(), args.begin() + 1);
+            return args;
         }
 
     };

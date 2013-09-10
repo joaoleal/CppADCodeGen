@@ -20,38 +20,9 @@ typedef CppAD::AD<CGD> ADCGD;
 
 using namespace CppAD;
 
-std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
-    size_t m = 2;
-    size_t n = 2;
-    size_t m2 = repeat * m;
-
-    // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    ADCGD tmp1 = x[1] * sin(x[1] + 4);
-    ADCGD tmp2 = 2.5 * x[1];
-    for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = tmp1 * cos(x[i * n]) / tmp2;
-        y[i * m + 1] = x[i * n + 1] * log(x[i * n]);
-    }
-
-    return y;
-}
-
-TEST_F(CppADCGPatternTest, CommonTmp2) {
-    using namespace CppAD;
-    size_t m = 2;
-    size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = false;
-
-    testPatternDetection(modelCommonTmp2, m, n, 6);
-
-    testLibCreation(modelCommonTmp2, m, n, 6, mExtra, "modelCommonTmp2", jacobian, hessian);
-}
-
+/**
+ * @test All variables are indexed, no temporaries
+ */
 std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
@@ -82,6 +53,9 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
     testLibCreation(model0, m, n, 6, mExtra, "model0", jacobian, hessian);
 }
 
+/**
+ * @test Some variables not indexed -> one constant temporary
+ */
 std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
@@ -112,6 +86,121 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     testLibCreation(model1, m, n, 6, mExtra, "model1", jacobian, hessian);
 }
 
+/**
+ * @test Some variables not indexed -> one constant temporary (defined outside 
+ *       loop)
+ */
+std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp = x[1] * x[2];
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = cos(x[i * n]) + tmp;
+        y[i * m + 1] = x[i * n + 1] * x[i * n] + tmp;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, CommonTmp) {
+    using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
+    size_t mExtra = 0; // equations not in loops
+
+    bool jacobian = false;
+    bool hessian = false;
+
+    testPatternDetection(modelCommonTmp, m, n, 6);
+
+    testLibCreation(modelCommonTmp, m, n, 6, mExtra, "modelCommonTmp", jacobian, hessian);
+}
+
+/**
+ * @test Some variables not indexed -> 2 constant temporaries (defined outside
+ *       loop) independents used in temporaries are not the same as the ones in
+ *       the equation inside the loop
+ */
+std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = x[1] * sin(x[1] + 4);
+    ADCGD tmp2 = 2.5 * x[1];
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = tmp1 * cos(x[i * n]) / tmp2;
+        y[i * m + 1] = x[i * n + 1] * log(x[i * n + 1]);
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, CommonTmp2) {
+    using namespace CppAD;
+    size_t m = 2;
+    size_t n = 2;
+    size_t mExtra = 0; // equations not in loops
+
+    bool jacobian = true;
+    bool hessian = false;
+
+    testPatternDetection(modelCommonTmp2, m, n, 6);
+
+    testLibCreation(modelCommonTmp2, m, n, 6, mExtra, "modelCommonTmp2", jacobian, hessian);
+}
+
+/**
+ * @test All variables are indexed -> 3 temporaries (defined inside and outside
+ *       the loop)
+ */
+std::vector<ADCGD> modelCommonTmp3(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 3;
+    size_t n = 3;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+    ADCGD tmp1 = sin(x[1] + 4);
+    for (size_t i = 0; i < repeat; i++) {
+
+        ADCGD tmp2 = 2.5 * x[i * n] + tmp1;
+        ADCGD tmp3 = 5 * x[i * n];
+
+        y[i * m] = cos(x[i * n]) / tmp2 + tmp3;
+        y[i * m + 1] = x[i * n + 1] * log(x[i * n + 1]) * tmp3;
+        y[i * m + 2] = x[i * n + 2] + tmp2;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, CommonTmp3) {
+    using namespace CppAD;
+    size_t m = 3;
+    size_t n = 3;
+    size_t mExtra = 0; // equations not in loops
+
+    bool jacobian = true;
+    bool hessian = false;
+
+    testPatternDetection(modelCommonTmp3, m, n, 6);
+
+    testLibCreation(modelCommonTmp3, m, n, 6, mExtra, "modelCommonTmp3", jacobian, hessian);
+}
+
+/**
+ * @test All variables are indexed but keep the same index after a given
+ *       iteration
+ */
 std::vector<ADCGD> model2(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 1;
     size_t n = 2;
@@ -144,6 +233,10 @@ TEST_F(CppADCGPatternTest, model2) {
     testLibCreation(model2, m, n, 6, mExtra, "model2");
 }
 
+/**
+ * @test Some variables are not indexed, some indexed variables keep the same
+ *       index after a given iteration
+ */
 std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 1;
     size_t n = 2;
@@ -174,6 +267,9 @@ TEST_F(CppADCGPatternTest, model3) {
     testLibCreation(model3, m, n, 6, mExtra, "model3");
 }
 
+/**
+ * @test 4 equations; 1 constant temporary; 1 equation with a constant value
+ */
 std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 4;
     size_t n = 4;
@@ -208,37 +304,9 @@ TEST_F(CppADCGPatternTest, Matcher4Eq) {
     testLibCreation(model4Eq, m, n, 6, mExtra, "model4Eq", jacobian, hessian);
 }
 
-std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
-    size_t m = 2;
-    size_t n = 2;
-    size_t m2 = repeat * m;
-
-    // dependent variable vector 
-    std::vector<ADCGD> y(m2);
-
-    ADCGD tmp = x[1] * x[2];
-    for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * n]) + tmp;
-        y[i * m + 1] = x[i * n + 1] * x[i * n] + tmp;
-    }
-
-    return y;
-}
-
-TEST_F(CppADCGPatternTest, CommonTmp) {
-    using namespace CppAD;
-    size_t m = 2;
-    size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = false;
-    bool hessian = false;
-
-    testPatternDetection(modelCommonTmp, m, n, 6);
-
-    testLibCreation(modelCommonTmp, m, n, 6, mExtra, "modelCommonTmp", jacobian, hessian);
-}
-
+/**
+ * @test 
+ */
 std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
@@ -271,6 +339,9 @@ TEST_F(CppADCGPatternTest, IndexedTmp) {
     testLibCreation(model4, m, n, 6, mExtra, "indexedTmp", jacobian, hessian);
 }
 
+/**
+ * @test 2 loops required
+ */
 std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
@@ -308,6 +379,9 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
     testLibCreation(model5, m, n, 6, mExtra, "model5", jacobian, hessian);
 }
 
+/**
+ * @test using atomic functions
+ */
 std::vector<ADCGD> modelAtomic(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
     size_t m = 2;
     size_t n = 2;
@@ -352,6 +426,10 @@ TEST_F(CppADCGPatternTest, Atomic) {
     testLibCreationWithAtomics(modelAtomic, atomics, m, n, 6, "modelAtomic");
 }
 
+/**
+ * @using atomic functions; some indexed variables keep the same index after a
+ *        given iteration
+ */
 std::vector<ADCGD> modelAtomic2(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
     size_t m = 1;
     size_t n = 2;
@@ -392,6 +470,9 @@ TEST_F(CppADCGPatternTest, Atomic2) {
     testLibCreationWithAtomics(modelAtomic2, atomics, m, n, 6, "modelAtomic2");
 }
 
+/**
+ * @test with an additional equation that does not belong to a loop
+ */
 std::vector<ADCGD> modelExtraFunc(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
