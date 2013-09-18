@@ -118,7 +118,7 @@ namespace CppAD {
         friend class CodeHandler<Base>;
         friend class CGAbstractAtomicFun<Base>;
         friend class Loop<Base>;
-        friend class LoopAtomicFun<Base>;
+        friend class LoopModel<Base>;
 
         template<class Base1, class Base2>
         friend class Evaluator;

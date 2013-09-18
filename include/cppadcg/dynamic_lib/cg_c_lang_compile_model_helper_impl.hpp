@@ -155,7 +155,7 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> xx(_funOrig.Domain());
+        std::vector<CGBase> xx(_fun.Domain());
         handler.makeVariables(xx);
         if (_x.size() > 0) {
             for (size_t i = 0; i < xx.size(); i++) {
@@ -163,18 +163,10 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> yy = _funOrig.Forward(0, xx);
+        std::vector<CGBase> yy = _fun.Forward(0, xx);
 
         DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx);
-        _funLoops = matcher.generateTape();
-        if (_funLoops != NULL) {
-            _fun = _funLoops;
-
-            const std::vector<Loop<Base>*>& loops = matcher.getLoops();
-            for (size_t l = 0; l < loops.size(); l++) {
-                _loopAtomics.insert(loops[l]->releaseAtomicFunction());
-            }
-        }
+        matcher.generateTapes(_funNoLoops, _loopTapes);
 
         if (_verbose) {
             std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
@@ -195,8 +187,8 @@ namespace CppAD {
         _cache.str("");
         _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
                 "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
-                "   *m = " << _fun->Range() << ";\n"
-                "   *n = " << _fun->Domain() << ";\n"
+                "   *m = " << _fun.Range() << ";\n"
+                "   *n = " << _fun.Domain() << ";\n"
                 "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n"
                 "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n"
                 "}\n\n";
@@ -232,7 +224,7 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> indVars(_fun->Domain());
+        vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < indVars.size(); i++) {
@@ -240,9 +232,16 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> dep = _fun->Forward(0, indVars);
-        if (_funLoops == _fun)
-            prepareForward0WithLoops(handler, dep);
+        vector<CGBase> dep;
+
+        if (_loopTapes.empty()) {
+            dep = _fun.Forward(0, indVars);
+        } else {
+            /**
+             * Contains loops
+             */
+            dep = prepareForward0WithLoops(handler, indVars);
+        }
 
         finishedGraphCreation();
 
@@ -265,7 +264,7 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> indVars(_fun->Domain());
+        vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < indVars.size(); i++) {
@@ -273,16 +272,16 @@ namespace CppAD {
             }
         }
 
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
-        std::vector<CGBase> jac(n * m);
+        vector<CGBase> jac(n * m);
         if (_jacMode == AUTOMATIC) {
-            jac = _fun->Jacobian(indVars);
+            jac = _fun.Jacobian(indVars);
         } else if (_jacMode == FORWARD) {
-            JacobianFor(*_fun, indVars, jac);
+            JacobianFor(_fun, indVars, jac);
         } else {
-            JacobianRev(*_fun, indVars, jac);
+            JacobianRev(_fun, indVars, jac);
         }
 
         finishedGraphCreation();
@@ -306,12 +305,12 @@ namespace CppAD {
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
 
         // independent variables
-        std::vector<CGBase> indVars(n);
+        vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < n; i++) {
@@ -320,7 +319,7 @@ namespace CppAD {
         }
 
         // multipliers
-        std::vector<CGBase> w(m);
+        vector<CGBase> w(m);
         handler.makeVariables(w);
         if (_x.size() > 0) {
             for (size_t i = 0; i < m; i++) {
@@ -328,7 +327,7 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> hess = _fun->Hessian(indVars, w);
+        vector<CGBase> hess = _fun.Hessian(indVars, w);
 
         // make use of the symmetry of the Hessian in order to reduce operations
         for (size_t i = 0; i < n; i++) {
@@ -352,8 +351,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         /**
          * Determine the sparsity pattern
@@ -363,23 +362,11 @@ namespace CppAD {
         bool forwardMode;
 
         if (_jacMode == AUTOMATIC) {
-            /**
-             * Estimate the work load of forward vs reverse mode
-             */
-            size_t workForward;
-            size_t workReverse;
             if (_custom_jac.defined) {
-                std::set<size_t> rows, cols;
-                rows.insert(_jacSparsity.rows.begin(), _jacSparsity.rows.end());
-                workReverse = rows.size();
-                cols.insert(_jacSparsity.cols.begin(), _jacSparsity.cols.end());
-                workForward = cols.size();
+                forwardMode = estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
             } else {
-                workReverse = m;
-                workForward = n;
+                forwardMode = n <= m;
             }
-
-            forwardMode = workForward <= workReverse;
         } else {
             forwardMode = _jacMode == FORWARD;
         }
@@ -397,19 +384,31 @@ namespace CppAD {
     }
 
     template<class Base>
+    bool CLangCompileModelHelper<Base>::estimateBestJacobianADMode(const std::vector<size_t>& jacRows,
+                                                                   const std::vector<size_t>& jacCols) {
+        std::set<size_t> rows, cols;
+        rows.insert(jacRows.begin(), jacRows.end());
+        size_t workReverse = rows.size();
+        cols.insert(jacCols.begin(), jacCols.end());
+        size_t workForward = cols.size();
+
+        return workForward <= workReverse;
+    }
+
+    template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources,
                                                                      bool forward) {
         const std::string jobName = "sparse Jacobian";
 
-        //size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        //size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         startingGraphCreation(jobName);
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
 
-        std::vector<CGBase> indVars(n);
+        vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
         if (_x.size() > 0) {
             for (size_t i = 0; i < n; i++) {
@@ -417,17 +416,18 @@ namespace CppAD {
             }
         }
 
-        //printSparsityPattern(_jacSparsity.sparsity, "jac sparsity");
-        std::vector<CGBase> jac(_jacSparsity.rows.size());
-        CppAD::sparse_jacobian_work work;
-        if (forward) {
-            _fun->SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
-        } else {
-            _fun->SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
-        }
+        vector<CGBase> jac(_jacSparsity.rows.size());
+        if (_loopTapes.empty()) {
+            //printSparsityPattern(_jacSparsity.sparsity, "jac sparsity");
+            CppAD::sparse_jacobian_work work;
+            if (forward) {
+                _fun.SparseJacobianForward(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
+            } else {
+                _fun.SparseJacobianReverse(indVars, _jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols, jac, work);
+            }
 
-        if (_funLoops == _fun) {
-            prepareSparseJacobianWithLoops(handler, jac);
+        } else {
+            jac = prepareSparseJacobianWithLoops(handler, indVars, forward);
         }
 
         finishedGraphCreation();
@@ -445,8 +445,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
                                                                            bool forward) {
-        //size_t m = _fun->Range();
-        //size_t n = _fun->Domain();
+        //size_t m = _fun.Range();
+        //size_t n = _fun.Domain();
         using namespace std;
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
@@ -542,7 +542,7 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (*_fun);
+        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
 
         if (!_custom_jac.defined) {
             generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
@@ -579,8 +579,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) {
         const std::string jobName = "sparse Hessian";
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         /**
          * we might have to consider a slightly different order than the one
@@ -591,7 +591,22 @@ namespace CppAD {
 
         std::map<size_t, std::map<size_t, size_t> > locations;
         for (size_t e = 0; e < evalRows.size(); e++) {
-            locations[evalRows[e]][evalCols[e]] = e;
+            size_t j1 = evalRows[e];
+            size_t j2 = evalCols[e];
+            std::map<size_t, std::map<size_t, size_t> >::iterator itJ1 = locations.find(j1);
+            if (itJ1 == locations.end()) {
+                locations[j1][j2] = e;
+            } else {
+                std::map<size_t, size_t>& j22e = itJ1->second;
+                if (j22e.find(j2) == j22e.end()) {
+                    j22e[j2] = e; // OK
+                } else {
+                    // repeated elements not allowed
+                    std::ostringstream ss;
+                    ss << "Repeated Hessian element requested: " << j1 << " " << j2;
+                    throw CGException(ss.str());
+                }
+            }
         }
 
         // make use of the symmetry of the Hessian in order to reduce operations
@@ -653,11 +668,11 @@ namespace CppAD {
             }
         }
 
-        std::vector<CGBase> hess(_hessSparsity.rows.size());
-        if (_funLoops != _fun) {
+        vector<CGBase> hess(_hessSparsity.rows.size());
+        if (_loopTapes.empty()) {
             CppAD::sparse_hessian_work work;
             vector<CGBase> lowerHess(lowerHessRows.size());
-            _fun->SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
+            _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 
             for (size_t i = 0; i < lowerHessOrder.size(); i++) {
                 hess[lowerHessOrder[i]] = lowerHess[i];
@@ -750,7 +765,7 @@ namespace CppAD {
                 maxCompressedSize = it->second.size();
         }
 
-        if (_funLoops == _fun) {
+        if (!_loopTapes.empty()) {
             /**
              * with loops
              */
@@ -856,8 +871,8 @@ namespace CppAD {
             return;
         }
 
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         /**
          * sparsity for the sum of the hessians of all equations
@@ -865,13 +880,13 @@ namespace CppAD {
         SparsitySetType r(n); // identity matrix
         for (size_t j = 0; j < n; j++)
             r[j].insert(j);
-        SparsitySetType jac = _fun->ForSparseJac(n, r);
+        SparsitySetType jac = _fun.ForSparseJac(n, r);
 
         SparsitySetType s(1);
         for (size_t i = 0; i < m; i++) {
             s[0].insert(i);
         }
-        _hessSparsity.sparsity = _fun->RevSparseHes(n, s, false);
+        _hessSparsity.sparsity = _fun.RevSparseHes(n, s, false);
         //printSparsityPattern(_hessSparsity.sparsity, "hessian");
 
         if (_hessianByEquation || _reverseTwo) {
@@ -891,7 +906,7 @@ namespace CppAD {
                     size_t j = *it;
                     r[j].insert(j);
                 }
-                jac = _fun->ForSparseJac(n, r);
+                jac = _fun.ForSparseJac(n, r);
             }
 
             /**
@@ -916,7 +931,7 @@ namespace CppAD {
                     size_t j = *it;
                     r[j].insert(j);
                 }
-                _fun->ForSparseJac(n, r);
+                _fun.ForSparseJac(n, r);
 
                 // second-order
                 s[0].clear();
@@ -927,7 +942,7 @@ namespace CppAD {
                     s[0].insert(i);
                 }
 
-                SparsitySetType sparsityc = _fun->RevSparseHes(n, s, false);
+                SparsitySetType sparsityc = _fun.RevSparseHes(n, s, false);
 
                 /**
                  * Retrieve the individual hessians for each equation
@@ -1058,9 +1073,9 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseForwardOneSources(std::map<std::string, std::string>& sources) {
 #ifndef NDEBUG
-        size_t m = _fun->Range();
+        size_t m = _fun.Range();
 #endif
-        size_t n = _fun->Domain();
+        size_t n = _fun.Domain();
 
         determineJacobianSparsity();
 
@@ -1073,7 +1088,7 @@ namespace CppAD {
         /**
          * Generate one function for each dependent variable
          */
-        std::vector<CGBase> dxv(n, Base(0));
+        vector<CGBase> dxv(n);
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
@@ -1089,7 +1104,7 @@ namespace CppAD {
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
 
-            std::vector<CGBase> indVars(n);
+            vector<CGBase> indVars(n);
             handler.makeVariables(indVars);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -1104,13 +1119,13 @@ namespace CppAD {
             }
 
             // TODO: consider caching the zero order coefficients somehow between calls
-            _fun->Forward(0, indVars);
+            _fun.Forward(0, indVars);
             dxv[j] = dx;
-            std::vector<CGBase> dy = _fun->Forward(1, dxv);
+            vector<CGBase> dy = _fun.Forward(1, dxv);
             dxv[j] = Base(0);
             assert(dy.size() == m);
 
-            std::vector<CGBase> dyCustom;
+            vector<CGBase> dyCustom;
             std::vector<size_t>::const_iterator it2;
             for (it2 = rows.begin(); it2 != rows.end(); ++it2) {
                 dyCustom.push_back(dy[*it2]);
@@ -1143,8 +1158,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::generateForwardOneSources(std::map<std::string, std::string>& sources) {
 
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_FORWARD_ONE;
@@ -1225,8 +1240,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseReverseOneSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         determineJacobianSparsity();
 
@@ -1236,7 +1251,7 @@ namespace CppAD {
             elements[_jacSparsity.rows[e]].push_back(_jacSparsity.cols[e]);
         }
 
-        std::vector<CGBase> w(m, Base(0));
+        vector<CGBase> w(m);
 
         /**
          * Generate one function for each dependent variable
@@ -1255,7 +1270,7 @@ namespace CppAD {
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
 
-            std::vector<CGBase> indVars(_fun->Domain());
+            vector<CGBase> indVars(_fun.Domain());
             handler.makeVariables(indVars);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -1270,14 +1285,14 @@ namespace CppAD {
             }
 
             // TODO: consider caching the zero order coefficients somehow between calls
-            _fun->Forward(0, indVars);
+            _fun.Forward(0, indVars);
 
             w[i] = py;
-            std::vector<CGBase> dw = _fun->Reverse(1, w);
+            vector<CGBase> dw = _fun.Reverse(1, w);
             assert(dw.size() == n);
             w[i] = Base(0);
 
-            std::vector<CGBase> dwCustom;
+            vector<CGBase> dwCustom;
             std::vector<size_t>::const_iterator it2;
             for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
                 dwCustom.push_back(dw[*it2]);
@@ -1309,8 +1324,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateReverseOneSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_ONE;
@@ -1389,8 +1404,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) {
-        const size_t m = _fun->Range();
-        const size_t n = _fun->Domain();
+        const size_t m = _fun.Range();
+        const size_t n = _fun.Domain();
         //const size_t k = 1;
         const size_t p = 2;
 
@@ -1409,7 +1424,7 @@ namespace CppAD {
             elements[evalRows[e]].push_back(evalCols[e]);
         }
 
-        if (_funLoops == _fun) {
+        if (!_loopTapes.empty()) {
             /**
              * with loops
              */
@@ -1417,7 +1432,7 @@ namespace CppAD {
             return;
         }
 
-        std::vector<CGBase> tx1v(n, Base(0));
+        vector<CGBase> tx1v(n);
 
         std::set<size_t> customVarsInHess;
         if (_custom_hess.defined) {
@@ -1425,9 +1440,11 @@ namespace CppAD {
             customVarsInHess.insert(_custom_hess.col.begin(), _custom_hess.col.end());
         }
 
+#if 0  // coloring must be changed
         /**
          * Coloring
          */
+        printSparsityPattern(_hessSparsity.sparsity, "hessian");
         const CppAD::vector<Color> colors = colorByRow(customVarsInHess, _hessSparsity.sparsity);
 
         for (size_t c = 0; c < colors.size(); c++) {
@@ -1452,7 +1469,7 @@ namespace CppAD {
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
 
-            std::vector<CGBase> tx0(n);
+            vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -1466,7 +1483,7 @@ namespace CppAD {
                 tx1.setValue(Base(1.0));
             }
 
-            std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+            vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
             handler.makeVariables(py);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < m; i++) {
@@ -1474,13 +1491,13 @@ namespace CppAD {
                 }
             }
 
-            _fun->Forward(0, tx0);
+            _fun.Forward(0, tx0);
 
             for (std::set<size_t>::const_iterator itj = color.forbiddenRows.begin(); itj != color.forbiddenRows.end(); ++itj) {
                 size_t j = *itj;
                 tx1v[j] = tx1;
             }
-            _fun->Forward(1, tx1v);
+            _fun.Forward(1, tx1v);
 
             // restore values
             for (std::set<size_t>::const_iterator itj = color.forbiddenRows.begin(); itj != color.forbiddenRows.end(); ++itj) {
@@ -1488,7 +1505,7 @@ namespace CppAD {
                 tx1v[j] = Base(0);
             }
 
-            std::vector<CGBase> px = _fun->Reverse(2, py);
+            vector<CGBase> px = _fun.Reverse(2, py);
             assert(px.size() == 2 * n);
 
             finishedGraphCreation();
@@ -1499,7 +1516,7 @@ namespace CppAD {
                 size_t j = itr2c->first;
                 const std::set<size_t>& cols = itr2c->second;
 
-                std::vector<CGBase> pxCustom(cols.size());
+                vector<CGBase> pxCustom(cols.size());
                 std::set<size_t>::const_iterator it2;
                 size_t e = 0;
                 for (it2 = cols.begin(); it2 != cols.end(); ++it2, e++) {
@@ -1521,6 +1538,7 @@ namespace CppAD {
             }
 
         }
+#endif
 
         /**
          * Generate one function for each independent variable
@@ -1539,7 +1557,7 @@ namespace CppAD {
             CodeHandler<Base> handler;
             handler.setVerbose(_verbose);
 
-            std::vector<CGBase> tx0(n);
+            vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -1553,7 +1571,7 @@ namespace CppAD {
                 tx1.setValue(Base(1.0));
             }
 
-            std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+            vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
             handler.makeVariables(py);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < m; i++) {
@@ -1561,15 +1579,15 @@ namespace CppAD {
                 }
             }
 
-            _fun->Forward(0, tx0);
+            _fun.Forward(0, tx0);
 
             tx1v[j] = tx1;
-            _fun->Forward(1, tx1v);
+            _fun.Forward(1, tx1v);
             tx1v[j] = Base(0);
-            std::vector<CGBase> px = _fun->Reverse(2, py);
+            vector<CGBase> px = _fun.Reverse(2, py);
             assert(px.size() == 2 * n);
 
-            std::vector<CGBase> pxCustom;
+            vector<CGBase> pxCustom;
             std::vector<size_t>::const_iterator it2;
             for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
                 size_t jj = *it2;
@@ -1602,8 +1620,8 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateReverseTwoSources(std::map<std::string, std::string>& sources) {
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         _cache.str("");
         _cache << _name << "_" << FUNCTION_REVERSE_TWO;
@@ -1685,7 +1703,7 @@ namespace CppAD {
                 "      in[1] = &tx[j * 2 + 1];\n"
                 "      in[2] = w;\n"
                 "      out[0] = compressed;\n";
-        if (_funLoops == _fun) {
+        if (!_loopTapes.empty()) {
             _cache << "      for(ePos = 0; ePos < nnz; ePos++)\n"
                     "         compressed[ePos] = 0;\n"
                     "\n";

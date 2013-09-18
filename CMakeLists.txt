@@ -18,9 +18,9 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX)
 
-SET(cppadcg_version      "20121215.5" )
+SET(cppadcg_version      "1.3" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
-SET(cppadcg_description  "Differentiation of C++ Algorithms with Source Code Generation" )
+SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
 # some additional cmake modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -30,7 +30,7 @@ FIND_PACKAGE(CppAD REQUIRED)
 FIND_PACKAGE(Eigen3 REQUIRED)
 
 IF( UNIX )
-	FIND_PACKAGE(DL REQUIRED)
+  FIND_PACKAGE(DL REQUIRED)
 ENDIF()
 
 INCLUDE_DIRECTORIES( ${CPPAD_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include" ${EIGEN3_INCLUDE_DIR} ${DL_INCLUDE_DIRS})
@@ -75,3 +75,15 @@ ADD_SUBDIRECTORY(pkgconfig)
 # enable testing must be called here in order for the target test to be created
 ENABLE_TESTING()
 ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)
+
+################################################################################
+# Generate the API documentation with Doxygen
+################################################################################
+FIND_PACKAGE(Doxygen)
+
+IF(DOXYGEN_FOUND)
+  CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doxyfile @ONLY)
+  ADD_CUSTOM_TARGET(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxyfile
+                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+                    COMMENT "Generating API documentation with Doxygen" VERBATIM)
+ENDIF()

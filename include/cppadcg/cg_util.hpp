@@ -701,6 +701,30 @@ namespace CppAD {
         }
     };
 
+    /**
+     * Smart set of pointers.
+     * Deletes all set values on destruction.
+     */
+    template<class Base>
+    class SmartSetPointer {
+    public:
+        std::set<Base*> s;
+
+        inline SmartSetPointer() {
+        }
+
+        inline SmartSetPointer(const std::set<Base*>& s_) {
+            s.swap(s_);
+        }
+
+        ~SmartSetPointer() {
+            typename std::set<Base*>::const_iterator it;
+            for (it = s.begin(); it != s.end(); ++it) {
+                delete *it;
+            }
+        }
+    };
+
     template<class Key, class Value>
     class SmartMapValuePointer {
     public:

@@ -97,8 +97,8 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
                                                                          const std::map<size_t, std::vector<size_t> >& elements) {
-        size_t m = _fun->Range();
-        size_t n = _fun->Domain();
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
 
         size_t mLoopTotal = 0;
         std::vector<bool> eqLoop(m, false);
@@ -108,13 +108,13 @@ namespace CppAD {
         /***********************************************************************
          * loops
          **********************************************************************/
-        typename std::set<LoopAtomicFun<Base>* >::const_iterator itl;
-        for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
-            LoopAtomicFun<Base>* loop = *itl;
+        typename std::set<LoopModel<Base>* >::const_iterator itl;
+        for (itl = _loopTapes.begin(); itl != _loopTapes.end(); ++itl) {
+            LoopModel<Base>* loop = *itl;
 
             const std::vector<std::vector<LoopPosition> >& eqIndexes = loop->getDependentIndexes();
 
-            mLoopTotal += loop->getLoopDependentCount();
+            //mLoopTotal += loop->getLoopDependentCount();
 
             SparsitySetType loopHessSparsity(n);
 
@@ -197,12 +197,12 @@ namespace CppAD {
                     }
                 }
 
-                _fun->Forward(0, tx0);
+                _fun.Forward(0, tx0);
 
                 tx1v[j] = tx1;
-                _fun->Forward(1, tx1v);
+                _fun.Forward(1, tx1v);
                 tx1v[j] = Base(0);
-                std::vector<CGBase> px = _fun->Reverse(2, py);
+                std::vector<CGBase> px = _fun.Reverse(2, py);
                 assert(px.size() == 2 * n);
 
                 hessRow.resize(cols.size());
@@ -299,15 +299,15 @@ namespace CppAD {
                     }
                 }
 
-                _fun->Forward(0, tx0);
+                _fun.Forward(0, tx0);
 
                 tx1v[j] = tx1;
-                _fun->Forward(1, tx1v);
+                _fun.Forward(1, tx1v);
                 tx1v[j] = Base(0);
-                std::vector<CGBase> px = _fun->Reverse(2, pyNoLoop);
+                std::vector<CGBase> px = _fun.Reverse(2, pyNoLoop);
                 assert(px.size() == 2 * n);
 
-                std::vector<CGBase> pxCustom(cols.size());
+                vector<CGBase> pxCustom(cols.size());
                 std::vector<Compressed2JColType>::const_iterator it2;
                 for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
                     size_t e = it2->first;
@@ -344,18 +344,14 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseReverseTwoSourcesForLoop(std::map<std::string, std::string>& sources,
                                                                               CodeHandler<Base>& handler,
-                                                                              LoopAtomicFun<Base>& loop,
+                                                                              LoopModel<Base>& loop,
                                                                               std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >& rev2,
                                                                               const CGBase& tx1) {
         using namespace std;
         using CppAD::vector;
 
-        size_t iterationCount = loop.getIterationCount();
+        //size_t iterationCount = loop.getIterationCount();
         size_t nnz = _hessSparsity.rows.size();
-
-        if (!loop.isTapeIndependentsFullyDetached2ndOrder()) {
-            throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
-        }
 
         std::vector<IndexedDependentLoopInfo2<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
         garbageCollection.reserve(nnz);
@@ -368,158 +364,10 @@ namespace CppAD {
         //      -> orig independent 1 -> iteration -> (position, val)
         map<TapeVarType, map<TapeVarType, map<size_t, IndexedDependentLoopInfo2<Base>* > > > hessIndexPatterns;
 
-        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo2<Base>* > > dependentIndexes;
-        // j1 -> iteration -> loop atomic evaluation -> results
-        map<TapeVarType, map<size_t, map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> > > > evaluations;
+        map<LoopModel<Base>*, vector<IndexedDependentLoopInfo2<Base>* > > dependentIndexes;
 
         typename std::map<size_t, std::vector<LoopRev2ValInfo<Base> > >::iterator itJRow;
-        for (itJRow = rev2.begin(); itJRow != rev2.end(); ++itJRow) {
-            size_t j1 = itJRow->first;
-            std::vector<LoopRev2ValInfo<Base> >& cols = itJRow->second;
 
-            for (size_t k = 0; k < cols.size(); k++) {
-                size_t j2 = cols[k].jcol2;
-                CGBase& hessVal = cols[k].val;
-                if (IdenticalZero(hessVal))
-                    continue;
-
-                // loop evaluation -> results
-                map<LoopEvaluationOperationNode<Base>*, map<size_t, OperationNode<Base>*> > evals;
-                findLoopEvaluations(handler, &loop, hessVal.getOperationNode(), evals); ////////////
-
-                if (evals.empty())
-                    continue;
-
-                //size_t iteration = iterationCount;
-                if (evals.size() > 1 || evals.begin()->second.size() > 1) {
-                    throw CGException("Unable to generate expression for a second order reverse mode element which "
-                                      "is either associated with multiple indexed independents "
-                                      "or an indepedent with constant index.");
-                }
-
-#ifndef NDEBUG
-                {
-                    LoopEvaluationOperationNode<Base>* loopEvalNode = evals.begin()->first;
-                    assert(loopEvalNode->getOperationType() == CGLoopReverseOp && loopEvalNode->getOrder() == 1);
-                }
-#endif
-
-                /**
-                 * If tapeJ1s.size()>1 then the independent is used by several
-                 * temporary variables. We know that it is NOT a mix of 
-                 * temporaries and indexed independents because this situation
-                 * is checked before.
-                 */
-                set<size_t> tapeJ1s = loop.getIndependentTapeIndexes(j1);
-                assert(tapeJ1s.size() >= 1);
-                bool isTemporary1 = loop.isTemporary(*tapeJ1s.begin());
-                size_t jRef1 = isTemporary1 ? j1 : 0;
-                TapeVarType jTape1(*tapeJ1s.begin(), jRef1);
-
-                set<size_t> tapeJ2s = loop.getIndependentTapeIndexes(j2);
-                assert(tapeJ2s.size() >= 1); // if >1 then the independent is used by several temporary variables
-                bool isTemporary2 = loop.isTemporary(*tapeJ2s.begin());
-                size_t jRef2 = isTemporary2 ? j2 : 0;
-                TapeVarType jTape2(*tapeJ2s.begin(), jRef2);
-
-                IndexedDependentLoopInfo2<Base>* origRev2El = NULL;
-
-                map<size_t, IndexedDependentLoopInfo2<Base>* >& ref = hessIndexPatterns[jTape1][jTape2];
-                if (ref.size() != 0) {
-                    typename map<size_t, IndexedDependentLoopInfo2<Base>* >::const_iterator it;
-                    it = ref.find(j1);
-                    if (it != ref.end()) {
-                        origRev2El = it->second;
-                    }
-                }
-
-                if (origRev2El == NULL) {
-                    // the vector will never allocate more space so this is safe:
-                    garbageCollection.resize(garbageCollection.size() + 1);
-                    ref[j1] = origRev2El = &garbageCollection.back();
-                    dependentIndexes[&loop].push_back(origRev2El);
-                }
-
-                /**
-                 * Determine the iteration
-                 */
-                size_t iteration;
-
-                bool indexed1 = loop.isIndexedIndependent(*tapeJ1s.begin());
-                bool indexed2 = loop.isIndexedIndependent(*tapeJ2s.begin());
-
-                std::set<size_t> iterations;
-
-                if (indexed1 || indexed2) {
-                    if (indexed1) {
-                        iterations = loop.getIterationsOfIndexedIndep(*tapeJ1s.begin(), j1);
-                        assert(!iterations.empty());
-                    }
-
-                    if (!indexed1 || (iterations.size() > 1 && indexed2)) {
-                        std::set<size_t> iterations2 = loop.getIterationsOfIndexedIndep(*tapeJ2s.begin(), j2);
-                        if (iterations.empty()) {
-                            iterations = iterations2;
-                        } else {
-                            std::set<size_t> intersection;
-                            std::set_intersection(iterations.begin(), iterations.end(),
-                                                  iterations2.begin(), iterations2.end(),
-                                                  std::inserter(intersection, intersection.end()));
-
-                            iterations.swap(intersection);
-                        }
-                    }
-
-                    std::set<size_t>::const_iterator itIt;
-                    for (itIt = iterations.begin(); itIt != iterations.end(); ++itIt) {
-                        origRev2El->iteration2location[*itIt] = cols[k];
-                    }
-
-                    if (iterations.size() == 1) {
-                        iteration = *iterations.begin();
-                    } else {
-                        if (iterations.find(0) != iterations.end()) {
-                            iteration = 0;
-                            // must change the argument of the call to the atomic
-                            // function so that it only corresponds to a single iteration
-                            throw CGException("Not implemented yet");
-                        } else {
-                            iteration = *iterations.begin();
-                        }
-                    }
-
-                } else {
-                    /**
-                     * hessian element relative to two non-indexed independents
-                     * (present in all iterations)
-                     */
-                    iteration = 0; // it is actually present in all iterations!!!
-                    for (size_t iter = 0; iter < iterationCount; iter++) {
-                        origRev2El->iteration2location[iter] = cols[k];
-                    }
-                    // must change the argument of the call to the atomic
-                    // function so that it only corresponds to a single iteration
-                    throw CGException("Not implemented yet");
-                }
-
-                typename map<LoopEvaluationOperationNode<Base>*, map<size_t, OperationNode<Base>*> >::const_iterator itE;
-                for (itE = evals.begin(); itE != evals.end(); ++itE) {
-                    LoopEvaluationOperationNode<Base>* loopEvalNode = itE->first;
-                    const map<size_t, OperationNode<Base>*>& results = itE->second;
-
-                    size_t result_size = loopEvalNode->getTapeResultSize(); // tape result size
-                    vector<OperationNode<Base>*>& allLoopEvalResults = evaluations[jTape1][iteration][loopEvalNode];
-                    allLoopEvalResults.resize(result_size);
-
-                    typename map<size_t, OperationNode<Base>*>::const_iterator itR;
-                    for (itR = results.begin(); itR != results.end(); ++itR) {
-                        size_t tapeIndex = itR->second->getInfo()[1];
-                        allLoopEvalResults[tapeIndex] = itR->second;
-                    }
-                }
-
-            }
-        }
 
         /**
          * Generate index patterns for the dependent variables
@@ -554,7 +402,7 @@ namespace CppAD {
                         iteration2pos[iteration] = loc.compressedLoc; //location
                     }
 
-                    idli->pattern = IndexPattern::detect(LoopAtomicFun<Base>::ITERATION_INDEX, iteration2pos);
+                    idli->pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, iteration2pos);
                     handler.manageLoopDependentIndexPattern(idli->pattern);
 
                     /**
@@ -722,205 +570,25 @@ namespace CppAD {
                 _cache.str("");
                 _cache << "model (reverse two, loop " << loop.getLoopId() << ", indep " << jTape1.first << "_" << jTape1.second << ", group " << g << ")";
                 std::string jobName = _cache.str();
-
-                std::string source = generateSparseReverseTwoWithLoopsVarGroupSource(functionName,
-                                                                                     jobName,
-                                                                                     loop, handler,
-                                                                                     jTape1, group,
-                                                                                     indexJrow,
-                                                                                     indexLocalIt,
-                                                                                     indexLocalItCount,
-                                                                                     *itPattern.get(),
-                                                                                     indexLocalItCountPattern.get(),
-                                                                                     loopDepIndexes.m,
-                                                                                     evaluations[jTape1][group.refIteration],
-                                                                                     tx1);
-
+                /*
+                                std::string source = generateSparseReverseTwoWithLoopsVarGroupSource(functionName,
+                                                                                                     jobName,
+                                                                                                     loop, handler,
+                                                                                                     jTape1, group,
+                                                                                                     indexJrow,
+                                                                                                     indexLocalIt,
+                                                                                                     indexLocalItCount,
+                 *itPattern.get(),
+                                                                                                     indexLocalItCountPattern.get(),
+                                                                                                     loopDepIndexes.m,
+                                                                                                     evaluations[jTape1][group.refIteration],
+                                                                                                     tx1);
+                 
                 sources[functionName + ".c"] = source;
+                 * */
             }
         }
 
-    }
-
-    template<class Base>
-    std::string CLangCompileModelHelper<Base>::generateSparseReverseTwoWithLoopsVarGroupSource(const std::string& functionName,
-                                                                                               const std::string& jobName,
-                                                                                               LoopAtomicFun<Base>& loop,
-                                                                                               CodeHandler<Base>& handler,
-                                                                                               const TapeVarType& jTape1,
-                                                                                               const GroupLoopRev2ColInfo<Base>& group,
-                                                                                               const Index& indexJrow,
-                                                                                               const Index& indexLocalIt,
-                                                                                               const Index& indexLocalItCount,
-                                                                                               const IndexPattern& itPattern,
-                                                                                               const IndexPattern* itCountPattern,
-                                                                                               const std::map<TapeVarType, Plane2DIndexPattern*>& loopDepIndexes,
-                                                                                               std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations,
-                                                                                               const CGBase& tx1) {
-        size_t n = _fun->Domain();
-
-        /**
-         * determine if a loop should be created
-         */
-        LoopStartOperationNode<Base>* loopStart = NULL;
-
-        std::map<size_t, std::set<size_t> > localIterCount2Jrows;
-
-        std::map<size_t, std::map<size_t, size_t> >::const_iterator itJrow2localit;
-        for (itJrow2localit = group.jrow2localIt2ModelIt.begin(); itJrow2localit != group.jrow2localIt2ModelIt.end(); ++itJrow2localit) {
-            size_t jrow = itJrow2localit->first;
-            size_t itCount = itJrow2localit->second.size();
-            localIterCount2Jrows[itCount].insert(jrow);
-        }
-
-        bool createsLoop = localIterCount2Jrows.size() != 1 || // is there a different number of iterations?
-                localIterCount2Jrows.begin()->first != 1; // is there always just on iteration?
-
-        IndexOperationNode<Base> jrowIndexOp(indexJrow);
-
-        std::auto_ptr<LoopNodeInfo<Base> > loopNodeInfo;
-        std::auto_ptr<IndexOperationNode<Base> > localIterIndexOp;
-        std::auto_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
-        std::auto_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
-        if (createsLoop) {
-            if (itCountPattern != NULL) {
-                itCountAssignOp.reset(new IndexAssignOperationNode<Base>(indexLocalItCount, *itCountPattern, jrowIndexOp));
-                localIterCountIndexOp.reset(new IndexOperationNode<Base>(indexLocalItCount, *itCountAssignOp.get()));
-                loopNodeInfo.reset(new CustomLoopNodeInfo<Base>(indexLocalIt, *localIterCountIndexOp.get()));
-            } else {
-                size_t itCount = group.jrow2localIt2ModelIt.begin()->second.size();
-                loopNodeInfo.reset(new CustomLoopNodeInfo<Base>(indexLocalIt, itCount));
-            }
-
-            loopStart = new LoopStartOperationNode<Base>(*loopNodeInfo.get());
-            handler.manageOperationNodeMemory(loopStart);
-
-            localIterIndexOp.reset(new IndexOperationNode<Base>(indexLocalIt, *loopStart));
-        }
-
-
-        IndexAssignOperationNode<Base> iterationIndexPatternOp(LoopAtomicFun<Base>::ITERATION_INDEX, itPattern, &jrowIndexOp, localIterIndexOp.get());
-        IndexOperationNode<Base> iterationIndexOp(LoopAtomicFun<Base>::ITERATION_INDEX, iterationIndexPatternOp);
-
-        /**
-         * generate the expressions inside the loop
-         */
-        size_t nIndexed = loop.getIndexedIndepIndexes().size();
-        vector<CGBase> indexedIndependents;
-        vector<CGBase> indexedIndependents2(nIndexed);
-
-        std::set<size_t> tapeJrows = loop.getIndependentTapeIndexes(group.refJrow);
-        std::set<size_t>::const_iterator itJrows;
-        for (itJrows = tapeJrows.begin(); itJrows != tapeJrows.end(); ++itJrows) {
-            size_t tapeJ = *itJrows;
-            if (tapeJ < nIndexed)
-                indexedIndependents2[tapeJ] = tx1;
-        }
-
-
-        replaceAtomicLoopWithExpression(handler, loop, iterationIndexOp, evaluations, indexedIndependents, indexedIndependents2);
-
-        /**
-         * 
-         */
-        const std::map<TapeVarType, LoopRev2GroupValInfo<Base> >& refVals = group.jRow2iterations2Loc.at(group.refJrow).at(group.refIteration);
-        std::vector<CGBase> pxCustom(refVals.size());
-
-        size_t assignOrAdd = 1; //add
-
-        std::map<TapeVarType, Plane2DIndexPattern*>::const_iterator itDepIndex;
-        /**
-         * make the loop end
-         */
-        if (createsLoop) {
-            std::set<IndexOperationNode<Base>*> indexesOps;
-            indexesOps.insert(&jrowIndexOp);
-            indexesOps.insert(localIterIndexOp.get());
-
-            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(refVals.size());
-
-            size_t i = 0;
-            for (itDepIndex = loopDepIndexes.begin(); itDepIndex != loopDepIndexes.end(); ++itDepIndex, i++) {
-                const CGBase& val = refVals.at(itDepIndex->first).val;
-                indexedLoopResults[i] = std::make_pair(val, itDepIndex->second);
-            }
-
-            OperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, *loopNodeInfo.get(), assignOrAdd);
-
-            /**
-             * change the dependents (must depend directly on the loop)
-             */
-            for (size_t i = 0; i < pxCustom.size(); i++) {
-                pxCustom[i] = handler.createCG(Argument<Base>(*loopEnd));
-            }
-
-            /**
-             * move no-nindexed expressions outside loop
-             */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd, indexLocalIt);
-        } else {
-            /**
-             * No loop required
-             */
-            std::vector<Argument<Base> > indexedArgs(2);
-            std::vector<size_t> info(2);
-
-            size_t i = 0;
-            for (itDepIndex = loopDepIndexes.begin(); itDepIndex != loopDepIndexes.end(); ++itDepIndex, i++) {
-                const CGBase& val = refVals.at(itDepIndex->first).val;
-
-                indexedArgs[0] = asArgument(val); // indexed expression
-                indexedArgs[1] = Argument<Base>(jrowIndexOp); // index
-                info[0] = handler.addLoopDependentIndexPattern(*itDepIndex->second); // dependent index pattern location
-                info[1] = assignOrAdd;
-
-                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
-                handler.manageOperationNodeMemory(yIndexed);
-
-                pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
-            }
-        }
-
-        CLanguage<Base> langC(_baseTypeName);
-        langC.setCurrentLoop(&loop);
-
-        _cache.str("");
-        std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
-        CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
-
-        /**
-         * Generate the source code inside the loop
-         */
-        handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
-
-        /**
-         * 
-         */
-        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
-
-        _cache.str("");
-        _cache << "#include <stdlib.h>\n"
-                "#include <math.h>\n"
-                "\n"
-                << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
-                "\n"
-                "void " << functionName << "(unsigned long jrow, " << argsDcl << ") {\n";
-        nameGenRev2.customFunctionVariableDeclarations(_cache);
-        _cache << langC.generateIndependentVariableDeclaration() << "\n";
-        _cache << langC.generateDependentVariableDeclaration() << "\n";
-        _cache << langC.generateTemporaryVariableDeclaration(true) << "\n";
-        nameGenRev2.prepareCustomFunctionVariables(_cache);
-
-        // code inside the loop
-        _cache << code.str();
-
-        nameGenRev2.finalizeCustomFunctionVariables(_cache);
-        _cache << "}\n\n";
-
-        std::string source = _cache.str();
-        _cache.str("");
-        return source;
     }
 
     template<class Base>
@@ -928,11 +596,11 @@ namespace CppAD {
                                                                                         std::map<std::string, std::string>& sources) {
 
         // functions for each row
-        std::map<size_t, std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > > > functions;
+        std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > > > functions;
 
-        typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
+        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
         for (itlj1g = _loopRev2Groups.begin(); itlj1g != _loopRev2Groups.end(); ++itlj1g) {
-            LoopAtomicFun<Base>* loop = itlj1g->first;
+            LoopModel<Base>* loop = itlj1g->first;
 
             typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
             for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
@@ -989,11 +657,11 @@ namespace CppAD {
             /**
              * contributions from equations in loops
              */
-            const std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >& rowFunctions = functions[jrow];
+            const std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >& rowFunctions = functions[jrow];
 
-            typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
+            typename std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
             for (itlj1g = rowFunctions.begin(); itlj1g != rowFunctions.end(); ++itlj1g) {
-                LoopAtomicFun<Base>* loop = itlj1g->first;
+                LoopModel<Base>* loop = itlj1g->first;
 
                 typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
                 for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
@@ -1032,7 +700,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
-                                                                     const LoopAtomicFun<Base>& loop,
+                                                                     const LoopModel<Base>& loop,
                                                                      const TapeVarType& jTape1,
                                                                      size_t g) {
         cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO <<

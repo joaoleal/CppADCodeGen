@@ -93,8 +93,8 @@ namespace CppAD {
             return _nameGen->getMaxTemporaryArrayVariableID();
         }
 
-        virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
-            return _nameGen->generateDependent(variable, index);
+        virtual std::string generateDependent(size_t index) {
+            return _nameGen->generateDependent(index);
         }
 
         virtual std::string generateIndependent(const OperationNode<Base>& independent) {

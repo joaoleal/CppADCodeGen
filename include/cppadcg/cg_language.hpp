@@ -25,21 +25,37 @@ namespace CppAD {
     template<class Base>
     class LanguageGenerationData {
     public:
-        // The independent variables
+        /**
+         * The independent variables
+         */
         const std::vector<OperationNode<Base> *>& independent;
-        // The dependent variables
-        const std::vector<CG<Base> >& dependent;
-        // the lowest ID used for temporary variables
+        /**
+         * The dependent variables
+         */
+        const vector<CG<Base> >& dependent;
+        /**
+         * the lowest ID used for temporary variables
+         */
         size_t minTemporaryVarID;
-        // The order of the assignment of the variables in the source code
+        /**
+         * The order of the assignment of the variables in the source code
+         */
         const std::vector<OperationNode<Base>*>& variableOrder;
-        // Provides the rules for variable name creation
+        /**
+         * Provides the rules for variable name creation
+         */
         VariableNameGenerator<Base>& nameGen;
-        // maps atomic function IDs to their internal index
+        /**
+         * maps atomic function IDs to their internal index
+         */
         const std::map<size_t, size_t>& atomicFunctionId2Index;
-        // maps atomic function IDs to their names
+        /**
+         * maps atomic function IDs to their names
+         */ 
         const std::map<size_t, std::string>& atomicFunctionId2Name;
-        // a flag indicating whether or not temporary variable IDs have been recycled
+        /**
+         * a flag indicating whether or not temporary variable IDs have been recycled
+         */
         const bool reuseIDs;
         //
         const std::set<const Index*>& indexes;
@@ -47,10 +63,15 @@ namespace CppAD {
         const std::vector<const IndexPattern*>& loopDependentIndexPatterns;
         //
         const std::vector<const IndexPattern*>& loopIndependentIndexPatterns;
+        /**
+         * whether or not the dependent variables should be zeroed before 
+         * executing the operation graph
+         */
+        const bool zeroDependents;
     public:
 
         LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
-                               const std::vector<CG<Base> >& dep,
+                               const vector<CG<Base> >& dep,
                                size_t minTempVID,
                                const std::vector<OperationNode<Base>*>& vo,
                                VariableNameGenerator<Base>& ng,
@@ -59,7 +80,8 @@ namespace CppAD {
                                const bool ri,
                                const std::set<const Index*>& indexs,
                                const std::vector<const IndexPattern*>& dependentIndexPatterns,
-                               const std::vector<const IndexPattern*>& independentIndexPatterns) :
+                               const std::vector<const IndexPattern*>& independentIndexPatterns,
+                               bool zero) :
             independent(ind),
             dependent(dep),
             minTemporaryVarID(minTempVID),
@@ -70,7 +92,8 @@ namespace CppAD {
             reuseIDs(ri),
             indexes(indexs),
             loopDependentIndexPatterns(dependentIndexPatterns),
-            loopIndependentIndexPatterns(independentIndexPatterns) {
+            loopIndependentIndexPatterns(independentIndexPatterns),
+            zeroDependents(zero) {
         }
     };
 

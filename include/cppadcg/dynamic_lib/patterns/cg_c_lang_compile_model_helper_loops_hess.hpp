@@ -17,355 +17,1075 @@
 
 namespace CppAD {
 
+    namespace {
+
+        template<class Base>
+        class HessianWithLoopsInfo {
+        public:
+            vector<std::set<size_t> > evalJacSparsity;
+            vector<std::set<size_t> > evalHessSparsity;
+            // (tapeJ1, tapeJ2) -> [positions]
+            std::map<std::pair<size_t, size_t>, std::vector<size_t> > indexedIndexedPositions;
+            // (tapeJ1, tapeJ2(j2) ) -> [positions]
+            std::map<std::pair<size_t, size_t>, std::vector<size_t> > indexedNonIndexedPositions;
+            // (tapeJ1, j2) -> [positions]
+            std::map<std::pair<size_t, size_t>, std::vector<size_t> > indexedTempPositions;
+            // (tapeJ1, j2) -> [k]
+            std::map<std::pair<size_t, size_t>, std::set<size_t> > indexedTempEvals;
+            // (j1, tapeJ2) -> [positions]
+            std::map<std::pair<size_t, size_t>, std::vector<size_t> > nonIndexedIndexedPositions;
+            /**
+             * (j1, j2) -> position
+             */
+            std::map<std::pair<size_t, size_t>, size_t> nonIndexedNonIndexedPosition;
+            // [(j1, j2)]
+            std::set<std::pair<size_t, size_t> > nonIndexedNonIndexedEvals;
+            // j1 -> (k1, tapeJ2) -> [positions]
+            std::map<size_t, std::map<std::pair<size_t, size_t>, std::vector<size_t> > > tempIndexedPositions;
+            // (j2, j1) -> [k]
+            std::map<std::pair<size_t, size_t>, std::set<size_t> > nonIndexedTempEvals;
+
+            // k1 -> [tape J2]
+            std::map<size_t, std::set<size_t> > tempIndexedEvals;
+            // (j1, j2) -> [k1]
+            std::map<std::pair<size_t, size_t>, std::set<size_t> > tempNonIndexedEvals;
+            // (j1, j2) -> k1 -> [k2]
+            std::map<std::pair<size_t, size_t>, std::map<size_t, std::set<size_t> > > tempTempEvals;
+            // (j1 ,j2) -> [k1]
+            std::map<std::pair<size_t, size_t>, std::set<size_t> > nonLoopNonIndexedNonIndexed;
+
+            LoopStartOperationNode<Base>* loopStart;
+            IndexOperationNode<Base>* iterationIndexOp;
+            vector<CG<Base> > x; // loop independent variables
+            vector<CG<Base> > w;
+            vector<std::map<size_t, CG<Base> > > dyiDzk;
+
+            HessianWithLoopsInfo() :
+                loopStart(NULL),
+                iterationIndexOp(NULL) {
+
+            }
+
+            HessianWithLoopsInfo(CppAD::LoopModel<Base>& loop) :
+                evalJacSparsity(loop.getTapeDependentCount()),
+                evalHessSparsity(loop.getTapeIndependentCount()),
+                loopStart(NULL),
+                iterationIndexOp(NULL),
+                dyiDzk(loop.getTapeDependentCount()) {
+
+            }
+
+        };
+    }
+
     /***************************************************************************
      *  Methods related with loop insertion into the operation graph
      **************************************************************************/
 
     template<class Base>
-    std::vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
-                                                                                        vector<CGBase>& indVars,
-                                                                                        vector<CGBase>& w,
-                                                                                        const std::vector<size_t>& lowerHessRows,
-                                                                                        const std::vector<size_t>& lowerHessCols,
-                                                                                        const std::vector<size_t>& lowerHessOrder,
-                                                                                        const std::map<size_t, size_t>& duplicates) {
-        size_t m = _fun->Range();
-        //size_t n = _fun->Domain();
+    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
+                                                                                   vector<CGBase>& x,
+                                                                                   vector<CGBase>& w,
+                                                                                   const std::vector<size_t>& lowerHessRows,
+                                                                                   const std::vector<size_t>& lowerHessCols,
+                                                                                   const std::vector<size_t>& lowerHessOrder,
+                                                                                   const std::map<size_t, size_t>& duplicates) {
+        typedef std::pair<size_t, size_t> pairss;
 
-        std::vector<CGBase> hess(_hessSparsity.rows.size());
-
-        size_t mLoopTotal = 0;
-        std::vector<bool> eqLoop(m, false);
-        typename std::set<LoopAtomicFun<Base>* >::const_iterator itl;
-        for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
-            LoopAtomicFun<Base>* loop = *itl;
-
-            size_t iterations = loop->getIterationCount();
-            mLoopTotal += loop->getLoopDependentCount();
-
-            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
-            for (size_t i = 0; i < depIndexes.size(); i++) {
-                for (size_t iter = 0; iter < iterations; iter++) {
-                    const LoopPosition& pos = depIndexes[i][iter];
-                    eqLoop[pos.original] = true;
-                }
-            }
-        }
-
-        if (mLoopTotal < m) {
-            /**
-             * equations not in loops
-             *  (must come before the loops because of the assigments to hess!)
-             */
-            vector<CGBase> ww(m);
-            for (size_t i = 0; i < m; i++) {
-                ww[i] = eqLoop[i] ? Base(0) : w[i];
-            }
-
-            CppAD::sparse_hessian_work work;
-            vector<CGBase> lowerHess(lowerHessRows.size());
-            _fun->SparseHessian(indVars, ww, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
-
-            for (size_t i = 0; i < lowerHessOrder.size(); i++) {
-                hess[lowerHessOrder[i]] = lowerHess[i];
-            }
-
-            // make use of the symmetry of the Hessian in order to reduce operations
-            std::map<size_t, size_t>::const_iterator it2;
-            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-                hess[it2->first] = hess[it2->second];
-            }
-        }
-
-        /**
-         * loops
-         */
-        std::map<LoopAtomicFun<Base>*, std::vector<CGBase> > loopHess; // hessian elements only for the equation in a given loop
-
-        for (itl = _loopAtomics.begin(); itl != _loopAtomics.end(); ++itl) {
-            LoopAtomicFun<Base>* loop = *itl;
-            size_t iterations = loop->getIterationCount();
-
-            vector<CGBase> wLoop(m);
-            for (size_t i = 0; i < m; i++) {
-                wLoop[i] = Base(0);
-            }
-
-            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
-            for (size_t i = 0; i < depIndexes.size(); i++) {
-                for (size_t iter = 0; iter < iterations; iter++) {
-                    const LoopPosition& pos = depIndexes[i][iter];
-                    wLoop[pos.original] = w[pos.original];
-                }
-            }
-
-            CppAD::sparse_hessian_work work;
-            vector<CGBase> lowerHess(lowerHessRows.size());
-            _fun->SparseHessian(indVars, wLoop, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
-
-            std::vector<CGBase>& hessLoopl = loopHess[loop];
-            hessLoopl.resize(_hessSparsity.rows.size());
-            for (size_t e = 0; e < lowerHessOrder.size(); e++) {
-                hessLoopl[lowerHessOrder[e]] = lowerHess[e];
-            }
-
-            // make use of the symmetry of the Hessian in order to reduce operations
-            std::map<size_t, size_t>::const_iterator it2;
-            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-                hessLoopl[it2->first] = hessLoopl[it2->second];
-            }
-
-            prepareSparseHessianForLoop(handler, loop, hessLoopl);
-
-            for (size_t e = 0; e < hess.size(); e++) {
-                hess[e] += hessLoopl[e];
-            }
-        }
-
-        return hess;
-    }
-
-    template<class Base>
-    void CLangCompileModelHelper<Base>::prepareSparseHessianForLoop(CodeHandler<Base>& handler,
-                                                                    LoopAtomicFun<Base>* loop,
-                                                                    std::vector<CGBase>& hess) {
         using namespace std;
         using CppAD::vector;
 
-        size_t iterationCount = loop->getIterationCount();
-        size_t nnz = _hessSparsity.rows.size();
+        handler.setZeroDependents(true);
 
-        if (!loop->isTapeIndependentsFullyDetached2ndOrder()) {
-            throw CGException("There are independent variables which appear as indexed and non-indexed for the same equation pattern");
-        }
-
-        std::vector<IndexedDependentLoopInfo<Base> > garbageCollection; ////////// <- rethink this!!!!!!!
-        garbageCollection.reserve(nnz);
+        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         /**
-         * Generate index patterns for the hessian elements resulting from loops
+         * determine sparsities
          */
-        // loop -> tape independent 1 -> orig independent(temporaries only) 1 ->
-        //      -> tape independent 2 -> orig independent(temporaries only) 2 -> iteration = position
-        map<TapeVarType, map<TapeVarType, IndexedDependentLoopInfo<Base>* > > hessIndexPatterns;
-
-        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
-        // loop -> loop atomic evaluation -> results
-        map<LoopAtomicFun<Base>*, map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
-
-#if 0
-        /**
-         * Determine the Hessian pattern for the equations in the loop
-         */
-        vector<std::set<size_t> > loopHessPattern;
-        {
-            const std::vector<std::vector<LoopPosition> >& depIndexes = loop->getDependentIndexes();
-
-            size_t n = _fun->Domain();
-
-            /**
-             * Determine the sparsity pattern p for Hessian of w^T F
-             */
-            vector<std::set<size_t> > r(n); // identity matrix
-            for (size_t j = 0; j < n; j++)
-                r[j].insert(j);
-            _fun->ForSparseJac(n, r);
-
-            vector<std::set<size_t> > s(1);
-            for (size_t i = 0; i < depIndexes.size(); i++) {
-                for (size_t it = 0; it < iterationCount; it++) {
-                    s[0].insert(depIndexes[i][it].original);
-                }
-            }
-
-            loopHessPattern = _fun->RevSparseHes(n, s, false);
+        typename std::set<LoopModel<Base>*>::const_iterator itloop;
+        for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
+            LoopModel<Base>* l = *itloop;
+            l->evalJacobianSparsity();
+            l->evalHessianSparsity();
         }
 
-        printSparsityPattern(loopHessPattern, "hessian");
-#endif
+        if (_funNoLoops != NULL) {
+            _funNoLoops->evalJacobianSparsity();
+            _funNoLoops->evalHessianSparsity();
+        }
 
-        for (size_t e = 0; e < nnz; e++) {
-            CGBase& hessVal = hess[e];
-            if (IdenticalZero(hessVal))
-                continue;
+        size_t m = _fun.Range();
+        size_t n = _fun.Domain();
+        size_t n2 = n / 2;
 
-            // loop evaluation -> result argument index -> results
-            map<LoopEvaluationOperationNode<Base>*, map<size_t, OperationNode<Base>*> > evals;
-            findLoopEvaluations(handler, loop, hessVal.getOperationNode(), evals); ////////////
+        size_t maxLoc = _hessSparsity.rows.size();
+        size_t nnz = lowerHessRows.size();
+        vector<CGBase> hess(maxLoc);
 
-            if (evals.empty())
-                continue;
+        vector<set<size_t> > noLoopEvalJacSparsity(_funNoLoops != NULL ? m : 0);
 
-            if (evals.size() > 1 || evals.begin()->second.size() > 1) {
-                throw CGException("Unable to generate expression for an hessian element which "
-                                  "is either associated with multiple indexed independents "
-                                  "or an indepedent with constant index.");
-            }
+        vector<set<size_t> > noLoopEvalHessSparsity(_funNoLoops != NULL ? n : 0);
+        vector<map<size_t, set<size_t> > > noLoopEvalHessLocations(noLoopEvalHessSparsity.size());
 
-#ifndef NDEBUG
-            {
-                LoopEvaluationOperationNode<Base>* loopEvalNode = evals.begin()->first;
-                assert(loopEvalNode->getOperationType() == CGLoopReverseOp);
-                assert(loopEvalNode->getOrder() == 1);
-            }
-#endif
-            size_t j1 = _hessSparsity.rows[e];
-            size_t j2 = _hessSparsity.cols[e];
+        vector<set<size_t> > noLoopEvalHessTempsSparsity(_funNoLoops != NULL ? n : 0);
 
-            /**
-             * If tapeJ1s.size()>1 then the independent is used by several
-             * temporary variables OR by several independent variables in 
-             * different iterations.
-             * We know that it is NOT a mix of 
-             * temporaries and indexed independents because this situation
-             * is checked before.
-             */
-            set<size_t> tapeJ1s = loop->getIndependentTapeIndexes(j1);
-            assert(tapeJ1s.size() >= 1);
-            bool isTemporary1 = loop->isTemporary(*tapeJ1s.begin());
-            size_t jRef1 = isTemporary1 ? j1 : 0;
-            TapeVarType jTape1(*tapeJ1s.begin(), jRef1);
+        map<LoopModel<Base>*, HessianWithLoopsInfo<Base> > loopHessInfo;
+        for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
+            LoopModel<Base>* loop = *itloop;
+            loopHessInfo[loop] = HessianWithLoopsInfo<Base>(*loop);
+        }
 
-            set<size_t> tapeJ2s = loop->getIndependentTapeIndexes(j2);
-            assert(tapeJ2s.size() >= 1); // if >1 then the independent is used by several temporary variables
-            bool isTemporary2 = loop->isTemporary(*tapeJ2s.begin());
-            size_t jRef2 = isTemporary2 ? j2 : 0;
-            TapeVarType jTape2(*tapeJ2s.begin(), jRef2);
+        /** 
+         * Load locations in the compressed hessian
+         * d      d y_i
+         * d x_j2 d x_j1
+         */
+        for (size_t eh = 0; eh < nnz; eh++) {
+            size_t j1 = lowerHessRows[eh];
+            size_t j2 = lowerHessCols[eh];
+            size_t e = lowerHessOrder[eh];
 
-            IndexedDependentLoopInfo<Base>* origHessEl = NULL;
-
-            map<TapeVarType, IndexedDependentLoopInfo<Base>* >& ref = hessIndexPatterns[jTape1];
-            if (ref.size() != 0) {
-                typename map<TapeVarType, IndexedDependentLoopInfo<Base>* >::const_iterator it;
-                it = ref.find(jTape2);
-                if (it != ref.end()) {
-                    origHessEl = it->second;
+            if (_funNoLoops != NULL) {
+                const set<size_t>& row = _funNoLoops->getHessianSparsity()[j1];
+                if (row.find(j2) != row.end()) {
+                    /**
+                     * Present in the equations outside the loops
+                     */
+                    noLoopEvalHessSparsity[j1].insert(j2);
+                    noLoopEvalHessLocations[j1][j2].insert(e);
                 }
             }
 
-            if (origHessEl == NULL) {
-                // the vector will never allocate more space so this is safe:
-                garbageCollection.resize(garbageCollection.size() + 1);
-                origHessEl = &garbageCollection.back();
-                origHessEl->indexes.resize(loop->getIterationCount(), nnz);
-                origHessEl->origVals.resize(loop->getIterationCount());
-                ref[jTape2] = origHessEl;
-                dependentIndexes[loop].push_back(origHessEl);
-            }
+            for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
+                LoopModel<Base>* loop = *itloop;
+                size_t iterations = loop->getIterationCount();
+                const vector<set<size_t> >& loopJac = loop->getJacobianSparsity();
+                const vector<set<size_t> >& loopHess = loop->getHessianSparsity();
+                HessianWithLoopsInfo<Base>& loopInfo = loopHessInfo.at(loop);
 
-            /**
-             * Determine the iteration
-             */
-            size_t iteration;
+                const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = loop->getIndexedIndepIndexes();
+                const std::vector<LoopPosition>& nonIndexedIndepIndexes = loop->getNonIndexedIndepIndexes();
+                const std::vector<LoopPosition>& temporaryIndependents = loop->getTemporaryIndependents();
 
-            bool indexed1 = loop->isIndexedIndependent(*tapeJ1s.begin());
-            bool indexed2 = loop->isIndexedIndependent(*tapeJ2s.begin());
-            if (indexed1 || indexed2) {
-                std::set<size_t> iterations;
-                if (indexed1) {
-                    iterations = loop->getIterationsOfIndexedIndep(*tapeJ1s.begin(), j1);
-                    assert(!iterations.empty());
-                }
+                size_t nIndexed = indexedIndepIndexes.size();
+                size_t nNonIndexed = nonIndexedIndepIndexes.size();
 
-                if (!indexed1 || (iterations.size() > 1 && indexed2)) {
-                    std::set<size_t> iterations2 = loop->getIterationsOfIndexedIndep(*tapeJ2s.begin(), j2);
-                    if (iterations.empty()) {
-                        iterations = iterations2;
-                    } else {
-                        std::set<size_t> intersection;
-                        std::set_intersection(iterations.begin(), iterations.end(),
-                                              iterations2.begin(), iterations2.end(),
-                                              std::inserter(intersection, intersection.end()));
-
-                        iterations.swap(intersection);
-                    }
-                }
-
-                std::set<size_t>::const_iterator itIt;
-                for (itIt = iterations.begin(); itIt != iterations.end(); ++itIt) {
-                    size_t nIt = *itIt;
-                    //size_t iteration = depPos.atomic / loop->getTapeDependentCount();
-
-                    origHessEl->indexes[nIt] = e;
-                    origHessEl->origVals[nIt] = hessVal;
-                }
-
-                if (iterations.size() == 1) {
-                    iteration = *iterations.begin();
-                } else {
-                    if (iterations.find(0) != iterations.end()) {
-                        iteration = 0;
-                        // must change the argument of the call to the atomic
-                        // function so that it only corresponds to a single iteration
-                        throw CGException("Not implemented yet");
-                    } else {
-                        iteration = *iterations.begin();
-                    }
-                }
-
-            } else {
                 /**
-                 * hessian element relative to two non-indexed independents
-                 * (present in all iterations)
+                 * indexed - indexed
+                 * d      d f_i
+                 * d x_l2 d x_l1
                  */
-                iteration = 0; // it is actually present in all iterations!!!
+                const std::vector<set<pairss> >& iter2tapeII = loop->getHessianIndexedIndexedTapeIndexes(j1, j2);
+                for (size_t iteration = 0; iteration < iter2tapeII.size(); iteration++) {
+                    const set<pairss>& tapePairs = iter2tapeII[iteration];
 
-                for (size_t iter = 0; iter < iterationCount; iter++) {
-                    origHessEl->indexes[iter] = e;
-                    origHessEl->origVals[iter] = hessVal;
+                    set<pairss> ::const_iterator itPairs;
+                    for (itPairs = tapePairs.begin(); itPairs != tapePairs.end(); ++itPairs) {
+                        pairss tape = *itPairs;
+
+                        std::vector<size_t>& positions = loopInfo.indexedIndexedPositions[tape];
+                        positions.resize(iterations, maxLoc);
+                        CPPADCG_ASSERT_KNOWN(positions[iteration] == maxLoc, "Repeated hessian elements requested");
+
+                        positions[iteration] = e;
+                        loopInfo.evalHessSparsity[tape.first].insert(tape.second);
+                    }
                 }
-                // must change the argument of the call to the atomic
-                // function so that it only corresponds to a single iteration
-                throw CGException("Not implemented yet");
+
+                /**
+                 * indexed - non-indexed 
+                 * d      d f_i
+                 * d x_j2 d x_l1
+                 */
+                const LoopPosition* posJ2 = loop->getNonIndexedIndepIndexes(j2);
+                if (posJ2 != NULL) {
+                    const std::vector<set<size_t> >& iter2tapeJ1OrigJ2 = loop->getHessianIndexedNonIndexedTapeIndexes(j1, j2);
+                    for (size_t iteration = 0; iteration < iter2tapeJ1OrigJ2.size(); iteration++) {
+                        const set<size_t>& tapeJ1s = iter2tapeJ1OrigJ2[iteration];
+
+                        set<size_t>::const_iterator ittj1;
+                        for (ittj1 = tapeJ1s.begin(); ittj1 != tapeJ1s.end(); ++ittj1) {
+                            size_t tapeJ1 = *ittj1;
+
+                            std::vector<size_t>& positions = loopInfo.indexedNonIndexedPositions[pairss(tapeJ1, posJ2->tape)];
+                            positions.resize(iterations, maxLoc);
+                            CPPADCG_ASSERT_KNOWN(positions[iteration] == maxLoc, "Repeated hessian elements requested");
+
+                            positions[iteration] = e;
+                            loopInfo.evalHessSparsity[tapeJ1].insert(posJ2->tape);
+                        }
+                    }
+                }
+
+                /**
+                 * indexed - constant z
+                 * d     d f_i    .   d z_k
+                 * d z_k d x_l1       d x_j2
+                 */
+                if (_funNoLoops != NULL) {
+                    map<size_t, set<size_t> > iter2tapeJ1 = loop->getIndexedTapeIndexes(j1);
+                    map<size_t, set<size_t> >::const_iterator itIter;
+                    for (itIter = iter2tapeJ1.begin(); itIter != iter2tapeJ1.end(); ++itIter) {
+                        size_t iteration = itIter->first;
+                        const set<size_t>& tapeJ1s = itIter->second;
+
+                        set<size_t>::const_iterator itTapeJ1;
+                        for (itTapeJ1 = tapeJ1s.begin(); itTapeJ1 != tapeJ1s.end(); ++itTapeJ1) {
+                            size_t tapeJ1 = *itTapeJ1;
+
+                            set<size_t>::const_iterator itz = loopHess[tapeJ1].lower_bound(nIndexed + nNonIndexed);
+
+                            // loop temporary variables
+                            for (; itz != loopHess[tapeJ1].end(); ++itz) {
+                                size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
+
+                                /**
+                                 * check if this temporary depends on j2
+                                 */
+                                const set<size_t>& sparsity = _funNoLoops->getJacobianSparsity()[nonIndexdedEqSize + k];
+                                if (sparsity.find(j2) != sparsity.end()) {
+                                    noLoopEvalJacSparsity[nonIndexdedEqSize + k].insert(j2); // element required
+
+                                    pairss pos(tapeJ1, j2);
+
+                                    std::set<size_t>& evals = loopInfo.indexedTempEvals[pos];
+                                    std::vector<size_t>& positions = loopInfo.indexedTempPositions[pos];
+                                    positions.resize(iterations, maxLoc);
+
+                                    positions[iteration] = e;
+                                    evals.insert(k);
+
+                                    size_t tapeK = loop->getTempIndepIndexes(k)->tape;
+                                    loopInfo.evalHessSparsity[tapeJ1].insert(tapeK);
+                                }
+                            }
+
+
+                        }
+
+                    }
+
+                }
+
+                /**
+                 * non-indexed - indexed
+                 * d      d f_i
+                 * d x_l2 d x_j1
+                 */
+                const LoopPosition* posJ1 = loop->getNonIndexedIndepIndexes(j1);
+                if (posJ1 != NULL) {
+                    const std::vector<set<size_t> >& iter2TapeJ2 = loop->getHessianNonIndexedIndexedTapeIndexes(j1, j2);
+                    for (size_t iteration = 0; iteration < iter2TapeJ2.size(); iteration++) {
+                        const set<size_t>& tapeJ2s = iter2TapeJ2[iteration];
+
+                        set<size_t>::const_iterator ittj2;
+                        for (ittj2 = tapeJ2s.begin(); ittj2 != tapeJ2s.end(); ++ittj2) {
+                            size_t tapeJ2 = *ittj2;
+
+                            std::vector<size_t>& positions = loopInfo.nonIndexedIndexedPositions[pairss(j1, tapeJ2)];
+                            positions.resize(iterations, maxLoc);
+                            CPPADCG_ASSERT_KNOWN(positions[iteration] == maxLoc, "Repeated hessian elements requested");
+
+                            positions[iteration] = e;
+                            loopInfo.evalHessSparsity[posJ1->tape].insert(tapeJ2);
+                        }
+                    }
+                }
+
+                /**
+                 * non-indexed - non-indexed
+                 * d      d f_i
+                 * d x_j2 d x_j1
+                 */
+                bool jInNonIndexed = false;
+                pairss orig(j1, j2);
+
+                if (posJ1 != NULL && posJ2 != NULL) {
+                    const set<pairss>& orig1orig2 = loop->getHessianNonIndexedNonIndexedIndexes();
+                    if (orig1orig2.find(orig) != orig1orig2.end()) {
+                        loopInfo.nonIndexedNonIndexedPosition[orig] = e;
+                        loopInfo.nonIndexedNonIndexedEvals.insert(orig);
+
+                        loopInfo.evalHessSparsity[posJ1->tape].insert(posJ2->tape);
+                        jInNonIndexed = true;
+                    }
+                }
+
+                /**
+                 * non-indexed - temporaries
+                 * d     d f_i   .  d z_k
+                 * d z_k d x_j1     d x_j2
+                 */
+                if (_funNoLoops != NULL && posJ1 != NULL) {
+
+                    const set<size_t>& hessRow = loopHess[posJ1->tape];
+                    set<size_t>::const_iterator itz = hessRow.lower_bound(nIndexed + nNonIndexed);
+
+                    // loop temporary variables
+                    for (; itz != hessRow.end(); ++itz) {
+                        size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
+
+                        //jacobian of g for k must have j2
+                        const set<size_t>& gJacRow = loopJac[k];
+                        if (gJacRow.find(j2) != gJacRow.end()) {
+                            noLoopEvalJacSparsity[nonIndexdedEqSize + k].insert(j2); // element required
+
+                            if (!jInNonIndexed) {
+                                CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
+                                                     "Repeated hessian elements requested");
+
+                                loopInfo.nonIndexedNonIndexedPosition[orig] = e;
+                                jInNonIndexed = true;
+                            }
+
+                            loopInfo.nonIndexedTempEvals[orig].insert(k);
+
+                            size_t tapeK = loop->getTempIndepIndexes(k)->tape;
+                            loopInfo.evalHessSparsity[posJ1->tape].insert(tapeK);
+                        }
+
+                    }
+                }
+
+                /**
+                 * temporaries
+                 */
+                if (_funNoLoops != NULL) {
+                    const vector<set<size_t> >& gJac = _funNoLoops->getJacobianSparsity();
+                    size_t nk = _funNoLoops->getTemporaryDependentCount();
+                    size_t nOrigEq = _funNoLoops->getTapeDependentCount() - nk;
+
+                    for (size_t k1 = 0; k1 < nk; k1++) {
+                        if (gJac[nOrigEq + k1].find(j1) == gJac[nOrigEq + k1].end()) {
+                            continue;
+                        }
+
+                        const LoopPosition* posK1 = loop->getTempIndepIndexes(k1);
+                        if (posK1 == NULL) {
+                            continue;
+                        }
+
+                        /**
+                         * temporary - indexed
+                         * d     d f_i
+                         * d x_l d z_k1
+                         */
+                        const std::vector<set<size_t> >& iter2TapeJ2 = loop->getHessianTempIndexedTapeIndexes(k1, j2);
+                        for (size_t iteration = 0; iteration < iter2TapeJ2.size(); iteration++) {
+                            const set<size_t>& tapeJ2s = iter2TapeJ2[iteration];
+
+                            set<size_t>::const_iterator ittj2;
+                            for (ittj2 = tapeJ2s.begin(); ittj2 != tapeJ2s.end(); ++ittj2) {
+                                size_t tapeJ2 = *ittj2;
+
+                                pairss pos(k1, tapeJ2);
+                                std::vector<size_t>& positions = loopInfo.tempIndexedPositions[j1][pos];
+                                positions.resize(iterations, maxLoc);
+                                CPPADCG_ASSERT_KNOWN(positions[iteration] == maxLoc, "Repeated hessian elements requested");
+
+                                positions[iteration] = e;
+
+                                loopInfo.tempIndexedEvals[k1].insert(tapeJ2);
+
+                                loopInfo.evalHessSparsity[posK1->tape].insert(tapeJ2);
+                            }
+                        }
+
+                        /**
+                         * temporary - non-indexed
+                         * d      d f_i
+                         * d x_j2 d z_k1
+                         */
+                        if (posJ2 != NULL) {
+                            const set<size_t>& hessRow = loop->getHessianSparsity()[posK1->tape];
+
+                            if (hessRow.find(j2) != hessRow.end()) {
+                                if (!jInNonIndexed) {
+                                    CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
+                                                         "Repeated hessian elements requested");
+
+                                    loopInfo.nonIndexedNonIndexedPosition[orig] = e;
+                                    jInNonIndexed = true;
+                                }
+
+                                loopInfo.tempNonIndexedEvals[orig].insert(k1);
+
+                                loopInfo.evalHessSparsity[posK1->tape].insert(posJ2->tape);
+                            }
+                        }
+                        /**
+                         * temporary - temporary
+                         *    d  d f_i    .  d z_k2
+                         * d z_k2 d z_k1     d x_j2
+                         */
+                        // loop hess row
+                        const set<size_t>& hessRow = loop->getHessianSparsity()[posK1->tape];
+                        set<size_t>::const_iterator itTapeJ2 = hessRow.lower_bound(nIndexed + nNonIndexed);
+                        for (; itTapeJ2 != hessRow.end(); ++itTapeJ2) {
+                            size_t tapeK2 = *itTapeJ2;
+                            size_t k2 = loop->getTemporaryIndependents()[tapeK2 - nIndexed - nNonIndexed].original;
+
+                            const set<size_t>& jacZk2Row = gJac[nOrigEq + k2];
+                            if (jacZk2Row.find(j2) != jacZk2Row.end()) { // is this check truly needed?
+
+                                if (!jInNonIndexed) {
+                                    CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
+                                                         "Repeated hessian elements requested");
+
+                                    loopInfo.nonIndexedNonIndexedPosition[orig] = e;
+                                    jInNonIndexed = true;
+                                }
+
+                                loopInfo.tempTempEvals[orig][k1].insert(k2);
+
+                                loopInfo.evalHessSparsity[posK1->tape].insert(tapeK2);
+
+                                noLoopEvalJacSparsity[nOrigEq + k2].insert(j2);
+                            }
+                        }
+
+
+                        //
+                        noLoopEvalJacSparsity[nOrigEq + k1].insert(j1);
+
+                        /**
+                         * temporary - temporary
+                         * d f_i   .  d      d z_k1
+                         * d z_k1     d x_j2 d x_j1
+                         */
+                        const set<size_t>& gHessRow = _funNoLoops->getHessianSparsity()[j1];
+                        if (gHessRow.find(j2) != gHessRow.end()) {
+
+                            for (size_t i = 0; i < loopJac.size(); i++) {
+                                const set<size_t>& fJacRow = loopJac[i];
+
+                                if (fJacRow.find(posK1->tape) != fJacRow.end()) {
+
+                                    if (!jInNonIndexed) {
+                                        CPPADCG_ASSERT_KNOWN(loopInfo.nonIndexedNonIndexedPosition.find(orig) == loopInfo.nonIndexedNonIndexedPosition.end(),
+                                                             "Repeated hessian elements requested");
+
+                                        loopInfo.nonIndexedNonIndexedPosition[orig] = e;
+                                        jInNonIndexed = true;
+                                    }
+
+                                    loopInfo.nonLoopNonIndexedNonIndexed[orig].insert(k1);
+                                    loopInfo.evalJacSparsity[i].insert(posK1->tape);
+
+                                    noLoopEvalHessTempsSparsity[j1].insert(j2);
+                                }
+                            }
+                        }
+                    }
+                }
+
+            }
+        }
+
+        /**
+         * Check that the hessian elements are requested for all iterations
+         */
+        typename map<LoopModel<Base>*, HessianWithLoopsInfo<Base> >::iterator itLoop2Info;
+        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+            LoopModel<Base>& lModel = *itLoop2Info->first;
+            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+
+            const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = lModel.getIndexedIndepIndexes();
+            const std::vector<LoopPosition>& nonIndexedIndepIndexes = lModel.getNonIndexedIndepIndexes();
+
+            size_t nIndexed = indexedIndepIndexes.size();
+
+            // (tapeJ1, tapeJ2) -> [positions]
+            map<pairss, std::vector<size_t> >::const_iterator it;
+            for (it = info.indexedIndexedPositions.begin(); it != info.indexedIndexedPositions.end(); ++it) {
+                pairss tape = it->first;
+                const std::vector<size_t>& positions = it->second;
+
+                for (size_t iter = 0; iter < positions.size(); iter++) {
+                    if (positions[iter] == maxLoc) {
+                        std::ostringstream ss;
+                        ss << "Hessian elements for indexed variables must be requested for all iterations.\n"
+                                "Element for an indexed variable pair:\n"
+                                "   var 1: ";
+                        LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tape.first]);
+                        ss << "\n"
+                                "   var 2: ";
+                        LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tape.second]);
+                        ss << "\n"
+                                " was NOT requested for the pair {"
+                                << indexedIndepIndexes[tape.first][iter].original << ", "
+                                << indexedIndepIndexes[tape.second][iter].original << "} (present at iteration " << iter << ").";
+                        throw CGException(ss.str());
+                    }
+                }
             }
 
-            if (iteration == 0) {
-                typename map<LoopEvaluationOperationNode<Base>*, map<size_t, OperationNode<Base>*> >::const_iterator itE;
-                for (itE = evals.begin(); itE != evals.end(); ++itE) {
-                    LoopEvaluationOperationNode<Base>* loopEvalNode = itE->first;
-                    const map<size_t, OperationNode<Base>*>& results = itE->second;
+            // (tapeJ1, tapeJ2(j2) ) -> [positions]
+            for (it = info.indexedNonIndexedPositions.begin(); it != info.indexedNonIndexedPositions.end(); ++it) {
+                pairss tape = it->first;
+                const std::vector<size_t>& positions = it->second;
 
-                    assert(loopEvalNode->getOperationType() == CGLoopReverseOp);
-                    size_t result_size = loopEvalNode->getTapeResultSize(); // tape result size
-
-                    vector<OperationNode<Base>*>& allLoopEvalResults = evaluations1it[loop][loopEvalNode];
-                    allLoopEvalResults.resize(result_size);
-
-                    typename map<size_t, OperationNode<Base>*>::const_iterator itR;
-                    for (itR = results.begin(); itR != results.end(); ++itR) {
-                        size_t tapeIndex = itR->second->getInfo()[1]; ///////////////////////////////////
-                        allLoopEvalResults[tapeIndex] = itR->second;
+                for (size_t iter = 0; iter < positions.size(); iter++) {
+                    if (positions[iter] == maxLoc) {
+                        std::ostringstream ss;
+                        ss << "Hessian elements for indexed variables must be requested for all iterations.\n"
+                                "Element for an indexed - non-indexed variable pair:\n"
+                                "   var 1: ";
+                        LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tape.first]);
+                        ss << "\n"
+                                "   var 2: " << nonIndexedIndepIndexes[tape.second - nIndexed].original <<
+                                "\n"
+                                " was NOT requested for the pair {"
+                                << indexedIndepIndexes[tape.first][iter].original << ", "
+                                << nonIndexedIndepIndexes[tape.second - nIndexed].original << "} (present at iteration " << iter << ").";
+                        throw CGException(ss.str());
                     }
+                }
+            }
+
+            // (tapeJ1, j2) -> [positions]
+            for (it = info.indexedTempPositions.begin(); it != info.indexedTempPositions.end(); ++it) {
+                pairss tape = it->first;
+                const std::vector<size_t>& positions = it->second;
+
+                for (size_t iter = 0; iter < positions.size(); iter++) {
+                    if (positions[iter] == maxLoc) {
+                        std::ostringstream ss;
+                        ss << "Hessian elements for indexed variables must be requested for all iterations.\n"
+                                "Element for an indexed - non-indexed variable pair:\n"
+                                "   var 1: ";
+                        LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tape.first]);
+                        ss << "\n"
+                                "   var 2: " << tape.second <<
+                                "\n"
+                                " was NOT requested for the pair {"
+                                << indexedIndepIndexes[tape.first][iter].original << ", "
+                                << tape.second << "} (present at iteration " << iter << ").";
+                        throw CGException(ss.str());
+                    }
+                }
+            }
+
+            // (j1, tapeJ2) -> [positions]
+            for (it = info.nonIndexedIndexedPositions.begin(); it != info.nonIndexedIndexedPositions.end(); ++it) {
+                pairss tape = it->first;
+                const std::vector<size_t>& positions = it->second;
+
+                for (size_t iter = 0; iter < positions.size(); iter++) {
+                    if (positions[iter] == maxLoc) {
+                        const LoopPosition* posJ1 = lModel.getNonIndexedIndepIndexes(tape.first);
+                        std::ostringstream ss;
+                        ss << "Hessian elements for indexed variables must be requested for all iterations.\n"
+                                "Element for a non-indexed - indexed variable pair:\n"
+                                "   var 1: " << posJ1->original << "\n"
+                                "   var 2: ";
+                        LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tape.second]);
+                        ss << "\n"
+                                " was NOT requested for the pair {"
+                                << posJ1->original << ", "
+                                << indexedIndepIndexes[tape.second][iter].original << "} (present at iteration " << iter << ").";
+                        throw CGException(ss.str());
+                    }
+                }
+            }
+
+            // j1 -> (k1, tapeJ2) -> [positions]
+            map<size_t, map<pairss, std::vector<size_t> > >::const_iterator itj1;
+            for (itj1 = info.tempIndexedPositions.begin(); itj1 != info.tempIndexedPositions.end(); ++itj1) {
+                size_t j1 = itj1->first;
+
+                for (it = itj1->second.begin(); it != itj1->second.end(); ++it) {
+                    size_t tapeJ2 = it->first.second;
+                    const std::vector<size_t>& positions = it->second;
+
+                    for (size_t iter = 0; iter < positions.size(); iter++) {
+                        if (positions[iter] == maxLoc) {
+                            std::ostringstream ss;
+                            ss << "Hessian elements for indexed variables must be requested for all iterations.\n"
+                                    "Element for a non-indexed - indexed variable pair:\n"
+                                    "   var 1: " << j1 << "\n"
+                                    "   var 2: ";
+                            LoopModel<Base>::printOriginalVariableIndexes(ss, indexedIndepIndexes[tapeJ2]);
+                            ss << "\n"
+                                    " was NOT requested for the pair {"
+                                    << j1 << ", "
+                                    << indexedIndepIndexes[tapeJ2][iter].original << "} (present at iteration " << iter << ").";
+                            throw CGException(ss.str());
+                        }
+                    }
+                }
+            }
+        }
+
+        /***********************************************************************
+         *        generate the operation graph
+         **********************************************************************/
+        /**
+         * Calculate hessians and jacobians
+         */
+        // temporaries (zero orders)
+        vector<CGBase> tmps;
+
+        /**
+         * No loops - zero order
+         */
+        if (_funNoLoops != NULL) {
+            ADFun<CGBase>& fun = _funNoLoops->getTape();
+            vector<CGBase> depNL = fun.Forward(0, x);
+
+            tmps.resize(depNL.size() - nonIndexdedEqSize);
+            for (size_t i = 0; i < tmps.size(); i++)
+                tmps[i] = depNL[nonIndexdedEqSize + i];
+        }
+
+        /**
+         * prepare loop independents
+         */
+        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+            LoopModel<Base>& lModel = *itLoop2Info->first;
+            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+
+            /**
+             * make the loop start
+             */
+            info.loopStart = new LoopStartOperationNode<Base>(lModel);
+            handler.manageOperationNodeMemory(info.loopStart);
+
+            info.iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX, *info.loopStart);
+            handler.manageOperationNodeMemory(info.iterationIndexOp);
+            set<IndexOperationNode<Base>*> indexesOps;
+            indexesOps.insert(info.iterationIndexOp);
+
+            vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
+            info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+
+            info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp);
+        }
+
+        /**
+         * No loops - Jacobian
+         */
+        // jacobian for equations outside loops
+        vector<CGBase> jacNoLoop;
+        // jacobian for temporaries
+        map<size_t, map<size_t, CGBase> > dzDx;
+
+        if (_funNoLoops != NULL) {
+            ADFun<CGBase>& fun = _funNoLoops->getTape();
+
+            std::vector<size_t> row, col;
+            generateSparsityIndexes(noLoopEvalJacSparsity, row, col);
+
+            if (row.size() > 0) {
+                jacNoLoop.resize(row.size());
+
+                CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
+                if (estimateBestJacobianADMode(row, col)) {
+                    fun.SparseJacobianForward(x, _funNoLoops->getJacobianSparsity(), row, col, jacNoLoop, work);
+                } else {
+                    fun.SparseJacobianReverse(x, _funNoLoops->getJacobianSparsity(), row, col, jacNoLoop, work);
+                }
+
+                for (size_t el = 0; el < row.size(); el++) {
+                    size_t inl = row[el];
+                    size_t j = col[el];
+                    assert(inl >= nonIndexdedEqSize);
+
+                    // dz_k/dx_v (for temporary variable)
+                    size_t k = inl - nonIndexdedEqSize;
+                    dzDx[k][j] = jacNoLoop[el];
                 }
             }
         }
 
         /**
-         * Generate index patterns for the dependent variables
+         * Loops - Jacobian
          */
-        typename map<TapeVarType, map<TapeVarType, IndexedDependentLoopInfo<Base>* > >::iterator itJ1;
-        for (itJ1 = hessIndexPatterns.begin(); itJ1 != hessIndexPatterns.end(); ++itJ1) {
+        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+            LoopModel<Base>& lModel = *itLoop2Info->first;
+            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+            ADFun<CGBase>& fun = lModel.getTape();
+            const vector<std::set<size_t> >& jacTapeSparsity = lModel.getJacobianSparsity();
 
-            typename map<TapeVarType, IndexedDependentLoopInfo<Base>* >::iterator itJ2;
-            for (itJ2 = itJ1->second.begin(); itJ2 != itJ1->second.end(); ++itJ2) {
+            printSparsityPattern(jacTapeSparsity, "jac - loop");
+            printSparsityPattern(info.evalJacSparsity, "jac - loop -eval");
 
-                IndexedDependentLoopInfo<Base>* orig = itJ2->second;
+            /**
+             * evaluate loop model jacobian
+             */
+            std::vector<size_t> row, col;
+            generateSparsityIndexes(info.evalJacSparsity, row, col);
+            if (row.size() > 0) {
+                vector<CGBase> jacLoop(row.size());
 
-                // make sure all element are requested
-                std::vector<size_t>::const_iterator ite;
-                for (ite = orig->indexes.begin(); ite != orig->indexes.end(); ++ite) {
-                    if (*ite == nnz) {
-                        throw CGException("All hessian elements must be requested for all iterations");
-                    }
+                CppAD::sparse_jacobian_work work; // temporary structure for CppAD
+                if (estimateBestJacobianADMode(row, col)) {
+                    fun.SparseJacobianForward(info.x, jacTapeSparsity, row, col, jacLoop, work);
+                } else {
+                    fun.SparseJacobianReverse(info.x, jacTapeSparsity, row, col, jacLoop, work);
                 }
 
-                orig->pattern = IndexPattern::detect(LoopAtomicFun<Base>::ITERATION_INDEX, orig->indexes);
-                handler.manageLoopDependentIndexPattern(orig->pattern);
+                // save/organize results
+                for (size_t el = 0; el < jacLoop.size(); el++) {
+                    size_t tapeI = row[el];
+                    size_t tapeJ = col[el];
+                    info.dyiDzk[tapeI][tapeJ] = jacLoop[el];
+                }
             }
         }
 
-        size_t assignOrAdd = 1; // add
-        prepareLoops(handler, hess, evaluations1it, dependentIndexes, assignOrAdd);
+        /**
+         * No Loops - Hessian
+         */
+        map<size_t, map<size_t, CGBase> > dzDxx;
+        if (_funNoLoops != NULL) {
+            ADFun<CGBase>& fun = _funNoLoops->getTape();
+
+            vector<CGBase> wNoLoop(_funNoLoops->getTapeDependentCount());
+
+            vector<CGBase> hessNoLoop;
+
+            const std::vector<size_t>& origIndexes = _funNoLoops->getOrigDependentIndexes();
+
+            /**
+             * hessian - original equations
+             */
+            std::vector<size_t> row, col;
+            generateSparsityIndexes(noLoopEvalHessSparsity, row, col);
+
+            if (row.size() > 0) {
+                hessNoLoop.resize(row.size());
+
+                for (size_t inl = 0; inl < origIndexes.size(); inl++) {
+                    wNoLoop[inl] = w[origIndexes[inl]];
+                }
+
+                CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+                fun.SparseHessian(x, wNoLoop, _funNoLoops->getHessianSparsity(), row, col, hessNoLoop, work);
+
+                // save non-indexed hessian elements
+                for (size_t el = 0; el < row.size(); el++) {
+                    size_t j1 = row[el];
+                    size_t j2 = col[el];
+                    const set<size_t>& locations = noLoopEvalHessLocations[j1][j2];
+                    for (set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE)
+                        hess[*itE] = hessNoLoop[el];
+                }
+            }
+
+            /**
+             * hessian - temporary variables
+             */
+            generateSparsityIndexes(noLoopEvalHessTempsSparsity, row, col);
+
+            if (row.size() > 0) {
+                hessNoLoop.resize(row.size());
+
+                for (size_t inl = 0; inl < origIndexes.size(); inl++) {
+                    wNoLoop[inl] = Base(0);
+                }
+
+                for (size_t inl = origIndexes.size(); inl < wNoLoop.size(); inl++) {
+                    CGBase sum = Base(0);
+                    for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+                        HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+
+                        for (size_t i = 0; i < info.dyiDzk.size(); i++) {
+                            const map<size_t, CGBase>& row = info.dyiDzk[i];
+                            typename map<size_t, CGBase>::const_iterator itCol;
+                            for (itCol = row.begin(); itCol != row.end(); ++itCol) {
+                                const CGBase& val = itCol->second;
+                                sum += val * info.w[i];
+                            }
+                        }
+                    }
+
+                    wNoLoop[inl] = sum;
+                }
+
+                CppAD::sparse_hessian_work workTemps;
+                fun.SparseHessian(x, wNoLoop, _funNoLoops->getHessianSparsity(), row, col, hessNoLoop, workTemps);
+
+                // save hessian
+                for (size_t el = 0; el < row.size(); el++) {
+                    size_t j1 = row[el];
+                    size_t j2 = col[el];
+                    dzDxx[j1][j2] = hessNoLoop[el];
+                }
+            }
+        }
+
+        /**
+         * Loops - Hessian
+         */
+        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+            LoopModel<Base>& lModel = *itLoop2Info->first;
+            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+            ADFun<CGBase>& fun = lModel.getTape();
+
+            std::vector<size_t> row, col;
+            generateSparsityIndexes(info.evalHessSparsity, row, col);
+
+            if (row.empty())
+                continue;
+
+            vector<CGBase> hessLoopFlat(row.size());
+
+            CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+            fun.SparseHessian(info.x, info.w, lModel.getHessianSparsity(), row, col, hessLoopFlat, work);
+
+            // save non-indexed hessian elements
+            vector<map<size_t, CGBase> > hessLoop(fun.Domain());
+            for (size_t el = 0; el < row.size(); el++) {
+                size_t tapeJ1 = row[el];
+                size_t tapeJ2 = col[el];
+                hessLoop[tapeJ1][tapeJ2] = hessLoopFlat[el];
+            }
+
+            // store results in indexedLoopResults
+            size_t hessElSize = info.indexedIndexedPositions.size() +
+                    info.indexedNonIndexedPositions.size() +
+                    info.indexedTempPositions.size() +
+                    info.nonIndexedIndexedPositions.size() +
+                    info.nonIndexedNonIndexedPosition.size();
+            map<size_t, map<pairss, std::vector<size_t> > >::const_iterator itJ1KJ2;
+            for (itJ1KJ2 = info.tempIndexedPositions.begin(); itJ1KJ2 != info.tempIndexedPositions.end(); ++itJ1KJ2) {
+                hessElSize += itJ1KJ2->second.size();
+            }
+
+            vector<pair<CGBase, IndexPattern*> > indexedLoopResults(hessElSize);
+            size_t hessLE = 0;
+
+            /*******************************************************************
+             * indexed - indexed
+             */
+            map<pairss, std::vector<size_t> >::const_iterator it;
+            for (it = info.indexedIndexedPositions.begin(); it != info.indexedIndexedPositions.end(); ++it) {
+                size_t tapeJ1 = it->first.first;
+                size_t tapeJ2 = it->first.second;
+                const std::vector<size_t>& positions = it->second;
+
+                // generate the index pattern for the hessian compressed element
+                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                indexedLoopResults[hessLE++] = make_pair(hessLoop[tapeJ1].at(tapeJ2), pattern);
+            }
+
+            /**
+             * indexed - non-indexed
+             */
+            for (it = info.indexedNonIndexedPositions.begin(); it != info.indexedNonIndexedPositions.end(); ++it) {
+                size_t tapeJ1 = it->first.first;
+                size_t tapeJ2 = it->first.second;
+                const std::vector<size_t>& positions = it->second;
+
+                // generate the index pattern for the hessian compressed element
+                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                indexedLoopResults[hessLE++] = make_pair(hessLoop[tapeJ1].at(tapeJ2), pattern);
+            }
+
+            /**
+             * indexed - temporary
+             */
+            map<pairss, set<size_t> >::const_iterator itEval;
+            for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
+                size_t tapeJ1 = itEval->first.first;
+                size_t j2 = itEval->first.second;
+                const set<size_t>& ks = itEval->second;
+
+                const std::vector<size_t>& positions = info.indexedTempPositions[itEval->first];
+
+                // generate the index pattern for the hessian compressed element
+                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                CGBase hessVal = Base(0);
+                set<size_t>::const_iterator itz;
+                for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                    size_t k = *itz;
+                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                    hessVal += hessLoop[tapeJ1].at(tapeK) * dzDx[k][j2];
+                }
+
+                indexedLoopResults[hessLE++] = make_pair(hessVal, pattern);
+            }
+
+
+            /*******************************************************************
+             * non-indexed - indexed
+             */
+            for (it = info.nonIndexedIndexedPositions.begin(); it != info.nonIndexedIndexedPositions.end(); ++it) {
+                size_t j1 = it->first.first;
+                size_t tapeJ1 = lModel.getNonIndexedIndepIndexes(j1)->tape;
+                size_t tapeJ2 = it->first.second;
+                const std::vector<size_t>& positions = it->second;
+
+                // generate the index pattern for the hessian compressed element
+                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                indexedLoopResults[hessLE++] = make_pair(hessLoop[tapeJ1].at(tapeJ2), pattern);
+            }
+
+            /*******************************************************************
+             * temporary - indexed
+             * 
+             *      d f_i       .    d x_k1
+             * d x_l2  d z_k1        d x_j1
+             */
+            for (itJ1KJ2 = info.tempIndexedPositions.begin(); itJ1KJ2 != info.tempIndexedPositions.end(); ++itJ1KJ2) {
+                size_t j1 = itJ1KJ2->first;
+
+                map<pairss, std::vector<size_t> >::const_iterator itKJ2;
+                for (itKJ2 = itJ1KJ2->second.begin(); itKJ2 != itJ1KJ2->second.end(); ++itKJ2) {
+                    size_t k1 = itKJ2->first.first;
+                    size_t tapeJ2 = itKJ2->first.second;
+                    size_t tapeK1 = lModel.getTempIndepIndexes(k1)->tape;
+
+                    const std::vector<size_t>& positions = itKJ2->second;
+
+                    // generate the index pattern for the hessian compressed element
+                    IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                    handler.manageLoopDependentIndexPattern(pattern);
+
+                    CGBase hessVal = hessLoop[tapeK1].at(tapeJ2) * dzDx[k1][j1];
+
+                    indexedLoopResults[hessLE++] = make_pair(hessVal, pattern);
+                }
+            }
+
+            /*******************************************************************
+             * contributions to a constant location
+             */
+            map<pairss, size_t>::const_iterator orig2PosIt;
+            for (orig2PosIt = info.nonIndexedNonIndexedPosition.begin(); orig2PosIt != info.nonIndexedNonIndexedPosition.end(); ++orig2PosIt) {
+                const pairss& orig = orig2PosIt->first;
+                size_t e = orig2PosIt->second;
+
+                size_t j1 = orig.first;
+                size_t j2 = orig.second;
+                const LoopPosition* posJ1 = lModel.getNonIndexedIndepIndexes(j1);
+                const LoopPosition* posJ2 = lModel.getNonIndexedIndepIndexes(j2);
+
+                // location
+                IndexPattern* pattern = new LinearIndexPattern(LoopModel<Base>::ITERATION_INDEX, 0, 0, 0, e);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                /**
+                 * non-indexed - non-indexed
+                 */
+                CGBase hessVal = Base(0);
+
+                if (info.nonIndexedNonIndexedEvals.find(orig) != info.nonIndexedNonIndexedEvals.end()) {
+                    hessVal = hessLoop[posJ1->tape].at(posJ2->tape);
+                }
+
+                /**
+                 * non-indexed - temporary
+                 */
+                map<pairss, set<size_t> >::const_iterator itNT = info.nonIndexedTempEvals.find(orig);
+                if (itNT != info.nonIndexedTempEvals.end()) {
+                    const set<size_t>& ks = itNT->second;
+
+                    set<size_t>::const_iterator itz;
+                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                        size_t k = *itz;
+                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                        hessVal += hessLoop[posJ1->tape].at(tapeK) * dzDx[k][j2];
+                    }
+                }
+
+                /**
+                 * temporary - non-indexed 
+                 * 
+                 *      d f_i       .    d x_k1
+                 * d x_j2  d z_k1        d x_j1
+                 */
+                map<pairss, set<size_t> >::const_iterator itTN = info.tempNonIndexedEvals.find(orig);
+                if (itTN != info.tempNonIndexedEvals.end()) {
+                    const set<size_t>& ks = itTN->second;
+
+                    set<size_t>::const_iterator itz;
+                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                        size_t k1 = *itz;
+                        size_t tapeK = lModel.getTempIndepIndexes(k1)->tape;
+                        hessVal += hessLoop[tapeK].at(posJ2->tape) * dzDx[k1][j1];
+                    }
+                }
+
+                /**
+                 * temporary - temporary
+                 */
+                map<pairss, map<size_t, set<size_t> > >::const_iterator itTT = info.tempTempEvals.find(orig);
+                if (itTT != info.tempTempEvals.end()) {
+                    const map<size_t, set<size_t> >& k1k2 = itTT->second;
+
+                    CGBase sum = Base(0);
+
+                    map<size_t, set<size_t> >::const_iterator itzz;
+                    for (itzz = k1k2.begin(); itzz != k1k2.end(); ++itzz) {
+                        size_t k1 = itzz->first;
+                        const set<size_t>& k2s = itzz->second;
+                        size_t tapeK1 = lModel.getTempIndepIndexes(k1)->tape;
+
+                        CGBase tmp = Base(0);
+                        for (set<size_t>::const_iterator itk2 = k2s.begin(); itk2 != k2s.end(); ++itk2) {
+                            size_t k2 = *itk2;
+                            size_t tapeK2 = lModel.getTempIndepIndexes(k2)->tape;
+
+                            tmp += hessLoop[tapeK1].at(tapeK2) * dzDx[k2][j2];
+                        }
+
+                        sum += tmp * dzDx[k1][j1];
+                    }
+
+                    hessVal += sum;
+                }
+
+                /**
+                 * temporary - temporary
+                 */
+                map<pairss, set<size_t> >::const_iterator itTT2 = info.nonLoopNonIndexedNonIndexed.find(orig);
+                if (itTT2 != info.nonLoopNonIndexedNonIndexed.end()) {
+                    hessVal += dzDxx.at(j1).at(j2); // it is already the sum of ddz / dx_j1 dx_j2
+                }
+
+                // place the result
+                indexedLoopResults[hessLE++] = make_pair(hessVal, pattern);
+            }
+
+
+            assert(hessLE == indexedLoopResults.size());
+
+            /**
+             * make the loop end
+             */
+            size_t assignOrAdd = 1;
+            set<IndexOperationNode<Base>*> indexesOps;
+            indexesOps.insert(info.iterationIndexOp);
+            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+
+            std::vector<size_t> ninfo(1);
+            std::vector<Argument<Base> > args(1);
+            std::vector<size_t>::const_iterator itE;
+            for (itE = lowerHessOrder.begin(); itE != lowerHessOrder.end(); ++itE) {
+                // an additional alias variable is required so that each dependent variable can have its own ID
+                size_t e = *itE;
+                ninfo[0] = e;
+                args[0] = Argument<Base>(*loopEnd);
+                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, ninfo, args));
+            }
+
+            /**
+             * move no-nindexed expressions outside loop
+             */
+            moveNonIndexedOutsideLoop(*info.loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+        }
+
+        return hess;
     }
 
 }

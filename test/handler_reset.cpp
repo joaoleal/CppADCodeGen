@@ -22,16 +22,15 @@ namespace {
     bool HandlerReset1() {
         using namespace CppAD;
         using namespace std;
-        using std::vector;
 
         CodeHandler<double> handler(20);
 
         // independent variables of CppAD
-        std::vector<CG<double> > u(3);
+        vector<CG<double> > u(3);
         handler.makeVariables(u);
 
         // independent variables of CppAD
-        std::vector<AD<CG<double> > > U(3);
+        vector<AD<CG<double> > > U(3);
         U[0] = u[0];
         U[1] = u[1];
         U[2] = u[2];
@@ -39,7 +38,7 @@ namespace {
         CppAD::Independent(U);
 
         // dependent variable of CppAD
-        std::vector<AD<CG<double> > > w(3);
+        vector<AD<CG<double> > > w(3);
         w[0] = u[0] + 2.0;
         w[1] = u[1] + 3.0;
         w[2] = u[2] * 4.0;

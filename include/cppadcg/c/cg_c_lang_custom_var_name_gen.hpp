@@ -49,11 +49,11 @@ namespace CppAD {
             indepNames_(indepNames) {
         }
 
-        virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
+        virtual std::string generateDependent(size_t index) {
             if (index < depNames_.size() && !depNames_[index].empty()) {
                 return depNames_[index];
             } else {
-                return CLangDefaultVariableNameGenerator<Base>::generateDependent(variable, index);
+                return CLangDefaultVariableNameGenerator<Base>::generateDependent(index);
             }
         }
 

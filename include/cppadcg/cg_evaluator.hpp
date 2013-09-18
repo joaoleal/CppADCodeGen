@@ -29,9 +29,7 @@ namespace CppAD {
         std::map<OperationNode<Base>*, AD<BaseOut> > evals_;
         std::map<OperationNode<Base>*, CppAD::vector<AD<BaseOut> >* > evalsArrays_;
         std::set<OperationNode<Base>*> evalsAtomic_;
-        std::map<OperationNode<Base>*, CppAD::vector<AD<BaseOut> > > evalsLoops_;
         std::map<size_t, atomic_base<BaseOut>* > atomicFunctions_;
-        std::map<size_t, atomic_base<BaseOut>* > loopFunctions_;
     public:
 
         /**
@@ -67,20 +65,6 @@ namespace CppAD {
                     atomicFunctions_[it->first] = atomic;
                 }
             }
-        }
-
-        /**
-         * Provides a loop atomic function.
-         * 
-         * @param id The loop ID
-         * @param loop The atomic function
-         * @return True if an atomic function with the same ID was already
-         *         defined, false otherwise.
-         */
-        virtual bool addLoop(size_t id, atomic_base<BaseOut>& atomic) {
-            bool exists = loopFunctions_.find(id) != loopFunctions_.end();
-            loopFunctions_[id] = &atomic;
-            return exists;
         }
 
         /**
@@ -263,24 +247,6 @@ namespace CppAD {
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
                     result = log(evalArg(args[0]));
                     break;
-                case CGLoopAtomicResultOp:
-                {
-                    const std::vector<size_t>& info = node.getInfo();
-                    CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for loop result");
-                    CPPADCG_ASSERT_KNOWN(args[0].getOperation() != NULL, "Invalid argument for loop result");
-                    CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for loop result");
-                    size_t index = info[0];
-                    OperationNode<Base>* loop = args[0].getOperation();
-                    typename std::map<OperationNode<Base>*, CppAD::vector<AD<BaseOut> > >::const_iterator it;
-                    it = evalsLoops_.find(loop);
-                    if (it != evalsLoops_.end()) {
-                        result = it->second[index]; // loop previously called
-                    } else {
-                        evalLoopOperation(*loop); // first time the loop is called
-                        result = evalsLoops_.at(loop)[index];
-                    }
-                    break;
-                }
                 case CGMulOp: // a * b
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication");
                     result = evalArg(args[0]) * evalArg(args[1]);
@@ -400,51 +366,6 @@ namespace CppAD {
             evalsAtomic_.insert(&node);
         }
 
-        inline void evalLoopOperation(OperationNode<Base>& node) throw (CGException) {
-            if (evalsLoops_.find(&node) != evalsLoops_.end()) {
-                return;
-            }
-
-            if (node.getOperationType() != CGLoopForwardOp) {
-                throw CGException("Evaluator can only handle zero forward mode for atomic loop functions");
-            }
-
-            const LoopEvaluationOperationNode<Base>& loopForNode = static_cast<LoopEvaluationOperationNode<Base>&> (node);
-            const std::vector<Argument<Base> >& args = node.getArguments();
-            CPPADCG_ASSERT_KNOWN(args.size() > 0, "Invalid number of arguments for atomic forward mode");
-
-            assert(args.size() == loopForNode.getLoopAtomicFun().getLoopIndependentCount());
-            size_t mFull = loopForNode.getLoopAtomicFun().getLoopDependentCount();
-            size_t p = loopForNode.getOrder();
-
-            typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator itaf = loopFunctions_.find(loopForNode.getLoopAtomicFun().getLoopId());
-            atomic_base<BaseOut>* atomicFunction = NULL;
-            if (itaf != loopFunctions_.end()) {
-                atomicFunction = itaf->second;
-            }
-            
-            if (atomicFunction == NULL) {
-                    std::stringstream ss;
-                    ss << "No atomic loop function defined in the evaluator for "
-                            "'" << loopForNode.getLoopAtomicFun().afun_name() << "'";
-                    throw CGException(ss.str());
-                }
-
-            if (p != 0) {
-                throw CGException("Evaluator can only handle zero forward mode for atomic loop functions");
-            }
-
-            vector<AD<BaseOut> > ax(args.size());
-            size_t aSize = ax.size();
-            for (size_t a = 0; a < aSize; a++) {
-                ax[a] = evalArg(args[a]);
-            }
-            vector<AD<BaseOut> > ay(mFull);
-
-            (*atomicFunction)(ax, ay);
-
-            evalsLoops_[&node] = ay;
-        }
     };
 }
 

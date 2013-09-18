@@ -57,7 +57,7 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testResults(fun, m, repeat, n_loops);
+            testPatternDetectionResults(fun, m, repeat, n_loops);
         }
 
         void testLibCreation(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
@@ -103,9 +103,11 @@ namespace CppAD {
             if (jacobian) {
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
             }
+            /*
             if (hessian) {
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
+             */
         }
 
         void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
@@ -152,7 +154,7 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testResults(fun, m, repeat, n_loops);
+            testPatternDetectionResults(fun, m, repeat, n_loops);
 
             for (size_t a = 0; a < atomics.size(); a++) {
                 delete atomics[a];
@@ -209,9 +211,11 @@ namespace CppAD {
             if (jacobian) {
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
             }
-            if (hessian) {
+            /*
+             if (hessian) {
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
+             */
         }
 
     private:
@@ -226,7 +230,7 @@ namespace CppAD {
             return relatedDepCandidates;
         }
 
-        void testResults(ADFun<CGD>& fun, size_t m, size_t repeat, size_t n_loops) {
+        void testPatternDetectionResults(ADFun<CGD>& fun, size_t m, size_t repeat, size_t n_loops) {
             /**
              * Generate operation graph
              */
@@ -245,10 +249,14 @@ namespace CppAD {
 
             DependentPatternMatcher<double> matcher(relatedDepCandidates, yy, xx);
 
-            std::auto_ptr<ADFun<CG<Base> > > newTape(matcher.generateTape());
+            LoopFreeModel<Base>* nonLoopTape;
+            SmartSetPointer<LoopModel<Base> > loopTapes;
+            matcher.generateTapes(nonLoopTape, loopTapes.s);
+
+            delete nonLoopTape;
 
             //std::cout << "loops: " << matcher.getLoops().size() << std::endl;
-            ASSERT_EQ(matcher.getLoops().size(), n_loops);
+            ASSERT_EQ(loopTapes.s.size(), n_loops);
 
             //std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
             ASSERT_EQ(matcher.getEquationPatterns().size(), m);

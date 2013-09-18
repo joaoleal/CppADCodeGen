@@ -301,8 +301,6 @@ namespace CppAD {
         std::set<CGOpCode> s;
         s.insert(CGIndexAssignOp);
         s.insert(CGIndexOp);
-        s.insert(CGLoopForwardOp);
-        s.insert(CGLoopReverseOp);
         s.insert(CGLoopStartOp);
         s.insert(CGLoopEndOp);
         return s;

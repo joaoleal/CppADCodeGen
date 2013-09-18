@@ -67,15 +67,6 @@ namespace CppAD {
     template<class Base>
     class LoopEndOperationNode;
 
-    template<class Base>
-    class LoopEvaluationOperationNode;
-
-    template<class Base>
-    class LoopForwardOperationNode;
-
-    template<class Base>
-    class LoopReverseOperationNode;
-
     /***************************************************************************
      * Loops
      **************************************************************************/
@@ -89,7 +80,10 @@ namespace CppAD {
     class Loop;
 
     template<class Base>
-    class LoopAtomicFun;
+    class LoopFreeModel;
+
+    template<class Base>
+    class LoopModel;
 
     template<class Base>
     class LoopNodeInfo;
@@ -99,7 +93,7 @@ namespace CppAD {
 
     template<class Base>
     class GroupLoopRev2ColInfo;
-    
+
     template<class Base>
     class LoopRev2ValInfo;
 

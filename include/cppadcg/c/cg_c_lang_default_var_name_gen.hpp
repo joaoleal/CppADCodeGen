@@ -80,7 +80,7 @@ namespace CppAD {
             return _maxTemporaryArrayID;
         }
 
-        inline virtual std::string generateDependent(const CG<Base>& variable, size_t index) {
+        inline virtual std::string generateDependent(size_t index) {
             _ss.clear();
             _ss.str("");
 

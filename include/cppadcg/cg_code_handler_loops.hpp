@@ -18,18 +18,18 @@
 namespace CppAD {
 
     template<class Base>
-    void CodeHandler<Base>::registerLoop(LoopAtomicFun<Base>& loop) {
+    void CodeHandler<Base>::registerLoop(LoopModel<Base>& loop) {
         _loops[loop.getLoopId()] = &loop;
     }
 
     template<class Base>
-    const std::map<size_t, LoopAtomicFun<Base>*>& CodeHandler<Base>::getLoops() const {
+    const std::map<size_t, LoopModel<Base>*>& CodeHandler<Base>::getLoops() const {
         return _loops;
     }
 
     template<class Base>
-    LoopAtomicFun<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
-        typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator it = _loops.find(loopId);
+    LoopModel<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
+        typename std::map<size_t, LoopModel<Base>*>::const_iterator it = _loops.find(loopId);
         if (it != _loops.end()) {
             return it->second;
         }

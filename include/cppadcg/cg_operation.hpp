@@ -59,9 +59,7 @@ namespace CppAD {
         CGDependentRefOp, // operation referencing a dependent variable (right hand side only)
         CGIndexOp, // an integer index
         CGIndexAssignOp, // assigment of an integer index to an index pattern expression
-        CGLoopForwardOp, // for() { forward(q, p, vx, vy, tx, ty) }
-        CGLoopReverseOp, // for() { reverse(p, tx, ty, px, py) }
-        CGLoopAtomicResultOp, // output from a loop atomic function evaluation
+        CGLoopAtomicResultOp, // output from a loop atomic function evaluation //////////////////////is it needed
         CGLoopStartOp, // for() {}
         CGLoopIndexedIndepOp, // indexed independent used by a loop
         CGLoopIndexedDepOp, // indexed output from a loop
@@ -169,12 +167,6 @@ namespace CppAD {
                 break;
             case CGIndexAssignOp:
                 os << "index = expression()";
-                break;
-            case CGLoopForwardOp:
-                os << "for() { forward(q, p, vx, vy, tx, ty) }";
-                break;
-            case CGLoopReverseOp:
-                os << "for() { reverse(p, tx, ty, px, py) }";
                 break;
             case CGLoopAtomicResultOp:
                 os << " dep <- loop";

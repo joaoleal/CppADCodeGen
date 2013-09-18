@@ -18,49 +18,41 @@
 namespace CppAD {
 
     /**
-     * Independent variable positions
+     * Variable positions
      */
     class LoopPosition {
     public:
         size_t tape;
-        size_t atomic;
         size_t original;
 
         inline LoopPosition() :
             tape(-1),
-            atomic(-1),
             original(-1) {
         }
 
-        inline LoopPosition(size_t t, size_t a, size_t o) :
+        inline LoopPosition(size_t t, size_t o) :
             tape(t),
-            atomic(a),
             original(o) {
         }
     };
 
     /**
-     * Temporary variable positions
+     * Variable position which changes from iteration to iteration
      */
-    class LoopPositionTmp {
+    class LoopIndexedPosition : public LoopPosition {
     public:
-        size_t tape;
-        size_t atomic;
-        // the independent variables that this temporary variable depends on
-        std::set<size_t> originalIndeps;
+        size_t iteration;
 
-        inline LoopPositionTmp() :
-            tape(-1),
-            atomic(-1) {
+        inline LoopIndexedPosition() :
+            LoopPosition(),
+            iteration(-1) {
         }
 
-        inline LoopPositionTmp(size_t t, size_t a, const std::set<size_t>& o) :
-            tape(t),
-            atomic(a),
-            originalIndeps(o) {
+        inline LoopIndexedPosition(size_t t, size_t o, size_t it) :
+            LoopPosition(t, o),
+            iteration(it) {
         }
     };
-
 }
 
 #endif

@@ -81,11 +81,8 @@
 #include <cppadcg/cg_operation_node.hpp>
 #include <cppadcg/nodes/cg_index_operation_node.hpp>
 #include <cppadcg/nodes/cg_index_assign_operation_node.hpp>
-#include <cppadcg/nodes/cg_loop_end_operation_node.hpp>
-#include <cppadcg/nodes/cg_loop_evaluation_operation_node.hpp>
-#include <cppadcg/nodes/cg_loop_forward_operation_node.hpp>
-#include <cppadcg/nodes/cg_loop_reverse_operation_node.hpp>
 #include <cppadcg/nodes/cg_loop_start_operation_node.hpp>
+#include <cppadcg/nodes/cg_loop_end_operation_node.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
 #include <cppadcg/cg_variable.hpp>
@@ -134,7 +131,8 @@
 #include <cppadcg/patterns/index/cg_index_pattern_impl.hpp>
 #include <cppadcg/patterns/cg_loop_node_info.hpp>
 #include <cppadcg/patterns/cg_custom_loop_node_info.hpp>
-#include <cppadcg/patterns/cg_loop_atomic_fun.hpp>
+#include <cppadcg/patterns/cg_loop_model.hpp>
+#include <cppadcg/patterns/cg_loop_free_model.hpp>
 #include <cppadcg/patterns/cg_equation_pattern.hpp>
 #include <cppadcg/patterns/cg_loop.hpp>
 #include <cppadcg/patterns/cg_dependent_pattern_matcher.hpp>

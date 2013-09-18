@@ -68,10 +68,6 @@ namespace CppAD {
          * time due to shared temporary variables
          */
         std::vector<std::set<size_t> > linkedDependents;
-        /**
-         * 
-         */
-        std::vector<OperationNode<Base>* > temporaryOrigVarOrder;
     private:
         /**
          * code handler for the operations in the loop
@@ -88,7 +84,7 @@ namespace CppAD {
         /**
          * 
          */
-        LoopAtomicFun<Base>* loopAtomic_;
+        LoopModel<Base>* loopModel_;
         /**
          * indexed independent variables for the loop (clones)
          */
@@ -138,11 +134,6 @@ namespace CppAD {
          */
         std::list<OperationArgumentsIndepOrder<Base>*> arg2IndepOrder_; // consider changing to forward_list (C++11)
         /**
-         * Maps the temporary variables in the original model to the independents
-         * used to determine them
-         */
-        std::map<const OperationNode<Base>*, std::set<OperationNode<Base>*> > tempClone2Indeps_;
-        /**
          * Variable id counter
          */
         size_t idCounter_;
@@ -151,7 +142,7 @@ namespace CppAD {
         Loop(EquationPattern<Base>& eq) :
             iterationCount(eq.dependents.size()),
             nIndependents_(0),
-            loopAtomic_(NULL) {
+            loopModel_(NULL) {
             //indexedOpIndep(eq.indexedOpIndep), // must be determined later for a different reference
             //constOperationIndependents(eq.constOperationIndependents) {
             equations.insert(&eq);
@@ -173,13 +164,13 @@ namespace CppAD {
             return iterationDependents_;
         }
 
-        LoopAtomicFun<Base>* getAtomicFunction() const {
-            return loopAtomic_;
+        LoopModel<Base>* getModel() const {
+            return loopModel_;
         }
 
-        LoopAtomicFun<Base>* releaseAtomicFunction() {
-            LoopAtomicFun<Base>* loopAtomic = loopAtomic_;
-            loopAtomic_ = NULL;
+        LoopModel<Base>* releaseLoopModel() {
+            LoopModel<Base>* loopAtomic = loopModel_;
+            loopModel_ = NULL;
             return loopAtomic;
         }
 
@@ -251,9 +242,10 @@ namespace CppAD {
             return true; // all OK
         }
 
-        void createAtomicLoopFunction(const std::vector<CG<Base> >& dependents,
-                                      const std::vector<CG<Base> >& independents,
-                                      const std::map<size_t, EquationPattern<Base>*>& dep2Equation) throw (CGException) {
+        void createLoopModel(const std::vector<CG<Base> >& dependents,
+                             const std::vector<CG<Base> >& independents,
+                             const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
+                             std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
 
             generateDependentLoopIndexes(dep2Equation);
 
@@ -286,7 +278,7 @@ namespace CppAD {
 
             resetCounters(dependents);
 
-            createLocalOperationGraph(dependents, independents, dep2Equation);
+            createLoopTapeNModel(dependents, independents, dep2Equation, origTemp2Index);
 
             /**
              * Clean-up
@@ -318,7 +310,7 @@ namespace CppAD {
                 delete *it;
             }
 
-            delete loopAtomic_;
+            delete loopModel_;
         }
 
         /***********************************************************************
@@ -658,9 +650,10 @@ namespace CppAD {
             }
         }
 
-        void createLocalOperationGraph(const std::vector<CG<Base> >& dependents,
-                                       const std::vector<CG<Base> >& independents,
-                                       const std::map<size_t, EquationPattern<Base>*>& dep2Equation) throw (CGException) {
+        void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
+                                  const std::vector<CG<Base> >& independents,
+                                  const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
+                                  std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
             typedef CG<Base> CGB;
             typedef AD<CGB> ADCGB;
             assert(independents.size() > 0);
@@ -722,14 +715,6 @@ namespace CppAD {
 
             struct IndexedIndepSorter indexedSorter(clone2indexedIndep, origModelIndepOrder);
             std::sort(indexedCloneOrder.begin(), indexedCloneOrder.end(), indexedSorter);
-
-            for (size_t j = 0; j < indexedCloneOrder.size(); j++) {
-                //const IndependentOrder<Base>* order = clone2indexedIndep.at(indexedCloneOrder[j]);
-                //size_t index = origModelIndepOrder.at(order->order[0]);
-                /////////////////////////////////////////////////////////////////////////////////////
-                // TODO: define a value in loopIndeps if possible////////////////////////////////////
-                /////////////////////////////////////////////////////////////////////////////////////
-            }
 
             // original indep index -> non-indexed independent clones
             std::map<size_t, const OperationNode<Base>*> nonIndexedCloneOrder;
@@ -822,21 +807,26 @@ namespace CppAD {
                 }
             }
 
-            std::vector<std::set<size_t> > temporaryIndependents(nTmpIndexed);
+            std::vector<size_t> temporaryIndependents(nTmpIndexed);
 
-            temporaryOrigVarOrder.resize(independentsTemp_.size());
             size_t j = 0;
             for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, j++) {
                 const OperationNode<Base>* tmpClone = itt->first;
-                const std::set<OperationNode<Base>*>& origIndeps = tempClone2Indeps_.at(tmpClone);
-                assert(!origIndeps.empty());
+                OperationNode<Base>* origTmpNode = temporaryClone2Orig_.at(tmpClone);
 
-                typename std::set<OperationNode<Base>*>::const_iterator ito;
-                for (ito = origIndeps.begin(); ito != origIndeps.end(); ++ito) {
-                    size_t origIndex = origModelIndepOrder.at(*ito);
-                    temporaryIndependents[j].insert(origIndex);
+                /**
+                 * assign an index (k) to each temporary variable 
+                 */
+                size_t k;
+                typename std::map<OperationNode<Base>*, size_t>::const_iterator itz = origTemp2Index.find(origTmpNode);
+                if (itz == origTemp2Index.end()) {
+                    k = origTemp2Index.size();
+                    origTemp2Index[origTmpNode] = k; // new index for a temporary variable
+                } else {
+                    k = itz->second;
                 }
-                temporaryOrigVarOrder[j] = temporaryClone2Orig_.at(tmpClone);
+
+                temporaryIndependents[j] = k;
             }
 
             std::vector<size_t> nonIndexedIndependents(orig2ConstIndepClone_.size());
@@ -845,13 +835,15 @@ namespace CppAD {
                 nonIndexedIndependents[s] = origJ2CloneIt->first;
             }
 
-            loopAtomic_ = new LoopAtomicFun<Base>("loop", ////// TODO: improve loop name
+            loopModel_ = new LoopModel<Base>("loop", ////// TODO: improve loop name
                     funIndexed.release(),
                     iterationCount,
                     dependentOrigIndexes,
                     indexedIndependents,
                     nonIndexedIndependents,
                     temporaryIndependents);
+
+            loopModel_->detectIndexPatterns();
         }
 
         inline Argument<Base> makeGraphClones(const EquationPattern<Base>& eq,
@@ -1003,27 +995,7 @@ namespace CppAD {
             clonesTemporary_[id] = cloneOp;
             node.setVariableID(id);
 
-            findIndependents(node, tempClone2Indeps_[cloneOp]);
-
             return *cloneOp;
-        }
-
-        void findIndependents(OperationNode<Base>& node, std::set<OperationNode<Base>*>& indeps) {
-            // TODO: improve to avoid visiting the same nodes!!!
-            const std::vector<Argument<Base> >& args = node.getArguments();
-
-            size_t arg_size = args.size();
-            for (size_t a = 0; a < arg_size; a++) {
-                OperationNode<Base>* argOp = args[a].getOperation();
-                if (argOp != NULL) {
-                    // variable
-                    if (argOp->getOperationType() == CGInvOp) {
-                        indeps.insert(argOp);
-                    } else {
-                        findIndependents(*argOp, indeps);
-                    }
-                }
-            }
         }
 
         Loop(const Loop<Base>& other); // not implemented

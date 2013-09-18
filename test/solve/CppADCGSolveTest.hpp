@@ -134,7 +134,7 @@ namespace CppAD {
             CLanguage<double> langC("double");
             CLangDefaultVariableNameGenerator<double> nameGen;
 
-            std::vector<CGD> depv(1);
+            vector<CGD> depv(1);
             depv[0] = dep;
 
             std::ostringstream code;

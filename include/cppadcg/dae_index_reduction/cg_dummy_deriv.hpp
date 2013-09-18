@@ -1506,7 +1506,7 @@ namespace CppAD {
             assert(handler.getIndependentVariableSize() == indepNames.size());
 
             CLanguage<Base> lang("double");
-            std::vector<CGBase> resAux;
+            vector<CGBase> resAux;
             for (size_t p = 0; p < res.size(); ++p) {
                 if (erasedEquations.find(p) == erasedEquations.end()) {
                     resAux.push_back(res[p]);

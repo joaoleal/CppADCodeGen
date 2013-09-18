@@ -22,16 +22,23 @@ namespace CppAD {
      */
     template<class Base>
     class DependentPatternMatcher {
+    public:
+        typedef CG<Base> CGBase;
     private:
         const std::vector<std::set<size_t> >& relatedDepCandidates_;
-        const std::vector<CG<Base> >& dependents_;
-        std::vector<CG<Base> >& independents_;
+        const std::vector<CGBase>& dependents_;
+        std::vector<CGBase>& independents_;
         std::vector<EquationPattern<Base>*> equations_;
         EquationPattern<Base>* eqCurr_;
         std::map<size_t, EquationPattern<Base>*> dep2Equation_;
         std::map<EquationPattern<Base>*, Loop<Base>*> equation2Loop_;
         std::vector<Loop<Base>*> loops_;
         std::set<const OperationNode<Base>*> sharedTemps_; // shared temporaries
+        /**
+         * maps the orignal model nodes used as temporary non-indexed variables
+         * by the loops to an index k
+         */
+        std::map<OperationNode<Base>*, size_t> origTemp2Index_;
         std::vector<std::set<size_t> > id2Deps;
         size_t idCounter_;
     public:
@@ -46,8 +53,8 @@ namespace CppAD {
          * @param independents The independent variable values
          */
         DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
-                                const std::vector<CG<Base> >& dependents,
-                                std::vector<CG<Base> >& independents) :
+                                const std::vector<CGBase>& dependents,
+                                std::vector<CGBase>& independents) :
             relatedDepCandidates_(relatedDepCandidates),
             dependents_(dependents),
             independents_(independents) {
@@ -67,24 +74,22 @@ namespace CppAD {
         /**
          * Detects common equation patterns and generates a new tape for the
          * model using loops.
-         * 
-         * This tape contains references to atomic functions that must be
-         * kept until the end of the tape usage. Either keep this object or 
-         * get the atomic functions from each loop object
-         * (getLoops()[...]->releaseAtomicFunction()).
-         * 
          * This method should only be called once!
          * 
-         * @return The new tape with loops or NULL if no loops were detected
+         * @param nonLoopTape The new tape without the loops or NULL if there
+         *                    are no non-indexed expressions in the model
+         * @param loopTapes The models for each loop (must be deleted by the user)
          */
-        virtual ADFun<CG<Base> >* generateTape() {
-            // find l
+        virtual void generateTapes(LoopFreeModel<Base>*& nonLoopTape,
+                                   std::set<LoopModel<Base>*>& loopTapes) {
             findLoops();
 
-            if (loops_.size() > 0) {
-                return createNewTape();
-            } else {
-                return NULL;
+            nonLoopTape = createNewTape();
+
+            loopTapes.clear();
+            for (size_t l = 0; l < loops_.size(); l++) {
+                Loop<Base>* loop = loops_[l];
+                loopTapes.insert(loop->releaseLoopModel());
             }
         }
 
@@ -100,7 +105,7 @@ namespace CppAD {
          * Attempts to detect common patterns in the equations and generate 
          * loops from these patterns.
          * 
-         * @return information about the detected loops (must be deleted by the user)
+         * @return information about the detected loops
          */
         virtual std::vector<Loop<Base>*> findLoops() throw (CGException) {
             /**
@@ -349,84 +354,118 @@ namespace CppAD {
                 }
             }
 
-            /**
-             * Generate a local operation graph for each loop
-             */
             size_t l_size = loops_.size();
+
+            /**
+             * assign indexes (k) to temporary variables (non-indexed) used by loops
+             */
             for (size_t l = 0; l < l_size; l++) {
-                loops_[l]->createAtomicLoopFunction(dependents_, independents_, dep2Equation_);
+                Loop<Base>* loop = loops_[l];
+
+               //Generate a local model for the loop
+                loop->createLoopModel(dependents_, independents_, dep2Equation_, origTemp2Index_);
             }
 
             return loops_;
         }
 
         /**
-         * Creates a new tape for the model with the previously detected loops.
+         * Creates a new tape for the model without the equations in the loops
+         * and with some extra dependents for the temporary variables used by
+         * loops.
          * 
-         * @return The new tape with the loops
+         * @return The new tape without loop equations
          */
-        virtual ADFun<CG<Base> >* createNewTape() {
+        virtual LoopFreeModel<Base>* createNewTape() {
             CodeHandler<Base>& origHandler = *independents_[0].getCodeHandler();
+
+            size_t m = dependents_.size();
+            std::vector<bool> inLoop(m, false);
+            size_t eqInLoopCount = 0;
 
             /**
              * Create the new tape
              */
             size_t l_size = loops_.size();
 
-            std::vector<CG<Base> > newDeps = dependents_;
             for (size_t l = 0; l < l_size; l++) {
                 Loop<Base>* loop = loops_[l];
-                LoopAtomicFun<Base>* atomic = loop->getAtomicFunction();
+                LoopModel<Base>* loopModel = loop->getModel();
 
-                vector<CG<Base> > loopDeps = atomic->insertIntoModel(independents_, loop->temporaryOrigVarOrder);
-
-                // place dependents
-                const std::vector<std::vector<LoopPosition> >& ldeps = atomic->getDependentIndexes();
+                /**
+                 * determine which equations belong to loops
+                 */
+                const std::vector<std::vector<LoopPosition> >& ldeps = loopModel->getDependentIndexes();
                 for (size_t eq = 0; eq < ldeps.size(); eq++) {
                     for (size_t it = 0; it < ldeps[eq].size(); it++) {
                         const LoopPosition& pos = ldeps[eq][it];
-                        newDeps[pos.original] = loopDeps[pos.atomic];
+                        inLoop[pos.original] = true;
+                    }
+                }
+                eqInLoopCount += ldeps.size() * loopModel->getIterationCount();
+            }
+
+            /**
+             * create a new smaller tape 
+             */
+            size_t nonLoopEq = m - eqInLoopCount;
+            std::vector<CGBase> nonLoopDeps(nonLoopEq + origTemp2Index_.size());
+
+            if (nonLoopDeps.size() == 0)
+                return NULL; // there are no equations outside the loops
+
+            /**
+             * Place the dependents that do not belong to a loop
+             */
+            size_t inl = 0;
+            std::vector<size_t> depTape2Orig(nonLoopEq);
+            if (eqInLoopCount < m) {
+                for (size_t i = 0; i < inLoop.size(); i++) {
+                    if (!inLoop[i]) {
+                        depTape2Orig[inl] = i;
+                        nonLoopDeps[inl++] = dependents_[i];
                     }
                 }
             }
+            assert(inl == nonLoopEq);
 
-            Evaluator<Base, CG<Base> > evaluator(origHandler, newDeps);
-            const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
-            std::map<size_t, atomic_base<CG<Base> >* > atomics;
-            atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
-            evaluator.addAtomicFunctions(atomics);
-            for (size_t l = 0; l < l_size; l++) {
-                Loop<Base>* loop = loops_[l];
-                LoopAtomicFun<Base>* atomic = loop->getAtomicFunction();
-                evaluator.addLoop(atomic->getLoopId(), *atomic);
+            /**
+             * Place new dependents for the temporary variables used by the loops
+             */
+            typename std::map<OperationNode<Base>*, size_t>::const_iterator itTmp;
+            for (itTmp = origTemp2Index_.begin(); itTmp != origTemp2Index_.end(); ++itTmp) {
+                size_t k = itTmp->second;
+                nonLoopDeps[nonLoopEq + k] = origHandler.createCG(Argument<Base>(*itTmp->first));
             }
 
-            std::vector<AD<CG<Base> > > x(independents_.size());
+            /**
+             * Generate the new tape by going again through the operations 
+             */
+            Evaluator<Base, CGBase> evaluator(origHandler, nonLoopDeps);
+
+            // set atomic functions
+            const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
+            std::map<size_t, atomic_base<CGBase>* > atomics;
+            atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
+            evaluator.addAtomicFunctions(atomics);
+
+            std::vector<AD<CGBase> > x(independents_.size());
             for (size_t j = 0; j < x.size(); j++) {
                 if (independents_[j].isValueDefined())
                     x[j] = independents_[j].getValue();
             }
 
             CppAD::Independent(x);
-            std::vector<AD<CG<Base> > > y = evaluator.evaluate(x);
+            std::vector<AD<CGBase> > y = evaluator.evaluate(x);
 
-            std::auto_ptr<ADFun<CG<Base> > > tapeWithLoops(new ADFun<CG<Base> >());
-            tapeWithLoops->Dependent(y);
+            std::auto_ptr<ADFun<CGBase> > tapeNoLoops(new ADFun<CGBase>());
+            tapeNoLoops->Dependent(y);
 
-            /**
-             * 
-             */
-            for (size_t l = 0; l < l_size; l++) {
-                Loop<Base>* loop = loops_[l];
-                LoopAtomicFun<Base>* atomic = loop->getAtomicFunction();
-                atomic->detectIndexPatterns();
-            }
-
-            return tapeWithLoops.release();
+            return new LoopFreeModel<Base>(tapeNoLoops.release(), depTape2Orig);
         }
 
-        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CG<Base> >& dependents,
-                                                                 const std::vector<CG<Base> >& independents) {
+        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
+                                                                 const std::vector<CGBase>& independents) {
             size_t n = independents.size();
             std::vector<OperationNode<Base>*> indep(n);
             for (size_t j = 0; j < n; j++) {
@@ -437,7 +476,7 @@ namespace CppAD {
             return findRelatedVariables(dependents, indep);
         }
 
-        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CG<Base> >& dependents,
+        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
                                                                  const std::vector<OperationNode<Base>*>& independents) {
             eqCurr_ = NULL;
 
@@ -580,7 +619,7 @@ namespace CppAD {
             }
         }
 
-        void assignIds(const std::vector<CG<Base> >& dependents) {
+        void assignIds(const std::vector<CGBase>& dependents) {
             idCounter_ = 1;
 
             size_t rSize = relatedDepCandidates_.size();

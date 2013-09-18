@@ -137,8 +137,6 @@ namespace CppAD {
                                                                  const std::string& library, const std::string& function,
                                                                  const std::vector<std::vector<double> >& indV,
                                                                  int& comparisons) {
-        using std::vector;
-
         size_t n = indV.begin()->size();
 
         CodeHandler<double> handler(10 + n * n);
@@ -184,13 +182,13 @@ namespace CppAD {
             throw;
         }
 
-        vector<vector<double> >depCGen(indV.size());
+        std::vector<std::vector<double> >depCGen(indV.size());
         for (size_t i = 0; i < indV.size(); i++) {
 
-            vector<double>& depi = depCGen[i];
+            std::vector<double>& depi = depCGen[i];
             depi.resize(dep.size());
 
-            const vector<double>& ind = indV[i];
+            const std::vector<double>& ind = indV[i];
 
             // the compiled version
             comparisons = (*fn)(&ind[0], &depi[0]);
@@ -261,8 +259,6 @@ namespace CppAD {
                                                                          const std::vector<std::vector<double> >& indV) {
         assert(!indV.empty());
 
-        using std::vector;
-
         CodeHandler<double> handler(50 + indV.size() * indV.size());
 
         vector<CG<double> > indVars(indV[0].size());
@@ -309,7 +305,7 @@ namespace CppAD {
             throw;
         }
 
-        vector<vector<double> >jac(indV.size());
+        std::vector<std::vector<double> > jac(indV.size());
 
         for (size_t i = 0; i < indV.size(); i++) {
             jac[i].resize(f.Range() * f.Domain());

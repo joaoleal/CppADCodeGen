@@ -65,7 +65,7 @@ namespace CppAD {
 
         virtual size_t getMaxTemporaryArrayVariableID() const = 0;
 
-        virtual std::string generateDependent(const CG<Base>& variable, size_t index) = 0;
+        virtual std::string generateDependent(size_t index) = 0;
 
         virtual std::string generateIndependent(const OperationNode<Base>& variable) = 0;
 

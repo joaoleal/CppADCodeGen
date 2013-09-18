@@ -71,7 +71,7 @@ namespace CppAD {
         // (some IDs may be the same as the independent variables when dep = indep)
         std::map<size_t, size_t> _dependentIDs;
         // the dependent variable vector
-        const std::vector<CG<Base> >* _dependent;
+        const vector<CG<Base> >* _dependent;
         // the temporary variables that may require a declaration
         std::map<size_t, OperationNode<Base>*> _temporary;
         // the operator used for assignment of dependent variables
@@ -174,7 +174,7 @@ namespace CppAD {
             _sources = sources;
         }
 
-        virtual void setCurrentLoop(LoopAtomicFun<Base>* loop) {
+        virtual void setCurrentLoop(LoopModel<Base>* loop) {
             if (loop == NULL) {
                 _currentLoopsUserDefined.clear();
             } else {
@@ -183,7 +183,8 @@ namespace CppAD {
             }
         }
 
-        virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false) {
+        virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false,
+                                                                 bool zeroArrayDependents = false) {
             assert(_nameGen != NULL);
 
             // declare variables
@@ -231,9 +232,9 @@ namespace CppAD {
                 if (localOnly && arraySize > 0) {
                     _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
                 }
-                if (arraySize > 0) {
-                    _ss << _spaces << "unsigned long i;\n";
-                }
+            }
+            if (arraySize > 0 || zeroArrayDependents) {
+                _ss << _spaces << "unsigned long i;\n";
             }
 
             // loop indexes
@@ -341,7 +342,7 @@ namespace CppAD {
             _minTemporaryVarID = info.minTemporaryVarID;
             _atomicFunctionId2Index = info.atomicFunctionId2Index;
             _atomicFunctionId2Name = info.atomicFunctionId2Name;
-            const std::vector<CG<Base> >& dependent = info.dependent;
+            const vector<CG<Base> >& dependent = info.dependent;
             const std::vector<OperationNode<Base>*>& variableOrder = info.variableOrder;
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
@@ -354,8 +355,8 @@ namespace CppAD {
              */
             //generate names for the independent variables
             typename std::vector<OperationNode<Base> *>::const_iterator it;
-            for (it = info.independent.begin(); it != info.independent.end(); ++it) {
-                OperationNode<Base>& op = **it;
+            for (size_t j = 0; j < _independentSize; j++) {
+                OperationNode<Base>& op = *info.independent[j];
                 if (op.getName() == NULL) {
                     op.setName(_nameGen->generateIndependent(op));
                 }
@@ -372,7 +373,7 @@ namespace CppAD {
                         node->setName(_nameGen->generateIndexedDependent(*node, *ip));
 
                     } else {
-                        node->setName(_nameGen->generateDependent(dependent[i], i));
+                        node->setName(_nameGen->generateDependent(i));
                     }
                 }
             }
@@ -448,12 +449,28 @@ namespace CppAD {
                 /**
                  * Source code generation magic!
                  */
+                if (info.zeroDependents) {
+                    // zero initial values
+                    const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
+                    for (size_t i = 0; i < depArg.size(); i++) {
+                        const FuncArgument& a = depArg[i];
+                        if (a.array) {
+                            _code << _indentation << "for(i = 0; i < " << _dependent->size() << "; i++) " << a.name << "[i]";
+                        } else {
+                            _code << _indentation << _nameGen->generateDependent(i);
+                        }
+                        _code << " = ";
+                        printParameter(Base(0.0));
+                        _code << ";\n";
+                    }
+                }
+
                 size_t assignCount = 0;
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
                     // check if a new function should start
                     if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoops.empty()) {
                         assignCount = 0;
-                        saveLocalFunction(localFuncNames);
+                        saveLocalFunction(localFuncNames, localFuncNames.empty() && info.zeroDependents);
                     }
 
                     OperationNode<Base>& op = **it;
@@ -483,7 +500,7 @@ namespace CppAD {
 
                 if (localFuncNames.size() > 0 && assignCount > 0) {
                     assignCount = 0;
-                    saveLocalFunction(localFuncNames);
+                    saveLocalFunction(localFuncNames, false);
                 }
             }
 
@@ -514,7 +531,7 @@ namespace CppAD {
                 for (std::set<size_t>::const_iterator it = dependentDuplicates.begin(); it != dependentDuplicates.end(); ++it) {
                     size_t index = *it;
                     const CG<Base>& dep = (*_dependent)[index];
-                    std::string varName = _nameGen->generateDependent(dep, index);
+                    std::string varName = _nameGen->generateDependent(index);
                     const std::string& origVarName = *dep.getOperationNode()->getName();
 
                     _code << _spaces << varName << " " << _depAssignOperation << " " << origVarName << ";\n";
@@ -530,7 +547,7 @@ namespace CppAD {
                             _code << _spaces << "// dependent variables without operations\n";
                             commentWritten = true;
                         }
-                        std::string varName = _nameGen->generateDependent(dependent[i], i);
+                        std::string varName = _nameGen->generateDependent(i);
                         _code << _spaces << varName << " " << _depAssignOperation << " ";
                         printParameter(dependent[i].getValue());
                         _code << ";\n";
@@ -540,7 +557,7 @@ namespace CppAD {
                         _code << _spaces << "// dependent variables without operations\n";
                         commentWritten = true;
                     }
-                    std::string varName = _nameGen->generateDependent(dependent[i], i);
+                    std::string varName = _nameGen->generateDependent(i);
                     const std::string& indepName = *dependent[i].getOperationNode()->getName();
                     _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
                 }
@@ -557,7 +574,7 @@ namespace CppAD {
                     _nameGen->customFunctionVariableDeclarations(_ss);
                     _ss << generateIndependentVariableDeclaration() << "\n";
                     _ss << generateDependentVariableDeclaration() << "\n";
-                    _ss << generateTemporaryVariableDeclaration(true) << "\n";
+                    _ss << generateTemporaryVariableDeclaration(true, info.zeroDependents) << "\n";
                     _nameGen->prepareCustomFunctionVariables(_ss);
                     _ss << _code.str();
                     _nameGen->finalizeCustomFunctionVariables(_ss);
@@ -617,7 +634,8 @@ namespace CppAD {
             return dcl + " " + funcArg.name;
         }
 
-        virtual void saveLocalFunction(std::vector<std::string>& localFuncNames) {
+        virtual void saveLocalFunction(std::vector<std::string>& localFuncNames,
+                                       bool zeroDependentArray) {
             _ss << _functionName << "__" << (localFuncNames.size() + 1);
             std::string funcName = _ss.str();
             _ss.str("");
@@ -631,6 +649,8 @@ namespace CppAD {
             size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID() - 1;
             if (arraySize > 0) {
                 _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
+            }
+            if (arraySize > 0 || zeroDependentArray) {
                 _ss << _spaces << "unsigned long i;\n";
             }
 
@@ -698,8 +718,6 @@ namespace CppAD {
                     op == CGArrayCreationOp ||
                     op == CGAtomicForwardOp ||
                     op == CGAtomicReverseOp ||
-                    op == CGLoopForwardOp ||
-                    op == CGLoopReverseOp ||
                     op == CGLoopStartOp ||
                     op == CGLoopEndOp ||
                     op == CGIndexAssignOp;
@@ -714,8 +732,6 @@ namespace CppAD {
             assert(var.getVariableID() > 0);
             assert(op != CGAtomicForwardOp);
             assert(op != CGAtomicReverseOp);
-            assert(op != CGLoopForwardOp);
-            assert(op != CGLoopReverseOp);
             assert(op != CGLoopStartOp);
             assert(op != CGLoopEndOp);
             assert(op != CGIndexOp);
@@ -747,8 +763,7 @@ namespace CppAD {
                         assert(it != _dependentIDs.end());
 
                         size_t index = it->second;
-                        const CG<Base>& dep = (*_dependent)[index];
-                        var.setName(_nameGen->generateDependent(dep, index));
+                        var.setName(_nameGen->generateDependent(index));
 
                     } else {
                         // temporary variable

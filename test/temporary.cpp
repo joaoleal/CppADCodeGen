@@ -25,7 +25,7 @@ namespace CppAD {
     public:
 
         inline CppADCGTempTest(bool verbose = false, bool printValues = false) :
-            CppADCGTest(verbose, printValues) {
+        CppADCGTest(verbose, printValues) {
         }
 
         void testModel(ADFun<CGD>& f, size_t expectedTmp, size_t expectedArraySize) {
@@ -34,10 +34,10 @@ namespace CppAD {
 
             CodeHandler<double> handler(10 + n * n);
 
-            std::vector<CGD> indVars(n);
+            vector<CGD> indVars(n);
             handler.makeVariables(indVars);
 
-            std::vector<CGD> dep = f.Forward(0, indVars);
+            vector<CGD> dep = f.Forward(0, indVars);
 
             CLanguage<double> langC("double");
             CLangDefaultVariableNameGenerator<double> nameGen;

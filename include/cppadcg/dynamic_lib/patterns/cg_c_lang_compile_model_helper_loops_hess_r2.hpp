@@ -31,7 +31,7 @@ namespace CppAD {
          * without needing a temporary array (compressed)
          */
 
-        std::map<size_t, std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, map<size_t, GroupLoopRev2ColInfo<Base>*> > > > loopCalls;
+        std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, map<size_t, GroupLoopRev2ColInfo<Base>*> > > > loopCalls;
 
         Index indexIt("it");
         const std::string& itName = indexIt.getName();
@@ -41,11 +41,11 @@ namespace CppAD {
          * Determine jrow index patterns and
          * hessian row start patterns
          */
-        typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
+        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
         typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
 
         for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
-            LoopAtomicFun<Base>* loop = itljg->first;
+            LoopModel<Base>* loop = itljg->first;
 
             for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
                 const TapeVarType& jTape1 = itjg->first;
@@ -171,8 +171,8 @@ namespace CppAD {
         /**
          * loop related values
          */
-        typename std::map<size_t, std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > > >::const_iterator itItljg2;
-        typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > >::const_iterator itljg2;
+        typename std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > > >::const_iterator itItljg2;
+        typename std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > >::const_iterator itljg2;
         typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> >::const_iterator itjg2;
         typename std::map<size_t, GroupLoopRev2ColInfo<Base>*>::const_iterator itg;
 
@@ -184,7 +184,7 @@ namespace CppAD {
             }
 
             for (itljg2 = itItljg2->second.begin(); itljg2 != itItljg2->second.end(); ++itljg2) {
-                const LoopAtomicFun<Base>& loop = *itljg2->first;
+                const LoopModel<Base>& loop = *itljg2->first;
                 for (itjg2 = itljg2->second.begin(); itjg2 != itljg2->second.end(); ++itjg2) {
                     const TapeVarType& jTape1 = itjg2->first;
                     for (itg = itjg2->second.begin(); itg != itjg2->second.end(); ++itg) {
@@ -240,9 +240,9 @@ namespace CppAD {
         std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
         std::string argsDclLoop = "unsigned long jrow, " + argsDcl;
 
-        typename std::map<LoopAtomicFun<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
+        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
         for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
-            const LoopAtomicFun<Base>& loop = *itljg->first;
+            const LoopModel<Base>& loop = *itljg->first;
             typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
             for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
                 const TapeVarType& jTape1 = itjg->first;

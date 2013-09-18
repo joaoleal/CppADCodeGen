@@ -40,7 +40,7 @@ namespace CppAD {
         // the independent variables
         std::vector<OperationNode<Base> *> _independentVariables;
         // the current dependent variables
-        std::vector<CG<Base> >* _dependents;
+        vector<CG<Base> >* _dependents;
         // all the source code blocks created with the CG<Base> objects
         std::vector<OperationNode<Base> *> _codeBlocks;
         // the order for the variable creation in the source code
@@ -48,7 +48,7 @@ namespace CppAD {
         // maps the ids of the atomic functions
         std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
         // maps the loop ids of the loop atomic functions
-        std::map<size_t, LoopAtomicFun<Base>*> _loops;
+        std::map<size_t, LoopModel<Base>*> _loops;
         // the used indexes
         std::set<const Index*> _indexes;
         //
@@ -79,6 +79,11 @@ namespace CppAD {
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
         size_t _minTemporaryVarID;
+        /**
+         * whether or not the dependent variables should be zeroed before 
+         * executing the operation graph
+         */
+        bool _zeroDependents;
         //
         bool _verbose;
     public:
@@ -94,6 +99,7 @@ namespace CppAD {
             _loopDepth(-1),
             _lang(NULL),
             _minTemporaryVarID(0),
+            _zeroDependents(false),
             _verbose(false) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
@@ -160,6 +166,26 @@ namespace CppAD {
         }
 
         /**
+         * Determines whether or not the dependent variables will be set to zero
+         * before executing the operation graph
+         * 
+         * @return true if the dependents will be zeroed
+         */
+        inline bool isZeroDependents() const {
+            return _zeroDependents;
+        }
+
+        /**
+         * Defines whether or not the dependent variables should be set to zero
+         * executing the operation graph
+         * 
+         * @param true if the dependents should be zeroed
+         */
+        inline void setZeroDependents(bool zeroDependents) {
+            _zeroDependents = zeroDependents;
+        }
+
+        /**
          * Provides the name used by an atomic function with a given ID.
          * 
          * @param id the atomic function ID.
@@ -193,7 +219,7 @@ namespace CppAD {
          *         registered or NULL otherwise
          */
         inline const std::string* getLoopName(size_t id) const {
-            typename std::map<size_t, LoopAtomicFun<Base>*>::const_iterator it;
+            typename std::map<size_t, LoopModel<Base>*>::const_iterator it;
             it = _loops.find(id);
             if (it != _loops.end())
                 return &(it->second->afun_name());
@@ -235,7 +261,7 @@ namespace CppAD {
          */
         virtual void generateCode(std::ostream& out,
                                   CppAD::Language<Base>& lang,
-                                  std::vector<CG<Base> >& dependent,
+                                  vector<CG<Base> >& dependent,
                                   VariableNameGenerator<Base>& nameGen,
                                   const std::string& jobName = "source") {
             std::vector<std::string> atomicFunctions;
@@ -256,7 +282,7 @@ namespace CppAD {
          */
         virtual void generateCode(std::ostream& out,
                                   CppAD::Language<Base>& lang,
-                                  std::vector<CG<Base> >& dependent,
+                                  vector<CG<Base> >& dependent,
                                   VariableNameGenerator<Base>& nameGen,
                                   std::vector<std::string>& atomicFunctions,
                                   const std::string& jobName = "source") {
@@ -290,30 +316,32 @@ namespace CppAD {
             /**
              * the first variable IDs are for the independent variables
              */
-            for (typename std::vector<OperationNode<Base> *>::iterator it = _independentVariables.begin(); it != _independentVariables.end(); ++it) {
-                (*it)->setVariableID(_idCount++);
+            size_t n = _independentVariables.size();
+            for (size_t j = 0; j < n; j++) {
+                _independentVariables[j]->setVariableID(_idCount++);
             }
 
-            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                if (it->getOperationNode() != NULL && it->getOperationNode()->getVariableID() == 0) {
-                    it->getOperationNode()->setVariableID(_idCount++);
+            size_t m = dependent.size();
+            for (size_t i = 0; i < m; i++) {
+                OperationNode<Base>* node = dependent[i].getOperationNode();
+                if (node != NULL && node->getVariableID() == 0) {
+                    node->setVariableID(_idCount++);
                 }
             }
 
             _minTemporaryVarID = _idCount;
 
             // determine the number of times each variable is used
-            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                CG<Base>& var = *it;
-                if (var.getOperationNode() != NULL) {
-                    OperationNode<Base>& code = *var.getOperationNode();
-                    markCodeBlockUsed(code);
+            for (size_t i = 0; i < m; i++) {
+                OperationNode<Base>* node = dependent[i].getOperationNode();
+                if (node != NULL) {
+                    markCodeBlockUsed(*node);
                 }
             }
 
             // determine the variable creation order
 
-            for (size_t i = 0; i < dependent.size(); i++) {
+            for (size_t i = 0; i < m; i++) {
                 CG<Base>& var = dependent[i];
                 if (var.getOperationNode() != NULL) {
                     OperationNode<Base>& code = *var.getOperationNode();
@@ -366,7 +394,8 @@ namespace CppAD {
                                               atomicFunctionId2Index, atomicFunctionId2Name,
                                               _reuseIDs,
                                               _indexes,
-                                              _loopDependentIndexPatterns, _loopIndependentIndexPatterns);
+                                              _loopDependentIndexPatterns, _loopIndependentIndexPatterns,
+                                              _zeroDependents);
             lang.generateSourceCode(out, info);
 
             _atomicFunctionsSet.clear();
@@ -429,9 +458,9 @@ namespace CppAD {
          *                        Loop management
          **********************************************************************/
 
-        const std::map<size_t, LoopAtomicFun<Base>*>& getLoops() const;
+        const std::map<size_t, LoopModel<Base>*>& getLoops() const;
 
-        LoopAtomicFun<Base>* getLoop(size_t loopId) const;
+        LoopModel<Base>* getLoop(size_t loopId) const;
 
         size_t addLoopDependentIndexPattern(const IndexPattern& jacPattern);
 
@@ -571,7 +600,7 @@ namespace CppAD {
         /***********************************************************************
          *                        Loop management
          **********************************************************************/
-        virtual void registerLoop(LoopAtomicFun<Base>& loop);
+        virtual void registerLoop(LoopModel<Base>& loop);
 
         /***********************************************************************
          * 
@@ -667,22 +696,21 @@ namespace CppAD {
             dependentAdded2EvaluationQueue(arg);
         }
 
-        inline void reduceTemporaryVariables(std::vector<CG<Base> >& dependent) {
+        inline void reduceTemporaryVariables(vector<CG<Base> >& dependent) {
 
             /**
              * determine the last line where each temporary variable is used
              */
             resetUsageCount();
 
-            for (typename std::vector<CG<Base> >::iterator it = dependent.begin(); it != dependent.end(); ++it) {
-                CG<Base>& var = *it;
-                if (var.getOperationNode() != NULL) {
-                    OperationNode<Base>& code = *var.getOperationNode();
-                    if (code.use_count_ == 0) {
+            for (size_t i = 0; i < dependent.size(); i++) {
+                OperationNode<Base>* node = dependent[i].getOperationNode();
+                if (node != NULL) {
+                    if (node->use_count_ == 0) {
                         // dependencies not visited yet
-                        determineLastTempVarUsage(code);
+                        determineLastTempVarUsage(*node);
                     }
-                    code.increaseUsageCount();
+                    node->increaseUsageCount();
                 }
             }
 
@@ -958,7 +986,8 @@ namespace CppAD {
                 typename std::set<OperationNode<Base>*>::const_iterator it;
                 for (it = outerLoopUsages.begin(); it != outerLoopUsages.end(); ++it) {
                     OperationNode<Base>* outerVar = *it;
-                    outerVar->setLastUsageEvaluationOrder(code.getEvaluationOrder());
+                    if (outerVar->getLastUsageEvaluationOrder() < code.getEvaluationOrder())
+                        outerVar->setLastUsageEvaluationOrder(code.getEvaluationOrder());
                 }
 
                 _loopDepth--;
@@ -1058,10 +1087,10 @@ namespace CppAD {
         friend class CG<Base>;
         friend class CGAbstractAtomicFun<Base>;
         friend class BaseAbstractAtomicFun<Base>;
-        friend class LoopAtomicFun<Base>;
+        friend class LoopModel<Base>;
 
     };
 
 }
-#endif
 
+#endif

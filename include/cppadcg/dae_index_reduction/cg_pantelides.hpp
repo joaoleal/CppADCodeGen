@@ -848,10 +848,10 @@ namespace CppAD {
 
             CodeHandler<Base> handler;
 
-            std::vector<CGBase> indep0(fun->Domain());
+            vector<CGBase> indep0(fun->Domain());
             handler.makeVariables(indep0);
 
-            std::vector<CGBase> dep0 = fun->Forward(0, indep0);
+            vector<CGBase> dep0 = fun->Forward(0, indep0);
 
             CLanguage<double> langC("double");
 

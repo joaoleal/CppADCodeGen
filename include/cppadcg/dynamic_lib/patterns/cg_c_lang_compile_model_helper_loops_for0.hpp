@@ -22,58 +22,93 @@ namespace CppAD {
      **************************************************************************/
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
-                                                                 std::vector<CGBase>& y) {
+    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
+                                                                              const vector<CGBase>& x) {
         using namespace std;
         using CppAD::vector;
 
-        std::vector<IndexedDependentLoopInfo<Base> > garbageCollection(y.size()); ////////// <- rethink this!!!!!!!
-        garbageCollection.resize(y.size());
+        vector<CGBase> y(_fun.Range());
 
-        map<LoopAtomicFun<Base>*, vector<IndexedDependentLoopInfo<Base>* > > dependentIndexes;
-        // loop -> loop atomic evaluation -> results
-        map<LoopAtomicFun<Base>*, map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> > > evaluations1it;
+        // temporaries
+        vector<CGBase> tmps;
 
-        for (size_t i = 0; i < y.size(); i++) {
-            OperationNode<Base>* node = y[i].getOperationNode();
-            if (node == NULL || node->getOperationType() != CGLoopAtomicResultOp) {
-                continue;
+        /**
+         * original equations outside the loops 
+         */
+        if (_funNoLoops != NULL) {
+            const std::vector<size_t>& origEq = _funNoLoops->getOrigDependentIndexes();
+
+            vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
+
+            // original equations
+            for (size_t e = 0; e < origEq.size(); e++) {
+                y[origEq[e]] = depNL[e];
             }
 
-            OperationNode<Base>* loopEvalNode = node->getArguments()[0].getOperation();
-            assert(loopEvalNode->getOperationType() == CGLoopForwardOp);
-
-            LoopForwardOperationNode<Base>* loopForNode = static_cast<LoopForwardOperationNode<Base>*> (loopEvalNode);
-            assert(loopForNode->getOrder() == 0);
-
-            LoopAtomicFun<Base>* loop = &loopForNode->getLoopAtomicFun();
-
-            const LoopPosition& depPos = loop->getTapeDependentIndex(i);
-            size_t mTape = loop->getTapeDependentCount();
-            size_t iteration = depPos.atomic / mTape;
-
-            if (iteration == 0) {
-                vector<OperationNode<Base>*>& allLoopEvalResults = evaluations1it[loop][loopForNode];
-                allLoopEvalResults.resize(loop->getTapeDependentCount());
-                allLoopEvalResults[depPos.tape] = node;
-            }
-
-            vector<IndexedDependentLoopInfo<Base>* >& depInfo = dependentIndexes[loop];
-            depInfo.resize(mTape);
-            IndexedDependentLoopInfo<Base>* origEl = depInfo[depPos.tape];
-            if (origEl == NULL) {
-                garbageCollection.resize(garbageCollection.size() + 1);
-                origEl = &garbageCollection.back();
-                depInfo[depPos.tape] = origEl;
-            }
-            origEl->indexes.resize(loop->getIterationCount());
-            origEl->origVals.resize(loop->getIterationCount());
-            origEl->indexes[iteration] = i;
-            origEl->origVals[iteration] = y[i];
-            origEl->pattern = loop->getDependentIndexPatterns()[depPos.tape];
+            tmps.resize(depNL.size() - origEq.size());
+            for (size_t i = origEq.size(); i < depNL.size(); i++)
+                tmps[i - origEq.size()] = depNL[i];
         }
 
-        prepareLoops(handler, y, evaluations1it, dependentIndexes);
+        /**
+         * equations in loops
+         */
+        typename std::set<LoopModel<Base>* >::const_iterator itl;
+        size_t l = 0;
+        for (itl = _loopTapes.begin(); itl != _loopTapes.end(); ++itl, l++) {
+            LoopModel<Base>& lModel = **itl;
+            size_t iterations = lModel.getIterationCount();
+            const std::vector<std::vector<LoopPosition> >& dependents = lModel.getDependentIndexes();
+
+            /**
+             * make the loop start
+             */
+            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(lModel);
+            handler.manageOperationNodeMemory(loopStart);
+
+            IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX, *loopStart);
+            handler.manageOperationNodeMemory(iterationIndexOp);
+            std::set<IndexOperationNode<Base>*> indexesOps;
+            indexesOps.insert(iterationIndexOp);
+
+            /**
+             * evaluate the loop body
+             */
+            vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
+            vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+
+            vector<CGBase> yl = lModel.getTape().Forward(0, xl);
+
+            /**
+             * make the loop end
+             */
+            const vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
+            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
+            for (size_t i = 0; i < yl.size(); i++) {
+                indexedLoopResults[i] = std::make_pair(yl[i], depPatterns[i]);
+            }
+            size_t assignOrAdd = 0;
+            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+
+            std::vector<size_t> info(1);
+            std::vector<Argument<Base> > args(1);
+            for (size_t i = 0; i < dependents.size(); i++) {
+                for (size_t it = 0; it < iterations; it++) {
+                    // an additional alias variable is required so that each dependent variable can have its own ID
+                    size_t e = dependents[i][it].original;
+                    info[0] = e;
+                    args[0] = Argument<Base>(*loopEnd);
+                    y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, info, args));
+                }
+            }
+
+            /**
+             * move no-nindexed expressions outside loop
+             */
+            moveNonIndexedOutsideLoop(*loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+        }
+
+        return y;
     }
 
 }

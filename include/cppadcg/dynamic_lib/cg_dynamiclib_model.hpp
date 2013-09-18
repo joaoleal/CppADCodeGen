@@ -90,6 +90,10 @@ namespace CppAD {
          */
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
 
+        /***********************************************************************
+         *                        Forward zero
+         **********************************************************************/
+
         /**
          * Evaluates the dependent model variables (zero-order).
          * This method considers that the dynamic library was compiled
@@ -143,7 +147,9 @@ namespace CppAD {
         virtual void ForwardZero(const std::vector<const Base*> &x,
                                  Base* dep, size_t dep_size) = 0;
 
-        /// calculate dense Jacobian
+        /***********************************************************************
+         *                        Dense Jacobian
+         **********************************************************************/
 
         template<typename VectorBase>
         inline VectorBase Jacobian(const VectorBase& x) {
@@ -161,8 +167,9 @@ namespace CppAD {
         virtual void Jacobian(const Base* x, size_t x_size,
                               Base* jac, size_t jac_size) = 0;
 
-        /// calculate Hessian for one component of f
-
+        /***********************************************************************
+         *                        Dense Hessian
+         **********************************************************************/
         template<typename VectorBase>
         inline VectorBase Hessian(const VectorBase& x,
                                   const VectorBase& w) {
@@ -170,6 +177,8 @@ namespace CppAD {
             this->Hessian(x, w, hess);
             return hess;
         }
+
+        /// calculate Hessian for one component of f
 
         template<typename VectorBase>
         inline VectorBase Hessian(const VectorBase& x,
@@ -194,6 +203,10 @@ namespace CppAD {
                              const Base* w, size_t w_size,
                              Base* hess) = 0;
 
+        /***********************************************************************
+         *                        Forward one
+         **********************************************************************/
+
         /**
          * Computes results during a forward mode sweep. 
          * Computes the first-order Taylor coefficients for dependent variables
@@ -210,7 +223,7 @@ namespace CppAD {
             size_t m = Range();
             const size_t k = 1;
             VectorBase ty((k + 1) * m);
-            
+
             this->ForwardOne(tx, ty);
 
             VectorBase dy(m);
@@ -253,6 +266,10 @@ namespace CppAD {
          */
         virtual void ForwardOne(const Base tx[], size_t tx_size,
                                 Base ty[], size_t ty_size) = 0;
+
+        /***********************************************************************
+         *                        Reverse one
+         **********************************************************************/
 
         /**
          * Computes results during a reverse mode sweep for the evaluation of
@@ -312,6 +329,10 @@ namespace CppAD {
                                 const Base ty[], size_t ty_size,
                                 Base px[], size_t px_size,
                                 const Base py[], size_t py_size) = 0;
+
+        /***********************************************************************
+         *                        Reverse two
+         **********************************************************************/
 
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
@@ -378,8 +399,19 @@ namespace CppAD {
                                 Base px[], size_t px_size,
                                 const Base py[], size_t py_size) = 0;
 
-        /// calculate sparse Jacobians 
+        /***********************************************************************
+         *                        Sparse Jacobians
+         **********************************************************************/
 
+        /**
+         * Calculates a Jacobian using sparse methods and saves it into a dense
+         * format:
+         *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+         * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
+         * 
+         * @param x independent variable vector
+         * @return a dense jacobian
+         */
         template<typename VectorBase>
         inline VectorBase SparseJacobian(const VectorBase& x) {
             VectorBase jac(Range() * Domain());
@@ -387,6 +419,15 @@ namespace CppAD {
             return jac;
         }
 
+        /**
+         * Calculates a Jacobian using sparse methods and saves it into a dense
+         * format:
+         *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+         * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
+         * 
+         * @param x independent variable vector
+         * @param jac a vector where the dense jacobian will be placed
+         */
         template<typename VectorBase>
         inline void SparseJacobian(const VectorBase& x,
                                    VectorBase& jac) {
@@ -394,6 +435,17 @@ namespace CppAD {
             SparseJacobian(&x[0], x.size(), &jac[0], jac.size());
         }
 
+        /**
+         * Calculates a Jacobian using sparse methods and saves it into a dense
+         * format:
+         *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+         * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
+         * 
+         * @param x independent variable array (must have n elements)
+         * @param x_size the size of the array (for verification purposes only)
+         * @param jac an array where the dense jacobian will be placed (must be allocated with at least m * n elements)
+         * @param jac_size the jacobian array size (for verification purposes only)
+         */
         virtual void SparseJacobian(const Base* x, size_t x_size,
                                     Base* jac, size_t jac_size) = 0;
 
@@ -426,8 +478,9 @@ namespace CppAD {
                                     size_t const** col,
                                     size_t nnz) = 0;
 
-        /// calculate sparse Hessians 
-
+        /***********************************************************************
+         *                        Sparse Hessians
+         **********************************************************************/
         template<typename VectorBase>
         inline VectorBase SparseHessian(const VectorBase& x,
                                         const VectorBase& w) {

@@ -78,8 +78,8 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     size_t n = 2;
     size_t mExtra = 0; // equations not in loops
 
-    bool jacobian = false;
-    bool hessian = false;
+    bool jacobian = true;
+    bool hessian = true;
 
     testPatternDetection(model1, m, n, 6);
 
@@ -113,8 +113,8 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
     size_t n = 2;
     size_t mExtra = 0; // equations not in loops
 
-    bool jacobian = false;
-    bool hessian = false;
+    bool jacobian = true;
+    bool hessian = true;
 
     testPatternDetection(modelCommonTmp, m, n, 6);
 
@@ -151,7 +151,7 @@ TEST_F(CppADCGPatternTest, CommonTmp2) {
     size_t mExtra = 0; // equations not in loops
 
     bool jacobian = true;
-    bool hessian = false;
+    bool hessian = true;
 
     testPatternDetection(modelCommonTmp2, m, n, 6);
 
@@ -190,7 +190,7 @@ TEST_F(CppADCGPatternTest, CommonTmp3) {
     size_t mExtra = 0; // equations not in loops
 
     bool jacobian = true;
-    bool hessian = false;
+    bool hessian = true;
 
     testPatternDetection(modelCommonTmp3, m, n, 6);
 
@@ -297,7 +297,7 @@ TEST_F(CppADCGPatternTest, Matcher4Eq) {
     size_t mExtra = 0; // equations not in loops
 
     bool jacobian = true;
-    bool hessian = false;
+    bool hessian = true;
 
     testPatternDetection(model4Eq, m, n, 6);
 
@@ -331,8 +331,8 @@ TEST_F(CppADCGPatternTest, IndexedTmp) {
     size_t n = 2;
     size_t mExtra = 0; // equations not in loops
 
-    bool jacobian = false;
-    bool hessian = false;
+    bool jacobian = true;
+    bool hessian = true;
 
     testPatternDetection(model4, m, n, 6);
 
@@ -371,8 +371,8 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
     size_t n = 2;
     size_t mExtra = 0; // equations not in loops
 
-    bool jacobian = false;
-    bool hessian = false;
+    bool jacobian = true;
+    bool hessian = true;
 
     testPatternDetection(model5, m, n, 6, 2);
 
