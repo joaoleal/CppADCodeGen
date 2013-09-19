@@ -672,15 +672,9 @@ namespace CppAD {
         virtual bool createsNewVariable(const OperationNode<Base>& var) const {
             CGOpCode op = var.getOperationType();
             if (var.getTotalUsageCount() > 1) {
-                if (op == CGLoopAtomicResultOp) {
-                    const OperationNode<Base>* opArg = var.getArguments()[0].getOperation();
-                    return opArg != NULL && opArg->getOperationType() != CGLoopIndexedIndepOp
-                            && opArg->getOperationType() != CGInvOp;
-                } else {
-                    return op != CGArrayElementOp && op != CGIndexOp;
-                }
+                return op != CGArrayElementOp && op != CGIndexOp;
             } else {
-                return op == CGArrayCreationOp ||
+                return (op == CGArrayCreationOp ||
                         op == CGAtomicForwardOp ||
                         op == CGAtomicReverseOp ||
                         op == CGComOpLt ||
@@ -690,7 +684,12 @@ namespace CppAD {
                         op == CGComOpGt ||
                         op == CGComOpNe ||
                         op == CGLoopIndexedDepOp ||
-                        op == CGIndexAssignOp;
+                        op == CGIndexAssignOp ||
+                        op == CGStartIfOp ||
+                        op == CGElseIfOp ||
+                        op == CGElseOp ||
+                        op == CGEndIfOp) &&
+                        op != CGCondResultOp;
             }
         }
 
@@ -702,7 +701,12 @@ namespace CppAD {
                     op != CGLoopStartOp &&
                     op != CGLoopEndOp &&
                     op != CGIndexOp &&
-                    op != CGIndexAssignOp);
+                    op != CGIndexAssignOp &&
+                    op != CGStartIfOp &&
+                    op != CGElseIfOp &&
+                    op != CGElseOp &&
+                    op != CGEndIfOp &&
+                    op != CGCondResultOp);
         }
 
         /**
@@ -720,11 +724,16 @@ namespace CppAD {
                     op == CGAtomicReverseOp ||
                     op == CGLoopStartOp ||
                     op == CGLoopEndOp ||
-                    op == CGIndexAssignOp;
+                    op == CGIndexAssignOp ||
+                    op == CGStartIfOp ||
+                    op == CGElseIfOp ||
+                    op == CGElseOp ||
+                    op == CGEndIfOp ||
+                    op == CGCondResultOp;
         }
 
         virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const {
-            return op == CGSignOp;
+            return op == CGSignOp || op == CGCondResultOp;
         }
 
         inline const std::string& createVariableName(OperationNode<Base>& var) {
@@ -876,9 +885,6 @@ namespace CppAD {
                     printIndexAssign(node);
                     break;
 
-                case CGLoopAtomicResultOp:
-                    printOperationAlias(node); // just follow the argument
-                    break;
                 case CGLoopStartOp:
                     printLoopStart(node);
                     break;
@@ -890,6 +896,24 @@ namespace CppAD {
                     break;
                 case CGLoopEndOp:
                     printLoopEnd(node);
+                    break;
+                case CGIndexCondExprOp:
+                    printIndexCondExprOp(node);
+                    break;
+                case CGStartIfOp:
+                    printStartIf(node);
+                    break;
+                case CGElseIfOp:
+                    printElseIf(node);
+                    break;
+                case CGElseOp:
+                    printElse(node);
+                    break;
+                case CGEndIfOp:
+                    printEndIf(node);
+                    break;
+                case CGCondResultOp:
+                    printCondResult(node);
                     break;
                 default:
                     std::stringstream ss;
@@ -1316,14 +1340,16 @@ namespace CppAD {
                     << jj << " = 0; "
                     << jj << " < " << iterationCount << "; "
                     << jj << "++) {\n";
-            _indentation = _spaces + _spaces;
+            _indentation += _spaces;
         }
 
         virtual void printLoopEnd(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopEndOp, "Invalid node type");
 
-            _code << _spaces << "}\n";
-            _indentation = _spaces;
+            _indentation.resize(_indentation.size() - _spaces.size());
+
+            _code << _indentation << "}\n";
+
             _currentLoops.pop_back();
         }
 
@@ -1355,6 +1381,101 @@ namespace CppAD {
             const IndexPattern& ip = inode.getIndexPattern();
             _code << _indentation << inode.getIndex().getName()
                     << " = " << createIndexPattern(ip) << ";\n";
+        }
+
+        virtual void printIndexCondExprOp(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGIndexCondExprOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of argumets for an index condition expression operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an index condition expression operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argumet for an index condition expression operation");
+            CPPADCG_ASSERT_KNOWN(node.getInfo().size() > 1 && node.getInfo().size() % 2 == 0, "Invalid number of information elements for an index condition expression operation");
+
+            const std::vector<size_t>& info = node.getInfo();
+
+            IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
+            const std::string& index = iterationIndexOp.getIndex().getName();
+
+            size_t infoSize = info.size();
+            for (size_t e = 0; e < infoSize; e += 2) {
+                if (e > 0) {
+                    _code << " || ";
+                }
+                size_t min = info[e];
+                size_t max = info[e + 1];
+                if (min == max) {
+                    _code << index << " == " << min;
+                } else if (min == 0) {
+                    _code << index << " <= " << max;
+                } else if (max == std::numeric_limits<size_t>::max()) {
+                    _code << min << " <= " << index;
+                } else {
+                    if (infoSize != 2)
+                        _code << "(";
+                    _code << min << " <= " << index << " && " << index << " <= " << max;
+                    if (infoSize != 2)
+                        _code << ")";
+                }
+            }
+        }
+
+        virtual void printStartIf(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGStartIfOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of argumets for an if start operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an if start operation");
+
+            _code << _indentation << "if(";
+            printIndexCondExprOp(*node.getArguments()[0].getOperation());
+            _code << ") {\n";
+
+            _indentation += _spaces;
+        }
+
+        virtual void printElseIf(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseIfOp, "Invalid node type");
+
+            _indentation.resize(_indentation.size() - _spaces.size());
+
+            _code << _indentation << "} else if(";
+            printIndexCondExprOp(*node.getArguments()[0].getOperation());
+            _code << ") {\n";
+
+            _indentation += _spaces;
+        }
+
+        virtual void printElse(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseOp, "Invalid node type");
+
+            _indentation.resize(_indentation.size() - _spaces.size());
+
+            _code << _indentation << "} else {\n";
+
+            _indentation += _spaces;
+        }
+
+        virtual void printEndIf(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGEndIfOp, "Invalid node type");
+
+            _indentation.resize(_indentation.size() - _spaces.size());
+
+            _code << _indentation << "}\n";
+        }
+
+        virtual void printCondResult(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGCondResultOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of argumets for an assigment inside an if/else operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an an assigment inside an if/else operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != 0, "Invalid argumet for an an assigment inside an if/else operation");
+
+            // just follow the argument
+            OperationNode<Base>& op = *node.getArguments()[1].getOperation();
+            bool createsVar = directlyAssignsVariable(op); // do we need to do the assigment here?
+            if (!createsVar) {
+                printAssigmentStart(op);
+            }
+            printExpressionNoVarCheck(op);
+            if (!createsVar) {
+                printAssigmentEnd(op);
+            }
         }
 
         inline bool isDependent(const OperationNode<Base>& arg) const {

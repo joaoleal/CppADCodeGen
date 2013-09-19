@@ -618,10 +618,23 @@ namespace CppAD {
                         // dependencies not visited yet
                         checkVariableCreation(arg);
 
-                        /**
-                         * Save atomic function related information
-                         */
-                        if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
+                        CGOpCode type = arg.getOperationType();
+                        if (type == CGLoopEndOp || type == CGElseIfOp || type == CGElseOp || type == CGEndIfOp) {
+                            /**
+                             * Some types of operations must be added immediatelly 
+                             * after its arguments
+                             * in order to avoid having other arguments inside
+                             * that stack frame (or scope)
+                             */
+                            if (arg.getVariableID() == 0) {
+                                addToEvaluationQueue(arg);
+                                // ID value is not really used but must be non-zero
+                                arg.setVariableID(std::numeric_limits<size_t>::max());
+                            }
+                        } else if (type == CGAtomicForwardOp || type == CGAtomicReverseOp) {
+                            /**
+                             * Save atomic function related information
+                             */
                             assert(arg.getArguments().size() > 1);
                             assert(arg.getInfo().size() > 1);
                             size_t id = arg.getInfo()[0];
@@ -631,7 +644,6 @@ namespace CppAD {
                                 _atomicFunctionsOrder->push_back(atomicName);
                             }
                         }
-
                     }
                 }
             }
@@ -639,32 +651,38 @@ namespace CppAD {
             for (it = args.begin(); it != args.end(); ++it) {
                 if (it->getOperation() != NULL) {
                     OperationNode<Base>& arg = *it->getOperation();
-                    // make sure new temporary variables are NOT created for
-                    // the independent variables and that a dependency did
-                    // not use it first
+                    CGOpCode aType = arg.getOperationType();
+                    /**
+                     * make sure new temporary variables are NOT created for
+                     * the independent variables and that a dependency did
+                     * not use it first
+                     */
                     if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
-                        if (arg.getOperationType() == CGLoopIndexedIndepOp) {
+                        if (aType == CGLoopIndexedIndepOp) {
                             // ID value not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
+                        } else if (aType == CGLoopEndOp || aType == CGElseIfOp ||
+                                aType == CGElseOp || aType == CGEndIfOp) {
+                            continue; // already added
                         } else {
                             size_t argIndex = it - args.begin();
-                            if (arg.getOperationType() == CGLoopStartOp || arg.getOperationType() == CGLoopEndOp) {
+                            if (aType == CGLoopStartOp) {
                                 if (arg.getVariableID() == 0) {
                                     addToEvaluationQueue(arg);
-                                    // ID value not really used but must be non-zero
+                                    // ID value is not really used but must be non-zero
                                     arg.setVariableID(std::numeric_limits<size_t>::max());
                                 }
                             } else if (_lang->createsNewVariable(arg) ||
                                     _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
                                 addToEvaluationQueue(arg);
                                 if (arg.getVariableID() == 0) {
-                                    if (arg.getOperationType() == CGAtomicForwardOp || arg.getOperationType() == CGAtomicReverseOp) {
+                                    if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
                                         arg.setVariableID(_idAtomicCount);
                                         _idAtomicCount++;
-                                    } else if (arg.getOperationType() == CGLoopIndexedDepOp) {
+                                    } else if (aType == CGLoopIndexedDepOp) {
                                         // ID value not really used but must be non-zero
                                         arg.setVariableID(std::numeric_limits<size_t>::max());
-                                    } else if (arg.getOperationType() == CGArrayCreationOp) {
+                                    } else if (aType == CGArrayCreationOp) {
                                         // a temporary array
                                         size_t arraySize = arg.getArguments().size();
                                         arg.setVariableID(_idArrayCount);

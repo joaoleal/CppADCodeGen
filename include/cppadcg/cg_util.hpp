@@ -748,6 +748,14 @@ namespace CppAD {
      * 
      */
     template<class Key, class Value>
+    void mapKeys(const std::map<Key, Value>& map, std::set<Key>& keys) {
+        typename std::map<Key, Value>::const_iterator it;
+        for (it = map.begin(); it != map.end(); ++it) {
+            keys.insert(keys.end(), it->first);
+        }
+    }
+
+    template<class Key, class Value>
     void mapKeys(const std::map<Key, Value>& map, std::vector<Key>& keys) {
         keys.resize(map.size());
 

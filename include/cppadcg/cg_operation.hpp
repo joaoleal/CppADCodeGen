@@ -59,11 +59,16 @@ namespace CppAD {
         CGDependentRefOp, // operation referencing a dependent variable (right hand side only)
         CGIndexOp, // an integer index
         CGIndexAssignOp, // assigment of an integer index to an index pattern expression
-        CGLoopAtomicResultOp, // output from a loop atomic function evaluation //////////////////////is it needed
         CGLoopStartOp, // for() {}
         CGLoopIndexedIndepOp, // indexed independent used by a loop
         CGLoopIndexedDepOp, // indexed output from a loop
-        CGLoopEndOp // endfor
+        CGLoopEndOp, // endfor
+        CGIndexCondExprOp, // a condition expression return a boolean
+        CGStartIfOp, // the start of an if statement
+        CGElseIfOp, // else if()
+        CGElseOp, // else
+        CGEndIfOp, // end of if
+        CGCondResultOp // assigment inside an if branch
     };
 
     inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
@@ -168,9 +173,6 @@ namespace CppAD {
             case CGIndexAssignOp:
                 os << "index = expression()";
                 break;
-            case CGLoopAtomicResultOp:
-                os << " dep <- loop";
-                break;
             case CGLoopStartOp:
                 os << "for";
                 break;
@@ -182,6 +184,24 @@ namespace CppAD {
                 break;
             case CGLoopEndOp:
                 os << "endfor";
+                break;
+            case CGIndexCondExprOp:
+                os << "";
+                break;
+            case CGStartIfOp:
+                os << "if()";
+                break;
+            case CGElseIfOp:
+                os << "else if()";
+                break;
+            case CGElseOp:
+                os << "else";
+                break;
+            case CGEndIfOp:
+                os << "endif";
+                break;
+            case CGCondResultOp:
+                os << "ifResult =";
                 break;
             default:
                 os << "\?\?\?\?()";

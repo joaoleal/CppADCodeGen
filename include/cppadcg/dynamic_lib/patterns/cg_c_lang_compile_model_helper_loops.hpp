@@ -130,22 +130,30 @@ namespace CppAD {
         std::vector<size_t> info(2);
 
         size_t dep_size = indexedLoopResults.size();
+        endArgs.reserve(dep_size);
+
         for (size_t i = 0; i < dep_size; i++) {
             const std::pair<CG<Base>, IndexPattern*>& depInfo = indexedLoopResults[i];
-            indexedArgs.resize(1);
+            if (depInfo.second != NULL) {
+                indexedArgs.resize(1);
 
-            indexedArgs[0] = asArgument(depInfo.first); // indexed expression
-            typename std::set<IndexOperationNode<Base>*>::const_iterator itIndexOp;
-            for (itIndexOp = indexesOps.begin(); itIndexOp != indexesOps.end(); ++itIndexOp) {
-                indexedArgs.push_back(Argument<Base>(**itIndexOp)); // dependency on the index
+                indexedArgs[0] = asArgument(depInfo.first); // indexed expression
+                typename std::set<IndexOperationNode<Base>*>::const_iterator itIndexOp;
+                for (itIndexOp = indexesOps.begin(); itIndexOp != indexesOps.end(); ++itIndexOp) {
+                    indexedArgs.push_back(Argument<Base>(**itIndexOp)); // dependency on the index
+                }
+
+                info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
+                info[1] = assignOrAdd;
+
+                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
+                handler.manageOperationNodeMemory(yIndexed);
+                endArgs.push_back(Argument<Base>(*yIndexed));
+            } else {
+                OperationNode<Base>* n = depInfo.first.getOperationNode();
+                assert(n != NULL);
+                endArgs.push_back(Argument<Base>(*n));
             }
-
-            info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
-            info[1] = assignOrAdd;
-
-            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
-            handler.manageOperationNodeMemory(yIndexed);
-            endArgs.push_back(Argument<Base>(*yIndexed));
         }
 
         LoopEndOperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopInfo, loopStart, endArgs);
