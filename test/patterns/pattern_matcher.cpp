@@ -123,7 +123,7 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
 
 /**
  * @test Some variables not indexed -> 2 constant temporaries (defined outside
- *       loop) independents used in temporaries are not the same as the ones in
+ *       loop) independents used by temporaries are not the same as the ones in
  *       the equation inside the loop
  */
 std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {

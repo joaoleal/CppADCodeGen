@@ -473,25 +473,25 @@ namespace CppAD {
                         saveLocalFunction(localFuncNames, localFuncNames.empty() && info.zeroDependents);
                     }
 
-                    OperationNode<Base>& op = **it;
+                    OperationNode<Base>& node = **it;
 
                     // a dependent variable assigned by a loop does require any source code (its done inside the loop)
-                    if (op.getOperationType() == CGDependentRefOp) {
+                    if (node.getOperationType() == CGDependentRefRhsOp) {
                         continue; // nothing to do (this operation is right hand side only)
                     }
 
-                    bool createsVar = directlyAssignsVariable(op); // do we need to do the assigment here?
+                    bool createsVar = directlyAssignsVariable(node); // do we need to do the assigment here?
                     if (!createsVar) {
-                        printAssigmentStart(op);
+                        printAssigmentStart(node);
                     }
-                    printExpressionNoVarCheck(op);
+                    printExpressionNoVarCheck(node);
                     if (!createsVar) {
-                        printAssigmentEnd(op);
+                        printAssigmentEnd(node);
                     }
 
-                    if (op.getOperationType() == CGArrayElementOp) {
-                        size_t arrayId = op.getArguments()[0].getOperation()->getVariableID();
-                        size_t pos = op.getInfo()[0];
+                    if (node.getOperationType() == CGArrayElementOp) {
+                        size_t arrayId = node.getArguments()[0].getOperation()->getVariableID();
+                        size_t pos = node.getInfo()[0];
                         _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
                     }
 

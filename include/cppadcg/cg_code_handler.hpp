@@ -580,7 +580,7 @@ namespace CppAD {
                     if (inode.getArguments().size() > 0) {
                         _indexes.insert(&inode.getIndex());
                     }
-                } else if (code.getOperationType() == CGDependentRefOp) {
+                } else if (code.getOperationType() == CGDependentRefRhsOp) {
                     assert(code.getInfo().size() == 1);
                     size_t depIndex = code.getInfo()[0];
 

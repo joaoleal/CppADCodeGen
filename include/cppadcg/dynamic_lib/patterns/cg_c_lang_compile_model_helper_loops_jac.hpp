@@ -475,7 +475,7 @@ namespace CppAD {
                 size_t e = *itE;
                 info[0] = e;
                 args[0] = Argument<Base>(*loopEnd);
-                jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, info, args));
+                jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
             }
 
             /**

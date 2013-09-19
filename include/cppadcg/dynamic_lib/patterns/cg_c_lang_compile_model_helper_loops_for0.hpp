@@ -98,7 +98,7 @@ namespace CppAD {
                     size_t e = dependents[i][it].original;
                     info[0] = e;
                     args[0] = Argument<Base>(*loopEnd);
-                    y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, info, args));
+                    y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
                 }
             }
 

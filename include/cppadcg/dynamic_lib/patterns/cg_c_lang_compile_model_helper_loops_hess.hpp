@@ -891,13 +891,22 @@ namespace CppAD {
                 size_t e = *itE;
                 ninfo[0] = e;
                 args[0] = Argument<Base>(*loopEnd);
-                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentRefOp, ninfo, args));
+                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, ninfo, args));
             }
 
             /**
              * move no-nindexed expressions outside loop
              */
             moveNonIndexedOutsideLoop(*info.loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+        }
+
+        /**
+         * duplicates (TODO)
+         */
+        // make use of the symmetry of the Hessian in order to reduce operations
+        std::map<size_t, size_t>::const_iterator it2;
+        for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
+            hess[it2->first] = handler.createCG(new OperationNode<Base> (CGAliasOp, asArgument(hess[it2->second])));
         }
 
         return hess;
