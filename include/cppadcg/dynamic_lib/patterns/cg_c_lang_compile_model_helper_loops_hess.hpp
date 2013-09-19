@@ -19,6 +19,8 @@ namespace CppAD {
 
     namespace loops {
 
+        typedef std::pair<size_t, size_t> SizeN1stIt;
+
         class HessianElement {
         public:
             size_t location; // location in the compressed hessian vector
@@ -55,7 +57,7 @@ namespace CppAD {
 
         template<class Base>
         IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
-                                             const std::map<size_t, std::pair<size_t, std::set<size_t> > >& first2Iterations);
+                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations);
     }
 
     /***************************************************************************
@@ -913,7 +915,7 @@ namespace CppAD {
         template <class Base>
         class IfElseInfo {
         public:
-            std::map<size_t, IfBranchInfo<Base> > firstIt2Branch;
+            std::map<SizeN1stIt, IfBranchInfo<Base> > firstIt2Branch;
             OperationNode<Base>* endIf;
 
             inline IfElseInfo() :
@@ -1029,11 +1031,12 @@ namespace CppAD {
                 map<size_t, map<size_t, size_t> >::const_iterator countIt;
 
                 // try to find an existing if-else where these operations can be added
-                map<size_t, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
+                map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
                 for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
                     set<size_t> iterations;
                     mapKeys(countIt->second, iterations);
-                    firstIt2Count2Iterations[*iterations.begin()] = make_pair(countIt->first, iterations);
+                    SizeN1stIt pos(iterations.size(), *iterations.begin());
+                    firstIt2Count2Iterations[pos] = make_pair(countIt->first, iterations);
                 }
 
                 IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
@@ -1045,17 +1048,19 @@ namespace CppAD {
                 }
 
                 //
-                map<size_t, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
+                map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
                 for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
-                    size_t firstIt = it1st2Count2Iters->first;
+                    size_t firstIt = it1st2Count2Iters->first.second;
                     size_t count = it1st2Count2Iters->second.first;
                     const set<size_t>& iterations = it1st2Count2Iters->second.second;
 
                     size_t iterCount = iterations.size();
 
+                    SizeN1stIt pos(iterCount, firstIt);
+
                     if (reusingIfElse) {
                         //reuse existing node
-                        ifBranch = ifElseBranches->firstIt2Branch.at(firstIt).node;
+                        ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
                         ifBranch->getArguments().insert(ifBranch->getArguments().end(),
                                                         nextBranchArgs.begin(), nextBranchArgs.end());
 
@@ -1096,7 +1101,7 @@ namespace CppAD {
                     nextBranchArgs.push_back(Argument<Base>(*ifAssign));
 
                     if (!reusingIfElse) {
-                        IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[iterCount]; // creates a new if branch
+                        IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
                         branch.iterations = iterations;
                         branch.node = ifBranch;
                     }
@@ -1187,7 +1192,7 @@ namespace CppAD {
 
         template<class Base>
         IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
-                                             const std::map<size_t, std::pair<size_t, std::set<size_t> > >& first2Iterations) {
+                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations) {
             using namespace std;
 
             // try to find an existing if-else where these operations can be added
@@ -1198,8 +1203,8 @@ namespace CppAD {
                     continue;
 
                 bool matches = true;
-                map<size_t, pair<size_t, set<size_t> > >::const_iterator itLoc = first2Iterations.begin();
-                typename map<size_t, IfBranchInfo<Base> >::const_iterator itBranches = ifElse.firstIt2Branch.begin();
+                map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator itLoc = first2Iterations.begin();
+                typename map<SizeN1stIt, IfBranchInfo<Base> >::const_iterator itBranches = ifElse.firstIt2Branch.begin();
                 for (; itLoc != first2Iterations.end(); ++itLoc, ++itBranches) {
                     if (itLoc->second.second != itBranches->second.iterations) {
                         matches = false;
