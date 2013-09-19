@@ -745,7 +745,7 @@ namespace CppAD {
     };
 
     /**
-     * 
+     * map related
      */
     template<class Key, class Value>
     void mapKeys(const std::map<Key, Value>& map, std::set<Key>& keys) {
@@ -766,6 +766,27 @@ namespace CppAD {
         }
     }
 
+    /**
+     * Checks if a map has only a set of keys.
+     * 
+     * @param map The map 
+     * @param keys The keys
+     * @return true if all the keys and only these keys where found in the map
+     */
+    template<class Key, class Value>
+    bool compareMapKeys(const std::map<Key, Value>& map, const std::set<Key>& keys) {
+        if (map.size() != keys.size())
+            return false;
+
+        typename std::map<Key, Value>::const_iterator itm = map.begin();
+        typename std::set<Key>::const_iterator itk = keys.begin();
+        for (; itm != map.end(); ++itm, ++itk) {
+            if(itm->first != *itk)
+                return false;
+        }
+        
+        return true;
+    }
 }
 
 #endif

@@ -30,15 +30,22 @@ namespace CppAD {
             }
 
         };
-        
+
+        template<class Base>
+        class IfBranchInfo;
+
+        template <class Base>
+        class IfElseInfo;
+
         template<class Base>
         class HessianWithLoopsInfo;
-        
+
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createHessianContribution(CodeHandler<Base>& handler,
                                                                      const std::vector<HessianElement>& positions,
                                                                      const CG<Base>& ddfdxdx,
-                                                                     IndexOperationNode<Base>& iterationIndexOp);
+                                                                     IndexOperationNode<Base>& iterationIndexOp,
+                                                                     vector<IfElseInfo<Base> >& ifElses);
 
         template<class Base>
         OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
@@ -46,6 +53,9 @@ namespace CppAD {
                                                             size_t maxIter,
                                                             IndexOperationNode<Base>& iterationIndexOp);
 
+        template<class Base>
+        IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
+                                             const std::map<size_t, std::pair<size_t, std::set<size_t> > >& first2Iterations);
     }
 
     /***************************************************************************
@@ -706,7 +716,8 @@ namespace CppAD {
                 size_t tapeJ2 = it->first.second;
                 const std::vector<HessianElement>& positions = it->second;
 
-                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessLoop[tapeJ1].at(tapeJ2), *info.iterationIndexOp);
+                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessLoop[tapeJ1].at(tapeJ2),
+                                                                         *info.iterationIndexOp, info.ifElses);
             }
 
             /**
@@ -733,7 +744,8 @@ namespace CppAD {
                     hessVal += hessLoop[tapeJ1].at(tapeK) * dzDx[k][j2];
                 }
 
-                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal, *info.iterationIndexOp);
+                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
+                                                                         *info.iterationIndexOp, info.ifElses);
             }
 
 
@@ -745,7 +757,8 @@ namespace CppAD {
                 size_t tapeJ2 = it->first.second;
                 const std::vector<HessianElement>& positions = it->second;
 
-                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessLoop[tapeJ1].at(tapeJ2), *info.iterationIndexOp);
+                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessLoop[tapeJ1].at(tapeJ2),
+                                                                         *info.iterationIndexOp, info.ifElses);
             }
 
             /*******************************************************************
@@ -891,6 +904,24 @@ namespace CppAD {
     namespace loops {
 
         template<class Base>
+        class IfBranchInfo {
+        public:
+            std::set<size_t> iterations;
+            OperationNode<Base>* node;
+        };
+
+        template <class Base>
+        class IfElseInfo {
+        public:
+            std::map<size_t, IfBranchInfo<Base> > firstIt2Branch;
+            OperationNode<Base>* endIf;
+
+            inline IfElseInfo() :
+                endIf(NULL) {
+            }
+        };
+
+        template<class Base>
         class HessianWithLoopsInfo {
         public:
             vector<std::set<size_t> > evalJacSparsity;
@@ -924,6 +955,9 @@ namespace CppAD {
             vector<CG<Base> > w;
             vector<std::map<size_t, CG<Base> > > dyiDzk;
 
+            // if-else branches
+            vector<IfElseInfo<Base> > ifElses;
+
             HessianWithLoopsInfo() :
                 loopStart(NULL),
                 iterationIndexOp(NULL) {
@@ -945,9 +979,11 @@ namespace CppAD {
         std::pair<CG<Base>, IndexPattern*> createHessianContribution(CodeHandler<Base>& handler,
                                                                      const std::vector<HessianElement>& positions,
                                                                      const CG<Base>& ddfdxdx,
-                                                                     IndexOperationNode<Base>& iterationIndexOp) {
+                                                                     IndexOperationNode<Base>& iterationIndexOp,
+                                                                     vector<IfElseInfo<Base> >& ifElses) {
             using namespace std;
 
+            // combine iterations with the same number of additions
             map<size_t, map<size_t, size_t> > locations;
             for (size_t iter = 0; iter < positions.size(); iter++) {
                 size_t c = positions[iter].count;
@@ -991,25 +1027,50 @@ namespace CppAD {
                 set<size_t> usedIter;
 
                 map<size_t, map<size_t, size_t> >::const_iterator countIt;
-                for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
-                    size_t count = countIt->first;
-                    const map<size_t, size_t>& locationsC = countIt->second;
-                    size_t iterCount = locationsC.size();
 
-                    if (usedIter.size() + iterCount == positions.size()) {
+                // try to find an existing if-else where these operations can be added
+                map<size_t, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
+                for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
+                    set<size_t> iterations;
+                    mapKeys(countIt->second, iterations);
+                    firstIt2Count2Iterations[*iterations.begin()] = make_pair(countIt->first, iterations);
+                }
+
+                IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
+                bool reusingIfElse = ifElseBranches != NULL;
+                if (!reusingIfElse) {
+                    size_t s = ifElses.size();
+                    ifElses.resize(s + 1);
+                    ifElseBranches = &ifElses[s];
+                }
+
+                //
+                map<size_t, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
+                for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
+                    size_t firstIt = it1st2Count2Iters->first;
+                    size_t count = it1st2Count2Iters->second.first;
+                    const set<size_t>& iterations = it1st2Count2Iters->second.second;
+
+                    size_t iterCount = iterations.size();
+
+                    if (reusingIfElse) {
+                        //reuse existing node
+                        ifBranch = ifElseBranches->firstIt2Branch.at(firstIt).node;
+                        ifBranch->getArguments().insert(ifBranch->getArguments().end(),
+                                                        nextBranchArgs.begin(), nextBranchArgs.end());
+
+                    } else if (usedIter.size() + iterCount == positions.size()) {
                         // all other iterations
                         ifBranch = new OperationNode<Base>(CGElseOp, ninfo, nextBranchArgs);
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
-                        std::set<size_t> iterations;
-                        mapKeys(locationsC, iterations);
-
                         // depends on the iterations indexes
                         OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                         handler.manageOperationNodeMemory(cond);
-                        //new OperationNode<Base>(CGCondExprOp, ninfo, args);
+
                         nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*cond));
-                        ifBranch = new OperationNode<Base>(countIt == locations.begin() ? CGStartIfOp : CGElseIfOp, ninfo, nextBranchArgs);
+                        CGOpCode op = it1st2Count2Iters == firstIt2Count2Iterations.begin() ? CGStartIfOp : CGElseIfOp;
+                        ifBranch = new OperationNode<Base>(op, ninfo, nextBranchArgs);
                         handler.manageOperationNodeMemory(ifBranch);
 
                         usedIter.insert(iterations.begin(), iterations.end());
@@ -1017,6 +1078,7 @@ namespace CppAD {
 
                     nextBranchArgs.clear();
 
+                    const map<size_t, size_t>& locationsC = locations[count];
                     IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, locationsC);
                     handler.manageLoopDependentIndexPattern(pattern);
 
@@ -1032,12 +1094,24 @@ namespace CppAD {
                     OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
                     handler.manageOperationNodeMemory(ifAssign);
                     nextBranchArgs.push_back(Argument<Base>(*ifAssign));
+
+                    if (!reusingIfElse) {
+                        IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[iterCount]; // creates a new if branch
+                        branch.iterations = iterations;
+                        branch.node = ifBranch;
+                    }
                 }
 
-                OperationNode<Base>* endif = new OperationNode<Base>(CGEndIfOp, ninfo, nextBranchArgs);
+                if (reusingIfElse) {
+                    ifElseBranches->endIf->getArguments().insert(ifElseBranches->endIf->getArguments().end(),
+                                                                 nextBranchArgs.begin(), nextBranchArgs.end());
+                } else {
+                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, ninfo, nextBranchArgs);
+                    handler.manageOperationNodeMemory(ifElseBranches->endIf);
+                }
 
                 IndexPattern* pattern = NULL;
-                return make_pair(handler.createCG(endif), pattern);
+                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), pattern);
             }
 
         }
@@ -1109,6 +1183,36 @@ namespace CppAD {
             args[0] = Argument<Base>(iterationIndexOp);
 
             return new OperationNode<Base>(CGIndexCondExprOp, info, args);
+        }
+
+        template<class Base>
+        IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
+                                             const std::map<size_t, std::pair<size_t, std::set<size_t> > >& first2Iterations) {
+            using namespace std;
+
+            // try to find an existing if-else where these operations can be added
+            for (size_t f = 0; f < ifElses.size(); f++) {
+                IfElseInfo<Base>& ifElse = ifElses[f];
+
+                if (first2Iterations.size() != ifElse.firstIt2Branch.size())
+                    continue;
+
+                bool matches = true;
+                map<size_t, pair<size_t, set<size_t> > >::const_iterator itLoc = first2Iterations.begin();
+                typename map<size_t, IfBranchInfo<Base> >::const_iterator itBranches = ifElse.firstIt2Branch.begin();
+                for (; itLoc != first2Iterations.end(); ++itLoc, ++itBranches) {
+                    if (itLoc->second.second != itBranches->second.iterations) {
+                        matches = false;
+                        break;
+                    }
+                }
+
+                if (matches) {
+                    return &ifElse;
+                }
+            }
+
+            return NULL;
         }
     }
 }
