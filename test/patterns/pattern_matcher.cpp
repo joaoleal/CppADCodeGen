@@ -40,17 +40,11 @@ std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
-    using namespace CppAD;
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(model0, m, n, 6);
-
-    testLibCreation(model0, m, n, 6, mExtra, "model0", jacobian, hessian);
+    testLibCreation("model0", model0, m, n, 6);
 }
 
 /**
@@ -73,17 +67,11 @@ std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
-    using namespace CppAD;
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(model1, m, n, 6);
-
-    testLibCreation(model1, m, n, 6, mExtra, "model1", jacobian, hessian);
+    testLibCreation("model1", model1, m, n, 6);
 }
 
 /**
@@ -108,17 +96,11 @@ std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, CommonTmp) {
-    using namespace CppAD;
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(modelCommonTmp, m, n, 6);
-
-    testLibCreation(modelCommonTmp, m, n, 6, mExtra, "modelCommonTmp", jacobian, hessian);
+    testLibCreation("modelCommonTmp", modelCommonTmp, m, n, 6);
 }
 
 /**
@@ -145,17 +127,11 @@ std::vector<ADCGD> modelCommonTmp2(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, CommonTmp2) {
-    using namespace CppAD;
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(modelCommonTmp2, m, n, 6);
-
-    testLibCreation(modelCommonTmp2, m, n, 6, mExtra, "modelCommonTmp2", jacobian, hessian);
+    testLibCreation("modelCommonTmp2", modelCommonTmp2, m, n, 6);
 }
 
 /**
@@ -184,17 +160,11 @@ std::vector<ADCGD> modelCommonTmp3(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, CommonTmp3) {
-    using namespace CppAD;
     size_t m = 3;
     size_t n = 3;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(modelCommonTmp3, m, n, 6);
-
-    testLibCreation(modelCommonTmp3, m, n, 6, mExtra, "modelCommonTmp3", jacobian, hessian);
+    testLibCreation("modelCommonTmp3", modelCommonTmp3, m, n, 6);
 }
 
 /**
@@ -222,15 +192,11 @@ std::vector<ADCGD> model2(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, model2) {
-    using namespace CppAD;
-
     size_t m = 1;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
 
     testPatternDetection(model2, m, n, 6);
-
-    testLibCreation(model2, m, n, 6, mExtra, "model2");
+    testLibCreation("model2", model2, m, n, 6);
 }
 
 /**
@@ -256,15 +222,11 @@ std::vector<ADCGD> model3(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, model3) {
-    using namespace CppAD;
-
     size_t m = 1;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
 
     testPatternDetection(model3, m, n, 6);
-
-    testLibCreation(model3, m, n, 6, mExtra, "model3");
+    testLibCreation("model3", model3, m, n, 6);
 }
 
 /**
@@ -291,17 +253,11 @@ std::vector<ADCGD> model4Eq(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, Matcher4Eq) {
-    using namespace CppAD;
     size_t m = 4;
     size_t n = 4;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(model4Eq, m, n, 6);
-
-    testLibCreation(model4Eq, m, n, 6, mExtra, "model4Eq", jacobian, hessian);
+    testLibCreation("model4Eq", model4Eq, m, n, 6);
 }
 
 /**
@@ -325,18 +281,11 @@ std::vector<ADCGD> model4(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, IndexedTmp) {
-    using namespace CppAD;
-
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(model4, m, n, 6);
-
-    testLibCreation(model4, m, n, 6, mExtra, "indexedTmp", jacobian, hessian);
+    testLibCreation("indexedTmp", model4, m, n, 6);
 }
 
 /**
@@ -365,18 +314,11 @@ std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
-    using namespace CppAD;
-
     size_t m = 2;
     size_t n = 2;
-    size_t mExtra = 0; // equations not in loops
-
-    bool jacobian = true;
-    bool hessian = true;
 
     testPatternDetection(model5, m, n, 6, 2);
-
-    testLibCreation(model5, m, n, 6, mExtra, "model5", jacobian, hessian);
+    testLibCreation("model5", model5, m, n, 6);
 }
 
 /**
@@ -422,8 +364,7 @@ TEST_F(CppADCGPatternTest, Atomic) {
 
 
     testPatternDetectionWithAtomics(modelAtomic, atomics, m, n, 6);
-
-    testLibCreationWithAtomics(modelAtomic, atomics, m, n, 6, "modelAtomic");
+    testLibCreationWithAtomics("modelAtomic", modelAtomic, atomics, m, n, 6);
 }
 
 /**
@@ -466,8 +407,7 @@ TEST_F(CppADCGPatternTest, Atomic2) {
 
 
     testPatternDetectionWithAtomics(modelAtomic2, atomics, m, n, 6);
-
-    testLibCreationWithAtomics(modelAtomic2, atomics, m, n, 6, "modelAtomic2");
+    testLibCreationWithAtomics("modelAtomic2", modelAtomic2, atomics, m, n, 6);
 }
 
 /**
@@ -492,16 +432,10 @@ std::vector<ADCGD> modelExtraFunc(std::vector<ADCGD>& x, size_t repeat) {
 }
 
 TEST_F(CppADCGPatternTest, modelExtraFunc) {
-    using namespace CppAD;
-
     size_t m = 2;
     size_t n = 2;
     size_t mExtra = 1; // equations not in loops
 
-    bool jacobian = true;
-    bool hessian = true;
-
     testPatternDetection(modelExtraFunc, m, n, 6);
-
-    testLibCreation(modelExtraFunc, m, n, 6, mExtra, "modelExtraFunc", jacobian, hessian);
+    testLibCreation("modelExtraFunc", modelExtraFunc, m, n, 6, mExtra);
 }

@@ -109,12 +109,11 @@ namespace CppAD {
         vector<set<size_t> > noLoopEvalHessSparsity(_funNoLoops != NULL ? n : 0);
         vector<map<size_t, set<size_t> > > noLoopEvalHessLocations(noLoopEvalHessSparsity.size());
 
-        vector<set<size_t> > noLoopEvalHessTempsSparsity(_funNoLoops != NULL ? n : 0);
-
         map<LoopModel<Base>*, HessianWithLoopsInfo<Base> > loopHessInfo;
         for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
             LoopModel<Base>* loop = *itloop;
             loopHessInfo[loop] = HessianWithLoopsInfo<Base>(*loop);
+            loopHessInfo[loop].noLoopEvalHessTempsSparsity.resize(_funNoLoops != NULL ? n : 0);
         }
 
         /** 
@@ -128,6 +127,7 @@ namespace CppAD {
             size_t e = lowerHessOrder[eh];
 
             if (_funNoLoops != NULL) {
+                // TODO: consider getting the patterns only for the original equations and leave out the temporaries
                 const set<size_t>& row = _funNoLoops->getHessianSparsity()[j1];
                 if (row.find(j2) != row.end()) {
                     /**
@@ -316,7 +316,7 @@ namespace CppAD {
                         size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
 
                         //jacobian of g for k must have j2
-                        const set<size_t>& gJacRow = loopJac[k];
+                        const set<size_t>& gJacRow = _funNoLoops->getJacobianSparsity()[nonIndexdedEqSize + k];
                         if (gJacRow.find(j2) != gJacRow.end()) {
                             noLoopEvalJacSparsity[nonIndexdedEqSize + k].insert(j2); // element required
 
@@ -462,8 +462,7 @@ namespace CppAD {
 
                                     loopInfo.nonLoopNonIndexedNonIndexed[orig].insert(k1);
                                     loopInfo.evalJacSparsity[i].insert(posK1->tape);
-
-                                    noLoopEvalHessTempsSparsity[j1].insert(j2);
+                                    loopInfo.noLoopEvalHessTempsSparsity[j1].insert(j2);
                                 }
                             }
                         }
@@ -536,6 +535,9 @@ namespace CppAD {
             if (row.size() > 0) {
                 jacNoLoop.resize(row.size());
 
+                //printSparsityPattern(_funNoLoops->getJacobianSparsity(), "jacobian No Loops");
+                //printSparsityPattern(noLoopEvalJacSparsity, "jacobian No Loops - eval");
+
                 CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
                 if (estimateBestJacobianADMode(row, col)) {
                     fun.SparseJacobianForward(x, _funNoLoops->getJacobianSparsity(), row, col, jacNoLoop, work);
@@ -564,8 +566,8 @@ namespace CppAD {
             ADFun<CGBase>& fun = lModel.getTape();
             const vector<std::set<size_t> >& jacTapeSparsity = lModel.getJacobianSparsity();
 
-            printSparsityPattern(jacTapeSparsity, "jac - loop");
-            printSparsityPattern(info.evalJacSparsity, "jac - loop -eval");
+            //printSparsityPattern(jacTapeSparsity, "jac - loop");
+            //printSparsityPattern(info.evalJacSparsity, "jac - loop -eval");
 
             /**
              * evaluate loop model jacobian
@@ -594,7 +596,6 @@ namespace CppAD {
         /**
          * No Loops - Hessian
          */
-        map<size_t, map<size_t, CGBase> > dzDxx;
         if (_funNoLoops != NULL) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
@@ -633,9 +634,15 @@ namespace CppAD {
             /**
              * hessian - temporary variables
              */
-            generateSparsityIndexes(noLoopEvalHessTempsSparsity, row, col);
+            for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+                LoopModel<Base>* loop = itLoop2Info->first;
+                HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
-            if (row.size() > 0) {
+                generateSparsityIndexes(info.noLoopEvalHessTempsSparsity, row, col);
+
+                if (row.empty())
+                    continue;
+
                 hessNoLoop.resize(row.size());
 
                 for (size_t inl = 0; inl < origIndexes.size(); inl++) {
@@ -643,21 +650,19 @@ namespace CppAD {
                 }
 
                 for (size_t inl = origIndexes.size(); inl < wNoLoop.size(); inl++) {
-                    CGBase sum = Base(0);
-                    for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-                        HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
-
+                    size_t k = inl - origIndexes.size();
+                    const LoopPosition* posK = loop->getTempIndepIndexes(k);
+                    
+                    if (posK != NULL) {
                         for (size_t i = 0; i < info.dyiDzk.size(); i++) {
                             const map<size_t, CGBase>& row = info.dyiDzk[i];
-                            typename map<size_t, CGBase>::const_iterator itCol;
-                            for (itCol = row.begin(); itCol != row.end(); ++itCol) {
+                            typename map<size_t, CGBase>::const_iterator itCol = row.find(posK->tape);
+                            if (itCol != row.end()) {
                                 const CGBase& val = itCol->second;
-                                sum += val * info.w[i];
+                                wNoLoop[inl] += val * info.w[i];
                             }
                         }
                     }
-
-                    wNoLoop[inl] = sum;
                 }
 
                 CppAD::sparse_hessian_work workTemps;
@@ -667,7 +672,7 @@ namespace CppAD {
                 for (size_t el = 0; el < row.size(); el++) {
                     size_t j1 = row[el];
                     size_t j2 = col[el];
-                    dzDxx[j1][j2] = hessNoLoop[el];
+                    info.dzDxx[j1][j2] = hessNoLoop[el];
                 }
             }
         }
@@ -683,20 +688,20 @@ namespace CppAD {
             std::vector<size_t> row, col;
             generateSparsityIndexes(info.evalHessSparsity, row, col);
 
-            if (row.empty())
-                continue;
+            vector<map<size_t, CGBase> > hessLoop;
+            if (!row.empty()) {
+                vector<CGBase> hessLoopFlat(row.size());
 
-            vector<CGBase> hessLoopFlat(row.size());
+                CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+                fun.SparseHessian(info.x, info.w, lModel.getHessianSparsity(), row, col, hessLoopFlat, work);
 
-            CppAD::sparse_hessian_work work; // temporary structure for CPPAD
-            fun.SparseHessian(info.x, info.w, lModel.getHessianSparsity(), row, col, hessLoopFlat, work);
-
-            // save non-indexed hessian elements
-            vector<map<size_t, CGBase> > hessLoop(fun.Domain());
-            for (size_t el = 0; el < row.size(); el++) {
-                size_t tapeJ1 = row[el];
-                size_t tapeJ2 = col[el];
-                hessLoop[tapeJ1][tapeJ2] = hessLoopFlat[el];
+                // save non-indexed hessian elements
+                hessLoop.resize(fun.Domain());
+                for (size_t el = 0; el < row.size(); el++) {
+                    size_t tapeJ1 = row[el];
+                    size_t tapeJ2 = col[el];
+                    hessLoop[tapeJ1][tapeJ2] = hessLoopFlat[el];
+                }
             }
 
             // store results in indexedLoopResults
@@ -865,7 +870,7 @@ namespace CppAD {
                  */
                 map<pairss, set<size_t> >::const_iterator itTT2 = info.nonLoopNonIndexedNonIndexed.find(orig);
                 if (itTT2 != info.nonLoopNonIndexedNonIndexed.end()) {
-                    hessVal += dzDxx.at(j1).at(j2); // it is already the sum of ddz / dx_j1 dx_j2
+                    hessVal += info.dzDxx.at(j1).at(j2); // it is already the sum of ddz / dx_j1 dx_j2
                 }
 
                 // place the result
@@ -906,7 +911,10 @@ namespace CppAD {
         // make use of the symmetry of the Hessian in order to reduce operations
         std::map<size_t, size_t>::const_iterator it2;
         for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-            hess[it2->first] = handler.createCG(new OperationNode<Base> (CGAliasOp, asArgument(hess[it2->second])));
+            if (hess[it2->second].isVariable())
+                hess[it2->first] = handler.createCG(new OperationNode<Base> (CGAliasOp, asArgument(hess[it2->second])));
+            else
+                hess[it2->first] = hess[it2->second].getValue();
         }
 
         return hess;
@@ -965,6 +973,9 @@ namespace CppAD {
             vector<CG<Base> > x; // loop independent variables
             vector<CG<Base> > w;
             vector<std::map<size_t, CG<Base> > > dyiDzk;
+
+            vector<std::set<size_t> > noLoopEvalHessTempsSparsity;
+            std::map<size_t, std::map<size_t, CG<Base> > > dzDxx;
 
             // if-else branches
             vector<IfElseInfo<Base> > ifElses;

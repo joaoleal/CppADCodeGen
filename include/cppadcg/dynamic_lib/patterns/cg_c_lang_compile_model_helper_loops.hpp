@@ -99,6 +99,7 @@ namespace CppAD {
         vector<CGBase> deps(depIndexes.size());
 
         size_t dep_size = depIndexes.size();
+        size_t x_size = loop.getTapeIndependentCount();
 
         std::vector<Argument<Base> > xIndexedArgs(1);
         xIndexedArgs[0] = Argument<Base>(iterationIndexOp);
@@ -107,7 +108,7 @@ namespace CppAD {
 
         for (size_t i = 0; i < dep_size; i++) {
             IndexPattern* ip = depIndexes[i];
-            info[1] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
+            info[1] = handler.addLoopIndependentIndexPattern(*ip, x_size + i); // dependent index pattern location
             deps[i] = handler.createCG(new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs));
         }
 

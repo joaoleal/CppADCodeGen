@@ -17,4 +17,5 @@
 SET(CMAKE_BUILD_TYPE DEBUG)
 
 add_cppadcg_test(pattern_matcher.cpp)
+add_cppadcg_test(hessian_with_loops.cpp)
 add_cppadcg_test(cstr_collocation.cpp)

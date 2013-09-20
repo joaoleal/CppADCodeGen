@@ -211,6 +211,5 @@ TEST_F(CppADCGPatternTest, Atomic) {
 
 
     testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
-
-    testLibCreationWithAtomics(modelCollocation, atomics, m, x, repeat, "modelAtomicCstr", true, true);
+    testLibCreationWithAtomics("modelAtomicCstr", modelCollocation, atomics, m, x, repeat);
 }
