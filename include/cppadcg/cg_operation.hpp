@@ -56,6 +56,7 @@ namespace CppAD {
         CGTanhOp, //  tanh(variable)
         CGTanOp, //  tan(variable)
         CGUnMinusOp, // -(a)
+        CGDependentMultiAssignOp, // operation which associates a dependent variables with loops and regular operations
         CGDependentRefRhsOp, // operation referencing a dependent variable (right hand side only)
         CGIndexOp, // an integer index
         CGIndexAssignOp, // assigment of an integer index to an index pattern expression

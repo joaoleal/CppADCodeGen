@@ -480,20 +480,7 @@ namespace CppAD {
                         continue; // nothing to do (this operation is right hand side only)
                     }
 
-                    bool createsVar = directlyAssignsVariable(node); // do we need to do the assigment here?
-                    if (!createsVar) {
-                        printAssigmentStart(node);
-                    }
-                    printExpressionNoVarCheck(node);
-                    if (!createsVar) {
-                        printAssigmentEnd(node);
-                    }
-
-                    if (node.getOperationType() == CGArrayElementOp) {
-                        size_t arrayId = node.getArguments()[0].getOperation()->getVariableID();
-                        size_t pos = node.getInfo()[0];
-                        _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
-                    }
+                    printAssigment(node);
 
                     assignCount++;
                 }
@@ -596,23 +583,53 @@ namespace CppAD {
             }
         }
 
+        inline void printAssigment(OperationNode<Base>& node) {
+            printAssigment(node, node);
+        }
+
+        inline void printAssigment(OperationNode<Base>& nodeName,
+                                   const Argument<Base>& nodeRhs) {
+            if (nodeRhs.getOperation() != NULL) {
+                printAssigment(nodeName, *nodeRhs.getOperation());
+            } else {
+                printAssigmentStart(nodeName);
+                printParameter(*nodeRhs.getParameter());
+                printAssigmentEnd(nodeName);
+            }
+        }
+
+        inline void printAssigment(OperationNode<Base>& nodeName,
+                                   OperationNode<Base>& nodeRhs) {
+            bool createsVar = directlyAssignsVariable(nodeRhs); // do we need to do the assigment here?
+            if (!createsVar) {
+                printAssigmentStart(nodeName);
+            }
+            printExpressionNoVarCheck(nodeRhs);
+            if (!createsVar) {
+                printAssigmentEnd(nodeRhs);
+            }
+
+            if (nodeRhs.getOperationType() == CGArrayElementOp) {
+                size_t arrayId = nodeRhs.getArguments()[0].getOperation()->getVariableID();
+                size_t pos = nodeRhs.getInfo()[0];
+                _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
+            }
+        }
+
         inline virtual void printAssigmentStart(OperationNode<Base>& op) {
             printAssigmentStart(op, createVariableName(op), isDependent(op));
         }
 
-        inline virtual void printAssigmentStart(OperationNode<Base>& op, const std::string& varName, bool isDep) {
+        inline virtual void printAssigmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep) {
             if (!isDep) {
-                _temporary[op.getVariableID()] = &op;
+                _temporary[node.getVariableID()] = &node;
             }
 
             _code << _indentation << varName << " ";
             if (isDep) {
-                if (op.getOperationType() == CGLoopIndexedDepOp) {
-                    if (op.getInfo()[1] == 0) {
-                        _code << "=";
-                    } else {
-                        _code << "+=";
-                    }
+                CGOpCode op = node.getOperationType();
+                if (op == CGDependentMultiAssignOp || (op == CGLoopIndexedDepOp && node.getInfo()[1] == 1)) {
+                    _code << "+=";
                 } else {
                     _code << _depAssignOperation;
                 }
@@ -722,6 +739,7 @@ namespace CppAD {
                     op == CGArrayCreationOp ||
                     op == CGAtomicForwardOp ||
                     op == CGAtomicReverseOp ||
+                    op == CGDependentMultiAssignOp ||
                     op == CGLoopStartOp ||
                     op == CGLoopEndOp ||
                     op == CGIndexAssignOp ||
@@ -877,6 +895,10 @@ namespace CppAD {
 
                 case CGUnMinusOp:
                     printOperationUnaryMinus(node);
+                    break;
+
+                case CGDependentMultiAssignOp:
+                    printDependentMultiAssign(node);
                     break;
 
                 case CGIndexOp:
@@ -1318,6 +1340,28 @@ namespace CppAD {
             }
         }
 
+        virtual void printDependentMultiAssign(OperationNode<Base>& node) {
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGDependentMultiAssignOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments");
+
+            const std::vector<Argument<Base> >& args = node.getArguments();
+            for (size_t a = 0; a < args.size(); a++) {
+                bool useArg = false;
+                const Argument<Base>& arg = args[a];
+                if (arg.getParameter() != NULL) {
+                    useArg = true;
+                } else {
+                    CGOpCode op = arg.getOperation()->getOperationType();
+                    useArg = op != CGDependentRefRhsOp && op != CGLoopEndOp && op != CGEndIfOp;
+                }
+
+                if (useArg) {
+                    printAssigment(node, arg); // ignore other arguments!
+                    break;
+                }
+            }
+        }
+
         virtual void printLoopStart(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopStartOp, "Invalid node type");
 
@@ -1467,15 +1511,8 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != 0, "Invalid argumet for an an assigment inside an if/else operation");
 
             // just follow the argument
-            OperationNode<Base>& op = *node.getArguments()[1].getOperation();
-            bool createsVar = directlyAssignsVariable(op); // do we need to do the assigment here?
-            if (!createsVar) {
-                printAssigmentStart(op);
-            }
-            printExpressionNoVarCheck(op);
-            if (!createsVar) {
-                printAssigmentEnd(op);
-            }
+            OperationNode<Base>& nodeArg = *node.getArguments()[1].getOperation();
+            printAssigment(nodeArg);
         }
 
         inline bool isDependent(const OperationNode<Base>& arg) const {

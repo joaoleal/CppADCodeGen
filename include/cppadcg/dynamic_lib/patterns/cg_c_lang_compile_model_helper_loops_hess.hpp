@@ -894,27 +894,31 @@ namespace CppAD {
             size_t assignOrAdd = 1;
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
-            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+            info.loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
 
-            std::vector<size_t> ninfo(1);
-            std::vector<Argument<Base> > args(1);
             std::vector<size_t>::const_iterator itE;
             for (itE = lowerHessOrder.begin(); itE != lowerHessOrder.end(); ++itE) {
                 // an additional alias variable is required so that each dependent variable can have its own ID
                 size_t e = *itE;
-                ninfo[0] = e;
-                args[0] = Argument<Base>(*loopEnd);
-                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, ninfo, args));
+                if (hess[e].isParameter() && hess[e].IdenticalZero()) {
+                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, Argument<Base>(*info.loopEnd)));
+
+                } else if (hess[e].getOperationNode() != NULL && hess[e].getOperationNode()->getOperationType() == CGDependentMultiAssignOp) {
+                    hess[e].getOperationNode()->getArguments().push_back(Argument<Base>(*info.loopEnd));
+
+                } else {
+                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, asArgument(hess[e]), Argument<Base>(*info.loopEnd)));
+                }
             }
 
             /**
              * move no-nindexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*info.loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+            moveNonIndexedOutsideLoop(*info.loopStart, *info.loopEnd, LoopModel<Base>::ITERATION_INDEX);
         }
 
         /**
-         * duplicates (TODO)
+         * duplicates (TODO: use loops)
          */
         // make use of the symmetry of the Hessian in order to reduce operations
         std::map<size_t, size_t>::const_iterator it2;
@@ -979,6 +983,7 @@ namespace CppAD {
             std::map<pairss, std::set<size_t> > nonLoopNonIndexedNonIndexed;
 
             LoopStartOperationNode<Base>* loopStart;
+            LoopEndOperationNode<Base>* loopEnd;
             IndexOperationNode<Base>* iterationIndexOp;
             vector<CG<Base> > x; // loop independent variables
             vector<CG<Base> > w;
@@ -992,6 +997,7 @@ namespace CppAD {
 
             HessianWithLoopsInfo() :
                 loopStart(NULL),
+                loopEnd(NULL),
                 iterationIndexOp(NULL) {
 
             }
@@ -1000,6 +1006,7 @@ namespace CppAD {
                 evalJacSparsity(loop.getTapeDependentCount()),
                 evalHessSparsity(loop.getTapeIndependentCount()),
                 loopStart(NULL),
+                loopEnd(NULL),
                 iterationIndexOp(NULL),
                 dyiDzk(loop.getTapeDependentCount()) {
 
