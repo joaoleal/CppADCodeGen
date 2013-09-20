@@ -320,7 +320,7 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler.setCompileFlags(flags);
-            compiler.setSourcesFolder("sources_" + libBaseName + "_1");
+            compiler.setSourcesFolder("sources_" + libBaseName);
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
@@ -342,7 +342,7 @@ namespace CppAD {
             compHelp.setCreateReverseTwo(reverseTwo);
             //compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
-            compiler.setSourcesFolder("sources_" + libBaseName + "_1");
+            compiler.setSourcesFolder("sources_" + libBaseName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             compDynHelp.setLibraryName("modelLibNoLoops");
@@ -415,7 +415,7 @@ namespace CppAD {
                 compHelpL.setTypicalIndependentValues(xTypical);
 
                 GccCompiler<double> compiler2;
-                compiler2.setSourcesFolder("sources_" + libBaseName + "_1");
+                compiler2.setSourcesFolder("sources_" + libBaseName);
 
                 CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
                 std::auto_ptr<DynamicLib<double> > dynamicLibL;
@@ -431,7 +431,7 @@ namespace CppAD {
                 compHelpL.setTypicalIndependentValues(xTypical);
 
                 GccCompiler<double> compiler2;
-                compiler2.setSourcesFolder("sources_" + libBaseName + "_1");
+                compiler2.setSourcesFolder("sources_" + libBaseName);
 
                 CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
                 std::auto_ptr<DynamicLib<double> > dynamicLibL;

@@ -52,7 +52,8 @@ namespace CppAD {
         template<class T>
         inline void compareValues(const std::vector<T>& depCGen,
                                   const std::vector<T>& dep,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                  T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             compareValues(depCGen, &dep[0], "depCGEN", "depTape", epsilonR, epsilonA);
         }
@@ -60,7 +61,8 @@ namespace CppAD {
         template<class T>
         inline void compareValues(const std::vector<std::vector<T> >& depCGen,
                                   const std::vector<std::vector<T> >& dep,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                  T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             assert(depCGen.size() == dep.size());
 
@@ -73,14 +75,16 @@ namespace CppAD {
         template<class VectorT, class T>
         inline void compareValues(const VectorT& cgen, const VectorT& orig,
                                   const std::string& nameCgen, const std::string& nameOrig,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                 T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
             compareValues(cgen, &orig[0], nameCgen, nameOrig, epsilonR, epsilonA);
         }
 
         template<class VectorT, class T>
         inline void compareValues(const VectorT& cgen, const T* orig,
                                   const std::string& nameCgen, const std::string& nameOrig,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                  T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
             for (size_t i = 0; i < cgen.size(); i++) {
                 nearEqual(cgen[i], orig[i], epsilonR, epsilonA);
                 //std::cerr << nameCgen << "[" << i << "] = " << std::setprecision(8) << cgen[i] <<
@@ -92,7 +96,8 @@ namespace CppAD {
         template<class VectorBase, class T>
         inline void compareValues(const VectorBase& depCGen,
                                   const CppAD::vector<CppAD::CG<T> >& dep,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                  T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             std::vector<T> depd(dep.size());
 
@@ -106,7 +111,8 @@ namespace CppAD {
         template<class VectorBase, class T>
         inline void compareValues(const VectorBase& depCGen,
                                   const std::vector<CppAD::CG<T> >& dep,
-                                  T epsilonR = 1e-14, T epsilonA = 1e-14) {
+                                  T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                  T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             std::vector<T> depd(dep.size());
 

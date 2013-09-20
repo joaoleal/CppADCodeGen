@@ -225,6 +225,9 @@ namespace CppAD {
 
                             set<size_t>::const_iterator itz = loopHess[tapeJ1].lower_bound(nIndexed + nNonIndexed);
 
+                            pairss pos(tapeJ1, j2);
+                            bool used = false;
+
                             // loop temporary variables
                             for (; itz != loopHess[tapeJ1].end(); ++itz) {
                                 size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
@@ -236,14 +239,9 @@ namespace CppAD {
                                 if (sparsity.find(j2) != sparsity.end()) {
                                     noLoopEvalJacSparsity[nonIndexdedEqSize + k].insert(j2); // element required
 
-                                    pairss pos(tapeJ1, j2);
-
                                     std::set<size_t>& evals = loopInfo.indexedTempEvals[pos];
-                                    std::vector<HessianElement>& positions = loopInfo.indexedTempPositions[pos];
-                                    positions.resize(iterations);
 
-                                    positions[iteration].location = e;
-                                    positions[iteration].count++;
+                                    used = true;
                                     evals.insert(k);
 
                                     size_t tapeK = loop->getTempIndepIndexes(k)->tape;
@@ -251,6 +249,13 @@ namespace CppAD {
                                 }
                             }
 
+                            if (used) {
+                                std::vector<HessianElement>& positions = loopInfo.indexedTempPositions[pos];
+                                positions.resize(iterations);
+
+                                positions[iteration].location = e;
+                                positions[iteration].count++;
+                            }
 
                         }
 
@@ -345,6 +350,8 @@ namespace CppAD {
                     size_t nk = _funNoLoops->getTemporaryDependentCount();
                     size_t nOrigEq = _funNoLoops->getTapeDependentCount() - nk;
 
+                    std::set<size_t> usedTapeJ2;
+
                     for (size_t k1 = 0; k1 < nk; k1++) {
                         if (gJac[nOrigEq + k1].find(j1) == gJac[nOrigEq + k1].end()) {
                             continue;
@@ -370,12 +377,16 @@ namespace CppAD {
 
                                 pairss pos(tapeJ2, j1);
 
-                                std::set<size_t>& evals = loopInfo.indexedTempEvals[pos];
-                                std::vector<HessianElement>& positions = loopInfo.indexedTempPositions[pos];
-                                positions.resize(iterations);
+                                if (usedTapeJ2.find(tapeJ2) == usedTapeJ2.end()) {
+                                    std::vector<HessianElement>& positions = loopInfo.indexedTempPositions[pos];
+                                    positions.resize(iterations);
 
-                                positions[iteration].location = e;
-                                positions[iteration].count++;
+                                    positions[iteration].location = e;
+                                    positions[iteration].count++;
+                                    usedTapeJ2.insert(tapeJ2);
+                                }
+
+                                std::set<size_t>& evals = loopInfo.indexedTempEvals[pos];
                                 evals.insert(k1);
 
                                 loopInfo.evalHessSparsity[tapeJ2].insert(posK1->tape);
@@ -400,7 +411,6 @@ namespace CppAD {
                                 }
 
                                 loopInfo.tempNonIndexedEvals[orig].insert(k1);
-
                                 loopInfo.evalHessSparsity[posK1->tape].insert(posJ2->tape);
                             }
                         }
@@ -428,9 +438,7 @@ namespace CppAD {
                                 }
 
                                 loopInfo.tempTempEvals[orig][k1].insert(k2);
-
                                 loopInfo.evalHessSparsity[posK1->tape].insert(tapeK2);
-
                                 noLoopEvalJacSparsity[nOrigEq + k2].insert(j2);
                             }
                         }
@@ -652,7 +660,7 @@ namespace CppAD {
                 for (size_t inl = origIndexes.size(); inl < wNoLoop.size(); inl++) {
                     size_t k = inl - origIndexes.size();
                     const LoopPosition* posK = loop->getTempIndepIndexes(k);
-                    
+
                     if (posK != NULL) {
                         for (size_t i = 0; i < info.dyiDzk.size(); i++) {
                             const map<size_t, CGBase>& row = info.dyiDzk[i];
@@ -943,30 +951,32 @@ namespace CppAD {
         template<class Base>
         class HessianWithLoopsInfo {
         public:
+            typedef std::pair<size_t, size_t> pairss;
+        public:
             vector<std::set<size_t> > evalJacSparsity;
             vector<std::set<size_t> > evalHessSparsity;
             // (tapeJ1, tapeJ2) -> [positions]
-            std::map<std::pair<size_t, size_t>, std::vector<HessianElement> > indexedIndexedPositions;
+            std::map<pairss, std::vector<HessianElement> > indexedIndexedPositions;
             // (tapeJ1, j2) -> [positions]
-            std::map<std::pair<size_t, size_t>, std::vector<HessianElement> > indexedTempPositions;
+            std::map<pairss, std::vector<HessianElement> > indexedTempPositions;
             // (tapeJ1, j2) -> [k]
-            std::map<std::pair<size_t, size_t>, std::set<size_t> > indexedTempEvals;
+            std::map<pairss, std::set<size_t> > indexedTempEvals;
             // (tapeJ1(j1), tapeJ2) -> [positions]
-            std::map<std::pair<size_t, size_t>, std::vector<HessianElement> > nonIndexedIndexedPositions;
+            std::map<pairss, std::vector<HessianElement> > nonIndexedIndexedPositions;
             /**
              * (j1, j2) -> position
              */
-            std::map<std::pair<size_t, size_t>, size_t> nonIndexedNonIndexedPosition;
+            std::map<pairss, size_t> nonIndexedNonIndexedPosition;
             // [(j1, j2)]
-            std::set<std::pair<size_t, size_t> > nonIndexedNonIndexedEvals;
+            std::set<pairss> nonIndexedNonIndexedEvals;
             // (j2, j1) -> [k]
-            std::map<std::pair<size_t, size_t>, std::set<size_t> > nonIndexedTempEvals;
+            std::map<pairss, std::set<size_t> > nonIndexedTempEvals;
             // (j1, j2) -> [k1]
-            std::map<std::pair<size_t, size_t>, std::set<size_t> > tempNonIndexedEvals;
+            std::map<pairss, std::set<size_t> > tempNonIndexedEvals;
             // (j1, j2) -> k1 -> [k2]
-            std::map<std::pair<size_t, size_t>, std::map<size_t, std::set<size_t> > > tempTempEvals;
+            std::map<pairss, std::map<size_t, std::set<size_t> > > tempTempEvals;
             // (j1 ,j2) -> [k1]
-            std::map<std::pair<size_t, size_t>, std::set<size_t> > nonLoopNonIndexedNonIndexed;
+            std::map<pairss, std::set<size_t> > nonLoopNonIndexedNonIndexed;
 
             LoopStartOperationNode<Base>* loopStart;
             IndexOperationNode<Base>* iterationIndexOp;

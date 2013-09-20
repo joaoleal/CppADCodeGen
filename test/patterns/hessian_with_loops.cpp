@@ -225,3 +225,115 @@ TEST_F(CppADCGHessLoopTest, modelTemporary) {
 
     testLibCreation("modelTemporary", modelTemporary, m, n, 6);
 }
+
+/**
+ * @test Model with bilinear term with a temporary variable (which depends 
+ *       non-linearly on a non-indexed) and an indexed variable
+ */
+std::vector<ADCGD> modelTemporaryIndexed(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 1;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp = cos(x[2]);
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = x[i * n] * tmp;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed) {
+    size_t m = 1;
+    size_t n = 2;
+
+    testLibCreation("modelTemporaryIndexed", modelTemporaryIndexed, m, n, 6);
+}
+
+/**
+ * @test Model with 2 bilinear term with a temporary variable (which depends 
+ *       non-linearly on a non-indexed) and an indexed variable
+ */
+std::vector<ADCGD> modelTemporaryIndexed2(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = cos(x[2]);
+    ADCGD tmp2 = cos(x[0]);
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = x[i * n] * tmp1;
+        y[i * m + 1] = x[i * n + 1] * tmp2;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed2) {
+    size_t m = 2;
+    size_t n = 2;
+
+    testLibCreation("modelTemporaryIndexed2", modelTemporaryIndexed2, m, n, 6);
+}
+
+/**
+ * @test Model with a temporary variable (which depends non-linearly on a 
+ *       non-indexed) and a non-linear term with an indexed variable
+ */
+std::vector<ADCGD> modelTemporaryIndexed3(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 1;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp = cos(x[0]);
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = x[i * n + 1] / x[i * n] * tmp;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed3) {
+    size_t m = 1;
+    size_t n = 2;
+
+    testLibCreation("modelTemporaryIndexed3", modelTemporaryIndexed3, m, n, 6);
+}
+
+/**
+ * @test Model with two temporary variables (which depends non-linearly on the
+ *       same non-indexed variable) and an indexed variable
+ */
+std::vector<ADCGD> modelTemporaryIndexed4(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 1;
+    size_t n = 1;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = 2 * x[0];
+    ADCGD tmp2 = 3 * x[0];
+    ADCGD tmp3 = 4 * x[0];
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = tmp1 * x[i * n] + x[i * n] * tmp2 + x[i * n] * tmp3;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed4) {
+    size_t m = 1;
+    size_t n = 1;
+
+    testLibCreation("modelTemporaryIndexed4", modelTemporaryIndexed4, m, n, 6);
+}
