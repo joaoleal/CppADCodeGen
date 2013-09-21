@@ -49,6 +49,9 @@ namespace CppAD {
     template<class Base>
     struct OperationPathNode;
 
+    template<class Base>
+    class ScopePathElement;
+
     /***************************************************************************
      * Nodes
      **************************************************************************/

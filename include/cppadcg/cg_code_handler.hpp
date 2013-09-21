@@ -30,6 +30,7 @@ namespace CppAD {
     class CodeHandler {
     public:
         typedef std::vector<OperationPathNode<Base> > SourceCodePath;
+        typedef std::vector<ScopePathElement<Base> > ScopePath;
     protected:
         // counter used to generate variable IDs
         size_t _idCount;
@@ -75,6 +76,14 @@ namespace CppAD {
         int _loopDepth;
         // the evaluation order of the loop start for each loop depth
         std::vector<size_t> _loopStartEvalOrder;
+        // scope color/index counter
+        size_t _scopeColorCount;
+        // the current scope color/index counter
+        size_t _currentScopeColor;
+        // all the scopes
+        std::vector<ScopePath> _scopes;
+        //
+        std::map<size_t, std::set<OperationNode<Base>*> > _scopeExtraDependecy;
         // the language used for source code generation
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
@@ -97,6 +106,8 @@ namespace CppAD {
             _used(false),
             _reuseIDs(true),
             _loopDepth(-1),
+            _scopeColorCount(0),
+            _currentScopeColor(0),
             _lang(NULL),
             _minTemporaryVarID(0),
             _zeroDependents(false),
@@ -303,6 +314,10 @@ namespace CppAD {
             _indexes.clear();
             _loopOuterVars.clear();
             _loopDepth = -1;
+            _scopeColorCount = 0;
+            _currentScopeColor = 0;
+            _scopes.reserve(4);
+            _scopeExtraDependecy.clear();
             _loopStartEvalOrder.clear();
             for (size_t i = 0; i < atomicFunctions.size(); i++) {
                 _atomicFunctionsSet.insert(atomicFunctions[i]);
@@ -331,7 +346,9 @@ namespace CppAD {
 
             _minTemporaryVarID = _idCount;
 
-            // determine the number of times each variable is used
+            /**
+             * determine the number of times each variable is used
+             */
             for (size_t i = 0; i < m; i++) {
                 OperationNode<Base>* node = dependent[i].getOperationNode();
                 if (node != NULL) {
@@ -339,8 +356,32 @@ namespace CppAD {
                 }
             }
 
-            // determine the variable creation order
+            /**
+             * add some additional arguments to some nodes related with other 
+             * nodes being used in different scopes
+             */
+            typename std::map<size_t, std::set<OperationNode<Base>*> >::const_iterator itse;
+            for (itse = _scopeExtraDependecy.begin(); itse != _scopeExtraDependecy.end(); ++itse) {
+                assert(itse->first < _scopes.size());
+                assert(!_scopes[itse->first].empty());
+                assert(_scopes[itse->first].back().beginning != NULL);
 
+                OperationNode<Base>& div = *_scopes[itse->first].back().beginning;
+                const std::set<OperationNode<Base>*>& extraDeps = itse->second;
+
+                typename std::set<OperationNode<Base>*>::const_iterator itn;
+                for (itn = extraDeps.begin(); itn != extraDeps.end(); ++itn) {
+                    OperationNode<Base>& code = **itn;
+                    if (!containsArgument(div, code)) {
+                        div.getArguments().push_back(Argument<Base>(code));
+                    }
+                }
+            }
+            _scopeExtraDependecy.clear();
+
+            /**
+             * determine the variable creation order
+             */
             for (size_t i = 0; i < m; i++) {
                 CG<Base>& var = dependent[i];
                 if (var.getOperationNode() != NULL) {
@@ -359,8 +400,6 @@ namespace CppAD {
                     code.increaseUsageCount();
                 }
             }
-
-            //assert(_idCount - 1 + _idArrayCount == _variableOrder.size() + _independentVariables.size());
 
             if (_reuseIDs) {
                 reduceTemporaryVariables(dependent);
@@ -561,9 +600,48 @@ namespace CppAD {
         virtual void markCodeBlockUsed(OperationNode<Base>& code) {
             code.total_use_count_++;
 
+            CGOpCode op = code.getOperationType();
+
             if (code.getTotalUsageCount() == 1) {
                 // first time this operation is visited
 
+                size_t previousScope = _currentScopeColor;
+
+                code.setColor(_currentScopeColor);
+
+                // check if there is a scope change
+                if (op == CGLoopStartOp || op == CGStartIfOp || op == CGElseIfOp || op == CGElseOp) {
+                    // leaving a scope
+                    ScopePath& sPath = _scopes[_currentScopeColor];
+                    assert(sPath.back().beginning == NULL);
+                    if (op == CGLoopStartOp || op == CGStartIfOp) {
+                        sPath.back().beginning = &code; // save the initial node
+                    } else {
+                        assert(!code.getArguments().empty() &&
+                               code.getArguments()[0].getOperation() != NULL &&
+                               code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
+                        sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
+                    }
+                    _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
+                }
+
+                if (op == CGLoopEndOp || op == CGEndIfOp || op == CGElseIfOp || op == CGElseOp) {
+                    // entering a new scope
+                    _currentScopeColor = ++_scopeColorCount;
+
+                    _scopes.resize(_currentScopeColor + 1);
+                    _scopes[_currentScopeColor] = _scopes[previousScope];
+
+                    // change current scope
+                    if (op == CGLoopEndOp || op == CGEndIfOp)
+                        _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor)); // one more scope level
+                    else
+                        _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor); // just changing last scope
+                }
+
+                /**
+                 * loop arguments
+                 */
                 const std::vector<Argument<Base> >& args = code.arguments_;
 
                 typename std::vector<Argument<Base> >::const_iterator it;
@@ -574,13 +652,13 @@ namespace CppAD {
                     }
                 }
 
-                if (code.getOperationType() == CGIndexOp) {
+                if (op == CGIndexOp) {
                     const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
                     // indexes that don't depend on a loop start or an index assignment are declared elsewhere
                     if (inode.getArguments().size() > 0) {
                         _indexes.insert(&inode.getIndex());
                     }
-                } else if (code.getOperationType() == CGDependentRefRhsOp) {
+                } else if (op == CGDependentRefRhsOp) {
                     assert(code.getInfo().size() == 1);
                     size_t depIndex = code.getInfo()[0];
 
@@ -590,7 +668,75 @@ namespace CppAD {
 
                     code.setVariableID(depNode->getVariableID());
                 }
+
+                /**
+                 * reset scope
+                 */
+                if (previousScope != _currentScopeColor) {
+                    _currentScopeColor = previousScope;
+                }
+
+            } else {
+                // been to this node before
+
+                if (code.getColor() != _currentScopeColor) {
+                    /**
+                     * node previously used in a different scope
+                     * must make sure it is defined before being used in both
+                     * scopes
+                     */
+                    size_t depth;
+                    std::set<size_t> divergence = findFirstDifferentScopeNodes(code.getColor(), _currentScopeColor, depth);
+                    std::set<size_t>::const_iterator itScope;
+                    for (itScope = divergence.begin(); itScope != divergence.end(); ++itScope) {
+                        _scopeExtraDependecy[*itScope].insert(&code);
+                    }
+
+                    // update the scope where it should be defined
+                    if (depth == 0)
+                        code.setColor(0);
+                    else
+                        code.setColor(_scopes[_currentScopeColor][depth - 1].color);
+                }
             }
+        }
+
+        inline std::set<size_t> findFirstDifferentScopeNodes(size_t color1, size_t color2, size_t& depth) {
+            assert(color1 < _scopes.size());
+            assert(color2 < _scopes.size());
+
+            ScopePath& scopePath1 = _scopes[color1];
+            ScopePath& scopePath2 = _scopes[color2];
+
+            size_t s1 = scopePath1.size();
+            size_t s2 = scopePath2.size();
+
+            std::set<size_t> divergence;
+            for (depth = 0; depth < s1 && depth < s2; depth++) {
+                if (scopePath1[depth].color != scopePath2[depth].color) {
+                    divergence.insert(scopePath1[depth].color);
+                    divergence.insert(scopePath2[depth].color);
+                    return divergence;
+                }
+            }
+
+            if (s1 < s2) {
+                divergence.insert(scopePath2[s1].color);
+            } else {
+                divergence.insert(scopePath1[s2].color);
+            }
+
+            return divergence;
+        }
+
+        inline static bool containsArgument(const OperationNode<Base>& node, const OperationNode<Base>& arg) {
+            const std::vector<Argument<Base> >& args = node.getArguments();
+            for (size_t a = 0; a < args.size(); a++) {
+                if (args[a].getOperation() == &arg) {
+                    return true;
+                }
+            }
+            return false;
         }
 
         virtual void registerAtomicFunction(CGAbstractAtomicFun<Base>& atomic) {

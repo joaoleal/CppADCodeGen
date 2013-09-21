@@ -1430,7 +1430,7 @@ namespace CppAD {
         virtual void printIndexCondExprOp(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGIndexCondExprOp, "Invalid node type");
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of argumets for an index condition expression operation");
-            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an index condition expression operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != NULL, "Invalid argumet for an index condition expression operation");
             CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argumet for an index condition expression operation");
             CPPADCG_ASSERT_KNOWN(node.getInfo().size() > 1 && node.getInfo().size() % 2 == 0, "Invalid number of information elements for an index condition expression operation");
 
@@ -1463,9 +1463,13 @@ namespace CppAD {
         }
 
         virtual void printStartIf(OperationNode<Base>& node) {
+            /**
+             * the first argument is the condition, following arguments are
+             * just extra dependencies that must be defined outside the if
+             */
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGStartIfOp, "Invalid node type");
-            CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of argumets for an if start operation");
-            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an if start operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of argumets for an 'if start' operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != NULL, "Invalid argumet for an 'if start' operation");
 
             _code << _indentation << "if(";
             printIndexCondExprOp(*node.getArguments()[0].getOperation());
@@ -1475,19 +1479,32 @@ namespace CppAD {
         }
 
         virtual void printElseIf(OperationNode<Base>& node) {
+            /**
+             * the first argument is the condition, the second argument is the 
+             * if start node, the following arguments are assigments in the
+             * previous if branch
+             */
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseIfOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 2, "Invalid number of argumets for an 'else if' operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != NULL, "Invalid argumet for an 'else if' operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != NULL, "Invalid argumet for an 'else if' operation");
 
             _indentation.resize(_indentation.size() - _spaces.size());
 
             _code << _indentation << "} else if(";
-            printIndexCondExprOp(*node.getArguments()[0].getOperation());
+            printIndexCondExprOp(*node.getArguments()[1].getOperation());
             _code << ") {\n";
 
             _indentation += _spaces;
         }
 
         virtual void printElse(OperationNode<Base>& node) {
+            /**
+             * the first argument is the  if start node, the following arguments
+             * are assigments in the previous if branch
+             */
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of argumets for an 'else' operation");
 
             _indentation.resize(_indentation.size() - _spaces.size());
 
@@ -1497,7 +1514,7 @@ namespace CppAD {
         }
 
         virtual void printEndIf(OperationNode<Base>& node) {
-            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGEndIfOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGEndIfOp, "Invalid node type for an 'end if' operation");
 
             _indentation.resize(_indentation.size() - _spaces.size());
 
@@ -1507,8 +1524,8 @@ namespace CppAD {
         virtual void printCondResult(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGCondResultOp, "Invalid node type");
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of argumets for an assigment inside an if/else operation");
-            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != 0, "Invalid argumet for an an assigment inside an if/else operation");
-            CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != 0, "Invalid argumet for an an assigment inside an if/else operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != NULL, "Invalid argumet for an an assigment inside an if/else operation");
+            CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != NULL, "Invalid argumet for an an assigment inside an if/else operation");
 
             // just follow the argument
             OperationNode<Base>& nodeArg = *node.getArguments()[1].getOperation();

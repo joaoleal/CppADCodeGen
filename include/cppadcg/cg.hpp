@@ -89,6 +89,7 @@
 #include <cppadcg/cg_identical.hpp>
 #include <cppadcg/cg_variable_name_generator.hpp>
 #include <cppadcg/cg_language.hpp>
+#include <cppadcg/cg_scope_path_element.hpp>
 #include <cppadcg/cg_code_handler.hpp>
 #include <cppadcg/patterns/cg_loop_position.hpp>
 #include <cppadcg/cg_code_handler_loops.hpp>

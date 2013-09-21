@@ -1084,6 +1084,7 @@ namespace CppAD {
                     ifElseBranches = &ifElses[s];
                 }
 
+                OperationNode<Base>* ifStart = NULL;
                 //
                 map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
                 for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
@@ -1103,6 +1104,7 @@ namespace CppAD {
 
                     } else if (usedIter.size() + iterCount == positions.size()) {
                         // all other iterations
+                        nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
                         ifBranch = new OperationNode<Base>(CGElseOp, ninfo, nextBranchArgs);
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
@@ -1111,8 +1113,15 @@ namespace CppAD {
                         handler.manageOperationNodeMemory(cond);
 
                         nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*cond));
-                        CGOpCode op = it1st2Count2Iters == firstIt2Count2Iterations.begin() ? CGStartIfOp : CGElseIfOp;
-                        ifBranch = new OperationNode<Base>(op, ninfo, nextBranchArgs);
+
+                        if (ifStart == NULL) {
+                            ifStart = new OperationNode<Base>(CGStartIfOp, ninfo, nextBranchArgs);
+                            ifBranch = ifStart;
+                        } else {
+                            nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
+                            ifBranch = new OperationNode<Base>(CGElseIfOp, ninfo, nextBranchArgs);
+                        }
+
                         handler.manageOperationNodeMemory(ifBranch);
 
                         usedIter.insert(iterations.begin(), iterations.end());

@@ -337,3 +337,33 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed4) {
 
     testLibCreation("modelTemporaryIndexed4", modelTemporaryIndexed4, m, n, 6);
 }
+
+/**
+ * @test Model with 2 equations each with a bilinear term with a temporary 
+ *       variable (which depends non-linearly on a non-indexed) and an indexed
+ *       variable. Tests the grouping of expressions in the same if-else branch
+ */
+std::vector<ADCGD> modelTemporaryIndexed5(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    ADCGD tmp1 = cos(x[0]);
+    ADCGD tmp2 = sin(x[1]);
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = x[i * n] * tmp1;
+        y[i * m + 1] = x[i * n + 1] * tmp2;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed5) {
+    size_t m = 2;
+    size_t n = 2;
+
+    testLibCreation("modelTemporaryIndexed5", modelTemporaryIndexed5, m, n, 6);
+}
