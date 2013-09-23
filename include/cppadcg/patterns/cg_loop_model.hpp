@@ -120,7 +120,7 @@ namespace CppAD {
          * non-indexed hessian elements
          * [{orig J1, orig J2}]
          */
-        std::set<pairss> hessOrig2Iter2OrigJ1OrigJ2_;
+        std::set<pairss> hessOrigJ1OrigJ2_;
         /**
          * temporary hessian elements
          * [{k1, orig J2}] -> [iteration -> [{tape J2}]]
@@ -387,7 +387,7 @@ namespace CppAD {
         }
 
         inline const std::set<std::pair<size_t, size_t> >& getHessianNonIndexedNonIndexedIndexes() const {
-            return hessOrig2Iter2OrigJ1OrigJ2_;
+            return hessOrigJ1OrigJ2_;
         }
 
         inline const std::vector<std::set<size_t> >& getHessianTempIndexedTapeIndexes(size_t k1,
@@ -511,9 +511,9 @@ namespace CppAD {
                         }
 
                         for (; itTape2 != hessRow.end() && *itTape2 < nIndexed + nNonIndexed; ++itTape2) {
-                            size_t j2 = nonIndexedIndepIndexes_[*itTape2].original;
+                            size_t j2 = nonIndexedIndepIndexes_[*itTape2 - nIndexed].original;
                             pairss orig(j1, j2);
-                            hessOrig2Iter2OrigJ1OrigJ2_.insert(orig);
+                            hessOrigJ1OrigJ2_.insert(orig);
                         }
                     }
 
