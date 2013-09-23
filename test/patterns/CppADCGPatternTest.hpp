@@ -423,7 +423,9 @@ namespace CppAD {
                 modelL->SparseHessian(x, w, hessl, rowsl, colsl);
                 model->SparseHessian(x, w, hess, rows, cols);
 
-                ASSERT_TRUE(compareValues(hessl, hess));
+                ASSERT_TRUE(compareValues(hessl, hess,
+                                          std::numeric_limits<Base>::epsilon() * 1e2,
+                                          std::numeric_limits<Base>::epsilon() * 4e3));
             }
 
 

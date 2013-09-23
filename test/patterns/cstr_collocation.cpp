@@ -23,7 +23,7 @@ using namespace CppAD;
 
 size_t ns = 4;
 size_t nm = 2;
-size_t npar = 23;
+size_t npar = 22;
 
 size_t K = 3;
 size_t m = K * ns;
@@ -58,11 +58,10 @@ std::vector<ADCGD> modelCollocation(std::vector<ADCGD>& x, size_t repeat, const 
         }
 
         // K = 1
-        s += nvarsk;
-
         for (size_t j = 0; j < ns; j++) {
             xik[j] = x[s + j]; // states
         }
+        s += nvarsk;
         // xik[ns + nm + npar] = x[s + ns];// time
 
         atomicCstr(xik, dxikdt); // ODE
@@ -76,11 +75,10 @@ std::vector<ADCGD> modelCollocation(std::vector<ADCGD>& x, size_t repeat, const 
         eq += ns;
 
         // K = 2
-        s += nvarsk;
-
         for (size_t j = 0; j < ns; j++) {
             xik[j] = x[s + j]; // states
         }
+        s += nvarsk;
         // xik[ns + nm + npar] = x[s + ns];// time
 
         atomicCstr(xik, dxikdt); // ODE
@@ -94,11 +92,10 @@ std::vector<ADCGD> modelCollocation(std::vector<ADCGD>& x, size_t repeat, const 
         eq += ns;
 
         // K = 3
-
-        s += nvarsk;
         for (size_t j = 0; j < ns; j++) {
             xik[j] = x[s + j]; // states
         }
+        s += nvarsk;
         // xik[ns + nm + npar] = x[s + ns];// time
 
         atomicCstr(xik, dxikdt); // ODE
@@ -175,12 +172,18 @@ TEST_F(CppADCGPatternTest, Atomic) {
     size_t nMstart = npar + nvarsk * K * repeat + nvarsk;
 
     std::vector<Base> x(nMstart + repeat * nm, 1.0);
-    xNorm.resize(nMstart + repeat * nm);
+    xNorm.resize(nMstart + repeat * nm, 1.0);
     // parameters
     for (size_t j = 0; j < npar; j++)
         xNorm[j] = xx[ns + nm + j];
 
     size_t s = npar;
+
+    // i = 0 K = 0
+    // states
+    for (size_t j = 0; j < ns; j++) {
+        xNorm[s++] = xx[j];
+    }
 
     for (size_t i = 0; i < repeat; i++) {
         // controls
@@ -189,33 +192,40 @@ TEST_F(CppADCGPatternTest, Atomic) {
         }
 
         // K = 1
-        s += nvarsk;
         // states
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s + j] = xx[j];
+            xNorm[s++] = xx[j];
         }
 
         // K = 2
-        s += nvarsk;
         // states
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s + j] = xx[j];
+            xNorm[s++] = xx[j];
         }
 
         // K = 3
         // states
-        s += nvarsk;
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s + j] = xx[j];
+            xNorm[s++] = xx[j];
         }
     }
 
-#if 1
+#if 0
     x = xNorm;
     xNorm.clear();
 #else
     for (size_t j = 0; j < xNorm.size(); j++) {
-        xNorm[j] = abs(xNorm[j]);
+        xNorm[j] = xNorm[j] != 0.0 ? xNorm[j] : 1.0;
+    }
+
+    eqNorm.resize(repeat * m);
+    size_t e = 0;
+    for (size_t i = 0; i < repeat; i++) {
+        for (size_t k = 0; k < K; k++) {
+            for (size_t j = 0; j < ns; j++) {
+                eqNorm[e++] = xx[j];
+            }
+        }
     }
 #endif
 
