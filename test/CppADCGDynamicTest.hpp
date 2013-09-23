@@ -120,12 +120,12 @@ namespace CppAD {
             // forward zero
             std::vector<CGD> dep = fun.Forward(0, x2);
             std::vector<double> depCGen = model->ForwardZero(x);
-            compareValues(depCGen, dep, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(depCGen, dep, epsilonR, epsilonA));
 
             // Jacobian
             std::vector<CGD> jac = fun.Jacobian(x2);
             depCGen = model->Jacobian(x);
-            compareValues(depCGen, jac, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
 
             // Hessian
             std::vector<CGD> w2(Z.size(), 1.0);
@@ -133,7 +133,7 @@ namespace CppAD {
 
             std::vector<CGD> hess = fun.Hessian(x2, w2);
             depCGen = model->Hessian(x, w);
-            compareValues(depCGen, hess, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
 
             // sparse Jacobian
             std::vector<double> jacCGen;
@@ -144,7 +144,7 @@ namespace CppAD {
                 jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
             }
 
-            compareValues(jacCGenDense, jac, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacCGenDense, jac, epsilonR, epsilonA));
 
             // sparse Hessian
             std::vector<double> hessCGen;
@@ -154,7 +154,7 @@ namespace CppAD {
                 hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
             }
 
-            compareValues(hessCGenDense, hess, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessCGenDense, hess, epsilonR, epsilonA));
 
             delete model;
             delete dynamicLib;
@@ -225,7 +225,7 @@ namespace CppAD {
                 jacSparse[i] = jac[row[i] * x.size() + col[i]];
             }
 
-            compareValues(jacCGen, jacSparse);
+            ASSERT_TRUE(compareValues(jacCGen, jacSparse));
 
             // sparse Hessian
             std::vector<double> w(Z.size(), 1.0);
@@ -239,15 +239,15 @@ namespace CppAD {
                 hessSparse[i] = hess[row[i] * x.size() + col[i]];
             }
 
-            compareValues(hessCGen, hessSparse);
+            ASSERT_TRUE(compareValues(hessCGen, hessSparse));
 
             delete model;
             delete dynamicLib;
         }
 
-        inline void compareValues(const std::vector<double>& depCGen,
-                                  const std::vector<CppAD::CG<double> >& dep,
-                                  double epsilonR = 1e-14, double epsilonA = 1e-14) {
+        inline ::testing::AssertionResult compareValues(const std::vector<double>& depCGen,
+                                                        const std::vector<CppAD::CG<double> >& dep,
+                                                        double epsilonR = 1e-14, double epsilonA = 1e-14) {
 
             std::vector<double> depd(dep.size());
 
@@ -255,7 +255,7 @@ namespace CppAD {
                 depd[i] = dep[i].getValue();
             }
 
-            CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
+            return CppADCGTest::compareValues(depCGen, depd, epsilonR, epsilonA);
         }
 
     };

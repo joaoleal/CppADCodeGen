@@ -187,7 +187,7 @@ namespace CppAD {
             vector<CGD> yOrig = _fun2->Forward(0, xOrig);
             vector<double> yOuter = modelLibOuter->ForwardZero(xOuter);
 
-            compareValues(yOuter, yOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(yOuter, yOrig, epsilonR, epsilonA));
 
             /**
              * Test first order forward mode
@@ -216,7 +216,7 @@ namespace CppAD {
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
 
-                compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -246,7 +246,7 @@ namespace CppAD {
                 w[i] = 0;
                 wOrig[i] = 0;
 
-                compareValues(dwOutter, dwOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -287,7 +287,7 @@ namespace CppAD {
                 ASSERT_EQ(dwOrig.size(), n * k1);
                 ASSERT_EQ(dwOrig.size(), dwOutter.size());
                 for (size_t j = 0; j < n; j++) {
-                    nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue());
+                    ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
                 }
             }
 
@@ -296,7 +296,7 @@ namespace CppAD {
              */
             vector<CGD> jacOrig = _fun2->Jacobian(xOrig);
             vector<double> jacOuter = modelLibOuter->Jacobian(xOuter);
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Jacobian sparsity
@@ -311,7 +311,7 @@ namespace CppAD {
              */
             jacOrig = _fun2->SparseJacobian(xOrig);
             jacOuter = modelLibOuter->SparseJacobian(xOuter);
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Hessian
@@ -322,7 +322,7 @@ namespace CppAD {
             }
             vector<CGD> hessOrig = _fun2->Hessian(xOrig, wOrig);
             vector<double> hessOuter = modelLibOuter->Hessian(xOuter, w);
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
 
             /**
              * Hessian sparsity
@@ -337,7 +337,7 @@ namespace CppAD {
              */
             hessOrig = _fun2->SparseHessian(xOrig, wOrig);
             hessOuter = modelLibOuter->SparseHessian(xOuter, w);
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
         }
 
         void test2LevelAtomicLibModelCustomEls(DynamicLibModel<Base>* modelLib,
@@ -365,7 +365,7 @@ namespace CppAD {
             vector<CGD> yOrig = _fun2->Forward(0, xOrig);
             vector<double> yOuter = modelLibOuter->ForwardZero(xOuter);
 
-            compareValues(yOuter, yOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(yOuter, yOrig, epsilonR, epsilonA));
 
             /**
              * Jacobian sparsity
@@ -386,7 +386,7 @@ namespace CppAD {
             size_t const* rows, *cols;
             modelLibOuter->SparseJacobian(&xOuter[0], xOuter.size(), &jacOuter[0], &rows, &cols, jacOuter.size());
 
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Hessian sparsity
@@ -413,7 +413,7 @@ namespace CppAD {
             modelLibOuter->SparseHessian(&xOuter[0], xOuter.size(), &w[0], w.size(),
                                          &hessOuter[0], &rows, &cols, hessOuter.size());
 
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
         }
 
         virtual void prepareAtomicLibAtomicLib(const CppAD::vector<Base>& xOuter,

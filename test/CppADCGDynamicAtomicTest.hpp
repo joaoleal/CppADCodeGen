@@ -134,8 +134,8 @@ namespace CppAD {
             vector<double> yInner = modelLib->ForwardZero(x);
             vector<double> yOutter = f2.Forward(0, x);
 
-            compareValues(yInner, yOrig, epsilonR, epsilonA);
-            compareValues(yOutter, yOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(yInner, yOrig, epsilonR, epsilonA));
+            ASSERT_TRUE(compareValues(yOutter, yOrig, epsilonR, epsilonA));
 
             /**
              * Test first order forward mode
@@ -167,8 +167,8 @@ namespace CppAD {
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
 
-                compareValues(y_pInner, y_pOrig, epsilonR, epsilonA);
-                compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(y_pInner, y_pOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -199,8 +199,8 @@ namespace CppAD {
                 w[i] = 0;
                 wOrig[i] = 0;
 
-                compareValues(dwInner, dwOrig, epsilonR, epsilonA);
-                compareValues(dwOutter, dwOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(dwInner, dwOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -246,8 +246,8 @@ namespace CppAD {
                 ASSERT_EQ(dwOrig.size(), dwInner.size());
                 ASSERT_EQ(dwOrig.size(), dwOutter.size());
                 for (size_t j = 0; j < n; j++) {
-                    nearEqual(dwInner[j * k1], dwOrig[j * k1].getValue());
-                    nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue());
+                    ASSERT_TRUE(nearEqual(dwInner[j * k1], dwOrig[j * k1].getValue()));
+                    ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
                 }
             }
 
@@ -256,7 +256,7 @@ namespace CppAD {
              */
             vector<CGD> jacOrig = _fun->Jacobian(xOrig);
             vector<double> jacOutter = f2.Jacobian(x);
-            compareValues(jacOutter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOutter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Jacobian sparsity
@@ -277,7 +277,7 @@ namespace CppAD {
              */
             jacOrig = _fun->SparseJacobian(xOrig);
             jacOutter = f2.SparseJacobian(x);
-            compareValues(jacOutter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOutter, jacOrig, epsilonR, epsilonA));
 
             // sparse reverse
             std::vector<size_t> row, col;
@@ -291,7 +291,7 @@ namespace CppAD {
             jacOutter.resize(row.size());
             f2.SparseJacobianReverse(x, jacSparsityOutter, row, col, jacOutter, work2);
 
-            compareValues(jacOutter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOutter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Hessian
@@ -302,14 +302,14 @@ namespace CppAD {
             }
             vector<CGD> hessOrig = _fun->Hessian(xOrig, wOrig);
             vector<double> hessOutter = f2.Hessian(x, w);
-            compareValues(hessOutter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOutter, hessOrig, epsilonR, epsilonA));
 
             /**
              * Sparse Hessian
              */
             hessOrig = _fun->SparseHessian(xOrig, wOrig);
             hessOutter = f2.SparseHessian(x, w);
-            compareValues(hessOutter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOutter, hessOrig, epsilonR, epsilonA));
         }
 
         /**
@@ -407,7 +407,7 @@ namespace CppAD {
             vector<CGD> yOrig = _fun2->Forward(0, xOrig);
             vector<double> yOuter = modelLibOuter->ForwardZero(x);
 
-            compareValues(yOuter, yOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(yOuter, yOrig, epsilonR, epsilonA));
 
             /**
              * Test first order forward mode
@@ -436,7 +436,7 @@ namespace CppAD {
                 x_pOrig[j] = 0;
                 tx[j * k1 + 1] = 0;
 
-                compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -466,7 +466,7 @@ namespace CppAD {
                 w[i] = 0;
                 wOrig[i] = 0;
 
-                compareValues(dwOutter, dwOrig, epsilonR, epsilonA);
+                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
             }
 
             /**
@@ -507,7 +507,7 @@ namespace CppAD {
                 ASSERT_EQ(dwOrig.size(), n * k1);
                 ASSERT_EQ(dwOrig.size(), dwOutter.size());
                 for (size_t j = 0; j < n; j++) {
-                    nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue());
+                    ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
                 }
             }
 
@@ -516,7 +516,7 @@ namespace CppAD {
              */
             vector<CGD> jacOrig = _fun2->Jacobian(xOrig);
             vector<double> jacOuter = modelLibOuter->Jacobian(x);
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Jacobian sparsity
@@ -531,7 +531,7 @@ namespace CppAD {
              */
             jacOrig = _fun2->SparseJacobian(xOrig);
             jacOuter = modelLibOuter->SparseJacobian(x);
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Hessian
@@ -542,7 +542,7 @@ namespace CppAD {
             }
             vector<CGD> hessOrig = _fun2->Hessian(xOrig, wOrig);
             vector<double> hessOuter = modelLibOuter->Hessian(x, w);
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
 
             /**
              * Hessian sparsity
@@ -557,7 +557,7 @@ namespace CppAD {
              */
             hessOrig = _fun2->SparseHessian(xOrig, wOrig);
             hessOuter = modelLibOuter->SparseHessian(x, w);
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
         }
 
         void test2LevelAtomicLibModelCustomEls(DynamicLibModel<Base>* modelLib,
@@ -589,7 +589,7 @@ namespace CppAD {
             vector<CGD> yOrig = _fun2->Forward(0, xOrig);
             vector<double> yOuter = modelLibOuter->ForwardZero(x);
 
-            compareValues(yOuter, yOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(yOuter, yOrig, epsilonR, epsilonA));
 
             /**
              * Jacobian sparsity
@@ -610,7 +610,7 @@ namespace CppAD {
             size_t const* rows, *cols;
             modelLibOuter->SparseJacobian(&x[0], x.size(), &jacOuter[0], &rows, &cols, jacOuter.size());
 
-            compareValues(jacOuter, jacOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
             /**
              * Hessian sparsity
@@ -637,7 +637,7 @@ namespace CppAD {
             modelLibOuter->SparseHessian(&x[0], x.size(), &w[0], w.size(),
                                          &hessOuter[0], &rows, &cols, hessOuter.size());
 
-            compareValues(hessOuter, hessOrig, epsilonR, epsilonA);
+            ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
         }
 
         void prepareAtomicLib(const CppAD::vector<Base>& x,

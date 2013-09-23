@@ -20,10 +20,11 @@ namespace CppAD {
 
     class CppADCGSolveTest : public CppADCGTest {
     public:
+
         inline CppADCGSolveTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues) {
         }
-            
+
     protected:
 
         inline void test_solve(CppAD::ADFun<CGD>& fun,
@@ -56,7 +57,7 @@ namespace CppAD {
             // evaluate the dependent values (equation residuals)
             const vector<double> depValues = calculateDependentForward0(fun, testValues);
 
-            nearEqual(depValues[expressionIndex], 0.0, 1e-4, 1e-8);
+            ASSERT_TRUE(nearEqual(depValues[expressionIndex], 0.0, 1e-4, 1e-8));
 
             // generate the operation graph
             CodeHandler<double> handler;
@@ -105,7 +106,7 @@ namespace CppAD {
 
             double resultVal = CppAD::Value(CppAD::Var2Par(result[0]));
 
-            nearEqual(resultVal, testValues[indIndex], 10e-4, 10e-4);
+            ASSERT_TRUE(nearEqual(resultVal, testValues[indIndex], 10e-4, 10e-4));
         }
 
         inline std::vector<double> calculateDependentForward0(CppAD::ADFun<CGD>& fun,

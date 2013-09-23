@@ -41,13 +41,13 @@ namespace CppAD {
     public:
 
         inline CppADCGDynamicAtomic2Test(bool verbose = false, bool printValues = false) :
-            CppADCGTest(verbose, printValues),
-            x(n),
-            _atomicFun(NULL),
-            _cgAtomicFun(NULL),
-            _fun(NULL),
-            _dynamicLib(NULL),
-            _model(NULL) {
+        CppADCGTest(verbose, printValues),
+        x(n),
+        _atomicFun(NULL),
+        _cgAtomicFun(NULL),
+        _fun(NULL),
+        _dynamicLib(NULL),
+        _model(NULL) {
         }
 
         virtual void SetUp() {
@@ -98,7 +98,7 @@ namespace CppAD {
             compHelp.setCreateHessian(true);
             compHelp.setCreateSparseJacobian(true);
             compHelp.setCreateSparseHessian(true);
-            
+
             GccCompiler<double> compiler;
             std::vector<std::string> flags;
             flags.push_back("-O0");
@@ -164,7 +164,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     vector<CGD> yOrig = _fun->Forward(0, xOrig);
     std::vector<double> yInner = _model->ForwardZero(x);
 
-    compareValues(yInner, yOrig);
+    ASSERT_TRUE(compareValues(yInner, yOrig));
 
     /**
      * Test first order forward mode
@@ -195,7 +195,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         x_pOrig[j] = 0;
         tx[j * k1 + 1] = 0;
 
-        compareValues(y_pInner, y_pOrig);
+        ASSERT_TRUE(compareValues(y_pInner, y_pOrig));
     }
 
     /**
@@ -226,7 +226,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         w[i] = 0;
         wOrig[i] = 0;
 
-        compareValues(dwInner, dwOrig);
+        ASSERT_TRUE(compareValues(dwInner, dwOrig));
     }
 
     /**
@@ -270,7 +270,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         ASSERT_EQ(pxOrig.size(), n * k1);
         ASSERT_EQ(pxOrig.size(), pxInner.size());
         for (size_t j = 0; j < n; j++) {
-            nearEqual(pxInner[j * k1], pxOrig[j * k1].getValue());
+            ASSERT_TRUE(nearEqual(pxInner[j * k1], pxOrig[j * k1].getValue()));
         }
     }
 
@@ -279,7 +279,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
      */
     vector<CGD> jacOrig = _fun->Jacobian(xOrig);
     std::vector<double> jacOutter = _model->Jacobian(x);
-    compareValues(jacOutter, jacOrig);
+    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
 
     /**
      * Jacobian sparsity
@@ -294,7 +294,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
      */
     jacOrig = _fun->SparseJacobian(xOrig);
     jacOutter = _model->SparseJacobian(x);
-    compareValues(jacOutter, jacOrig);
+    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
 
     // sparse reverse
     std::vector<size_t> row, col;
@@ -307,7 +307,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     jacOrig.resize(row.size());
     _fun->SparseJacobianReverse(xOrig, jacSparsityOrig, row, col, jacOrig, workOrig);
 
-    compareValues(jacOutter, jacOrig);
+    ASSERT_TRUE(compareValues(jacOutter, jacOrig));
 
     /**
      * Hessian
@@ -318,12 +318,12 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     }
     vector<CGD> hessOrig = _fun->Hessian(xOrig, wOrig);
     std::vector<double> hessOutter = _model->Hessian(x, stdw);
-    compareValues(hessOutter, hessOrig);
+    ASSERT_TRUE(compareValues(hessOutter, hessOrig));
 
     /**
      * Sparse Hessian
      */
     hessOrig = _fun->SparseHessian(xOrig, wOrig);
     hessOutter = _model->SparseHessian(x, stdw);
-    compareValues(hessOutter, hessOrig);
+    ASSERT_TRUE(compareValues(hessOutter, hessOrig));
 }

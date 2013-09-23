@@ -23,7 +23,7 @@ TEST_F(CppADCGTest, InputStreamFloat) {
     is >> var;
 
     ASSERT_TRUE(var.isParameter());
-    nearEqual(var.getValue(), 5.5, 10e-10, 10e-10);
+    ASSERT_TRUE(nearEqual(var.getValue(), 5.5, 10e-10, 10e-10));
 }
 
 TEST_F(CppADCGTest, InputStreamInteger) {
@@ -33,5 +33,5 @@ TEST_F(CppADCGTest, InputStreamInteger) {
     is2 >> var2;
 
     ASSERT_TRUE(var2.isParameter());
-    nearEqual(var2.getValue(), 8.0, 10e-10, 10e-10);
+    ASSERT_TRUE(nearEqual(var2.getValue(), 8.0, 10e-10, 10e-10));
 }

@@ -30,12 +30,12 @@ namespace CppAD {
     public:
 
         inline CppADCGDynamicForRevTest2(bool verbose = false, bool printValues = false) :
-            CppADCGTest(verbose, printValues),
-            _modelName("model"),
-            x(n),
-            _fun(NULL),
-            _dynamicLib(NULL),
-            _model(NULL) {
+        CppADCGTest(verbose, printValues),
+        _modelName("model"),
+        x(n),
+        _fun(NULL),
+        _dynamicLib(NULL),
+        _model(NULL) {
         }
 
         virtual void SetUp() {
@@ -125,7 +125,7 @@ TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
     vector<CGD> jacOrig = _fun->SparseJacobian(xOrig, p);
     vector<double> jacCG = CppADCGDynamicForRevTest2::_model->SparseJacobian(x);
 
-    compareValues(jacCG, jacOrig);
+    ASSERT_TRUE(compareValues(jacCG, jacOrig));
 }
 
 TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
@@ -150,5 +150,5 @@ TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
     vector<CGD> hessOrig = _fun->SparseHessian(xOrig, wOrig);
     vector<double> hessCG = CppADCGDynamicForRevTest2::_model->SparseHessian(x, w);
 
-    compareValues(hessCG, hessOrig);
+    ASSERT_TRUE(compareValues(hessCG, hessOrig));
 }

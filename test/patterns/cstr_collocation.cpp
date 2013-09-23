@@ -174,41 +174,50 @@ TEST_F(CppADCGPatternTest, Atomic) {
     size_t nvarsk = ns;
     size_t nMstart = npar + nvarsk * K * repeat + nvarsk;
 
-    std::vector<Base> x(nMstart + repeat * nm);
+    std::vector<Base> x(nMstart + repeat * nm, 1.0);
+    xNorm.resize(nMstart + repeat * nm);
     // parameters
     for (size_t j = 0; j < npar; j++)
-        x[j] = xx[ns + nm + j];
+        xNorm[j] = xx[ns + nm + j];
 
     size_t s = npar;
 
     for (size_t i = 0; i < repeat; i++) {
         // controls
         for (size_t j = 0; j < nm; j++) {
-            x[nMstart + nm * i + j] = xx[ns + j];
+            xNorm[nMstart + nm * i + j] = xx[ns + j];
         }
 
         // K = 1
         s += nvarsk;
         // states
         for (size_t j = 0; j < ns; j++) {
-            x[s + j] = xx[j];
+            xNorm[s + j] = xx[j];
         }
 
         // K = 2
         s += nvarsk;
         // states
         for (size_t j = 0; j < ns; j++) {
-            x[s + j] = xx[j];
+            xNorm[s + j] = xx[j];
         }
 
         // K = 3
         // states
         s += nvarsk;
         for (size_t j = 0; j < ns; j++) {
-            x[s + j] = xx[j];
+            xNorm[s + j] = xx[j];
         }
     }
 
+#if 1
+    x = xNorm;
+    xNorm.clear();
+#else
+    for (size_t j = 0; j < xNorm.size(); j++) {
+        xNorm[j] = abs(xNorm[j]);
+    }
+#endif
 
     testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
     testLibCreationWithAtomics("modelAtomicCstr", modelCollocation, atomics, m, x, repeat);

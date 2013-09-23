@@ -31,6 +31,8 @@ namespace CppAD {
     protected:
         TEST_TYPE jacobian_;
         TEST_TYPE hessian_;
+        std::vector<Base> xNorm;
+        std::vector<Base> eqNorm;
     public:
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
@@ -94,8 +96,18 @@ namespace CppAD {
             for (size_t j = 0; j < xb.size(); j++)
                 x[j] = xb[j];
             CppAD::Independent(x);
+            if (xNorm.size() > 0) {
+                ASSERT_EQ(x.size(), xNorm.size());
+                for (size_t j = 0; j < x.size(); j++)
+                    x[j] *= xNorm[j];
+            }
 
             std::vector<ADCGD> y = (*model)(x, repeat);
+            if (eqNorm.size() > 0) {
+                ASSERT_EQ(y.size(), eqNorm.size());
+                for (size_t i = 0; i < y.size(); i++)
+                    y[i] /= eqNorm[i];
+            }
 
             ADFun<CGD> fun;
             fun.Dependent(y);
@@ -149,8 +161,18 @@ namespace CppAD {
             for (size_t j = 0; j < n2; j++)
                 x[j] = xb[j];
             CppAD::Independent(x);
+            if (xNorm.size() > 0) {
+                ASSERT_EQ(x.size(), xNorm.size());
+                for (size_t j = 0; j < x.size(); j++)
+                    x[j] *= xNorm[j];
+            }
 
             std::vector<ADCGD> y = (*model)(x, repeat, atomics);
+            if (eqNorm.size() > 0) {
+                ASSERT_EQ(y.size(), eqNorm.size());
+                for (size_t i = 0; i < y.size(); i++)
+                    y[i] /= eqNorm[i];
+            }
 
             ADFun<CGD> fun;
             fun.Dependent(y);
@@ -371,7 +393,7 @@ namespace CppAD {
             if (compHelp.isCreateForwardZero()) {
                 std::vector<double> yl = modelL->ForwardZero(x);
                 std::vector<double> y = model->ForwardZero(x);
-                compareValues(yl, y);
+                ASSERT_TRUE(compareValues(yl, y));
             }
 
             // test jacobian
@@ -384,7 +406,7 @@ namespace CppAD {
                 modelL->SparseJacobian(x, jacl, rowsl, colsl);
                 model->SparseJacobian(x, jac, rows, cols);
 
-                compareValues(jacl, jac);
+                ASSERT_TRUE(compareValues(jacl, jac));
             }
 
             // test hessian
@@ -401,7 +423,7 @@ namespace CppAD {
                 modelL->SparseHessian(x, w, hessl, rowsl, colsl);
                 model->SparseHessian(x, w, hess, rows, cols);
 
-                compareValues(hessl, hess);
+                ASSERT_TRUE(compareValues(hessl, hess));
             }
 
 
