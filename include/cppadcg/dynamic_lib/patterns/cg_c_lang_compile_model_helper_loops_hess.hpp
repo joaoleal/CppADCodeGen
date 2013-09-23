@@ -19,8 +19,6 @@ namespace CppAD {
 
     namespace loops {
 
-        typedef std::pair<size_t, size_t> SizeN1stIt;
-
         class HessianElement {
         public:
             size_t location; // location in the compressed hessian vector
@@ -32,15 +30,6 @@ namespace CppAD {
             }
 
         };
-
-        template<class Base>
-        class IfBranchInfo;
-
-        template <class Base>
-        class IfElseInfo;
-
-        template<class Base>
-        class HessianWithLoopsInfo;
 
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createHessianContribution(CodeHandler<Base>& handler,
@@ -65,20 +54,19 @@ namespace CppAD {
      **************************************************************************/
 
     template<class Base>
-    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
-                                                                                   vector<CGBase>& x,
-                                                                                   vector<CGBase>& w,
-                                                                                   const std::vector<size_t>& lowerHessRows,
-                                                                                   const std::vector<size_t>& lowerHessCols,
-                                                                                   const std::vector<size_t>& lowerHessOrder,
-                                                                                   const std::map<size_t, size_t>& duplicates) {
+    void CLangCompileModelHelper<Base>::analyseSparseHessianWithLoops(const std::vector<size_t>& lowerHessRows,
+                                                                      const std::vector<size_t>& lowerHessCols,
+                                                                      const std::vector<size_t>& lowerHessOrder,
+                                                                      vector<std::set<size_t> >& noLoopEvalJacSparsity,
+                                                                      vector<std::set<size_t> >& noLoopEvalHessSparsity,
+                                                                      vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
+                                                                      std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo) {
+
         typedef std::pair<size_t, size_t> pairss;
 
         using namespace std;
         using namespace CppAD::loops;
         using CppAD::vector;
-
-        handler.setZeroDependents(true);
 
         size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
@@ -100,16 +88,13 @@ namespace CppAD {
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
-        size_t maxLoc = _hessSparsity.rows.size();
         size_t nnz = lowerHessRows.size();
-        vector<CGBase> hess(maxLoc);
 
-        vector<set<size_t> > noLoopEvalJacSparsity(_funNoLoops != NULL ? m : 0);
+        noLoopEvalJacSparsity.resize(_funNoLoops != NULL ? m : 0);
+        noLoopEvalHessSparsity.resize(_funNoLoops != NULL ? n : 0);
+        noLoopEvalHessLocations.resize(noLoopEvalHessSparsity.size());
 
-        vector<set<size_t> > noLoopEvalHessSparsity(_funNoLoops != NULL ? n : 0);
-        vector<map<size_t, set<size_t> > > noLoopEvalHessLocations(noLoopEvalHessSparsity.size());
-
-        map<LoopModel<Base>*, HessianWithLoopsInfo<Base> > loopHessInfo;
+        loopHessInfo.clear();
         for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
             LoopModel<Base>* loop = *itloop;
             loopHessInfo[loop] = HessianWithLoopsInfo<Base>(*loop);
@@ -175,7 +160,6 @@ namespace CppAD {
 
                         std::vector<HessianElement>& positions = loopInfo.indexedIndexedPositions[tape];
                         positions.resize(iterations);
-                        //CPPADCG_ASSERT_KNOWN(positions[iteration] == maxLoc, "Repeated hessian elements requested");
 
                         positions[iteration].location = e;
                         positions[iteration].count++;
@@ -479,6 +463,42 @@ namespace CppAD {
 
             }
         }
+    }
+
+    template<class Base>
+    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
+                                                                                   vector<CGBase>& x,
+                                                                                   vector<CGBase>& w,
+                                                                                   const std::vector<size_t>& lowerHessRows,
+                                                                                   const std::vector<size_t>& lowerHessCols,
+                                                                                   const std::vector<size_t>& lowerHessOrder,
+                                                                                   const std::map<size_t, size_t>& duplicates) {
+        typedef std::pair<size_t, size_t> pairss;
+
+        using namespace std;
+        using namespace CppAD::loops;
+        using CppAD::vector;
+
+        handler.setZeroDependents(true);
+
+        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+
+        size_t maxLoc = _hessSparsity.rows.size();
+        vector<CGBase> hess(maxLoc);
+
+        vector<set<size_t> > noLoopEvalJacSparsity;
+        vector<set<size_t> > noLoopEvalHessSparsity;
+        vector<map<size_t, set<size_t> > > noLoopEvalHessLocations;
+        map<LoopModel<Base>*, HessianWithLoopsInfo<Base> > loopHessInfo;
+
+        /** 
+         * Load locations in the compressed hessian
+         * d      d y_i
+         * d x_j2 d x_j1
+         */
+        analyseSparseHessianWithLoops(lowerHessRows, lowerHessCols, lowerHessOrder,
+                                      noLoopEvalJacSparsity, noLoopEvalHessSparsity,
+                                      noLoopEvalHessLocations, loopHessInfo);
 
         /***********************************************************************
          *        generate the operation graph

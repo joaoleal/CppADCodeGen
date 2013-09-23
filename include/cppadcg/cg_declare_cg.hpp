@@ -104,6 +104,22 @@ namespace CppAD {
 
     class IndexPattern;
 
+    namespace loops {
+
+        typedef std::pair<size_t, size_t> SizeN1stIt;
+
+        class HessianElement;
+
+        template<class Base>
+        class IfBranchInfo;
+
+        template <class Base>
+        class IfElseInfo;
+
+        template<class Base>
+        class HessianWithLoopsInfo;
+    }
+
     /***************************************************************************
      * Dynamic model compilation
      **************************************************************************/

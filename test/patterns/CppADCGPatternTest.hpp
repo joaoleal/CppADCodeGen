@@ -121,11 +121,11 @@ namespace CppAD {
             if (jacobian_ == MUST_PASS) {
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
             }
-            /*
-            if (hessian) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
+
+            if (hessian_ == MUST_PASS) {
+                // testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
-             */
+
         }
 
         void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
@@ -237,11 +237,10 @@ namespace CppAD {
             if (jacobian_ == MUST_PASS) {
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
             }
-            /*
-             if (hessian) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
+
+            if (hessian_ == MUST_PASS) {
+                //testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
-             */
         }
 
     private:

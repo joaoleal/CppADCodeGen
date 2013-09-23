@@ -775,6 +775,14 @@ namespace CppAD {
                                                              const std::vector<size_t>& lowerHessOrder,
                                                              const std::map<size_t, size_t>& duplicates);
 
+        virtual void analyseSparseHessianWithLoops(const std::vector<size_t>& lowerHessRows,
+                                                   const std::vector<size_t>& lowerHessCols,
+                                                   const std::vector<size_t>& lowerHessOrder,
+                                                   vector<std::set<size_t> >& noLoopEvalJacSparsity,
+                                                   vector<std::set<size_t> >& noLoopEvalHessSparsity,
+                                                   vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
+                                                   std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo);
+
         void generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
                                                              std::map<std::string, std::string>& sources);
 
