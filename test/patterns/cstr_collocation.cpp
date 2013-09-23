@@ -120,6 +120,8 @@ void atomicFunction(const std::vector<AD<double> >& x, std::vector<AD<double> >&
 TEST_F(CppADCGPatternTest, Atomic) {
     using namespace CppAD;
 
+    this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
+
     /**
      * 
      */
@@ -172,58 +174,58 @@ TEST_F(CppADCGPatternTest, Atomic) {
     size_t nMstart = npar + nvarsk * K * repeat + nvarsk;
 
     std::vector<Base> x(nMstart + repeat * nm, 1.0);
-    xNorm.resize(nMstart + repeat * nm, 1.0);
+    xNorm_.resize(nMstart + repeat * nm, 1.0);
     // parameters
     for (size_t j = 0; j < npar; j++)
-        xNorm[j] = xx[ns + nm + j];
+        xNorm_[j] = xx[ns + nm + j];
 
     size_t s = npar;
 
     // i = 0 K = 0
     // states
     for (size_t j = 0; j < ns; j++) {
-        xNorm[s++] = xx[j];
+        xNorm_[s++] = xx[j];
     }
 
     for (size_t i = 0; i < repeat; i++) {
         // controls
         for (size_t j = 0; j < nm; j++) {
-            xNorm[nMstart + nm * i + j] = xx[ns + j];
+            xNorm_[nMstart + nm * i + j] = xx[ns + j];
         }
 
         // K = 1
         // states
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s++] = xx[j];
+            xNorm_[s++] = xx[j];
         }
 
         // K = 2
         // states
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s++] = xx[j];
+            xNorm_[s++] = xx[j];
         }
 
         // K = 3
         // states
         for (size_t j = 0; j < ns; j++) {
-            xNorm[s++] = xx[j];
+            xNorm_[s++] = xx[j];
         }
     }
 
 #if 0
-    x = xNorm;
-    xNorm.clear();
+    x = xNorm_;
+    xNorm_.clear();
 #else
-    for (size_t j = 0; j < xNorm.size(); j++) {
-        xNorm[j] = xNorm[j] != 0.0 ? xNorm[j] : 1.0;
+    for (size_t j = 0; j < xNorm_.size(); j++) {
+        xNorm_[j] = xNorm_[j] != 0.0 ? xNorm_[j] : 1.0;
     }
 
-    eqNorm.resize(repeat * m);
+    eqNorm_.resize(repeat * m);
     size_t e = 0;
     for (size_t i = 0; i < repeat; i++) {
         for (size_t k = 0; k < K; k++) {
             for (size_t j = 0; j < ns; j++) {
-                eqNorm[e++] = xx[j];
+                eqNorm_[e++] = xx[j];
             }
         }
     }

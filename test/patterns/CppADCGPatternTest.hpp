@@ -31,14 +31,19 @@ namespace CppAD {
     protected:
         TEST_TYPE jacobian_;
         TEST_TYPE hessian_;
-        std::vector<Base> xNorm;
-        std::vector<Base> eqNorm;
+        std::vector<Base> xNorm_;
+        std::vector<Base> eqNorm_;
+        Base epsilonA_;
+        Base epsilonR_;
     public:
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
             jacobian_(MUST_PASS),
-            hessian_(MUST_PASS) {
+            hessian_(MUST_PASS),
+            epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
+            epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
+
         }
 
         void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
@@ -96,17 +101,17 @@ namespace CppAD {
             for (size_t j = 0; j < xb.size(); j++)
                 x[j] = xb[j];
             CppAD::Independent(x);
-            if (xNorm.size() > 0) {
-                ASSERT_EQ(x.size(), xNorm.size());
+            if (xNorm_.size() > 0) {
+                ASSERT_EQ(x.size(), xNorm_.size());
                 for (size_t j = 0; j < x.size(); j++)
-                    x[j] *= xNorm[j];
+                    x[j] *= xNorm_[j];
             }
 
             std::vector<ADCGD> y = (*model)(x, repeat);
-            if (eqNorm.size() > 0) {
-                ASSERT_EQ(y.size(), eqNorm.size());
+            if (eqNorm_.size() > 0) {
+                ASSERT_EQ(y.size(), eqNorm_.size());
                 for (size_t i = 0; i < y.size(); i++)
-                    y[i] /= eqNorm[i];
+                    y[i] /= eqNorm_[i];
             }
 
             ADFun<CGD> fun;
@@ -161,17 +166,17 @@ namespace CppAD {
             for (size_t j = 0; j < n2; j++)
                 x[j] = xb[j];
             CppAD::Independent(x);
-            if (xNorm.size() > 0) {
-                ASSERT_EQ(x.size(), xNorm.size());
+            if (xNorm_.size() > 0) {
+                ASSERT_EQ(x.size(), xNorm_.size());
                 for (size_t j = 0; j < x.size(); j++)
-                    x[j] *= xNorm[j];
+                    x[j] *= xNorm_[j];
             }
 
             std::vector<ADCGD> y = (*model)(x, repeat, atomics);
-            if (eqNorm.size() > 0) {
-                ASSERT_EQ(y.size(), eqNorm.size());
+            if (eqNorm_.size() > 0) {
+                ASSERT_EQ(y.size(), eqNorm_.size());
                 for (size_t i = 0; i < y.size(); i++)
-                    y[i] /= eqNorm[i];
+                    y[i] /= eqNorm_[i];
             }
 
             ADFun<CGD> fun;
@@ -424,8 +429,7 @@ namespace CppAD {
                 model->SparseHessian(x, w, hess, rows, cols);
 
                 ASSERT_TRUE(compareValues(hessl, hess,
-                                          std::numeric_limits<Base>::epsilon() * 1e2,
-                                          std::numeric_limits<Base>::epsilon() * 4e3));
+                                          epsilonR_, epsilonA_));
             }
 
 
