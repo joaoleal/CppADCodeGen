@@ -384,18 +384,6 @@ namespace CppAD {
     }
 
     template<class Base>
-    bool CLangCompileModelHelper<Base>::estimateBestJacobianADMode(const std::vector<size_t>& jacRows,
-                                                                   const std::vector<size_t>& jacCols) {
-        std::set<size_t> rows, cols;
-        rows.insert(jacRows.begin(), jacRows.end());
-        size_t workReverse = rows.size();
-        cols.insert(jacCols.begin(), jacCols.end());
-        size_t workForward = cols.size();
-
-        return workForward <= workReverse;
-    }
-
-    template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources,
                                                                      bool forward) {
         const std::string jobName = "sparse Jacobian";

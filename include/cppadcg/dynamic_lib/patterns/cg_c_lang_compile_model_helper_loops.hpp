@@ -104,7 +104,7 @@ namespace CppAD {
         std::vector<Argument<Base> > xIndexedArgs(1);
         xIndexedArgs[0] = Argument<Base>(iterationIndexOp);
         std::vector<size_t> info(2);
-        info[0] = 1; // py
+        info[0] = 2; // py2
 
         for (size_t i = 0; i < dep_size; i++) {
             IndexPattern* ip = depIndexes[i];

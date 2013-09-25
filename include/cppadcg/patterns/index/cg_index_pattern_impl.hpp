@@ -51,6 +51,13 @@ namespace CppAD {
         }
     }
 
+    inline bool IndexPattern::isConstant(const IndexPattern& ip) {
+        if (ip.getType() == LINEAR) {
+            const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
+            return lip.getLinearSlopeDy() == 0;
+        }
+        return false;
+    }
 }
 
 #endif

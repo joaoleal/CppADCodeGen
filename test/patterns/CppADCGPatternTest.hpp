@@ -123,7 +123,7 @@ namespace CppAD {
             }
 
             if (hessian_ == MUST_PASS) {
-                // testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
 
         }
@@ -239,7 +239,7 @@ namespace CppAD {
             }
 
             if (hessian_ == MUST_PASS) {
-                //testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
             }
         }
 

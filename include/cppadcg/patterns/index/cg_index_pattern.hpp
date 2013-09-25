@@ -63,6 +63,8 @@ namespace CppAD {
          * @return the generated index pattern (must be deleted by user)
          */
         static inline IndexPattern* detect(const Index& indexX, const std::map<size_t, size_t>& x2y);
+        
+        static inline bool isConstant(const IndexPattern& ip);
     };
 
 }

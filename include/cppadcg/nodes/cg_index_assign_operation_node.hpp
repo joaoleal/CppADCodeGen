@@ -28,7 +28,9 @@ namespace CppAD {
     template<class Base>
     class IndexAssignOperationNode : public OperationNode<Base> {
     private:
+        // the value being assigned
         const Index& index_;
+        // the index expression used to define the index value
         const IndexPattern& indexPattern_;
     public:
 

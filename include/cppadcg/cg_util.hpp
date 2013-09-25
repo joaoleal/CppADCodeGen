@@ -107,6 +107,23 @@ namespace CppAD {
     }
 
     /**
+     * Estimates the work load of forward vs reverse mode for the evaluation of
+     * a Jacobian
+     * 
+     * @return true if the foward mode should be used, false for the reverse mode
+     */
+    inline bool estimateBestJacobianADMode(const std::vector<size_t>& jacRows,
+                                           const std::vector<size_t>& jacCols) {
+        std::set<size_t> rows, cols;
+        rows.insert(jacRows.begin(), jacRows.end());
+        size_t workReverse = rows.size();
+        cols.insert(jacCols.begin(), jacCols.end());
+        size_t workForward = cols.size();
+
+        return workForward <= workReverse;
+    }
+
+    /**
      * Determines the sum of the hessian sparsities for all the dependent 
      * variables in a model
      * 
@@ -744,8 +761,15 @@ namespace CppAD {
         }
     };
 
-    /**
+    /***************************************************************************
      * map related
+     **************************************************************************/
+
+    /**
+     * Gets all the keys present in a map
+     * 
+     * @param map the map from which to get the keys from
+     * @param keys the map keys will be inserted into this set
      */
     template<class Key, class Value>
     void mapKeys(const std::map<Key, Value>& map, std::set<Key>& keys) {
@@ -755,6 +779,12 @@ namespace CppAD {
         }
     }
 
+    /**
+     * Gets all the keys present in a map
+     * 
+     * @param map the map from which to get the keys from
+     * @param keys the map keys will be saved in this vector
+     */
     template<class Key, class Value>
     void mapKeys(const std::map<Key, Value>& map, std::vector<Key>& keys) {
         keys.resize(map.size());
@@ -781,11 +811,63 @@ namespace CppAD {
         typename std::map<Key, Value>::const_iterator itm = map.begin();
         typename std::set<Key>::const_iterator itk = keys.begin();
         for (; itm != map.end(); ++itm, ++itk) {
-            if(itm->first != *itk)
+            if (itm->first != *itk)
                 return false;
         }
-        
+
         return true;
+    }
+
+    /**
+     * Creates a new map with only a given set of keys
+     * 
+     * @param m The map to be filtered
+     * @param keys the keys (the filter) to be retrieved from the map 
+     * @return a new map only with the keys found in provided filter
+     */
+    template<class Key, class Value>
+    inline std::map<Key, Value> filterBykeys(const std::map<Key, Value>& m,
+                                             const std::set<Key>& keys) {
+        std::map<Key, Value> filtered;
+
+        typename std::map<Key, Value>::const_iterator itM;
+
+        typename std::set<Key>::const_iterator itK;
+        for (itK = keys.begin(); itK != keys.end(); ++itK) {
+            itM = m.find(*itK);
+            if (itM != m.end()) {
+                filtered[itM->first] = itM->second;
+            }
+        }
+        return filtered;
+    }
+
+    /**
+     * Compares two sets
+     * 
+     * @param s1 the first set
+     * @param s2 the second set
+     * @return -1 if the first set is considered lower than the second,
+     *         0 if they have all the same elements
+     *         1 if the second set is considered lower than the first.
+     */
+    template<class T>
+    inline int compare(std::set<T> s1, std::set<T> s2) {
+        if (s1.size() < s2.size()) {
+            return -1;
+        } else if (s1.size() > s2.size()) {
+            return 1;
+        } else {
+            typename std::set<T>::const_iterator it1, it2;
+            for (it1 = s1.begin(), it2 = s2.begin(); it1 != s1.end(); ++it1) {
+                if (*it1 < *it2) {
+                    return -1;
+                } else if (*it1 > *it2) {
+                    return 1;
+                }
+            }
+            return 0;
+        }
     }
 }
 

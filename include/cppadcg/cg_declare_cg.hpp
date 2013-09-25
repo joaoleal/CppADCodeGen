@@ -108,6 +108,8 @@ namespace CppAD {
 
         typedef std::pair<size_t, size_t> SizeN1stIt;
 
+        typedef std::pair<size_t, size_t> pairss;
+
         class HessianElement;
 
         template<class Base>
@@ -118,6 +120,9 @@ namespace CppAD {
 
         template<class Base>
         class HessianWithLoopsInfo;
+
+        template<class Base>
+        class HessianRowGroup;
     }
 
     /***************************************************************************

@@ -205,12 +205,12 @@ namespace CppAD {
                         if (itCount > 1) {
                             _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern) << ";\n";
                             _cache << "      ";
-                            generateFunctionNameLoopRev2(_cache, loop, jTape1, g);
+                            generateFunctionNameLoopRev2(_cache, loop, g);
                             _cache << "(jrow, " << loopFArgs << ");\n";
                         } else {
                             size_t jrow = group->jRow2iterations2Loc.begin()->first; // only one jrow
                             _cache << "   ";
-                            generateFunctionNameLoopRev2(_cache, loop, jTape1, g);
+                            generateFunctionNameLoopRev2(_cache, loop, g);
                             _cache << "(" << jrow << ", " << loopFArgs << ");\n";
                         }
 
@@ -249,7 +249,7 @@ namespace CppAD {
                 const vector<GroupLoopRev2ColInfo<Base>*>& groups = itjg->second;
                 for (size_t g = 0; g < groups.size(); g++) {
                     cache << "void ";
-                    generateFunctionNameLoopRev2(cache, loop, jTape1, g);
+                    generateFunctionNameLoopRev2(cache, loop, g);
                     cache << "(" << argsDclLoop << ");\n";
                 }
             }
