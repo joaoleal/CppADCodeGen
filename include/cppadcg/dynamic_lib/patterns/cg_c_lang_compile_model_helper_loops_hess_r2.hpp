@@ -17,6 +17,15 @@
 
 namespace CppAD {
 
+    namespace loops {
+
+        class RowGroup {
+        public:
+            std::auto_ptr<IndexPattern> jrowPattern;
+            std::auto_ptr<IndexPattern> hessStartLocPattern;
+        };
+    }
+
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
                                                                                      const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
@@ -25,66 +34,69 @@ namespace CppAD {
         //size_t m = _fun->Range();
         //size_t n = _fun->Domain();
         using namespace std;
+        using namespace CppAD::loops;
 
         /**
          * determine to which functions we can provide the hessian row directly
          * without needing a temporary array (compressed)
          */
-
-        std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, map<size_t, GroupLoopRev2ColInfo<Base>*> > > > loopCalls;
+        SmartVectorPointer<RowGroup> garbage;
+        map<size_t, map<LoopModel<Base>*, map<size_t, RowGroup*> > > loopCalls;
 
         Index indexIt("it");
-        const std::string& itName = indexIt.getName();
+        const string& itName = indexIt.getName();
 
-        std::vector<size_t> jrows, hessRowStart;
+        std::vector<size_t> hessRowStart;
         /**
          * Determine jrow index patterns and
          * hessian row start patterns
          */
-        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
-        typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
+        std::vector<size_t> localit2jrows;
+        typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlge;
+        for (itlge = _loopRev2Groups.begin(); itlge != _loopRev2Groups.end(); ++itlge) {
+            LoopModel<Base>* loop = itlge->first;
 
-        for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
-            LoopModel<Base>* loop = itljg->first;
+            garbage.v.reserve(garbage.v.size() + itlge->second.size());
 
-            for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
-                const TapeVarType& jTape1 = itjg->first;
-                const vector<GroupLoopRev2ColInfo<Base>*>& groups = itjg->second;
-                for (size_t g = 0; g < groups.size(); g++) {
-                    GroupLoopRev2ColInfo<Base>* group = groups[g];
-                    /**
-                     * jrow pattern
-                     */
-                    mapKeys(group->jrow2localIt2ModelIt, jrows);
+            map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
+            for (itg = itlge->second.begin(); itg != itlge->second.end(); ++itg) {
+                size_t group = itg->first;
+                const map<size_t, set<size_t> >& jrows2e = itg->second;
 
-                    group->jrowPattern = IndexPattern::detect(indexIt, jrows);
+                // group by number of iterations
+                std::auto_ptr<RowGroup> data(new RowGroup());
 
-                    /**
-                     * hessian row start pattern
-                     */
-                    bool ordered = true;
-                    std::map<size_t, std::map<size_t, size_t> >::const_iterator itJrow;
-                    for (itJrow = group->jrow2localIt2ModelIt.begin(); itJrow != group->jrow2localIt2ModelIt.end(); ++itJrow) {
-                        if (!jrowOrdered.at(itJrow->first)) {
-                            ordered = false;
-                            break;
-                        }
+                /**
+                 * jrow pattern
+                 */
+                mapKeys(jrows2e, localit2jrows);
+                data->jrowPattern.reset(IndexPattern::detect(indexIt, localit2jrows));
+
+                /**
+                 * hessian row start pattern
+                 */
+                bool ordered = true;
+                for (size_t l = 0; l < localit2jrows.size(); l++) {
+                    if (!jrowOrdered.at(localit2jrows[l])) {
+                        ordered = false;
+                        break;
                     }
-
-                    if (ordered) {
-                        hessRowStart.resize(jrows.size());
-
-                        for (size_t e = 0; e < jrows.size(); e++) {
-                            const std::vector<set<size_t> >& location = userHessElLocation.at(jrows[e]);
-                            hessRowStart[e] = *location[0].begin();
-                        }
-
-                        group->hessStartLocPattern = IndexPattern::detect(indexIt, hessRowStart);
-                    }
-
-                    // group by number of iterations
-                    loopCalls[jrows.size()][loop][jTape1][g] = group;
                 }
+
+                if (ordered) {
+                    hessRowStart.resize(localit2jrows.size());
+
+                    for (size_t l = 0; l < localit2jrows.size(); l++) {
+                        const std::vector<set<size_t> >& location = userHessElLocation.at(localit2jrows[l]);
+                        hessRowStart[l] = *location[0].begin();
+                    }
+
+                    data->hessStartLocPattern.reset(IndexPattern::detect(indexIt, hessRowStart));
+                }
+
+                // group by number of iterations
+                loopCalls[localit2jrows.size()][loop][group] = data.get();
+                garbage.v.push_back(data.release());
             }
         }
 
@@ -93,8 +105,8 @@ namespace CppAD {
         string nlRev2Suffix = "noloop_indep";
 
         CLanguage<Base> langC(_baseTypeName);
-        std::string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
-        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
+        string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
         _cache.str("");
         _cache << "#include <stdlib.h>\n"
@@ -135,16 +147,16 @@ namespace CppAD {
          */
         langC.setArgumentIn("inLocal");
         langC.setArgumentOut("outLocal");
-        std::string argsLocal = langC.generateDefaultFunctionArguments();
+        string argsLocal = langC.generateDefaultFunctionArguments();
 
         bool lastCompressed = true;
-        map<size_t, std::vector<Compressed2JColType> >::const_iterator it;
+        map<size_t, set<size_t> >::const_iterator it;
         for (it = _nonLoopRev2Elements.begin(); it != _nonLoopRev2Elements.end(); ++it) {
             size_t index = it->first;
-            const std::vector<Compressed2JColType>& els = it->second;
+            const set<size_t>& elPos = it->second;
             const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-            assert(els.size() <= location.size()); // it can be lower because not all elements have to be assigned
-            assert(els.size() > 0);
+            assert(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
+            assert(elPos.size() > 0);
             bool rowOrdered = jrowOrdered.at(index);
 
             _cache << "\n";
@@ -155,7 +167,8 @@ namespace CppAD {
             }
             _cache << "   " << functionRev2 << "_" << nlRev2Suffix << index << "(" << argsLocal << ");\n";
             if (!rowOrdered) {
-                for (size_t e = 0; e < els.size(); e++) {
+                for (set<size_t>::const_iterator itEl = elPos.begin(); itEl != elPos.end(); ++itEl) {
+                    size_t e = *itEl;
                     _cache << "   ";
                     set<size_t>::const_iterator itl;
                     for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
@@ -171,53 +184,50 @@ namespace CppAD {
         /**
          * loop related values
          */
-        typename std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > > >::const_iterator itItljg2;
-        typename std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> > >::const_iterator itljg2;
-        typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>*> >::const_iterator itjg2;
-        typename std::map<size_t, GroupLoopRev2ColInfo<Base>*>::const_iterator itg;
+        typename map<size_t, map<LoopModel<Base>*, map<size_t, RowGroup*> > >::const_iterator itItlg;
+        typename map<LoopModel<Base>*, map<size_t, RowGroup*> >::const_iterator itlg;
+        typename map<size_t, RowGroup*>::const_iterator itg;
 
         lastCompressed = true;
-        for (itItljg2 = loopCalls.begin(); itItljg2 != loopCalls.end(); ++itItljg2) {
-            size_t itCount = itItljg2->first;
+        for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
+            size_t itCount = itItlg->first;
             if (itCount > 1) {
                 _cache << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {";
             }
 
-            for (itljg2 = itItljg2->second.begin(); itljg2 != itItljg2->second.end(); ++itljg2) {
-                const LoopModel<Base>& loop = *itljg2->first;
-                for (itjg2 = itljg2->second.begin(); itjg2 != itljg2->second.end(); ++itjg2) {
-                    const TapeVarType& jTape1 = itjg2->first;
-                    for (itg = itjg2->second.begin(); itg != itjg2->second.end(); ++itg) {
-                        size_t g = itg->first;
-                        GroupLoopRev2ColInfo<Base>* group = itg->second;
+            for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
+                LoopModel<Base>& loop = *itlg->first;
 
-                        _cache << "\n";
-                        if (itCount > 1) {
-                            _cache << "   "; //identation
-                        }
-                        if (group->hessStartLocPattern != NULL) {
-                            // determine hessRowStart = f(it)
-                            _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::createIndexPattern(*group->hessStartLocPattern) << "];\n";
-                        } else if (!lastCompressed) {
-                            _cache << "   outLocal[0] = compressed;\n";
-                        }
+                for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                    size_t g = itg->first;
+                    RowGroup* group = itg->second;
 
-                        if (itCount > 1) {
-                            _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern) << ";\n";
-                            _cache << "      ";
-                            generateFunctionNameLoopRev2(_cache, loop, g);
-                            _cache << "(jrow, " << loopFArgs << ");\n";
-                        } else {
-                            size_t jrow = group->jRow2iterations2Loc.begin()->first; // only one jrow
-                            _cache << "   ";
-                            generateFunctionNameLoopRev2(_cache, loop, g);
-                            _cache << "(" << jrow << ", " << loopFArgs << ");\n";
-                        }
+                    _cache << "\n";
+                    if (itCount > 1) {
+                        _cache << "   "; //identation
+                    }
+                    if (group->hessStartLocPattern.get() != NULL) {
+                        // determine hessRowStart = f(it)
+                        _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::createIndexPattern(*group->hessStartLocPattern) << "];\n";
+                    } else if (!lastCompressed) {
+                        _cache << "   outLocal[0] = compressed;\n";
+                    }
 
-                        if (group->hessStartLocPattern == NULL) {
-                            throw CGException("Not implemented yet");
-                            _cache << "   outLocal[0] = compressed;\n"; //////////////////////
-                        }
+                    if (itCount > 1) {
+                        _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern) << ";\n";
+                        _cache << "      ";
+                        generateFunctionNameLoopRev2(_cache, loop, g);
+                        _cache << "(jrow, " << loopFArgs << ");\n";
+                    } else {
+                        size_t jrow = _loopRev2Groups[&loop][g].begin()->first; // only one jrow
+                        _cache << "   ";
+                        generateFunctionNameLoopRev2(_cache, loop, g);
+                        _cache << "(" << jrow << ", " << loopFArgs << ");\n";
+                    }
+
+                    if (group->hessStartLocPattern.get() == NULL) {
+                        throw CGException("Not implemented yet");
+                        _cache << "   outLocal[0] = compressed;\n"; //////////////////////
                     }
                 }
             }
@@ -240,18 +250,17 @@ namespace CppAD {
         std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
         std::string argsDclLoop = "unsigned long jrow, " + argsDcl;
 
-        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
-        for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
-            const LoopModel<Base>& loop = *itljg->first;
-            typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
-            for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
-                const TapeVarType& jTape1 = itjg->first;
-                const vector<GroupLoopRev2ColInfo<Base>*>& groups = itjg->second;
-                for (size_t g = 0; g < groups.size(); g++) {
-                    cache << "void ";
-                    generateFunctionNameLoopRev2(cache, loop, g);
-                    cache << "(" << argsDclLoop << ");\n";
-                }
+        typename std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >::const_iterator itlg;
+        for (itlg = _loopRev2Groups.begin(); itlg != _loopRev2Groups.end(); ++itlg) {
+            const LoopModel<Base>& loop = *itlg->first;
+
+            typename std::map<size_t, std::map<size_t, std::set<size_t> > >::const_iterator itg;
+            for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                size_t group = itg->first;
+
+                cache << "void ";
+                generateFunctionNameLoopRev2(cache, loop, group);
+                cache << "(" << argsDclLoop << ");\n";
             }
         }
     }

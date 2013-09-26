@@ -201,12 +201,11 @@ namespace CppAD {
          */
         std::vector<std::set<size_t> > _relatedDepCandidates;
         /**
-         * 
+         * Maps the row groups of each loop model to the set of rows (loop->group->{rows->{compressed reverse 2 position} })
          */
-        std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > > _loopRev2Groups; //////////////////////////////////////////
-        typedef std::pair<size_t, size_t> Compressed2JColType;
-        // elements[var]{compressed location, original column index}
-        std::map<size_t, std::vector<Compressed2JColType> > _nonLoopRev2Elements; //////////////////////////////////////////
+        std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopRev2Groups; //////////////////////////////////////////
+        // hessian rows with a contribution from non loop equations [var]{compressed reverse 2 position}
+        std::map<size_t, std::set<size_t> > _nonLoopRev2Elements;
     public:
 
         /**
@@ -620,18 +619,6 @@ namespace CppAD {
             for (it = _loopTapes.begin(); it != _loopTapes.end(); ++it) {
                 delete *it;
             }
-
-            typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itljg;
-            for (itljg = _loopRev2Groups.begin(); itljg != _loopRev2Groups.end(); ++itljg) {
-                typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itjg;
-                for (itjg = itljg->second.begin(); itjg != itljg->second.end(); ++itjg) {
-                    const vector<GroupLoopRev2ColInfo<Base>*>& groups = itjg->second;
-                    for (size_t g = 0; g < groups.size(); g++) {
-                        delete groups[g];
-                    }
-                }
-            }
-
         }
 
         static inline std::string baseTypeName();
@@ -858,22 +845,6 @@ namespace CppAD {
                                       const loops::HessianWithLoopsInfo<Base>& info,
                                       SmartVectorPointer<loops::HessianRowGroup<Base> >& loopGroups);
 
-        /*
-                std::string generateSparseReverseTwoWithLoopsVarGroupSource(const std::string& functionName,
-                                                                            const std::string& jobName,
-                                                                            LoopModel<Base>& loop,
-                                                                            CodeHandler<Base>& handler,
-                                                                            const std::pair<size_t, size_t>& jTape1,
-                                                                            const GroupLoopRev2ColInfo<Base>& group,
-                                                                            const Index& indexJrow,
-                                                                            const Index& indexLocalIt,
-                                                                            const Index& indexLocalItCount,
-                                                                            const IndexPattern& itPattern,
-                                                                            const IndexPattern* itCountPattern,
-                                                                            const std::map<TapeVarType, Plane2DIndexPattern*>& loopDepIndexes,
-                                                                            std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> >& evaluations,
-                                                                            const CGBase& tx1);
-         */
         /***********************************************************************
          * Sparsities
          **********************************************************************/

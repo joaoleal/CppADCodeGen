@@ -94,12 +94,6 @@ namespace CppAD {
     template<class Base>
     class IndexedDependentLoopInfo;
 
-    template<class Base>
-    class GroupLoopRev2ColInfo;
-
-    template<class Base>
-    class LoopRev2ValInfo;
-
     class Index;
 
     class IndexPattern;

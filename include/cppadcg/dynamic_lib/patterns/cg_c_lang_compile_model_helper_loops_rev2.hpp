@@ -18,7 +18,7 @@
 namespace CppAD {
 
     /***************************************************************************
-     *  Utility classes
+     *  Utility classes and functions
      **************************************************************************/
     namespace loops {
 
@@ -50,76 +50,6 @@ namespace CppAD {
                                                                           const CG<Base>& ddfdxdx,
                                                                           IndexOperationNode<Base>& iterationIndexOp);
     }
-
-    template<class Base>
-    class LoopRev2GroupValInfo {
-    public:
-        size_t compressedLoc;
-        size_t jrow1;
-        CppAD::CG<Base> val;
-    };
-
-    template<class Base>
-    class LoopRev2ValInfo {
-    public:
-
-        size_t compressedLoc;
-        size_t jcol2;
-        CppAD::CG<Base> val;
-
-        LoopRev2ValInfo() {
-        }
-
-        LoopRev2ValInfo(size_t e, size_t orig2, const CppAD::CG<Base>& v) :
-            compressedLoc(e),
-            jcol2(orig2),
-            val(v) {
-        }
-    };
-
-    template<class Base>
-    class IndexedDependentLoopInfo2 {
-    public:
-        std::map<size_t, LoopRev2ValInfo<Base> > iteration2location;
-        IndexPattern* pattern;
-
-        inline IndexedDependentLoopInfo2() :
-            pattern(NULL) {
-        }
-    };
-
-    template<class Base>
-    class GroupLoopRev2ColInfo {
-    public:
-        typedef std::pair<size_t, size_t> TapeVarType;
-    public:
-        size_t refJrow;
-        size_t refIteration;
-        std::set<TapeVarType> tapeJ2OrigJ2;
-        std::map<size_t, std::map<size_t, std::map<TapeVarType, LoopRev2GroupValInfo<Base> > > > jRow2iterations2Loc;
-        std::map<size_t, std::map<size_t, size_t> > jrow2localIt2ModelIt;
-        IndexPattern* jrowPattern;
-        IndexPattern* hessStartLocPattern;
-    public:
-
-        GroupLoopRev2ColInfo() {
-        }
-
-        GroupLoopRev2ColInfo(const std::set<TapeVarType>& vars,
-                             const std::map<size_t, std::map<size_t, std::map<TapeVarType, LoopRev2GroupValInfo<Base> > > >& jRowiters) :
-            refJrow(jRowiters.begin()->first),
-            refIteration(jRowiters.begin()->second.begin()->first),
-            tapeJ2OrigJ2(vars),
-            jRow2iterations2Loc(jRowiters),
-            jrowPattern(NULL),
-            hessStartLocPattern(NULL) {
-        }
-
-        virtual ~GroupLoopRev2ColInfo() {
-            delete jrowPattern;
-            delete hessStartLocPattern;
-        }
-    };
 
     /***************************************************************************
      *  Methods related with loop insertion into the operation graph
@@ -288,12 +218,15 @@ namespace CppAD {
             _cache.str("");
             _cache << "model (reverse two, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
-            startingGraphCreation(jobName);
 
             /**
              * loop model hessian evaluation
              */
+            startingGraphCreation(jobName);
+
             info.evalLoopModelHessian();
+
+            finishedGraphCreation();
 
             /*******************************************************************
              * create hessian row groups
@@ -410,18 +343,22 @@ namespace CppAD {
                     size_t assignOrAdd = 1;
                     set<IndexOperationNode<Base>*> indexesOps;
                     indexesOps.insert(info.iterationIndexOp);
-                    info.loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+                    LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
 
                     /**
                      * move no-nindexed expressions outside loop
                      */
-                    moveNonIndexedOutsideLoop(*info.loopStart, *info.loopEnd, indexLocalIt);
+                    moveNonIndexedOutsideLoop(*loopStart, *loopEnd, indexLocalIt);
 
                     /**
                      * 
                      */
                     pxCustom.resize(1);
-                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, Argument<Base>(*info.loopEnd)));
+                    std::vector<size_t> info(1);
+                    info[0] = 0; // must point to itself since there is only one dependent
+                    std::vector<Argument<Base> > args(1);
+                    args[0] = Argument<Base>(*loopEnd);
+                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
 
                 } else {
                     /**
@@ -501,7 +438,6 @@ namespace CppAD {
 
             }
 
-            finishedGraphCreation();
         }
 
         /*******************************************************************
@@ -565,8 +501,10 @@ namespace CppAD {
                     size_t j1 = row[el];
                     size_t j2 = col[el];
                     const set<size_t>& locations = noLoopEvalHessLocations[j1][j2];
-                    for (set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE)
+                    for (set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE) {
                         hess[j1][*itE] = hessNoLoop[el];
+                        _nonLoopRev2Elements[j1].insert(*itE);
+                    }
                 }
 
                 /**
@@ -928,7 +866,7 @@ namespace CppAD {
             map<pairss, size_t>::const_iterator orig2PosIt;
             for (orig2PosIt = info.nonIndexedNonIndexedPosition.begin(); orig2PosIt != info.nonIndexedNonIndexedPosition.end(); ++orig2PosIt) {
                 size_t j1 = orig2PosIt->first.first;
-                jrows[j1].nonIndexedNonIndexed.insert(it->first);
+                jrows[j1].nonIndexedNonIndexed.insert(orig2PosIt->first);
             }
 
             /**
@@ -1013,17 +951,18 @@ namespace CppAD {
             typename map<Reverse2Jrow2Iter, HessianTermContrib<Base> >::const_iterator itK2C;
             for (itK2C = contribs.begin(); itK2C != contribs.end(); ++itK2C) {
                 const Reverse2Jrow2Iter& jrow2Iters = itK2C->first;
+                const HessianTermContrib<Base>& hc = itK2C->second;
 
-                typename map<HessianTermContrib<Base>, HessianRowGroup<Base>*>::const_iterator its = c2subgroups.find(itK2C->second);
+                typename map<HessianTermContrib<Base>, HessianRowGroup<Base>*>::const_iterator its = c2subgroups.find(hc);
                 HessianRowGroup<Base>* sg;
                 if (its != c2subgroups.end()) {
                     sg = its->second;
                     sg->jRow2Iterations[jrow2Iters.jrow] = jrow2Iters.iterations;
                     sg->iterations.insert(jrow2Iters.iterations.begin(), jrow2Iters.iterations.end());
                 } else {
-                    sg = new HessianRowGroup<Base>(itK2C->second, jrow2Iters);
+                    sg = new HessianRowGroup<Base>(hc, jrow2Iters);
                     subGroups.v.push_back(sg);
-                    c2subgroups[itK2C->second] = sg;
+                    c2subgroups[hc] = sg;
                 }
             }
         }
@@ -1264,27 +1203,22 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                         std::map<std::string, std::string>& sources) {
 
-        // functions for each row
-        std::map<size_t, std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > > > functions;
+        using namespace std;
 
-        typename std::map<LoopModel<Base>*, std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
+        // functions for each row
+        map<size_t, map<LoopModel<Base>*, set<size_t> > > functions;
+
+        typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlj1g;
         for (itlj1g = _loopRev2Groups.begin(); itlj1g != _loopRev2Groups.end(); ++itlj1g) {
             LoopModel<Base>* loop = itlj1g->first;
 
-            typename std::map<TapeVarType, vector<GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
-            for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
-                const TapeVarType& jTape1 = itj1g->first;
+            map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
+            for (itg = itlj1g->second.begin(); itg != itlj1g->second.end(); ++itg) {
+                size_t group = itg->first;
+                const map<size_t, set<size_t> >& jrows = itg->second;
 
-                const vector<GroupLoopRev2ColInfo<Base>* >& groups = itj1g->second;
-                for (size_t g = 0; g < groups.size(); g++) {
-                    GroupLoopRev2ColInfo<Base>* group = groups[g];
-
-                    std::map<size_t, std::map<size_t, size_t> >::const_iterator itJrow;
-                    for (itJrow = group->jrow2localIt2ModelIt.begin(); itJrow != group->jrow2localIt2ModelIt.end(); ++itJrow) {
-                        size_t jrow = itJrow->first;
-                        functions[jrow][loop][jTape1][g] = group;
-                    }
-
+                for (map<size_t, set<size_t> >::const_iterator itJrow = jrows.begin(); itJrow != jrows.end(); ++itJrow) {
+                    functions[itJrow->first][loop].insert(group);
                 }
             }
         }
@@ -1293,10 +1227,10 @@ namespace CppAD {
          * The function that matches each equation to a directional derivative function
          */
         CLanguage<Base> langC(_baseTypeName);
-        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
-        std::string args = langC.generateDefaultFunctionArguments();
-        std::string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
-        std::string noLoopFunc = functionRev2 + "_noloop_indep";
+        string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        string args = langC.generateDefaultFunctionArguments();
+        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
+        string noLoopFunc = functionRev2 + "_noloop_indep";
 
         _cache.str("");
         _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
@@ -1308,7 +1242,7 @@ namespace CppAD {
                 "(unsigned long pos, " << argsDcl << ") {\n"
                 "   \n"
                 "   switch(pos) {\n";
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
+        map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t jrow = it->first;
             // the size of each sparsity row
@@ -1318,7 +1252,7 @@ namespace CppAD {
              * contributions from equations not in loops 
              * (must come before contributions from loops because of the assigments)
              */
-            std::map<size_t, std::vector<Compressed2JColType> >::const_iterator itnl = _nonLoopRev2Elements.find(jrow);
+            map<size_t, set<size_t> >::const_iterator itnl = _nonLoopRev2Elements.find(jrow);
             if (itnl != _nonLoopRev2Elements.end()) {
                 _cache << "         " << noLoopFunc << jrow << "(" << args << ");\n";
             }
@@ -1326,23 +1260,16 @@ namespace CppAD {
             /**
              * contributions from equations in loops
              */
-            const std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >& rowFunctions = functions[jrow];
+            const map<LoopModel<Base>*, set<size_t> >& rowFunctions = functions[jrow];
 
-            typename std::map<LoopModel<Base>*, std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > > >::const_iterator itlj1g;
-            for (itlj1g = rowFunctions.begin(); itlj1g != rowFunctions.end(); ++itlj1g) {
-                LoopModel<Base>* loop = itlj1g->first;
+            typename map<LoopModel<Base>*, set<size_t> >::const_iterator itlg;
+            for (itlg = rowFunctions.begin(); itlg != rowFunctions.end(); ++itlg) {
+                LoopModel<Base>* loop = itlg->first;
 
-                typename std::map<TapeVarType, std::map<size_t, GroupLoopRev2ColInfo<Base>* > >::const_iterator itj1g;
-                for (itj1g = itlj1g->second.begin(); itj1g != itlj1g->second.end(); ++itj1g) {
-                    const TapeVarType& jTape1 = itj1g->first;
-
-                    typename std::map<size_t, GroupLoopRev2ColInfo<Base>* >::const_iterator itg;
-                    for (itg = itj1g->second.begin(); itg != itj1g->second.end(); ++itg) {
-                        size_t g = itg->first;
-                        _cache << "         ";
-                        generateFunctionNameLoopRev2(_cache, *loop, g);
-                        _cache << "(" << jrow << ", " << args << ");\n";
-                    }
+                for (set<size_t>::const_iterator itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                    _cache << "         ";
+                    generateFunctionNameLoopRev2(_cache, *loop, *itg);
+                    _cache << "(" << jrow << ", " << args << ");\n";
                 }
             }
 
