@@ -27,16 +27,21 @@ namespace CppAD {
             vector<std::set<size_t> > evalHessSparsity;
             // (tapeJ1, tapeJ2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > indexedIndexedPositions;
+            // (tapeJ1, tapeJ2(j2)) -> [positions]
+            std::map<pairss, std::vector<HessianElement> > indexedNonIndexedPositions;
             // (tapeJ1, j2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > indexedTempPositions;
-            // (tapeJ1, j2) -> [k]
-            std::map<pairss, std::set<size_t> > indexedTempEvals;
+
             // (tapeJ1(j1), tapeJ2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > nonIndexedIndexedPositions;
-            /**
-             * (j1, j2) -> position
-             */
+            //(j1, j2) -> position
             std::map<pairss, size_t> nonIndexedNonIndexedPosition;
+
+            // (j1, tapeJ2) -> [positions]
+            std::map<pairss, std::vector<HessianElement> > tempIndexedPositions;
+
+            // (tapeJ1, j2) -> [k]
+            std::map<pairss, std::set<size_t> > indexedTempEvals;
             // [(j1, j2)]
             std::set<pairss> nonIndexedNonIndexedEvals;
             // (j2, j1) -> [k]

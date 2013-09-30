@@ -62,7 +62,8 @@ namespace CppAD {
                                                                       vector<std::set<size_t> >& noLoopEvalJacSparsity,
                                                                       vector<std::set<size_t> >& noLoopEvalHessSparsity,
                                                                       vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
-                                                                      std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo) {
+                                                                      std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
+                                                                      bool useSymmetry) {
         using namespace std;
         using namespace CppAD::loops;
         using CppAD::vector;
@@ -153,7 +154,7 @@ namespace CppAD {
                     set<pairss> ::const_iterator itPairs;
                     for (itPairs = tapePairs.begin(); itPairs != tapePairs.end(); ++itPairs) {
                         pairss tape; // work the symmetry
-                        if (itPairs->first < itPairs->second) {
+                        if (!useSymmetry || itPairs->first < itPairs->second) {
                             tape = *itPairs;
                         } else {
                             tape = pairss(itPairs->second, itPairs->first);
@@ -183,13 +184,19 @@ namespace CppAD {
                         for (ittj1 = tapeJ1s.begin(); ittj1 != tapeJ1s.end(); ++ittj1) {
                             size_t tapeJ1 = *ittj1;
 
-                            std::vector<HessianElement>& positions = loopInfo.nonIndexedIndexedPositions[pairss(posJ2->tape, tapeJ1)];
-                            positions.resize(iterations);
+                            std::vector<HessianElement>* positions;
+                            if (useSymmetry) {
+                                positions = &loopInfo.nonIndexedIndexedPositions[pairss(posJ2->tape, tapeJ1)];
+                                loopInfo.evalHessSparsity[posJ2->tape].insert(tapeJ1);
+                            } else {
+                                positions = &loopInfo.indexedNonIndexedPositions[pairss(tapeJ1, posJ2->tape)];
+                                loopInfo.evalHessSparsity[tapeJ1].insert(posJ2->tape);
+                            }
 
-                            positions[iteration].location = e;
-                            positions[iteration].row = j1;
-                            positions[iteration].count++;
-                            loopInfo.evalHessSparsity[posJ2->tape].insert(tapeJ1);
+                            positions->resize(iterations);
+                            (*positions)[iteration].location = e;
+                            (*positions)[iteration].row = j1;
+                            (*positions)[iteration].count++;
                         }
                     }
                 }
@@ -366,22 +373,34 @@ namespace CppAD {
                             for (ittj2 = tapeJ2s.begin(); ittj2 != tapeJ2s.end(); ++ittj2) {
                                 size_t tapeJ2 = *ittj2;
 
-                                pairss pos(tapeJ2, j1);
+                                std::vector<HessianElement>* positions = NULL;
 
-                                if (usedTapeJ2.find(tapeJ2) == usedTapeJ2.end()) {
-                                    std::vector<HessianElement>& positions = loopInfo.indexedTempPositions[pos];
-                                    positions.resize(iterations);
+                                if (useSymmetry) {
+                                    if (usedTapeJ2.find(tapeJ2) == usedTapeJ2.end()) {
+                                        pairss pos(tapeJ2, j1);
+                                        positions = &loopInfo.indexedTempPositions[pos];
+                                    }
+                                    loopInfo.evalHessSparsity[tapeJ2].insert(posK1->tape);
+                                } else {
+                                    if (usedTapeJ2.find(tapeJ2) == usedTapeJ2.end()) {
+                                        pairss pos(j1, tapeJ2);
+                                        positions = &loopInfo.tempIndexedPositions[pos];
+                                    }
+                                    loopInfo.evalHessSparsity[posK1->tape].insert(tapeJ2);
+                                }
 
-                                    positions[iteration].location = e;
-                                    positions[iteration].row = j1;
-                                    positions[iteration].count++;
+                                if (positions != NULL) {
+                                    positions->resize(iterations);
+
+                                    (*positions)[iteration].location = e;
+                                    (*positions)[iteration].row = j1;
+                                    (*positions)[iteration].count++;
                                     usedTapeJ2.insert(tapeJ2);
                                 }
 
-                                std::set<size_t>& evals = loopInfo.indexedTempEvals[pos];
+                                std::set<size_t>& evals = loopInfo.indexedTempEvals[pairss(tapeJ2, j1)];
                                 evals.insert(k1);
 
-                                loopInfo.evalHessSparsity[tapeJ2].insert(posK1->tape);
                             }
                         }
 
@@ -503,7 +522,7 @@ namespace CppAD {
          */
         analyseSparseHessianWithLoops(lowerHessRows, lowerHessCols, lowerHessOrder,
                                       noLoopEvalJacSparsity, noLoopEvalHessSparsity,
-                                      noLoopEvalHessLocations, loopHessInfo);
+                                      noLoopEvalHessLocations, loopHessInfo, true);
 
         /***********************************************************************
          *        generate the operation graph

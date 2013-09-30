@@ -132,7 +132,7 @@ namespace CppAD {
 
         analyseSparseHessianWithLoops(hessRows, hessCols, hessOrder,
                                       noLoopEvalJacSparsity, noLoopEvalHessSparsity,
-                                      noLoopEvalHessLocations, loopHessInfo);
+                                      noLoopEvalHessLocations, loopHessInfo, false);
 
         /***********************************************************************
          *        generate the operation graph
@@ -376,7 +376,7 @@ namespace CppAD {
                     for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                         const CGBase& val = indexedLoopResults[i].first;
                         IndexPattern* ip = indexedLoopResults[i].second;
-                        
+
                         if (ip != NULL) {
                             aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
                             aInfo[1] = assignOrAdd;
@@ -387,17 +387,17 @@ namespace CppAD {
                             handler.manageOperationNodeMemory(yIndexed);
 
                             pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
-                            
+
                         } else if (val.getOperationNode() != NULL &&
                                 val.getOperationNode()->getOperationType() == CGEndIfOp) {
-                            
+
                             std::vector<size_t> info(1);
                             info[0] = i; // points to itself
                             std::vector<Argument<Base> > args(1);
                             args[0] = Argument<Base>(*val.getOperationNode());
-                            
+
                             pxCustom[i] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
-                            
+
                         } else {
                             pxCustom[i] = val;
                         }
@@ -581,13 +581,17 @@ namespace CppAD {
          * group rows with the same contribution terms
          */
         map<pairss, map<size_t, set<size_t> > > indexedIndexed2jrow2Iter;
+        map<pairss, map<size_t, set<size_t> > > indexedNonIndexed2jrow2Iter;
         map<pairss, map<size_t, set<size_t> > > indexedTemp2jrow2Iter;
         map<pairss, map<size_t, set<size_t> > > nonIndexedIndexed2jrow2Iter;
+        map<pairss, map<size_t, set<size_t> > > tempIndexed2jrow2Iter;
 
         map<HessianTermContrib<Base>, set<size_t> > contrib2jrows = groupHessianRowsByContrib(info, _fun.Domain(),
                                                                                               indexedIndexed2jrow2Iter,
+                                                                                              indexedNonIndexed2jrow2Iter,
                                                                                               indexedTemp2jrow2Iter,
-                                                                                              nonIndexedIndexed2jrow2Iter);
+                                                                                              nonIndexedIndexed2jrow2Iter,
+                                                                                              tempIndexed2jrow2Iter);
 
         typename map<HessianTermContrib<Base>, set<size_t> >::const_iterator itC;
         for (itC = contrib2jrows.begin(); itC != contrib2jrows.end(); ++itC) {
@@ -599,8 +603,10 @@ namespace CppAD {
              */
             subgroupHessianRowsByContrib(info, c, jrows,
                                          indexedIndexed2jrow2Iter,
+                                         indexedNonIndexed2jrow2Iter,
                                          indexedTemp2jrow2Iter,
                                          nonIndexedIndexed2jrow2Iter,
+                                         tempIndexed2jrow2Iter,
                                          loopGroups);
         }
 
@@ -611,7 +617,7 @@ namespace CppAD {
         template<class Base>
         vector<std::pair<CG<Base>, IndexPattern*> > generateReverseMode2GroupOps(CodeHandler<Base>& handler,
                                                                                  const LoopModel<Base>& lModel,
-                                                                                 const loops::HessianWithLoopsInfo<Base>& info,
+                                                                                 const HessianWithLoopsInfo<Base>& info,
                                                                                  IndexOperationNode<Base>& jrowIndexOp,
                                                                                  HessianRowGroup<Base>& group,
                                                                                  const CG<Base>& tx1,
@@ -626,10 +632,7 @@ namespace CppAD {
             IndexOperationNode<Base>& iterationIndexOp = *info.iterationIndexOp;
 
             // store results in indexedLoopResults
-            size_t hessElSize = group.indexedIndexed.size() +
-                    group.indexedTemp.size() +
-                    group.nonIndexedIndexed.size() +
-                    group.nonIndexedNonIndexed.size();
+            size_t hessElSize = group.size();
 
             vector<pair<CGBase, IndexPattern*> > indexedLoopResults(hessElSize);
             size_t hessLE = 0;
@@ -653,8 +656,19 @@ namespace CppAD {
 
             /**
              * indexed - non-indexed
-             * -> done by  (non-indexed - indexed)
              */
+            for (it = group.indexedNonIndexed.begin(); it != group.indexedNonIndexed.end(); ++it) {
+                size_t tapeJ1 = it->first;
+                size_t tapeJ2 = it->second;
+                const std::vector<HessianElement>& positions = info.indexedNonIndexedPositions.at(*it);
+
+                CGBase val = info.hess[tapeJ1].at(tapeJ2) * tx1;
+
+                indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
+                                                                              positions, val,
+                                                                              iterationIndexOp,
+                                                                              jrow2CompressedLoc);
+            }
 
             /**
              * indexed - temporary
@@ -702,9 +716,27 @@ namespace CppAD {
              * 
              *      d f_i       .    d x_k1
              * d x_l2  d z_k1        d x_j1
-             * 
-             * -> done by  (indexed - temporary)
              */
+            for (it = group.tempIndexed.begin(); it != group.tempIndexed.end(); ++it) {
+                size_t j1 = it->first;
+                size_t tapeJ2 = it->second;
+                const set<size_t>& ks = info.indexedTempEvals.at(pairss(tapeJ2, j1));
+                const std::vector<HessianElement>& positions = info.tempIndexedPositions.at(*it);
+
+                CGBase val = Base(0);
+                set<size_t>::const_iterator itz;
+                for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                    size_t k = *itz;
+                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                    val += info.hess[tapeK].at(tapeJ2) * dzDx.at(k).at(j1);
+                }
+                val *= tx1;
+
+                indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
+                                                                              positions, val,
+                                                                              iterationIndexOp,
+                                                                              jrow2CompressedLoc);
+            }
 
             /*******************************************************************
              * contributions to a constant location
@@ -842,8 +874,10 @@ namespace CppAD {
         inline std::map<HessianTermContrib<Base>, std::set<size_t> > groupHessianRowsByContrib(const loops::HessianWithLoopsInfo<Base>& info,
                                                                                                size_t n,
                                                                                                std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedIndexed2jrow2Iter,
+                                                                                               std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedNonIndexed2jrow2Iter,
                                                                                                std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedTemp2jrow2Iter,
-                                                                                               std::map<pairss, std::map<size_t, std::set<size_t> > >& nonIndexedIndexed2jrow2Iter) {
+                                                                                               std::map<pairss, std::map<size_t, std::set<size_t> > >& nonIndexedIndexed2jrow2Iter,
+                                                                                               std::map<pairss, std::map<size_t, std::set<size_t> > >& tempIndexed2jrow2Iter) {
             using namespace std;
 
             size_t nIterations = info.model->getIterationCount();
@@ -859,6 +893,18 @@ namespace CppAD {
                 for (size_t iter = 0; iter < nIterations; iter++) {
                     if (positions[iter].count > 0) {
                         jrows[positions[iter].row].indexedIndexed.insert(it->first);
+                        jrow2Iter[positions[iter].row].insert(iter);
+                    }
+                }
+            }
+
+            // indexed - non-indexed
+            for (it = info.indexedNonIndexedPositions.begin(); it != info.indexedNonIndexedPositions.end(); ++it) {
+                map<size_t, set<size_t> >& jrow2Iter = indexedNonIndexed2jrow2Iter[it->first];
+                const std::vector<HessianElement>& positions = it->second;
+                for (size_t iter = 0; iter < nIterations; iter++) {
+                    if (positions[iter].count > 0) {
+                        jrows[positions[iter].row].indexedNonIndexed.insert(it->first);
                         jrow2Iter[positions[iter].row].insert(iter);
                     }
                 }
@@ -895,6 +941,18 @@ namespace CppAD {
                 jrows[j1].nonIndexedNonIndexed.insert(orig2PosIt->first);
             }
 
+            //  temporary - indexed
+            for (it = info.tempIndexedPositions.begin(); it != info.tempIndexedPositions.end(); ++it) {
+                map<size_t, set<size_t> >& jrow2Iter = tempIndexed2jrow2Iter[it->first];
+                const std::vector<HessianElement>& positions = it->second;
+                for (size_t iter = 0; iter < nIterations; iter++) {
+                    if (positions[iter].count > 0) {
+                        jrows[positions[iter].row].tempIndexed.insert(it->first);
+                        jrow2Iter[positions[iter].row].insert(iter);
+                    }
+                }
+            }
+
             /**
              * group rows with the same contribution terms
              */
@@ -912,8 +970,10 @@ namespace CppAD {
                                                  const HessianTermContrib<Base>& c,
                                                  const std::set<size_t>& jrows,
                                                  const std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedIndexed2jrow2Iter,
+                                                 const std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedNonIndexed2jrow2Iter,
                                                  const std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedTemp2jrow2Iter,
                                                  const std::map<pairss, std::map<size_t, std::set<size_t> > >& nonIndexedIndexed2jrow2Iter,
+                                                 const std::map<pairss, std::map<size_t, std::set<size_t> > >& tempIndexed2jrow2Iter,
                                                  SmartVectorPointer<HessianRowGroup<Base> >& subGroups) {
             using namespace std;
 
@@ -930,6 +990,17 @@ namespace CppAD {
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
                     contribs[k].indexedIndexed.insert(pos);
+                }
+            }
+
+            // indexed - non-indexed
+            for (it = c.indexedNonIndexed.begin(); it != c.indexedNonIndexed.end(); ++it) {
+                pairss pos = *it;
+
+                map<size_t, set<size_t> > jrow2Iter = filterBykeys(indexedNonIndexed2jrow2Iter.at(pos), jrows);
+                for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
+                    Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
+                    contribs[k].indexedNonIndexed.insert(pos);
                 }
             }
 
@@ -966,6 +1037,17 @@ namespace CppAD {
                     pairss pos = *it;
                     Reverse2Jrow2Iter k(pos.first, allIters);
                     contribs[k].nonIndexedNonIndexed.insert(pos);
+                }
+            }
+
+            //  temporary - indexed
+            for (it = c.tempIndexed.begin(); it != c.tempIndexed.end(); ++it) {
+                pairss pos = *it;
+
+                map<size_t, set<size_t> > jrow2Iter = filterBykeys(tempIndexed2jrow2Iter.at(pos), jrows);
+                for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
+                    Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
+                    contribs[k].tempIndexed.insert(pos);
                 }
             }
 
@@ -1165,16 +1247,29 @@ namespace CppAD {
         public:
             // (tapeJ1, tapeJ2)
             std::set<pairss> indexedIndexed;
+            // (tapeJ1, tapeJ2(j2))
+            std::set<pairss> indexedNonIndexed;
             // (tapeJ1, j2)
             std::set<pairss> indexedTemp;
             // (tapeJ1(j1), tapeJ2)
             std::set<pairss> nonIndexedIndexed;
             //(j1, j2) 
             std::set<pairss> nonIndexedNonIndexed;
+            // (j1, tapeJ2)
+            std::set<pairss> tempIndexed;
+
         public:
 
             inline bool empty() const {
-                return indexedIndexed.empty() && indexedTemp.empty() && nonIndexedIndexed.empty() && nonIndexedNonIndexed.empty();
+                return indexedIndexed.empty() && indexedNonIndexed.empty() && indexedTemp.empty() &&
+                        nonIndexedIndexed.empty() && nonIndexedNonIndexed.empty() &&
+                        tempIndexed.empty();
+            }
+
+            inline size_t size() const {
+                return indexedIndexed.size() + indexedNonIndexed.size() + indexedTemp.size() +
+                        nonIndexedIndexed.size() + nonIndexedNonIndexed.size() +
+                        tempIndexed.size();
             }
         };
 
@@ -1182,11 +1277,15 @@ namespace CppAD {
         bool operator<(const HessianTermContrib<Base>& l, const HessianTermContrib<Base>& r) {
             int c = compare(l.indexedIndexed, r.indexedIndexed);
             if (c != 0) return c == -1;
+            c = compare(l.indexedNonIndexed, r.indexedNonIndexed);
+            if (c != 0) return c == -1;
             c = compare(l.indexedTemp, r.indexedTemp);
             if (c != 0) return c == -1;
             c = compare(l.nonIndexedIndexed, r.nonIndexedIndexed);
             if (c != 0) return c == -1;
             c = compare(l.nonIndexedNonIndexed, r.nonIndexedNonIndexed);
+            if (c != 0) return c == -1;
+            c = compare(l.tempIndexed, r.tempIndexed);
             if (c != 0) return c == -1;
             return false;
         }
@@ -1195,32 +1294,20 @@ namespace CppAD {
          * 
          */
         template<class Base>
-        class HessianRowGroup {
+        class HessianRowGroup : public HessianTermContrib<Base> {
         public:
             // all the required iterations for each jrow
             std::map<size_t, std::set<size_t> > jRow2Iterations;
             // all iterations
             std::set<size_t> iterations;
-            // (tapeJ1, tapeJ2)
-            std::set<pairss> indexedIndexed;
-            // (tapeJ1, j2)
-            std::set<pairss> indexedTemp;
-            // (tapeJ1(j1), tapeJ2)
-            std::set<pairss> nonIndexedIndexed;
-            // (j1, j2)
-            std::set<pairss> nonIndexedNonIndexed;
-
             // if-else branches
             vector<IfElseInfo<Base> > ifElses;
         public:
 
             inline HessianRowGroup(const HessianTermContrib<Base>& c,
                                    const Reverse2Jrow2Iter& jrow2Iters) :
-                iterations(jrow2Iters.iterations),
-                indexedIndexed(c.indexedIndexed),
-                indexedTemp(c.indexedTemp),
-                nonIndexedIndexed(c.nonIndexedIndexed),
-                nonIndexedNonIndexed(c.nonIndexedNonIndexed) {
+                HessianTermContrib<Base>(c),
+                iterations(jrow2Iters.iterations) {
                 jRow2Iterations[jrow2Iters.jrow] = jrow2Iters.iterations;
             }
         };
