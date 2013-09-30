@@ -861,14 +861,14 @@ namespace CppAD {
      *         1 if the second set is considered lower than the first.
      */
     template<class T>
-    inline int compare(std::set<T> s1, std::set<T> s2) {
+    inline int compare(const std::set<T>& s1, const std::set<T>& s2) {
         if (s1.size() < s2.size()) {
             return -1;
         } else if (s1.size() > s2.size()) {
             return 1;
         } else {
             typename std::set<T>::const_iterator it1, it2;
-            for (it1 = s1.begin(), it2 = s2.begin(); it1 != s1.end(); ++it1) {
+            for (it1 = s1.begin(), it2 = s2.begin(); it1 != s1.end(); ++it1, ++it2) {
                 if (*it1 < *it2) {
                     return -1;
                 } else if (*it1 > *it2) {
