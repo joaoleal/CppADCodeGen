@@ -1038,7 +1038,7 @@ namespace CppAD {
                 results[count] = val;
             }
 
-            if (results.size() == 1 && locations.begin()->second.size() == positions.size()) {
+            if (results.size() == 1 && locations.begin()->second.size() == group.iterations.size()) {
                 // same expression present in all iterations
 
                 // generate the index pattern for the hessian compressed element
@@ -1095,13 +1095,13 @@ namespace CppAD {
                         ifBranch->getArguments().insert(ifBranch->getArguments().end(),
                                                         nextBranchArgs.begin(), nextBranchArgs.end());
 
-                    } else if (usedIter.size() + iterCount == positions.size()) {
+                    } else if (usedIter.size() + iterCount == group.iterations.size()) {
                         // all other iterations
                         nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
                         ifBranch = new OperationNode<Base>(CGElseOp, ninfo, nextBranchArgs);
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
-                        // depends on the iterations indexes
+                        // depends on the iteration index
                         OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                         handler.manageOperationNodeMemory(cond);
 
