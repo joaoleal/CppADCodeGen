@@ -376,6 +376,7 @@ namespace CppAD {
                     for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                         const CGBase& val = indexedLoopResults[i].first;
                         IndexPattern* ip = indexedLoopResults[i].second;
+                        
                         if (ip != NULL) {
                             aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
                             aInfo[1] = assignOrAdd;
@@ -386,9 +387,21 @@ namespace CppAD {
                             handler.manageOperationNodeMemory(yIndexed);
 
                             pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
+                            
+                        } else if (val.getOperationNode() != NULL &&
+                                val.getOperationNode()->getOperationType() == CGEndIfOp) {
+                            
+                            std::vector<size_t> info(1);
+                            info[0] = i; // points to itself
+                            std::vector<Argument<Base> > args(1);
+                            args[0] = Argument<Base>(*val.getOperationNode());
+                            
+                            pxCustom[i] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                            
                         } else {
                             pxCustom[i] = val;
                         }
+
                     }
 
                 }
