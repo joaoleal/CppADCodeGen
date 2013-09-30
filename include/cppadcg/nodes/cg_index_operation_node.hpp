@@ -27,27 +27,36 @@ namespace CppAD {
      */
     template<class Base>
     class IndexOperationNode : public OperationNode<Base> {
-    private:
-        const Index& index_;
     public:
 
-        inline IndexOperationNode(const Index& index) :
-            OperationNode<Base>(CGIndexOp),
-            index_(index) {
+        inline IndexOperationNode(IndexDclrOperationNode<Base>& indexDcl) :
+            OperationNode<Base>(CGIndexOp, Argument<Base>(indexDcl)) {
         }
 
-        inline IndexOperationNode(const Index& index,
-                                  OperationNode<Base>& loopStartOrIndexAssign) :
-            OperationNode<Base>(CGIndexOp, Argument<Base>(loopStartOrIndexAssign)),
-            index_(index) {
-            CPPADCG_ASSERT_KNOWN(loopStartOrIndexAssign.getOperationType() == CGLoopStartOp ||
-                                 (loopStartOrIndexAssign.getOperationType() == CGIndexAssignOp &&
-                                 &static_cast<IndexAssignOperationNode<Base>&> (loopStartOrIndexAssign).getIndex() == &index),
-                                 "Invalid argument");
+        inline IndexOperationNode(LoopStartOperationNode<Base>& loopStart) :
+            OperationNode<Base>(CGIndexOp, Argument<Base>(loopStart.getIndex()), Argument<Base>(loopStart)) {
         }
 
-        inline const Index& getIndex() const {
-            return index_;
+        inline IndexOperationNode(IndexAssignOperationNode<Base>& indexAssign) :
+            OperationNode<Base>(CGIndexOp, Argument<Base>(indexAssign.getIndex()), Argument<Base>(indexAssign)) {
+        }
+
+        inline const IndexDclrOperationNode<Base>& getIndex() const {
+            const std::vector<Argument<Base> >& args = this->getArguments();
+            CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
+
+            OperationNode<Base>* aNode = args[0].getOperation();
+            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+
+            return static_cast<const IndexDclrOperationNode<Base>&> (*aNode);
+        }
+
+        inline void makeAssigmentDependent(IndexAssignOperationNode<Base>& indexAssign) {
+            std::vector<Argument<Base> >& args = this->getArguments();
+
+            args.resize(2);
+            args[0] = Argument<Base>(indexAssign.getIndex());
+            args[1] = Argument<Base>(indexAssign);
         }
 
         inline virtual ~IndexOperationNode() {

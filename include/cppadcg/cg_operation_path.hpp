@@ -38,7 +38,7 @@ namespace CppAD {
     inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPaths(OperationNode<Base>& root,
                                                                                              OperationNode<Base>& code,
                                                                                              size_t max) {
-        resetCounters();
+        resetManagedNodes();
 
         std::vector<std::vector<OperationPathNode<Base> > > found;
 

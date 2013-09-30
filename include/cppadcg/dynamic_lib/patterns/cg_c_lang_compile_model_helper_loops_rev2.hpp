@@ -41,14 +41,16 @@ namespace CppAD {
                                                                                  IndexOperationNode<Base>& jrowIndexOp,
                                                                                  HessianRowGroup<Base>& group,
                                                                                  const CG<Base>& tx1,
-                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx);
+                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
+                                                                                 std::map<size_t, std::set<size_t> >& jrow2CompressedLoc);
 
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createReverseMode2Contribution(CodeHandler<Base>& handler,
                                                                           HessianRowGroup<Base>& group,
                                                                           const std::vector<HessianElement>& positions,
                                                                           const CG<Base>& ddfdxdx,
-                                                                          IndexOperationNode<Base>& iterationIndexOp);
+                                                                          IndexOperationNode<Base>& iterationIndexOp,
+                                                                          std::map<size_t, std::set<size_t> >& jrow2CompressedLoc);
     }
 
     /***************************************************************************
@@ -64,6 +66,12 @@ namespace CppAD {
 
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
+
+        IndexDclrOperationNode<Base> indexJrowDcl("jrow");
+        IndexDclrOperationNode<Base> indexLocalItDcl("it");
+        IndexDclrOperationNode<Base> indexLocalItCountDcl("itCount");
+        IndexDclrOperationNode<Base> indexIterationDcl(LoopModel<Base>::ITERATION_INDEX_NAME);
+        IndexOperationNode<Base> jrowIndexOp(indexJrowDcl);
 
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
@@ -158,7 +166,7 @@ namespace CppAD {
             /**
              * make the loop's indexed variables
              */
-            info.iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX); // *info.loopStart);
+            info.iterationIndexOp = new IndexOperationNode<Base>(indexIterationDcl); // *info.loopStart);
             handler.manageOperationNodeMemory(info.iterationIndexOp);
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
@@ -206,11 +214,6 @@ namespace CppAD {
         /**
          * Loops - Hessian
          */
-        Index indexJrow("jrow");
-        Index indexLocalIt("it");
-        Index indexLocalItCount("itCount");
-        IndexOperationNode<Base> jrowIndexOp(indexJrow);
-
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -282,7 +285,7 @@ namespace CppAD {
                  * try to fit a combination of two patterns:
                  *  j = fStart(jrow) + flit(lit);
                  */
-                std::auto_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(indexJrow, indexLocalIt, jrow2localIt2ModelIt));
+                std::auto_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jrow2localIt2ModelIt));
 
                 if (itPattern.get() == NULL) {
                     // did not match!
@@ -292,7 +295,6 @@ namespace CppAD {
                 /**
                  * Local iteration count pattern
                  */
-                std::auto_ptr<LoopNodeInfo<Base> > loopNodeInfo;
                 std::auto_ptr<IndexOperationNode<Base> > localIterIndexOp;
                 std::auto_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
                 std::auto_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
@@ -306,35 +308,37 @@ namespace CppAD {
                         jrow2litCount[jrow] = itJrow2Its->second.size();
                     }
 
-                    std::auto_ptr<IndexPattern> indexLocalItCountPattern(IndexPattern::detect(indexJrow, jrow2litCount));
+                    std::auto_ptr<IndexPattern> indexLocalItCountPattern(IndexPattern::detect(jrow2litCount));
 
                     if (IndexPattern::isConstant(*indexLocalItCountPattern.get())) {
                         size_t itCount = group.jRow2Iterations.begin()->second.size();
-                        loopNodeInfo.reset(new CustomLoopNodeInfo<Base>(indexLocalIt, itCount));
+                        loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, itCount);
                     } else {
-                        itCountAssignOp.reset(new IndexAssignOperationNode<Base>(indexLocalItCount, *indexLocalItCountPattern.get(), jrowIndexOp));
-                        localIterCountIndexOp.reset(new IndexOperationNode<Base>(indexLocalItCount, *itCountAssignOp.get()));
-                        loopNodeInfo.reset(new CustomLoopNodeInfo<Base>(indexLocalIt, *localIterCountIndexOp.get()));
+                        itCountAssignOp.reset(new IndexAssignOperationNode<Base>(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jrowIndexOp));
+                        localIterCountIndexOp.reset(new IndexOperationNode<Base>(*itCountAssignOp.get()));
+                        loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, *localIterCountIndexOp.get());
                     }
-
-                    loopStart = new LoopStartOperationNode<Base>(*loopNodeInfo.get());
                     handler.manageOperationNodeMemory(loopStart);
 
-                    localIterIndexOp.reset(new IndexOperationNode<Base>(indexLocalIt, *loopStart));
+                    localIterIndexOp.reset(new IndexOperationNode<Base>(*loopStart));
                 }
 
 
-                IndexAssignOperationNode<Base> iterationIndexPatternOp(LoopModel<Base>::ITERATION_INDEX, *itPattern.get(), &jrowIndexOp, localIterIndexOp.get());
-                info.iterationIndexOp->getArguments().resize(1);
-                info.iterationIndexOp->getArguments()[0] = Argument<Base>(iterationIndexPatternOp);
+                IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), &jrowIndexOp, localIterIndexOp.get());
+                info.iterationIndexOp->makeAssigmentDependent(iterationIndexPatternOp);
 
+                map<size_t, set<size_t> > jrow2CompressedLoc;
                 vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
 
                 indexedLoopResults = generateReverseMode2GroupOps(handler, lModel, info,
                                                                   jrowIndexOp,
                                                                   group, tx1,
-                                                                  dzDx);
+                                                                  dzDx,
+                                                                  jrow2CompressedLoc);
 
+                _loopRev2Groups[&lModel][g] = jrow2CompressedLoc;
+
+                LoopEndOperationNode<Base>* loopEnd = NULL;
                 vector<CGBase> pxCustom;
                 if (createsLoop) {
                     /**
@@ -343,12 +347,12 @@ namespace CppAD {
                     size_t assignOrAdd = 1;
                     set<IndexOperationNode<Base>*> indexesOps;
                     indexesOps.insert(info.iterationIndexOp);
-                    LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+                    loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
                     /**
                      * move no-nindexed expressions outside loop
                      */
-                    moveNonIndexedOutsideLoop(*loopStart, *loopEnd, indexLocalIt);
+                    moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
 
                     /**
                      * 
@@ -366,22 +370,19 @@ namespace CppAD {
                      */
                     size_t assignOrAdd = 1; // add
                     std::vector<Argument<Base> > indexedArgs(2);
-                    std::vector<size_t> info(2);
+                    std::vector<size_t> aInfo(2);
 
                     pxCustom.resize(indexedLoopResults.size());
                     for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                         const CGBase& val = indexedLoopResults[i].first;
                         IndexPattern* ip = indexedLoopResults[i].second;
                         if (ip != NULL) {
-                            indexedArgs.resize(1);
-
-                            info[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
-                            info[1] = assignOrAdd;
+                            aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
+                            aInfo[1] = assignOrAdd;
                             indexedArgs[0] = asArgument(val); // indexed expression
-                            indexedArgs[1] = Argument<Base>(jrowIndexOp); // index
-                            ///////////////////////////////////////////////////////////////// OTHER INDEXES
+                            indexedArgs[1] = Argument<Base>(*info.iterationIndexOp); // index  ///jrowIndexOp
 
-                            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
+                            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
                             handler.manageOperationNodeMemory(yIndexed);
 
                             pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
@@ -393,7 +394,7 @@ namespace CppAD {
                 }
 
                 CLanguage<Base> langC(_baseTypeName);
-                langC.setCurrentLoop(&lModel);
+                langC.setFunctionIndexArgument(indexJrowDcl);
 
                 _cache.str("");
                 std::ostringstream code;
@@ -412,7 +413,7 @@ namespace CppAD {
                 generateFunctionNameLoopRev2(_cache, lModel, g);
                 std::string functionName = _cache.str();
 
-                std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+                std::string argsDcl = langC.generateFunctionArgumentsDcl();
 
                 _cache.str("");
                 _cache << "#include <stdlib.h>\n"
@@ -420,7 +421,7 @@ namespace CppAD {
                         "\n"
                         << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                         "\n"
-                        "void " << functionName << "(unsigned long jrow, " << argsDcl << ") {\n";
+                        "void " << functionName << "(" << argsDcl << ") {\n";
                 nameGenRev2.customFunctionVariableDeclarations(_cache);
                 _cache << langC.generateIndependentVariableDeclaration() << "\n";
                 _cache << langC.generateDependentVariableDeclaration() << "\n";
@@ -436,6 +437,12 @@ namespace CppAD {
                 sources[functionName] = _cache.str();
                 _cache.str("");
 
+                /**
+                 * prepare the nodes to be reused!
+                 */
+                if (g + 1 < loopGroups.v.size()) {
+                    handler.resetNodes(); // uncolor nodes
+                }
             }
 
         }
@@ -480,7 +487,7 @@ namespace CppAD {
                 vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
                 handlerNL.makeVariables(py);
 
-                vector<CGBase> pyNoLoop(m);
+                vector<CGBase> pyNoLoop(_funNoLoops->getTapeDependentCount());
 
                 const std::vector<size_t>& origIndexes = _funNoLoops->getOrigDependentIndexes();
                 for (size_t inl = 0; inl < origIndexes.size(); inl++) {
@@ -493,7 +500,7 @@ namespace CppAD {
                 vector<CGBase> hessNoLoop(row.size());
 
                 CppAD::sparse_hessian_work work; // temporary structure for CPPAD
-                fun.SparseHessian(tx0, pyNoLoop, _funNoLoops->getHessianSparsity(), row, col, hessNoLoop, work);
+                fun.SparseHessian(tx0, pyNoLoop, _funNoLoops->getHessianOrigEqsSparsity(), row, col, hessNoLoop, work);
 
                 map<size_t, map<size_t, CGBase> > hess;
                 // save non-indexed hessian elements
@@ -595,7 +602,8 @@ namespace CppAD {
                                                                                  IndexOperationNode<Base>& jrowIndexOp,
                                                                                  HessianRowGroup<Base>& group,
                                                                                  const CG<Base>& tx1,
-                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx) {
+                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
+                                                                                 std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
             using namespace std;
             using namespace CppAD::loops;
             using CppAD::vector;
@@ -626,7 +634,8 @@ namespace CppAD {
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
-                                                                              iterationIndexOp);
+                                                                              iterationIndexOp,
+                                                                              jrow2CompressedLoc);
             }
 
             /**
@@ -654,7 +663,8 @@ namespace CppAD {
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
-                                                                              iterationIndexOp);
+                                                                              iterationIndexOp,
+                                                                              jrow2CompressedLoc);
             }
 
 
@@ -670,7 +680,8 @@ namespace CppAD {
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
-                                                                              iterationIndexOp);
+                                                                              iterationIndexOp,
+                                                                              jrow2CompressedLoc);
             }
 
             /*******************************************************************
@@ -695,7 +706,7 @@ namespace CppAD {
                 const LoopPosition* posJ2 = lModel.getNonIndexedIndepIndexes(j2);
 
                 // location
-                IndexPattern* pattern = new LinearIndexPattern(LoopModel<Base>::ITERATION_INDEX, 0, 0, 0, e);
+                IndexPattern* pattern = new LinearIndexPattern(0, 0, 0, e);
                 handler.manageLoopDependentIndexPattern(pattern);
 
                 /**
@@ -781,6 +792,8 @@ namespace CppAD {
 
                 // place the result
                 indexedLoopResults[hessLE++] = make_pair(hessVal, pattern);
+
+                jrow2CompressedLoc[j1].insert(e);
             }
 
             return indexedLoopResults;
@@ -882,7 +895,7 @@ namespace CppAD {
         }
 
         template<class Base>
-        inline void subgroupHessianRowsByContrib(const loops::HessianWithLoopsInfo<Base>& info,
+        inline void subgroupHessianRowsByContrib(const HessianWithLoopsInfo<Base>& info,
                                                  const HessianTermContrib<Base>& c,
                                                  const std::set<size_t>& jrows,
                                                  const std::map<pairss, std::map<size_t, std::set<size_t> > >& indexedIndexed2jrow2Iter,
@@ -972,7 +985,8 @@ namespace CppAD {
                                                                           HessianRowGroup<Base>& group,
                                                                           const std::vector<HessianElement>& positions,
                                                                           const CG<Base>& ddfdxdx,
-                                                                          IndexOperationNode<Base>& iterationIndexOp) {
+                                                                          IndexOperationNode<Base>& iterationIndexOp,
+                                                                          std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
             using namespace std;
 
             /**
@@ -982,7 +996,9 @@ namespace CppAD {
 
             set<size_t>::const_iterator itIt;
             for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
-                iteration2pos[*itIt] = positions[*itIt].location;
+                size_t iter = *itIt;
+                iteration2pos[iter] = positions[iter].location;
+                jrow2CompressedLoc[positions[iter].row].insert(positions[iter].location);
             }
 
             // combine iterations with the same number of additions
@@ -1013,7 +1029,7 @@ namespace CppAD {
                 // same expression present in all iterations
 
                 // generate the index pattern for the hessian compressed element
-                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, locations.begin()->second);
+                IndexPattern* pattern = IndexPattern::detect(locations.begin()->second);
                 handler.manageLoopDependentIndexPattern(pattern);
 
                 return make_pair(results.begin()->second, pattern);
@@ -1094,7 +1110,7 @@ namespace CppAD {
                     nextBranchArgs.clear();
 
                     const map<size_t, size_t>& locationsC = locations[count];
-                    IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, locationsC);
+                    IndexPattern* pattern = IndexPattern::detect(locationsC);
                     handler.manageLoopDependentIndexPattern(pattern);
 
                     std::vector<size_t> ainfo(2);

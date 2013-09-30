@@ -51,7 +51,7 @@ namespace CppAD {
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopModel<Base>*> _loops;
         // the used indexes
-        std::set<const Index*> _indexes;
+        std::set<const IndexDclrOperationNode<Base>*> _indexes;
         //
         std::vector<const IndexPattern*> _loopDependentIndexPatterns;
         std::vector<const IndexPattern*> _loopDependentIndexPatternManaged; // garbage collection
@@ -238,6 +238,10 @@ namespace CppAD {
                 return NULL;
         }
 
+        inline const std::vector<ScopePath>& getScopes() const {
+            return _scopes;
+        }
+
         /***********************************************************************
          *                   Graph management functions
          **********************************************************************/
@@ -324,7 +328,7 @@ namespace CppAD {
             }
 
             if (_used) {
-                resetCounters();
+                resetManagedNodes();
             }
             _used = true;
 
@@ -457,6 +461,14 @@ namespace CppAD {
             return _idArrayCount - 1;
         }
 
+        /***********************************************************************
+         *                   Reusing handler and nodes
+         **********************************************************************/
+
+        /**
+         * Resets this handler for a usage with completely different nodes.
+         * @warning all managed memory will be deleted
+         */
         virtual void reset() {
             typename std::vector<OperationNode<Base> *>::iterator itc;
             for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {
@@ -480,6 +492,44 @@ namespace CppAD {
             _loopDependentIndexPatternManaged.clear();
 
             _used = false;
+        }
+
+        /**
+         * Resets the previously used dependents and their children so that they
+         * can be reused again by this handler.
+         */
+        inline void resetNodes() {
+            if (_dependents != NULL)
+                resetNodes(*_dependents);
+        }
+
+        /**
+         * Resets the nodes and their children so that they can be reused again
+         * by a handler
+         * @param dependents the nodes to be reset
+         */
+        static inline void resetNodes(vector<CG<Base> >& dependents) {
+            for (size_t i = 0; i < dependents.size(); i++) {
+                resetNodes(dependents[i].getOperationNode());
+            }
+        }
+
+        /**
+         * Resets a node and its children so that they can be reused again by a
+         * handler
+         * @param node the node to be reset
+         */
+        static inline void resetNodes(OperationNode<Base>* node) {
+            if (node == NULL || node->getTotalUsageCount() == 0)
+                return;
+
+            node->resetHandlerCounters();
+            node->setColor(0);
+
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            for (size_t a = 0; a < args.size(); a++) {
+                resetNodes(args[a].getOperation());
+            }
         }
 
         /***********************************************************************
@@ -633,10 +683,13 @@ namespace CppAD {
                     _scopes[_currentScopeColor] = _scopes[previousScope];
 
                     // change current scope
-                    if (op == CGLoopEndOp || op == CGEndIfOp)
-                        _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor)); // one more scope level
-                    else
-                        _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor); // just changing last scope
+                    if (op == CGLoopEndOp || op == CGEndIfOp) {
+                        // one more scope level
+                        _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor, &code));
+                    } else {
+                        // same level but different scope
+                        _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor, &code);
+                    }
                 }
 
                 /**
@@ -1221,12 +1274,13 @@ namespace CppAD {
             return arg.getOperationType() == CGArrayCreationOp;
         }
 
-        virtual void resetCounters() {
+        inline void resetManagedNodes() {
             _variableOrder.clear();
 
             for (typename std::vector<OperationNode<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                 OperationNode<Base>* block = *it;
                 block->resetHandlerCounters();
+                block->setColor(0);
             }
         }
 

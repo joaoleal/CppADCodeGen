@@ -18,11 +18,11 @@
 namespace CppAD {
 
     template<class VectorSizeT>
-    IndexPattern* IndexPattern::detect(const Index& indexX, const VectorSizeT& x2y) {
+    IndexPattern* IndexPattern::detect(const VectorSizeT& x2y) {
         assert(x2y.size() > 0);
 
         size_t maxCount = std::min(std::max(3ul, x2y.size() / 4), 8ul);
-        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(indexX, x2y, maxCount);
+        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(x2y, maxCount);
 
         if (linearSections.size() == 1) {
             return linearSections.begin()->second;
@@ -30,16 +30,16 @@ namespace CppAD {
             return new SectionedIndexPattern(linearSections);
         } else {
             throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern(indexX);
+            return new RandomIndexPattern();
         }
 
     }
 
-    IndexPattern* IndexPattern::detect(const Index& indexX, const std::map<size_t, size_t>& x2y) {
+    IndexPattern* IndexPattern::detect(const std::map<size_t, size_t>& x2y) {
         assert(!x2y.empty());
 
         size_t maxCount = std::min(std::max(3ul, x2y.size() / 4), 8ul);
-        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(indexX, x2y, maxCount);
+        std::map<size_t, IndexPattern*> linearSections = SectionedIndexPattern::detectLinearSections(x2y, maxCount);
 
         if (linearSections.size() == 1) {
             return linearSections.begin()->second;
@@ -47,7 +47,7 @@ namespace CppAD {
             return new SectionedIndexPattern(linearSections);
         } else {
             throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern(indexX);
+            return new RandomIndexPattern();
         }
     }
 

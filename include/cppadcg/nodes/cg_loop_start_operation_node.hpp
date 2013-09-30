@@ -27,20 +27,45 @@ namespace CppAD {
      */
     template<class Base>
     class LoopStartOperationNode : public OperationNode<Base> {
-    private:
-        const LoopNodeInfo<Base>& loopInfo_;
     public:
 
-        inline LoopStartOperationNode(const LoopNodeInfo<Base>& info) :
-            OperationNode<Base>(CGLoopStartOp),
-            loopInfo_(info) {
-            if (info.getIterationCountNode() != NULL) {
-                this->getArguments().push_back(Argument<Base>(*loopInfo_.getIterationCountNode()));
-            }
+        inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, size_t iterationCount) :
+            OperationNode<Base>(CGLoopStartOp, Argument<Base>(indexDcl)) {
+            this->getInfo().push_back(iterationCount);
         }
 
-        inline const LoopNodeInfo<Base>& getLoopInfo() const {
-            return loopInfo_;
+        inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, IndexOperationNode<Base>& iterCount) :
+            OperationNode<Base>(CGLoopStartOp, Argument<Base>(indexDcl), Argument<Base>(iterCount)) {
+        }
+
+        inline IndexDclrOperationNode<Base>& getIndex() const {
+            const std::vector<Argument<Base> >& args = this->getArguments();
+            CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
+
+            OperationNode<Base>* aNode = args[0].getOperation();
+            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+
+            return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
+        }
+
+        inline IndexOperationNode<Base>* getIterationCountNode() const {
+            if (this->getInfo().empty()) {
+                CPPADCG_ASSERT_KNOWN(this->getArguments().size() > 1, "Invalid number of arguments.");
+
+                OperationNode<Base>* aNode = this->getArguments()[1].getOperation();
+                CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexOp, "Invalid argument node type");
+
+                return static_cast<IndexOperationNode<Base>*> (aNode);
+            }
+
+            return NULL;
+        }
+
+        inline const size_t getIterationCount() const {
+            if (this->getInfo().empty()) {
+                return 0;
+            }
+            return this->getInfo()[0];
         }
 
         inline virtual ~LoopStartOperationNode() {

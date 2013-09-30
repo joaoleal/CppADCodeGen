@@ -58,7 +58,7 @@ namespace CppAD {
          */
         const bool reuseIDs;
         //
-        const std::set<const Index*>& indexes;
+        const std::set<const IndexDclrOperationNode<Base>*>& indexes;
         //
         const std::vector<const IndexPattern*>& loopDependentIndexPatterns;
         //
@@ -78,7 +78,7 @@ namespace CppAD {
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri,
-                               const std::set<const Index*>& indexs,
+                               const std::set<const IndexDclrOperationNode<Base>*>& indexs,
                                const std::vector<const IndexPattern*>& dependentIndexPatterns,
                                const std::vector<const IndexPattern*>& independentIndexPatterns,
                                bool zero) :

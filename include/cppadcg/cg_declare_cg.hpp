@@ -65,6 +65,9 @@ namespace CppAD {
     class IndexAssignOperationNode;
 
     template<class Base>
+    class IndexDclrOperationNode;
+
+    template<class Base>
     class LoopStartOperationNode;
 
     template<class Base>
@@ -89,12 +92,7 @@ namespace CppAD {
     class LoopModel;
 
     template<class Base>
-    class LoopNodeInfo;
-
-    template<class Base>
     class IndexedDependentLoopInfo;
-
-    class Index;
 
     class IndexPattern;
 

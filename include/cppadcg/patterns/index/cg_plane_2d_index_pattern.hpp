@@ -60,9 +60,7 @@ namespace CppAD {
          *                        static methods
          **********************************************************************/
 
-        static inline Plane2DIndexPattern* detectPlane2D(const Index& indexX,
-                                                         const Index& indexY,
-                                                         const std::map<size_t, std::map<size_t, size_t> >& x2y2z) {
+        static inline Plane2DIndexPattern* detectPlane2D(const std::map<size_t, std::map<size_t, size_t> >& x2y2z) {
             /**
              * try to fit a combination of two patterns:
              *  z = fStart(x) + flit(y);
@@ -71,7 +69,7 @@ namespace CppAD {
             if (x2y2z.size() == 1) {
                 // only one x -> fit z to y
                 const std::map<size_t, size_t>& y2z = x2y2z.begin()->second;
-                return new Plane2DIndexPattern(NULL, IndexPattern::detect(indexY, y2z));
+                return new Plane2DIndexPattern(NULL, IndexPattern::detect(y2z));
             }
 
             // perhaps there is always only one y
@@ -93,7 +91,7 @@ namespace CppAD {
             }
 
             if (!x2z.empty()) {
-                return new Plane2DIndexPattern(IndexPattern::detect(indexX, x2z), NULL);
+                return new Plane2DIndexPattern(IndexPattern::detect(x2z), NULL);
             }
 
             /**
@@ -129,7 +127,7 @@ namespace CppAD {
              */
             std::auto_ptr<IndexPattern> fx;
 
-            std::map<size_t, IndexPattern*> startSections = SectionedIndexPattern::detectLinearSections(indexX, x2zStart, 2);
+            std::map<size_t, IndexPattern*> startSections = SectionedIndexPattern::detectLinearSections(x2zStart, 2);
             if (startSections.empty()) {
                 return NULL; // does not fit the pattern
             }
@@ -147,7 +145,7 @@ namespace CppAD {
              * try to detect a pattern for the following iterations
              * based on the local loop index (local index != model index)
              */
-            std::map<size_t, IndexPattern*> sections = SectionedIndexPattern::detectLinearSections(indexY, y2zOffset, 2);
+            std::map<size_t, IndexPattern*> sections = SectionedIndexPattern::detectLinearSections(y2zOffset, 2);
             if (sections.empty()) {
                 return NULL; // does not fit the pattern
             }

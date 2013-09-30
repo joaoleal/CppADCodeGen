@@ -127,20 +127,26 @@ namespace CppAD {
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
                                                      const IndexPattern& ip) {
+            CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGLoopIndexedDepOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
+
             _ss.clear();
             _ss.str("");
 
-            _ss << _depName << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
+            _ss << _depName << "[" << CLanguage<Base>::createIndexPattern(ip, getIndexes(var, 1)) << "]";
 
             return _ss.str();
         }
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
                                                        const IndexPattern& ip) {
+            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
+
             _ss.clear();
             _ss.str("");
 
-            _ss << _indepName << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
+            _ss << _indepName << "[" << CLanguage<Base>::createIndexPattern(ip, getIndexes(independent, 0)) << "]";
 
             return _ss.str();
         }
@@ -158,7 +164,21 @@ namespace CppAD {
 
         inline virtual ~CLangDefaultVariableNameGenerator() {
         }
+    protected:
 
+        static inline std::vector<const IndexDclrOperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset) {
+            const std::vector<Argument<Base> >& args = var.getArguments();
+            std::vector<const IndexDclrOperationNode<Base>*> indexes(args.size() - offset);
+
+            for (size_t a = offset; a < args.size(); a++) {
+                CPPADCG_ASSERT_KNOWN(args[a].getOperation() != NULL, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
+
+                indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();
+            }
+
+            return indexes;
+        }
     };
 }
 

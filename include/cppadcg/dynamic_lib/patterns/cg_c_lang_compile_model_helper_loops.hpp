@@ -124,7 +124,6 @@ namespace CppAD {
                                                                              LoopStartOperationNode<Base>& loopStart,
                                                                              const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                                              const std::set<IndexOperationNode<Base>*>& indexesOps,
-                                                                             const LoopNodeInfo<Base>& loopInfo,
                                                                              size_t assignOrAdd) {
         std::vector<Argument<Base> > endArgs;
         std::vector<Argument<Base> > indexedArgs(1 + indexesOps.size());
@@ -157,7 +156,7 @@ namespace CppAD {
             }
         }
 
-        LoopEndOperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopInfo, loopStart, endArgs);
+        LoopEndOperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopStart, endArgs);
         handler.manageOperationNodeMemory(loopEnd);
 
         return loopEnd;
@@ -165,9 +164,9 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::moveNonIndexedOutsideLoop(LoopStartOperationNode<Base>& loopStart,
-                                                                  LoopEndOperationNode<Base>& loopEnd,
-                                                                  const Index& loopIndex) {
+                                                                  LoopEndOperationNode<Base>& loopEnd) {
         //EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
+        const IndexDclrOperationNode<Base>& loopIndex = loopStart.getIndex();
         std::set<OperationNode<Base>*> nonIndexed;
 
         const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
@@ -190,13 +189,12 @@ namespace CppAD {
     template<class Base>
     bool CLangCompileModelHelper<Base>::findNonIndexedNodes(OperationNode<Base>& node,
                                                             std::set<OperationNode<Base>*>& nonIndexed,
-                                                            const Index& loopIndex) {
+                                                            const IndexDclrOperationNode<Base>& loopIndex) {
         if (node.getColor() > 0)
             return node.getColor() == 1;
 
-        if (node.getOperationType() == CGIndexOp) {
-            IndexOperationNode<Base>& indexNode = static_cast<IndexOperationNode<Base>&> (node);
-            if (&indexNode.getIndex() == &loopIndex) {
+        if (node.getOperationType() == CGIndexDeclarationOp) {
+            if (&node == &loopIndex) {
                 node.setColor(2);
                 return false; // depends on the loop index
             }

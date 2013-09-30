@@ -49,8 +49,7 @@ namespace CppAD {
          **********************************************************************/
 
         template<class VectorSizeT>
-        static inline std::map<size_t, IndexPattern*> detectLinearSections(const Index& index,
-                                                                           const VectorSizeT& indexes,
+        static inline std::map<size_t, IndexPattern*> detectLinearSections(const VectorSizeT& indexes,
                                                                            size_t maxCount = 0) {
             assert(indexes.size() > 0);
 
@@ -78,7 +77,7 @@ namespace CppAD {
                     }
                 }
 
-                linearSections.m[xStart] = new LinearIndexPattern(index, xOffset, dy, dx, b);
+                linearSections.m[xStart] = new LinearIndexPattern(xOffset, dy, dx, b);
                 xStart = lastLinear;
 
                 if (linearSections.m.size() == maxCount && xStart != indexes.size()) {
@@ -90,8 +89,7 @@ namespace CppAD {
             return linearSections.release();
         }
 
-        static inline std::map<size_t, IndexPattern*> detectLinearSections(const Index& index,
-                                                                           const std::map<size_t, size_t>& x2y,
+        static inline std::map<size_t, IndexPattern*> detectLinearSections(const std::map<size_t, size_t>& x2y,
                                                                            size_t maxCount = 0) {
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
 
@@ -136,7 +134,7 @@ namespace CppAD {
                     }
                 }
 
-                linearSections.m[pStart->first] = new LinearIndexPattern(index, xOffset, dy, dx, b);
+                linearSections.m[pStart->first] = new LinearIndexPattern(xOffset, dy, dx, b);
 
                 pStart = pNextSection;
 

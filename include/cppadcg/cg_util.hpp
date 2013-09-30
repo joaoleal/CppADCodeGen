@@ -153,6 +153,16 @@ namespace CppAD {
     template<class VectorSet, class Base>
     inline VectorSet hessianSparsitySet(ADFun<Base>& fun, bool transpose = false) {
         size_t m = fun.Range();
+
+        std::set<size_t> w;
+        for (size_t i = 0; i < m; i++) {
+            w.insert(i);
+        }
+        return hessianSparsitySet<VectorSet, Base>(fun, w, transpose);
+    }
+
+    template<class VectorSet, class Base>
+    inline VectorSet hessianSparsitySet(ADFun<Base>& fun, const std::set<size_t>& w, bool transpose = false) {
         size_t n = fun.Domain();
 
         /**
@@ -164,9 +174,8 @@ namespace CppAD {
         fun.ForSparseJac(n, r);
 
         VectorSet s(1);
-        for (size_t i = 0; i < m; i++) {
-            s[0].insert(i);
-        }
+        s[0] = w;
+
         return fun.RevSparseHes(n, s, transpose);
     }
 

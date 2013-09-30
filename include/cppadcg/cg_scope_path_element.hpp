@@ -24,10 +24,14 @@ namespace CppAD {
         size_t color;
         // the node that marks the beginning of this scope
         OperationNode<Base>* beginning;
+        // the node that marks the end of this scope
+        OperationNode<Base>* end;
+    public:
 
-        inline ScopePathElement(size_t color_ = 0, OperationNode<Base>* node = NULL) :
+        inline ScopePathElement(size_t color_ = 0, OperationNode<Base>* nEnd = NULL, OperationNode<Base>* nBegin = NULL) :
             color(color_),
-            beginning(node) {
+            beginning(nBegin),
+            end(nEnd) {
         }
 
     };

@@ -21,23 +21,9 @@ namespace CppAD {
      * Generic index pattern
      */
     class IndexPattern {
-    protected:
-        std::vector<const Index*> indexes_;
     public:
 
-        inline IndexPattern() {
-        }
-
-        inline IndexPattern(const Index& index) :
-            indexes_(1) {
-            indexes_[0] = &index;
-        }
-
         virtual IndexPatternType getType() const = 0;
-
-        inline const std::vector<const Index*>& getIndexes() const {
-            return indexes_;
-        }
 
         inline virtual ~IndexPattern() {
         }
@@ -53,7 +39,7 @@ namespace CppAD {
          * @return the generated index pattern (must be deleted by user)
          */
         template<class VectorSizeT>
-        static inline IndexPattern* detect(const Index& indexX, const VectorSizeT& x2y);
+        static inline IndexPattern* detect(const VectorSizeT& x2y);
 
         /**
          * Detects the index pattern for the provided points (y = f(x))
@@ -62,8 +48,8 @@ namespace CppAD {
          * @param x2y maps the independents to the dependents (x,y)
          * @return the generated index pattern (must be deleted by user)
          */
-        static inline IndexPattern* detect(const Index& indexX, const std::map<size_t, size_t>& x2y);
-        
+        static inline IndexPattern* detect(const std::map<size_t, size_t>& x2y);
+
         static inline bool isConstant(const IndexPattern& ip);
     };
 

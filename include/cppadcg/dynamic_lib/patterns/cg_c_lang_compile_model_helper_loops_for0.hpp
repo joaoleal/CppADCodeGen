@@ -53,20 +53,23 @@ namespace CppAD {
         /**
          * equations in loops
          */
+        IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
+        handler.manageOperationNodeMemory(iterationIndexDcl);
+
         typename std::set<LoopModel<Base>* >::const_iterator itl;
         size_t l = 0;
         for (itl = _loopTapes.begin(); itl != _loopTapes.end(); ++itl, l++) {
             LoopModel<Base>& lModel = **itl;
-            size_t iterations = lModel.getIterationCount();
+            size_t nIterations = lModel.getIterationCount();
             const std::vector<std::vector<LoopPosition> >& dependents = lModel.getDependentIndexes();
 
             /**
              * make the loop start
              */
-            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(lModel);
+            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, nIterations);
             handler.manageOperationNodeMemory(loopStart);
 
-            IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX, *loopStart);
+            IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(*loopStart);
             handler.manageOperationNodeMemory(iterationIndexOp);
             std::set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(iterationIndexOp);
@@ -88,12 +91,12 @@ namespace CppAD {
                 indexedLoopResults[i] = std::make_pair(yl[i], depPatterns[i]);
             }
             size_t assignOrAdd = 0;
-            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
             std::vector<size_t> info(1);
             std::vector<Argument<Base> > args(1);
             for (size_t i = 0; i < dependents.size(); i++) {
-                for (size_t it = 0; it < iterations; it++) {
+                for (size_t it = 0; it < nIterations; it++) {
                     // an additional alias variable is required so that each dependent variable can have its own ID
                     size_t e = dependents[i][it].original;
                     info[0] = e;
@@ -105,7 +108,7 @@ namespace CppAD {
             /**
              * move no-nindexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
         }
 
         return y;

@@ -30,8 +30,7 @@ namespace CppAD {
         long b_;
     public:
 
-        inline LinearIndexPattern(const Index& index, long xOffset, long dy, long dx, long b) :
-            IndexPattern(index),
+        inline LinearIndexPattern(long xOffset, long dy, long dx, long b) :
             xOffset_(xOffset),
             dy_(dy),
             dx_(dx),

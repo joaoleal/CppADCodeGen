@@ -132,12 +132,20 @@ namespace CppAD {
             if (varType == 0) {
                 return _nameGen->generateIndexedIndependent(independent, ip);
             } else {
+                CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != NULL, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
+
                 _ss.clear();
                 _ss.str("");
+
+                const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[0].getOperation());
+
                 if (varType == 1) {
-                    _ss << _level1Name << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
+                    _ss << _level1Name << "[" << CLanguage<Base>::createIndexPattern(ip, index.getIndex()) << "]";
                 } else {
-                    _ss << _level2Name << "[" << CLanguage<Base>::createIndexPattern(ip) << "]";
+                    _ss << _level2Name << "[" << CLanguage<Base>::createIndexPattern(ip, index.getIndex()) << "]";
                 }
                 return _ss.str();
             }

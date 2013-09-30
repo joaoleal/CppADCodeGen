@@ -201,10 +201,14 @@ namespace CppAD {
          */
         std::vector<std::set<size_t> > _relatedDepCandidates;
         /**
-         * Maps the row groups of each loop model to the set of rows (loop->group->{rows->{compressed reverse 2 position} })
+         * Maps the row groups of each loop model to the set of rows
+         * (loop->group->{rows->{compressed reverse 2 position} })
          */
-        std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopRev2Groups; //////////////////////////////////////////
-        // hessian rows with a contribution from non loop equations [var]{compressed reverse 2 position}
+        std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopRev2Groups;
+        /**
+         * hessian rows with a contribution from non loop equations
+         *  [var]{compressed reverse 2 position}
+         */
         std::map<size_t, std::set<size_t> > _nonLoopRev2Elements;
     public:
 
@@ -898,16 +902,14 @@ namespace CppAD {
                                                                 LoopStartOperationNode<Base>& loopStart,
                                                                 const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                                 const std::set<IndexOperationNode<Base>*>& indexesOps,
-                                                                const LoopNodeInfo<Base>& loopInfo,
                                                                 size_t assignOrAdd);
 
         static inline void moveNonIndexedOutsideLoop(LoopStartOperationNode<Base>& loopStart,
-                                                     LoopEndOperationNode<Base>& loopEnd,
-                                                     const Index& loopIndex);
+                                                     LoopEndOperationNode<Base>& loopEnd);
 
         static inline bool findNonIndexedNodes(OperationNode<Base>& node,
                                                std::set<OperationNode<Base>*>& nonIndexed,
-                                               const Index& loopIndex);
+                                               const IndexDclrOperationNode<Base>& loopIndex);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

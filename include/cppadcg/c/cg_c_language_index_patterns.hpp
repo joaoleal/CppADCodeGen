@@ -22,27 +22,47 @@ namespace CppAD {
         if (_indexes->empty())
             return;
 
+        std::set<const IndexDclrOperationNode<Base>*> funcArgs(_funcArgIndexes.begin(), _funcArgIndexes.end());
+
+        bool first = true;
+
         _ss << _spaces << "unsigned long";
-        std::set<const Index*>::const_iterator iti;
+        typename std::set<const IndexDclrOperationNode<Base>*>::const_iterator iti;
         for (iti = _indexes->begin(); iti != _indexes->end(); ++iti) {
-            if (iti != _indexes->begin())
-                _ss << ",";
-            _ss << " " << (*iti)->getName();
+
+            if (funcArgs.find(*iti) == funcArgs.end()) {
+                if (first) first = false;
+                else _ss << ",";
+
+                _ss << " " << (*(*iti)->getName());
+            }
+
         }
         _ss << ";\n";
     }
 
     template<class Base>
-    inline std::string CLanguage<Base>::createIndexPattern(const IndexPattern& ip) {
+    inline std::string CLanguage<Base>::createIndexPattern(const IndexPattern& ip,
+                                                           const IndexDclrOperationNode<Base>& index) {
+        std::vector<const IndexDclrOperationNode<Base>*>indexes(1);
+        indexes[0] = &index;
+        return createIndexPattern(ip, indexes);
+    }
+
+    template<class Base>
+    inline std::string CLanguage<Base>::createIndexPattern(const IndexPattern& ip,
+                                                           const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
         std::stringstream ss;
         switch (ip.getType()) {
             case LINEAR: // y = x * a + b
             {
+                CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
                 const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
-                return createLinearIndexPattern(lip);
+                return createLinearIndexPattern(lip, *indexes[0]);
             }
             case SECTIONED:
             {
+                CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
                 const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
                 const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
                 size_t sSize = sections.size();
@@ -54,30 +74,30 @@ namespace CppAD {
                     ++its;
                     size_t xStart = its->first;
 
-                    assert(!lp->getIndexes().empty());
-                    ss << "(" << lp->getIndexes()[0]->getName() << "<" << xStart << ")? "
-                            << createIndexPattern(*lp) << ": ";
+                    ss << "(" << (*indexes[0]->getName()) << "<" << xStart << ")? "
+                            << createIndexPattern(*lp, *indexes[0]) << ": ";
                 }
-                ss << createIndexPattern(*its->second);
+                ss << createIndexPattern(*its->second, *indexes[0]);
 
                 return ss.str();
             }
 
             case PLANE2D: // y = f(x) + f(z)
             {
-                std::string index;
+                CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
+                std::string indexExpr;
                 const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
                 if (pip.getPattern1() != NULL) {
-                    index += createIndexPattern(*pip.getPattern1());
+                    indexExpr += createIndexPattern(*pip.getPattern1(), *indexes[0]);
                 }
 
                 if (pip.getPattern2() != NULL) {
                     if (pip.getPattern1() != NULL)
-                        index += " + ";
-                    index += createIndexPattern(*pip.getPattern2());
+                        indexExpr += " + ";
+                    indexExpr += createIndexPattern(*pip.getPattern2(), *indexes.back());
                 }
 
-                return index;
+                return indexExpr;
             }
             case RANDOM:
                 throw CGException("Random indexes not implemented yet");
@@ -89,9 +109,8 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline std::string CLanguage<Base>::createLinearIndexPattern(const LinearIndexPattern& lip) {
-        assert(lip.getIndexes().size() == 1);
-
+    inline std::string CLanguage<Base>::createLinearIndexPattern(const LinearIndexPattern& lip,
+                                                                 const IndexDclrOperationNode<Base>& index) {
         long dy = lip.getLinearSlopeDy();
         long dx = lip.getLinearSlopeDx();
         long b = lip.getLinearConstantTerm();
@@ -102,7 +121,7 @@ namespace CppAD {
             if (xOffset != 0) {
                 ss << "(";
             }
-            ss << lip.getIndexes()[0]->getName();
+            ss << (*index.getName());
             if (xOffset != 0) {
                 ss << " - " << xOffset << ")";
             }

@@ -43,8 +43,8 @@ namespace CppAD {
         SmartVectorPointer<RowGroup> garbage;
         map<size_t, map<LoopModel<Base>*, map<size_t, RowGroup*> > > loopCalls;
 
-        Index indexIt("it");
-        const string& itName = indexIt.getName();
+        IndexDclrOperationNode<Base> indexIt("it");
+        const string& itName = *indexIt.getName();
 
         std::vector<size_t> hessRowStart;
         /**
@@ -70,7 +70,7 @@ namespace CppAD {
                  * jrow pattern
                  */
                 mapKeys(jrows2e, localit2jrows);
-                data->jrowPattern.reset(IndexPattern::detect(indexIt, localit2jrows));
+                data->jrowPattern.reset(IndexPattern::detect(localit2jrows));
 
                 /**
                  * hessian row start pattern
@@ -91,7 +91,7 @@ namespace CppAD {
                         hessRowStart[l] = *location[0].begin();
                     }
 
-                    data->hessStartLocPattern.reset(IndexPattern::detect(indexIt, hessRowStart));
+                    data->hessStartLocPattern.reset(IndexPattern::detect(hessRowStart));
                 }
 
                 // group by number of iterations
@@ -108,6 +108,7 @@ namespace CppAD {
         string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
         string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
+
         _cache.str("");
         _cache << "#include <stdlib.h>\n"
                 << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
@@ -119,7 +120,7 @@ namespace CppAD {
                 "   " << _baseTypeName << " const * inLocal[3];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
                 "   " << _baseTypeName << " * outLocal[1];\n"
-                "   unsigned long " << indexIt.getName() << ";\n"
+                "   unsigned long " << itName << ";\n"
                 "   unsigned long jrow;\n";
         if (maxCompressedSize > 0) {
             _cache << "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n";
@@ -179,8 +180,6 @@ namespace CppAD {
             lastCompressed = !rowOrdered;
         }
 
-        _cache << "\n";
-
         /**
          * loop related values
          */
@@ -192,7 +191,7 @@ namespace CppAD {
         for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
             size_t itCount = itItlg->first;
             if (itCount > 1) {
-                _cache << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {";
+                _cache << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {\n";
             }
 
             for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
@@ -202,19 +201,18 @@ namespace CppAD {
                     size_t g = itg->first;
                     RowGroup* group = itg->second;
 
-                    _cache << "\n";
                     if (itCount > 1) {
                         _cache << "   "; //identation
                     }
                     if (group->hessStartLocPattern.get() != NULL) {
                         // determine hessRowStart = f(it)
-                        _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::createIndexPattern(*group->hessStartLocPattern) << "];\n";
+                        _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::createIndexPattern(*group->hessStartLocPattern, indexIt) << "];\n";
                     } else if (!lastCompressed) {
                         _cache << "   outLocal[0] = compressed;\n";
                     }
 
                     if (itCount > 1) {
-                        _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern) << ";\n";
+                        _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern, indexIt) << ";\n";
                         _cache << "      ";
                         generateFunctionNameLoopRev2(_cache, loop, g);
                         _cache << "(jrow, " << loopFArgs << ");\n";
@@ -229,6 +227,8 @@ namespace CppAD {
                         throw CGException("Not implemented yet");
                         _cache << "   outLocal[0] = compressed;\n"; //////////////////////
                     }
+
+                    _cache << "\n";
                 }
             }
 
@@ -247,7 +247,7 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateFunctionDeclarationSourceLoopRev2(std::ostringstream& cache,
                                                                                   CLanguage<Base>& langC) {
 
-        std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+        std::string argsDcl = langC.generateFunctionArgumentsDcl();
         std::string argsDclLoop = "unsigned long jrow, " + argsDcl;
 
         typename std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >::const_iterator itlg;

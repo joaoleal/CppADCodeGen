@@ -58,6 +58,7 @@ namespace CppAD {
         CGUnMinusOp, // -(a)
         CGDependentMultiAssignOp, // operation which associates a dependent variables with loops and regular operations
         CGDependentRefRhsOp, // operation referencing a dependent variable (right hand side only)
+        CGIndexDeclarationOp, // an integer index declaration
         CGIndexOp, // an integer index
         CGIndexAssignOp, // assigment of an integer index to an index pattern expression
         CGLoopStartOp, // for() {}
@@ -167,6 +168,9 @@ namespace CppAD {
                 break;
             case CGUnMinusOp:
                 os << "-(a)";
+                break;
+            case CGIndexDeclarationOp:
+                os << "index declaration";
                 break;
             case CGIndexOp:
                 os << "index";

@@ -44,9 +44,16 @@ namespace CppAD {
         vector<std::set<size_t> > jacTapeSparsity_;
         bool jacSparsity_;
         /**
-         * Hessian sparsity pattern of the tape
+         * Hessian sparsity pattern for equations used to determine the 
+         * temporaries (ignores the the original model equations)
          */
-        vector<std::set<size_t> > hessTapeSparsity_;
+        vector<std::set<size_t> > hessTapeTempSparsity_;
+        /**
+         * Hessian sparsity pattern for the original model equations in the tape
+         * (ignores the equations for the temporaries)
+         */
+        vector<std::set<size_t> > hessTapeOrigEqSparsity_;
+        // whether or not the hessian sparsities have been evaluated
         bool hessSparsity_;
     public:
 
@@ -151,13 +158,38 @@ namespace CppAD {
 
         inline void evalHessianSparsity() {
             if (!hessSparsity_) {
-                hessTapeSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
+                size_t mo = dependentIndexes_.size();
+                size_t m = fun_->Range();
+
+                // hessian for the original equations
+                std::set<size_t> eqs;
+                if (mo != 0) {
+                    for (size_t i = 0; i < mo; i++)
+                        eqs.insert(eqs.end(), i);
+
+                    hessTapeOrigEqSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_, eqs);
+                }
+
+                // hessian for the temporary variable equations
+                if (m != mo) {
+                    eqs.clear();
+                    for (size_t i = mo; i < m; i++)
+                        eqs.insert(eqs.end(), i);
+                    hessTapeTempSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_, eqs);
+                }
+
                 hessSparsity_ = true;
             }
         }
 
-        inline const vector<std::set<size_t> >& getHessianSparsity() const {
-            return hessTapeSparsity_;
+        inline const vector<std::set<size_t> >& getHessianTempEqsSparsity() const {
+            assert(hessSparsity_);
+            return hessTapeTempSparsity_;
+        }
+
+        inline const vector<std::set<size_t> >& getHessianOrigEqsSparsity() const {
+            assert(hessSparsity_);
+            return hessTapeOrigEqSparsity_;
         }
 
         /**
@@ -172,8 +204,12 @@ namespace CppAD {
             using namespace std;
             using namespace CppAD::loops;
 
-            vector<CGB> wNoLoop(getTapeDependentCount());
+            assert(hessSparsity_); // check that the sparsities have been evaluated
 
+            size_t mo = dependentIndexes_.size();
+            size_t m = getTapeDependentCount();
+
+            vector<CGB> wNoLoop(m);
             vector<CGB> hessNoLoop;
 
             /**
@@ -193,12 +229,12 @@ namespace CppAD {
 
                 hessNoLoop.resize(row.size());
 
-                for (size_t inl = 0; inl < dependentIndexes_.size(); inl++) {
+                for (size_t inl = 0; inl < mo; inl++) {
                     wNoLoop[inl] = Base(0);
                 }
 
-                for (size_t inl = dependentIndexes_.size(); inl < wNoLoop.size(); inl++) {
-                    size_t k = inl - dependentIndexes_.size();
+                for (size_t inl = mo; inl < m; inl++) {
+                    size_t k = inl - mo;
                     const LoopPosition* posK = loop->getTempIndepIndexes(k);
 
                     if (posK != NULL) {
@@ -214,7 +250,7 @@ namespace CppAD {
                 }
 
                 CppAD::sparse_hessian_work workTemps;
-                fun_->SparseHessian(x, wNoLoop, getHessianSparsity(), row, col, hessNoLoop, workTemps);
+                fun_->SparseHessian(x, wNoLoop, hessTapeTempSparsity_, row, col, hessNoLoop, workTemps);
 
                 // save hessian
                 for (size_t el = 0; el < row.size(); el++) {
@@ -233,8 +269,9 @@ namespace CppAD {
             using namespace std;
             using namespace CppAD::loops;
 
-            vector<CGB> wNoLoop(getTapeDependentCount());
+            assert(hessSparsity_); // check that the sparsities have been evaluated
 
+            vector<CGB> wNoLoop(getTapeDependentCount());
             vector<CGB> hessNoLoop;
 
             /**
@@ -251,7 +288,7 @@ namespace CppAD {
                 }
 
                 CppAD::sparse_hessian_work work; // temporary structure for CPPAD
-                fun_->SparseHessian(x, wNoLoop, getHessianSparsity(), row, col, hessNoLoop, work);
+                fun_->SparseHessian(x, wNoLoop, hessTapeOrigEqSparsity_, row, col, hessNoLoop, work);
 
                 // save non-indexed hessian elements
                 for (size_t el = 0; el < row.size(); el++) {

@@ -23,12 +23,12 @@ namespace CppAD {
      * @author Joao Leal
      */
     template <class Base>
-    class LoopModel : public LoopNodeInfo<Base> {
+    class LoopModel {
     public:
         typedef CppAD::CG<Base> CGB;
         typedef Argument<Base> Arg;
     public:
-        static const Index ITERATION_INDEX;
+        static const std::string ITERATION_INDEX_NAME;
         typedef std::pair<size_t, size_t> pairss;
     protected:
         static const std::set<size_t> EMPTYSET;
@@ -36,7 +36,7 @@ namespace CppAD {
         static const std::vector<std::set<size_t> > EMPTYVECTORSETS;
 
     protected:
-        const std::string name_;
+        const size_t loopId_;
         /**
          * The tape for a single loop iteration
          */
@@ -141,14 +141,13 @@ namespace CppAD {
          * @param nonIndexedIndepOrigIndexes
          * @param temporaryIndependents
          */
-        LoopModel(const std::string& name,
-                  ADFun<CGB>* fun,
+        LoopModel(ADFun<CGB>* fun,
                   size_t iterationCount,
                   const std::vector<std::vector<size_t> >& dependentOrigIndexes,
                   const std::vector<std::vector<size_t> >& indexedIndepOrigIndexes,
                   const std::vector<size_t>& nonIndexedIndepOrigIndexes,
                   const std::vector<size_t>& temporaryIndependents) :
-            name_(name),
+            loopId_(createNewLoopId()),
             fun_(fun),
             iterationCount_(iterationCount),
             m_(dependentOrigIndexes.size()),
@@ -204,19 +203,16 @@ namespace CppAD {
             }
         }
 
-        virtual const std::string* getLoopName() const {
-            return &name_;
+        /**
+         * Provides a unique identifier for this loop.
+         * 
+         * @return a unique identifier ID
+         */
+        inline size_t getLoopId() const {
+            return loopId_;
         }
 
-        virtual inline const Index& getIndex() const {
-            return ITERATION_INDEX;
-        }
-
-        virtual inline IndexOperationNode<Base>* getIterationCountNode() const {
-            return NULL;
-        }
-
-        virtual inline const size_t getIterationCount() const {
+        inline const size_t getIterationCount() const {
             return iterationCount_;
         }
 
@@ -413,7 +409,7 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     indexes[it] = indexedIndepIndexes_[j][it].original;
                 }
-                indepIndexPatterns_[j] = IndexPattern::detect(ITERATION_INDEX, indexes);
+                indepIndexPatterns_[j] = IndexPattern::detect(indexes);
             }
 
             depIndexPatterns_.resize(dependentIndexes_.size());
@@ -422,7 +418,7 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     indexes[it] = dependentIndexes_[j][it].original;
                 }
-                depIndexPatterns_[j] = IndexPattern::detect(ITERATION_INDEX, indexes);
+                depIndexPatterns_[j] = IndexPattern::detect(indexes);
             }
         }
 
@@ -563,6 +559,14 @@ namespace CppAD {
         }
 
     private:
+
+        static size_t createNewLoopId() {
+            CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+            static size_t count = 0;
+            count++;
+            return count;
+        }
+
         LoopModel(const LoopModel<Base>&); // not implemented
 
         LoopModel& operator=(const LoopModel<Base>&); // not implemented
@@ -570,7 +574,7 @@ namespace CppAD {
     };
 
     template<class Base>
-    const Index LoopModel<Base>::ITERATION_INDEX("j");
+    const std::string LoopModel<Base>::ITERATION_INDEX_NAME("j");
 
     template<class Base>
     const std::set<size_t> LoopModel<Base>::EMPTYSET;

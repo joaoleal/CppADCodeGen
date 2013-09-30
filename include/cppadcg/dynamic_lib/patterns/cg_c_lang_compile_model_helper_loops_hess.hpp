@@ -111,14 +111,16 @@ namespace CppAD {
             size_t e = lowerHessOrder[eh];
 
             if (_funNoLoops != NULL) {
-                // TODO: consider getting the patterns only for the original equations and leave out the temporaries
-                const set<size_t>& row = _funNoLoops->getHessianSparsity()[j1];
-                if (row.find(j2) != row.end()) {
-                    /**
-                     * Present in the equations outside the loops
-                     */
-                    noLoopEvalHessSparsity[j1].insert(j2);
-                    noLoopEvalHessLocations[j1][j2].insert(e);
+                // considers only the pattern for the original equations and leaves out the temporaries
+                const vector<std::set<size_t> >& dydxx = _funNoLoops->getHessianOrigEqsSparsity();
+                if (dydxx.size() > 0) {
+                    if (dydxx[j1].find(j2) != dydxx[j1].end()) {
+                        /**
+                         * Present in the equations outside the loops
+                         */
+                        noLoopEvalHessSparsity[j1].insert(j2);
+                        noLoopEvalHessLocations[j1][j2].insert(e);
+                    }
                 }
             }
 
@@ -337,6 +339,8 @@ namespace CppAD {
                     size_t nk = _funNoLoops->getTemporaryDependentCount();
                     size_t nOrigEq = _funNoLoops->getTapeDependentCount() - nk;
 
+                    const vector<set<size_t> >& dzdxx = _funNoLoops->getHessianTempEqsSparsity();
+
                     std::set<size_t> usedTapeJ2;
 
                     for (size_t k1 = 0; k1 < nk; k1++) {
@@ -440,8 +444,7 @@ namespace CppAD {
                          * d f_i   .  d      d z_k1
                          * d z_k1     d x_j2 d x_j1
                          */
-                        const set<size_t>& gHessRow = _funNoLoops->getHessianSparsity()[j1];
-                        if (gHessRow.find(j2) != gHessRow.end()) {
+                        if (dzdxx[j1].find(j2) != dzdxx[j1].end()) {
 
                             for (size_t i = 0; i < loopJac.size(); i++) {
                                 const set<size_t>& fJacRow = loopJac[i];
@@ -526,6 +529,9 @@ namespace CppAD {
         /**
          * prepare loop independents
          */
+        IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
+        handler.manageOperationNodeMemory(iterationIndexDcl);
+
         typename map<LoopModel<Base>*, HessianWithLoopsInfo<Base> >::iterator itLoop2Info;
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
@@ -534,10 +540,10 @@ namespace CppAD {
             /**
              * make the loop start
              */
-            info.loopStart = new LoopStartOperationNode<Base>(lModel);
+            info.loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, lModel.getIterationCount());
             handler.manageOperationNodeMemory(info.loopStart);
 
-            info.iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX, *info.loopStart);
+            info.iterationIndexOp = new IndexOperationNode<Base>(*info.loopStart);
             handler.manageOperationNodeMemory(info.iterationIndexOp);
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
@@ -562,7 +568,7 @@ namespace CppAD {
          */
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
-            
+
             info.evalLoopModelJacobian();
         }
 
@@ -685,7 +691,7 @@ namespace CppAD {
                 const LoopPosition* posJ2 = lModel.getNonIndexedIndepIndexes(j2);
 
                 // location
-                IndexPattern* pattern = new LinearIndexPattern(LoopModel<Base>::ITERATION_INDEX, 0, 0, 0, e);
+                IndexPattern* pattern = new LinearIndexPattern(0, 0, 0, e);
                 handler.manageLoopDependentIndexPattern(pattern);
 
                 /**
@@ -780,7 +786,7 @@ namespace CppAD {
             size_t assignOrAdd = 1;
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
-            info.loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+            info.loopEnd = createLoopEnd(handler, *info.loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
             std::vector<size_t>::const_iterator itE;
             for (itE = lowerHessOrder.begin(); itE != lowerHessOrder.end(); ++itE) {
@@ -804,7 +810,7 @@ namespace CppAD {
             /**
              * move no-nindexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*info.loopStart, *info.loopEnd, LoopModel<Base>::ITERATION_INDEX);
+            moveNonIndexedOutsideLoop(*info.loopStart, *info.loopEnd);
         }
 
         /**
@@ -877,7 +883,7 @@ namespace CppAD {
                 // same expression present in all iterations
 
                 // generate the index pattern for the hessian compressed element
-                IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, locations.begin()->second);
+                IndexPattern* pattern = IndexPattern::detect(locations.begin()->second);
                 handler.manageLoopDependentIndexPattern(pattern);
 
                 return make_pair(results.begin()->second, pattern);
@@ -958,7 +964,7 @@ namespace CppAD {
                     nextBranchArgs.clear();
 
                     const map<size_t, size_t>& locationsC = locations[count];
-                    IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, locationsC);
+                    IndexPattern* pattern = IndexPattern::detect(locationsC);
                     handler.manageLoopDependentIndexPattern(pattern);
 
                     std::vector<size_t> ainfo(2);

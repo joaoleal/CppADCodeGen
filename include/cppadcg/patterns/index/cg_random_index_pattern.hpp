@@ -23,8 +23,7 @@ namespace CppAD {
     class RandomIndexPattern : public IndexPattern {
     public:
 
-        inline RandomIndexPattern(const Index& index) :
-            IndexPattern(index) {
+        inline RandomIndexPattern() {
         }
 
         inline virtual IndexPatternType getType() const {

@@ -297,7 +297,7 @@ namespace CppAD {
              * zero order
              */
             vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
-            
+
             tmps.resize(depNL.size() - nonIndexdedEqSize);
             for (size_t i = 0; i < tmps.size(); i++)
                 tmps[i] = depNL[nonIndexdedEqSize + i];
@@ -335,6 +335,9 @@ namespace CppAD {
         /***********************************************************************
          * Generate loop body
          **********************************************************************/
+        IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
+        handler.manageOperationNodeMemory(iterationIndexDcl);
+
         vector<CGBase> jacLoop;
 
         // loop loops :)
@@ -349,10 +352,10 @@ namespace CppAD {
             /**
              * make the loop start
              */
-            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(lModel);
+            LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, lModel.getIterationCount());
             handler.manageOperationNodeMemory(loopStart);
 
-            IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX, *loopStart);
+            IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(*loopStart);
             handler.manageOperationNodeMemory(iterationIndexOp);
             std::set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(iterationIndexOp);
@@ -411,7 +414,7 @@ namespace CppAD {
                     allLocations.insert(positions.begin(), positions.end());
 
                     // generate the index pattern for the jacobian compressed element
-                    IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                    IndexPattern* pattern = IndexPattern::detect(positions);
                     handler.manageLoopDependentIndexPattern(pattern);
 
                     indexedLoopResults[jacLE++] = std::make_pair(dyiDxtape[tapeI][tapeJ], pattern);
@@ -428,7 +431,7 @@ namespace CppAD {
                     allLocations.insert(positions.begin(), positions.end());
 
                     // generate the index pattern for the jacobian compressed element
-                    IndexPattern* pattern = IndexPattern::detect(LoopModel<Base>::ITERATION_INDEX, positions);
+                    IndexPattern* pattern = IndexPattern::detect(positions);
                     handler.manageLoopDependentIndexPattern(pattern);
 
                     CGBase jacVal = Base(0);
@@ -465,7 +468,7 @@ namespace CppAD {
              * make the loop end
              */
             size_t assignOrAdd = 1;
-            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, lModel, assignOrAdd);
+            LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
             std::vector<size_t> info(1);
             std::vector<Argument<Base> > args(1);
@@ -481,7 +484,7 @@ namespace CppAD {
             /**
              * move no-nindexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd, LoopModel<Base>::ITERATION_INDEX);
+            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
         }
 
         return jac;

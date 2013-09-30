@@ -27,31 +27,21 @@ namespace CppAD {
      */
     template<class Base>
     class LoopEndOperationNode : public OperationNode<Base> {
-    private:
-        LoopStartOperationNode<Base>& loopStart_;
-        const LoopNodeInfo<Base>& loopInfo_;
     public:
 
-        inline LoopEndOperationNode(const LoopNodeInfo<Base>& info,
-                                    LoopStartOperationNode<Base>& loopStart,
+        inline LoopEndOperationNode(LoopStartOperationNode<Base>& loopStart,
                                     const std::vector<Argument<Base> >& endArgs) :
-            OperationNode<Base>(CGLoopEndOp, std::vector<size_t>(0), createArguments(loopStart, endArgs)),
-            loopStart_(loopStart),
-            loopInfo_(info) {
+            OperationNode<Base>(CGLoopEndOp, std::vector<size_t>(0), createArguments(loopStart, endArgs)) {
         }
 
         inline const LoopStartOperationNode<Base>& getLoopStart() const {
-#ifndef NDEBUG
             const std::vector<Argument<Base> >& args = this->getArguments();
             CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument");
-            CPPADCG_ASSERT_KNOWN(args[0].getOperation() == &loopStart_, "The first argument must be the loop start operation");
-#endif
 
-            return loopStart_;
-        }
+            OperationNode<Base>* aNode = args[0].getOperation();
+            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGLoopStartOp, "The first argument must be the loop start operation");
 
-        inline const LoopNodeInfo<Base>& getLoopInfo() const {
-            return loopInfo_;
+            return dynamic_cast<LoopStartOperationNode<Base>&> (*aNode);
         }
 
         inline virtual ~LoopEndOperationNode() {

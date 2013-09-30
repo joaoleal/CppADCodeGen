@@ -835,8 +835,7 @@ namespace CppAD {
                 nonIndexedIndependents[s] = origJ2CloneIt->first;
             }
 
-            loopModel_ = new LoopModel<Base>("loop", ////// TODO: improve loop name
-                    funIndexed.release(),
+            loopModel_ = new LoopModel<Base>(funIndexed.release(),
                     iterationCount,
                     dependentOrigIndexes,
                     indexedIndependents,
