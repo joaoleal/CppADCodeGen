@@ -298,6 +298,7 @@ namespace CppAD {
                 std::auto_ptr<IndexOperationNode<Base> > localIterIndexOp;
                 std::auto_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
                 std::auto_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
+                std::auto_ptr<IndexPattern> indexLocalItCountPattern;
 
                 if (createsLoop) {
                     map<size_t, size_t> jrow2litCount;
@@ -308,7 +309,7 @@ namespace CppAD {
                         jrow2litCount[jrow] = itJrow2Its->second.size();
                     }
 
-                    std::auto_ptr<IndexPattern> indexLocalItCountPattern(IndexPattern::detect(jrow2litCount));
+                    indexLocalItCountPattern.reset(IndexPattern::detect(jrow2litCount));
 
                     if (IndexPattern::isConstant(*indexLocalItCountPattern.get())) {
                         size_t itCount = group.jRow2Iterations.begin()->second.size();

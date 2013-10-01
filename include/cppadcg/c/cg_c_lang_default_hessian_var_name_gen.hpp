@@ -126,7 +126,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            _ss << _multName << "[" << CLanguage<Base>::createIndexPattern(ip, index.getIndex()) << "]";
+            _ss << _multName << "[" << CLanguage<Base>::indexPattern2String(ip, index.getIndex()) << "]";
             return _ss.str();
         }
 

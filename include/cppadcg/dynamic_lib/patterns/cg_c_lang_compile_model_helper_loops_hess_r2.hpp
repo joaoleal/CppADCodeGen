@@ -206,13 +206,13 @@ namespace CppAD {
                     }
                     if (group->hessStartLocPattern.get() != NULL) {
                         // determine hessRowStart = f(it)
-                        _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::createIndexPattern(*group->hessStartLocPattern, indexIt) << "];\n";
+                        _cache << "   outLocal[0] = &hess[" << CLanguage<Base>::indexPattern2String(*group->hessStartLocPattern, indexIt) << "];\n";
                     } else if (!lastCompressed) {
                         _cache << "   outLocal[0] = compressed;\n";
                     }
 
                     if (itCount > 1) {
-                        _cache << "      jrow = " << CLanguage<Base>::createIndexPattern(*group->jrowPattern, indexIt) << ";\n";
+                        _cache << "      jrow = " << CLanguage<Base>::indexPattern2String(*group->jrowPattern, indexIt) << ";\n";
                         _cache << "      ";
                         generateFunctionNameLoopRev2(_cache, loop, g);
                         _cache << "(jrow, " << loopFArgs << ");\n";

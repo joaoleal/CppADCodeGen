@@ -143,9 +143,9 @@ namespace CppAD {
                 const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[0].getOperation());
 
                 if (varType == 1) {
-                    _ss << _level1Name << "[" << CLanguage<Base>::createIndexPattern(ip, index.getIndex()) << "]";
+                    _ss << _level1Name << "[" << CLanguage<Base>::indexPattern2String(ip, index.getIndex()) << "]";
                 } else {
-                    _ss << _level2Name << "[" << CLanguage<Base>::createIndexPattern(ip, index.getIndex()) << "]";
+                    _ss << _level2Name << "[" << CLanguage<Base>::indexPattern2String(ip, index.getIndex()) << "]";
                 }
                 return _ss.str();
             }

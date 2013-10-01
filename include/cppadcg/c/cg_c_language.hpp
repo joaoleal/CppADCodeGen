@@ -347,14 +347,14 @@ namespace CppAD {
         /***********************************************************************
          * index patterns
          **********************************************************************/
-        static inline std::string createIndexPattern(const IndexPattern& ip,
-                                                     const IndexDclrOperationNode<Base>& index);
+        static inline std::string indexPattern2String(const IndexPattern& ip,
+                                                      const IndexDclrOperationNode<Base>& index);
 
-        static inline std::string createIndexPattern(const IndexPattern& ip,
-                                                     const std::vector<const IndexDclrOperationNode<Base>*>& indexes);
+        static inline std::string indexPattern2String(const IndexPattern& ip,
+                                                      const std::vector<const IndexDclrOperationNode<Base>*>& indexes);
 
-        static inline std::string createLinearIndexPattern(const LinearIndexPattern& lip,
-                                                           const IndexDclrOperationNode<Base>& index);
+        static inline std::string linearIndexPattern2String(const LinearIndexPattern& lip,
+                                                            const IndexDclrOperationNode<Base>& index);
 
     protected:
 
@@ -1459,7 +1459,7 @@ namespace CppAD {
 
             const IndexPattern& ip = inode.getIndexPattern();
             _code << _indentation << (*inode.getIndex().getName())
-                    << " = " << createIndexPattern(ip, inode.getIndexPatternIndexes()) << ";\n";
+                    << " = " << indexPattern2String(ip, inode.getIndexPatternIndexes()) << ";\n";
         }
 
         virtual void printIndexCondExprOp(OperationNode<Base>& node) {

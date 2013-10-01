@@ -42,23 +42,23 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline std::string CLanguage<Base>::createIndexPattern(const IndexPattern& ip,
+    inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
                                                            const IndexDclrOperationNode<Base>& index) {
         std::vector<const IndexDclrOperationNode<Base>*>indexes(1);
         indexes[0] = &index;
-        return createIndexPattern(ip, indexes);
+        return indexPattern2String(ip, indexes);
     }
 
     template<class Base>
-    inline std::string CLanguage<Base>::createIndexPattern(const IndexPattern& ip,
-                                                           const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
+    inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
+                                                            const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
         std::stringstream ss;
         switch (ip.getType()) {
             case LINEAR: // y = x * a + b
             {
                 CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
                 const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
-                return createLinearIndexPattern(lip, *indexes[0]);
+                return linearIndexPattern2String(lip, *indexes[0]);
             }
             case SECTIONED:
             {
@@ -75,9 +75,9 @@ namespace CppAD {
                     size_t xStart = its->first;
 
                     ss << "(" << (*indexes[0]->getName()) << "<" << xStart << ")? "
-                            << createIndexPattern(*lp, *indexes[0]) << ": ";
+                            << indexPattern2String(*lp, *indexes[0]) << ": ";
                 }
-                ss << createIndexPattern(*its->second, *indexes[0]);
+                ss << indexPattern2String(*its->second, *indexes[0]);
 
                 return ss.str();
             }
@@ -88,13 +88,13 @@ namespace CppAD {
                 std::string indexExpr;
                 const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
                 if (pip.getPattern1() != NULL) {
-                    indexExpr += createIndexPattern(*pip.getPattern1(), *indexes[0]);
+                    indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
                 }
 
                 if (pip.getPattern2() != NULL) {
                     if (pip.getPattern1() != NULL)
                         indexExpr += " + ";
-                    indexExpr += createIndexPattern(*pip.getPattern2(), *indexes.back());
+                    indexExpr += indexPattern2String(*pip.getPattern2(), *indexes.back());
                 }
 
                 return indexExpr;
@@ -109,7 +109,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    inline std::string CLanguage<Base>::createLinearIndexPattern(const LinearIndexPattern& lip,
+    inline std::string CLanguage<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
                                                                  const IndexDclrOperationNode<Base>& index) {
         long dy = lip.getLinearSlopeDy();
         long dx = lip.getLinearSlopeDx();

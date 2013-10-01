@@ -133,7 +133,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            _ss << _depName << "[" << CLanguage<Base>::createIndexPattern(ip, getIndexes(var, 1)) << "]";
+            _ss << _depName << "[" << CLanguage<Base>::indexPattern2String(ip, getIndexes(var, 1)) << "]";
 
             return _ss.str();
         }
@@ -146,7 +146,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            _ss << _indepName << "[" << CLanguage<Base>::createIndexPattern(ip, getIndexes(independent, 0)) << "]";
+            _ss << _indepName << "[" << CLanguage<Base>::indexPattern2String(ip, getIndexes(independent, 0)) << "]";
 
             return _ss.str();
         }
