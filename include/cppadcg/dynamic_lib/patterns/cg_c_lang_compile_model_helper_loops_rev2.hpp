@@ -73,6 +73,13 @@ namespace CppAD {
         IndexDclrOperationNode<Base> indexIterationDcl(LoopModel<Base>::ITERATION_INDEX_NAME);
         IndexOperationNode<Base> jrowIndexOp(indexJrowDcl);
 
+        std::vector<OperationNode<Base>* > localNodes(5);
+        localNodes[0] = &indexJrowDcl;
+        localNodes[1] = &indexLocalItDcl;
+        localNodes[2] = &indexLocalItCountDcl;
+        localNodes[3] = &indexIterationDcl;
+        localNodes[4] = &jrowIndexOp;
+
         CodeHandler<Base> handler;
         handler.setVerbose(_verbose);
         handler.setZeroDependents(false);
@@ -217,6 +224,14 @@ namespace CppAD {
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+
+            // reset nodes not managed by a handler
+            if (itLoop2Info != loopHessInfo.begin()) {
+                for (size_t j = 0; j < localNodes.size(); j++) {
+                    localNodes[j]->resetHandlerCounters();
+                    localNodes[j]->setColor(0);
+                }
+            }
 
             _cache.str("");
             _cache << "model (reverse two, loop " << lModel.getLoopId() << ")";
