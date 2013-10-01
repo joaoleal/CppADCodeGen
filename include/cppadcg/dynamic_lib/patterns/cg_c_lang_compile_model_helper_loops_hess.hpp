@@ -153,11 +153,13 @@ namespace CppAD {
 
                     set<pairss> ::const_iterator itPairs;
                     for (itPairs = tapePairs.begin(); itPairs != tapePairs.end(); ++itPairs) {
-                        pairss tape; // work the symmetry
-                        if (!useSymmetry || itPairs->first < itPairs->second) {
-                            tape = *itPairs;
+                        size_t tape1 = itPairs->first;
+                        size_t tape2 = itPairs->second;
+                        pairss tape;
+                        if (useSymmetry && tape1 > tape2 && loopHess[tape2].find(tape1) != loopHess[tape2].end()) {
+                            tape = pairss(tape2, tape1); // work the symmetry
                         } else {
-                            tape = pairss(itPairs->second, itPairs->first);
+                            tape = *itPairs;
                         }
 
                         std::vector<HessianElement>& positions = loopInfo.indexedIndexedPositions[tape];
@@ -185,7 +187,7 @@ namespace CppAD {
                             size_t tapeJ1 = *ittj1;
 
                             std::vector<HessianElement>* positions;
-                            if (useSymmetry) {
+                            if (useSymmetry && loopHess[posJ2->tape].find(tapeJ1) != loopHess[posJ2->tape].end()) {
                                 positions = &loopInfo.nonIndexedIndexedPositions[pairss(posJ2->tape, tapeJ1)];
                                 loopInfo.evalHessSparsity[posJ2->tape].insert(tapeJ1);
                             } else {
@@ -375,7 +377,7 @@ namespace CppAD {
 
                                 std::vector<HessianElement>* positions = NULL;
 
-                                if (useSymmetry) {
+                                if (useSymmetry && loopHess[tapeJ2].find(posK1->tape) != loopHess[tapeJ2].end()) {
                                     if (usedTapeJ2.find(tapeJ2) == usedTapeJ2.end()) {
                                         pairss pos(tapeJ2, j1);
                                         positions = &loopInfo.indexedTempPositions[pos];
@@ -648,8 +650,16 @@ namespace CppAD {
 
             /**
              * indexed - non-indexed
-             * -> done by  (non-indexed - indexed)
+             * - usually done by  (non-indexed - indexed) by exploiting the symmetry
              */
+            for (it = info.indexedNonIndexedPositions.begin(); it != info.indexedNonIndexedPositions.end(); ++it) {
+                size_t tapeJ1 = it->first.first;
+                size_t tapeJ2 = it->first.second;
+                const std::vector<HessianElement>& positions = it->second;
+
+                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, info.hess[tapeJ1].at(tapeJ2),
+                                                                         *info.iterationIndexOp, info.ifElses);
+            }
 
             /**
              * indexed - temporary
@@ -660,18 +670,21 @@ namespace CppAD {
                 size_t j2 = itEval->first.second;
                 const set<size_t>& ks = itEval->second;
 
-                const std::vector<HessianElement>& positions = info.indexedTempPositions[itEval->first];
+                map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.indexedTempPositions.find(itEval->first);
+                if (itPos != info.indexedTempPositions.end()) {
+                    const std::vector<HessianElement>& positions = itPos->second;
 
-                CGBase hessVal = Base(0);
-                set<size_t>::const_iterator itz;
-                for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                    size_t k = *itz;
-                    size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                    hessVal += info.hess[tapeJ1].at(tapeK) * dzDx[k][j2];
+                    CGBase hessVal = Base(0);
+                    set<size_t>::const_iterator itz;
+                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                        size_t k = *itz;
+                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                        hessVal += info.hess[tapeJ1].at(tapeK) * dzDx[k][j2];
+                    }
+
+                    indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
+                                                                             *info.iterationIndexOp, info.ifElses);
                 }
-
-                indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
-                                                                         *info.iterationIndexOp, info.ifElses);
             }
 
 
@@ -693,8 +706,28 @@ namespace CppAD {
              *      d f_i       .    d x_k1
              * d x_l2  d z_k1        d x_j1
              * 
-             * -> done by  (indexed - temporary)
+             * -> usually done by  (indexed - temporary) by exploiting the symmetry
              */
+            for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
+                size_t tapeJ2 = itEval->first.first;
+                size_t j1 = itEval->first.second;
+                const set<size_t>& ks = itEval->second;
+
+                map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.tempIndexedPositions.find(pairss(j1, tapeJ2));
+                if (itPos != info.tempIndexedPositions.end()) {
+                    const std::vector<HessianElement>& positions = itPos->second;
+                    CGBase hessVal = Base(0);
+                    set<size_t>::const_iterator itz;
+                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                        size_t k = *itz;
+                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                        hessVal += info.hess[tapeK].at(tapeJ2) * dzDx[k][j1];
+                    }
+
+                    indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
+                                                                             *info.iterationIndexOp, info.ifElses);
+                }
+            }
 
             /*******************************************************************
              * contributions to a constant location
