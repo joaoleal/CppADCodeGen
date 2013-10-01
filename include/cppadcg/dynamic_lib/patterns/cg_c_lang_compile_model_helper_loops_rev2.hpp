@@ -463,7 +463,7 @@ namespace CppAD {
                 nameGenRev2.finalizeCustomFunctionVariables(_cache);
                 _cache << "}\n\n";
 
-                sources[functionName] = _cache.str();
+                sources[functionName + ".c"] = _cache.str();
                 _cache.str("");
 
                 /**
@@ -571,8 +571,6 @@ namespace CppAD {
                     CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                     handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
-
-                    sources[functionName] = code.str();
                 }
 
                 finishedGraphCreation();
