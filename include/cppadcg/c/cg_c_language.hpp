@@ -471,14 +471,14 @@ namespace CppAD {
             if (variableOrder.size() > 0) {
                 // generate names for temporary variables
                 for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
-                    OperationNode<Base>& op = **it;
-                    if (op.getName() == NULL) {
-                        if (!isDependent(op)) {
-                            if (requiresVariableName(op) && op.getOperationType() != CGArrayCreationOp) {
-                                op.setName(_nameGen->generateTemporary(op));
-                            } else if (op.getOperationType() == CGArrayCreationOp) {
-                                op.setName(_nameGen->generateTemporaryArray(op));
-                            }
+                    OperationNode<Base>& node = **it;
+                    CGOpCode op = node.getOperationType();
+                    if (!isDependent(node) && op != CGIndexDeclarationOp) {
+                        // variable names for temporaries must always be created since they might have been used before with a different name/id
+                        if (requiresVariableName(node) && op != CGArrayCreationOp) {
+                            node.setName(_nameGen->generateTemporary(node));
+                        } else if (op == CGArrayCreationOp) {
+                            node.setName(_nameGen->generateTemporaryArray(node));
                         }
                     }
                 }

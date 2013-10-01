@@ -259,8 +259,15 @@ namespace CppAD {
         }
 
         inline void setName(const std::string& name) {
-            assert(name_ == NULL);
-            name_ = new std::string(name);
+            if (name_ != NULL)
+                *name_ = name;
+            else
+                name_ = new std::string(name);
+        }
+
+        inline void clearName() {
+            delete name_;
+            name_ = NULL;
         }
 
         inline size_t getColor() const {
