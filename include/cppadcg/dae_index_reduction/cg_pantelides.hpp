@@ -26,7 +26,7 @@ namespace CppAD {
      * Pantelides DAE index reduction algorithm
      */
     template<class Base>
-    class Plantelides : public DaeIndexReduction<Base> {
+    class Pantelides : public DaeIndexReduction<Base> {
     protected:
         typedef CG<Base> CGBase;
         typedef AD<CGBase> ADCG;
@@ -56,7 +56,7 @@ namespace CppAD {
          * @param varInfo DAE model variable classification
          * @param x typical variable values (used to avoid NaNs in CppAD checks)
          */
-        Plantelides(ADFun<CG<Base> >* fun,
+        Pantelides(ADFun<CG<Base> >* fun,
                     const std::vector<DaeVarInfo>& varInfo,
                     const std::vector<Base>& x) :
             DaeIndexReduction<Base>(fun, varInfo),
@@ -303,7 +303,7 @@ namespace CppAD {
             std::cout << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << "\n";
         }
 
-        virtual ~Plantelides() {
+        virtual ~Pantelides() {
             for (size_t i = 0; i < enodes_.size(); i++)
                 delete enodes_[i];
 
@@ -872,8 +872,8 @@ namespace CppAD {
         }
 
     private:
-        Plantelides(const Plantelides& p); // not implemented
-        Plantelides& operator=(const Plantelides& p); // not implemented
+        Pantelides(const Pantelides& p); // not implemented
+        Pantelides& operator=(const Pantelides& p); // not implemented
     };
 
 }

@@ -44,7 +44,7 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum2D) {
     x[9] = -1.0; // dvxdt
     x[10] = 9.80665; // dvydt
 
-    Plantelides<double> pantelides(fun, daeVar, x);
+    Pantelides<double> pantelides(fun, daeVar, x);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
@@ -90,7 +90,7 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
     x[10] = -1.0; // dvxdt
     x[11] = 9.80665; // dvydt
     x[12] = 0.0; // dvzdt
-    Plantelides<double> pantelides(fun, daeVar, x);
+    Pantelides<double> pantelides(fun, daeVar, x);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;

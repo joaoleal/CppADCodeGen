@@ -875,7 +875,7 @@ namespace CppAD {
             }
         };
 
-        bool operator<(const Reverse2Jrow2Iter& l, const Reverse2Jrow2Iter& r) {
+        inline bool operator<(const Reverse2Jrow2Iter& l, const Reverse2Jrow2Iter& r) {
             if (l.jrow < r.jrow)
                 return true;
             else if (l.jrow > r.jrow)

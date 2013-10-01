@@ -138,7 +138,7 @@ namespace CppAD {
      * Dummy derivatives DAE index reduction algorithm
      */
     template<class Base>
-    class DummyDerivatives : public Plantelides<Base> {
+    class DummyDerivatives : public Pantelides<Base> {
         typedef CG<Base> CGBase;
         typedef AD<CGBase> ADCG;
         typedef Eigen::Matrix<Base, Eigen::Dynamic, 1 > VectorB;
@@ -188,7 +188,7 @@ namespace CppAD {
                          const std::vector<Base>& x,
                          const std::vector<Base>& normVar,
                          const std::vector<Base>& normEq) :
-            Plantelides<Base>(fun, varInfo, x),
+            Pantelides<Base>(fun, varInfo, x),
             normVar_(normVar),
             normEq_(normEq),
             diffVarStart_(0),
@@ -252,7 +252,7 @@ namespace CppAD {
              */
             std::vector<DaeEquationInfo> reducedEqInfo;
 
-            std::auto_ptr<ADFun<CG<Base> > > fun(Plantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
+            std::auto_ptr<ADFun<CG<Base> > > fun(Pantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
             if (fun.get() == NULL)
                 return NULL; //nothing to do (no index reduction required)
 
@@ -409,7 +409,7 @@ namespace CppAD {
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
                 std::cout << "# " << **j << "   \t" << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
             std::cout << "# \n";
-            Plantelides<Base>::printModel(this->reducedFun_, newVarInfo);
+            Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
 #endif
 
         }
@@ -588,7 +588,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "DAE with less equations and variables:\n";
-            Plantelides<Base>::printModel(shortFun.get(), newVarInfo);
+            Pantelides<Base>::printModel(shortFun.get(), newVarInfo);
 #endif
 
             return shortFun;
@@ -710,7 +710,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "Semi-Eplicit DAE:\n";
-            Plantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
+            Pantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
 #endif
 
             return semiExplicitFun;
@@ -1246,7 +1246,7 @@ namespace CppAD {
 
 #ifdef CPPAD_CG_DAE_VERBOSE
             std::cout << "reordered DAE equations and variables:\n";
-            Plantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
+            Pantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
 #endif
 
             return reorderedFun;
