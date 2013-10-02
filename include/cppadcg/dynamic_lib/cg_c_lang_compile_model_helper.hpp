@@ -662,15 +662,6 @@ namespace CppAD {
         virtual vector<CGBase> prepareForward0WithLoops(CodeHandler<Base>& handler,
                                                         const vector<CGBase>& x);
 
-        inline vector<CGBase> createIndexedIndependents(CodeHandler<Base>& handler,
-                                                        LoopModel<Base>& loop,
-                                                        IndexOperationNode<Base>& iterationIndexOp);
-
-        inline vector<CGBase> createLoopIndependentVector(CodeHandler<Base>& handler,
-                                                          LoopModel<Base>& loop,
-                                                          const vector<CGBase>& indexedIndeps,
-                                                          const vector<CGBase>& nonIndexedIndeps,
-                                                          const vector<CGBase>& nonIndexedTmps);
         /***********************************************************************
          * Jacobian
          **********************************************************************/
@@ -783,10 +774,6 @@ namespace CppAD {
                                                          const LoopModel<Base>& loop,
                                                          size_t g);
 
-        inline static vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
-                                                                  LoopModel<Base>& loop,
-                                                                  IndexOperationNode<Base>& iterationIndexOp);
-
         /***********************************************************************
          * Sparsities for forward/reverse
          **********************************************************************/
@@ -888,29 +875,6 @@ namespace CppAD {
         static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                             const std::vector<size_t>& userRows,
                                                                                             const std::vector<size_t>& userCols);
-
-        /***********************************************************************
-         * Loops
-         **********************************************************************/
-        /*
-                static inline void prepareLoops(CodeHandler<Base>& handler,
-                                                std::vector<CGBase>& jac,
-                                                std::map<LoopModel<Base>*, std::map<LoopEvaluationOperationNode<Base>*, vector<OperationNode<Base>*> > >& evaluations,
-                                                std::map<LoopModel<Base>*, vector<IndexedDependentLoopInfo<Base>* > >& dependentIndexes,
-                                                size_t assignOrAdd = 0);
-         */
-        static inline LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
-                                                                LoopStartOperationNode<Base>& loopStart,
-                                                                const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
-                                                                const std::set<IndexOperationNode<Base>*>& indexesOps,
-                                                                size_t assignOrAdd);
-
-        static inline void moveNonIndexedOutsideLoop(LoopStartOperationNode<Base>& loopStart,
-                                                     LoopEndOperationNode<Base>& loopEnd);
-
-        static inline bool findNonIndexedNodes(OperationNode<Base>& node,
-                                               std::set<OperationNode<Base>*>& nonIndexed,
-                                               const IndexDclrOperationNode<Base>& loopIndex);
 
     private:
         void inline startingGraphCreation(const std::string& jobName);

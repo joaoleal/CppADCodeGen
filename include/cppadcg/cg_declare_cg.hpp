@@ -22,6 +22,9 @@
 // forward declarations
 namespace CppAD {
 
+    template<class Base>
+    class vector;
+
     /***************************************************************************
      * Atomics
      **************************************************************************/
@@ -95,27 +98,6 @@ namespace CppAD {
     class IndexedDependentLoopInfo;
 
     class IndexPattern;
-
-    namespace loops {
-
-        typedef std::pair<size_t, size_t> SizeN1stIt;
-
-        typedef std::pair<size_t, size_t> pairss;
-
-        class HessianElement;
-
-        template<class Base>
-        class IfBranchInfo;
-
-        template <class Base>
-        class IfElseInfo;
-
-        template<class Base>
-        class HessianWithLoopsInfo;
-
-        template<class Base>
-        class HessianRowGroup;
-    }
 
     /***************************************************************************
      * Dynamic model compilation
@@ -351,6 +333,11 @@ namespace CppAD {
         PLANE2D // y = f(x) + f(z)
     };
 }
+
+/**
+ * loops namespace
+ */
+#include <cppadcg/cg_declare_cg_loops.hpp>
 
 #endif
 

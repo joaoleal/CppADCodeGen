@@ -886,24 +886,6 @@ namespace CppAD {
     namespace loops {
 
         template<class Base>
-        class IfBranchInfo {
-        public:
-            std::set<size_t> iterations;
-            OperationNode<Base>* node;
-        };
-
-        template <class Base>
-        class IfElseInfo {
-        public:
-            std::map<SizeN1stIt, IfBranchInfo<Base> > firstIt2Branch;
-            OperationNode<Base>* endIf;
-
-            inline IfElseInfo() :
-                endIf(NULL) {
-            }
-        };
-
-        template<class Base>
         std::pair<CG<Base>, IndexPattern*> createHessianContribution(CodeHandler<Base>& handler,
                                                                      const std::vector<HessianElement>& positions,
                                                                      const CG<Base>& ddfdxdx,
@@ -1125,35 +1107,7 @@ namespace CppAD {
             return new OperationNode<Base>(CGIndexCondExprOp, info, args);
         }
 
-        template<class Base>
-        IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
-                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations) {
-            using namespace std;
-
-            // try to find an existing if-else where these operations can be added
-            for (size_t f = 0; f < ifElses.size(); f++) {
-                IfElseInfo<Base>& ifElse = ifElses[f];
-
-                if (first2Iterations.size() != ifElse.firstIt2Branch.size())
-                    continue;
-
-                bool matches = true;
-                map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator itLoc = first2Iterations.begin();
-                typename map<SizeN1stIt, IfBranchInfo<Base> >::const_iterator itBranches = ifElse.firstIt2Branch.begin();
-                for (; itLoc != first2Iterations.end(); ++itLoc, ++itBranches) {
-                    if (itLoc->second.second != itBranches->second.iterations) {
-                        matches = false;
-                        break;
-                    }
-                }
-
-                if (matches) {
-                    return &ifElse;
-                }
-            }
-
-            return NULL;
-        }
+        
     }
 }
 

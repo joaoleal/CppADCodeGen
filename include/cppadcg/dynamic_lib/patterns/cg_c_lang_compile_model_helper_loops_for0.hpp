@@ -25,6 +25,7 @@ namespace CppAD {
     vector<CG<Base> > CLangCompileModelHelper<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
                                                                               const vector<CGBase>& x) {
         using namespace std;
+        using namespace loops;
         using CppAD::vector;
 
         vector<CGBase> y(_fun.Range());
