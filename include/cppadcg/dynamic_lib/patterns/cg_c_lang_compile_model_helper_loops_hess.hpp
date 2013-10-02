@@ -665,28 +665,29 @@ namespace CppAD {
              * indexed - temporary
              */
             map<pairss, set<size_t> >::const_iterator itEval;
-            for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
-                size_t tapeJ1 = itEval->first.first;
-                size_t j2 = itEval->first.second;
-                const set<size_t>& ks = itEval->second;
+            if (!info.indexedTempPositions.empty()) {
+                for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
+                    size_t tapeJ1 = itEval->first.first;
+                    size_t j2 = itEval->first.second;
+                    const set<size_t>& ks = itEval->second;
 
-                map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.indexedTempPositions.find(itEval->first);
-                if (itPos != info.indexedTempPositions.end()) {
-                    const std::vector<HessianElement>& positions = itPos->second;
+                    map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.indexedTempPositions.find(itEval->first);
+                    if (itPos != info.indexedTempPositions.end()) {
+                        const std::vector<HessianElement>& positions = itPos->second;
 
-                    CGBase hessVal = Base(0);
-                    set<size_t>::const_iterator itz;
-                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                        size_t k = *itz;
-                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                        hessVal += info.hess[tapeJ1].at(tapeK) * dzDx[k][j2];
+                        CGBase hessVal = Base(0);
+                        set<size_t>::const_iterator itz;
+                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                            size_t k = *itz;
+                            size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                            hessVal += info.hess[tapeJ1].at(tapeK) * dzDx[k][j2];
+                        }
+
+                        indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
+                                                                                 *info.iterationIndexOp, info.ifElses);
                     }
-
-                    indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
-                                                                             *info.iterationIndexOp, info.ifElses);
                 }
             }
-
 
             /*******************************************************************
              * non-indexed - indexed
@@ -708,24 +709,26 @@ namespace CppAD {
              * 
              * -> usually done by  (indexed - temporary) by exploiting the symmetry
              */
-            for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
-                size_t tapeJ2 = itEval->first.first;
-                size_t j1 = itEval->first.second;
-                const set<size_t>& ks = itEval->second;
+            if (!info.tempIndexedPositions.empty()) {
+                for (itEval = info.indexedTempEvals.begin(); itEval != info.indexedTempEvals.end(); ++itEval) {
+                    size_t tapeJ2 = itEval->first.first;
+                    size_t j1 = itEval->first.second;
+                    const set<size_t>& ks = itEval->second;
 
-                map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.tempIndexedPositions.find(pairss(j1, tapeJ2));
-                if (itPos != info.tempIndexedPositions.end()) {
-                    const std::vector<HessianElement>& positions = itPos->second;
-                    CGBase hessVal = Base(0);
-                    set<size_t>::const_iterator itz;
-                    for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                        size_t k = *itz;
-                        size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                        hessVal += info.hess[tapeK].at(tapeJ2) * dzDx[k][j1];
+                    map<pairss, std::vector<HessianElement> >::const_iterator itPos = info.tempIndexedPositions.find(pairss(j1, tapeJ2));
+                    if (itPos != info.tempIndexedPositions.end()) {
+                        const std::vector<HessianElement>& positions = itPos->second;
+                        CGBase hessVal = Base(0);
+                        set<size_t>::const_iterator itz;
+                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
+                            size_t k = *itz;
+                            size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
+                            hessVal += info.hess[tapeK].at(tapeJ2) * dzDx[k][j1];
+                        }
+
+                        indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
+                                                                                 *info.iterationIndexOp, info.ifElses);
                     }
-
-                    indexedLoopResults[hessLE++] = createHessianContribution(handler, positions, hessVal,
-                                                                             *info.iterationIndexOp, info.ifElses);
                 }
             }
 
