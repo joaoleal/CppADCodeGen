@@ -90,7 +90,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler,
-                                                       bool posIndepCode) {
+                                                       bool posIndepCode) throw (CGException) {
         generateLoops();
 
         std::map<std::string, std::string> sources;
@@ -145,7 +145,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateLoops() {
+    void CLangCompileModelHelper<Base>::generateLoops() throw (CGException) {
         if (_relatedDepCandidates.empty()) {
             return; //nothing to do
         }
@@ -350,7 +350,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources) throw (CGException) {
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
@@ -385,7 +385,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateSparseJacobianSource(std::map<std::string, std::string>& sources,
-                                                                     bool forward) {
+                                                                     bool forward) throw (CGException) {
         const std::string jobName = "sparse Jacobian";
 
         //size_t m = _fun.Range();
@@ -551,7 +551,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseHessianSource(std::map<std::string, std::string>& sources) throw (CGException) {
         /**
          * Determine the sparsity pattern p for Hessian of w^T F
          */
@@ -565,7 +565,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) throw (CGException) {
         const std::string jobName = "sparse Hessian";
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
@@ -694,7 +694,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) throw (CGException) {
         using namespace std;
 
         /**
@@ -1391,7 +1391,7 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) {
+    void CLangCompileModelHelper<Base>::generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) throw (CGException) {
         const size_t m = _fun.Range();
         const size_t n = _fun.Domain();
         //const size_t k = 1;

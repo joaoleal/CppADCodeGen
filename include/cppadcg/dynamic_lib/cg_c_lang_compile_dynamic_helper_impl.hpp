@@ -32,7 +32,7 @@ namespace CppAD {
     const std::string CLangCompileDynamicHelper<Base>::CONST = "const";
 
     template<class Base>
-    DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) {
+    DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException) {
 
         compiler.setVerbose(_verbose);
 

@@ -81,7 +81,7 @@ namespace CppAD {
          * @param loopTapes The models for each loop (must be deleted by the user)
          */
         virtual void generateTapes(LoopFreeModel<Base>*& nonLoopTape,
-                                   std::set<LoopModel<Base>*>& loopTapes) {
+                                   std::set<LoopModel<Base>*>& loopTapes) throw (CGException) {
             findLoops();
 
             nonLoopTape = createNewTape();
@@ -362,7 +362,7 @@ namespace CppAD {
             for (size_t l = 0; l < l_size; l++) {
                 Loop<Base>* loop = loops_[l];
 
-               //Generate a local model for the loop
+                //Generate a local model for the loop
                 loop->createLoopModel(dependents_, independents_, dep2Equation_, origTemp2Index_);
             }
 
@@ -465,7 +465,7 @@ namespace CppAD {
         }
 
         std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
-                                                                 const std::vector<CGBase>& independents) {
+                                                                 const std::vector<CGBase>& independents) throw (CGException) {
             size_t n = independents.size();
             std::vector<OperationNode<Base>*> indep(n);
             for (size_t j = 0; j < n; j++) {
@@ -477,7 +477,7 @@ namespace CppAD {
         }
 
         std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
-                                                                 const std::vector<OperationNode<Base>*>& independents) {
+                                                                 const std::vector<OperationNode<Base>*>& independents) throw (CGException) {
             eqCurr_ = NULL;
 
             size_t rSize = relatedDepCandidates_.size();

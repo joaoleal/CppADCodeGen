@@ -2,12 +2,12 @@ Source: cppadcodegen
 Section: Development/Libraries
 Priority: extra
 Maintainer: Joao Leal <development@ciengis.com>
-Build-Depends: debhelper (>= 5), binutils (>= 2.18.1 ), libacl1 (>= 2.2.45-1 ), libattr1 (>= 1 ), libcomerr2 (>= 1.40.2-1 ), cmake (>= 2.8), doxygen, cppad-dev (>= 20121215), libeigen3-dev
+Build-Depends: debhelper (>= 5), binutils (>= 2.18.1 ), libacl1 (>= 2.2.45-1 ), libattr1 (>= 1 ), cmake (>= 2.8), doxygen, cppad-dev (>= 20130819), libeigen3-dev
 Standards-Version: 3.7.2
 
 Package: cppadcodegen-dev
 Architecture: any
-Depends: ${shlibs:Depends}, ${misc:Depends}, libcomerr2 (>= 1.40.2-1 ), cppad-dev (>= 20121215)
+Depends: ${misc:Depends}, cppad-dev (>= 20130819)
 Description: A Package for Differentiation of C++ Algorithms that performs source code generation
 
 Package: cppadcodegen-doc

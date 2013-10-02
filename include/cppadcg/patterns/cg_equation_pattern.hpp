@@ -110,7 +110,7 @@ namespace CppAD {
             dependents.insert(iDepRef);
         }
 
-        bool testAdd(size_t iDep2, const CG<Base>& dep2) {
+        bool testAdd(size_t iDep2, const CG<Base>& dep2) throw (CGException) {
             IndexedIndependent<Base> independentsBackup = indexedOpIndep;
             std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependentsBackup = constOperationIndependents;
             std::map<const OperationNode<Base>*, OperationNode<Base>*> operation2ReferenceBackup = operation2Reference;
@@ -260,7 +260,7 @@ namespace CppAD {
     private:
 
         bool comparePath(const CG<Base>& dep1,
-                         const CG<Base>& dep2) {
+                         const CG<Base>& dep2) throw (CGException) {
             if (dep1.getCodeHandler() != dep2.getCodeHandler()) {
                 if (dep1.getCodeHandler() != NULL && dep2.getCodeHandler() != NULL)
                     throw CGException("Only one code handler allowed");

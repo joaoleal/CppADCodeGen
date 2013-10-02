@@ -39,7 +39,7 @@ namespace CppAD {
     template<class Base>
     vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                                                     const vector<CGBase>& x,
-                                                                                    bool forward) {
+                                                                                    bool forward) throw (CGException) {
         using namespace std;
         using CppAD::vector;
         //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());

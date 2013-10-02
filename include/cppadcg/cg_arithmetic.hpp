@@ -19,7 +19,7 @@ namespace CppAD {
 
     template<class Base>
     CodeHandler<Base>* getHandler(const CG<Base> &left,
-                                  const CG<Base> &right) {
+                                  const CG<Base> &right) throw (CGException) {
 
         assert(!left.isParameter() || !right.isParameter());
 

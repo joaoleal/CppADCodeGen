@@ -642,9 +642,9 @@ namespace CppAD {
                                                                          const std::string& tmpName,
                                                                          const std::string& tmpArrayName);
 
-        virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode);
+        virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode) throw (CGException);
 
-        virtual void generateLoops();
+        virtual void generateLoops() throw (CGException);
 
         virtual void generateInfoSource(std::map<std::string, std::string>& sources);
 
@@ -677,10 +677,10 @@ namespace CppAD {
 
         virtual void generateJacobianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources);
+        virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources) throw (CGException);
 
         virtual void generateSparseJacobianSource(std::map<std::string, std::string>& sources,
-                                                  bool forward);
+                                                  bool forward) throw (CGException);
 
         virtual void generateSparseJacobianForRevSource(std::map<std::string, std::string>& sources,
                                                         bool forward);
@@ -708,7 +708,7 @@ namespace CppAD {
          */
         virtual vector<CGBase> prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                               const vector<CGBase>& x,
-                                                              bool forward);
+                                                              bool forward) throw (CGException);
 
         /***********************************************************************
          * Hessian
@@ -716,11 +716,11 @@ namespace CppAD {
 
         virtual void generateHessianSource(std::map<std::string, std::string>& sources);
 
-        virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources);
+        virtual void generateSparseHessianSource(std::map<std::string, std::string>& sources) throw (CGException);
 
-        virtual void generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources);
+        virtual void generateSparseHessianSourceDirectly(std::map<std::string, std::string>& sources) throw (CGException);
 
-        virtual void generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources);
+        virtual void generateSparseHessianSourceFromRev2(std::map<std::string, std::string>& sources) throw (CGException);
 
         virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                        std::vector<size_t>& userCols);
@@ -774,7 +774,7 @@ namespace CppAD {
         inline virtual void generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
                                                                          const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                          const std::map<size_t, bool>& ordered,
-                                                                         size_t maxCompressedSize);
+                                                                         size_t maxCompressedSize) throw (CGException);
 
         inline virtual void generateFunctionDeclarationSourceLoopRev2(std::ostringstream& cache,
                                                                       CLanguage<Base>& langC);
@@ -823,7 +823,7 @@ namespace CppAD {
          * Reverse 2 mode
          **********************************************************************/
 
-        virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources);
+        virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) throw (CGException);
 
         virtual void generateReverseTwoSources(std::map<std::string, std::string>& sources);
 
@@ -844,7 +844,7 @@ namespace CppAD {
          * Loops
          */
         virtual void prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
-                                                      const std::map<size_t, std::vector<size_t> >& elements);
+                                                      const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
 
         void generateHessianRowGroups(const LoopModel<Base>& lModel,
                                       const loops::HessianWithLoopsInfo<Base>& info,

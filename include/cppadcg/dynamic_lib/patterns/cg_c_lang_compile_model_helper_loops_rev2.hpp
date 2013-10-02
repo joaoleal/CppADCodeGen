@@ -59,7 +59,7 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
-                                                                         const std::map<size_t, std::vector<size_t> >& elements) {
+                                                                         const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
         using namespace std;
         using namespace CppAD::loops;
         using CppAD::vector;

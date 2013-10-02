@@ -30,7 +30,7 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
                                                                                      const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                                      const std::map<size_t, bool>& jrowOrdered,
-                                                                                     size_t maxCompressedSize) {
+                                                                                     size_t maxCompressedSize) throw (CGException) {
         //size_t m = _fun->Range();
         //size_t n = _fun->Domain();
         using namespace std;

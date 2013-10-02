@@ -129,7 +129,7 @@ namespace CppAD {
             _customSource[filename] = source;
         }
 
-        DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler);
+        DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException);
 
         void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode = false);
 
