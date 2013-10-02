@@ -1149,11 +1149,6 @@ namespace CppAD {
                  * contribution to the hessian is only evaluated at the
                  * relevant iterations
                  */
-                const std::vector<size_t> ninfo;
-                OperationNode<Base>* ifBranch;
-                std::vector<Argument<Base> > nextBranchArgs;
-                set<size_t> usedIter;
-
                 map<size_t, map<size_t, size_t> >::const_iterator countIt;
 
                 // try to find an existing if-else where these operations can be added
@@ -1173,8 +1168,14 @@ namespace CppAD {
                     ifElseBranches = &group.ifElses[s];
                 }
 
+                /**
+                 * create/change each if/else branch
+                 */
                 OperationNode<Base>* ifStart = NULL;
-                //
+                OperationNode<Base>* ifBranch;
+                Argument<Base> nextBranchArg;
+                set<size_t> usedIter;
+
                 map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
                 for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
                     size_t firstIt = it1st2Count2Iters->first.second;
@@ -1188,35 +1189,31 @@ namespace CppAD {
                     if (reusingIfElse) {
                         //reuse existing node
                         ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
-                        ifBranch->getArguments().insert(ifBranch->getArguments().end(),
-                                                        nextBranchArgs.begin(), nextBranchArgs.end());
+                        if (nextBranchArg.getOperation() != NULL)
+                            ifBranch->getArguments().push_back(nextBranchArg);
 
                     } else if (usedIter.size() + iterCount == group.iterations.size()) {
-                        // all other iterations
-                        nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
-                        ifBranch = new OperationNode<Base>(CGElseOp, ninfo, nextBranchArgs);
+                        // all other iterations: ELSE
+                        ifBranch = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifBranch), nextBranchArg);
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
                         // depends on the iteration index
                         OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                         handler.manageOperationNodeMemory(cond);
 
-                        nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*cond));
-
                         if (ifStart == NULL) {
-                            ifStart = new OperationNode<Base>(CGStartIfOp, ninfo, nextBranchArgs);
+                            // IF
+                            ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
                             ifBranch = ifStart;
                         } else {
-                            nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
-                            ifBranch = new OperationNode<Base>(CGElseIfOp, ninfo, nextBranchArgs);
+                            // ELSE IF
+                            ifBranch = new OperationNode<Base>(CGElseIfOp, Argument<Base>(*ifBranch), Argument<Base>(*cond), nextBranchArg);
                         }
 
                         handler.manageOperationNodeMemory(ifBranch);
 
                         usedIter.insert(iterations.begin(), iterations.end());
                     }
-
-                    nextBranchArgs.clear();
 
                     const map<size_t, size_t>& locationsC = locations[count];
                     IndexPattern* pattern = IndexPattern::detect(locationsC);
@@ -1233,7 +1230,7 @@ namespace CppAD {
 
                     OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
                     handler.manageOperationNodeMemory(ifAssign);
-                    nextBranchArgs.push_back(Argument<Base>(*ifAssign));
+                    nextBranchArg = Argument<Base>(*ifAssign);
 
                     if (!reusingIfElse) {
                         IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
@@ -1242,16 +1239,18 @@ namespace CppAD {
                     }
                 }
 
+                /**
+                 * end if
+                 */
                 if (reusingIfElse) {
-                    ifElseBranches->endIf->getArguments().insert(ifElseBranches->endIf->getArguments().end(),
-                                                                 nextBranchArgs.begin(), nextBranchArgs.end());
+                    ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
                 } else {
-                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, ninfo, nextBranchArgs);
+                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
                     handler.manageOperationNodeMemory(ifElseBranches->endIf);
                 }
 
-                IndexPattern* pattern = NULL;
-                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), pattern);
+                IndexPattern* p = NULL;
+                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), p);
             }
 
         }

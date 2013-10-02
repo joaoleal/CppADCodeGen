@@ -306,9 +306,10 @@ TEST_F(CppADCGPatternCstrTest, Atomic) {
     std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
     std::vector<std::set<size_t> > jacSpar(jacSparAll.size());
     for (size_t i = 0; i < jacSparAll.size(); i++) {
-        std::set<size_t>::const_iterator it = jacSparAll[i].upper_bound(ns + nm - 1);
-        if (it != jacSparAll[i].begin())
-            jacSpar[i].insert(jacSparAll[i].begin(), it);
+        // only differential information for states and controls
+        std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
+        if (itEnd != jacSparAll[i].begin())
+            jacSpar[i].insert(jacSparAll[i].begin(), itEnd);
     }
     compHelp1.setCustomSparseJacobianElements(jacSpar);
 

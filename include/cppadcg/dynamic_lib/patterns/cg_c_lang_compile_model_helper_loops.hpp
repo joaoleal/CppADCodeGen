@@ -285,6 +285,76 @@ namespace CppAD {
 
             return NULL;
         }
+
+        template<class Base>
+        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
+                                                            const std::set<size_t>& usedIter,
+                                                            size_t maxIter,
+                                                            IndexOperationNode<Base>& iterationIndexOp) {
+            assert(!iterations.empty());
+
+            std::map<size_t, bool> allIters;
+            for (std::set<size_t>::const_iterator it = usedIter.begin(); it != usedIter.end(); ++it) {
+                allIters[*it] = false;
+            }
+            for (std::set<size_t>::const_iterator it = iterations.begin(); it != iterations.end(); ++it) {
+                allIters[*it] = true;
+            }
+
+            std::vector<size_t> info;
+            info.reserve(iterations.size() / 2 + 2);
+
+            std::map<size_t, bool>::const_iterator it = allIters.begin();
+            while (it != allIters.end()) {
+                std::map<size_t, bool> ::const_iterator min = it;
+                std::map<size_t, bool>::const_iterator max = it;
+                std::map<size_t, bool>::const_iterator minNew = allIters.end();
+                std::map<size_t, bool>::const_iterator maxNew = allIters.end();
+                if (it->second) {
+                    minNew = it;
+                    maxNew = it;
+                }
+
+                for (++it; it != allIters.end(); ++it) {
+                    if (it->first != max->first + 1) {
+                        break;
+                    }
+
+                    max = it;
+                    if (it->second) {
+                        if (minNew == allIters.end())
+                            minNew = it;
+                        maxNew = it;
+                    }
+                }
+
+                if (minNew != allIters.end()) {
+                    // contains elements from the current iteration set
+                    if (maxNew->first == minNew->first) {
+                        // only one element
+                        info.push_back(minNew->first);
+                        info.push_back(maxNew->first);
+                    } else {
+                        //several elements
+                        if (min->first == 0)
+                            info.push_back(min->first);
+                        else
+                            info.push_back(minNew->first);
+
+                        if (max->first == maxIter)
+                            info.push_back(std::numeric_limits<size_t>::max());
+                        else
+                            info.push_back(maxNew->first);
+                    }
+                }
+            }
+
+            std::vector<Argument<Base> > args(1);
+            args[0] = Argument<Base>(iterationIndexOp);
+
+            return new OperationNode<Base>(CGIndexCondExprOp, info, args);
+        }
+        
     }
 }
 

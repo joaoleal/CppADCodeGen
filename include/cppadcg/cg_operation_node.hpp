@@ -98,6 +98,26 @@ namespace CppAD {
         inline OperationNode(CGOpCode op,
                              const Argument<Base>& arg1,
                              const Argument<Base>& arg2,
+                             const Argument<Base>& arg3) :
+            operation_(op),
+            arguments_(3),
+            var_id_(0),
+            evaluation_order_(0),
+            total_use_count_(0),
+            use_count_(0),
+            last_usage_order_(0),
+            color_(0),
+            name_(NULL) {
+            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
+                   arg3.getOperation() != NULL);
+            arguments_[0] = arg1;
+            arguments_[1] = arg2;
+            arguments_[2] = arg3;
+        }
+
+        inline OperationNode(CGOpCode op,
+                             const Argument<Base>& arg1,
+                             const Argument<Base>& arg2,
                              const Argument<Base>& arg3,
                              const Argument<Base>& arg4) :
             operation_(op),

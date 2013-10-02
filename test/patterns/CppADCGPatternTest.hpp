@@ -35,6 +35,8 @@ namespace CppAD {
         std::vector<Base> eqNorm_;
         Base epsilonA_;
         Base epsilonR_;
+        std::vector<std::set<size_t> > customJacSparsity_;
+        std::vector<std::set<size_t> > customHessSparsity_;
     public:
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
@@ -338,6 +340,12 @@ namespace CppAD {
             //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
             compHelpL.setRelatedDependents(relatedDepCandidates);
             compHelpL.setTypicalIndependentValues(xTypical);
+
+            if (!customJacSparsity_.empty())
+                compHelpL.setCustomSparseJacobianElements(customJacSparsity_);
+
+            if (!customHessSparsity_.empty())
+                compHelpL.setCustomSparseHessianElements(customHessSparsity_);
 
             GccCompiler<double> compiler;
             std::vector<std::string> flags;

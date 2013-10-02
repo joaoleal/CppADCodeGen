@@ -40,15 +40,6 @@ namespace CppAD {
                                                                      IndexOperationNode<Base>& iterationIndexOp,
                                                                      vector<IfElseInfo<Base> >& ifElses);
 
-        template<class Base>
-        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
-                                                            const std::set<size_t>& usedIter,
-                                                            size_t maxIter,
-                                                            IndexOperationNode<Base>& iterationIndexOp);
-
-        template<class Base>
-        IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
-                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations);
     }
 
     /***************************************************************************
@@ -931,11 +922,6 @@ namespace CppAD {
                  * contribution to the hessian is only evaluated at the
                  * relevant iterations
                  */
-                const std::vector<size_t> ninfo;
-                OperationNode<Base>* ifBranch;
-                std::vector<Argument<Base> > nextBranchArgs;
-                set<size_t> usedIter;
-
                 map<size_t, map<size_t, size_t> >::const_iterator countIt;
 
                 // try to find an existing if-else where these operations can be added
@@ -955,8 +941,14 @@ namespace CppAD {
                     ifElseBranches = &ifElses[s];
                 }
 
+                /**
+                 * create/change each if/else branch
+                 */
                 OperationNode<Base>* ifStart = NULL;
-                //
+                OperationNode<Base>* ifBranch;
+                Argument<Base> nextBranchArg;
+                set<size_t> usedIter;
+
                 map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
                 for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
                     size_t firstIt = it1st2Count2Iters->first.second;
@@ -970,35 +962,31 @@ namespace CppAD {
                     if (reusingIfElse) {
                         //reuse existing node
                         ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
-                        ifBranch->getArguments().insert(ifBranch->getArguments().end(),
-                                                        nextBranchArgs.begin(), nextBranchArgs.end());
+                        if (nextBranchArg.getOperation() != NULL)
+                            ifBranch->getArguments().push_back(nextBranchArg);
 
                     } else if (usedIter.size() + iterCount == positions.size()) {
-                        // all other iterations
-                        nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
-                        ifBranch = new OperationNode<Base>(CGElseOp, ninfo, nextBranchArgs);
+                        // all other iterations: ELSE
+                        ifBranch = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifBranch), nextBranchArg);
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
                         // depends on the iterations indexes
                         OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                         handler.manageOperationNodeMemory(cond);
 
-                        nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*cond));
-
                         if (ifStart == NULL) {
-                            ifStart = new OperationNode<Base>(CGStartIfOp, ninfo, nextBranchArgs);
+                            // IF
+                            ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
                             ifBranch = ifStart;
                         } else {
-                            nextBranchArgs.insert(nextBranchArgs.begin(), Argument<Base>(*ifStart));
-                            ifBranch = new OperationNode<Base>(CGElseIfOp, ninfo, nextBranchArgs);
+                            // ELSE IF
+                            ifBranch = new OperationNode<Base>(CGElseIfOp, Argument<Base>(*ifBranch), Argument<Base>(*cond), nextBranchArg);
                         }
 
                         handler.manageOperationNodeMemory(ifBranch);
 
                         usedIter.insert(iterations.begin(), iterations.end());
                     }
-
-                    nextBranchArgs.clear();
 
                     const map<size_t, size_t>& locationsC = locations[count];
                     IndexPattern* pattern = IndexPattern::detect(locationsC);
@@ -1015,7 +1003,7 @@ namespace CppAD {
 
                     OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
                     handler.manageOperationNodeMemory(ifAssign);
-                    nextBranchArgs.push_back(Argument<Base>(*ifAssign));
+                    nextBranchArg = Argument<Base>(*ifAssign);
 
                     if (!reusingIfElse) {
                         IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
@@ -1024,90 +1012,22 @@ namespace CppAD {
                     }
                 }
 
+                /**
+                 * end if
+                 */
                 if (reusingIfElse) {
-                    ifElseBranches->endIf->getArguments().insert(ifElseBranches->endIf->getArguments().end(),
-                                                                 nextBranchArgs.begin(), nextBranchArgs.end());
+                    ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
                 } else {
-                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, ninfo, nextBranchArgs);
+                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
                     handler.manageOperationNodeMemory(ifElseBranches->endIf);
                 }
 
-                IndexPattern* pattern = NULL;
-                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), pattern);
+                IndexPattern* p = NULL;
+                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), p);
             }
 
         }
 
-        template<class Base>
-        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
-                                                            const std::set<size_t>& usedIter,
-                                                            size_t maxIter,
-                                                            IndexOperationNode<Base>& iterationIndexOp) {
-            assert(!iterations.empty());
-
-            std::map<size_t, bool> allIters;
-            for (std::set<size_t>::const_iterator it = usedIter.begin(); it != usedIter.end(); ++it) {
-                allIters[*it] = false;
-            }
-            for (std::set<size_t>::const_iterator it = iterations.begin(); it != iterations.end(); ++it) {
-                allIters[*it] = true;
-            }
-
-            std::vector<size_t> info;
-            info.reserve(iterations.size() / 2 + 2);
-
-            std::map<size_t, bool>::const_iterator it = allIters.begin();
-            while (it != allIters.end()) {
-                std::map<size_t, bool> ::const_iterator min = it;
-                std::map<size_t, bool>::const_iterator max = it;
-                std::map<size_t, bool>::const_iterator minNew = allIters.end();
-                std::map<size_t, bool>::const_iterator maxNew = allIters.end();
-                if (it->second) {
-                    minNew = it;
-                    maxNew = it;
-                }
-
-                for (++it; it != allIters.end(); ++it) {
-                    if (it->first != max->first + 1) {
-                        break;
-                    }
-
-                    max = it;
-                    if (it->second) {
-                        if (minNew == allIters.end())
-                            minNew = it;
-                        maxNew = it;
-                    }
-                }
-
-                if (minNew != allIters.end()) {
-                    // contains elements from the current iteration set
-                    if (maxNew->first == minNew->first) {
-                        // only one element
-                        info.push_back(minNew->first);
-                        info.push_back(maxNew->first);
-                    } else {
-                        //several elements
-                        if (min->first == 0)
-                            info.push_back(min->first);
-                        else
-                            info.push_back(minNew->first);
-
-                        if (max->first == maxIter)
-                            info.push_back(std::numeric_limits<size_t>::max());
-                        else
-                            info.push_back(maxNew->first);
-                    }
-                }
-            }
-
-            std::vector<Argument<Base> > args(1);
-            args[0] = Argument<Base>(iterationIndexOp);
-
-            return new OperationNode<Base>(CGIndexCondExprOp, info, args);
-        }
-
-        
     }
 }
 

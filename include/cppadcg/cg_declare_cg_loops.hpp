@@ -77,6 +77,12 @@ namespace CppAD {
         template<class Base>
         inline IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
                                                     const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations);
+
+        template<class Base>
+        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
+                                                            const std::set<size_t>& usedIter,
+                                                            size_t maxIter,
+                                                            IndexOperationNode<Base>& iterationIndexOp);
     }
 
 }

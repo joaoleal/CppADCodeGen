@@ -17,20 +17,33 @@
 
 namespace CppAD {
 
-    class JacobianWithLoopsRowInfo {
-    public:
-        // tape J index -> {locationIt0, locationIt1, ...}
-        std::map<size_t, std::vector<size_t> > indexedPositions;
+    namespace loops {
 
-        // original J index -> {locationIt0, locationIt1, ...}
-        std::map<size_t, std::vector<size_t> > nonIndexedPositions;
+        class JacobianWithLoopsRowInfo {
+        public:
+            // tape J index -> {locationIt0, locationIt1, ...}
+            std::map<size_t, std::vector<size_t> > indexedPositions;
 
-        // original J index 
-        std::set<size_t> nonIndexedEvals;
+            // original J index -> {locationIt0, locationIt1, ...}
+            std::map<size_t, std::vector<size_t> > nonIndexedPositions;
 
-        // original J index -> k index 
-        std::map<size_t, std::set<size_t> > tmpEvals;
-    };
+            // original J index 
+            std::set<size_t> nonIndexedEvals;
+
+            // original J index -> k index 
+            std::map<size_t, std::set<size_t> > tmpEvals;
+        };
+
+        template<class Base>
+        std::pair<CG<Base>, IndexPattern*> createJacobianElement(CodeHandler<Base>& handler,
+                                                                 const std::vector<size_t>& positions,
+                                                                 size_t maxPos,
+                                                                 const CG<Base>& dfdx,
+                                                                 IndexOperationNode<Base>& iterationIndexOp,
+                                                                 vector<IfElseInfo<Base> >& ifElses,
+                                                                 std::set<size_t>& allLocations);
+
+    }
 
     /***************************************************************************
      *  Methods related with loop insertion into the operation graph
@@ -224,58 +237,6 @@ namespace CppAD {
             }
         }
 
-        /**
-         * Check that the jacobian elements are requested for all iterations
-         */
-        typename map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> >::iterator itl2Eq;
-        for (itl2Eq = loopEqInfo.begin(); itl2Eq != loopEqInfo.end(); ++itl2Eq) {
-            LoopModel<Base>* loop = itl2Eq->first;
-            size_t iterations = loop->getIterationCount();
-            std::vector<JacobianWithLoopsRowInfo>& eqs = itl2Eq->second;
-
-            for (size_t tapeI = 0; tapeI < eqs.size(); tapeI++) {
-                JacobianWithLoopsRowInfo& rowInfo = eqs[tapeI];
-
-                // tape J index -> {locationIt0, locationIt1, ...}
-                map<size_t, std::vector<size_t> >::iterator itJ2Pos;
-                for (itJ2Pos = rowInfo.indexedPositions.begin(); itJ2Pos != rowInfo.indexedPositions.end(); ++itJ2Pos) {
-                    size_t tapeJ = itJ2Pos->first;
-                    const std::vector<size_t>& positions = itJ2Pos->second;
-                    for (size_t it = 0; it < iterations; it++) {
-                        if (positions[it] == nnz) {
-                            const LoopPosition& eqPos = loop->getDependentIndexes()[tapeI][it];
-                            const std::vector<LoopPosition>& indexPos = loop->getIndexedIndepIndexes()[tapeJ];
-                            std::ostringstream ss;
-                            ss << "Jacobian elements for an equation pattern (equation in a loop) must be requested for all iterations.\n"
-                                    "Element for the indexed variable (";
-                            for (size_t it2 = 0; it2 < indexPos.size(); it2++) {
-                                if (it2 > 0) ss << ", ";
-                                ss << indexPos[it2].original;
-                            }
-                            ss << ") was NOT requested for equation " << eqPos.original << " (iteration " << it << ").";
-                            throw CGException(ss.str());
-                        }
-                    }
-                }
-
-                // original J index -> {locationIt0, locationIt1, ...}
-                for (itJ2Pos = rowInfo.nonIndexedPositions.begin(); itJ2Pos != rowInfo.nonIndexedPositions.end(); ++itJ2Pos) {
-                    size_t j = itJ2Pos->first;
-                    const std::vector<size_t>& positions = itJ2Pos->second;
-                    for (size_t it = 0; it < iterations; it++) {
-                        if (positions[it] == nnz) {
-                            const LoopPosition& eqPos = loop->getDependentIndexes()[tapeI][it];
-                            std::ostringstream ss;
-                            ss << "Jacobian elements for an equation pattern (equation in a loop) must be requested for all iterations.\n"
-                                    "Element for the non-indexed variable (" << j << ") was NOT requested for equation " << eqPos.original << " (iteration " << it << ").";
-                            throw CGException(ss.str());
-                        }
-                    }
-                }
-            }
-
-        }
-
         /***********************************************************************
          *        generate the operation graph
          **********************************************************************/
@@ -340,8 +301,10 @@ namespace CppAD {
         handler.manageOperationNodeMemory(iterationIndexDcl);
 
         vector<CGBase> jacLoop;
+        vector<IfElseInfo<Base> > ifElses;
 
         // loop loops :)
+        typename map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> >::iterator itl2Eq;
         for (itl2Eq = loopEqInfo.begin(); itl2Eq != loopEqInfo.end(); ++itl2Eq) {
             LoopModel<Base>& lModel = *itl2Eq->first;
             std::vector<JacobianWithLoopsRowInfo>& eqs = itl2Eq->second;
@@ -390,16 +353,17 @@ namespace CppAD {
             std::set<size_t> allLocations;
 
             // store results in indexedLoopResults
-            size_t jacElSize = 0;
+            size_t maxJacElSize = 0;
             for (size_t tapeI = 0; tapeI < eqs.size(); tapeI++) {
                 JacobianWithLoopsRowInfo& rowInfo = eqs[tapeI];
-                jacElSize += rowInfo.indexedPositions.size();
-                jacElSize += rowInfo.nonIndexedPositions.size();
+                maxJacElSize += rowInfo.indexedPositions.size();
+                maxJacElSize += rowInfo.nonIndexedPositions.size();
             }
-            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(jacElSize);
-            size_t jacLE = 0;
+
+            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(maxJacElSize);
 
             // create the dependents (jac elements) for indexed and constant 
+            size_t jacLE = 0;
             for (size_t tapeI = 0; tapeI < eqs.size(); tapeI++) {
                 JacobianWithLoopsRowInfo& rowInfo = eqs[tapeI];
 
@@ -412,13 +376,9 @@ namespace CppAD {
                     size_t tapeJ = itJ2Pos->first;
                     const std::vector<size_t>& positions = itJ2Pos->second;
 
-                    allLocations.insert(positions.begin(), positions.end());
-
-                    // generate the index pattern for the jacobian compressed element
-                    IndexPattern* pattern = IndexPattern::detect(positions);
-                    handler.manageLoopDependentIndexPattern(pattern);
-
-                    indexedLoopResults[jacLE++] = std::make_pair(dyiDxtape[tapeI][tapeJ], pattern);
+                    indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+                                                                        dyiDxtape[tapeI][tapeJ], *iterationIndexOp, ifElses,
+                                                                        allLocations);
                 }
 
                 /**
@@ -428,12 +388,6 @@ namespace CppAD {
                 for (itJ2Pos = rowInfo.nonIndexedPositions.begin(); itJ2Pos != rowInfo.nonIndexedPositions.end(); ++itJ2Pos) {
                     size_t j = itJ2Pos->first;
                     const std::vector<size_t>& positions = itJ2Pos->second;
-
-                    allLocations.insert(positions.begin(), positions.end());
-
-                    // generate the index pattern for the jacobian compressed element
-                    IndexPattern* pattern = IndexPattern::detect(positions);
-                    handler.manageLoopDependentIndexPattern(pattern);
 
                     CGBase jacVal = Base(0);
 
@@ -460,10 +414,13 @@ namespace CppAD {
                         }
                     }
 
-                    indexedLoopResults[jacLE++] = std::make_pair(jacVal, pattern);
+                    indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+                                                                        jacVal, *iterationIndexOp, ifElses,
+                                                                        allLocations);
                 }
             }
-            assert(jacLE == indexedLoopResults.size());
+
+            indexedLoopResults.resize(jacLE);
 
             /**
              * make the loop end
@@ -489,6 +446,112 @@ namespace CppAD {
         }
 
         return jac;
+    }
+
+
+    namespace loops {
+
+        template<class Base>
+        std::pair<CG<Base>, IndexPattern*> createJacobianElement(CodeHandler<Base>& handler,
+                                                                 const std::vector<size_t>& positions,
+                                                                 size_t maxPos,
+                                                                 const CG<Base>& dfdx,
+                                                                 IndexOperationNode<Base>& iterationIndexOp,
+                                                                 vector<IfElseInfo<Base> >& ifElses,
+                                                                 std::set<size_t>& allLocations) {
+            using namespace std;
+
+            map<size_t, size_t> locations;
+            for (size_t iter = 0; iter < positions.size(); iter++) {
+                if (positions[iter] != maxPos) {
+                    locations[iter] = positions[iter];
+                    allLocations.insert(positions[iter]);
+                }
+            }
+
+            if (locations.size() == positions.size()) {
+                // present in all iterations
+
+                // generate the index pattern for the jacobian compressed element
+                IndexPattern* pattern = IndexPattern::detect(positions);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                return make_pair(dfdx, pattern);
+
+            } else {
+                /**
+                 * must create a conditional element so that this 
+                 * contribution to the jacobian is only evaluated at the
+                 * relevant iterations
+                 */
+
+                // generate the index pattern for the jacobian compressed element
+                IndexPattern* pattern = IndexPattern::detect(locations);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                // try to find an existing if-else where these operations can be added
+                map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
+
+                set<size_t> iterations;
+                mapKeys(locations, iterations);
+                SizeN1stIt pos(iterations.size(), *iterations.begin());
+                firstIt2Count2Iterations[pos] = make_pair(*iterations.begin(), iterations);
+
+                IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
+                bool reusingIfElse = ifElseBranches != NULL;
+                if (!reusingIfElse) {
+                    size_t s = ifElses.size();
+                    ifElses.resize(s + 1);
+                    ifElseBranches = &ifElses[s];
+                }
+
+                OperationNode<Base>* ifStart;
+
+                if (reusingIfElse) {
+                    //reuse existing node
+                    ifStart = ifElseBranches->firstIt2Branch.at(pos).node;
+                } else {
+                    // depends on the iterations indexes
+                    set<size_t> usedIter;
+                    OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
+                    handler.manageOperationNodeMemory(cond);
+
+                    ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                    handler.manageOperationNodeMemory(ifStart);
+                }
+
+                std::vector<size_t> ainfo(2);
+                ainfo[0] = handler.addLoopDependentIndexPattern(*pattern); // dependent index pattern location
+                ainfo[1] = 1; // assignOrAdd
+                std::vector<Argument<Base> > indexedArgs(2);
+                indexedArgs[0] = asArgument(dfdx); // indexed expression
+                indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+                handler.manageOperationNodeMemory(yIndexed);
+
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*yIndexed));
+                handler.manageOperationNodeMemory(ifAssign);
+
+                if (!reusingIfElse) {
+                    // existing 'if' with the same iterations
+                    IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
+                    branch.iterations = iterations;
+                    branch.node = ifStart;
+                }
+
+                if (reusingIfElse) {
+                    ifElseBranches->endIf->getArguments().push_back(Argument<Base>(*ifAssign));
+                } else {
+                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+                    handler.manageOperationNodeMemory(ifElseBranches->endIf);
+                }
+
+                IndexPattern* p = NULL;
+                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), p);
+            }
+
+        }
+
     }
 
 }
