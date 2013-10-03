@@ -28,13 +28,39 @@ namespace CppAD {
             return CG<double> (fabs(var.getValue()));
         } else {
             CG<double> result(*var.getCodeHandler(), new OperationNode<double>(CGAbsOp, var.argument()));
-            if(var.isValueDefined()) {
+            if (var.isValueDefined()) {
                 result.setValue(fabs(var.getValue()));
             }
             return result;
         }
     }
 
+    /**
+     * Specialization of the numeric_limits for doubles
+     */
+    template <>
+    class numeric_limits<CG<double> > {
+    public:
+        static CG<double> epsilon() {
+            return std::numeric_limits<double>::epsilon();
+        }
+
+        static CG<double> min() {
+            return std::numeric_limits<double>::min();
+        }
+
+        static CG<double> max() {
+            return std::numeric_limits<double>::max();
+        }
+    };
+
+    /**
+     * Specialization of the machine epsilon for CG<double>
+     */
+    template <>
+    inline CG<double> epsilon<CG<double> >() {
+        return std::numeric_limits<double>::epsilon();
+    }
 
 }
 
