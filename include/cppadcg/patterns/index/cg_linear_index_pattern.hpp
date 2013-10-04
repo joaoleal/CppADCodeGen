@@ -45,6 +45,10 @@ namespace CppAD {
             return dy_;
         }
 
+        inline void setLinearSlopeDy(long dy) {
+            dy_ = dy;
+        }
+
         inline long getLinearSlopeDx() const {
             return dx_;
         }
@@ -59,6 +63,10 @@ namespace CppAD {
 
         inline virtual IndexPatternType getType() const {
             return LINEAR;
+        }
+
+        inline long evaluate(long x) const {
+            return ((x - xOffset_) / dx_) * dy_ + b_;
         }
 
         inline virtual ~LinearIndexPattern() {
