@@ -905,10 +905,12 @@ namespace CppAD {
             std::copy(pyb, pyb + ySize, &libModel->_py[0]);
 
 #ifndef NDEBUG
-            // only required in order to avoid an issue with a validation inside CppAD 
-            vector<bool> vx, vy;
-            if (!atomicBase->forward(p, p, vx, vy, libModel->_tx, libModel->_ty))
-                return false;
+            if (libModel->_evalAtomicForwardOne4CppAD) {
+                // only required in order to avoid an issue with a validation inside CppAD 
+                vector<bool> vx, vy;
+                if (!atomicBase->forward(p, p, vx, vy, libModel->_tx, libModel->_ty))
+                    return false;
+            }
 #endif
 
             bool ret = atomicBase->reverse(p, libModel->_tx, libModel->_ty, libModel->_px, libModel->_py);

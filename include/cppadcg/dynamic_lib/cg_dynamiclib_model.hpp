@@ -26,10 +26,13 @@ namespace CppAD {
     class DynamicLibModel {
     protected:
         CGAtomicLibModel<Base>* _atomic;
+        // whether or not to evaluate forward mode of atomics during a reverse sweep
+        bool _evalAtomicForwardOne4CppAD;
     public:
 
         DynamicLibModel() :
-            _atomic(NULL) {
+            _atomic(NULL),
+            _evalAtomicForwardOne4CppAD(true) {
         }
 
         /**
@@ -89,6 +92,22 @@ namespace CppAD {
          *         if it will never be used.
          */
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
+
+        /**
+         * Defines whether or not to evaluate a forward mode of an atomic 
+         * functions during a reverse sweep so that CppAD checks validate OK.
+         * If this model is not used within CppAD then it should be set to false.
+         * 
+         * @param evalForwardOne4CppAD true to perform the forward mode, 
+         *                             false to ignore it
+         */
+        inline void setAmoticEvalForwardOne4CppAD(bool evalForwardOne4CppAD) {
+            _evalAtomicForwardOne4CppAD = evalForwardOne4CppAD;
+        }
+
+        inline bool isAmoticEvalForwardOne4CppAD() const {
+            return _evalAtomicForwardOne4CppAD;
+        }
 
         /***********************************************************************
          *                        Forward zero

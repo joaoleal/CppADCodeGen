@@ -998,8 +998,8 @@ namespace CppAD {
 
         /**
          * Create subgroups from goups with the same contributions at the 
-         * same Hessian rows. Each subgroup has a sub-set of the group 
-         * contributions wich have the same relations between Hessian row index
+         * same Hessian rows. Each subgroup has a sub-set of the group's 
+         * contributions which have the same relations between Hessian row index
          * and set of iteration indexes.
          */
         template<class Base>
