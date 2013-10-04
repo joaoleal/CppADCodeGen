@@ -56,6 +56,9 @@ namespace CppAD {
             long dx = 1;
             long xOffset = 0;
 
+            LinearIndexPattern* prevPattern = NULL;
+            size_t prevXStart = 0;
+
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
             size_t xStart = 0;
             while (xStart != indexes.size()) {
@@ -77,7 +80,24 @@ namespace CppAD {
                     }
                 }
 
-                linearSections.m[xStart] = new LinearIndexPattern(xOffset, dy, dx, b);
+                LinearIndexPattern* p = new LinearIndexPattern(xOffset, dy, dx, b);
+                if (dy == 0 && prevPattern != NULL) { // constant
+                    // can we take the last element out of the previous section?
+                    if (prevPattern->evaluate(xStart - 1) == b) {
+                        // yes
+                        xStart--;
+                        if (prevXStart + 1 == xStart) {
+                            // it has only one element -> make it a constant section
+                            size_t bb = prevPattern->evaluate(prevXStart);
+                            prevPattern->setLinearSlopeDy(0);
+                            prevPattern->setLinearConstantTerm(bb);
+                        }
+                    }
+                }
+                linearSections.m[xStart] = p;
+
+                prevXStart = xStart;
+                prevPattern = p;
                 xStart = lastLinear;
 
                 if (linearSections.m.size() == maxCount && xStart != indexes.size()) {
@@ -92,6 +112,9 @@ namespace CppAD {
         static inline std::map<size_t, IndexPattern*> detectLinearSections(const std::map<size_t, size_t>& x2y,
                                                                            size_t maxCount = 0) {
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
+
+            LinearIndexPattern* prevPattern = NULL;
+            size_t prevXStart = 0;
 
             std::map<size_t, size_t>::const_iterator pStart = x2y.begin();
             while (pStart != x2y.end()) {
@@ -134,8 +157,25 @@ namespace CppAD {
                     }
                 }
 
-                linearSections.m[pStart->first] = new LinearIndexPattern(xOffset, dy, dx, b);
+                LinearIndexPattern* p = new LinearIndexPattern(xOffset, dy, dx, b);
+                size_t xStart = pStart->first;
+                if (dy == 0 && prevPattern != NULL) { // constant
+                    // can we take the last element from the previous section?
+                    if (prevPattern->evaluate(xStart - 1) == b) {
+                        // yes
+                        xStart--;
+                        if (prevXStart + 1 == xStart) {
+                            // it has only one element -> make it a constant section
+                            size_t bb = prevPattern->evaluate(prevXStart);
+                            prevPattern->setLinearSlopeDy(0);
+                            prevPattern->setLinearConstantTerm(bb);
+                        }
+                    }
+                }
+                linearSections.m[xStart] = p;
 
+                prevXStart = xStart;
+                prevPattern = p;
                 pStart = pNextSection;
 
                 if (linearSections.m.size() == maxCount && pStart != x2y.end()) {
