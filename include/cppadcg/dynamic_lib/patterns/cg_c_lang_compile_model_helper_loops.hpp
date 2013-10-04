@@ -41,6 +41,21 @@ namespace CppAD {
             }
         };
 
+        class JacobianWithLoopsRowInfo {
+        public:
+            // tape J index -> {locationIt0, locationIt1, ...}
+            std::map<size_t, std::vector<size_t> > indexedPositions;
+
+            // original J index -> {locationIt0, locationIt1, ...}
+            std::map<size_t, std::vector<size_t> > nonIndexedPositions;
+
+            // original J index 
+            std::set<size_t> nonIndexedEvals;
+
+            // original J index -> k index 
+            std::map<size_t, std::set<size_t> > tmpEvals;
+        };
+
         template<class Base>
         class IndexedDependentLoopInfo {
         public:
@@ -354,7 +369,480 @@ namespace CppAD {
 
             return new OperationNode<Base>(CGIndexCondExprOp, info, args);
         }
-        
+
+        class ArrayElementCopyPattern {
+        public:
+            IndexPattern* resultPattern;
+            IndexPattern* compressedPattern;
+        public:
+
+            inline ArrayElementCopyPattern() :
+                resultPattern(NULL),
+                compressedPattern(NULL) {
+            }
+
+            inline ArrayElementCopyPattern(IndexPattern* resultPat,
+                                           IndexPattern* compressedPat) :
+                resultPattern(resultPat),
+                compressedPattern(compressedPat) {
+            }
+
+            inline ~ArrayElementCopyPattern() {
+                delete resultPattern;
+                delete compressedPattern;
+            }
+
+        };
+
+        class ArrayGroup {
+        public:
+            std::auto_ptr<IndexPattern> pattern;
+            std::auto_ptr<IndexPattern> startLocPattern;
+            std::vector<ArrayElementCopyPattern> elements;
+        };
+
+        /**
+         * 
+         * @param loopGroups Used elemets from the arrays provided by the group
+         *                   function calls (loop->group->{array->{compressed position} })
+         * @param userElLocation maps each element to its position 
+         *                      (array -> [compressed elements { original index }] )
+         * @param orderedArray
+         * @param loopCalls
+         * @param garbage holds created ArrayGroups
+         */
+        template<class Base>
+        inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                                 const std::map<size_t, std::vector<std::set<size_t> > >& userElLocation,
+                                                 const std::map<size_t, bool>& orderedArray,
+                                                 std::map<size_t, std::map<LoopModel<Base>*, std::map<size_t, ArrayGroup*> > >& loopCalls,
+                                                 SmartVectorPointer<ArrayGroup>& garbage) {
+
+            using namespace std;
+
+            std::vector<size_t> arrayStart;
+            /**
+             * Determine jcol index patterns and
+             * array start patterns
+             */
+            std::vector<size_t> localit2jcols;
+            typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlge;
+            for (itlge = loopGroups.begin(); itlge != loopGroups.end(); ++itlge) {
+                LoopModel<Base>* loop = itlge->first;
+
+                garbage.v.reserve(garbage.v.size() + itlge->second.size());
+
+                map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
+                for (itg = itlge->second.begin(); itg != itlge->second.end(); ++itg) {
+                    size_t group = itg->first;
+                    const map<size_t, set<size_t> >& jcols2e = itg->second;
+
+                    // group by number of iterations
+                    std::auto_ptr<ArrayGroup> data(new ArrayGroup());
+
+                    /**
+                     * jcol pattern
+                     */
+                    mapKeys(jcols2e, localit2jcols);
+                    data->pattern.reset(IndexPattern::detect(localit2jcols));
+
+                    /**
+                     * array start pattern
+                     */
+                    bool ordered = true;
+                    for (size_t l = 0; l < localit2jcols.size(); l++) {
+                        if (!orderedArray.at(localit2jcols[l])) {
+                            ordered = false;
+                            break;
+                        }
+                    }
+
+                    if (ordered) {
+                        arrayStart.resize(localit2jcols.size());
+
+                        for (size_t l = 0; l < localit2jcols.size(); l++) {
+                            const std::vector<set<size_t> >& location = userElLocation.at(localit2jcols[l]);
+                            arrayStart[l] = *location[0].begin();
+                        }
+
+                        data->startLocPattern.reset(IndexPattern::detect(arrayStart));
+                    } else {
+                        /**
+                         * check if all calls to this group function provides 
+                         * the same number of elements
+                         */
+                        map<size_t, set<size_t> >::const_iterator itJcols2e = jcols2e.begin();
+                        size_t commonElSize = itJcols2e->second.size();
+
+                        for (++itJcols2e; itJcols2e != jcols2e.end(); ++itJcols2e) {
+                            if (itJcols2e->second.size() != commonElSize) {
+                                commonElSize = 0;
+                                break;
+                            }
+                        }
+
+                        if (commonElSize > 0) {
+                            // the same number of elements is always provided in each call
+                            std::vector<std::vector<size_t> > compressPos(commonElSize, std::vector<size_t>(jcols2e.size()));
+                            std::vector<std::vector<size_t> > resultPos(commonElSize, std::vector<size_t>(jcols2e.size()));
+
+                            data->elements.resize(commonElSize);
+
+                            size_t localIt = 0;
+                            for (itJcols2e = jcols2e.begin(); itJcols2e != jcols2e.end(); ++itJcols2e, localIt++) {
+                                size_t key = itJcols2e->first;
+
+                                const std::vector<std::set<size_t> >& origPos = userElLocation.at(key);
+
+                                set<size_t>::const_iterator itE;
+                                size_t e = 0;
+                                for (itE = itJcols2e->second.begin(); itE != itJcols2e->second.end(); ++itE, e++) {
+                                    assert(origPos[*itE].size() == 1);
+                                    resultPos[e][localIt] = *origPos[*itE].begin();
+
+                                    compressPos[e][localIt] = *itE;
+                                }
+                            }
+
+                            for (size_t e = 0; e < commonElSize; e++) {
+                                data->elements[e].resultPattern = IndexPattern::detect(resultPos[e]);
+                                data->elements[e].compressedPattern = IndexPattern::detect(compressPos[e]);
+                            }
+
+                        } else {
+                            throw CGException("Not implemented yet");
+                        }
+
+                    }
+
+                    // group by number of iterations
+                    loopCalls[localit2jcols.size()][loop][group] = data.get();
+                    garbage.v.push_back(data.release());
+                }
+            }
+        }
+
+        /**
+         * @param loopGroups Used elemets from the arrays provided by the group
+         *                   function calls (loop->group->{array->{compressed position} })
+         * @param nonLoopElements Used elements from non loop function calls
+         *                        ([array]{compressed position})
+         */
+        template<class Base>
+        void printForRevUsageFunction(std::ostringstream& out,
+                                      const std::string& baseTypeName,
+                                      const std::string& modelName,
+                                      const std::string& modelFunction,
+                                      size_t inLocalSize,
+                                      const std::string& localFunction,
+                                      const std::string& suffix,
+                                      const std::string& keyIndexName,
+                                      const IndexDclrOperationNode<Base>& indexIt,
+                                      const std::string& resultName,
+                                      const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                      const std::map<size_t, std::set<size_t> >& nonLoopElements,
+                                      const std::map<size_t, std::vector<std::set<size_t> > >& userElLocation,
+                                      const std::map<size_t, bool>& jcolOrdered,
+                                      void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g),
+                                      size_t nnz,
+                                      size_t maxCompressedSize) {
+
+            using namespace std;
+
+            /**
+             * determine to which functions we can provide the hessian row directly
+             * without needing a temporary array (compressed)
+             */
+            SmartVectorPointer<ArrayGroup> garbage;
+            map<size_t, map<LoopModel<Base>*, map<size_t, ArrayGroup*> > > loopCalls;
+
+            /**
+             * Determine jrow index patterns and
+             * hessian row start patterns
+             */
+            determineForRevUsagePatterns(loopGroups, userElLocation, jcolOrdered,
+                                         loopCalls, garbage);
+
+
+            const string& itName = *indexIt.getName();
+
+            string nlRev2Suffix = "noloop_" + suffix;
+
+            CLanguage<Base> langC(baseTypeName);
+            string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
+            string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+
+            out << "void " << modelFunction << "(" << argsDcl << ") {\n"
+                    "   " << baseTypeName << " const * inLocal[" << inLocalSize << "];\n"
+                    "   " << baseTypeName << " inLocal1 = 1;\n"
+                    "   " << baseTypeName << " * outLocal[1];\n"
+                    "   unsigned long " << itName << ";\n"
+                    "   unsigned long " << keyIndexName << ";\n"
+                    "   unsigned long e;\n";
+            assert(itName != "e" && keyIndexName != "e");
+            if (maxCompressedSize > 0) {
+                out << "   " << baseTypeName << " compressed[" << maxCompressedSize << "];\n";
+            }
+            out << "   " << baseTypeName << " * " << resultName << " = out[0];\n"
+                    "\n"
+                    "   inLocal[0] = in[0];\n"
+                    "   inLocal[1] = &inLocal1;\n";
+            for (size_t j = 2; j < inLocalSize; j++)
+                out << "   inLocal[" << j << "] = in[" << (j - 1) << "];\n";
+
+            out << "\n";
+
+            /**
+             * zero the output
+             */
+            out << "   for(e = 0; e < " << nnz << "; e++) " << resultName << "[e] = 0;\n"
+                    "\n";
+
+            /**
+             * contributions from equations NOT belonging to loops
+             * (must come before the loop related values because of the assigments)
+             */
+            langC.setArgumentIn("inLocal");
+            langC.setArgumentOut("outLocal");
+            string argsLocal = langC.generateDefaultFunctionArguments();
+
+            bool lastCompressed = false;
+            map<size_t, set<size_t> >::const_iterator it;
+            for (it = nonLoopElements.begin(); it != nonLoopElements.end(); ++it) {
+                size_t index = it->first;
+                const set<size_t>& elPos = it->second;
+                const std::vector<set<size_t> >& location = userElLocation.at(index);
+                assert(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
+                assert(elPos.size() > 0);
+                bool rowOrdered = jcolOrdered.at(index);
+
+                out << "\n";
+                if (rowOrdered) {
+                    out << "   outLocal[0] = &" << resultName << "[" << *location[0].begin() << "];\n";
+                } else if (!lastCompressed) {
+                    out << "   outLocal[0] = compressed;\n";
+                }
+                out << "   " << localFunction << "_" << nlRev2Suffix << index << "(" << argsLocal << ");\n";
+                if (!rowOrdered) {
+                    for (set<size_t>::const_iterator itEl = elPos.begin(); itEl != elPos.end(); ++itEl) {
+                        size_t e = *itEl;
+                        out << "   ";
+                        set<size_t>::const_iterator itl;
+                        for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                            out << resultName << "[" << (*itl) << "] += compressed[" << e << "];\n";
+                        }
+                    }
+                }
+                lastCompressed = !rowOrdered;
+            }
+
+            /**
+             * loop related values
+             */
+            typename map<size_t, map<LoopModel<Base>*, map<size_t, ArrayGroup*> > >::const_iterator itItlg;
+            typename map<LoopModel<Base>*, map<size_t, ArrayGroup*> >::const_iterator itlg;
+            typename map<size_t, ArrayGroup*>::const_iterator itg;
+
+            
+            for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
+                size_t itCount = itItlg->first;
+                if (itCount > 1) {
+                    lastCompressed = false;
+                    out << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {\n";
+                }
+
+                for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
+                    LoopModel<Base>& loop = *itlg->first;
+
+                    for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                        size_t g = itg->first;
+                        ArrayGroup* group = itg->second;
+
+                        string ident = itCount == 1 ? "   " : "      "; //identation
+
+                        if (group->startLocPattern.get() != NULL) {
+                            // determine hessRowStart = f(it)
+                            out << ident << "outLocal[0] = &" << resultName << "[" << CLanguage<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
+                        } else {
+                            if (!lastCompressed) {
+                                out << ident << "outLocal[0] = compressed;\n";
+                            }
+                            out << ident << "for(e = 0; e < " << maxCompressedSize << "; e++)  compressed[e] = 0;\n";
+                        }
+
+                        if (itCount > 1) {
+                            out << ident << keyIndexName << " = " << CLanguage<Base>::indexPattern2String(*group->pattern, indexIt) << ";\n";
+                            out << ident;
+                            (*generateLocalFunctionName)(out, modelName, loop, g);
+                            out << "(" << keyIndexName << ", " << loopFArgs << ");\n";
+                        } else {
+                            size_t key = loopGroups.at(&loop).at(g).begin()->first; // only one jrow
+                            out << ident;
+                            (*generateLocalFunctionName)(out, modelName, loop, g);
+                            out << "(" << key << ", " << loopFArgs << ");\n";
+                        }
+
+                        if (group->startLocPattern.get() == NULL) {
+                            assert(!group->elements.empty());
+
+                            for (size_t e = 0; e < group->elements.size(); e++) {
+                                const ArrayElementCopyPattern& ePos = group->elements[e];
+
+                                out << ident << resultName << "["
+                                        << CLanguage<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
+                                        << "] += compressed["
+                                        << CLanguage<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
+                                        << "];\n";
+                            }
+                        }
+
+                        out << "\n";
+                        
+                        lastCompressed = group->startLocPattern.get() == NULL;
+                    }
+                }
+
+                if (itCount > 1) {
+                    out << "   }\n";
+                }
+            }
+
+            out << "\n"
+                    "}\n";
+        }
+
+        /**
+         * 
+         * @param elements
+         * @param loopGroups Used elemets from the arrays provided by the group
+         *                   function calls (loop->group->{array->{compressed position} })
+         * @param nonLoopElements Used elements from non loop function calls
+         *                        ([array]{compressed position})
+         * @param functionName
+         * @param modelName
+         * @param baseTypeName
+         * @param suffix
+         * @param generateLocalFunctionName
+         * @return 
+         */
+        template<class Base>
+        std::string generateGlobalForRevWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
+                                                                const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                                                const std::map<size_t, std::set<size_t> >& nonLoopElements,
+                                                                const std::string& functionName,
+                                                                const std::string& modelName,
+                                                                const std::string& baseTypeName,
+                                                                const std::string& suffix,
+                                                                void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) {
+
+            using namespace std;
+
+            // functions for each row
+            map<size_t, map<LoopModel<Base>*, set<size_t> > > functions;
+
+            typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlj1g;
+            for (itlj1g = loopGroups.begin(); itlj1g != loopGroups.end(); ++itlj1g) {
+                LoopModel<Base>* loop = itlj1g->first;
+
+                map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
+                for (itg = itlj1g->second.begin(); itg != itlj1g->second.end(); ++itg) {
+                    size_t group = itg->first;
+                    const map<size_t, set<size_t> >& jrows = itg->second;
+
+                    for (map<size_t, set<size_t> >::const_iterator itJrow = jrows.begin(); itJrow != jrows.end(); ++itJrow) {
+                        functions[itJrow->first][loop].insert(group);
+                    }
+                }
+            }
+
+            /**
+             * The function that matches each equation to a directional derivative function
+             */
+            CLanguage<Base> langC(baseTypeName);
+            string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+            string args = langC.generateDefaultFunctionArguments();
+            string noLoopFunc = functionName + "_noloop_" + suffix;
+
+            std::ostringstream out;
+            out << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+                    "\n";
+            CLangCompileModelHelper<Base>::generateFunctionDeclarationSource(out, functionName, "noloop_" + suffix, nonLoopElements, argsDcl);
+            generateFunctionDeclarationSourceLoopForRev(out, langC, modelName, "j", loopGroups, generateLocalFunctionName);
+            out << "\n";
+            out << "int " << functionName <<
+                    "(unsigned long pos, " << argsDcl << ") {\n"
+                    "   \n"
+                    "   switch(pos) {\n";
+            map<size_t, std::vector<size_t> >::const_iterator it;
+            for (it = elements.begin(); it != elements.end(); ++it) {
+                size_t jrow = it->first;
+                // the size of each sparsity row
+                out << "      case " << jrow << ":\n";
+
+                /**
+                 * contributions from equations not in loops 
+                 * (must come before contributions from loops because of the assigments)
+                 */
+                map<size_t, set<size_t> >::const_iterator itnl = nonLoopElements.find(jrow);
+                if (itnl != nonLoopElements.end()) {
+                    out << "         " << noLoopFunc << jrow << "(" << args << ");\n";
+                }
+
+                /**
+                 * contributions from equations in loops
+                 */
+                const map<LoopModel<Base>*, set<size_t> >& rowFunctions = functions[jrow];
+
+                typename map<LoopModel<Base>*, set<size_t> >::const_iterator itlg;
+                for (itlg = rowFunctions.begin(); itlg != rowFunctions.end(); ++itlg) {
+                    LoopModel<Base>* loop = itlg->first;
+
+                    for (set<size_t>::const_iterator itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                        out << "         ";
+                        generateLocalFunctionName(out, modelName, *loop, *itg);
+                        out << "(" << jrow << ", " << args << ");\n";
+                    }
+                }
+
+                /**
+                 * return all OK
+                 */
+                out << "         return 0; // done\n";
+            }
+            out << "      default:\n"
+                    "         return 1; // error\n"
+                    "   };\n";
+
+            out << "}\n";
+            return out.str();
+        }
+
+        template<class Base>
+        void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& out,
+                                                         CLanguage<Base>& langC,
+                                                         const std::string& modelName,
+                                                         const std::string& keyName,
+                                                         const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                                         void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) {
+
+            std::string argsDcl = langC.generateFunctionArgumentsDcl();
+            std::string argsDclLoop = "unsigned long " + keyName + ", " + argsDcl;
+
+            typename std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >::const_iterator itlg;
+            for (itlg = loopGroups.begin(); itlg != loopGroups.end(); ++itlg) {
+                const LoopModel<Base>& loop = *itlg->first;
+
+                typename std::map<size_t, std::map<size_t, std::set<size_t> > >::const_iterator itg;
+                for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                    size_t group = itg->first;
+
+                    out << "void ";
+                    (*generateLocalFunctionName)(out, modelName, loop, group);
+                    out << "(" << argsDclLoop << ");\n";
+                }
+            }
+        }
+
     }
 }
 

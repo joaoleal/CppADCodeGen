@@ -19,21 +19,6 @@ namespace CppAD {
 
     namespace loops {
 
-        class JacobianWithLoopsRowInfo {
-        public:
-            // tape J index -> {locationIt0, locationIt1, ...}
-            std::map<size_t, std::vector<size_t> > indexedPositions;
-
-            // original J index -> {locationIt0, locationIt1, ...}
-            std::map<size_t, std::vector<size_t> > nonIndexedPositions;
-
-            // original J index 
-            std::set<size_t> nonIndexedEvals;
-
-            // original J index -> k index 
-            std::map<size_t, std::set<size_t> > tmpEvals;
-        };
-
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createJacobianElement(CodeHandler<Base>& handler,
                                                                  const std::vector<size_t>& positions,
@@ -50,16 +35,21 @@ namespace CppAD {
      **************************************************************************/
 
     template<class Base>
-    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
-                                                                                    const vector<CGBase>& x,
-                                                                                    bool forward) throw (CGException) {
+    void CLangCompileModelHelper<Base>::analyseSparseJacobianWithLoops(const std::vector<size_t>& rows,
+                                                                       const std::vector<size_t>& cols,
+                                                                       const std::vector<size_t>& location,
+                                                                       vector<std::set<size_t> >& noLoopEvalSparsity,
+                                                                       vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
+                                                                       std::map<LoopModel<Base>*, vector<std::set<size_t> > >& loopsEvalSparsities,
+                                                                       std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException) {
+
         using namespace std;
         using namespace loops;
         using CppAD::vector;
-        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
 
-        handler.setZeroDependents(true);
-
+        assert(rows.size() == cols.size());
+        assert(rows.size() == location.size());
+        
         /**
          * determine sparsities
          */
@@ -76,29 +66,27 @@ namespace CppAD {
          * Generate index patterns for the jacobian elements resulting from loops
          */
         size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
-        vector<set<size_t> > noLoopEvalSparsity(_funNoLoops != NULL ? _funNoLoops->getTapeDependentCount() : 0);
+        noLoopEvalSparsity.resize(_funNoLoops != NULL ? _funNoLoops->getTapeDependentCount() : 0);
 
         // tape equation -> original J -> locations
-        vector<map<size_t, set<size_t> > > noLoopEvalLocations(noLoopEvalSparsity.size());
-        map<LoopModel<Base>*, vector<set<size_t> > > loopsEvalSparsities;
+        noLoopEvalLocations.resize(noLoopEvalSparsity.size());
 
         // loop -> equation -> row info
-        map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> > loopEqInfo;
         for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
             LoopModel<Base>* loop = *itloop;
             loopEqInfo[loop].resize(loop->getTapeDependentCount());
             loopsEvalSparsities[loop].resize(loop->getTapeDependentCount());
         }
 
-        size_t nnz = _jacSparsity.rows.size();
-        vector<CGBase> jac(nnz);
+        size_t nnz = rows.size();
 
         /** 
          * Load locations in the compressed jacobian
          */
-        for (size_t e = 0; e < nnz; e++) {
-            size_t i = _jacSparsity.rows[e];
-            size_t j = _jacSparsity.cols[e];
+        for (size_t el = 0; el < nnz; el++) {
+            size_t i = rows[el];
+            size_t j = cols[el];
+            size_t e = location[el];
 
             // find LOOP + get loop results
             LoopModel<Base>* loop = NULL;
@@ -236,6 +224,36 @@ namespace CppAD {
 
             }
         }
+    }
+
+    template<class Base>
+    vector<CG<Base> > CLangCompileModelHelper<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
+                                                                                    const vector<CGBase>& x,
+                                                                                    bool forward) throw (CGException) {
+        using namespace std;
+        using namespace loops;
+        using CppAD::vector;
+        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
+
+        handler.setZeroDependents(true);
+
+        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+
+        vector<set<size_t> > noLoopEvalSparsity;
+        vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
+        map<LoopModel<Base>*, vector<set<size_t> > > loopsEvalSparsities;
+        map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> > loopEqInfo;
+
+        size_t nnz = _jacSparsity.rows.size();
+        std::vector<size_t> locations(nnz);
+        for (size_t e = 0; e < nnz; e++)
+            locations[e] = e;
+
+        analyseSparseJacobianWithLoops(_jacSparsity.rows, _jacSparsity.cols, locations,
+                                       noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
+
+
+        vector<CGBase> jac(nnz);
 
         /***********************************************************************
          *        generate the operation graph

@@ -121,11 +121,13 @@ namespace CppAD {
 
             testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, jacobian_, hessian_);
             if (jacobian_ == MUST_PASS) {
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, MUST_PASS, IGNORE, true);
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
+                //testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE, true);
             }
 
             if (hessian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, false, true);
             }
 
         }
@@ -237,11 +239,13 @@ namespace CppAD {
             size_t mExtra = 0;
             testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, jacobian_, hessian_);
             if (jacobian_ == MUST_PASS) {
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, MUST_PASS, IGNORE, true);
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
+                //testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE, true);
             }
 
             if (hessian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, false, true);
             }
         }
 
@@ -297,9 +301,10 @@ namespace CppAD {
                                JacobianADMode jacMode,
                                TEST_TYPE jacobian = MUST_PASS,
                                TEST_TYPE hessian = MUST_PASS,
+                               bool forReverseOne = false,
                                bool reverseTwo = false) {
             std::vector<atomic_base<Base>*> atoms;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xTypical, jacMode, jacobian, hessian, reverseTwo);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xTypical, jacMode, jacobian, hessian, forReverseOne, reverseTwo);
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,
@@ -311,12 +316,14 @@ namespace CppAD {
                                JacobianADMode jacMode,
                                TEST_TYPE jacobian = MUST_PASS,
                                TEST_TYPE hessian = MUST_PASS,
+                               bool forReverseOne = false,
                                bool reverseTwo = false) {
 
             std::string libBaseName = name;
             if (jacobian == MUST_PASS) {
-                if (jacMode == FORWARD)libBaseName += "F";
-                else if (jacMode == REVERSE)libBaseName += "R";
+                if (!forReverseOne) libBaseName += "d";
+                if (jacMode == FORWARD) libBaseName += "F";
+                else if (jacMode == REVERSE) libBaseName += "R";
             }
             if (hessian == MUST_PASS && reverseTwo)
                 libBaseName += "rev2";
@@ -334,8 +341,8 @@ namespace CppAD {
             compHelpL.setCreateHessian(false);
             compHelpL.setCreateSparseJacobian(jacobian == MUST_PASS);
             compHelpL.setCreateSparseHessian(hessian == MUST_PASS);
-            compHelpL.setCreateForwardOne(false);
-            compHelpL.setCreateReverseOne(false);
+            compHelpL.setCreateForwardOne(forReverseOne && jacMode == FORWARD);
+            compHelpL.setCreateReverseOne(forReverseOne && jacMode == REVERSE);
             compHelpL.setCreateReverseTwo(reverseTwo);
             //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
             compHelpL.setRelatedDependents(relatedDepCandidates);

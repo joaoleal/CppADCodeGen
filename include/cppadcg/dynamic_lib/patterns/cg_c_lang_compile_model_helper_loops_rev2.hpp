@@ -35,14 +35,13 @@ namespace CppAD {
         class HessianRowGroup;
 
         template<class Base>
-        vector<std::pair<CG<Base>, IndexPattern*> > generateReverseMode2GroupOps(CodeHandler<Base>& handler,
-                                                                                 const LoopModel<Base>& lModel,
-                                                                                 const loops::HessianWithLoopsInfo<Base>& info,
-                                                                                 IndexOperationNode<Base>& jrowIndexOp,
-                                                                                 HessianRowGroup<Base>& group,
-                                                                                 const CG<Base>& tx1,
-                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
-                                                                                 std::map<size_t, std::set<size_t> >& jrow2CompressedLoc);
+        vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(CodeHandler<Base>& handler,
+                                                                               const LoopModel<Base>& lModel,
+                                                                               const loops::HessianWithLoopsInfo<Base>& info,
+                                                                               HessianRowGroup<Base>& group,
+                                                                               const CG<Base>& tx1,
+                                                                               const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
+                                                                               std::map<size_t, std::set<size_t> >& jrow2CompressedLoc);
 
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createReverseMode2Contribution(CodeHandler<Base>& handler,
@@ -173,15 +172,15 @@ namespace CppAD {
             /**
              * make the loop's indexed variables
              */
-            info.iterationIndexOp = new IndexOperationNode<Base>(indexIterationDcl); // *info.loopStart);
+            info.iterationIndexOp = new IndexOperationNode<Base>(indexIterationDcl);
             handler.manageOperationNodeMemory(info.iterationIndexOp);
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
 
-            vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp); /////////////////////////////////////////////////////////
+            vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
             info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
 
-            info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp); /////////////////////////////////////////////////////////
+            info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp);
         }
 
         /**
@@ -247,15 +246,15 @@ namespace CppAD {
             finishedGraphCreation();
 
             /*******************************************************************
-             * create hessian row groups
+             * create Hessian row groups
              * for the contributions from the equations in loops
              ******************************************************************/
             SmartVectorPointer<HessianRowGroup<Base> > loopGroups;
 
-            generateHessianRowGroups(lModel, info, loopGroups);
+            generateHessianRowGroups(lModel, info, n, loopGroups);
 
             /*******************************************************************
-             * generate the operation graph for each hessian row group
+             * generate the operation graph for each Hessian row subgroup
              ******************************************************************/
             for (size_t g = 0; g < loopGroups.v.size(); g++) {
                 HessianRowGroup<Base>& group = *loopGroups.v[g];
@@ -346,11 +345,10 @@ namespace CppAD {
                 map<size_t, set<size_t> > jrow2CompressedLoc;
                 vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
 
-                indexedLoopResults = generateReverseMode2GroupOps(handler, lModel, info,
-                                                                  jrowIndexOp,
-                                                                  group, tx1,
-                                                                  dzDx,
-                                                                  jrow2CompressedLoc);
+                indexedLoopResults = generateReverseTwoGroupOps(handler, lModel, info,
+                                                                group, tx1,
+                                                                dzDx,
+                                                                jrow2CompressedLoc);
 
                 _loopRev2Groups[&lModel][g] = jrow2CompressedLoc;
 
@@ -578,65 +576,79 @@ namespace CppAD {
 
         }
 
-        generateGlobalReverseTwoWithLoopsFunctionSource(elements, sources);
-    }
-
-    template<class Base>
-    void CLangCompileModelHelper<Base>::generateHessianRowGroups(const LoopModel<Base>& lModel,
-                                                                 const loops::HessianWithLoopsInfo<Base>& info,
-                                                                 SmartVectorPointer<loops::HessianRowGroup<Base> >& loopGroups) {
-        using namespace std;
-        using namespace CppAD::loops;
-        using CppAD::vector;
-
-        loopGroups.v.reserve(20); // TODO: improve this
-
         /**
-         * group rows with the same contribution terms
+         * 
          */
-        map<pairss, map<size_t, set<size_t> > > indexedIndexed2jrow2Iter;
-        map<pairss, map<size_t, set<size_t> > > indexedNonIndexed2jrow2Iter;
-        map<pairss, map<size_t, set<size_t> > > indexedTemp2jrow2Iter;
-        map<pairss, map<size_t, set<size_t> > > nonIndexedIndexed2jrow2Iter;
-        map<pairss, map<size_t, set<size_t> > > tempIndexed2jrow2Iter;
-
-        map<HessianTermContrib<Base>, set<size_t> > contrib2jrows = groupHessianRowsByContrib(info, _fun.Domain(),
-                                                                                              indexedIndexed2jrow2Iter,
-                                                                                              indexedNonIndexed2jrow2Iter,
-                                                                                              indexedTemp2jrow2Iter,
-                                                                                              nonIndexedIndexed2jrow2Iter,
-                                                                                              tempIndexed2jrow2Iter);
-
-        typename map<HessianTermContrib<Base>, set<size_t> >::const_iterator itC;
-        for (itC = contrib2jrows.begin(); itC != contrib2jrows.end(); ++itC) {
-            const HessianTermContrib<Base>& c = itC->first;
-            const set<size_t>& jrows = itC->second;
-
-            /**
-             * create subgroups
-             */
-            subgroupHessianRowsByContrib(info, c, jrows,
-                                         indexedIndexed2jrow2Iter,
-                                         indexedNonIndexed2jrow2Iter,
-                                         indexedTemp2jrow2Iter,
-                                         nonIndexedIndexed2jrow2Iter,
-                                         tempIndexed2jrow2Iter,
-                                         loopGroups);
-        }
-
+        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
+        sources[functionRev2 + ".c"] = generateGlobalForRevWithLoopsFunctionSource(elements,
+                                                                                   _loopRev2Groups, _nonLoopRev2Elements,
+                                                                                   functionRev2, _name, _baseTypeName, "indep",
+                                                                                   generateFunctionNameLoopRev2);
+        /**
+         * Sparsity
+         */
+        _cache.str("");
+        generateSparsity1DSource2(_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY, elements);
+        sources[_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY + ".c"] = _cache.str();
+        _cache.str("");
     }
 
     namespace loops {
 
         template<class Base>
-        vector<std::pair<CG<Base>, IndexPattern*> > generateReverseMode2GroupOps(CodeHandler<Base>& handler,
-                                                                                 const LoopModel<Base>& lModel,
-                                                                                 const HessianWithLoopsInfo<Base>& info,
-                                                                                 IndexOperationNode<Base>& jrowIndexOp,
-                                                                                 HessianRowGroup<Base>& group,
-                                                                                 const CG<Base>& tx1,
-                                                                                 const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
-                                                                                 std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
+        void generateHessianRowGroups(const LoopModel<Base>& lModel,
+                                      const HessianWithLoopsInfo<Base>& info,
+                                      size_t n,
+                                      SmartVectorPointer<HessianRowGroup<Base> >& loopGroups) {
+            using namespace std;
+            using namespace CppAD::loops;
+            using CppAD::vector;
+
+            /**
+             * group rows with the same contribution terms
+             */
+            map<pairss, map<size_t, set<size_t> > > indexedIndexed2jrow2Iter;
+            map<pairss, map<size_t, set<size_t> > > indexedNonIndexed2jrow2Iter;
+            map<pairss, map<size_t, set<size_t> > > indexedTemp2jrow2Iter;
+            map<pairss, map<size_t, set<size_t> > > nonIndexedIndexed2jrow2Iter;
+            map<pairss, map<size_t, set<size_t> > > tempIndexed2jrow2Iter;
+
+            map<HessianTermContrib<Base>, set<size_t> > contrib2jrows = groupHessianRowsByContrib(info, n,
+                                                                                                  indexedIndexed2jrow2Iter,
+                                                                                                  indexedNonIndexed2jrow2Iter,
+                                                                                                  indexedTemp2jrow2Iter,
+                                                                                                  nonIndexedIndexed2jrow2Iter,
+                                                                                                  tempIndexed2jrow2Iter);
+
+            loopGroups.v.reserve(contrib2jrows.size() *2); // TODO: improve this
+
+            typename map<HessianTermContrib<Base>, set<size_t> >::const_iterator itC;
+            for (itC = contrib2jrows.begin(); itC != contrib2jrows.end(); ++itC) {
+                const HessianTermContrib<Base>& c = itC->first;
+                const set<size_t>& jrows = itC->second;
+
+                /**
+                 * create subgroups
+                 */
+                subgroupHessianRowsByContrib(info, c, jrows,
+                                             indexedIndexed2jrow2Iter,
+                                             indexedNonIndexed2jrow2Iter,
+                                             indexedTemp2jrow2Iter,
+                                             nonIndexedIndexed2jrow2Iter,
+                                             tempIndexed2jrow2Iter,
+                                             loopGroups);
+            }
+
+        }
+
+        template<class Base>
+        vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(CodeHandler<Base>& handler,
+                                                                               const LoopModel<Base>& lModel,
+                                                                               const HessianWithLoopsInfo<Base>& info,
+                                                                               HessianRowGroup<Base>& group,
+                                                                               const CG<Base>& tx1,
+                                                                               const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
+                                                                               std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
             using namespace std;
             using namespace CppAD::loops;
             using CppAD::vector;
@@ -884,6 +896,9 @@ namespace CppAD {
             return compare(l.iterations, r.iterations) == -1;
         }
 
+        /**
+         * Create groups with the same contributions at the same Hessian rows
+         */
         template<class Base>
         inline std::map<HessianTermContrib<Base>, std::set<size_t> > groupHessianRowsByContrib(const loops::HessianWithLoopsInfo<Base>& info,
                                                                                                size_t n,
@@ -896,7 +911,9 @@ namespace CppAD {
 
             size_t nIterations = info.model->getIterationCount();
 
-            // 1
+            /**
+             * determine the contributions to each Hessian row
+             */
             std::vector<HessianTermContrib<Base> > jrows(n);
 
             // indexed-indexed
@@ -979,6 +996,12 @@ namespace CppAD {
             return contrib2jrows;
         }
 
+        /**
+         * Create subgroups from goups with the same contributions at the 
+         * same Hessian rows. Each subgroup has a sub-set of the group 
+         * contributions wich have the same relations between Hessian row index
+         * and set of iteration indexes.
+         */
         template<class Base>
         inline void subgroupHessianRowsByContrib(const HessianWithLoopsInfo<Base>& info,
                                                  const HessianTermContrib<Base>& c,
@@ -1076,13 +1099,12 @@ namespace CppAD {
                 const HessianTermContrib<Base>& hc = itK2C->second;
 
                 typename map<HessianTermContrib<Base>, HessianRowGroup<Base>*>::const_iterator its = c2subgroups.find(hc);
-                HessianRowGroup<Base>* sg;
                 if (its != c2subgroups.end()) {
-                    sg = its->second;
+                    HessianRowGroup<Base>* sg = its->second;
                     sg->jRow2Iterations[jrow2Iters.jrow] = jrow2Iters.iterations;
                     sg->iterations.insert(jrow2Iters.iterations.begin(), jrow2Iters.iterations.end());
                 } else {
-                    sg = new HessianRowGroup<Base>(hc, jrow2Iters);
+                    HessianRowGroup<Base>* sg = new HessianRowGroup<Base>(hc, jrow2Iters);
                     subGroups.v.push_back(sg);
                     c2subgroups[hc] = sg;
                 }
@@ -1255,6 +1277,9 @@ namespace CppAD {
 
         }
 
+        /**
+         * Group of contributions to an Hessian
+         */
         template<class Base>
         class HessianTermContrib {
         public:
@@ -1304,7 +1329,8 @@ namespace CppAD {
         }
 
         /**
-         * 
+         * Group of contributions to an Hessian with the same relation between
+         * Hessian rows and set of iterations
          */
         template<class Base>
         class HessianRowGroup : public HessianTermContrib<Base> {
@@ -1329,105 +1355,18 @@ namespace CppAD {
     } // end loops 
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
-                                                                                        std::map<std::string, std::string>& sources) {
-
-        using namespace std;
-
-        // functions for each row
-        map<size_t, map<LoopModel<Base>*, set<size_t> > > functions;
-
-        typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlj1g;
-        for (itlj1g = _loopRev2Groups.begin(); itlj1g != _loopRev2Groups.end(); ++itlj1g) {
-            LoopModel<Base>* loop = itlj1g->first;
-
-            map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
-            for (itg = itlj1g->second.begin(); itg != itlj1g->second.end(); ++itg) {
-                size_t group = itg->first;
-                const map<size_t, set<size_t> >& jrows = itg->second;
-
-                for (map<size_t, set<size_t> >::const_iterator itJrow = jrows.begin(); itJrow != jrows.end(); ++itJrow) {
-                    functions[itJrow->first][loop].insert(group);
-                }
-            }
-        }
-
-        /**
-         * The function that matches each equation to a directional derivative function
-         */
-        CLanguage<Base> langC(_baseTypeName);
-        string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
-        string args = langC.generateDefaultFunctionArguments();
-        string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
-        string noLoopFunc = functionRev2 + "_noloop_indep";
-
-        _cache.str("");
-        _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
-                "\n";
-        generateFunctionDeclarationSource(_cache, functionRev2, "noloop_indep", _nonLoopRev2Elements, argsDcl);
-        generateFunctionDeclarationSourceLoopRev2(_cache, langC);
-        _cache << "\n";
-        _cache << "int " << functionRev2 <<
-                "(unsigned long pos, " << argsDcl << ") {\n"
-                "   \n"
-                "   switch(pos) {\n";
-        map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t jrow = it->first;
-            // the size of each sparsity row
-            _cache << "      case " << jrow << ":\n";
-
-            /**
-             * contributions from equations not in loops 
-             * (must come before contributions from loops because of the assigments)
-             */
-            map<size_t, set<size_t> >::const_iterator itnl = _nonLoopRev2Elements.find(jrow);
-            if (itnl != _nonLoopRev2Elements.end()) {
-                _cache << "         " << noLoopFunc << jrow << "(" << args << ");\n";
-            }
-
-            /**
-             * contributions from equations in loops
-             */
-            const map<LoopModel<Base>*, set<size_t> >& rowFunctions = functions[jrow];
-
-            typename map<LoopModel<Base>*, set<size_t> >::const_iterator itlg;
-            for (itlg = rowFunctions.begin(); itlg != rowFunctions.end(); ++itlg) {
-                LoopModel<Base>* loop = itlg->first;
-
-                for (set<size_t>::const_iterator itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
-                    _cache << "         ";
-                    generateFunctionNameLoopRev2(_cache, *loop, *itg);
-                    _cache << "(" << jrow << ", " << args << ");\n";
-                }
-            }
-
-            /**
-             * return all OK
-             */
-            _cache << "         return 0; // done\n";
-        }
-        _cache << "      default:\n"
-                "         return 1; // error\n"
-                "   };\n";
-
-        _cache << "}\n";
-        sources[functionRev2 + ".c"] = _cache.str();
-        _cache.str("");
-
-        /**
-         * Sparsity
-         */
-        generateSparsity1DSource2(_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY, elements);
-        sources[_name + "_" + FUNCTION_REVERSE_TWO_SPARSITY + ".c"] = _cache.str();
-        _cache.str("");
+    void CLangCompileModelHelper<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
+                                                                     const LoopModel<Base>& loop,
+                                                                     size_t g) {
+        generateFunctionNameLoopRev2(cache, _name, loop, g);
     }
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
+                                                                     const std::string& modelName,
                                                                      const LoopModel<Base>& loop,
                                                                      size_t g) {
-        cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO <<
+        cache << modelName << "_" << FUNCTION_SPARSE_REVERSE_TWO <<
                 "_loop" << loop.getLoopId() << "_g" << g;
     }
 

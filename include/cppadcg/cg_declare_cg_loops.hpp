@@ -27,6 +27,8 @@ namespace CppAD {
 
         typedef std::pair<size_t, size_t> pairss;
 
+        class JacobianWithLoopsRowInfo;
+
         class HessianElement;
 
         template<class Base>
@@ -36,10 +38,18 @@ namespace CppAD {
         class IfElseInfo;
 
         template<class Base>
+        class JacobianTermContrib;
+
+        template<class Base>
+        class JacobianColGroup;
+
+        template<class Base>
         class HessianWithLoopsInfo;
 
         template<class Base>
         class HessianRowGroup;
+
+        class ArrayGroup;
 
         template<class Base>
         inline vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
@@ -83,6 +93,21 @@ namespace CppAD {
                                                             const std::set<size_t>& usedIter,
                                                             size_t maxIter,
                                                             IndexOperationNode<Base>& iterationIndexOp);
+
+        template<class Base>
+        inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                                 const std::map<size_t, std::vector<std::set<size_t> > >& userElLocation,
+                                                 const std::map<size_t, bool>& ordered,
+                                                 std::map<size_t, std::map<LoopModel<Base>*, std::map<size_t, ArrayGroup*> > >& loopCalls,
+                                                 SmartVectorPointer<ArrayGroup>& garbage);
+
+        template<class Base>
+        void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& cache,
+                                                         CLanguage<Base>& langC,
+                                                         const std::string& modelName,
+                                                         const std::string& keyName,
+                                                         const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& _loopRev2Groups,
+                                                         void (*generateFunctionNameLoopRev2)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g));
     }
 
 }

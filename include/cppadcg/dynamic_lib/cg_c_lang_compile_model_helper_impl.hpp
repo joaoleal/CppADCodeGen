@@ -436,11 +436,6 @@ namespace CppAD {
         //size_t m = _fun.Range();
         //size_t n = _fun.Domain();
         using namespace std;
-        _cache.str("");
-        _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
-        string model_function(_cache.str());
-
-        map<size_t, std::vector<size_t> >::const_iterator it;
 
         map<size_t, std::vector<size_t> > elements;
         map<size_t, std::vector<set<size_t> > > userJacElLocation; // maps each element to its position in the user jacobian
@@ -467,11 +462,57 @@ namespace CppAD {
             revForSuffix = "dep";
         }
 
-        size_t maxCompressedSize = 0;
+
+        /**
+         * determine to which functions we can provide the jacobian row/column
+         * directly without needing a temporary array (compressed)
+         */
+        map<size_t, bool> ordered;
+        map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
-            if (it->second.size() > maxCompressedSize)
+            size_t index = it->first;
+            const std::vector<size_t>& els = it->second;
+            const std::vector<set<size_t> >& location = userJacElLocation.at(index);
+            assert(els.size() == location.size());
+            assert(els.size() > 0);
+
+            bool passed = true;
+            size_t jacArrayStart = *location[0].begin();
+            for (size_t e = 0; e < els.size(); e++) {
+                if (location[e].size() > 1) {
+                    passed = false; // too many elements
+                    break;
+                }
+                if (*location[e].begin() != jacArrayStart + e) {
+                    passed = false; // wrong order
+                    break;
+                }
+            }
+            ordered[index] = passed;
+        }
+        assert(elements.size() == ordered.size());
+
+        size_t maxCompressedSize = 0;
+        map<size_t, bool>::const_iterator itOrd;
+        for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
+            if (it->second.size() > maxCompressedSize && !itOrd->second)
                 maxCompressedSize = it->second.size();
         }
+
+        if (!_loopTapes.empty()) {
+            /**
+             * with loops
+             */
+            if (forward)
+                generateSparseJacobianWithLoopsSourceFromFor1(sources, userJacElLocation, ordered, maxCompressedSize);
+            else
+                throw 1;
+            return;
+        }
+
+        _cache.str("");
+        _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
+        string model_function(_cache.str());
 
         CLanguage<Base> langC(_baseTypeName);
         std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
@@ -497,22 +538,31 @@ namespace CppAD {
         langC.setArgumentOut("outLocal");
         std::string argsLocal = langC.generateDefaultFunctionArguments();
 
-        for (it = elements.begin(); it != elements.end(); ++it) {
+        bool lastCompressed = true;
+        for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userJacElLocation.at(index);
             assert(els.size() == location.size());
 
-            _cache << "\n"
-                    "   " << functionRevFor << "_" << revForSuffix << index << "(" << argsLocal << ");\n";
-            for (size_t e = 0; e < els.size(); e++) {
-                _cache << "   ";
-                set<size_t>::const_iterator itl;
-                for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                    _cache << "jac[" << (*itl) << "] = ";
-                }
-                _cache << "compressed[" << e << "];\n";
+            _cache << "\n";
+            if (itOrd->second) {
+                _cache << "   outLocal[0] = &jac[" << *location[0].begin() << "];\n";
+            } else if (!lastCompressed) {
+                _cache << "   outLocal[0] = compressed;\n";
             }
+            _cache << "   " << functionRevFor << "_" << revForSuffix << index << "(" << argsLocal << ");\n";
+            if (!itOrd->second) {
+                for (size_t e = 0; e < els.size(); e++) {
+                    _cache << "   ";
+                    set<size_t>::const_iterator itl;
+                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
+                        _cache << "jac[" << (*itl) << "] = ";
+                    }
+                    _cache << "compressed[" << e << "];\n";
+                }
+            }
+            lastCompressed = !itOrd->second;
         }
 
         _cache << "\n"
@@ -1071,6 +1121,14 @@ namespace CppAD {
         std::map<size_t, std::vector<size_t> > elements;
         for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
             elements[_jacSparsity.cols[e]].push_back(_jacSparsity.rows[e]);
+        }
+
+        if (!_loopTapes.empty()) {
+            /**
+             * with loops
+             */
+            prepareSparseForwardOneWithLoops(sources, elements);
+            return;
         }
 
         /**

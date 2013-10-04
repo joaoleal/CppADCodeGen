@@ -201,12 +201,22 @@ namespace CppAD {
          */
         std::vector<std::set<size_t> > _relatedDepCandidates;
         /**
+         * Maps the column groups of each loop model to the set of columns
+         * (loop->group->{columns->{compressed forward 1 position} })
+         */
+        std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopFor1Groups;
+        /**
+         * Jacobian columns with a contribution from non loop equations
+         *  [var]{compressed forward 1 position}
+         */
+        std::map<size_t, std::set<size_t> > _nonLoopFor1Elements;
+        /**
          * Maps the row groups of each loop model to the set of rows
          * (loop->group->{rows->{compressed reverse 2 position} })
          */
         std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopRev2Groups;
         /**
-         * hessian rows with a contribution from non loop equations
+         * Hessian rows with a contribution from non loop equations
          *  [var]{compressed reverse 2 position}
          */
         std::map<size_t, std::set<size_t> > _nonLoopRev2Elements;
@@ -625,7 +635,15 @@ namespace CppAD {
             }
         }
 
+    public:
         static inline std::string baseTypeName();
+
+        template<class T>
+        static void generateFunctionDeclarationSource(std::ostringstream& cache,
+                                                      const std::string& model_function,
+                                                      const std::string& suffix,
+                                                      const std::map<size_t, T>& elements,
+                                                      const std::string& argsDcl);
 
     protected:
 
@@ -701,6 +719,28 @@ namespace CppAD {
                                                               const vector<CGBase>& x,
                                                               bool forward) throw (CGException);
 
+        inline void analyseSparseJacobianWithLoops(const std::vector<size_t>& rows,
+                                                   const std::vector<size_t>& cols,
+                                                   const std::vector<size_t>& location,
+                                                   vector<std::set<size_t> >& noLoopEvalSparsity,
+                                                   vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
+                                                   std::map<LoopModel<Base>*, vector<std::set<size_t> > >& loopsEvalSparsities,
+                                                   std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException);
+
+        virtual void generateSparseJacobianWithLoopsSourceFromFor1(std::map<std::string, std::string>& sources,
+                                                                   const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
+                                                                   const std::map<size_t, bool>& jcolOrdered,
+                                                                   size_t maxCompressedSize) throw (CGException);
+
+        inline virtual void generateFunctionNameLoopFor1(std::ostringstream& cache,
+                                                         const LoopModel<Base>& loop,
+                                                         size_t g);
+
+        inline static void generateFunctionNameLoopFor1(std::ostringstream& cache,
+                                                        const std::string& modelName,
+                                                        const LoopModel<Base>& loop,
+                                                        size_t g);
+
         /***********************************************************************
          * Hessian
          **********************************************************************/
@@ -759,20 +799,19 @@ namespace CppAD {
                                                   std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
                                                   bool useSymmetry);
 
-        void generateGlobalReverseTwoWithLoopsFunctionSource(const std::map<size_t, std::vector<size_t> >& elements,
-                                                             std::map<std::string, std::string>& sources);
-
         inline virtual void generateSparseHessianWithLoopsSourceFromRev2(std::map<std::string, std::string>& sources,
                                                                          const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                          const std::map<size_t, bool>& ordered,
                                                                          size_t maxCompressedSize) throw (CGException);
 
-        inline virtual void generateFunctionDeclarationSourceLoopRev2(std::ostringstream& cache,
-                                                                      CLanguage<Base>& langC);
-
         inline virtual void generateFunctionNameLoopRev2(std::ostringstream& cache,
                                                          const LoopModel<Base>& loop,
                                                          size_t g);
+
+        static inline void generateFunctionNameLoopRev2(std::ostringstream& cache,
+                                                        const std::string& modelName,
+                                                        const LoopModel<Base>& loop,
+                                                        size_t g);
 
         /***********************************************************************
          * Sparsities for forward/reverse
@@ -798,6 +837,14 @@ namespace CppAD {
 
         virtual void generateForwardOneSources(std::map<std::string, std::string>& sources);
 
+        virtual void prepareSparseForwardOneWithLoops(std::map<std::string, std::string>& sources,
+                                                      const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+
+        virtual void createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
+                                                 size_t j,
+                                                 vector<CG<Base> >& jacRow,
+                                                 std::map<std::string, std::string>& sources);
+
         /***********************************************************************
          * Reverse 1 mode
          **********************************************************************/
@@ -820,22 +867,11 @@ namespace CppAD {
                                                              const std::map<size_t, std::vector<size_t> >& elements,
                                                              std::map<std::string, std::string>& sources);
 
-        template<class T>
-        void generateFunctionDeclarationSource(std::ostringstream& cache,
-                                               const std::string& model_function,
-                                               const std::string& suffix,
-                                               const std::map<size_t, T>& elements,
-                                               const std::string& argsDcl);
-
         /**
          * Loops
          */
         virtual void prepareSparseReverseTwoWithLoops(std::map<std::string, std::string>& sources,
                                                       const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
-
-        void generateHessianRowGroups(const LoopModel<Base>& lModel,
-                                      const loops::HessianWithLoopsInfo<Base>& info,
-                                      SmartVectorPointer<loops::HessianRowGroup<Base> >& loopGroups);
 
         /***********************************************************************
          * Sparsities
