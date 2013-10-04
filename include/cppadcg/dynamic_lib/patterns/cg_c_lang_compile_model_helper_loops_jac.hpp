@@ -531,7 +531,7 @@ namespace CppAD {
                 } else {
                     // depends on the iterations indexes
                     set<size_t> usedIter;
-                    OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
+                    OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                     handler.manageOperationNodeMemory(cond);
 
                     ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));

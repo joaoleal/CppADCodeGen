@@ -302,10 +302,20 @@ namespace CppAD {
         }
 
         template<class Base>
-        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
-                                                            const std::set<size_t>& usedIter,
-                                                            size_t maxIter,
-                                                            IndexOperationNode<Base>& iterationIndexOp) {
+        OperationNode<Base>* createIndexConditionExpressionOp(const std::set<size_t>& iterations,
+                                                              const std::set<size_t>& usedIter,
+                                                              size_t maxIter,
+                                                              IndexOperationNode<Base>& iterationIndexOp) {
+            std::vector<size_t> info = createIndexConditionExpression(iterations, usedIter, maxIter);
+            std::vector<Argument<Base> > args(1);
+            args[0] = Argument<Base>(iterationIndexOp);
+
+            return new OperationNode<Base>(CGIndexCondExprOp, info, args);
+        }
+
+        std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
+                                                           const std::set<size_t>& usedIter,
+                                                           size_t maxIter) {
             assert(!iterations.empty());
 
             std::map<size_t, bool> allIters;
@@ -364,10 +374,7 @@ namespace CppAD {
                 }
             }
 
-            std::vector<Argument<Base> > args(1);
-            args[0] = Argument<Base>(iterationIndexOp);
-
-            return new OperationNode<Base>(CGIndexCondExprOp, info, args);
+            return info;
         }
 
         class ArrayElementCopyPattern {
@@ -394,11 +401,22 @@ namespace CppAD {
 
         };
 
+        class ArrayElementGroup {
+        public:
+            std::set<size_t> keys;
+            std::vector<ArrayElementCopyPattern> elements;
+
+            ArrayElementGroup(const std::set<size_t>& k, size_t size) :
+                keys(k),
+                elements(size) {
+            }
+        };
+
         class ArrayGroup {
         public:
             std::auto_ptr<IndexPattern> pattern;
             std::auto_ptr<IndexPattern> startLocPattern;
-            std::vector<ArrayElementCopyPattern> elements;
+            SmartMapValuePointer<size_t, ArrayElementGroup> elCount2elements;
         };
 
         /**
@@ -468,35 +486,42 @@ namespace CppAD {
                         data->startLocPattern.reset(IndexPattern::detect(arrayStart));
                     } else {
                         /**
-                         * check if all calls to this group function provides 
+                         * combine calls to this group function which provide 
                          * the same number of elements
                          */
-                        map<size_t, set<size_t> >::const_iterator itJcols2e = jcols2e.begin();
-                        size_t commonElSize = itJcols2e->second.size();
+                        map<size_t, map<size_t, size_t> > elCount2localIt2jcols;
 
-                        for (++itJcols2e; itJcols2e != jcols2e.end(); ++itJcols2e) {
-                            if (itJcols2e->second.size() != commonElSize) {
-                                commonElSize = 0;
-                                break;
-                            }
+                        map<size_t, set<size_t> >::const_iterator itJcols2e;
+                        size_t localIt = 0;
+                        for (itJcols2e = jcols2e.begin(); itJcols2e != jcols2e.end(); ++itJcols2e, localIt++) {
+                            size_t elCount = itJcols2e->second.size();
+                            elCount2localIt2jcols[elCount][localIt] = itJcols2e->first;
                         }
 
-                        if (commonElSize > 0) {
+                        map<size_t, map<size_t, size_t> > ::const_iterator elC2jcolIt;
+                        for (elC2jcolIt = elCount2localIt2jcols.begin(); elC2jcolIt != elCount2localIt2jcols.end(); ++elC2jcolIt) {
+                            size_t commonElSize = elC2jcolIt->first;
+                            const map<size_t, size_t>& localIt2keys = elC2jcolIt->second;
+
                             // the same number of elements is always provided in each call
-                            std::vector<std::vector<size_t> > compressPos(commonElSize, std::vector<size_t>(jcols2e.size()));
-                            std::vector<std::vector<size_t> > resultPos(commonElSize, std::vector<size_t>(jcols2e.size()));
+                            std::vector<std::map<size_t, size_t> > compressPos(commonElSize);
+                            std::vector<std::map<size_t, size_t> > resultPos(commonElSize);
 
-                            data->elements.resize(commonElSize);
+                            set<size_t> keys;
 
-                            size_t localIt = 0;
-                            for (itJcols2e = jcols2e.begin(); itJcols2e != jcols2e.end(); ++itJcols2e, localIt++) {
-                                size_t key = itJcols2e->first;
+                            map<size_t, size_t>::const_iterator lIt2jcolIt;
+                            for (lIt2jcolIt = localIt2keys.begin(); lIt2jcolIt != localIt2keys.end(); ++lIt2jcolIt) {
+                                size_t localIt = lIt2jcolIt->first;
+                                size_t key = lIt2jcolIt->second;
+
+                                keys.insert(key);
 
                                 const std::vector<std::set<size_t> >& origPos = userElLocation.at(key);
+                                const set<size_t>& compressed = jcols2e.at(key);
 
                                 set<size_t>::const_iterator itE;
                                 size_t e = 0;
-                                for (itE = itJcols2e->second.begin(); itE != itJcols2e->second.end(); ++itE, e++) {
+                                for (itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
                                     assert(origPos[*itE].size() == 1);
                                     resultPos[e][localIt] = *origPos[*itE].begin();
 
@@ -504,13 +529,14 @@ namespace CppAD {
                                 }
                             }
 
+                            ArrayElementGroup* eg = new ArrayElementGroup(keys, commonElSize);
+                            data->elCount2elements.m[commonElSize] = eg;
+
                             for (size_t e = 0; e < commonElSize; e++) {
-                                data->elements[e].resultPattern = IndexPattern::detect(resultPos[e]);
-                                data->elements[e].compressedPattern = IndexPattern::detect(compressPos[e]);
+                                eg->elements[e].resultPattern = IndexPattern::detect(resultPos[e]);
+                                eg->elements[e].compressedPattern = IndexPattern::detect(compressPos[e]);
                             }
 
-                        } else {
-                            throw CGException("Not implemented yet");
                         }
 
                     }
@@ -643,7 +669,7 @@ namespace CppAD {
             typename map<LoopModel<Base>*, map<size_t, ArrayGroup*> >::const_iterator itlg;
             typename map<size_t, ArrayGroup*>::const_iterator itg;
 
-            
+
             for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
                 size_t itCount = itItlg->first;
                 if (itCount > 1) {
@@ -657,6 +683,8 @@ namespace CppAD {
                     for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
                         size_t g = itg->first;
                         ArrayGroup* group = itg->second;
+
+                        const map<size_t, set<size_t> >& key2Compressed = loopGroups.at(&loop).at(g);
 
                         string ident = itCount == 1 ? "   " : "      "; //identation
 
@@ -676,28 +704,71 @@ namespace CppAD {
                             (*generateLocalFunctionName)(out, modelName, loop, g);
                             out << "(" << keyIndexName << ", " << loopFArgs << ");\n";
                         } else {
-                            size_t key = loopGroups.at(&loop).at(g).begin()->first; // only one jrow
+                            size_t key = key2Compressed.begin()->first; // only one jrow
                             out << ident;
                             (*generateLocalFunctionName)(out, modelName, loop, g);
                             out << "(" << key << ", " << loopFArgs << ");\n";
                         }
 
                         if (group->startLocPattern.get() == NULL) {
-                            assert(!group->elements.empty());
+                            assert(!group->elCount2elements.m.empty());
 
-                            for (size_t e = 0; e < group->elements.size(); e++) {
-                                const ArrayElementCopyPattern& ePos = group->elements[e];
+                            std::set<size_t> usedIter;
 
-                                out << ident << resultName << "["
-                                        << CLanguage<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
-                                        << "] += compressed["
-                                        << CLanguage<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
-                                        << "];\n";
+                            // add keys which are never used to usedIter to improve the if/else condition
+                            size_t eKey = 0;
+                            map<size_t, set<size_t> >::const_iterator itKey = key2Compressed.begin();
+                            for (; itKey != key2Compressed.end(); ++itKey) {
+                                size_t key = itKey->first;
+                                for (size_t k = eKey; k < key; k++) {
+                                    usedIter.insert(k);
+                                }
+                                eKey = key + 1;
+                            }
+
+                            bool withIfs = group->elCount2elements.m.size() > 1;
+                            map<size_t, ArrayElementGroup*>::const_iterator itc;
+                            for (itc = group->elCount2elements.m.begin(); itc != group->elCount2elements.m.end(); ++itc) {
+                                const ArrayElementGroup* eg = itc->second;
+                                assert(!eg->elements.empty());
+
+                                string ident2 = ident;
+                                if (withIfs) {
+                                    out << ident;
+                                    if (itc != group->elCount2elements.m.begin())
+                                        out << "} else ";
+                                    if (itc->first != group->elCount2elements.m.rbegin()->first) { // check that it is not the last branch
+                                        out << "if(";
+
+                                        size_t maxKey = key2Compressed.rbegin()->first;
+                                        std::vector<size_t> info = createIndexConditionExpression(eg->keys, usedIter, maxKey);
+                                        CLanguage<Base>::printIndexCondExpr(out, info, keyIndexName);
+                                        out << ") ";
+
+                                        usedIter.insert(eg->keys.begin(), eg->keys.end());
+                                    }
+                                    out << "{\n";
+                                    ident2 += "   ";
+                                }
+
+                                for (size_t e = 0; e < eg->elements.size(); e++) {
+                                    const ArrayElementCopyPattern& ePos = eg->elements[e];
+
+                                    out << ident2 << resultName << "["
+                                            << CLanguage<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
+                                            << "] += compressed["
+                                            << CLanguage<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
+                                            << "];\n";
+                                }
+                            }
+
+                            if (withIfs) {
+                                out << ident << "}\n";
                             }
                         }
 
                         out << "\n";
-                        
+
                         lastCompressed = group->startLocPattern.get() == NULL;
                     }
                 }

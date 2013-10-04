@@ -88,11 +88,15 @@ namespace CppAD {
         inline IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
                                                     const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations);
 
+        inline std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
+                                                                  const std::set<size_t>& usedIter,
+                                                                  size_t maxIter);
+
         template<class Base>
-        OperationNode<Base>* createIndexConditionExpression(const std::set<size_t>& iterations,
-                                                            const std::set<size_t>& usedIter,
-                                                            size_t maxIter,
-                                                            IndexOperationNode<Base>& iterationIndexOp);
+        inline OperationNode<Base>* createIndexConditionExpressionOp(const std::set<size_t>& iterations,
+                                                                     const std::set<size_t>& usedIter,
+                                                                     size_t maxIter,
+                                                                     IndexOperationNode<Base>& iterationIndexOp);
 
         template<class Base>
         inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,

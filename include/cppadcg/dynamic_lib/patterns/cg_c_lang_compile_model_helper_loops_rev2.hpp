@@ -1220,7 +1220,7 @@ namespace CppAD {
                         handler.manageOperationNodeMemory(ifBranch);
                     } else {
                         // depends on the iteration index
-                        OperationNode<Base>* cond = createIndexConditionExpression<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
+                        OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, positions.size() - 1, iterationIndexOp);
                         handler.manageOperationNodeMemory(cond);
 
                         if (ifStart == NULL) {

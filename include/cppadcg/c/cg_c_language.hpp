@@ -344,6 +344,34 @@ namespace CppAD {
         inline virtual ~CLanguage() {
         }
 
+        static inline void printIndexCondExpr(std::ostringstream& out,
+                                              const std::vector<size_t>& info,
+                                              const std::string& index) {
+            CPPADCG_ASSERT_KNOWN(info.size() > 1 && info.size() % 2 == 0, "Invalid number of information elements for an index condition expression operation");
+
+            size_t infoSize = info.size();
+            for (size_t e = 0; e < infoSize; e += 2) {
+                if (e > 0) {
+                    out << " || ";
+                }
+                size_t min = info[e];
+                size_t max = info[e + 1];
+                if (min == max) {
+                    out << index << " == " << min;
+                } else if (min == 0) {
+                    out << index << " <= " << max;
+                } else if (max == std::numeric_limits<size_t>::max()) {
+                    out << min << " <= " << index;
+                } else {
+                    if (infoSize != 2)
+                        out << "(";
+                    out << min << " <= " << index << " && " << index << " <= " << max;
+                    if (infoSize != 2)
+                        out << ")";
+                }
+            }
+        }
+
         /***********************************************************************
          * index patterns
          **********************************************************************/
@@ -1467,34 +1495,13 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of argumets for an index condition expression operation");
             CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != NULL, "Invalid argumet for an index condition expression operation");
             CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argumet for an index condition expression operation");
-            CPPADCG_ASSERT_KNOWN(node.getInfo().size() > 1 && node.getInfo().size() % 2 == 0, "Invalid number of information elements for an index condition expression operation");
 
             const std::vector<size_t>& info = node.getInfo();
 
             IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
             const std::string& index = *iterationIndexOp.getIndex().getName();
 
-            size_t infoSize = info.size();
-            for (size_t e = 0; e < infoSize; e += 2) {
-                if (e > 0) {
-                    _code << " || ";
-                }
-                size_t min = info[e];
-                size_t max = info[e + 1];
-                if (min == max) {
-                    _code << index << " == " << min;
-                } else if (min == 0) {
-                    _code << index << " <= " << max;
-                } else if (max == std::numeric_limits<size_t>::max()) {
-                    _code << min << " <= " << index;
-                } else {
-                    if (infoSize != 2)
-                        _code << "(";
-                    _code << min << " <= " << index << " && " << index << " <= " << max;
-                    if (infoSize != 2)
-                        _code << ")";
-                }
-            }
+            printIndexCondExpr(_code, info, index);
         }
 
         virtual void printStartIf(OperationNode<Base>& node) {
