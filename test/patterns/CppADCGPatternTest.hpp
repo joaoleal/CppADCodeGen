@@ -123,7 +123,7 @@ namespace CppAD {
             if (jacobian_ == MUST_PASS) {
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, MUST_PASS, IGNORE, true);
                 testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
-                //testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE, true);
             }
 
             if (hessian_ == MUST_PASS) {
@@ -241,7 +241,7 @@ namespace CppAD {
             if (jacobian_ == MUST_PASS) {
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, MUST_PASS, IGNORE, true);
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
-                //testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE, true);
             }
 
             if (hessian_ == MUST_PASS) {

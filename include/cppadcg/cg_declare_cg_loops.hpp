@@ -69,6 +69,11 @@ namespace CppAD {
                                                            IndexOperationNode<Base>& iterationIndexOp);
 
         template<class Base>
+        inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
+                                                          size_t i, const CG<Base>& val, IndexPattern* ip,
+                                                          IndexOperationNode<Base>& iterationIndexOp);
+
+        template<class Base>
         inline LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
                                                          LoopStartOperationNode<Base>& loopStart,
                                                          const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,

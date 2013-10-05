@@ -211,6 +211,16 @@ namespace CppAD {
          */
         std::map<size_t, std::set<size_t> > _nonLoopFor1Elements;
         /**
+         * Maps the column groups of each loop model to the set of columns
+         * (loop->group->{row->{compressed reverse 1 position} })
+         */
+        std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > > _loopRev1Groups;
+        /**
+         * Jacobian rows with a contribution from non loop equations
+         *  [eq]{compressed reverse 1 position}
+         */
+        std::map<size_t, std::set<size_t> > _nonLoopRev1Elements;
+        /**
          * Maps the row groups of each loop model to the set of rows
          * (loop->group->{rows->{compressed reverse 2 position} })
          */
@@ -719,6 +729,18 @@ namespace CppAD {
                                                               const vector<CGBase>& x,
                                                               bool forward) throw (CGException);
 
+        inline void prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
+                                                      LoopModel<Base>& lModel,
+                                                      size_t tapeI,
+                                                      const loops::JacobianWithLoopsRowInfo& rowInfo,
+                                                      const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
+                                                      const std::vector<std::map<size_t, CGBase> >& dzDx,
+                                                      IndexOperationNode<Base>& iterationIndexOp,
+                                                      vector<loops::IfElseInfo<Base> >& ifElses,
+                                                      size_t& jacLE,
+                                                      vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                      std::set<size_t>& allLocations);
+
         inline void analyseSparseJacobianWithLoops(const std::vector<size_t>& rows,
                                                    const std::vector<size_t>& cols,
                                                    const std::vector<size_t>& location,
@@ -727,10 +749,17 @@ namespace CppAD {
                                                    std::map<LoopModel<Base>*, vector<std::set<size_t> > >& loopsEvalSparsities,
                                                    std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException);
 
-        virtual void generateSparseJacobianWithLoopsSourceFromFor1(std::map<std::string, std::string>& sources,
-                                                                   const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
-                                                                   const std::map<size_t, bool>& jcolOrdered,
-                                                                   size_t maxCompressedSize) throw (CGException);
+
+        virtual void generateSparseJacobianWithLoopsSourceFromForRev(std::map<std::string, std::string>& sources,
+                                                                     const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
+                                                                     const std::map<size_t, bool>& keyOrdered,
+                                                                     size_t maxCompressedSize,
+                                                                     const std::string& localFunctionTypeName,
+                                                                     const std::string& suffix,
+                                                                     const std::string& keyName,
+                                                                     const std::map<size_t, std::set<size_t> >& nonLoopElements,
+                                                                     const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
+                                                                     void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) throw (CGException);
 
         inline virtual void generateFunctionNameLoopFor1(std::ostringstream& cache,
                                                          const LoopModel<Base>& loop,
@@ -740,6 +769,15 @@ namespace CppAD {
                                                         const std::string& modelName,
                                                         const LoopModel<Base>& loop,
                                                         size_t g);
+
+        inline virtual void generateFunctionNameLoopRev1(std::ostringstream& cache,
+                                                         const LoopModel<Base>& loop,
+                                                         size_t i);
+
+        inline static void generateFunctionNameLoopRev1(std::ostringstream& cache,
+                                                        const std::string& modelName,
+                                                        const LoopModel<Base>& loop,
+                                                        size_t i);
 
         /***********************************************************************
          * Hessian
@@ -842,7 +880,7 @@ namespace CppAD {
 
         virtual void createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
                                                  size_t j,
-                                                 vector<CG<Base> >& jacRow,
+                                                 vector<CG<Base> >& jacCol,
                                                  std::map<std::string, std::string>& sources);
 
         /***********************************************************************
@@ -852,6 +890,14 @@ namespace CppAD {
         virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
 
         virtual void generateReverseOneSources(std::map<std::string, std::string>& sources);
+
+        virtual void prepareSparseReverseOneWithLoops(std::map<std::string, std::string>& sources,
+                                                      const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+
+        virtual void createReverseOneWithLoopsNL(CodeHandler<Base>& handler,
+                                                 size_t i,
+                                                 vector<CG<Base> >& jacRow,
+                                                 std::map<std::string, std::string>& sources);
 
         /***********************************************************************
          * Reverse 2 mode

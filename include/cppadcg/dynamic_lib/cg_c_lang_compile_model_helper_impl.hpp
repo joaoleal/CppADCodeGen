@@ -503,10 +503,17 @@ namespace CppAD {
             /**
              * with loops
              */
-            if (forward)
-                generateSparseJacobianWithLoopsSourceFromFor1(sources, userJacElLocation, ordered, maxCompressedSize);
-            else
-                throw 1;
+            if (forward) {
+                generateSparseJacobianWithLoopsSourceFromForRev(sources, userJacElLocation, ordered, maxCompressedSize,
+                                                                FUNCTION_SPARSE_FORWARD_ONE, "indep", "jcol",
+                                                                _nonLoopFor1Elements, _loopFor1Groups,
+                                                                generateFunctionNameLoopFor1);
+            } else {
+                generateSparseJacobianWithLoopsSourceFromForRev(sources, userJacElLocation, ordered, maxCompressedSize,
+                                                                FUNCTION_SPARSE_REVERSE_ONE, "dep", "jrow",
+                                                                _nonLoopRev1Elements, _loopRev1Groups,
+                                                                generateFunctionNameLoopRev1);
+            }
             return;
         }
 
@@ -1295,6 +1302,14 @@ namespace CppAD {
         std::map<size_t, std::vector<size_t> > elements;
         for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
             elements[_jacSparsity.rows[e]].push_back(_jacSparsity.cols[e]);
+        }
+
+        if (!_loopTapes.empty()) {
+            /**
+             * with loops
+             */
+            prepareSparseReverseOneWithLoops(sources, elements);
+            return;
         }
 
         vector<CGBase> w(m);

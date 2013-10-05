@@ -138,11 +138,11 @@ namespace CppAD {
             map<size_t, vector<CGBase> > jacNl; // by column
 
             for (size_t el = 0; el < row.size(); el++) {
-                size_t il = row[el];
+                size_t inl = row[el];
                 size_t j = col[el];
-                if (il < nonIndexdedEqSize) {
+                if (inl < nonIndexdedEqSize) {
                     // (dy_i/dx_v) elements from equations outside loops
-                    const std::set<size_t>& locations = noLoopEvalLocations[il][j];
+                    const std::set<size_t>& locations = noLoopEvalLocations[inl][j];
 
                     assert(locations.size() == 1);
                     size_t e = *locations.begin();
@@ -155,7 +155,7 @@ namespace CppAD {
 
                 } else {
                     // dz_k/dx_v (for temporary variable)
-                    size_t k = il - nonIndexdedEqSize;
+                    size_t k = inl - nonIndexdedEqSize;
                     dzDx[k][j] = jacNoLoop[el];
                 }
             }
@@ -182,7 +182,6 @@ namespace CppAD {
             //size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
 
             // reset nodes not managed by a handler
-
             if (itl2Eq != loopEqInfo.begin()) {
                 for (size_t j = 0; j < localNodes.size(); j++) {
                     localNodes[j]->resetHandlerCounters();
@@ -358,40 +357,12 @@ namespace CppAD {
                     /**
                      * No loop required
                      */
-                    size_t assignOrAdd = 1; // add
-                    std::vector<Argument<Base> > indexedArgs(2);
-                    std::vector<size_t> aInfo(2);
-
                     pxCustom.resize(indexedLoopResults.size());
                     for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                         const CGBase& val = indexedLoopResults[i].first;
                         IndexPattern* ip = indexedLoopResults[i].second;
 
-                        if (ip != NULL) {
-                            aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
-                            aInfo[1] = assignOrAdd;
-                            indexedArgs[0] = asArgument(val); // indexed expression
-                            indexedArgs[1] = Argument<Base>(iterationIndexOp); // index  ///jrowIndexOp
-
-                            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
-                            handler.manageOperationNodeMemory(yIndexed);
-
-                            pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
-
-                        } else if (val.getOperationNode() != NULL &&
-                                val.getOperationNode()->getOperationType() == CGEndIfOp) {
-
-                            std::vector<size_t> info(1);
-                            info[0] = i; // points to itself
-                            std::vector<Argument<Base> > args(1);
-                            args[0] = Argument<Base>(*val.getOperationNode());
-
-                            pxCustom[i] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
-
-                        } else {
-                            pxCustom[i] = val;
-                        }
-
+                        pxCustom[i] = createLoopDependentFunctionResult(handler, i, val, ip, iterationIndexOp);
                     }
 
                 }
@@ -470,12 +441,12 @@ namespace CppAD {
     template<class Base>
     void CLangCompileModelHelper<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
                                                                     size_t j,
-                                                                    vector<CG<Base> >& jacRow,
+                                                                    vector<CG<Base> >& jacCol,
                                                                     std::map<std::string, std::string>& sources) {
         size_t n = _fun.Domain();
 
         _cache.str("");
-        _cache << "model (forward one) no loop";
+        _cache << "model (forward one, indep " << j << ") no loop";
         const std::string jobName = _cache.str();
 
         CLanguage<Base> langC(_baseTypeName);
@@ -488,7 +459,7 @@ namespace CppAD {
         std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "x", "var", "array"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
-        handler.generateCode(code, langC, jacRow, nameGenHess, _atomicFunctions, jobName);
+        handler.generateCode(code, langC, jacCol, nameGenHess, _atomicFunctions, jobName);
 
         handler.resetNodes();
     }

@@ -49,7 +49,7 @@ namespace CppAD {
 
         assert(rows.size() == cols.size());
         assert(rows.size() == location.size());
-        
+
         /**
          * determine sparsities
          */
@@ -266,7 +266,7 @@ namespace CppAD {
         vector<CGBase> tmps;
 
         // jacobian for temporaries
-        std::map<size_t, std::map<size_t, CGBase> > dzDx;
+        std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != NULL ? _funNoLoops->getTemporaryDependentCount() : 0);
 
         // jacobian for equations outside loops
         vector<CGBase> jacNoLoop;
@@ -328,9 +328,6 @@ namespace CppAD {
             std::vector<JacobianWithLoopsRowInfo>& eqs = itl2Eq->second;
             ADFun<CGBase>& fun = lModel.getTape();
 
-            size_t nIndexed = lModel.getIndexedIndepIndexes().size();
-            size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
-
             /**
              * make the loop start
              */
@@ -385,57 +382,11 @@ namespace CppAD {
             for (size_t tapeI = 0; tapeI < eqs.size(); tapeI++) {
                 JacobianWithLoopsRowInfo& rowInfo = eqs[tapeI];
 
-                /**
-                 * indexed variable contributions
-                 */
-                // tape J index -> {locationIt0, locationIt1, ...}
-                std::map<size_t, std::vector<size_t> >::iterator itJ2Pos;
-                for (itJ2Pos = rowInfo.indexedPositions.begin(); itJ2Pos != rowInfo.indexedPositions.end(); ++itJ2Pos) {
-                    size_t tapeJ = itJ2Pos->first;
-                    const std::vector<size_t>& positions = itJ2Pos->second;
-
-                    indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
-                                                                        dyiDxtape[tapeI][tapeJ], *iterationIndexOp, ifElses,
-                                                                        allLocations);
-                }
-
-                /**
-                 * non-indexed variable contributions
-                 */
-                // original J index -> {locationIt0, locationIt1, ...}
-                for (itJ2Pos = rowInfo.nonIndexedPositions.begin(); itJ2Pos != rowInfo.nonIndexedPositions.end(); ++itJ2Pos) {
-                    size_t j = itJ2Pos->first;
-                    const std::vector<size_t>& positions = itJ2Pos->second;
-
-                    CGBase jacVal = Base(0);
-
-                    // non-indexed variables used directly
-                    const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
-                    if (pos != NULL) {
-                        size_t tapeJ = pos->tape;
-                        typename std::map<size_t, CGBase>::const_iterator itVal = dyiDxtape[tapeI].find(tapeJ);
-                        if (itVal != dyiDxtape[tapeI].end()) {
-                            jacVal += itVal->second;
-                        }
-                    }
-
-                    // non-indexed variables used through temporary variables
-                    std::map<size_t, std::set<size_t> >::const_iterator itks = rowInfo.tmpEvals.find(j);
-                    if (itks != rowInfo.tmpEvals.end()) {
-                        const std::set<size_t>& ks = itks->second;
-                        std::set<size_t>::const_iterator itk;
-                        for (itk = ks.begin(); itk != ks.end(); ++itk) {
-                            size_t k = *itk;
-                            size_t tapeJ = nIndexed + nNonIndexed + k;
-
-                            jacVal += dyiDxtape[tapeI][tapeJ] * dzDx[k][j];
-                        }
-                    }
-
-                    indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
-                                                                        jacVal, *iterationIndexOp, ifElses,
-                                                                        allLocations);
-                }
+                prepareSparseJacobianRowWithLoops(handler, lModel,
+                                                  tapeI, rowInfo,
+                                                  dyiDxtape, dzDx,
+                                                  *iterationIndexOp, ifElses,
+                                                  jacLE, indexedLoopResults, allLocations);
             }
 
             indexedLoopResults.resize(jacLE);
@@ -464,6 +415,79 @@ namespace CppAD {
         }
 
         return jac;
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
+                                                                          LoopModel<Base>& lModel,
+                                                                          size_t tapeI,
+                                                                          const loops::JacobianWithLoopsRowInfo& rowInfo,
+                                                                          const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
+                                                                          const std::vector<std::map<size_t, CGBase> >& dzDx,
+                                                                          IndexOperationNode<Base>& iterationIndexOp,
+                                                                          vector<loops::IfElseInfo<Base> >& ifElses,
+                                                                          size_t& jacLE,
+                                                                          vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                                          std::set<size_t>& allLocations) {
+        using namespace std;
+        using namespace loops;
+        using CppAD::vector;
+
+        size_t nnz = _jacSparsity.rows.size();
+        size_t nIndexed = lModel.getIndexedIndepIndexes().size();
+        size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
+
+        /**
+         * indexed variable contributions
+         */
+        // tape J index -> {locationIt0, locationIt1, ...}
+        map<size_t, std::vector<size_t> >::const_iterator itJ2Pos;
+        for (itJ2Pos = rowInfo.indexedPositions.begin(); itJ2Pos != rowInfo.indexedPositions.end(); ++itJ2Pos) {
+            size_t tapeJ = itJ2Pos->first;
+            const std::vector<size_t>& positions = itJ2Pos->second;
+
+            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+                                                                dyiDxtape[tapeI].at(tapeJ), iterationIndexOp, ifElses,
+                                                                allLocations);
+        }
+
+        /**
+         * non-indexed variable contributions
+         */
+        // original J index -> {locationIt0, locationIt1, ...}
+        for (itJ2Pos = rowInfo.nonIndexedPositions.begin(); itJ2Pos != rowInfo.nonIndexedPositions.end(); ++itJ2Pos) {
+            size_t j = itJ2Pos->first;
+            const std::vector<size_t>& positions = itJ2Pos->second;
+
+            CGBase jacVal = Base(0);
+
+            // non-indexed variables used directly
+            const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
+            if (pos != NULL) {
+                size_t tapeJ = pos->tape;
+                typename std::map<size_t, CGBase>::const_iterator itVal = dyiDxtape[tapeI].find(tapeJ);
+                if (itVal != dyiDxtape[tapeI].end()) {
+                    jacVal += itVal->second;
+                }
+            }
+
+            // non-indexed variables used through temporary variables
+            std::map<size_t, std::set<size_t> >::const_iterator itks = rowInfo.tmpEvals.find(j);
+            if (itks != rowInfo.tmpEvals.end()) {
+                const std::set<size_t>& ks = itks->second;
+                std::set<size_t>::const_iterator itk;
+                for (itk = ks.begin(); itk != ks.end(); ++itk) {
+                    size_t k = *itk;
+                    size_t tapeJ = nIndexed + nNonIndexed + k;
+
+                    jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx[k].at(j);
+                }
+            }
+
+            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+                                                                jacVal, iterationIndexOp, ifElses,
+                                                                allLocations);
+        }
     }
 
 

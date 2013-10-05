@@ -150,6 +150,41 @@ namespace CppAD {
             return deps;
         }
 
+        template<class Base>
+        inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
+                                                          size_t i, const CG<Base>& val, IndexPattern* ip,
+                                                          IndexOperationNode<Base>& iterationIndexOp) {
+
+            size_t assignOrAdd = 1; // add
+            std::vector<Argument<Base> > indexedArgs(2);
+            std::vector<size_t> aInfo(2);
+
+            if (ip != NULL) {
+                aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
+                aInfo[1] = assignOrAdd;
+                indexedArgs[0] = asArgument(val); // indexed expression
+                indexedArgs[1] = Argument<Base>(iterationIndexOp); // index  ///jrowIndexOp
+
+                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
+                handler.manageOperationNodeMemory(yIndexed);
+
+                return handler.createCG(Argument<Base>(*yIndexed));
+
+            } else if (val.getOperationNode() != NULL &&
+                    val.getOperationNode()->getOperationType() == CGEndIfOp) {
+
+                std::vector<size_t> info(1);
+                info[0] = i; // points to itself
+                std::vector<Argument<Base> > args(1);
+                args[0] = Argument<Base>(*val.getOperationNode());
+
+                return handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+
+            } else {
+                return val;
+            }
+        }
+
         /***************************************************************************
          *  Methods related with loop insertion into the operation graph
          **************************************************************************/

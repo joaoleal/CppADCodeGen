@@ -382,40 +382,12 @@ namespace CppAD {
                     /**
                      * No loop required
                      */
-                    size_t assignOrAdd = 1; // add
-                    std::vector<Argument<Base> > indexedArgs(2);
-                    std::vector<size_t> aInfo(2);
-
                     pxCustom.resize(indexedLoopResults.size());
                     for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                         const CGBase& val = indexedLoopResults[i].first;
                         IndexPattern* ip = indexedLoopResults[i].second;
 
-                        if (ip != NULL) {
-                            aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
-                            aInfo[1] = assignOrAdd;
-                            indexedArgs[0] = asArgument(val); // indexed expression
-                            indexedArgs[1] = Argument<Base>(*info.iterationIndexOp); // index  ///jrowIndexOp
-
-                            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
-                            handler.manageOperationNodeMemory(yIndexed);
-
-                            pxCustom[i] = handler.createCG(Argument<Base>(*yIndexed));
-
-                        } else if (val.getOperationNode() != NULL &&
-                                val.getOperationNode()->getOperationType() == CGEndIfOp) {
-
-                            std::vector<size_t> info(1);
-                            info[0] = i; // points to itself
-                            std::vector<Argument<Base> > args(1);
-                            args[0] = Argument<Base>(*val.getOperationNode());
-
-                            pxCustom[i] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
-
-                        } else {
-                            pxCustom[i] = val;
-                        }
-
+                        pxCustom[i] = createLoopDependentFunctionResult(handler, i, val, ip, *info.iterationIndexOp);
                     }
 
                 }
