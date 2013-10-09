@@ -13,6 +13,7 @@
  * Author: Joao Leal
  */
 #include <vector>
+#include <valarray>
 
 #include <gtest/gtest.h>
 
@@ -50,24 +51,15 @@ namespace CppAD {
     protected:
 
         template<class T>
-        inline ::testing::AssertionResult compareValues(const std::vector<T>& depCGen,
-                                                        const std::vector<T>& dep,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-
-            return compareValues(depCGen, &dep[0], "depCGEN", "depTape", epsilonR, epsilonA);
-        }
-
-        template<class T>
-        inline ::testing::AssertionResult compareValues(const std::vector<std::vector<T> >& depCGen,
-                                                        const std::vector<std::vector<T> >& dep,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        static inline ::testing::AssertionResult compareValues(const std::vector<std::vector<T> >& depCGen,
+                                                               const std::vector<std::vector<T> >& dep,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             assert(depCGen.size() == dep.size());
 
             for (size_t i = 0; i < depCGen.size(); i++) {
-                ::testing::AssertionResult r = compareValues(depCGen[i], &dep[i][0], "depCGEN", "depTape", epsilonR, epsilonA);
+                ::testing::AssertionResult r = compareValues<T>(depCGen[i], dep[i], epsilonR, epsilonA);
                 if (!r) {
                     return ::testing::AssertionFailure() << "Comparison failed for array " << i << ":\n" << r.failure_message();
                 }
@@ -76,19 +68,35 @@ namespace CppAD {
             return ::testing::AssertionSuccess();
         }
 
-        template<class VectorT, class T>
-        inline ::testing::AssertionResult compareValues(const VectorT& cgen, const VectorT& orig,
-                                                        const std::string& nameCgen, const std::string& nameOrig,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-            return compareValues(cgen, &orig[0], nameCgen, nameOrig, epsilonR, epsilonA);
+        template<class T>
+        static inline ::testing::AssertionResult compareValues(const std::vector<T>& cgen,
+                                                               const std::vector<T>& orig,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+            return compareValues<std::vector<T>, std::vector<T>, T>(cgen, orig, epsilonR, epsilonA);
         }
 
-        template<class VectorT, class T>
-        inline ::testing::AssertionResult compareValues(const VectorT& cgen, const T* orig,
-                                                        const std::string& nameCgen, const std::string& nameOrig,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        template<class T>
+        static inline ::testing::AssertionResult compareValues(const CppAD::vector<T>& cgen,
+                                                               const CppAD::vector<T>& orig,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+            return compareValues<CppAD::vector<T>, CppAD::vector<T>, T>(cgen, orig, epsilonR, epsilonA);
+        }
+
+        template<class T>
+        static inline ::testing::AssertionResult compareValues(const std::valarray<T>& cgen,
+                                                               const std::valarray<T>& orig,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+            return compareValues<std::valarray<T>, std::valarray<T>, T>(cgen, orig, epsilonR, epsilonA);
+        }
+
+        template<class VectorT, class VectorT2, class T>
+        static inline ::testing::AssertionResult compareValues(const VectorT& cgen,
+                                                               const VectorT2& orig,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
             std::ostringstream ss;
             for (size_t i = 0; i < cgen.size(); i++) {
                 ::testing::AssertionResult r = nearEqual(cgen[i], orig[i], epsilonR, epsilonA);
@@ -104,10 +112,10 @@ namespace CppAD {
         }
 
         template<class VectorBase, class T>
-        inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
-                                                        const CppAD::vector<CppAD::CG<T> >& dep,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        static inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
+                                                               const CppAD::vector<CppAD::CG<T> >& dep,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             std::vector<T> depd(dep.size());
 
@@ -115,14 +123,14 @@ namespace CppAD {
                 depd[i] = dep[i].getValue();
             }
 
-            return CppADCGTest::compareValues(depCGen, &depd[0], "depCGEN", "depTape", epsilonR, epsilonA);
+            return compareValues(depCGen, &depd[0], epsilonR, epsilonA);
         }
 
         template<class VectorBase, class T>
-        inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
-                                                        const std::vector<CppAD::CG<T> >& dep,
-                                                        T epsilonR = std::numeric_limits<T>::epsilon() * 100,
-                                                        T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        static inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
+                                                               const std::vector<CppAD::CG<T> >& dep,
+                                                               T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                               T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
             std::vector<T> depd(dep.size());
 
@@ -130,11 +138,11 @@ namespace CppAD {
                 depd[i] = dep[i].getValue();
             }
 
-            return CppADCGTest::compareValues(depCGen, &depd[0], "depCGEN", "depTape", epsilonR, epsilonA);
+            return compareValues(depCGen, &depd[0], epsilonR, epsilonA);
         }
 
         template<class VectorBool>
-        inline void compareBoolValues(const VectorBool& expected, const VectorBool& value) {
+        static inline void compareBoolValues(const VectorBool& expected, const VectorBool& value) {
             ASSERT_EQ(expected.size(), value.size());
             for (size_t i = 0; i < expected.size(); i++) {
                 ASSERT_EQ(expected[i], value[i]);
@@ -142,7 +150,7 @@ namespace CppAD {
         }
 
         template<class VectorSet>
-        inline void compareVectorSetValues(const VectorSet& expected, const VectorSet& value) {
+        static inline void compareVectorSetValues(const VectorSet& expected, const VectorSet& value) {
             ASSERT_EQ(expected.size(), value.size());
             for (size_t i = 0; i < expected.size(); i++) {
                 ASSERT_EQ(expected[i].size(), value[i].size());
@@ -155,9 +163,9 @@ namespace CppAD {
         }
 
         template <class T>
-        inline ::testing::AssertionResult nearEqual(const T &x, const T &y,
-                                                    const T &r = std::numeric_limits<T>::epsilon() * 100,
-                                                    const T &a = std::numeric_limits<T>::epsilon() * 100) throw (CGException) {
+        static inline ::testing::AssertionResult nearEqual(const T &x, const T &y,
+                                                           const T &r = std::numeric_limits<T>::epsilon() * 100,
+                                                           const T &a = std::numeric_limits<T>::epsilon() * 100) throw (CGException) {
 
             T zero(0);
             if (r <= zero)

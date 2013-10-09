@@ -54,6 +54,11 @@ namespace CppAD {
 
     template<class Base>
     class ScopePathElement;
+    
+    /**************************************************************************/
+    class SparseForjacHessianWorkJac;
+    class SparseForjacHessianWorkHes;
+    class SparseForjacHessianWork;
 
     /***************************************************************************
      * Nodes
