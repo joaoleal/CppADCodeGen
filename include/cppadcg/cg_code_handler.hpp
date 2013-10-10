@@ -652,7 +652,18 @@ namespace CppAD {
 
             CGOpCode op = code.getOperationType();
 
-            if (code.getTotalUsageCount() == 1) {
+            if (op == CGAliasOp) {
+                /**
+                 * Alias operations are always followed so that there is a 
+                 * correct usage count at the operation that it points to
+                 */
+                assert(code.getArguments().size() == 1);
+                OperationNode<Base>* arg = code.getArguments()[0].getOperation();
+                if (arg != NULL) {
+                    markCodeBlockUsed(*arg);
+                }
+
+            } else if (code.getTotalUsageCount() == 1) {
                 // first time this operation is visited
 
                 size_t previousScope = _currentScopeColor;
@@ -807,6 +818,18 @@ namespace CppAD {
         virtual void checkVariableCreation(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
+            if (code.getOperationType() == CGAliasOp) {
+                /**
+                 * avoid creating temporary variables for alias operations,
+                 * the temporary should be the variable where it points to
+                 */
+                assert(args.size() == 1);
+                if (args[0].getOperation() != NULL) {
+                    checkVariableCreation(*args[0].getOperation());
+                }
+                return;
+            }
+
             typename std::vector<Argument<Base> >::const_iterator it;
 
             for (it = args.begin(); it != args.end(); ++it) {
@@ -863,17 +886,21 @@ namespace CppAD {
                         } else if (aType == CGLoopEndOp || aType == CGElseIfOp ||
                                 aType == CGElseOp || aType == CGEndIfOp) {
                             continue; // already added
+                        } else if (aType == CGAliasOp) {
+                            continue; // should never be added to the evaluation queue
+                        } else if (aType == CGLoopStartOp) {
+                            if (arg.getVariableID() == 0) {
+                                addToEvaluationQueue(arg);
+                                // ID value is not really used but must be non-zero
+                                arg.setVariableID(std::numeric_limits<size_t>::max());
+                            }
                         } else {
                             size_t argIndex = it - args.begin();
-                            if (aType == CGLoopStartOp) {
-                                if (arg.getVariableID() == 0) {
-                                    addToEvaluationQueue(arg);
-                                    // ID value is not really used but must be non-zero
-                                    arg.setVariableID(std::numeric_limits<size_t>::max());
-                                }
-                            } else if (_lang->createsNewVariable(arg) ||
+                            if (_lang->createsNewVariable(arg) ||
                                     _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+
                                 addToEvaluationQueue(arg);
+
                                 if (arg.getVariableID() == 0) {
                                     if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
                                         arg.setVariableID(_idAtomicCount);
@@ -1181,15 +1208,19 @@ namespace CppAD {
 
                     arg.increaseUsageCount();
 
-                    if (arg.getLastUsageEvaluationOrder() < code.getEvaluationOrder()) {
-                        arg.setLastUsageEvaluationOrder(code.getEvaluationOrder());
-                    }
+                    size_t order = code.getEvaluationOrder();
+                    OperationNode<Base>* aa = getOperationFromAlias(arg); // follow alias!
+                    if (aa != NULL) {
+                        if (aa->getLastUsageEvaluationOrder() < order) {
+                            aa->setLastUsageEvaluationOrder(order);
+                        }
 
-                    if (_loopDepth >= 0 &&
-                            arg.getEvaluationOrder() < _loopStartEvalOrder[_loopDepth] &&
-                            isTemporary(arg)) {
-                        // outer variable used inside the loop
-                        _loopOuterVars[_loopDepth].insert(&arg);
+                        if (_loopDepth >= 0 &&
+                                aa->getEvaluationOrder() < _loopStartEvalOrder[_loopDepth] &&
+                                isTemporary(*aa)) {
+                            // outer variable used inside the loop
+                            _loopOuterVars[_loopDepth].insert(aa);
+                        }
                     }
                 }
             }
@@ -1203,8 +1234,11 @@ namespace CppAD {
                 typename std::set<OperationNode<Base>*>::const_iterator it;
                 for (it = outerLoopUsages.begin(); it != outerLoopUsages.end(); ++it) {
                     OperationNode<Base>* outerVar = *it;
-                    if (outerVar->getLastUsageEvaluationOrder() < code.getEvaluationOrder())
-                        outerVar->setLastUsageEvaluationOrder(code.getEvaluationOrder());
+                    size_t order = code.getEvaluationOrder();
+
+                    OperationNode<Base>* aa = getOperationFromAlias(*outerVar); // follow alias!
+                    if (aa != NULL && aa->getLastUsageEvaluationOrder() < order)
+                        aa->setLastUsageEvaluationOrder(order);
                 }
 
                 _loopDepth--;
@@ -1272,6 +1306,19 @@ namespace CppAD {
 
         inline bool isTemporaryArray(const OperationNode<Base>& arg) const {
             return arg.getOperationType() == CGArrayCreationOp;
+        }
+
+        inline static OperationNode<Base>* getOperationFromAlias(OperationNode<Base>& alias) {
+            if (alias.getOperationType() != CGAliasOp) {
+                return &alias;
+            } else {
+                OperationNode<Base>* aa = &alias;
+                do {
+                    assert(aa->getArguments().size() == 1);
+                    aa = aa->getArguments()[0].getOperation();
+                } while (aa != NULL && aa->getOperationType() == CGAliasOp);
+                return aa;
+            }
         }
 
         inline void resetManagedNodes() {

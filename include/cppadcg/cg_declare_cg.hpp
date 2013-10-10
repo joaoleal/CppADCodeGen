@@ -54,7 +54,7 @@ namespace CppAD {
 
     template<class Base>
     class ScopePathElement;
-    
+
     /**************************************************************************/
     class SparseForjacHessianWorkJac;
     class SparseForjacHessianWorkHes;
@@ -107,7 +107,7 @@ namespace CppAD {
     /***************************************************************************
      * Languages
      **************************************************************************/
-    
+
     template<class Base>
     class CLanguage;
 
@@ -159,6 +159,9 @@ namespace CppAD {
 
     template<class Base>
     class SmartVectorPointer;
+
+    template<class Key, class Value>
+    class SmartMapValuePointer;
 
     /***************************************************************************
      * 

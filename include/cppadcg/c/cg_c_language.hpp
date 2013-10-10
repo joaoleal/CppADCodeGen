@@ -1116,12 +1116,7 @@ namespace CppAD {
             const Argument<Base>& left = op.getArguments()[0];
             const Argument<Base>& right = op.getArguments()[1];
 
-            const OperationNode<Base>* opRight = right.getOperation();
-            bool encloseRight = opRight != NULL &&
-                    opRight->getVariableID() == 0 &&
-                    opRight->getOperationType() != CGDivOp &&
-                    opRight->getOperationType() != CGMulOp &&
-                    !isFunction(opRight->getOperationType());
+            bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
             print(left);
             _code << " - ";
@@ -1134,20 +1129,28 @@ namespace CppAD {
             }
         }
 
+        static inline bool encloseInParenthesesDiv(const OperationNode<Base>* node) {
+            while (node != NULL) {
+                if (node->getVariableID() != 0)
+                    return false;
+                if (node->getOperationType() == CGAliasOp)
+                    node = node->getArguments()[0].getOperation();
+                else
+                    break;
+            }
+            return node != NULL &&
+                    node->getVariableID() == 0 &&
+                    !isFunction(node->getOperationType());
+        }
+
         virtual void printOperationDiv(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for division");
 
             const Argument<Base>& left = op.getArguments()[0];
             const Argument<Base>& right = op.getArguments()[1];
 
-            const OperationNode<Base>* opLeft = left.getOperation();
-            bool encloseLeft = opLeft != NULL &&
-                    opLeft->getVariableID() == 0 &&
-                    !isFunction(opLeft->getOperationType());
-            const OperationNode<Base>* opRight = right.getOperation();
-            bool encloseRight = opRight != NULL &&
-                    opRight->getVariableID() == 0 &&
-                    !isFunction(opRight->getOperationType());
+            bool encloseLeft = encloseInParenthesesDiv(left.getOperation());
+            bool encloseRight = encloseInParenthesesDiv(right.getOperation());
 
             if (encloseLeft) {
                 _code << "(";
@@ -1166,24 +1169,30 @@ namespace CppAD {
             }
         }
 
+        static inline bool encloseInParenthesesMul(const OperationNode<Base>* node) {
+            while (node != NULL) {
+                if (node->getVariableID() != 0)
+                    return false;
+                else if (node->getOperationType() == CGAliasOp)
+                    node = node->getArguments()[0].getOperation();
+                else
+                    break;
+            }
+            return node != NULL &&
+                    node->getVariableID() == 0 &&
+                    node->getOperationType() != CGDivOp &&
+                    node->getOperationType() != CGMulOp &&
+                    !isFunction(node->getOperationType());
+        }
+
         virtual void printOperationMul(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for multiplication");
 
             const Argument<Base>& left = op.getArguments()[0];
             const Argument<Base>& right = op.getArguments()[1];
 
-            const OperationNode<Base>* opLeft = left.getOperation();
-            bool encloseLeft = opLeft != NULL &&
-                    opLeft->getVariableID() == 0 &&
-                    opLeft->getOperationType() != CGDivOp &&
-                    opLeft->getOperationType() != CGMulOp &&
-                    !isFunction(opLeft->getOperationType());
-            const OperationNode<Base>* opRight = right.getOperation();
-            bool encloseRight = opRight != NULL &&
-                    opRight->getVariableID() == 0 &&
-                    opRight->getOperationType() != CGDivOp &&
-                    opRight->getOperationType() != CGMulOp &&
-                    !isFunction(opRight->getOperationType());
+            bool encloseLeft = encloseInParenthesesMul(left.getOperation());
+            bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
             if (encloseLeft) {
                 _code << "(";
@@ -1207,12 +1216,7 @@ namespace CppAD {
 
             const Argument<Base>& arg = op.getArguments()[0];
 
-            const OperationNode<Base>* scf = arg.getOperation();
-            bool enclose = scf != NULL &&
-                    scf->getVariableID() == 0 &&
-                    scf->getOperationType() != CGDivOp &&
-                    scf->getOperationType() != CGMulOp &&
-                    !isFunction(scf->getOperationType());
+            bool enclose = encloseInParenthesesMul(arg.getOperation());
 
             _code << "-";
             if (enclose) {
