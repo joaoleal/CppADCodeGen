@@ -115,47 +115,6 @@ namespace CppAD {
             return jacTapeSparsity_;
         }
 
-        inline std::map<size_t, std::map<size_t, CGB> > evaluateJacobian4Temporaries(const vector<CGB>& x,
-                                                                                     const vector<std::set<size_t> >& noLoopEvalJacSparsity) {
-            using namespace std;
-
-            size_t nonIndexdedEqSize = dependentIndexes_.size();
-
-            // jacobian for equations outside loops
-            vector<CGB> jacNoLoop;
-            // jacobian for temporaries
-            map<size_t, map<size_t, CGB> > dzDx;
-
-            std::vector<size_t> row, col;
-            generateSparsityIndexes(noLoopEvalJacSparsity, row, col);
-
-            if (row.size() > 0) {
-                jacNoLoop.resize(row.size());
-
-                //printSparsityPattern(_funNoLoops->getJacobianSparsity(), "jacobian No Loops");
-                //printSparsityPattern(noLoopEvalJacSparsity, "jacobian No Loops - eval");
-
-                CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
-                if (estimateBestJacobianADMode(row, col)) {
-                    fun_->SparseJacobianForward(x, getJacobianSparsity(), row, col, jacNoLoop, work);
-                } else {
-                    fun_->SparseJacobianReverse(x, getJacobianSparsity(), row, col, jacNoLoop, work);
-                }
-
-                for (size_t el = 0; el < row.size(); el++) {
-                    size_t inl = row[el];
-                    size_t j = col[el];
-                    assert(inl >= nonIndexdedEqSize);
-
-                    // dz_k/dx_v (for temporary variable)
-                    size_t k = inl - nonIndexdedEqSize;
-                    dzDx[k][j] = jacNoLoop[el];
-                }
-            }
-
-            return dzDx;
-        }
-
         inline void evalHessianSparsity() {
             if (!hessSparsity_) {
                 size_t mo = dependentIndexes_.size();
