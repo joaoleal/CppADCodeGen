@@ -878,6 +878,40 @@ namespace CppAD {
             return 0;
         }
     }
+
+    template<class Base>
+    inline void printModel(ADFun<CG<Base> >& fun) {
+        std::vector<std::string> depNames;
+        std::vector<std::string> indepNames;
+        printModel(fun, depNames, indepNames);
+    }
+
+    template<class Base>
+    inline void printModel(ADFun<CG<Base> >& fun,
+                           const std::vector<std::string>& depNames,
+                           const std::vector<std::string>& indepNames) {
+        assert(depNames.size() <= fun.Range());
+        assert(indepNames.size() <= fun.Domain());
+
+        CodeHandler<Base> handler;
+
+        vector<CG<Base> > indep0(fun.Domain());
+        handler.makeVariables(indep0);
+
+        vector<CG<Base> > dep0 = fun.Forward(0, indep0);
+
+        CLanguage<double> langC("double");
+
+        /**
+         * generate the source code
+         */
+        CLangCustomVariableNameGenerator<double> nameGen(depNames, indepNames,
+                                                         "y", "x", "z", "array");
+
+        std::ostringstream code;
+        handler.generateCode(code, langC, dep0, nameGen);
+        std::cout << "\n" << code.str() << std::endl;
+    }
 }
 
 #endif
