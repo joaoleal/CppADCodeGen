@@ -29,5 +29,5 @@ CMakeLists.txt CppADCodeGen CMake input file.
 COPYING        Statement of user license to use software.
 doxyfile.in    Control file for CppADCodeGen developer documentation.
 epl-v10.txt    A copy of the Eclipse Public License version 1.
-gpl2.txt       A copy of the GNU General Public License version 2.
+gpl3.txt       A copy of the GNU General Public License version 3.
 INSTALL        Points to README file.
