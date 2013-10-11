@@ -24,13 +24,13 @@ int main(void) {
     typedef AD<CGD> ADCG;
 
     // independent variable vector
-    std::vector<ADCG> U(2);
+    CppAD::vector<ADCG> U(2);
     U[0] = 2.;
     U[1] = 3.;
     Independent(U);
 
     // dependent variable vector 
-    std::vector<ADCG> Z(1);
+    CppAD::vector<ADCG> Z(1);
 
     // the model
     ADCG a = U[0] / 1. + U[1] * U[1];
@@ -39,7 +39,7 @@ int main(void) {
     ADFun<CGD> fun(U, Z);
 
     // independent variable vector, indices, values, and declaration
-    std::vector<double> u(2);
+    CppAD::vector<double> u(2);
     u[0] = 2.;
     u[1] = 3.;
 
@@ -49,10 +49,10 @@ int main(void) {
      */
     CodeHandler<double> handler;
 
-    std::vector<CGD> indVars(2);
+    CppAD::vector<CGD> indVars(2);
     handler.makeVariables(indVars);
 
-    std::vector<CGD> jac = fun.SparseJacobian(indVars);
+    CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
 
     CLanguage<double> langC("double");
     CLangDefaultVariableNameGenerator<double> nameGen;
