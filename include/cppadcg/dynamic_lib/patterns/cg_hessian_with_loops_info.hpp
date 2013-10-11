@@ -97,12 +97,12 @@ namespace CppAD {
                  * evaluate loop model jacobian
                  */
                 std::vector<size_t> row, col;
-                generateSparsityIndexes(evalJacSparsity, row, col);
+                extra::generateSparsityIndexes(evalJacSparsity, row, col);
                 if (row.size() > 0) {
                     vector<CG<Base> > jacLoop(row.size());
 
                     CppAD::sparse_jacobian_work work; // temporary structure for CppAD
-                    if (estimateBestJacobianADMode(row, col)) {
+                    if (extra::estimateBestJacobianADMode(row, col)) {
                         fun.SparseJacobianForward(x, jacTapeSparsity, row, col, jacLoop, work);
                     } else {
                         fun.SparseJacobianReverse(x, jacTapeSparsity, row, col, jacLoop, work);
@@ -120,6 +120,8 @@ namespace CppAD {
             }
 
             inline void evalLoopModelJacobianHessian() {
+                using namespace CppAD::extra;
+                
                 ADFun<CG<Base> >& fun = model->getTape();
 
                 std::vector<size_t> jacRow, jacCol;

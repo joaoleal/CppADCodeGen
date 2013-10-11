@@ -274,7 +274,7 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
 TEST_F(CppADCGPatternCstrTest, Atomic) {
 
     using namespace CppAD;
-
+    using namespace CppAD::extra;
 
     std::string modelName = "ctsr";
 

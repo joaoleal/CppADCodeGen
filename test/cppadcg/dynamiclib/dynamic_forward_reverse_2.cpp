@@ -18,7 +18,7 @@ namespace CppAD {
 
 #define _MODEL1
 
-    class CppADCGDynamicForRevTest2 : public CppADCGTest {
+    class CppADCGDynamicForRevTest : public CppADCGTest {
     protected:
         const std::string _modelName;
         const static size_t n;
@@ -29,7 +29,7 @@ namespace CppAD {
         DynamicLibModel<double>* _model;
     public:
 
-        inline CppADCGDynamicForRevTest2(bool verbose = false, bool printValues = false) :
+        inline CppADCGDynamicForRevTest(bool verbose = false, bool printValues = false) :
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),
@@ -44,9 +44,12 @@ namespace CppAD {
             typedef CG<Base> CGD;
             typedef AD<CGD> ADCG;
 
+#ifdef _MODEL1
+            for (size_t j = 0; j < n; j++)
+                x[j] = j + 2;
+#else
             x[0] = 0.5;
-            x[1] = 1.5;
-
+#endif
             // independent variables
             std::vector<ADCG> u(n);
             for (size_t j = 0; j < n; j++)
@@ -60,9 +63,14 @@ namespace CppAD {
             /**
              * create the CppAD tape as usual
              */
-            Z[0] = 1.5 * x[0] + 1;
-            Z[1] = 1.0 * x[1] + 2;
-
+#ifdef _MODEL1
+            Z[0] = cos(u[0]);
+            Z[1] = u[1] * u[2] + sin(u[0]);
+            Z[2] = u[2] * u[2] + sin(u[1]);
+            Z[3] = u[0] / u[2] + u[1] * u[2] + 5.0;
+#else
+            Z[0] = 1.0 / u[0];
+#endif
             // create f: U -> Z and vectors used for derivative calculations
             _fun = new ADFun<CGD>(u, Z);
 
@@ -104,15 +112,20 @@ namespace CppAD {
     /**
      * static data
      */
-    const size_t CppADCGDynamicForRevTest2::n = 2;
-    const size_t CppADCGDynamicForRevTest2::m = 2;
-
+#ifdef _MODEL1
+    const size_t CppADCGDynamicForRevTest::n = 3;
+    const size_t CppADCGDynamicForRevTest::m = 4;
+#else
+    const size_t CppADCGDynamicForRevTest::n = 1;
+    const size_t CppADCGDynamicForRevTest::m = 1;
+#endif
 }
 
 using namespace CppAD;
+using namespace CppAD::extra;
 using namespace std;
 
-TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
+TEST_F(CppADCGDynamicForRevTest, SparseJacobian) {
     using namespace std;
     using std::vector;
 
@@ -123,12 +136,12 @@ TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
     const std::vector<bool> p = jacobianSparsity < std::vector<bool>, CGD > (*_fun);
 
     vector<CGD> jacOrig = _fun->SparseJacobian(xOrig, p);
-    vector<double> jacCG = CppADCGDynamicForRevTest2::_model->SparseJacobian(x);
+    vector<double> jacCG = CppADCGDynamicForRevTest::_model->SparseJacobian(x);
 
     ASSERT_TRUE(compareValues(jacCG, jacOrig));
 }
 
-TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
+TEST_F(CppADCGDynamicForRevTest, SparseHessian) {
     using namespace std;
     using std::vector;
 
@@ -148,7 +161,7 @@ TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
         xOrig[i] = x[i];
 
     vector<CGD> hessOrig = _fun->SparseHessian(xOrig, wOrig);
-    vector<double> hessCG = CppADCGDynamicForRevTest2::_model->SparseHessian(x, w);
+    vector<double> hessCG = CppADCGDynamicForRevTest::_model->SparseHessian(x, w);
 
     ASSERT_TRUE(compareValues(hessCG, hessOrig));
 }

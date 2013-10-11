@@ -30,7 +30,8 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::prepareSparseReverseOneWithLoops(std::map<std::string, std::string>& sources,
                                                                          const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
         using namespace std;
-        using namespace loops;
+        using namespace CppAD::loops;
+        using namespace CppAD::extra;
         using CppAD::vector;
         //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
 

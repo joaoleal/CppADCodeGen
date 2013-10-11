@@ -137,10 +137,10 @@ namespace CppAD {
 }
 
 using namespace CppAD;
+using namespace CppAD::extra;
 using namespace std;
 
 TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
-    using namespace std;
     using CppAD::vector;
 
     typedef double Base;

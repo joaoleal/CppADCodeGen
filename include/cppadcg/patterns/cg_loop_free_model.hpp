@@ -106,7 +106,7 @@ namespace CppAD {
 
         inline void evalJacobianSparsity() {
             if (!jacSparsity_) {
-                jacTapeSparsity_ = jacobianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
+                jacTapeSparsity_ = extra::jacobianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
                 jacSparsity_ = true;
             }
         }
@@ -116,6 +116,8 @@ namespace CppAD {
         }
 
         inline void evalHessianSparsity() {
+            using namespace CppAD::extra;
+            
             if (!hessSparsity_) {
                 size_t mo = dependentIndexes_.size();
                 size_t m = fun_->Range();
@@ -167,6 +169,7 @@ namespace CppAD {
                                                                                             const vector<std::set<size_t> >& noLoopEvalJacSparsity) {
             using namespace std;
             using namespace CppAD::loops;
+            using namespace CppAD::extra;
 
             assert(hessSparsity_); // check that the sparsities have been evaluated
 
@@ -273,6 +276,7 @@ namespace CppAD {
                                                       vector<CGB>& hess) {
             using namespace std;
             using namespace CppAD::loops;
+            using namespace CppAD::extra;
 
             assert(hessSparsity_); // check that the sparsities have been evaluated
 

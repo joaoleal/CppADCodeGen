@@ -55,11 +55,6 @@ namespace CppAD {
     template<class Base>
     class ScopePathElement;
 
-    /**************************************************************************/
-    class SparseForjacHessianWorkJac;
-    class SparseForjacHessianWorkHes;
-    class SparseForjacHessianWork;
-
     /***************************************************************************
      * Nodes
      **************************************************************************/
@@ -317,26 +312,9 @@ namespace CppAD {
     inline CG<Base> tanh(const CG<Base>& var);
 
     /***************************************************************************
-     * Utility functions
-     **************************************************************************/
-    template<class VectorBool, class Base>
-    inline VectorBool jacobianSparsity(ADFun<Base>& fun);
-
-    template<class VectorBool, class VectorSize>
-    inline void generateSparsityIndexes(const VectorBool& sparsity,
-                                        size_t m,
-                                        size_t n,
-                                        VectorSize& row,
-                                        VectorSize& col);
-
-    template<class VectorSet, class VectorSize>
-    inline void generateSparsityIndexes(const VectorSet& sparsity,
-                                        VectorSize& row,
-                                        VectorSize& col);
-
-    /**
      * Index reduction functions
-     */
+     **************************************************************************/
+
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Enode<Base>& i);
 

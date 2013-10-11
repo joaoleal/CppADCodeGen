@@ -21,6 +21,7 @@
 #include "CppADCGTest.hpp"
 
 using namespace CppAD;
+using namespace CppAD::extra;
 using namespace std;
 
 class SparseJacHes : public CppADCGTest {

@@ -96,7 +96,7 @@ namespace CppAD {
                 size_t n = fun_.Domain();
                 size_t m = fun_.Range();
                 if (!custom_jac_.isFullDefined()) {
-                    custom_jac_.setFullElements(CppAD::jacobianForwardSparsitySet<vector<std::set<size_t> > >(fun_));
+                    custom_jac_.setFullElements(extra::jacobianForwardSparsitySet<vector<std::set<size_t> > >(fun_));
                     fun_.size_forward_set(0);
                 }
 
@@ -120,7 +120,7 @@ namespace CppAD {
                 size_t n = fun_.Domain();
                 size_t m = fun_.Range();
                 if (!custom_jac_.isFullDefined()) {
-                    custom_jac_.setFullElements(CppAD::jacobianReverseSparsitySet<vector<std::set<size_t> > >(fun_));
+                    custom_jac_.setFullElements(extra::jacobianReverseSparsitySet<vector<std::set<size_t> > >(fun_));
                 }
 
                 for (size_t i = 0; i < st.size(); i++) {
@@ -141,6 +141,8 @@ namespace CppAD {
                                     const vector<std::set<size_t> >& r,
                                     const vector<std::set<size_t> >& u,
                                     vector<std::set<size_t> >& v) {
+            using namespace CppAD::extra;
+            
             if (cacheSparsities_ || custom_jac_.isFilterDefined() || custom_hess_.isFilterDefined()) {
                 size_t n = fun_.Domain();
                 size_t m = fun_.Range();
@@ -150,7 +152,7 @@ namespace CppAD {
                 }
 
                 if (!custom_jac_.isFullDefined()) {
-                    custom_jac_.setFullElements(CppAD::jacobianSparsitySet<vector<std::set<size_t> > >(fun_));
+                    custom_jac_.setFullElements(jacobianSparsitySet<vector<std::set<size_t> > >(fun_));
                 }
                 const vector<std::set<size_t> >& jacSparsity = custom_jac_.getFullElements();
 
@@ -171,7 +173,7 @@ namespace CppAD {
 
                 if (allSelected) {
                     if (!custom_hess_.isFullDefined()) {
-                        custom_hess_.setFullElements(CppAD::hessianSparsitySet<vector<std::set<size_t> > >(fun_)); // f''(x)
+                        custom_hess_.setFullElements(hessianSparsitySet<vector<std::set<size_t> > >(fun_)); // f''(x)
                     }
                     const vector<std::set<size_t> >& sF2 = custom_hess_.getFullElements();
                     CppAD::multMatrixTransMatrixSparsity(sF2, r, v, n, n, q); // f''^T * R
@@ -182,7 +184,7 @@ namespace CppAD {
                             std::map<size_t, vector<std::set<size_t> > >::const_iterator itH = hess_.find(i);
                             const vector<std::set<size_t> >* spari;
                             if (itH == hess_.end()) {
-                                vector<std::set<size_t> >& hi = hess_[i] = CppAD::hessianSparsitySet<vector<std::set<size_t> > >(fun_, i); // f''_i(x)
+                                vector<std::set<size_t> >& hi = hess_[i] = hessianSparsitySet<vector<std::set<size_t> > >(fun_, i); // f''_i(x)
                                 spari = &hi;
                                 custom_hess_.filter(hi);
                             } else {

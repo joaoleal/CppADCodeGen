@@ -363,7 +363,7 @@ namespace CppAD {
 
         if (_jacMode == AUTOMATIC) {
             if (_custom_jac.defined) {
-                forwardMode = estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
+                forwardMode = extra::estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
             } else {
                 forwardMode = n <= m;
             }
@@ -587,10 +587,10 @@ namespace CppAD {
         /**
          * Determine the sparsity pattern
          */
-        _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
+        _jacSparsity.sparsity = extra::jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
 
         if (!_custom_jac.defined) {
-            generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
+            extra::generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
 
         } else {
             _jacSparsity.rows = _custom_jac.row;
@@ -1010,8 +1010,8 @@ namespace CppAD {
                 LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
 
                 if (!_custom_hess.defined) {
-                    generateSparsityIndexes(hessSparsitiesi.sparsity,
-                                            hessSparsitiesi.rows, hessSparsitiesi.cols);
+                    extra::generateSparsityIndexes(hessSparsitiesi.sparsity,
+                                                   hessSparsitiesi.rows, hessSparsitiesi.cols);
 
                 } else {
                     size_t nnz = _custom_hess.row.size();
@@ -1029,8 +1029,8 @@ namespace CppAD {
         }
 
         if (!_custom_hess.defined) {
-            generateSparsityIndexes(_hessSparsity.sparsity,
-                                    _hessSparsity.rows, _hessSparsity.cols);
+            extra::generateSparsityIndexes(_hessSparsity.sparsity,
+                                           _hessSparsity.rows, _hessSparsity.cols);
 
         } else {
             _hessSparsity.rows = _custom_hess.row;

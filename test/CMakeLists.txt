@@ -177,19 +177,8 @@ ENDIF()
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-create_temp_folder_target()
-
-add_cppadcg_test(inputstream.cpp)
-add_cppadcg_test(temporary.cpp)
-add_cppadcg_test(mult_sparsity_pattern.cpp)
-add_cppadcg_test(sparse_jac_hes.cpp)
-
-ADD_SUBDIRECTORY(operations)
-ADD_SUBDIRECTORY(models)
-ADD_SUBDIRECTORY(dynamiclib)
-ADD_SUBDIRECTORY(patterns)
-ADD_SUBDIRECTORY(solve)
-ADD_SUBDIRECTORY(dae_index_reduction)
+ADD_SUBDIRECTORY(cppadcg)
+ADD_SUBDIRECTORY(cppad/extra)
 
 file(COPY "${CMAKE_CURRENT_SOURCE_DIR}/valgrind.sh"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

@@ -231,7 +231,8 @@ namespace CppAD {
                                                                                     const vector<CGBase>& x,
                                                                                     bool forward) throw (CGException) {
         using namespace std;
-        using namespace loops;
+        using namespace CppAD::loops;
+        using namespace CppAD::extra;
         using CppAD::vector;
         //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
 

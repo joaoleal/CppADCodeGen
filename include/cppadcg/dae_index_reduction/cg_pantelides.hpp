@@ -57,8 +57,8 @@ namespace CppAD {
          * @param x typical variable values (used to avoid NaNs in CppAD checks)
          */
         Pantelides(ADFun<CG<Base> >* fun,
-                    const std::vector<DaeVarInfo>& varInfo,
-                    const std::vector<Base>& x) :
+                   const std::vector<DaeVarInfo>& varInfo,
+                   const std::vector<Base>& x) :
             DaeIndexReduction<Base>(fun, varInfo),
             x_(x),
             reducedFun_(NULL),
@@ -66,6 +66,7 @@ namespace CppAD {
             origTimeDependentCount_(0),
             timeOrigVarIndex_(-1) {
 
+            using namespace CppAD::extra;
             using namespace std;
             using std::vector;
 

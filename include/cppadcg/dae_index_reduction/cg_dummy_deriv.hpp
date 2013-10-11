@@ -718,6 +718,7 @@ namespace CppAD {
 
         inline void matchVars2Eqs4Eliminaton(std::vector<DaeVarInfo>& varInfo,
                                              std::vector<DaeEquationInfo>& eqInfo) throw (CGException) {
+            using namespace CppAD::extra;
             using std::vector;
             using std::map;
             typedef vector<OperationPathNode<Base> > SourceCodePath;
@@ -943,7 +944,7 @@ namespace CppAD {
                     if (!error.empty())
                         throw CGException("Failed to generate semi-explicit DAE. Could not solve system for the following variables:" + error);
                 }
-                
+
             } catch (...) {
                 deleteVectorValues(diffVariables);
                 deleteVectorValues(dummyVariables);
@@ -1322,6 +1323,7 @@ namespace CppAD {
          * (e.g. dxdt)
          */
         inline void determineJacobian() {
+            using namespace CppAD::extra;
             using namespace std;
             using std::vector;
 

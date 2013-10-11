@@ -67,6 +67,8 @@
 // ---------------------------------------------------------------------------
 // CppAD
 #include <cppad/cppad.hpp>
+// addons
+#include <cppad/extra/extra.hpp>
 
 // ---------------------------------------------------------------------------
 // system dependent files
@@ -112,7 +114,6 @@
 #include <cppadcg/cg_operation_path.hpp>
 #include <cppadcg/cg_solver.hpp>
 #include <cppadcg/cg_graph_mod.hpp>
-#include <cppadcg/cg_sparse_forjac_hessian.hpp>
 
 // ---------------------------------------------------------------------------
 // atomic function utilities

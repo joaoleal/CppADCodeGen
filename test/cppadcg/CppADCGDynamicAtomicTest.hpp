@@ -97,6 +97,7 @@ namespace CppAD {
             ASSERT_EQ(x.size(), xNorm.size());
 
             using namespace CppAD;
+            using namespace CppAD::extra;
             using namespace std;
             using CppAD::vector;
 
@@ -388,6 +389,7 @@ namespace CppAD {
             ASSERT_EQ(x.size(), xNorm.size());
 
             using namespace CppAD;
+            using namespace CppAD::extra;
             using namespace std;
             using CppAD::vector;
 
@@ -571,6 +573,7 @@ namespace CppAD {
             ASSERT_EQ(x.size(), xNorm.size());
 
             using namespace CppAD;
+            using namespace CppAD::extra;
             using namespace std;
             using CppAD::vector;
 

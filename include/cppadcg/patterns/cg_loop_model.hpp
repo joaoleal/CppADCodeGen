@@ -443,7 +443,7 @@ namespace CppAD {
 
         inline void evalJacobianSparsity() {
             if (!jacSparsity_) {
-                jacTapeSparsity_ = jacobianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
+                jacTapeSparsity_ = extra::jacobianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
                 jacSparsity_ = true;
             }
         }
@@ -454,7 +454,7 @@ namespace CppAD {
 
         inline void evalHessianSparsity() {
             if (!hessSparsity_) {
-                hessTapeSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
+                hessTapeSparsity_ = extra::hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
 
                 /**
                  * make a database of the hessian elements

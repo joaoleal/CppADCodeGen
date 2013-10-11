@@ -61,6 +61,7 @@ namespace CppAD {
                                                                          const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
         using namespace std;
         using namespace CppAD::loops;
+        using namespace CppAD::extra;
         using CppAD::vector;
 
         size_t m = _fun.Range();
