@@ -29,24 +29,51 @@ public:
     typedef CppAD::vector< std::set<size_t> > cppad_vector_set;
 public:
 
+    inline static std::vector<AD<double> > model1(const std::vector<AD<double> >& X) {
+        std::vector<AD<double> > Y(2);
+
+        Y[0] = X[0] * X[1] * X[2] + X[0];
+        Y[1] = X[1] * X[2] + 10;
+
+        return Y;
+    }
+
+    inline static std::vector<AD<double> > model2(const std::vector<AD<double> >& X) {
+        std::vector<AD<double> > Y(1);
+
+        Y[0] = X[1] / X[0] * X[2];
+
+        return Y;
+    }
+
+    void multiTestModel(size_t n,
+                        std::vector<AD<double> > (*model)(const std::vector<AD<double> >& X),
+                        const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
+                        const std::vector<size_t>& hesRow, const std::vector<size_t>& hesCol) {
+        testModel<CppAD::vector<double>, std_vector_set, std::vector<size_t> >(n, model, jacRow, jacCol, hesRow, hesCol);
+        testModel<std::valarray<double>, std_vector_set, std::vector<size_t> >(n, model, jacRow, jacCol, hesRow, hesCol);
+        testModel<std::vector<double>, cppad_vector_set, std::vector<size_t> >(n, model, jacRow, jacCol, hesRow, hesCol);
+        testModel<CppAD::vector<double>, cppad_vector_set, std::vector<size_t> >(n, model, jacRow, jacCol, hesRow, hesCol);
+    }
+
     template <class VectorBase, class VectorSet, class VectorSize>
-    void set_case() {
+    void testModel(size_t n,
+                   std::vector<AD<double> > (*model)(const std::vector<AD<double> >& X),
+                   const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
+                   const std::vector<size_t>& hesRow, const std::vector<size_t>& hesCol) {
 
         size_t i, j;
 
         // domain space vector
-        size_t n = 3;
-        CPPAD_TESTVECTOR(AD<double>) X(n);
+        std::vector<AD<double> > X(n);
         for (i = 0; i < n; i++)
-            X[i] = AD<double> (0);
+            X[i] = AD<double> (i + 1);
 
         // declare independent variables and starting recording
         Independent(X);
 
-        size_t m = 2;
-        CPPAD_TESTVECTOR(AD<double>) Y(m);
-        Y[0] = X[0] * X[1] * X[2] + X[0];
-        Y[1] = X[1] * X[2] + 10;
+        std::vector<AD<double> > Y = model(X);
+        size_t m = Y.size();
 
         // create f: x -> y and stop tape recording
         ADFun<double> f(X, Y);
@@ -58,8 +85,8 @@ public:
 
         // second derivative of y[1] 
         VectorBase w(m);
-        w[0] = 1.;
-        w[1] = 2.;
+        for (size_t i = 0; i < m; i++)
+            w[i] = i + 1;
 
         /**
          * zero-order
@@ -70,18 +97,18 @@ public:
          * Jacobian
          */
         // sparsity pattern
-        VectorSet s(m), p(m);
+        VectorSet s(m);
         for (i = 0; i < m; i++)
             s[i].insert(i);
         VectorSet jsparsity = f.RevSparseJac(m, s);
 
         // evaluate
-        size_t jnnz = 2;
+        size_t jnnz = jacRow.size();
         VectorSize jrow(jnnz), jcol(jnnz);
-        jrow[0] = 0;
-        jcol[0] = 2;
-        jrow[1] = 1;
-        jcol[1] = 1;
+        for (size_t jj = 0; jj < jnnz; jj++) {
+            jrow[jj] = jacRow[jj];
+            jcol[jj] = jacCol[jj];
+        }
         VectorBase check_jac(jnnz);
         sparse_jacobian_work jwork;
 
@@ -103,18 +130,12 @@ public:
         VectorSet hsparsity = f.RevSparseHes(n, s);
 
         // evaluate
-        size_t hnnz = 5;
+        size_t hnnz = hesRow.size();
         VectorSize hrow(hnnz), hcol(hnnz);
-        hrow[0] = 0;
-        hcol[0] = 1;
-        hrow[1] = 0;
-        hcol[1] = 2;
-        hrow[2] = 1;
-        hcol[2] = 0;
-        hrow[3] = 1;
-        hcol[3] = 2;
-        hrow[4] = 2;
-        hcol[4] = 1;
+        for (size_t h = 0; h < hnnz; h++) {
+            hrow[h] = hesRow[h];
+            hcol[h] = hesCol[h];
+        }
         VectorBase check_hes(hnnz);
         sparse_hessian_work hwork;
 
@@ -130,11 +151,16 @@ public:
         VectorBase hes(hnnz);
 
         SparseForjacHessianWork work;
-        size_t n_sweep_jh = 1 + SparseForJacHessian(f, x, w,
+        size_t n_sweep_jh = 1 + sparseForJacHessian(f, x, w,
                                                     y,
                                                     jsparsity, jrow, jcol, jac,
                                                     hsparsity, hrow, hcol, hes,
                                                     work);
+        if (this->verbose_) {
+            std::cout << "n_sweep_jh = " << n_sweep_jh
+                    << "  n_sweep = " << n_sweep << std::endl;
+        }
+
         ASSERT_TRUE(compareValues(y, check_y));
         ASSERT_TRUE(compareValues(jac, check_jac));
         ASSERT_TRUE(compareValues(hes, check_hes));
@@ -143,18 +169,47 @@ public:
 
 };
 
-TEST_F(SparseJacHes, CppADVectorVectorSet) {
-    this->set_case< CppAD::vector<double>, std_vector_set, std::vector<size_t> >();
+TEST_F(SparseJacHes, model1) {
+    std::vector<size_t> jrow(2), jcol(2);
+    jrow[0] = 0;
+    jcol[0] = 2;
+    jrow[1] = 1;
+    jcol[1] = 1;
+
+    std::vector<size_t> hrow(5), hcol(5);
+    hrow[0] = 0;
+    hcol[0] = 1;
+    hrow[1] = 0;
+    hcol[1] = 2;
+    hrow[2] = 1;
+    hcol[2] = 0;
+    hrow[3] = 1;
+    hcol[3] = 2;
+    hrow[4] = 2;
+    hcol[4] = 1;
+
+    multiTestModel(3, model1,
+                   jrow, jcol,
+                   hrow, hcol);
 }
 
-TEST_F(SparseJacHes, valarrayVectorSet) {
-    set_case< std::valarray<double>, std_vector_set, std::vector<size_t> >();
-}
+TEST_F(SparseJacHes, model2) {
+    std::vector<size_t> jrow(1), jcol(1);
+    jrow[0] = 0;
+    jcol[0] = 2;
 
-TEST_F(SparseJacHes, VectorCppADVectorSet) {
-    set_case< std::vector<double>, cppad_vector_set, std::vector<size_t> >();
-}
+    std::vector<size_t> hrow(4), hcol(4);
+    hrow[0] = 0;
+    hrow[1] = 0;
+    hrow[2] = 0;
+    hrow[3] = 1;
 
-TEST_F(SparseJacHes, CppADVectorCppADVectorSet) {
-    set_case< CppAD::vector<double>, cppad_vector_set, std::vector<size_t> >();
+    hcol[0] = 0;
+    hcol[1] = 1;
+    hcol[2] = 2;
+    hcol[3] = 2;
+
+    multiTestModel(3, model2,
+                   jrow, jcol,
+                   hrow, hcol);
 }
