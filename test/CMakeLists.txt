@@ -142,7 +142,7 @@ FUNCTION(add_cppadcg_test source_file)
   ADD_TEST(NAME ${test_target_name}
            COMMAND ${test_target_name})
   IF(VALGRIND_FOUND)
-    ADD_TEST(NAME memcheck_${test_target_name}
+    ADD_TEST(NAME ${test_target_name}_memcheck
              COMMAND ${GTEST_MEMORYCHECK_COMMAND} 
                      --read-var-info=yes
                      --leak-check=full

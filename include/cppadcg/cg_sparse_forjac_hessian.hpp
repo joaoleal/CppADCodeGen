@@ -250,6 +250,11 @@ namespace CppAD {
 
             color.resize(n);
 
+            CPPAD_ASSERT_KNOWN(jac_p.size() == m,
+                               "sparseForJacHessian: invalid jacobian sparsity pattern dimension.");
+            CPPAD_ASSERT_KNOWN(hes_p.size() == n,
+                               "sparseForJacHessian: invalid hessian sparsity pattern dimension.");
+
             /**
              * Jacobian
              */

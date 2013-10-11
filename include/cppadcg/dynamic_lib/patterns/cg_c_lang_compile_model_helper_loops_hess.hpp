@@ -521,29 +521,26 @@ namespace CppAD {
          *        generate the operation graph
          **********************************************************************/
         /**
-         * Calculate hessians and jacobians
-         */
-        // temporaries (zero orders)
-        vector<CGBase> tmps;
-
-        /**
-         * No loops - zero order
-         */
-        if (_funNoLoops != NULL) {
-            ADFun<CGBase>& fun = _funNoLoops->getTape();
-            vector<CGBase> depNL = fun.Forward(0, x);
-
-            tmps.resize(depNL.size() - nonIndexdedEqSize);
-            for (size_t i = 0; i < tmps.size(); i++)
-                tmps[i] = depNL[nonIndexdedEqSize + i];
-        }
-
-        /**
          * prepare loop independents
          */
         IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
         handler.manageOperationNodeMemory(iterationIndexDcl);
 
+        // temporaries (zero orders)
+        vector<CGBase> tmpsAlias;
+        if (_funNoLoops != NULL) {
+            ADFun<CGBase>& fun = _funNoLoops->getTape();
+
+            tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
+            for (size_t k = 0; k < tmpsAlias.size(); k++) {
+                // to be defined later
+                tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGAliasOp));
+            }
+        }
+        
+        /**
+         * prepare loop independents
+         */
         typename map<LoopModel<Base>*, HessianWithLoopsInfo<Base> >::iterator itLoop2Info;
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
@@ -559,39 +556,59 @@ namespace CppAD {
             handler.manageOperationNodeMemory(info.iterationIndexOp);
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
-
+            
+            /**
+             * make the loop's indexed variables
+             */
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
-            info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+            info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmpsAlias);
 
             info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp);
         }
 
         /**
-         * No loops - Jacobian
+         * Calculate hessians and jacobians
+         */
+        /**
+         * Loops - evaluate Jacobian and Hessian
+         */
+        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
+            LoopModel<Base>& lModel = *itLoop2Info->first;
+            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+
+            _cache.str("");
+            _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
+            std::string jobName = _cache.str();
+            _cache.str("");
+            startingGraphCreation(jobName);
+
+            info.evalLoopModelJacobianHessian();
+
+            finishedGraphCreation();
+        }
+
+        /**
+         * No loops
          */
         // jacobian for temporaries
         map<size_t, map<size_t, CGBase> > dzDx;
+
         if (_funNoLoops != NULL) {
-            dzDx = _funNoLoops-> evaluateJacobian4Temporaries(x, noLoopEvalJacSparsity);
-        }
+            ADFun<CGBase>& fun = _funNoLoops->getTape();
+            vector<CGBase> yNL(fun.Range());
 
-        /**
-         * Loops - Jacobian
-         */
-        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
-
-            info.evalLoopModelJacobian();
-        }
-
-        /**
-         * No Loops - Hessian
-         */
-        if (_funNoLoops != NULL) {
             /**
-             * hessian - temporary variables
+             * Jacobian and Hessian - temporary variables
              */
-            _funNoLoops->calculateHessianUsedByLoops(loopHessInfo, x);
+            startingGraphCreation("model (Jacobian + Hessian, temporary variables)");
+
+            dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
+                                                                    noLoopEvalJacSparsity);
+
+            finishedGraphCreation();
+
+            for (size_t i = 0; i < tmpsAlias.size(); i++)
+                tmpsAlias[i].getOperationNode()->getArguments().push_back(asArgument(yNL[nonIndexdedEqSize + i]));
 
             for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
                 HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -613,9 +630,6 @@ namespace CppAD {
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
-
-            // calculate the hessian of the loop model
-            info.evalLoopModelHessian();
 
             // store results in indexedLoopResults
             size_t hessElSize = info.indexedIndexedPositions.size() +

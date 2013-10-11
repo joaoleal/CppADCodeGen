@@ -131,7 +131,7 @@ namespace CppAD {
             return depVals;
         }
 
-        inline void printModel(CodeHandler<double>&handler, CGD& dep) {
+        inline void printModel(CodeHandler<double>& handler, CGD& dep) {
             CLanguage<double> langC("double");
             CLangDefaultVariableNameGenerator<double> nameGen;
 

@@ -111,6 +111,15 @@ namespace CppAD {
     template<class Base>
     class CLanguage;
 
+    template<class Base>
+    class VariableNameGenerator;
+
+    template<class Base>
+    class CLangDefaultVariableNameGenerator;
+
+    template<class Base>
+    class CLangCustomVariableNameGenerator;
+
     /***************************************************************************
      * Dynamic model compilation
      **************************************************************************/
