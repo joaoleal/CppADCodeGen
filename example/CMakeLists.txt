@@ -15,15 +15,13 @@
 #
 # ----------------------------------------------------------------------------
 
-ADD_EXECUTABLE(source_generation EXCLUDE_FROM_ALL
-	source_generation.cpp)
+ADD_EXECUTABLE(source_generation source_generation.cpp)
 SET(EXAMPLES_COMMAND "COMMAND source_generation")
 ADD_CUSTOM_TARGET(example_source_generation
                   COMMAND source_generation)
 
 IF( UNIX )
-	ADD_EXECUTABLE(dynamic_linux EXCLUDE_FROM_ALL
-		dynamic_linux.cpp)
+	ADD_EXECUTABLE(dynamic_linux dynamic_linux.cpp)
 	SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
 
 	TARGET_LINK_LIBRARIES(dynamic_linux ${DL_LIBRARIES})

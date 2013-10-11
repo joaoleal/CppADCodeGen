@@ -15,4 +15,4 @@ Name:         @PROJECT_NAME@
 Description:  @cppadcg_descriptio@
 Version:      @cppadcg_versioN@
 URL:          @cppadcg_url@
-Cflags:       -I@install_include_location@
+Cflags:       -I@install_cppadcg_include_location@ -I@install_cppad_include_location@

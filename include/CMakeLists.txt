@@ -17,5 +17,9 @@
 # files to be installed
 # ----------------------------------------------------------------------------
 INSTALL( DIRECTORY "cppadcg/"
-         DESTINATION ${install_include_location}
+         DESTINATION "${install_cppadcg_include_location}"
+         FILES_MATCHING PATTERN "*.hpp")
+
+INSTALL( DIRECTORY "cppad/extra/"
+         DESTINATION "${install_cppad_include_location}/extra"
          FILES_MATCHING PATTERN "*.hpp")

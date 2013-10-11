@@ -7,7 +7,7 @@ Standards-Version: 3.7.2
 
 Package: cppadcodegen-dev
 Architecture: any
-Depends: ${misc:Depends}, cppad-dev (>= 20130819)
+Depends: ${misc:Depends}, cppad-dev (>= 20131007)
 Description: A Package for Differentiation of C++ Algorithms that performs source code generation
 
 Package: cppadcodegen-doc
