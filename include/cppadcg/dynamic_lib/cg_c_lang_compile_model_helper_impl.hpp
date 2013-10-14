@@ -1999,18 +1999,42 @@ namespace CppAD {
     template<class Base>
     void inline CLangCompileModelHelper<Base>::startingGraphCreation(const std::string& jobName) {
         if (_verbose) {
+            if (!_jobNames.empty()) {
+                if (!_nestedJobs.back())
+                    std::cout << "\n";
+                std::string ident(3 * _jobNames.size(), ' ');
+                std::cout << ident;
+            }
             std::cout << "generating operation graph for '" << jobName << "' ... ";
             std::cout.flush();
-            _beginTime = system::currentTime();
+
+            std::fill(_nestedJobs.begin(), _nestedJobs.end(), true);
+
+            _nestedJobs.push_back(false);
+            _jobNames.push_back(jobName);
+            _beginTimes.push_back(system::currentTime());
         }
     }
 
     template<class Base>
     void inline CLangCompileModelHelper<Base>::finishedGraphCreation() {
         if (_verbose) {
+            assert(_nestedJobs.size() > 0);
+
+            double beginTime = _beginTimes.back();
             double endTime = system::currentTime();
-            std::cout << "done [" << std::fixed << std::setprecision(3)
-                    << (endTime - _beginTime) << "]" << std::endl;
+            double elapsed = endTime - beginTime;
+            if (_nestedJobs.back()) {
+                std::string ident(3 * (_jobNames.size() - 1), ' ');
+                std::cout << ident;
+                std::cout << "generated operation graph for '" << _jobNames.back() << "' ... ";
+            }
+
+            std::cout << "done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;
+
+            _nestedJobs.pop_back();
+            _jobNames.pop_back();
+            _beginTimes.pop_back();
         }
     }
 

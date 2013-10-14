@@ -193,9 +193,17 @@ namespace CppAD {
          */
         bool _verbose;
         /**
-         * auxiliary variable to measure the elapsed time
+         * saves the current job names
          */
-        double _beginTime;
+        std::vector<std::string> _jobNames;
+        /**
+         * Whether or not there are jobs inside other jobs
+         */
+        std::vector<bool> _nestedJobs;
+        /**
+         * auxiliary variable to measure the elapsed time for each job
+         */
+        std::vector<double> _beginTimes;
         /**
          * 
          */
@@ -254,8 +262,7 @@ namespace CppAD {
             _reverseOne(false),
             _reverseTwo(false),
             _jacMode(AUTOMATIC),
-            _maxAssignPerFunc(20000),
-            _beginTime(0) {
+            _maxAssignPerFunc(20000) {
 
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
             CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
