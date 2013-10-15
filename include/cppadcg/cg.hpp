@@ -91,6 +91,7 @@
 #include <cppadcg/cg_variable.hpp>
 #include <cppadcg/cg_identical.hpp>
 #include <cppadcg/cg_variable_name_generator.hpp>
+#include <cppadcg/cg_job_time.hpp>
 #include <cppadcg/cg_language.hpp>
 #include <cppadcg/cg_scope_path_element.hpp>
 #include <cppadcg/cg_code_handler.hpp>

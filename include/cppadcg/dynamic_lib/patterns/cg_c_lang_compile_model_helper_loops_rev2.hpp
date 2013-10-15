@@ -81,7 +81,7 @@ namespace CppAD {
         localNodes[4] = &jrowIndexOp;
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
         handler.setZeroDependents(false);
 
         // independent variables
@@ -195,11 +195,11 @@ namespace CppAD {
             _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
             _cache.str("");
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + jobName + "'");
 
             info.evalLoopModelJacobianHessian();
 
-            finishedGraphCreation();
+            finishedJob();
         }
 
         /**
@@ -213,12 +213,12 @@ namespace CppAD {
             /**
              * Jacobian and Hessian - temporary variables
              */
-            startingGraphCreation("model (Jacobian + Hessian, temporary variables)");
+            startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
                                                                     noLoopEvalJacSparsity);
 
-            finishedGraphCreation();
+            finishedJob();
 
             for (size_t i = 0; i < tmpsAlias.size(); i++)
                 tmpsAlias[i].getOperationNode()->getArguments().push_back(asArgument(yNL[nonIndexdedEqSize + i]));
@@ -459,15 +459,12 @@ namespace CppAD {
             generateSparsityIndexes(noLoopEvalHessSparsity, row, col);
 
             if (row.size() > 0) {
-
-                _cache.str("");
-                _cache << "model (reverse two, no loops)";
-                const std::string jobName = _cache.str();
-                startingGraphCreation(jobName);
+                const string jobName = "model (reverse two, no loops)";
+                startingJob("source for '" + jobName + "'");
 
                 // we can use a new handler to reduce memmory usage
                 CodeHandler<Base> handlerNL;
-                handlerNL.setVerbose(_verbose);
+                handlerNL.setJobTimer(this);
 
                 vector<CGBase> tx0(n);
                 handlerNL.makeVariables(tx0);
@@ -543,7 +540,7 @@ namespace CppAD {
                     handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
                 }
 
-                finishedGraphCreation();
+                finishedJob();
             }
 
         }

@@ -95,6 +95,8 @@ namespace CppAD {
         bool _zeroDependents;
         //
         bool _verbose;
+        //
+        JobTime* _jobTimer;
     public:
 
         CodeHandler(size_t varCount = 50) :
@@ -111,7 +113,8 @@ namespace CppAD {
             _lang(NULL),
             _minTemporaryVarID(0),
             _zeroDependents(false),
-            _verbose(false) {
+            _verbose(false),
+            _jobTimer(NULL) {
             _codeBlocks.reserve(varCount);
             _variableOrder.reserve(1 + varCount / 3);
         }
@@ -174,6 +177,14 @@ namespace CppAD {
 
         inline void setVerbose(bool verbose) {
             _verbose = verbose;
+        }
+
+        inline JobTime* getJobTimer() const {
+            return _jobTimer;
+        }
+
+        inline void setJobTimer(JobTime* jobTimer) {
+            _jobTimer = jobTimer;
         }
 
         /**
@@ -302,7 +313,10 @@ namespace CppAD {
                                   std::vector<std::string>& atomicFunctions,
                                   const std::string& jobName = "source") {
             double beginTime;
-            if (_verbose) {
+
+            if (_jobTimer != NULL) {
+                _jobTimer->startingJob("source for '" + jobName + "'");
+            } else if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
                 std::cout.flush();
                 beginTime = system::currentTime();
@@ -443,7 +457,9 @@ namespace CppAD {
 
             _atomicFunctionsSet.clear();
 
-            if (_verbose) {
+            if (_jobTimer != NULL) {
+                _jobTimer->finishedJob();
+            } else if (_verbose) {
                 double endTime = system::currentTime();
                 std::cout << "done [" << std::fixed << std::setprecision(3)
                         << (endTime - beginTime) << "]" << std::endl;

@@ -24,7 +24,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class CLangCompileModelHelper {
+    class CLangCompileModelHelper : protected JobTime {
         typedef CppAD::CG<Base> CGBase;
         typedef CppAD::AD<CGBase> ADCG;
         typedef CppAD::vector<std::set<size_t> > SparsitySetType;
@@ -187,23 +187,8 @@ namespace CppAD {
          * maximum number of assignments per function (~ lines)
          */
         size_t _maxAssignPerFunc;
-        /**
-         * Whether or not to print some progress information to the standard 
-         * output
-         */
-        bool _verbose;
-        /**
-         * saves the current job names
-         */
-        std::vector<std::string> _jobNames;
-        /**
-         * Whether or not there are jobs inside other jobs
-         */
-        std::vector<bool> _nestedJobs;
-        /**
-         * auxiliary variable to measure the elapsed time for each job
-         */
-        std::vector<double> _beginTimes;
+
+        
         /**
          * 
          */
@@ -664,14 +649,6 @@ namespace CppAD {
 
     protected:
 
-        inline bool isVerbose() const {
-            return _verbose;
-        }
-
-        inline void setVerbose(bool verbose) {
-            _verbose = verbose;
-        }
-
         virtual VariableNameGenerator<Base>* createVariableNameGenerator(const std::string& depName,
                                                                          const std::string& indepName,
                                                                          const std::string& tmpName,
@@ -966,10 +943,6 @@ namespace CppAD {
                                                                                             const std::vector<size_t>& userCols);
 
     private:
-        void inline startingGraphCreation(const std::string& jobName);
-
-        void inline finishedGraphCreation();
-
         CLangCompileModelHelper(const CLangCompileModelHelper&); // not implemented
 
         CLangCompileModelHelper& operator=(const CLangCompileModelHelper&); // not implemented

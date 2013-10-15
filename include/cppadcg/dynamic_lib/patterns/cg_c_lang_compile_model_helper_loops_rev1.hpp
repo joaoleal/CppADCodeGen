@@ -49,7 +49,7 @@ namespace CppAD {
         localNodes[3] = &jrowIndexOp;
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
         handler.setZeroDependents(false);
 
         size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
@@ -204,7 +204,7 @@ namespace CppAD {
             /**
              * evaluate loop model jacobian
              */
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + jobName + "'");
 
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
@@ -224,7 +224,7 @@ namespace CppAD {
                 dyiDxtape[tapeI][tapeJ] = jacLoop[el];
             }
 
-            finishedGraphCreation();
+            finishedJob();
 
             /**
              * process each equation pattern (row in the loop tape)

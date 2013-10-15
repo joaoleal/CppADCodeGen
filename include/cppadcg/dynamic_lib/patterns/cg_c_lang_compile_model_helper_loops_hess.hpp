@@ -537,7 +537,7 @@ namespace CppAD {
                 tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGAliasOp));
             }
         }
-        
+
         /**
          * prepare loop independents
          */
@@ -556,7 +556,7 @@ namespace CppAD {
             handler.manageOperationNodeMemory(info.iterationIndexOp);
             set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(info.iterationIndexOp);
-            
+
             /**
              * make the loop's indexed variables
              */
@@ -580,11 +580,11 @@ namespace CppAD {
             _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
             _cache.str("");
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + jobName + "'");
 
             info.evalLoopModelJacobianHessian();
 
-            finishedGraphCreation();
+            finishedJob();
         }
 
         /**
@@ -600,12 +600,12 @@ namespace CppAD {
             /**
              * Jacobian and Hessian - temporary variables
              */
-            startingGraphCreation("model (Jacobian + Hessian, temporary variables)");
+            startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
                                                                     noLoopEvalJacSparsity);
 
-            finishedGraphCreation();
+            finishedJob();
 
             for (size_t i = 0; i < tmpsAlias.size(); i++)
                 tmpsAlias[i].getOperationNode()->getArguments().push_back(asArgument(yNL[nonIndexdedEqSize + i]));
@@ -636,6 +636,9 @@ namespace CppAD {
                     info.indexedTempPositions.size() +
                     info.nonIndexedIndexedPositions.size() +
                     info.nonIndexedNonIndexedPosition.size();
+
+            if (hessElSize == 0)
+                continue; // no second order information
 
             vector<pair<CGBase, IndexPattern*> > indexedLoopResults(hessElSize);
             size_t hessLE = 0;

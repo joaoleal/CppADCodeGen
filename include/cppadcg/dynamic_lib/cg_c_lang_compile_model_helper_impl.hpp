@@ -150,10 +150,10 @@ namespace CppAD {
             return; //nothing to do
         }
 
-        startingGraphCreation("Loop detection");
+        startingJob("Loop detection");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         std::vector<CGBase> xx(_fun.Domain());
         handler.makeVariables(xx);
@@ -173,7 +173,7 @@ namespace CppAD {
             std::cout << "loops: " << matcher.getLoops().size() << std::endl;
         }
 
-        finishedGraphCreation();
+        finishedJob();
     }
 
     template<class Base>
@@ -219,10 +219,10 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
         const std::string jobName = "model (zero-order forward)";
 
-        startingGraphCreation(jobName);
+        startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
@@ -243,7 +243,7 @@ namespace CppAD {
             dep = prepareForward0WithLoops(handler, indVars);
         }
 
-        finishedGraphCreation();
+        finishedJob();
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -259,10 +259,10 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateJacobianSource(std::map<std::string, std::string>& sources) {
         const std::string jobName = "Jacobian";
 
-        startingGraphCreation(jobName);
+        startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);
@@ -284,7 +284,7 @@ namespace CppAD {
             JacobianRev(_fun, indVars, jac);
         }
 
-        finishedGraphCreation();
+        finishedJob();
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -300,10 +300,10 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
         const std::string jobName = "Hessian";
 
-        startingGraphCreation(jobName);
+        startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
@@ -336,7 +336,7 @@ namespace CppAD {
             }
         }
 
-        finishedGraphCreation();
+        finishedJob();
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -391,10 +391,10 @@ namespace CppAD {
         //size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
-        startingGraphCreation(jobName);
+        startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         vector<CGBase> indVars(n);
         handler.makeVariables(indVars);
@@ -418,7 +418,7 @@ namespace CppAD {
             jac = prepareSparseJacobianWithLoops(handler, indVars, forward);
         }
 
-        finishedGraphCreation();
+        finishedJob();
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -690,10 +690,10 @@ namespace CppAD {
         /**
          * 
          */
-        startingGraphCreation(jobName);
+        startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setVerbose(_verbose);
+        handler.setJobTimer(this);
 
         // independent variables
         vector<CGBase> indVars(n);
@@ -737,7 +737,7 @@ namespace CppAD {
                                                  duplicates);
         }
 
-        finishedGraphCreation();
+        finishedJob();
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -1143,19 +1143,23 @@ namespace CppAD {
          */
         vector<CGBase> dxv(n);
 
+
+        const std::string jobName = "model (forward one)";
+        startingJob("source for '" + jobName + "'");
+
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t j = it->first;
             const std::vector<size_t>& rows = it->second;
 
             _cache.str("");
-            _cache << "model (forward one)";
-            const std::string jobName = _cache.str();
+            _cache << "model (forward one, indep " << j << ")";
+            const std::string subJobName = _cache.str();
 
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setVerbose(_verbose);
+            handler.setJobTimer(this);
 
             vector<CGBase> indVars(n);
             handler.makeVariables(indVars);
@@ -1184,7 +1188,7 @@ namespace CppAD {
                 dyCustom.push_back(dy[*it2]);
             }
 
-            finishedGraphCreation();
+            finishedJob();
 
             CLanguage<Base> langC(_baseTypeName);
             langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -1196,8 +1200,10 @@ namespace CppAD {
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "x", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
-            handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, jobName);
+            handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, subJobName);
         }
+
+        finishedJob();
 
         _cache.str("");
 
@@ -1317,6 +1323,9 @@ namespace CppAD {
         /**
          * Generate one function for each dependent variable
          */
+        const std::string jobName = "model (reverse one)";
+        startingJob("source for '" + jobName + "'");
+
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t i = it->first;
@@ -1324,12 +1333,12 @@ namespace CppAD {
 
             _cache.str("");
             _cache << "model (reverse one, dep " << i << ")";
-            const std::string jobName = _cache.str();
+            const std::string subJobName = _cache.str();
 
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setVerbose(_verbose);
+            handler.setJobTimer(this);
 
             vector<CGBase> indVars(_fun.Domain());
             handler.makeVariables(indVars);
@@ -1359,7 +1368,7 @@ namespace CppAD {
                 dwCustom.push_back(dw[*it2]);
             }
 
-            finishedGraphCreation();
+            finishedJob();
 
             CLanguage<Base> langC(_baseTypeName);
             langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -1371,8 +1380,10 @@ namespace CppAD {
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw", "x", "var", "array"));
             CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "py", n);
 
-            handler.generateCode(code, langC, dwCustom, nameGenHess, _atomicFunctions, jobName);
+            handler.generateCode(code, langC, dwCustom, nameGenHess, _atomicFunctions, subJobName);
         }
+
+        finishedJob();
 
         _cache.str("");
 
@@ -1525,10 +1536,10 @@ namespace CppAD {
 
             const std::string jobName = _cache.str();
 
-            startingGraphCreation(jobName);
+            startingJob(jobName);
 
             CodeHandler<Base> handler;
-            handler.setVerbose(_verbose);
+            handler.setJobTime(this);
 
             vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
@@ -1569,7 +1580,7 @@ namespace CppAD {
             vector<CGBase> px = _fun.Reverse(2, py);
             assert(px.size() == 2 * n);
 
-            finishedGraphCreation();
+            finishedJob();
 
 
             std::map<size_t, std::set<size_t> >::const_iterator itr2c;
@@ -1604,6 +1615,8 @@ namespace CppAD {
         /**
          * Generate one function for each independent variable
          */
+        startingJob("source for 'model (reverse two)'");
+
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
             size_t j = it->first;
@@ -1611,12 +1624,12 @@ namespace CppAD {
 
             _cache.str("");
             _cache << "model (reverse two, indep " << j << ")";
-            const std::string jobName = _cache.str();
+            const std::string subJobName = _cache.str();
 
-            startingGraphCreation(jobName);
+            startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setVerbose(_verbose);
+            handler.setJobTimer(this);
 
             vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
@@ -1655,7 +1668,7 @@ namespace CppAD {
                 pxCustom.push_back(px[jj * p + 1]); // not interested in all values
             }
 
-            finishedGraphCreation();
+            finishedJob();
 
             CLanguage<Base> langC(_baseTypeName);
             langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
@@ -1667,8 +1680,10 @@ namespace CppAD {
             std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
             CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
-            handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
+            handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
         }
+
+        finishedJob();
 
         _cache.str("");
 
@@ -1994,48 +2009,6 @@ namespace CppAD {
                 "   break;\n"
                 "   };\n"
                 "}\n";
-    }
-
-    template<class Base>
-    void inline CLangCompileModelHelper<Base>::startingGraphCreation(const std::string& jobName) {
-        if (_verbose) {
-            if (!_jobNames.empty()) {
-                if (!_nestedJobs.back())
-                    std::cout << "\n";
-                std::string ident(3 * _jobNames.size(), ' ');
-                std::cout << ident;
-            }
-            std::cout << "generating operation graph for '" << jobName << "' ... ";
-            std::cout.flush();
-
-            std::fill(_nestedJobs.begin(), _nestedJobs.end(), true);
-
-            _nestedJobs.push_back(false);
-            _jobNames.push_back(jobName);
-            _beginTimes.push_back(system::currentTime());
-        }
-    }
-
-    template<class Base>
-    void inline CLangCompileModelHelper<Base>::finishedGraphCreation() {
-        if (_verbose) {
-            assert(_nestedJobs.size() > 0);
-
-            double beginTime = _beginTimes.back();
-            double endTime = system::currentTime();
-            double elapsed = endTime - beginTime;
-            if (_nestedJobs.back()) {
-                std::string ident(3 * (_jobNames.size() - 1), ' ');
-                std::cout << ident;
-                std::cout << "generated operation graph for '" << _jobNames.back() << "' ... ";
-            }
-
-            std::cout << "done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;
-
-            _nestedJobs.pop_back();
-            _jobNames.pop_back();
-            _beginTimes.pop_back();
-        }
     }
 
     template<class Base>
