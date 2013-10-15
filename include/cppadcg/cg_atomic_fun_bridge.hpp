@@ -142,7 +142,7 @@ namespace CppAD {
                                     const vector<std::set<size_t> >& u,
                                     vector<std::set<size_t> >& v) {
             using namespace CppAD::extra;
-            
+
             if (cacheSparsities_ || custom_jac_.isFilterDefined() || custom_hess_.isFilterDefined()) {
                 size_t n = fun_.Domain();
                 size_t m = fun_.Range();
@@ -245,16 +245,15 @@ namespace CppAD {
 
     protected:
 
+        virtual void zeroOrderDependency(const vector<bool>& vx,
+                                         vector<bool>& vy) {
+            CppAD::zeroOrderDependency(fun_, vx, vy);
+        }
+
         virtual bool atomicForward(size_t q,
                                    size_t p,
-                                   const vector<bool>& vx,
-                                   vector<bool>& vy,
                                    const vector<Base>& tx,
                                    vector<Base>& ty) {
-
-            if (vx.size() > 0) {
-                zeroOrderDependency(fun_, vx, vy);
-            }
             vector<CGB> txcg(tx.size());
             toCG(tx, txcg);
 

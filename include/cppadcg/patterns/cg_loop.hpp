@@ -49,6 +49,8 @@ namespace CppAD {
      */
     template<class Base>
     class Loop {
+    private:
+        typedef std::pair<size_t, CG<Base> > IndexValue;
     public:
         /**
          * The number of iterations this loop will have
@@ -88,15 +90,15 @@ namespace CppAD {
         /**
          * indexed independent variables for the loop (clones)
          */
-        std::map<const OperationNode<Base>*, size_t> independentsIndexed_;
+        std::map<const OperationNode<Base>*, IndexValue> independentsIndexed_;
         /**
          * non-indexed independent variables for the loop (clones)
          */
-        std::map<const OperationNode<Base>*, size_t> independentsNonIndexed_;
+        std::map<const OperationNode<Base>*, IndexValue> independentsNonIndexed_;
         /**
          * independent variables for the loop created from temporary variables (clones)
          */
-        std::map<const OperationNode<Base>*, size_t> independentsTemp_;
+        std::map<const OperationNode<Base>*, IndexValue> independentsTemp_;
         /**
          * id -> clone
          */
@@ -732,37 +734,62 @@ namespace CppAD {
                 nonIndexedCloneOrder[j] = clone;
             }
 
-            // tape independent array
-            std::vector<ADCGB> loopIndeps(independentsIndexed_.size() +
-                                          independentsNonIndexed_.size() +
-                                          independentsTemp_.size());
-            CppAD::Independent(loopIndeps);
-
             size_t nIndexed = indexedCloneOrder.size();
             size_t nNonIndexed = nonIndexedCloneOrder.size();
             size_t nTmpIndexed = independentsTemp_.size();
 
-            /**
-             * Reorder independent variables for the new tape
-             */
-            std::vector<ADCGB> localIndeps(loopIndeps.size());
+            // tape independent array
+            std::vector<ADCGB> loopIndeps(independentsIndexed_.size() +
+                                          independentsNonIndexed_.size() +
+                                          independentsTemp_.size());
 
+            /**
+             * assign values from the original model if possible (to avoid NaN)
+             */
             for (size_t j = 0; j < nIndexed; j++) {
-                size_t localIndex = independentsIndexed_.at(indexedCloneOrder[j]);
-                localIndeps[localIndex] = loopIndeps[j];
+                const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
+                loopIndeps[j] = iv.second;
             }
 
             s = 0;
             typename std::map<size_t, const OperationNode<Base>*>::const_iterator origJ2CloneIt;
             for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
-                size_t localIndex = independentsNonIndexed_.at(origJ2CloneIt->second);
+                const IndexValue& iv = independentsNonIndexed_.at(origJ2CloneIt->second);
+                loopIndeps[nIndexed + s] = iv.second;
+            }
+
+            s = 0;
+            typename std::map<const OperationNode<Base>*, IndexValue>::const_iterator itt;
+            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
+                const IndexValue& iv = itt->second;
+                loopIndeps[nIndexed + nNonIndexed + s] = iv.second;
+            }
+
+            /**
+             * register the independent variables
+             */
+            CppAD::Independent(loopIndeps);
+
+            /**
+             * Reorder independent variables for the new tape (1st iteration only)
+             */
+            std::vector<ADCGB> localIndeps(loopIndeps.size());
+
+            for (size_t j = 0; j < nIndexed; j++) {
+                const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
+                size_t localIndex = iv.first;
+                localIndeps[localIndex] = loopIndeps[j];
+            }
+
+            s = 0;
+            for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
+                size_t localIndex = independentsNonIndexed_.at(origJ2CloneIt->second).first;
                 localIndeps[localIndex] = loopIndeps[nIndexed + s];
             }
 
             s = 0;
-            typename std::map<const OperationNode<Base>*, size_t>::const_iterator itt;
             for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
-                size_t localIndex = itt->second;
+                size_t localIndex = itt->second.first;
                 localIndeps[localIndex] = loopIndeps[nIndexed + nNonIndexed + s];
             }
 
@@ -944,7 +971,7 @@ namespace CppAD {
             } else {
                 CG<Base> newIndep;
                 handler_.makeVariable(newIndep);
-                independentsIndexed_[newIndep.getOperationNode()] = nIndependents_;
+                independentsIndexed_[newIndep.getOperationNode()] = IndexValue(nIndependents_, newIndep);
                 nIndependents_++;
 
                 OperationNode<Base>* clone = newIndep.getOperationNode();
@@ -964,7 +991,7 @@ namespace CppAD {
 
             CG<Base> newIndep;
             handler_.makeVariable(newIndep);
-            independentsNonIndexed_[newIndep.getOperationNode()] = nIndependents_;
+            independentsNonIndexed_[newIndep.getOperationNode()] = IndexValue(nIndependents_, newIndep);
             nIndependents_++;
 
             OperationNode<Base>* clone = newIndep.getOperationNode();
@@ -987,7 +1014,7 @@ namespace CppAD {
             OperationNode<Base>* cloneOp = newIndep.getOperationNode();
 
             temporaryClone2Orig_[cloneOp] = &node;
-            independentsTemp_[cloneOp] = nIndependents_;
+            independentsTemp_[cloneOp] = IndexValue(nIndependents_, newIndep);
             nIndependents_++;
 
             size_t id = idCounter_++;

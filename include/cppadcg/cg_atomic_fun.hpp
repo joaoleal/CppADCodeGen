@@ -99,12 +99,37 @@ namespace CppAD {
 
     protected:
 
+        virtual void zeroOrderDependency(const vector<bool>& vx,
+                                         vector<bool>& vy) {
+            typedef vector<std::set<size_t> > VectorSet;
+
+            size_t m = vy.size();
+            size_t n = vx.size();
+
+            vector<std::set<size_t> > rt(m);
+            for (size_t j = 0; j < m; j++) {
+                rt[j].insert(j);
+            }
+            vector<std::set<size_t> > st(n);
+
+            rev_sparse_jac(m, rt, st);
+
+            std::set<size_t>::const_iterator it;
+            for (size_t j = 0; j < n; j++) {
+                for (it = st[j].begin(); it != st[j].end(); ++it) {
+                    size_t i = *it;
+                    if (vx[j]) {
+                        vy[i] = true;
+                    }
+                }
+            }
+        }
+
         virtual bool atomicForward(size_t q,
                                    size_t p,
-                                   const vector<bool>& vx,
-                                   vector<bool>& vy,
                                    const vector<Base>& tx,
                                    vector<Base>& ty) {
+            vector<bool> vx, vy;
             return atomicFun_.forward(q, p, vx, vy, tx, ty);
         }
 

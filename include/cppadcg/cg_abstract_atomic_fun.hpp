@@ -74,15 +74,13 @@ namespace CppAD {
                              vector<CGB>& ty) {
 
             bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
-            CPPADCG_ASSERT_KNOWN(valuesDefined || vx.size() == 0,
-                                 "Values must be defined in order to call atomic function");
-            if (!valuesDefined && vx.size() > 0)
-                return false;
+            if (vx.size() > 0)
+                zeroOrderDependency(vx, vy);
 
             bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);
             if (allParameters) {
                 vector<Base> tyb;
-                if (!evalForwardValues(q, p, vx, vy, tx, tyb, ty.size()))
+                if (!evalForwardValues(q, p, tx, tyb, ty.size()))
                     return false;
 
                 assert(tyb.size() == ty.size());
@@ -140,7 +138,7 @@ namespace CppAD {
 
             vector<Base> tyb;
             if (valuesDefined) {
-                if (!evalForwardValues(q, p, vx, vy, tx, tyb, ty.size()))
+                if (!evalForwardValues(q, p, tx, tyb, ty.size()))
                     return false;
             }
 
@@ -355,6 +353,9 @@ namespace CppAD {
 
     protected:
 
+        virtual void zeroOrderDependency(const vector<bool>& vx,
+                                         vector<bool>& vy) = 0;
+
         /**
          * Used to evaluate function values and forward mode function values and
          * derivatives.
@@ -371,8 +372,6 @@ namespace CppAD {
          */
         virtual bool atomicForward(size_t q,
                                    size_t p,
-                                   const vector<bool>& vx,
-                                   vector<bool>& vy,
                                    const vector<Base>& tx,
                                    vector<Base>& ty) = 0;
         /**
@@ -397,8 +396,6 @@ namespace CppAD {
 
         inline bool evalForwardValues(size_t q,
                                       size_t p,
-                                      const vector<bool>& vx,
-                                      vector<bool>& vy,
                                       const vector<CGB>& tx,
                                       vector<Base>& tyb,
                                       size_t ty_size) {
@@ -409,7 +406,7 @@ namespace CppAD {
                 txb[i] = tx[i].getValue();
             }
 
-            return atomicForward(q, p, vx, vy, txb, tyb);
+            return atomicForward(q, p, txb, tyb);
         }
 
         inline bool evalReverseValues(size_t p,

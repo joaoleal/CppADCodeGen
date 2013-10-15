@@ -45,7 +45,7 @@ namespace CppAD {
             hessian_(MUST_PASS),
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
             epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
-
+            //this->verbose_ = true;
         }
 
         void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
@@ -334,7 +334,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");
+            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");       
             compHelpL.setCreateForwardZero(true);
             compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
@@ -364,6 +364,7 @@ namespace CppAD {
             compiler.setSourcesFolder("sources_" + libBaseName);
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
+            compDynHelpL.setVerbose(this->verbose_);
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
             std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(libBaseName + "Loops"));
             for (size_t i = 0; i < atoms.size(); i++)
@@ -386,6 +387,7 @@ namespace CppAD {
             compiler.setSourcesFolder("sources_" + libBaseName);
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
+            compDynHelp.setVerbose(this->verbose_);
             compDynHelp.setLibraryName("modelLibNoLoops");
             std::auto_ptr<DynamicLib<double> > dynamicLib(compDynHelp.createDynamicLibrary(compiler));
 
