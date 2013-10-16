@@ -600,6 +600,11 @@ namespace CppAD {
         }
     }
 
+    /**
+     * Prints the model to standad output
+     * 
+     * @param fun the model
+     */
     template<class Base>
     inline void printModel(ADFun<CG<Base> >& fun) {
         std::vector<std::string> depNames;
@@ -607,6 +612,13 @@ namespace CppAD {
         printModel(fun, depNames, indepNames);
     }
 
+    /**
+     * Prints the model to standad output
+     * 
+     * @param fun the model
+     * @param depNames the names to be used for the dependent variables
+     * @param indepNames the names to be used for the independent variables
+     */
     template<class Base>
     inline void printModel(ADFun<CG<Base> >& fun,
                            const std::vector<std::string>& depNames,
@@ -636,4 +648,3 @@ namespace CppAD {
 }
 
 #endif
-

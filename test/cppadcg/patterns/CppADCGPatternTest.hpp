@@ -329,7 +329,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");       
+            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");
             compHelpL.setCreateForwardZero(true);
             compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
