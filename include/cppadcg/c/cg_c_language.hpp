@@ -844,27 +844,24 @@ namespace CppAD {
                     const IndexPattern* ip = (*_loopIndependentIndexPatterns)[pos];
                     var.setName(_nameGen->generateIndexedIndependent(var, *ip));
 
+                } else if (var.getVariableID() <= _independentSize) {
+                    // independent variable
+                    var.setName(_nameGen->generateIndependent(var));
+
+                } else if (var.getVariableID() < _minTemporaryVarID) {
+                    // dependent variable
+                    std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.getVariableID());
+                    assert(it != _dependentIDs.end());
+
+                    size_t index = it->second;
+                    var.setName(_nameGen->generateDependent(index));
+
                 } else {
-                    if (var.getVariableID() <= _independentSize) {
-                        // independent variable
-                        var.setName(_nameGen->generateIndependent(var));
-
-                    } else if (var.getVariableID() < _minTemporaryVarID) {
-                        // dependent variable
-                        std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.getVariableID());
-                        assert(it != _dependentIDs.end());
-
-                        size_t index = it->second;
-                        var.setName(_nameGen->generateDependent(index));
-
-                    } else {
-                        // temporary variable
-                        if (requiresVariableName(var)) {
-                            var.setName(_nameGen->generateTemporary(var));
-                        }
-                    }
+                    // temporary variable
+                    var.setName(_nameGen->generateTemporary(var));
                 }
             }
+
 
             return *var.getName();
         }
@@ -1230,39 +1227,39 @@ namespace CppAD {
             }
         }
 
-        virtual void printConditionalAssignment(OperationNode<Base>& op) {
-            assert(op.getVariableID() > 0);
+        virtual void printConditionalAssignment(OperationNode<Base>& node) {
+            assert(node.getVariableID() > 0);
 
-            const std::vector<Argument<Base> >& args = op.getArguments();
+            const std::vector<Argument<Base> >& args = node.getArguments();
             const Argument<Base> &left = args[0];
             const Argument<Base> &right = args[1];
             const Argument<Base> &trueCase = args[2];
             const Argument<Base> &falseCase = args[3];
 
-            bool isDep = isDependent(op);
-            const std::string& varName = createVariableName(op);
+            bool isDep = isDependent(node);
+            const std::string& varName = createVariableName(node);
 
             if ((trueCase.getParameter() != NULL && falseCase.getParameter() != NULL && *trueCase.getParameter() == *falseCase.getParameter()) ||
                     (trueCase.getOperation() != NULL && falseCase.getOperation() != NULL && trueCase.getOperation() == falseCase.getOperation())) {
                 // true and false cases are the same
-                printAssigmentStart(op, varName, isDep);
+                printAssigmentStart(node, varName, isDep);
                 print(trueCase);
-                printAssigmentEnd(op);
+                printAssigmentEnd(node);
             } else {
                 _code << _indentation << "if( ";
                 print(left);
-                _code << " " << getComparison(op.getOperationType()) << " ";
+                _code << " " << getComparison(node.getOperationType()) << " ";
                 print(right);
                 _code << " ) {\n";
                 _code << _spaces;
-                printAssigmentStart(op, varName, isDep);
+                printAssigmentStart(node, varName, isDep);
                 print(trueCase);
-                printAssigmentEnd(op);
+                printAssigmentEnd(node);
                 _code << _indentation << "} else {\n";
                 _code << _spaces;
-                printAssigmentStart(op, varName, isDep);
+                printAssigmentStart(node, varName, isDep);
                 print(falseCase);
-                printAssigmentEnd(op);
+                printAssigmentEnd(node);
                 _code << _indentation << "}\n";
             }
         }
