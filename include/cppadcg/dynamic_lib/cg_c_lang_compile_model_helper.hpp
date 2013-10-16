@@ -151,14 +151,27 @@ namespace CppAD {
          * Typical values of the independent vector 
          */
         std::vector<Base> _x;
+        /// generate source code for the zero order model evaluation
         bool _zero;
+        bool _zeroEvaluated;
+        /// generate source code for a dense Jacobian
         bool _jacobian;
+        /// generate source code for a dense Hessian
         bool _hessian;
+        /// generate source code for a sparse Jacobian
         bool _sparseJacobian;
+        /// generate source code for a sparse Hessian
         bool _sparseHessian;
+        /**
+         * generate source-code the Hessian sparsity pattern for each 
+         * equation/dependent
+         */
         bool _hessianByEquation;
+        /// generate source code for forward first order mode
         bool _forwardOne;
+        /// generate source code for reverse first order mode
         bool _reverseOne;
+        /// generate source code for reverse second order mode
         bool _reverseTwo;
         JacobianADMode _jacMode;
         /**
@@ -179,6 +192,11 @@ namespace CppAD {
          * The order of the atomic functions
          */
         std::vector<std::string> _atomicFunctions;
+        /**
+         * Maps each atomic function ID to the independent variable indexes 
+         * which affect a call of that atomic function
+         */
+        std::map<size_t, std::set<size_t> >* _atomicsIndeps;
         /**
          * A string cache for code generation
          */
@@ -238,6 +256,7 @@ namespace CppAD {
             _name(model),
             _baseTypeName(CLangCompileModelHelper<Base>::baseTypeName()),
             _zero(true),
+            _zeroEvaluated(false),
             _jacobian(false),
             _hessian(false),
             _sparseJacobian(false),
@@ -247,6 +266,7 @@ namespace CppAD {
             _reverseOne(false),
             _reverseTwo(false),
             _jacMode(AUTOMATIC),
+            _atomicsIndeps(NULL),
             _maxAssignPerFunc(20000) {
 
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
@@ -630,6 +650,7 @@ namespace CppAD {
 
         inline virtual ~CLangCompileModelHelper() {
             delete _funNoLoops;
+            delete _atomicsIndeps;
 
             typename std::set<LoopModel<Base>* >::const_iterator it;
             for (it = _loopTapes.begin(); it != _loopTapes.end(); ++it) {
@@ -663,6 +684,8 @@ namespace CppAD {
         virtual void generateAtomicFuncNames(std::map<std::string, std::string>& sources);
 
         virtual bool isAtomicsUsed();
+
+        virtual const std::map<size_t, std::set<size_t> >& getAtomicsIndeps();
 
         /***********************************************************************
          * zero order (the orginal model)

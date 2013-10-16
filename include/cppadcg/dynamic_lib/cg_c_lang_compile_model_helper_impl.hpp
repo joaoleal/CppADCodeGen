@@ -96,6 +96,7 @@ namespace CppAD {
         std::map<std::string, std::string> sources;
         if (_zero) {
             generateZeroSource(sources);
+            _zeroEvaluated = true;
         }
 
         if (_jacobian) {
@@ -217,10 +218,20 @@ namespace CppAD {
 
     template<class Base>
     bool CLangCompileModelHelper<Base>::isAtomicsUsed() {
-        if (_zero)
+        if (_zeroEvaluated) {
             return _atomicFunctions.size() > 0;
-        else
-            throw CGException("Not implemented yet: must request zero order");
+        } else {
+            return !getAtomicsIndeps().empty();
+        }
+    }
+
+    template<class Base>
+    const std::map<size_t, std::set<size_t> >& CLangCompileModelHelper<Base>::getAtomicsIndeps() {
+        if (_atomicsIndeps == NULL) {
+            AtomicDependencyLocator<Base> adl(_fun);
+            _atomicsIndeps = new std::map<size_t, std::set<size_t> >(adl.findAtomicsUsage());
+        }
+        return *_atomicsIndeps;
     }
 
     template<class Base>

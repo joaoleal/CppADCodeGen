@@ -188,6 +188,8 @@ namespace CppAD {
          * Loops - evaluate Jacobian and Hessian
          */
         bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
+        //const std::map<size_t, std::set<size_t> >& aaa = getAtomicsIndeps();
+        
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
