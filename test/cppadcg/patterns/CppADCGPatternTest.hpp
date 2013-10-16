@@ -24,13 +24,8 @@ namespace CppAD {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
     protected:
-
-        enum TEST_TYPE {
-            MUST_PASS, MUST_FAIL, IGNORE
-        };
-    protected:
-        TEST_TYPE jacobian_;
-        TEST_TYPE hessian_;
+        bool testJacobian_;
+        bool testHessian_;
         std::vector<Base> xNorm_;
         std::vector<Base> eqNorm_;
         Base epsilonA_;
@@ -41,8 +36,8 @@ namespace CppAD {
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
-            jacobian_(MUST_PASS),
-            hessian_(MUST_PASS),
+            testJacobian_(true),
+            testHessian_(true),
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
             epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
             //this->verbose_ = true;
@@ -119,15 +114,15 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, jacobian_, hessian_);
-            if (jacobian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, MUST_PASS, IGNORE, true);
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE);
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, MUST_PASS, IGNORE, true);
+            testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, testJacobian_, testHessian_);
+            if (testJacobian_) {
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, true, false, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, true, false);
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, true, false, true);
             }
 
-            if (hessian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, IGNORE, MUST_PASS, false, true);
+            if (testHessian_) {
+                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, false, true, false, true);
             }
 
         }
@@ -237,15 +232,15 @@ namespace CppAD {
             fun.Dependent(y);
 
             size_t mExtra = 0;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, jacobian_, hessian_);
-            if (jacobian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, MUST_PASS, IGNORE, true);
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE);
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, MUST_PASS, IGNORE, true);
+            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, testJacobian_, testHessian_);
+            if (testJacobian_) {
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, true, false, true);
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, true, false);
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, true, false, true);
             }
 
-            if (hessian_ == MUST_PASS) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, IGNORE, MUST_PASS, false, true);
+            if (testHessian_) {
+                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, false, true, false, true);
             }
         }
 
@@ -299,8 +294,8 @@ namespace CppAD {
                                const std::string& name,
                                const std::vector<Base>& xTypical,
                                JacobianADMode jacMode,
-                               TEST_TYPE jacobian = MUST_PASS,
-                               TEST_TYPE hessian = MUST_PASS,
+                               bool jacobian = true,
+                               bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
             std::vector<atomic_base<Base>*> atoms;
@@ -314,18 +309,18 @@ namespace CppAD {
                                const std::vector<atomic_base<Base>*>& atoms,
                                const std::vector<Base>& xTypical,
                                JacobianADMode jacMode,
-                               TEST_TYPE jacobian = MUST_PASS,
-                               TEST_TYPE hessian = MUST_PASS,
+                               bool jacobian = true,
+                               bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
 
             std::string libBaseName = name;
-            if (jacobian == MUST_PASS) {
+            if (jacobian) {
                 if (!forReverseOne) libBaseName += "d";
                 if (jacMode == FORWARD) libBaseName += "F";
                 else if (jacMode == REVERSE) libBaseName += "R";
             }
-            if (hessian == MUST_PASS && reverseTwo)
+            if (hessian && reverseTwo)
                 libBaseName += "rev2";
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
@@ -339,8 +334,8 @@ namespace CppAD {
             compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
             compHelpL.setCreateHessian(false);
-            compHelpL.setCreateSparseJacobian(jacobian == MUST_PASS);
-            compHelpL.setCreateSparseHessian(hessian == MUST_PASS);
+            compHelpL.setCreateSparseJacobian(jacobian);
+            compHelpL.setCreateSparseHessian(hessian);
             compHelpL.setCreateForwardOne(forReverseOne && jacMode == FORWARD);
             compHelpL.setCreateReverseOne(forReverseOne && jacMode == REVERSE);
             compHelpL.setCreateReverseTwo(reverseTwo);
@@ -377,8 +372,8 @@ namespace CppAD {
             compHelp.setJacobianADMode(jacMode);
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
-            compHelp.setCreateSparseJacobian(jacobian == MUST_PASS);
-            compHelp.setCreateSparseHessian(hessian == MUST_PASS);
+            compHelp.setCreateSparseJacobian(jacobian);
+            compHelp.setCreateSparseHessian(hessian);
             compHelp.setCreateForwardOne(false);
             compHelp.setCreateReverseOne(false);
             compHelp.setCreateReverseTwo(reverseTwo);
@@ -448,39 +443,6 @@ namespace CppAD {
                                           epsilonR_, epsilonA_));
             }
 
-
-            if (jacobian == MUST_FAIL) {
-                /** Make sure it fails */
-                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "LoopsJacFail");
-                compHelpL.setCreateForwardZero(false);
-                compHelpL.setJacobianADMode(jacMode);
-                compHelpL.setCreateSparseJacobian(true);
-                compHelpL.setRelatedDependents(relatedDepCandidates);
-                compHelpL.setTypicalIndependentValues(xTypical);
-
-                GccCompiler<double> compiler2;
-                compiler2.setSourcesFolder("sources_" + libBaseName);
-
-                CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
-                std::auto_ptr<DynamicLib<double> > dynamicLibL;
-                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler2)), CGException);
-            }
-
-            if (hessian == MUST_FAIL) {
-                /** Make sure it fails */
-                CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "LoopsHessFail");
-                compHelpL.setCreateForwardZero(false);
-                compHelpL.setCreateSparseHessian(true);
-                compHelpL.setRelatedDependents(relatedDepCandidates);
-                compHelpL.setTypicalIndependentValues(xTypical);
-
-                GccCompiler<double> compiler2;
-                compiler2.setSourcesFolder("sources_" + libBaseName);
-
-                CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
-                std::auto_ptr<DynamicLib<double> > dynamicLibL;
-                ASSERT_THROW(dynamicLibL = std::auto_ptr<DynamicLib<double> >(compDynHelpL.createDynamicLibrary(compiler2)), CGException);
-            }
         }
     };
 }

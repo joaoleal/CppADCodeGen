@@ -125,7 +125,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
 
     ASSERT_TRUE(reducedFun != NULL);
 
-    ASSERT_EQ(2, dummyD.getDifferentiationIndex());
+    ASSERT_EQ(size_t(2), dummyD.getDifferentiationIndex());
     
     delete reducedFun;
 }

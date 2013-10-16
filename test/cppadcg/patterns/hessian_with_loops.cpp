@@ -29,7 +29,7 @@ namespace CppAD {
 
         inline CppADCGHessLoopTest(bool verbose = false, bool printValues = false) :
         CppADCGPatternTest(verbose, printValues) {
-            this->jacobian_ = IGNORE;
+            this->testJacobian_ = false;
         }
     };
 }
