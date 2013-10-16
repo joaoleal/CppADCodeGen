@@ -60,7 +60,7 @@ namespace CppAD {
             vector<CG<Base> > w;
             vector<std::map<size_t, CG<Base> > > dyiDzk;
 
-            vector<std::map<size_t, CG<Base> > > hess;
+            std::map<size_t, std::map<size_t, CG<Base> > > hess;
 
             vector<std::set<size_t> > noLoopEvalHessTempsSparsity;
             std::map<size_t, std::map<size_t, CG<Base> > > dzDxx;
@@ -119,49 +119,28 @@ namespace CppAD {
 
             }
 
-            inline void evalLoopModelJacobianHessian() {
+            inline void evalLoopModelJacobianHessian(bool individualColoring) {
                 using namespace CppAD::extra;
-                
+
                 ADFun<CG<Base> >& fun = model->getTape();
 
-                std::vector<size_t> jacRow, jacCol;
-                generateSparsityIndexes(evalJacSparsity, jacRow, jacCol);
-                vector<CG<Base> > jacLoop(jacRow.size());
+                vector<vector<CG<Base> > > vw(1);
+                vw[0] = w;
 
-                std::vector<size_t> hesRow, hesCol;
-                generateSparsityIndexes(evalHessSparsity, hesRow, hesCol);
-                vector<CG<Base> > hessLoopFlat(hesRow.size());
+                vector<CG<Base> > y;
+                vector<std::map<size_t, std::map<size_t, CG<Base> > > > vhess;
 
-                if (!jacRow.empty() || !hesRow.empty()) {
-                    vector<CG<Base> > y(model->getTapeDependentCount());
+                generateLoopForJacHes(fun, x, vw, y,
+                                      model->getJacobianSparsity(),
+                                      evalJacSparsity,
+                                      dyiDzk,
+                                      model->getHessianSparsity(),
+                                      evalHessSparsity,
+                                      vhess,
+                                      individualColoring);
 
-                    SparseForjacHessianWork work;
-                    sparseForJacHessian(fun, x, w,
-                                        y,
-                                        model->getJacobianSparsity(),
-                                        jacRow, jacCol, jacLoop,
-                                        model->getHessianSparsity(),
-                                        hesRow, hesCol, hessLoopFlat,
-                                        work);
-
-                    // save/organize results
-                    // Jacobian
-                    dyiDzk.resize(model->getTapeDependentCount());
-                    for (size_t el = 0; el < jacLoop.size(); el++) {
-                        size_t tapeI = jacRow[el];
-                        size_t tapeJ = jacCol[el];
-                        dyiDzk[tapeI][tapeJ] = jacLoop[el];
-                    }
-
-                    // save non-indexed hessian elements
-                    // Hessian
-                    hess.resize(fun.Domain());
-                    for (size_t el = 0; el < hesRow.size(); el++) {
-                        size_t tapeJ1 = hesRow[el];
-                        size_t tapeJ2 = hesCol[el];
-                        hess[tapeJ1][tapeJ2] = hessLoopFlat[el];
-                    }
-                }
+                //Hessian
+                hess = vhess[0];
             }
 
         };

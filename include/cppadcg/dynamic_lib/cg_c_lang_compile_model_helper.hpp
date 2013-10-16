@@ -188,7 +188,7 @@ namespace CppAD {
          */
         size_t _maxAssignPerFunc;
 
-        
+
         /**
          * 
          */
@@ -662,6 +662,8 @@ namespace CppAD {
 
         virtual void generateAtomicFuncNames(std::map<std::string, std::string>& sources);
 
+        virtual bool isAtomicsUsed();
+
         /***********************************************************************
          * zero order (the orginal model)
          **********************************************************************/
@@ -857,6 +859,12 @@ namespace CppAD {
 
         virtual void generateSparseForwardOneSources(std::map<std::string, std::string>& sources);
 
+        virtual void generateSparseForwardOneSourcesWithAtomics(std::map<std::string, std::string>& sources,
+                                                                const std::map<size_t, std::vector<size_t> >& elements);
+
+        virtual void generateSparseForwardOneSourcesNoAtomics(std::map<std::string, std::string>& sources,
+                                                              const std::map<size_t, std::vector<size_t> >& elements);
+
         virtual void generateForwardOneSources(std::map<std::string, std::string>& sources);
 
         virtual void prepareSparseForwardOneWithLoops(std::map<std::string, std::string>& sources,
@@ -867,11 +875,24 @@ namespace CppAD {
                                                  vector<CG<Base> >& jacCol,
                                                  std::map<std::string, std::string>& sources);
 
+
+        inline static std::map<size_t, std::map<size_t, CG<Base> > > generateLoopFor1Jac(ADFun<CGBase>& fun,
+                                                                                         const vector<std::set<size_t> >& sparsity,
+                                                                                         const vector<std::set<size_t> >& evalSparsity,
+                                                                                         const vector<CGBase>& xl,
+                                                                                         bool constainsAtomics);
+
         /***********************************************************************
          * Reverse 1 mode
          **********************************************************************/
 
         virtual void generateSparseReverseOneSources(std::map<std::string, std::string>& sources);
+
+        virtual void generateSparseReverseOneSourcesWithAtomics(std::map<std::string, std::string>& sources,
+                                                                const std::map<size_t, std::vector<size_t> >& elements);
+
+        virtual void generateSparseReverseOneSourcesNoAtomics(std::map<std::string, std::string>& sources,
+                                                              const std::map<size_t, std::vector<size_t> >& elements);
 
         virtual void generateReverseOneSources(std::map<std::string, std::string>& sources);
 
@@ -883,11 +904,25 @@ namespace CppAD {
                                                  vector<CG<Base> >& jacRow,
                                                  std::map<std::string, std::string>& sources);
 
+        inline static std::vector<std::map<size_t, CGBase> > generateLoopRev1Jac(ADFun<CGBase>& fun,
+                                                                                 const vector<std::set<size_t> >& sparsity,
+                                                                                 const vector<std::set<size_t> >& evalSparsity,
+                                                                                 const vector<CGBase>& xl,
+                                                                                 bool constainsAtomics);
+
         /***********************************************************************
          * Reverse 2 mode
          **********************************************************************/
 
         virtual void generateSparseReverseTwoSources(std::map<std::string, std::string>& sources) throw (CGException);
+
+        virtual void generateSparseReverseTwoSourcesWithAtomics(std::map<std::string, std::string>& sources,
+                                                                const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+
+        virtual void generateSparseReverseTwoSourcesNoAtomics(std::map<std::string, std::string>& sources,
+                                                              const std::map<size_t, std::vector<size_t> >& elements,
+                                                              const std::vector<size_t>& evalRows,
+                                                              const std::vector<size_t>& evalCols) throw (CGException);
 
         virtual void generateReverseTwoSources(std::map<std::string, std::string>& sources);
 

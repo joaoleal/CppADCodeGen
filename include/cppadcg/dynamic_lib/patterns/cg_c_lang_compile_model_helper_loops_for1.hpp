@@ -65,7 +65,7 @@ namespace CppAD {
         std::vector<size_t> locations(nnz);
 
         size_t p = 0;
-        std::map<size_t, std::vector<size_t> >::const_iterator itJ;
+        map<size_t, std::vector<size_t> >::const_iterator itJ;
         for (itJ = elements.begin(); itJ != elements.end(); ++itJ) {//loop variables
             size_t j = itJ->first;
             const std::vector<size_t>& r = itJ->second;
@@ -107,13 +107,11 @@ namespace CppAD {
         vector<CGBase> tmps;
 
         // jacobian for temporaries
-        std::map<size_t, std::map<size_t, CGBase> > dzDx;
+        map<size_t, map<size_t, CGBase> > dzDx;
 
         /*******************************************************************
          * equations NOT in loops
          ******************************************************************/
-
-        vector<CGBase> jacNoLoop; // jacobian for equations outside loops
         if (_funNoLoops != NULL) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
@@ -129,35 +127,42 @@ namespace CppAD {
             /**
              * jacobian
              */
-            vector<size_t> row, col;
-            generateSparsityIndexes(noLoopEvalSparsity, row, col);
-            jacNoLoop.resize(row.size());
-
-            CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
-            fun.SparseJacobianForward(x, _funNoLoops->getJacobianSparsity(), row, col, jacNoLoop, work);
+            bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
+            map<size_t, map<size_t, CGBase> > dydxT = generateLoopFor1Jac(fun,
+                                                                          _funNoLoops->getJacobianSparsity(),
+                                                                          noLoopEvalSparsity,
+                                                                          x, hasAtomics);
 
             map<size_t, vector<CGBase> > jacNl; // by column
+            typename map<size_t, map<size_t, CGBase> >::const_iterator itDydxT;
+            for (itDydxT = dydxT.begin(); itDydxT != dydxT.end(); ++itDydxT) {
+                size_t j = itDydxT->first;
+                const map<size_t, CGBase>& dydxjT = itDydxT->second;
 
-            for (size_t el = 0; el < row.size(); el++) {
-                size_t inl = row[el];
-                size_t j = col[el];
-                if (inl < nonIndexdedEqSize) {
-                    // (dy_i/dx_v) elements from equations outside loops
-                    const std::set<size_t>& locations = noLoopEvalLocations[inl][j];
+                // prepare space for the jacobian of the original equations
+                vector<CGBase>& col = jacNl[j];
+                col.resize(elements.at(j).size());
 
-                    assert(locations.size() == 1);
-                    size_t e = *locations.begin();
+                typename map<size_t, CGBase>::const_iterator itiv;
+                for (itiv = dydxjT.begin(); itiv != dydxjT.end(); ++itiv) {
+                    size_t inl = itiv->first;
 
-                    vector<CGBase>& col = jacNl[j];
-                    col.resize(elements.at(j).size());
-                    col[e] = jacNoLoop[el] * dx;
+                    if (inl < nonIndexdedEqSize) {
+                        // (dy_i/dx_v) elements from equations outside loops
+                        const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
-                    _nonLoopFor1Elements[j].insert(e);
+                        assert(locations.size() == 1); // one jacobian element should not be placed in several locations
+                        size_t e = *locations.begin();
 
-                } else {
-                    // dz_k/dx_v (for temporary variable)
-                    size_t k = inl - nonIndexdedEqSize;
-                    dzDx[k][j] = jacNoLoop[el];
+                        col[e] = itiv->second * dx;
+
+                        _nonLoopFor1Elements[j].insert(e);
+                    } else {
+                        // dz_k/dx_v (for temporary variable)
+                        size_t k = inl - nonIndexdedEqSize;
+                        dzDx[k][j] = itiv->second;
+                    }
+
                 }
             }
 
@@ -203,20 +208,11 @@ namespace CppAD {
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
 
-            vector<size_t> row, col;
-            generateSparsityIndexes(loopsEvalSparsities[&lModel], row, col);
-            vector<CGBase> jacLoop(row.size());
-
-            CppAD::sparse_jacobian_work work; // temporary structure for CppAD
-            fun.SparseJacobianForward(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
-
-            // organize results
-            std::vector<std::map<size_t, CGBase> > dyiDxtape(lModel.getTapeDependentCount());
-            for (size_t el = 0; el < jacLoop.size(); el++) {
-                size_t tapeI = row[el];
-                size_t tapeJ = col[el];
-                dyiDxtape[tapeI][tapeJ] = jacLoop[el];
-            }
+            bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
+            map<size_t, map<size_t, CGBase> > dyiDxtapeT = generateLoopFor1Jac(fun,
+                                                                               lModel.getJacobianSparsity(),
+                                                                               loopsEvalSparsities[&lModel],
+                                                                               xl, hasAtomics);
 
             finishedJob();
 
@@ -278,7 +274,7 @@ namespace CppAD {
 
                 if (itPattern.get() == NULL) {
                     // did not match!
-                    throw CGException("Not implemented yet");
+                    throw CGException("Random index patterns not implemented yet!");
                 }
 
                 /**
@@ -323,7 +319,7 @@ namespace CppAD {
                 indexedLoopResults = generateForwardOneGroupOps(handler, lModel, info,
                                                                 group, iterationIndexOp,
                                                                 nnz,
-                                                                dx, dyiDxtape, dzDx,
+                                                                dx, dyiDxtapeT, dzDx,
                                                                 jcol2CompressedLoc);
 
                 _loopFor1Groups[&lModel][g] = jcol2CompressedLoc;
@@ -725,7 +721,7 @@ namespace CppAD {
                                                                                IndexOperationNode<Base>& iterationIndexOp,
                                                                                size_t nnz,
                                                                                const CG<Base>& dx,
-                                                                               const std::vector<std::map<size_t, CG<Base> > >& dyiDxtape,
+                                                                               const std::map<size_t, std::map<size_t, CG<Base> > >& dyiDxtapeT,
                                                                                const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
                                                                                std::map<size_t, std::set<size_t> >& jcol2CompressedLoc) {
             using namespace std;
@@ -767,7 +763,7 @@ namespace CppAD {
                         for (size_t iter = 0; iter < nIterations; iter++)
                             iter2jcols[iter] = tapeJPos[iter].original;
 
-                        CGBase val = dyiDxtape.at(tapeI).at(tapeJ) * dx;
+                        CGBase val = dyiDxtapeT.at(tapeJ).at(tapeI) * dx;
                         indexedLoopResults[jacLE++] = createForwardOneElement(handler, group, positions, iter2jcols, nnz,
                                                                               val, iterationIndexOp, jcol2CompressedLoc);
                     }
@@ -791,22 +787,24 @@ namespace CppAD {
                         const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
                         if (pos != NULL) {
                             size_t tapeJ = pos->tape;
-                            typename std::map<size_t, CGBase>::const_iterator itVal = dyiDxtape.at(tapeI).find(tapeJ);
-                            if (itVal != dyiDxtape[tapeI].end()) {
+
+                            const map<size_t, CG<Base> >& dyiDxJtapeT = dyiDxtapeT.at(tapeJ);
+                            typename map<size_t, CGBase>::const_iterator itVal = dyiDxJtapeT.find(tapeI);
+                            if (itVal != dyiDxJtapeT.end()) {
                                 jacVal += itVal->second;
                             }
                         }
 
                         // non-indexed variables used through temporary variables
-                        std::map<size_t, std::set<size_t> >::const_iterator itks = jlrw.tmpEvals.find(j);
+                        map<size_t, set<size_t> >::const_iterator itks = jlrw.tmpEvals.find(j);
                         if (itks != jlrw.tmpEvals.end()) {
-                            const std::set<size_t>& ks = itks->second;
-                            std::set<size_t>::const_iterator itk;
+                            const set<size_t>& ks = itks->second;
+                            set<size_t>::const_iterator itk;
                             for (itk = ks.begin(); itk != ks.end(); ++itk) {
                                 size_t k = *itk;
                                 size_t tapeJ = nIndexed + nNonIndexed + k;
 
-                                jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx.at(k).at(j);
+                                jacVal += dyiDxtapeT.at(tapeJ).at(tapeI) * dzDx.at(k).at(j);
                             }
                         }
 
@@ -838,7 +836,7 @@ namespace CppAD {
             /**
              * Determine index pattern
              */
-            std::map<size_t, size_t> locations;
+            map<size_t, size_t> locations;
 
             set<size_t>::const_iterator itIt;
             for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
@@ -931,6 +929,70 @@ namespace CppAD {
 
         }
 
+    }
+
+    template<class Base>
+    std::map<size_t, std::map<size_t, CG<Base> > > CLangCompileModelHelper<Base>::generateLoopFor1Jac(ADFun<CGBase>& fun,
+                                                                                                      const vector<std::set<size_t> >& sparsity,
+                                                                                                      const vector<std::set<size_t> >& evalSparsity,
+                                                                                                      const vector<CGBase>& x,
+                                                                                                      bool constainsAtomics) {
+        using namespace std;
+        using namespace CppAD::extra;
+        using CppAD::vector;
+
+        size_t m = fun.Range();
+        size_t n = fun.Domain();
+
+        map<size_t, map<size_t, CGBase> > dyDxT;
+
+        if (!constainsAtomics) {
+            vector<size_t> row, col;
+            generateSparsityIndexes(evalSparsity, row, col);
+            vector<CGBase> jacLoop(row.size());
+
+            CppAD::sparse_jacobian_work work; // temporary structure for CppAD
+            fun.SparseJacobianForward(x, sparsity, row, col, jacLoop, work);
+
+            // organize results
+            for (size_t el = 0; el < jacLoop.size(); el++) {
+                size_t i = row[el];
+                size_t j = col[el];
+                dyDxT[j][i] = jacLoop[el];
+            }
+
+        } else {
+            //transpose
+            vector<set<size_t> > evalSparsityT(n);
+            transposePattern(evalSparsity, evalSparsityT);
+
+            vector<CGBase> dx(n);
+
+            for (size_t j = 0; j < n; j++) {
+                const set<size_t>& column = evalSparsityT[j];
+
+                if (column.empty())
+                    continue;
+
+                fun.Forward(0, x);
+
+                dx[j] = Base(1);
+                vector<CGBase> dy = fun.Forward(1, dx);
+                assert(dy.size() == m);
+                dx[j] = Base(0);
+
+                map<size_t, CGBase>& dyDxJT = dyDxT[j];
+
+                set<size_t>::const_iterator it2;
+                for (it2 = column.begin(); it2 != column.end(); ++it2) {
+                    size_t i = *it2;
+                    dyDxJT[i] = dy[i];
+                }
+            }
+
+        }
+
+        return dyDxT;
     }
 
     template<class Base>

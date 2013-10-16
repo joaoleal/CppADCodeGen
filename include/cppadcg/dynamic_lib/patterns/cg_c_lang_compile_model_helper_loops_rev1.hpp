@@ -112,8 +112,6 @@ namespace CppAD {
         /*******************************************************************
          * equations NOT in loops
          ******************************************************************/
-
-        vector<CGBase> jacNoLoop; // jacobian for equations outside loops
         if (_funNoLoops != NULL) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
@@ -129,43 +127,42 @@ namespace CppAD {
             /**
              * jacobian
              */
-            vector<size_t> row, col;
-            generateSparsityIndexes(noLoopEvalSparsity, row, col);
-            jacNoLoop.resize(row.size());
-
-            CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
-            fun.SparseJacobianReverse(x, _funNoLoops->getJacobianSparsity(), row, col, jacNoLoop, work);
+            bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
+            std::vector<map<size_t, CGBase> > dydx = generateLoopRev1Jac(fun, _funNoLoops->getJacobianSparsity(), noLoopEvalSparsity, x, hasAtomics);
 
             const std::vector<size_t>& dependentIndexes = _funNoLoops->getOrigDependentIndexes();
             map<size_t, vector<CGBase> > jacNl; // by row
 
-            // prepare space for the jacobian of the original equations
             for (size_t inl = 0; inl < nonIndexdedEqSize; inl++) {
                 size_t i = dependentIndexes[inl];
-                jacNl[i].resize(elements.at(i).size());
-            }
 
-            for (size_t el = 0; el < row.size(); el++) {
-                size_t inl = row[el];
-                size_t j = col[el];
-                if (inl < nonIndexdedEqSize) {
-                    size_t i = dependentIndexes[inl];
+                // prepare space for the jacobian of the original equations
+                vector<CGBase>& row = jacNl[i];
+                row.resize(dydx[inl].size());
 
+                typename map<size_t, CGBase>::const_iterator itjv;
+                for (itjv = dydx[inl].begin(); itjv != dydx[inl].end(); ++itjv) {
+                    size_t j = itjv->first;
                     // (dy_i/dx_v) elements from equations outside loops
-                    const std::set<size_t>& locations = noLoopEvalLocations[inl][j];
+                    const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
                     assert(locations.size() == 1); // one jacobian element should not be placed in several locations
                     size_t e = *locations.begin();
 
-                    vector<CGBase>& row = jacNl[i];
-                    row[e] = jacNoLoop[el] * py;
+                    row[e] = itjv->second * py;
 
                     _nonLoopRev1Elements[i].insert(e);
+                }
+            }
 
-                } else {
-                    // dz_k/dx_v (for temporary variable)
-                    size_t k = inl - nonIndexdedEqSize;
-                    dzDx[k][j] = jacNoLoop[el];
+            // dz_k/dx_v (for temporary variable)
+            for (size_t inl = nonIndexdedEqSize; inl < dydx.size(); inl++) {
+                size_t k = inl - nonIndexdedEqSize;
+
+                typename map<size_t, CGBase>::const_iterator itjv;
+                for (itjv = dydx[inl].begin(); itjv != dydx[inl].end(); ++itjv) {
+                    size_t j = itjv->first;
+                    dzDx[k][j] = itjv->second;
                 }
             }
 
@@ -209,20 +206,8 @@ namespace CppAD {
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
 
-            vector<size_t> row, col;
-            generateSparsityIndexes(loopsEvalSparsities[&lModel], row, col);
-            vector<CGBase> jacLoop(row.size());
-
-            CppAD::sparse_jacobian_work work; // temporary structure for CppAD
-            fun.SparseJacobianReverse(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
-
-            // organize results
-            std::vector<std::map<size_t, CGBase> > dyiDxtape(lModel.getTapeDependentCount());
-            for (size_t el = 0; el < jacLoop.size(); el++) {
-                size_t tapeI = row[el];
-                size_t tapeJ = col[el];
-                dyiDxtape[tapeI][tapeJ] = jacLoop[el];
-            }
+            bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
+            std::vector<map<size_t, CGBase> > dyiDxtape = generateLoopRev1Jac(fun, lModel.getJacobianSparsity(), loopsEvalSparsities[&lModel], xl, hasAtomics);
 
             finishedJob();
 
@@ -310,7 +295,7 @@ namespace CppAD {
                  * Generate the source code inside the loop
                  */
                 _cache.str("");
-                _cache << "model (forward one, loop " << lModel.getLoopId() << ", group " << tapeI << ")";
+                _cache << "model (reverse one, loop " << lModel.getLoopId() << ", group " << tapeI << ")";
                 string jobName = _cache.str();
                 handler.generateCode(code, langC, pxCustom, nameGenHess, _atomicFunctions, jobName);
 
@@ -393,6 +378,67 @@ namespace CppAD {
         handler.generateCode(code, langC, jacRow, nameGenHess, _atomicFunctions, jobName);
 
         handler.resetNodes();
+    }
+
+    template<class Base>
+    std::vector<std::map<size_t, CG<Base> > > CLangCompileModelHelper<Base>::generateLoopRev1Jac(ADFun<CGBase>& fun,
+                                                                                                 const vector<std::set<size_t> >& sparsity,
+                                                                                                 const vector<std::set<size_t> >& evalSparsity,
+                                                                                                 const vector<CGBase>& x,
+                                                                                                 bool constainsAtomics) {
+        using namespace std;
+        using namespace CppAD::extra;
+        using CppAD::vector;
+
+        size_t m = fun.Range();
+        size_t n = fun.Domain();
+
+        std::vector<map<size_t, CGBase> > dyDx(m);
+
+        if (!constainsAtomics) {
+            vector<size_t> row, col;
+            generateSparsityIndexes(evalSparsity, row, col);
+            vector<CGBase> jacLoop(row.size());
+
+            CppAD::sparse_jacobian_work work; // temporary structure for CppAD
+            fun.SparseJacobianReverse(x, sparsity, row, col, jacLoop, work);
+
+            // organize results
+            for (size_t el = 0; el < jacLoop.size(); el++) {
+                size_t i = row[el];
+                size_t j = col[el];
+                dyDx[i][j] = jacLoop[el];
+            }
+
+        } else {
+
+            vector<CGBase> w(m);
+
+            for (size_t i = 0; i < m; i++) {
+                const set<size_t>& row = evalSparsity[i];
+
+                if (row.empty())
+                    continue;
+
+                fun.Forward(0, x);
+
+                w[i] = Base(1);
+                vector<CGBase> dw = fun.Reverse(1, w);
+                assert(dw.size() == n);
+                w[i] = Base(0);
+
+                map<size_t, CGBase>& dyIDx = dyDx[i];
+
+                set<size_t>::const_iterator it2;
+                for (it2 = row.begin(); it2 != row.end(); ++it2) {
+                    size_t j = *it2;
+                    dyIDx[j] = dw[j];
+                }
+            }
+
+        }
+
+        return dyDx;
     }
 
     template<class Base>

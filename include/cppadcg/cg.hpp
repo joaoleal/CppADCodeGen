@@ -161,6 +161,12 @@
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper.hpp>
 #include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_for0.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_for1.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_rev1.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_rev2.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_jac.hpp>
+#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_hes.hpp>
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops.hpp>
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_for0.hpp>
 #include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_for1.hpp>

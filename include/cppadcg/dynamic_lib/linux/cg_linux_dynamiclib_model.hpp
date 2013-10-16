@@ -596,13 +596,14 @@ namespace CppAD {
             col.resize(nnz);
 
             if (nnz > 0) {
+                std::copy(drow, drow + nnz, row.begin());
+                std::copy(dcol, dcol + nnz, col.begin());
+
                 _inHess[0] = &x[0];
                 _inHess[1] = &w[0];
                 _out[0] = &hess[0];
 
                 (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
-                std::copy(drow, drow + nnz, row.begin());
-                std::copy(dcol, dcol + nnz, col.begin());
             }
         }
 

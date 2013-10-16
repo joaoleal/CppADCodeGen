@@ -582,7 +582,7 @@ namespace CppAD {
             _cache.str("");
             startingJob("operation graph for '" + jobName + "'");
 
-            info.evalLoopModelJacobianHessian();
+            info.evalLoopModelJacobianHessian(false);
 
             finishedJob();
         }
@@ -603,7 +603,8 @@ namespace CppAD {
             startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
-                                                                    noLoopEvalJacSparsity);
+                                                                    noLoopEvalJacSparsity,
+                                                                    false);
 
             finishedJob();
 

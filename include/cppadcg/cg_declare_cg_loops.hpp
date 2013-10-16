@@ -117,6 +117,19 @@ namespace CppAD {
                                                          const std::string& keyName,
                                                          const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& _loopRev2Groups,
                                                          void (*generateFunctionNameLoopRev2)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g));
+
+        template<class Base>
+        inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
+                                          const vector<CG<Base> >& x,
+                                          const vector<vector<CG<Base> > >& vw,
+                                          vector<CG<Base> >& y,
+                                          const vector<std::set<size_t> >& jacSparsity,
+                                          const vector<std::set<size_t> >& jacEvalSparsity,
+                                          vector<std::map<size_t, CG<Base> > >& jac,
+                                          const vector<std::set<size_t> >& hesSparsity,
+                                          const vector<std::set<size_t> >& hesEvalSparsity,
+                                          vector<std::map<size_t, std::map<size_t, CG<Base> > > >& vhess,
+                                          bool constainsAtomics);
     }
 
 }

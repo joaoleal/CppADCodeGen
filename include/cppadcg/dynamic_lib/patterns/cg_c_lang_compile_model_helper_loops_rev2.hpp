@@ -187,6 +187,7 @@ namespace CppAD {
         /**
          * Loops - evaluate Jacobian and Hessian
          */
+        bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -194,10 +195,10 @@ namespace CppAD {
             _cache.str("");
             _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
-            _cache.str("");
+
             startingJob("operation graph for '" + jobName + "'");
 
-            info.evalLoopModelJacobianHessian();
+            info.evalLoopModelJacobianHessian(hasAtomics);
 
             finishedJob();
         }
@@ -216,7 +217,8 @@ namespace CppAD {
             startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
-                                                                    noLoopEvalJacSparsity);
+                                                                    noLoopEvalJacSparsity,
+                                                                    hasAtomics);
 
             finishedJob();
 
@@ -303,7 +305,7 @@ namespace CppAD {
 
                 if (itPattern.get() == NULL) {
                     // did not match!
-                    throw CGException("Not implemented yet");
+                    throw CGException("Random index patterns not implemented yet!");
                 }
 
                 /**
@@ -395,7 +397,6 @@ namespace CppAD {
                 CLanguage<Base> langC(_baseTypeName);
                 langC.setFunctionIndexArgument(indexJrowDcl);
 
-                _cache.str("");
                 std::ostringstream code;
                 std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
                 CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
@@ -641,7 +642,7 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.indexedIndexedPositions.at(*it);
 
-                CGBase val = info.hess[tapeJ1].at(tapeJ2) * tx1;
+                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
@@ -657,7 +658,7 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.indexedNonIndexedPositions.at(*it);
 
-                CGBase val = info.hess[tapeJ1].at(tapeJ2) * tx1;
+                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
@@ -679,7 +680,7 @@ namespace CppAD {
                 for (itz = ks.begin(); itz != ks.end(); ++itz) {
                     size_t k = *itz;
                     size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                    val += info.hess[tapeJ1].at(tapeK) * dzDx.at(k).at(j2);
+                    val += info.hess.at(tapeJ1).at(tapeK) * dzDx.at(k).at(j2);
                 }
                 val *= tx1;
 
@@ -698,7 +699,7 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.nonIndexedIndexedPositions.at(*it);
 
-                CGBase val = info.hess[tapeJ1].at(tapeJ2) * tx1;
+                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
                                                                               positions, val,
@@ -723,7 +724,7 @@ namespace CppAD {
                 for (itz = ks.begin(); itz != ks.end(); ++itz) {
                     size_t k = *itz;
                     size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                    val += info.hess[tapeK].at(tapeJ2) * dzDx.at(k).at(j1);
+                    val += info.hess.at(tapeK).at(tapeJ2) * dzDx.at(k).at(j1);
                 }
                 val *= tx1;
 
@@ -755,7 +756,7 @@ namespace CppAD {
                 CGBase hessVal = Base(0);
 
                 if (info.nonIndexedNonIndexedEvals.find(orig) != info.nonIndexedNonIndexedEvals.end()) {
-                    hessVal = info.hess[posJ1->tape].at(posJ2->tape);
+                    hessVal = info.hess.at(posJ1->tape).at(posJ2->tape);
                 }
 
                 /**
@@ -769,7 +770,7 @@ namespace CppAD {
                     for (itz = ks.begin(); itz != ks.end(); ++itz) {
                         size_t k = *itz;
                         size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
-                        hessVal += info.hess[posJ1->tape].at(tapeK) * dzDx.at(k).at(j2);
+                        hessVal += info.hess.at(posJ1->tape).at(tapeK) * dzDx.at(k).at(j2);
                     }
                 }
 
@@ -787,7 +788,7 @@ namespace CppAD {
                     for (itz = ks.begin(); itz != ks.end(); ++itz) {
                         size_t k1 = *itz;
                         size_t tapeK = lModel.getTempIndepIndexes(k1)->tape;
-                        hessVal += info.hess[tapeK].at(posJ2->tape) * dzDx.at(k1).at(j1);
+                        hessVal += info.hess.at(tapeK).at(posJ2->tape) * dzDx.at(k1).at(j1);
                     }
                 }
 
@@ -811,7 +812,7 @@ namespace CppAD {
                             size_t k2 = *itk2;
                             size_t tapeK2 = lModel.getTempIndepIndexes(k2)->tape;
 
-                            tmp += info.hess[tapeK1].at(tapeK2) * dzDx.at(k2).at(j2);
+                            tmp += info.hess.at(tapeK1).at(tapeK2) * dzDx.at(k2).at(j2);
                         }
 
                         sum += tmp * dzDx.at(k1).at(j1);
@@ -1320,8 +1321,138 @@ namespace CppAD {
             }
         };
 
+        template<class Base>
+        inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
+                                          const vector<CG<Base> >& x,
+                                          const vector<vector<CG<Base> > >& vw,
+                                          vector<CG<Base> >& y,
+                                          const vector<std::set<size_t> >& jacSparsity,
+                                          const vector<std::set<size_t> >& jacEvalSparsity,
+                                          vector<std::map<size_t, CG<Base> > >& jac,
+                                          const vector<std::set<size_t> >& hesSparsity,
+                                          const vector<std::set<size_t> >& hesEvalSparsity,
+                                          vector<std::map<size_t, std::map<size_t, CG<Base> > > >& vhess,
+                                          bool individualColoring) {
+            using namespace std;
+            using namespace CppAD::extra;
+            using CppAD::vector;
 
-    } // end loops 
+            typedef CG<Base> CGB;
+
+            size_t m = fun.Range();
+            size_t n = fun.Domain();
+
+            jac.resize(m);
+
+            if (!individualColoring) {
+                /**
+                 * No atomics
+                 */
+
+                // jacobian for temporaries
+                std::vector<size_t> jacRow, jacCol;
+                generateSparsityIndexes(jacEvalSparsity, jacRow, jacCol);
+
+                // jacobian for equations outside loops
+                vector<CGB> jacFlat(jacRow.size());
+
+                /**
+                 * hessian - temporary variables
+                 */
+                std::vector<size_t> hesRow, hesCol;
+                generateSparsityIndexes(hesEvalSparsity, hesRow, hesCol);
+
+                vector<vector<CGB> > vhessFlat(vw.size());
+                for (size_t l = 0; l < vw.size(); l++) {
+                    vhessFlat[l].resize(hesRow.size());
+                }
+
+                SparseForjacHessianWork work;
+                sparseForJacHessian(fun, x, vw,
+                                    y,
+                                    jacSparsity,
+                                    jacRow, jacCol, jacFlat,
+                                    hesSparsity,
+                                    hesRow, hesCol, vhessFlat,
+                                    work);
+
+                // save Jacobian
+                for (size_t el = 0; el < jacRow.size(); el++) {
+                    size_t i = jacRow[el];
+                    size_t j = jacCol[el];
+
+                    jac[i][j] = jacFlat[el];
+                }
+
+                // save Hessian
+                vhess.resize(vw.size());
+                for (size_t l = 0; l < vw.size(); l++) {
+                    vector<CGB>& hessFlat = vhessFlat[l];
+                    map<size_t, map<size_t, CGB> >& hess = vhess[l];
+
+                    for (size_t el = 0; el < hesRow.size(); el++) {
+                        size_t j1 = hesRow[el];
+                        size_t j2 = hesCol[el];
+                        hess[j1][j2] = hessFlat[el];
+                    }
+                }
+
+            } else {
+                /**
+                 * Contains atomics
+                 */
+
+                //transpose
+                vector<set<size_t> > jacEvalSparsityT(n);
+                transposePattern(jacEvalSparsity, jacEvalSparsityT);
+
+                vector<CGB> tx1v(n);
+                vhess.resize(vw.size());
+
+                for (size_t j1 = 0; j1 < n; j1++) {
+                    if (jacEvalSparsityT[j1].empty() && hesEvalSparsity[j1].empty()) {
+                        continue;
+                    }
+
+                    y = fun.Forward(0, x);
+
+                    tx1v[j1] = Base(1);
+                    vector<CGB> dy = fun.Forward(1, tx1v);
+                    assert(dy.size() == m);
+                    tx1v[j1] = Base(0);
+
+                    // save Jacobian
+                    const set<size_t>& column = jacEvalSparsityT[j1];
+                    set<size_t>::const_iterator itI;
+                    for (itI = column.begin(); itI != column.end(); ++itI) {
+                        size_t i = *itI;
+                        jac[i][j1] = dy[i];
+                    }
+
+                    const set<size_t>& hesRow = hesEvalSparsity[j1];
+
+                    if (!hesRow.empty()) {
+
+                        for (size_t l = 0; l < vw.size(); l++) {
+
+                            vector<CGB> px = fun.Reverse(2, vw[l]);
+                            assert(px.size() == 2 * n);
+
+                            // save Hessian
+                            map<size_t, CGB>& hessRow = vhess[l][j1];
+                            set<size_t>::const_iterator itj2;
+                            for (itj2 = hesRow.begin(); itj2 != hesRow.end(); ++itj2) {
+                                size_t j2 = *itj2;
+                                hessRow[j2] = px[j2 * 2 + 1];
+                            }
+                        }
+                    }
+                }
+            }
+
+        }
+
+    } // end loops
 
     template<class Base>
     void CLangCompileModelHelper<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
