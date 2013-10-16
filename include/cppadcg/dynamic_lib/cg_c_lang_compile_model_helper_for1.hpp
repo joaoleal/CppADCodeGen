@@ -64,7 +64,6 @@ namespace CppAD {
         /**
          * Generate one function for each dependent variable
          */
-        size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
         vector<CGBase> dxv(n);
@@ -105,7 +104,7 @@ namespace CppAD {
             dxv[j] = dx;
             vector<CGBase> dy = _fun.Forward(1, dxv);
             dxv[j] = Base(0);
-            assert(dy.size() == m);
+            assert(dy.size() == _fun.Range());
 
             vector<CGBase> dyCustom;
             std::vector<size_t>::const_iterator it2;

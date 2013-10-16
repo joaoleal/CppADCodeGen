@@ -941,7 +941,6 @@ namespace CppAD {
         using namespace CppAD::extra;
         using CppAD::vector;
 
-        size_t m = fun.Range();
         size_t n = fun.Domain();
 
         map<size_t, map<size_t, CGBase> > dyDxT;
@@ -978,7 +977,7 @@ namespace CppAD {
 
                 dx[j] = Base(1);
                 vector<CGBase> dy = fun.Forward(1, dx);
-                assert(dy.size() == m);
+                assert(dy.size() == fun.Range());
                 dx[j] = Base(0);
 
                 map<size_t, CGBase>& dyDxJT = dyDxT[j];

@@ -109,7 +109,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivPendulum3D) {
 
     ASSERT_TRUE(reducedFun != NULL);
 
-    ASSERT_EQ(3, dummyD.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), dummyD.getDifferentiationIndex());
 
     delete fun;
     delete reducedFun;

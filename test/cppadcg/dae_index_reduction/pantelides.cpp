@@ -99,7 +99,7 @@ TEST_F(CppADCGIndexReductionTest, PantelidesPendulum3D) {
 
     ASSERT_TRUE(reducedFun != NULL);
 
-    ASSERT_EQ(3, pantelides.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), pantelides.getDifferentiationIndex());
 
     delete fun;
     delete reducedFun;

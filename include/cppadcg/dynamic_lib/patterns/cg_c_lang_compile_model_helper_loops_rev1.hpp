@@ -391,7 +391,6 @@ namespace CppAD {
         using CppAD::vector;
 
         size_t m = fun.Range();
-        size_t n = fun.Domain();
 
         std::vector<map<size_t, CGBase> > dyDx(m);
 
@@ -424,7 +423,7 @@ namespace CppAD {
 
                 w[i] = Base(1);
                 vector<CGBase> dw = fun.Reverse(1, w);
-                assert(dw.size() == n);
+                assert(dw.size() ==  fun.Domain());
                 w[i] = Base(0);
 
                 map<size_t, CGBase>& dyIDx = dyDx[i];
