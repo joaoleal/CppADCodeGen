@@ -189,7 +189,7 @@ namespace CppAD {
          */
         bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
         //const std::map<size_t, std::set<size_t> >& aaa = getAtomicsIndeps();
-        
+
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -521,6 +521,10 @@ namespace CppAD {
                     size_t j = it->first;
                     const map<size_t, CGBase>& cols = it->second;
 
+                    _cache.str("");
+                    _cache << "model (reverse two, no loops, indep " << j << ")";
+                    const string subJobName = _cache.str();
+
                     vector<CGBase> pxCustom(cols.size());
 
                     typename map<size_t, CGBase>::const_iterator it2;
@@ -540,7 +544,7 @@ namespace CppAD {
                     std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
                     CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
-                    handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, jobName);
+                    handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
                 }
 
                 finishedJob();
