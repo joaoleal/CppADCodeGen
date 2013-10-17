@@ -525,7 +525,7 @@ namespace CppAD {
                     _cache << "model (reverse two, no loops, indep " << j << ")";
                     const string subJobName = _cache.str();
 
-                    vector<CGBase> pxCustom(cols.size());
+                    vector<CGBase> pxCustom(elements.at(j).size());
 
                     typename map<size_t, CGBase>::const_iterator it2;
                     for (it2 = cols.begin(); it2 != cols.end(); ++it2) {

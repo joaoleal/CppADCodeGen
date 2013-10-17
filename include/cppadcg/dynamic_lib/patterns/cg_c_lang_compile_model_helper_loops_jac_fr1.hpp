@@ -31,6 +31,8 @@ namespace CppAD {
         using namespace std;
         using namespace CppAD::loops;
 
+        startingJob("source for 'sparse Jacobian'");
+
         /**
          * Generate the source code
          */
@@ -60,6 +62,8 @@ namespace CppAD {
                 generateLocalFunctionName,
                 _jacSparsity.rows.size(), maxCompressedSize);
 
+        finishedJob();
+        
         sources[model_function + ".c"] = _cache.str();
         _cache.str("");
     }

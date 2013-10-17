@@ -25,6 +25,8 @@ namespace CppAD {
         using namespace std;
         using namespace CppAD::loops;
 
+        startingJob("source for 'sparse Hessian'");
+
         /**
          * Generate the source code
          */
@@ -54,6 +56,8 @@ namespace CppAD {
                                  userHessElLocation, jrowOrdered,
                                  generateFunctionNameLoopRev2,
                                  _hessSparsity.rows.size(), maxCompressedSize);
+
+        finishedJob();
 
         sources[model_function + ".c"] = _cache.str();
         _cache.str("");
