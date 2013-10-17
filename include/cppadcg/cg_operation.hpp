@@ -65,7 +65,7 @@ namespace CppAD {
         CGLoopIndexedIndepOp, // indexed independent used by a loop
         CGLoopIndexedDepOp, // indexed output from a loop
         CGLoopEndOp, // endfor
-        CGIndexCondExprOp, // a condition expression return a boolean
+        CGIndexCondExprOp, // a condition expression which returns a boolean
         CGStartIfOp, // the start of an if statement
         CGElseIfOp, // else if()
         CGElseOp, // else

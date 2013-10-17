@@ -274,7 +274,7 @@ namespace CppAD {
 
                 if (itPattern.get() == NULL) {
                     // did not match!
-                    throw CGException("Random index patterns not implemented yet!");
+                    itPattern.reset(new Random2DIndexPattern(jcol2localIt2ModelIt));
                 }
 
                 /**

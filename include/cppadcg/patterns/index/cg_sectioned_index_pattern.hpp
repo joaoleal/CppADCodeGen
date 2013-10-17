@@ -40,6 +40,14 @@ namespace CppAD {
             return SECTIONED;
         }
 
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+            std::map<size_t, IndexPattern*>::const_iterator it;
+            for (it = sections_.begin(); it != sections_.end(); ++it) {
+                indexes.insert(it->second);
+                it->second->getSubIndexes(indexes);
+            }
+        }
+
         inline virtual ~SectionedIndexPattern() {
             deleteIndexPatterns(sections_);
         }

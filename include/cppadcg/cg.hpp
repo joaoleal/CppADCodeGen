@@ -86,6 +86,7 @@
 #include <cppadcg/nodes/cg_index_assign_operation_node.hpp>
 #include <cppadcg/nodes/cg_loop_start_operation_node.hpp>
 #include <cppadcg/nodes/cg_loop_end_operation_node.hpp>
+#include <cppadcg/patterns/index/cg_index_pattern.hpp>
 #include <cppadcg/cg_cg.hpp>
 #include <cppadcg/cg_default.hpp>
 #include <cppadcg/cg_variable.hpp>
@@ -128,11 +129,12 @@
 
 // ---------------------------------------------------------------------------
 // loop/pattern detection
-#include <cppadcg/patterns/index/cg_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_linear_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_sectioned_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_plane_2d_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_random_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_random_1d_index_pattern.hpp>
+#include <cppadcg/patterns/index/cg_random_2d_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_index_pattern_impl.hpp>
 #include <cppadcg/patterns/cg_loop_model.hpp>
 #include <cppadcg/patterns/cg_loop_free_model.hpp>

@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_RANDOM_INDEX_PATTERN_INCLUDED
-#define CPPAD_CG_RANDOM_INDEX_PATTERN_INCLUDED
+#ifndef CPPAD_CG_RANDOM_2D_INDEX_PATTERN_INCLUDED
+#define CPPAD_CG_RANDOM_2D_INDEX_PATTERN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -18,26 +18,28 @@
 namespace CppAD {
 
     /**
-     * Random pattern
+     * Random pattern using two indexes
      */
-    class RandomIndexPattern : public IndexPattern {
+    class Random2DIndexPattern : public RandomIndexPattern {
     protected:
+        std::map<size_t, std::map<size_t, size_t> > indexes_;
         std::string name_;
     public:
 
-        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
-            // nothing to add
+        inline Random2DIndexPattern(const std::map<size_t, std::map<size_t, size_t> >& x2y2z) :
+            indexes_(x2y2z) {
+            assert(!indexes_.empty());
         }
 
-        inline const std::string& getName() const {
-            return name_;
+        inline virtual IndexPatternType getType() const {
+            return RANDOM2D;
         }
 
-        inline void setName(const std::string& name) {
-            name_ = name;
+        inline const std::map<size_t, std::map<size_t, size_t> >& getValues() const {
+            return indexes_;
         }
 
-        inline virtual ~RandomIndexPattern() {
+        inline virtual ~Random2DIndexPattern() {
         }
     };
 

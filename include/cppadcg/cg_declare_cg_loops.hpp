@@ -50,7 +50,7 @@ namespace CppAD {
         class HessianRowGroup;
 
         class ArrayGroup;
-
+        
         template<class Base>
         inline vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
                                                            LoopModel<Base>& loop,

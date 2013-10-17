@@ -25,6 +25,8 @@ namespace CppAD {
 
         virtual IndexPatternType getType() const = 0;
 
+        virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const = 0;
+
         inline virtual ~IndexPattern() {
         }
 

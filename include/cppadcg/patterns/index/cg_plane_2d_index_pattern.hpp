@@ -51,6 +51,17 @@ namespace CppAD {
             return PLANE2D;
         }
 
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+            if (pattern1_ != NULL) {
+                indexes.insert(pattern1_);
+                pattern1_->getSubIndexes(indexes);
+            }
+            if (pattern2_ != NULL) {
+                indexes.insert(pattern2_);
+                pattern2_->getSubIndexes(indexes);
+            }
+        }
+
         inline virtual ~Plane2DIndexPattern() {
             delete pattern1_;
             delete pattern2_;

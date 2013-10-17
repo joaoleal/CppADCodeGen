@@ -29,8 +29,7 @@ namespace CppAD {
         } else if (!linearSections.empty()) {
             return new SectionedIndexPattern(linearSections);
         } else {
-            throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern();
+            return new Random1DIndexPattern(x2y);
         }
 
     }
@@ -46,8 +45,7 @@ namespace CppAD {
         } else if (!linearSections.empty()) {
             return new SectionedIndexPattern(linearSections);
         } else {
-            throw CGException("Random index patterns not implemented yet!");
-            return new RandomIndexPattern();
+            return new Random1DIndexPattern(x2y);
         }
     }
 

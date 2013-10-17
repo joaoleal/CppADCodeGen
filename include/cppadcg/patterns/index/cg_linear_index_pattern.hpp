@@ -65,6 +65,10 @@ namespace CppAD {
             return LINEAR;
         }
 
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+            // nothing to add
+        }
+
         inline long evaluate(long x) const {
             return ((x - xOffset_) / dx_) * dy_ + b_;
         }

@@ -52,10 +52,12 @@ namespace CppAD {
         std::map<size_t, LoopModel<Base>*> _loops;
         // the used indexes
         std::set<const IndexDclrOperationNode<Base>*> _indexes;
+        // the used random index patterns
+        std::set<RandomIndexPattern*> _indexRandomPatterns;
         //
-        std::vector<const IndexPattern*> _loopDependentIndexPatterns;
+        std::vector<IndexPattern*> _loopDependentIndexPatterns;
         std::vector<const IndexPattern*> _loopDependentIndexPatternManaged; // garbage collection
-        std::vector<const IndexPattern*> _loopIndependentIndexPatterns;
+        std::vector<IndexPattern*> _loopIndependentIndexPatterns;
         /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
@@ -330,6 +332,7 @@ namespace CppAD {
             _atomicFunctionsOrder = &atomicFunctions;
             _atomicFunctionsSet.clear();
             _indexes.clear();
+            _indexRandomPatterns.clear();
             _loopOuterVars.clear();
             _loopDepth = -1;
             _scopeColorCount = 0;
@@ -450,7 +453,7 @@ namespace CppAD {
                                               nameGen,
                                               atomicFunctionId2Index, atomicFunctionId2Name,
                                               _reuseIDs,
-                                              _indexes,
+                                              _indexes, _indexRandomPatterns,
                                               _loopDependentIndexPatterns, _loopIndependentIndexPatterns,
                                               _zeroDependents);
             lang.generateSourceCode(out, info);
@@ -498,6 +501,7 @@ namespace CppAD {
 
             _loops.clear();
             _indexes.clear();
+            _indexRandomPatterns.clear();
             _loopDependentIndexPatterns.clear();
             _loopIndependentIndexPatterns.clear();
 
@@ -567,11 +571,32 @@ namespace CppAD {
 
         LoopModel<Base>* getLoop(size_t loopId) const;
 
-        size_t addLoopDependentIndexPattern(const IndexPattern& jacPattern);
+        size_t addLoopDependentIndexPattern(IndexPattern& jacPattern);
 
         void manageLoopDependentIndexPattern(const IndexPattern* pattern);
 
-        size_t addLoopIndependentIndexPattern(const IndexPattern& pattern, size_t hint);
+        size_t addLoopIndependentIndexPattern(IndexPattern& pattern, size_t hint);
+
+        /***********************************************************************
+         *                           Index patterns
+         **********************************************************************/
+        static inline void findRandomIndexPatterns(IndexPattern* ip,
+                                                   std::set<RandomIndexPattern*>& found) {
+            if (ip == NULL)
+                return;
+
+            if (ip->getType() == RANDOM1D || ip->getType() == RANDOM2D) {
+                found.insert(static_cast<RandomIndexPattern*> (ip));
+            } else {
+                std::set<IndexPattern*> indexes;
+                ip->getSubIndexes(indexes);
+                for (std::set<IndexPattern*>::const_iterator itIp = indexes.begin(); itIp != indexes.end(); ++itIp) {
+                    IndexPattern* sip = *itIp;
+                    if (sip->getType() == RANDOM1D || sip->getType() == RANDOM2D)
+                        found.insert(static_cast<RandomIndexPattern*> (sip));
+                }
+            }
+        }
 
         /***********************************************************************
          *                   Operation graph manipulation
@@ -735,9 +760,23 @@ namespace CppAD {
                 if (op == CGIndexOp) {
                     const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
                     // indexes that don't depend on a loop start or an index assignment are declared elsewhere
-                    if (inode.getArguments().size() > 0) {
+                    if (inode.isDefinedLocally()) {
                         _indexes.insert(&inode.getIndex());
                     }
+                } else if (op == CGLoopIndexedIndepOp || op == CGLoopIndexedDepOp || op == CGIndexAssignOp) {
+                    IndexPattern* ip;
+                    if (op == CGLoopIndexedDepOp) {
+                        size_t pos = code.getInfo()[0];
+                        ip = _loopDependentIndexPatterns[pos];
+                    } else if (op == CGLoopIndexedIndepOp) {
+                        size_t pos = code.getInfo()[1];
+                        ip = _loopIndependentIndexPatterns[pos];
+                    } else {
+                        ip = &static_cast<IndexAssignOperationNode<Base>&> (code).getIndexPattern();
+                    }
+
+                    findRandomIndexPatterns(ip, _indexRandomPatterns);
+
                 } else if (op == CGDependentRefRhsOp) {
                     assert(code.getInfo().size() == 1);
                     size_t depIndex = code.getInfo()[0];

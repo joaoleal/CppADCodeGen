@@ -40,7 +40,7 @@ namespace CppAD {
             testHessian_(true),
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
             epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
-            this->verbose_ = true;
+            //this->verbose_ = true;
         }
 
         void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),

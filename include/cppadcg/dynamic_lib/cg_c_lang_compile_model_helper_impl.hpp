@@ -365,14 +365,8 @@ namespace CppAD {
                 " unsigned long* nnz) {\n";
 
         // the size of each sparsity row
-        _cache << "   static unsigned long const nonzeros[" << sparsity.size() << "] = {";
-        if (!sparsity.empty()) {
-            _cache << sparsity[0];
-            for (size_t i = 1; i < sparsity.size(); i++) {
-                _cache << "," << sparsity[i];
-            }
-        }
-        _cache << "};\n";
+        _cache << "   ";
+        CLanguage<Base>::printStaticIndexArray(_cache, "nonzeros", sparsity);
 
         _cache << "   *sparsity = nonzeros;\n"
                 "   *nnz = " << sparsity.size() << ";\n"
@@ -393,27 +387,15 @@ namespace CppAD {
                 " unsigned long* nnz) {\n";
 
         // the size of each sparsity row
-        _cache << "static unsigned long const rows[" << rows.size() << "] = {";
-        if (!rows.empty()) {
-            _cache << rows[0];
-            for (size_t i = 1; i < rows.size(); i++) {
-                _cache << "," << rows[i];
-            }
-        }
-        _cache << "};\n";
+        _cache << "   ";
+        CLanguage<Base>::printStaticIndexArray(_cache, "rows", rows);
 
-        _cache << "static unsigned long const cols[" << cols.size() << "] = {";
-        if (!cols.empty()) {
-            _cache << cols[0];
-            for (size_t i = 1; i < cols.size(); i++) {
-                _cache << "," << cols[i];
-            }
-        }
-        _cache << "};\n";
+        _cache << "   ";
+        CLanguage<Base>::printStaticIndexArray(_cache, "cols", cols);
 
-        _cache << "*row = rows;\n"
-                "*col = cols;\n"
-                "*nnz = " << rows.size() << ";\n"
+        _cache << "   *row = rows;\n"
+                "   *col = cols;\n"
+                "   *nnz = " << rows.size() << ";\n"
                 "}\n";
     }
 
@@ -426,24 +408,22 @@ namespace CppAD {
                 " unsigned long const** col,"
                 " unsigned long* nnz) {\n";
 
+        std::ostringstream os;
+
         for (size_t i = 0; i < sparsities.size(); i++) {
             const std::vector<size_t>& rows = sparsities[i].rows;
             const std::vector<size_t>& cols = sparsities[i].cols;
             assert(rows.size() == cols.size());
             if (!rows.empty()) {
-                _cache << "   static unsigned long const rows" << i << "[" << rows.size() << "] = {";
-                _cache << rows[0];
-                for (size_t j = 1; j < rows.size(); j++) {
-                    _cache << "," << rows[j];
-                }
-                _cache << "};\n";
+                os.str("");
+                os << "rows" << i;
+                _cache << "   ";
+                CLanguage<Base>::printStaticIndexArray(_cache, os.str(), rows);
 
-                _cache << "   static unsigned long const cols" << i << "[" << cols.size() << "] = {";
-                _cache << cols[0];
-                for (size_t i = 1; i < cols.size(); i++) {
-                    _cache << "," << cols[i];
-                }
-                _cache << "};\n";
+                os.str("");
+                os << "cols" << i;
+                _cache << "   ";
+                CLanguage<Base>::printStaticIndexArray(_cache, os.str(), cols);
             }
         }
 
@@ -481,14 +461,10 @@ namespace CppAD {
         for (it = elements.begin(); it != elements.end(); ++it) {
             // the size of each sparsity row
             const std::vector<size_t>& els = it->second;
-            _cache << "   static unsigned long const elements" << it->first << "[" << els.size() << "] = {";
-            if (!els.empty()) {
-                _cache << els[0];
-                for (size_t i = 1; i < els.size(); i++) {
-                    _cache << "," << els[i];
-                }
-            }
-            _cache << "};\n";
+            _cache << "   ";
+            std::ostringstream os;
+            os << "elements" << it->first;
+            CLanguage<Base>::printStaticIndexArray(_cache, os.str(), els);
         }
 
         _cache << "   switch(pos) {\n";

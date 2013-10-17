@@ -41,6 +41,10 @@ namespace CppAD {
             OperationNode<Base>(CGIndexOp, Argument<Base>(indexAssign.getIndex()), Argument<Base>(indexAssign)) {
         }
 
+        inline bool isDefinedLocally() const {
+            return this->getArguments().size() > 1;
+        }
+
         inline const IndexDclrOperationNode<Base>& getIndex() const {
             const std::vector<Argument<Base> >& args = this->getArguments();
             CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");

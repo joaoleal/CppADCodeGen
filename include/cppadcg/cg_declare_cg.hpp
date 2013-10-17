@@ -98,6 +98,10 @@ namespace CppAD {
     class IndexedDependentLoopInfo;
 
     class IndexPattern;
+    class LinearIndexPattern;
+    class Plane2DIndexPattern;
+    class RandomIndexPattern;
+    class SectionedIndexPattern;
 
     /***************************************************************************
      * Languages
@@ -338,7 +342,8 @@ namespace CppAD {
     enum IndexPatternType {
         LINEAR, // y = (x / dx) * dy + b
         SECTIONED, // several index patterns
-        RANDOM,
+        RANDOM1D,
+        RANDOM2D,
         PLANE2D // y = f(x) + f(z)
     };
 }

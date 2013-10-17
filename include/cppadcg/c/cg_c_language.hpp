@@ -39,6 +39,7 @@ namespace CppAD {
         static const std::string _C_COMP_OP_GE;
         static const std::string _C_COMP_OP_GT;
         static const std::string _C_COMP_OP_NE;
+        static const std::string _C_STATIC_INDEX_ARRAY;
 
     protected:
         // the type name of the Base class (e.g. "double")
@@ -58,7 +59,7 @@ namespace CppAD {
         // creates the variable names
         VariableNameGenerator<Base>* _nameGen;
         // auxiliary string stream
-        std::stringstream _ss;
+        std::ostringstream _ss;
         //
         size_t _independentSize;
         //
@@ -92,8 +93,10 @@ namespace CppAD {
         std::vector<const IndexDclrOperationNode<Base>*> _funcArgIndexes;
         // all used indexes
         const std::set<const IndexDclrOperationNode<Base>*>* _indexes;
-        const std::vector<const IndexPattern*>* _loopDependentIndexPatterns;
-        const std::vector<const IndexPattern*>* _loopIndependentIndexPatterns;
+        // all used random index patterns
+        const std::set<RandomIndexPattern*>* _indexRandomPatterns;
+        const std::vector<IndexPattern*>* _loopDependentIndexPatterns;
+        const std::vector<IndexPattern*>* _loopIndependentIndexPatterns;
         std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     private:
         std::string funcArgDcl_;
@@ -123,6 +126,7 @@ namespace CppAD {
             _maxAssigmentsPerFunction(0),
             _sources(NULL),
             _indexes(NULL),
+            _indexRandomPatterns(NULL),
             _loopDependentIndexPatterns(NULL),
             _loopIndependentIndexPatterns(NULL) {
         }
@@ -373,8 +377,26 @@ namespace CppAD {
         }
 
         /***********************************************************************
+         * 
+         **********************************************************************/
+
+        static inline void printStaticIndexArray(std::ostringstream& os,
+                                                 const std::string& name,
+                                                 const std::vector<size_t>& values);
+
+        static inline void printStaticIndexMatrix(std::ostringstream& os,
+                                                  const std::string& name,
+                                                  const std::map<size_t, std::map<size_t, size_t> >& values);
+
+        /***********************************************************************
          * index patterns
          **********************************************************************/
+        static inline void generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns);
+
+        static inline void printRandomIndexPatternDeclaration(std::ostringstream& os,
+                                                              const std::string& identation,
+                                                              const std::set<RandomIndexPattern*>& randomPatterns);
+
         static inline std::string indexPattern2String(const IndexPattern& ip,
                                                       const IndexDclrOperationNode<Base>& index);
 
@@ -413,8 +435,14 @@ namespace CppAD {
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
             _indexes = &info.indexes;
+            _indexRandomPatterns = &info.indexRandomPatterns;
             _loopDependentIndexPatterns = &info.loopDependentIndexPatterns;
             _loopIndependentIndexPatterns = &info.loopIndependentIndexPatterns;
+
+            /**
+             * generate index array names (might be used for variable names)
+             */
+            generateNames4RandomIndexPatterns(*_indexRandomPatterns);
 
             /**
              * generate variable names
@@ -1668,6 +1696,9 @@ namespace CppAD {
     const std::string CLanguage<Base>::_C_COMP_OP_GT = ">";
     template<class Base>
     const std::string CLanguage<Base>::_C_COMP_OP_NE = "!=";
+
+    template<class Base>
+    const std::string CLanguage<Base>::_C_STATIC_INDEX_ARRAY = "index";
 
     template<class Base>
     const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "struct CLangAtomicFun {\n"

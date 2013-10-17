@@ -51,7 +51,7 @@ namespace CppAD {
         const std::map<size_t, size_t>& atomicFunctionId2Index;
         /**
          * maps atomic function IDs to their names
-         */ 
+         */
         const std::map<size_t, std::string>& atomicFunctionId2Name;
         /**
          * a flag indicating whether or not temporary variable IDs have been recycled
@@ -60,9 +60,11 @@ namespace CppAD {
         //
         const std::set<const IndexDclrOperationNode<Base>*>& indexes;
         //
-        const std::vector<const IndexPattern*>& loopDependentIndexPatterns;
+        const std::set<RandomIndexPattern*>& indexRandomPatterns;
         //
-        const std::vector<const IndexPattern*>& loopIndependentIndexPatterns;
+        const std::vector<IndexPattern*>& loopDependentIndexPatterns;
+        //
+        const std::vector<IndexPattern*>& loopIndependentIndexPatterns;
         /**
          * whether or not the dependent variables should be zeroed before 
          * executing the operation graph
@@ -79,8 +81,9 @@ namespace CppAD {
                                const std::map<size_t, std::string>& atomicId2Name,
                                const bool ri,
                                const std::set<const IndexDclrOperationNode<Base>*>& indexs,
-                               const std::vector<const IndexPattern*>& dependentIndexPatterns,
-                               const std::vector<const IndexPattern*>& independentIndexPatterns,
+                               const std::set<RandomIndexPattern*>& idxRandomPatterns,
+                               const std::vector<IndexPattern*>& dependentIndexPatterns,
+                               const std::vector<IndexPattern*>& independentIndexPatterns,
                                bool zero) :
             independent(ind),
             dependent(dep),
@@ -91,6 +94,7 @@ namespace CppAD {
             atomicFunctionId2Name(atomicId2Name),
             reuseIDs(ri),
             indexes(indexs),
+            indexRandomPatterns(idxRandomPatterns),
             loopDependentIndexPatterns(dependentIndexPatterns),
             loopIndependentIndexPatterns(independentIndexPatterns),
             zeroDependents(zero) {

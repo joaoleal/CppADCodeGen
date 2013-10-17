@@ -48,6 +48,44 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
 }
 
 /**
+ * @test All variables have a random index, no temporaries
+ */
+std::vector<ADCGD> modelRandom(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+    vector<unsigned long> index0(repeat);
+    vector<unsigned long> index1(repeat);
+    for (size_t i = 0; i < repeat; i++) {
+        if (i % 2 == 0) {
+            index0[i] = i * n;
+            index1[i] = i * n + 1;
+        } else {
+            index0[i] = (repeat - i) * n;
+            index1[i] = (repeat - i) * n - 1;
+        }
+    }
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = cos(x[index0[i]]);
+        y[i * m + 1] = x[index1[i]] * x[index0[i]];
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, random) {
+    size_t m = 2;
+    size_t n = 2;
+
+    testPatternDetection(modelRandom, m, n, 10);
+    testLibCreation("modelRandom", modelRandom, m, n, 10);
+}
+
+/**
  * @test Some variables not indexed -> one constant temporary
  */
 std::vector<ADCGD> model1(std::vector<ADCGD>& x, size_t repeat) {

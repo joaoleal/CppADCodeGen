@@ -18,6 +18,75 @@
 namespace CppAD {
 
     template<class Base>
+    inline void CLanguage<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
+        std::ostringstream os;
+
+        std::set<std::string> usedNames;
+
+        // save existing names so that they are not to overridden 
+        // (independent variable names might have already used them)
+        std::set<RandomIndexPattern*>::const_iterator it;
+        for (it = randomPatterns.begin(); it != randomPatterns.end(); ++it) {
+            RandomIndexPattern* ip = *it;
+            if (!ip->getName().empty()) {
+                usedNames.insert(ip->getName());
+            }
+        }
+
+        // create new names for the index pattern arrays without a name
+        size_t c = 0;
+        for (it = randomPatterns.begin(); it != randomPatterns.end(); ++it) {
+            RandomIndexPattern* ip = *it;
+            if (ip->getName().empty()) {
+                // new name required
+                std::string name;
+                do {
+                    os << _C_STATIC_INDEX_ARRAY << c;
+                    name = os.str();
+                    os.str("");
+                    c++;
+                } while (usedNames.find(name) != usedNames.end());
+
+                ip->setName(name);
+            }
+        }
+
+    }
+
+    template<class Base>
+    inline void CLanguage<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
+                                                                    const std::string& identation,
+                                                                    const std::set<RandomIndexPattern*>& randomPatterns) {
+        typename std::set<RandomIndexPattern*>::const_iterator itr;
+        for (itr = randomPatterns.begin(); itr != randomPatterns.end(); ++itr) {
+            RandomIndexPattern* ip = *itr;
+            if (ip->getType() == RANDOM1D) {
+                /**
+                 * 1D
+                 */
+                Random1DIndexPattern* ip1 = static_cast<Random1DIndexPattern*> (ip);
+                const std::map<size_t, size_t>& x2y = ip1->getValues();
+
+                std::vector<size_t> y(x2y.rbegin()->first + 1);
+                std::map<size_t, size_t>::const_iterator it;
+                for (it = x2y.begin(); it != x2y.end(); ++it)
+                    y[it->first] = it->second;
+
+                os << identation;
+                printStaticIndexArray(os, ip->getName(), y);
+            } else {
+                assert(ip->getType() == RANDOM2D);
+                /**
+                 * 2D
+                 */
+                Random2DIndexPattern* ip2 = static_cast<Random2DIndexPattern*> (ip);
+                os << identation;
+                printStaticIndexMatrix(os, ip->getName(), ip2->getValues());
+            }
+        }
+    }
+
+    template<class Base>
     inline void CLanguage<Base>::createIndexDeclaration() {
         if (_indexes->empty())
             return;
@@ -25,6 +94,8 @@ namespace CppAD {
         std::set<const IndexDclrOperationNode<Base>*> funcArgs(_funcArgIndexes.begin(), _funcArgIndexes.end());
 
         bool first = true;
+
+        printRandomIndexPatternDeclaration(_ss, _spaces, *_indexRandomPatterns);
 
         _ss << _spaces << "unsigned long";
         typename std::set<const IndexDclrOperationNode<Base>*>::const_iterator iti;
@@ -42,8 +113,76 @@ namespace CppAD {
     }
 
     template<class Base>
+    void CLanguage<Base>::printStaticIndexArray(std::ostringstream& os,
+                                                const std::string& name,
+                                                const std::vector<size_t>& values) {
+        os << "static unsigned long const " << name << "[" << values.size() << "] = {";
+        if (!values.empty()) {
+            os << values[0];
+            for (size_t i = 1; i < values.size(); i++) {
+                os << "," << values[i];
+            }
+        }
+        os << "};\n";
+    }
+
+    template<class Base>
+    void CLanguage<Base>::printStaticIndexMatrix(std::ostringstream& os,
+                                                 const std::string& name,
+                                                 const std::map<size_t, std::map<size_t, size_t> >& values) {
+        size_t m = 0;
+        size_t n = 0;
+
+        std::map<size_t, std::map<size_t, size_t> >::const_iterator it;
+        std::map<size_t, size_t>::const_iterator ity2z;
+
+        if (!values.empty()) {
+            m = values.rbegin()->first + 1;
+
+            for (it = values.begin(); it != values.end(); ++it) {
+                if (!it->second.empty())
+                    n = std::max(n, it->second.rbegin()->first + 1);
+            }
+        }
+
+        os << "static unsigned long const " << name << "[" << m << "][" << n << "] = {";
+        size_t x = 0;
+        for (it = values.begin(); it != values.end(); ++it) {
+            if (it->first != x) {
+                while (it->first != x) {
+                    os << "{},";
+                    x++;
+                }
+            }
+
+            os << "{";
+
+            size_t y = 0;
+            for (ity2z = it->second.begin(); ity2z != it->second.end(); ++ity2z) {
+                if (ity2z->first != y) {
+                    while (ity2z->first != y) {
+                        os << "0,";
+                        y++;
+                    }
+                }
+
+                os << ity2z->second;
+                if (ity2z->first != it->second.rbegin()->first) os << ",";
+
+                y++;
+            }
+
+            os << "}";
+            if (it->first != values.rbegin()->first) os << ",";
+
+            x++;
+        }
+        os << "};\n";
+    }
+
+    template<class Base>
     inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
-                                                           const IndexDclrOperationNode<Base>& index) {
+                                                            const IndexDclrOperationNode<Base>& index) {
         std::vector<const IndexDclrOperationNode<Base>*>indexes(1);
         indexes[0] = &index;
         return indexPattern2String(ip, indexes);
@@ -99,9 +238,20 @@ namespace CppAD {
 
                 return indexExpr;
             }
-            case RANDOM:
-                throw CGException("Random indexes not implemented yet");
-                //return ss.str();
+            case RANDOM1D:
+            {
+                CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
+                const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
+                CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+                return rip.getName() + "[" + (*indexes[0]->getName()) + "]";
+            }
+            case RANDOM2D:
+            {
+                CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
+                const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);
+                CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
+                return rip.getName() + "[" + (*indexes[0]->getName()) + "][" + (*indexes[1]->getName()) + "]";
+            }
             default:
                 assert(false); // should never reach this
                 return "";
@@ -110,7 +260,7 @@ namespace CppAD {
 
     template<class Base>
     inline std::string CLanguage<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
-                                                                 const IndexDclrOperationNode<Base>& index) {
+                                                                  const IndexDclrOperationNode<Base>& index) {
         long dy = lip.getLinearSlopeDy();
         long dx = lip.getLinearSlopeDx();
         long b = lip.getLinearConstantTerm();

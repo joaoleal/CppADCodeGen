@@ -633,8 +633,56 @@ namespace CppAD {
             string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
             string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
-            out << "void " << modelFunction << "(" << argsDcl << ") {\n"
-                    "   " << baseTypeName << " const * inLocal[" << inLocalSize << "];\n"
+            out << "void " << modelFunction << "(" << argsDcl << ") {\n";
+
+            /**
+             * Find random index patterns
+             */
+            set<RandomIndexPattern*> indexRandomPatterns;
+
+            typename map<size_t, map<LoopModel<Base>*, map<size_t, ArrayGroup*> > >::const_iterator itItlg;
+            typename map<LoopModel<Base>*, map<size_t, ArrayGroup*> >::const_iterator itlg;
+            typename map<size_t, ArrayGroup*>::const_iterator itg;
+
+            for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
+
+                for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
+
+                    for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                        ArrayGroup* group = itg->second;
+
+                        CodeHandler<Base>::findRandomIndexPatterns(group->pattern.get(), indexRandomPatterns);
+
+                        if (group->startLocPattern.get() != NULL) {
+                            CodeHandler<Base>::findRandomIndexPatterns(group->startLocPattern.get(), indexRandomPatterns);
+
+                        } else {
+                            map<size_t, ArrayElementGroup*>::const_iterator itc;
+                            for (itc = group->elCount2elements.m.begin(); itc != group->elCount2elements.m.end(); ++itc) {
+                                const ArrayElementGroup* eg = itc->second;
+
+                                for (size_t e = 0; e < eg->elements.size(); e++) {
+                                    const ArrayElementCopyPattern& ePos = eg->elements[e];
+
+                                    CodeHandler<Base>::findRandomIndexPatterns(ePos.resultPattern, indexRandomPatterns);
+                                    CodeHandler<Base>::findRandomIndexPatterns(ePos.compressedPattern, indexRandomPatterns);
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            /**
+             * static variables
+             */
+            CLanguage<Base>::generateNames4RandomIndexPatterns(indexRandomPatterns);
+            CLanguage<Base>::printRandomIndexPatternDeclaration(out, "   ", indexRandomPatterns);
+
+            /**
+             * local variables
+             */
+            out << "   " << baseTypeName << " const * inLocal[" << inLocalSize << "];\n"
                     "   " << baseTypeName << " inLocal1 = 1;\n"
                     "   " << baseTypeName << " * outLocal[1];\n"
                     "   unsigned long " << itName << ";\n"
@@ -700,11 +748,6 @@ namespace CppAD {
             /**
              * loop related values
              */
-            typename map<size_t, map<LoopModel<Base>*, map<size_t, ArrayGroup*> > >::const_iterator itItlg;
-            typename map<LoopModel<Base>*, map<size_t, ArrayGroup*> >::const_iterator itlg;
-            typename map<size_t, ArrayGroup*>::const_iterator itg;
-
-
             for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
                 size_t itCount = itItlg->first;
                 if (itCount > 1) {

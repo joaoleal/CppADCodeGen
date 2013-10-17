@@ -28,7 +28,7 @@ namespace CppAD {
     template<class Base>
     class IndexAssignOperationNode : public OperationNode<Base> {
     private:
-        const IndexPattern& indexPattern_;
+        IndexPattern& indexPattern_;
     public:
 
         /**
@@ -38,14 +38,14 @@ namespace CppAD {
          * @param index1
          */
         inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
-                                        const IndexPattern& indexPattern,
+                                        IndexPattern& indexPattern,
                                         IndexOperationNode<Base>& index1) :
             OperationNode<Base>(CGIndexAssignOp, Argument<Base>(index), Argument<Base>(index1)),
             indexPattern_(indexPattern) {
         }
 
         inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
-                                        const IndexPattern& indexPattern,
+                                        IndexPattern& indexPattern,
                                         IndexOperationNode<Base>* index1,
                                         IndexOperationNode<Base>* index2) :
             OperationNode<Base>(CGIndexAssignOp, std::vector<size_t> (0), createArguments(index, index1, index2)),
@@ -63,6 +63,10 @@ namespace CppAD {
         }
 
         inline const IndexPattern& getIndexPattern() const {
+            return indexPattern_;
+        }
+
+        inline IndexPattern& getIndexPattern() {
             return indexPattern_;
         }
 
