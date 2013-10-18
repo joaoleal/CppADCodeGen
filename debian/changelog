@@ -6,6 +6,7 @@ cppadcodegen (1.3.1-1) unstable; urgency=low
   * minor improvements in printouts
   * bugfix in hessian generation for models with loops when there is no second order information
   * bugfix in loop tape creation (avoids potential NaNs)
+  * bugfix in equation pattern detection when there are several equations that do not match any pattern
 
  -- Development <development@ciengis.com>  Tue, 15 Oct 2013 13:00:00 +0000
 
