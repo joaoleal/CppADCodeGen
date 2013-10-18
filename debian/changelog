@@ -1,10 +1,11 @@
 cppadcodegen (1.3.1-1) unstable; urgency=low
 
-  * bugfix in hessian generation for models with loops when there is no second order information
-  * bugfix in loop tape creation (avoids potential NaNs)
+  * implemented random index patterns
   * improved performance of the generated code for models with loops and atomics
   * improved source code generation performance for models without loops and atomics
   * minor improvements in printouts
+  * bugfix in hessian generation for models with loops when there is no second order information
+  * bugfix in loop tape creation (avoids potential NaNs)
 
  -- Development <development@ciengis.com>  Tue, 15 Oct 2013 13:00:00 +0000
 
