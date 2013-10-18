@@ -513,13 +513,13 @@ namespace CppAD {
                             used.insert(iDep);
                         }
                     }
-                }
 
-                if (used.size() == 0) {
-                    // nothing found :(
-                    delete eqCurr_;
-                    eqCurr_ = NULL;
-                    equations_.resize(equations_.size() - 1);
+                    if (eqCurr_->dependents.size() == 1) {
+                        // nothing found :(
+                        delete eqCurr_;
+                        eqCurr_ = NULL;
+                        equations_.pop_back();
+                    }
                 }
             }
 

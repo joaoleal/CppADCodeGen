@@ -477,3 +477,39 @@ TEST_F(CppADCGPatternTest, modelExtraFunc) {
     testPatternDetection(modelExtraFunc, m, n, 6);
     testLibCreation("modelExtraFunc", modelExtraFunc, m, n, 6, mExtra);
 }
+
+/**
+ * @test with an additional equation that does not belong to a loop
+ */
+std::vector<ADCGD> modelWrongEqs(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t n = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        ADCGD shared = 2 * x[i * n];
+        ADCGD y0;
+        if (i == 2) {
+            y0 = sin(x[0]);
+        } else if (i == 3) {
+            y0 = log(x[0] * x[1]) + 3 * x[3];
+        } else {
+            y0 = cos(shared);
+        }
+        y[i * m] = y0;
+        y[i * m + 1] = 10 * x[i * n + 1] * shared;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, modelWrongEqs) {
+    size_t m = 2;
+    size_t n = 2;
+
+    testPatternDetection(modelWrongEqs, m, n, 8, 2);
+    testLibCreation("modelWrongEqs", modelWrongEqs, m, n, 6);
+}

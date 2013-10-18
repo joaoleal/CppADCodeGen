@@ -313,6 +313,23 @@ namespace CppAD {
                                bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
+            
+            std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
+            
+            testSourceCodeGen(fun, relatedDepCandidates, name, atoms, xTypical,
+                              jacMode, jacobian, hessian, forReverseOne, reverseTwo);
+        }
+
+        void testSourceCodeGen(ADFun<CGD>& fun,
+                               const std::vector<std::set<size_t> >& relatedDepCandidates,
+                               const std::string& name,
+                               const std::vector<atomic_base<Base>*>& atoms,
+                               const std::vector<Base>& xTypical,
+                               JacobianADMode jacMode,
+                               bool jacobian = true,
+                               bool hessian = true,
+                               bool forReverseOne = false,
+                               bool reverseTwo = false) {
 
             std::string libBaseName = name;
             if (jacobian) {
@@ -323,7 +340,7 @@ namespace CppAD {
             if (hessian && reverseTwo)
                 libBaseName += "rev2";
 
-            std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
+
             assert(fun.Domain() == xTypical.size());
             /**
              * Create the dynamic library
@@ -430,7 +447,7 @@ namespace CppAD {
                 compareVectorSetValues(modelL->HessianSparsitySet(),
                                        model->HessianSparsitySet());
 
-                std::vector<double> w(m * repeat + mExtra);
+                std::vector<double> w(fun.Range());
                 for (size_t i = 0; i < w.size(); i++) {
                     w[i] = 0.5 * (i + 1);
                 }
