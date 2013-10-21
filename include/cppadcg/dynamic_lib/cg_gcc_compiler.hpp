@@ -152,7 +152,7 @@ namespace CppAD {
                 count++;
                 std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
 
-                double beginTime;
+                double beginTime = 0.0;
                 if (_verbose) {
                     beginTime = system::currentTime();
                     std::cout << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count 

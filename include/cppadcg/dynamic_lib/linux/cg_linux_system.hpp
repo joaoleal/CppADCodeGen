@@ -118,8 +118,10 @@ namespace CppAD {
                 // close read end of pipe
                 close(fd[0]);
                 //Pipe source to the executable
-                write(fd[1], pipeMessage.c_str(), pipeMessage.size());
+                ssize_t flag = write(fd[1], pipeMessage.c_str(), pipeMessage.size());
                 close(fd[1]);
+                if (flag == -1)
+                    throw CGException("Failed to write to pipe");
             }
 
             //Wait for the executable to exit

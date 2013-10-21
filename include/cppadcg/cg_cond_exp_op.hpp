@@ -80,6 +80,7 @@ namespace CppAD {
                 handler = falseCase.getCodeHandler();
             } else {
                 CPPAD_ASSERT_UNKNOWN(0);
+                throw CGException("Unexpected error!");
             }
 
             if ((!right.isParameter() && right.getCodeHandler() != handler)
@@ -111,6 +112,7 @@ namespace CppAD {
 
                 default:
                     CPPAD_ASSERT_UNKNOWN(0);
+                    throw CGException("Unexpected error!");
             }
 
             CG<Base> result(*handler, new OperationNode<Base> (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));

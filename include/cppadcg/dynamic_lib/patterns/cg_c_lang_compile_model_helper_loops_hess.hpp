@@ -963,7 +963,7 @@ namespace CppAD {
                  * create/change each if/else branch
                  */
                 OperationNode<Base>* ifStart = NULL;
-                OperationNode<Base>* ifBranch;
+                OperationNode<Base>* ifBranch = NULL;
                 Argument<Base> nextBranchArg;
                 set<size_t> usedIter;
 
