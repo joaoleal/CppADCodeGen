@@ -314,7 +314,7 @@ namespace CppAD {
                                   VariableNameGenerator<Base>& nameGen,
                                   std::vector<std::string>& atomicFunctions,
                                   const std::string& jobName = "source") {
-            double beginTime;
+            double beginTime = 0.0;
 
             if (_jobTimer != NULL) {
                 _jobTimer->startingJob("source for '" + jobName + "'");
@@ -689,7 +689,7 @@ namespace CppAD {
         }
 
         virtual void markCodeBlockUsed(OperationNode<Base>& code) {
-            code.total_use_count_++;
+            code.increaseTotalUsageCount();
 
             CGOpCode op = code.getOperationType();
 

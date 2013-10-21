@@ -233,6 +233,14 @@ namespace CppAD {
             return total_use_count_;
         }
 
+        inline void increaseTotalUsageCount() {
+            total_use_count_++;
+        }
+
+        inline void resetTotalUsageCount() {
+            total_use_count_ = 0;
+        }
+
         /**
          * Provides the number of times the result of this operation has been 
          * used as an argument for another operation.
