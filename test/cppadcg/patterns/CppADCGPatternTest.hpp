@@ -24,6 +24,7 @@ namespace CppAD {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
     protected:
+        bool testZeroOrder_;
         bool testJacobian_;
         bool testHessian_;
         std::vector<Base> xNorm_;
@@ -36,6 +37,7 @@ namespace CppAD {
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
+            testZeroOrder_(true),
             testJacobian_(true),
             testHessian_(true),
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
@@ -313,9 +315,9 @@ namespace CppAD {
                                bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
-            
+
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
-            
+
             testSourceCodeGen(fun, relatedDepCandidates, name, atoms, xTypical,
                               jacMode, jacobian, hessian, forReverseOne, reverseTwo);
         }
@@ -330,6 +332,8 @@ namespace CppAD {
                                bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
+
+            bool loadModels = this->testZeroOrder_ || jacobian || hessian;
 
             std::string libBaseName = name;
             if (jacobian) {
@@ -378,14 +382,17 @@ namespace CppAD {
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
             compDynHelpL.setVerbose(this->verbose_);
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
-            std::auto_ptr<DynamicLibModel<double> > modelL(dynamicLibL->model(libBaseName + "Loops"));
-            for (size_t i = 0; i < atoms.size(); i++)
-                modelL->addAtomicFunction(*atoms[i]);
+            std::auto_ptr<DynamicLibModel<double> > modelL;
+            if (loadModels) {
+                modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
+                for (size_t i = 0; i < atoms.size(); i++)
+                    modelL->addAtomicFunction(*atoms[i]);
+            }
             /**
              * Without the loops
              */
             CLangCompileModelHelper<double> compHelp(fun, libBaseName + "NoLoops");
-            compHelp.setCreateForwardZero(true);
+            compHelp.setCreateForwardZero(testZeroOrder_);
             compHelp.setJacobianADMode(jacMode);
             compHelp.setCreateJacobian(false);
             compHelp.setCreateHessian(false);
@@ -406,9 +413,15 @@ namespace CppAD {
             /**
              * reference library
              */
-            std::auto_ptr<DynamicLibModel<double> > model(dynamicLib->model(libBaseName + "NoLoops"));
-            for (size_t i = 0; i < atoms.size(); i++)
-                model->addAtomicFunction(*atoms[i]);
+            std::auto_ptr<DynamicLibModel<double> > model;
+            if (loadModels) {
+                model.reset(dynamicLib->model(libBaseName + "NoLoops"));
+                for (size_t i = 0; i < atoms.size(); i++)
+                    model->addAtomicFunction(*atoms[i]);
+            }
+
+            if (!loadModels)
+                return;
 
             /**
              * Compare results
