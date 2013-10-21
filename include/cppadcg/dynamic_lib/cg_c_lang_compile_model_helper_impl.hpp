@@ -169,12 +169,11 @@ namespace CppAD {
         DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx);
         matcher.generateTapes(_funNoLoops, _loopTapes);
 
-        if (_verbose) {
-            std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
-            std::cout << "loops: " << matcher.getLoops().size() << std::endl;
-        }
-
         finishedJob();
+        if (_verbose) {
+            std::cout << " equation patterns: " << matcher.getEquationPatterns().size() <<
+                    "  loops: " << matcher.getLoops().size() << std::endl;
+        }
     }
 
     template<class Base>
