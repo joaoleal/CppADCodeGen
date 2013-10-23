@@ -145,7 +145,6 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
 
     typedef double Base;
     typedef CppAD::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCG;
 
     vector< AD<double> > ax(n);
     for (size_t j = 0; j < n; j++)
