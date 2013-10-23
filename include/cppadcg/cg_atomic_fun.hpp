@@ -101,8 +101,6 @@ namespace CppAD {
 
         virtual void zeroOrderDependency(const vector<bool>& vx,
                                          vector<bool>& vy) {
-            typedef vector<std::set<size_t> > VectorSet;
-
             size_t m = vy.size();
             size_t n = vx.size();
 

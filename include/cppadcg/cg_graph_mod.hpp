@@ -30,7 +30,6 @@ namespace CppAD {
                                                          bool removeFromIndependents) throw (CGException) {
         using std::vector;
         typedef CG<Base> CGBase;
-        typedef AD<CGBase> ADCG;
 
         //check if the independent variable belongs to this handler
         size_t indepIndex = getIndependentVariableIndex(indep);
