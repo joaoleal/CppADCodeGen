@@ -16,7 +16,7 @@
 # ----------------------------------------------------------------------------
 CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
-PROJECT(cppadcg CXX)
+PROJECT(cppadcg CXX C)
 
 SET(cppadcg_version      "1.3.1" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
@@ -24,6 +24,8 @@ SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source 
 
 # some additional cmake modules
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
+
+FIND_PACKAGE(Threads REQUIRED)
 
 FIND_PACKAGE(CppAD REQUIRED)
 
@@ -62,7 +64,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   # NDEBUG required in order to make CppAD significantly faster
   SET(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O2 -DNDEBUG")
 
-  SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG")
+  SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG -D_FORTIFY_SOURCE=2")
 ENDIF()
 
 ################################################################################
