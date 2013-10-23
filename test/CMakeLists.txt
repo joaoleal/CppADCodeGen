@@ -83,11 +83,11 @@ INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
 ################################################################################
 FUNCTION(add_gest_link_libraries test_target_name use_main)
   IF(CMAKE_COMPILER_IS_GNUCXX)
-    TARGET_LINK_LIBRARIES(${test_target_name} pthread)
     TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
     IF(${use_main})
       TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
     ENDIF()
+    TARGET_LINK_LIBRARIES(${test_target_name} pthread)
   ELSE()
     TARGET_LINK_LIBRARIES(${test_target_name}
                           debug ${GTEST_LIBS_DIR}/DebugLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest${CMAKE_FIND_LIBRARY_SUFFIXES}
