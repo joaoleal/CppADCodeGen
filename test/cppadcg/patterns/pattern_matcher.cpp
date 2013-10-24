@@ -126,7 +126,7 @@ std::vector<ADCGD> modelCommonTmp(std::vector<ADCGD>& x, size_t repeat) {
 
     ADCGD tmp = x[1] * x[2];
     for (size_t i = 0; i < repeat; i++) {
-        y[i * m] = cos(x[i * n]) + tmp;
+        y[i * m] = cos(x[i * n]) + tmp + tmp;
         y[i * m + 1] = x[i * n + 1] * x[i * n] + tmp;
     }
 
