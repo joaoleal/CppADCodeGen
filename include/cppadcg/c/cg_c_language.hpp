@@ -1613,9 +1613,20 @@ namespace CppAD {
 
         virtual void printParameter(const Base& value) {
             // make sure all digits of floating point values are printed
-            _code.unsetf(std::ios::floatfield);
-            //std::scientific 
-            _code << std::setprecision(std::numeric_limits< Base >::digits10 + 2) << value;
+            std::ostringstream os;
+            int p = std::numeric_limits<Base>::digits10 + 2;
+            os << std::setprecision(p) << value;
+
+            std::string number = os.str();
+            _code << number;
+
+            if (std::abs(value) > Base(0) && value != Base(1) && value != Base(-1)) {
+                if (number.find('.') == std::string::npos && number.find('e') == std::string::npos) {
+                    // also make sure there is always a '.' after the number in
+                    // order to avoid integer overflows
+                    _code << '.';
+                }
+            }
         }
 
         virtual const std::string& getComparison(enum CGOpCode op) const {
