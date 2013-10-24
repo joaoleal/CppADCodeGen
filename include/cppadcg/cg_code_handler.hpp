@@ -378,8 +378,8 @@ namespace CppAD {
             }
 
             /**
-             * add some additional arguments to some nodes related with other 
-             * nodes being used in different scopes
+             * add some additional arguments to some nodes (loops, ifs) related
+             * with other nodes being used in different scopes
              */
             typename std::map<size_t, std::set<OperationNode<Base>*> >::const_iterator itse;
             for (itse = _scopeExtraDependecy.begin(); itse != _scopeExtraDependecy.end(); ++itse) {
@@ -873,18 +873,6 @@ namespace CppAD {
         virtual void checkVariableCreation(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
-            if (code.getOperationType() == CGAliasOp) {
-                /**
-                 * avoid creating temporary variables for alias operations,
-                 * the temporary should be the variable where it points to
-                 */
-                assert(args.size() == 1);
-                if (args[0].getOperation() != NULL) {
-                    checkVariableCreation(*args[0].getOperation());
-                }
-                return;
-            }
-
             typename std::vector<Argument<Base> >::const_iterator it;
 
             for (it = args.begin(); it != args.end(); ++it) {
@@ -898,7 +886,7 @@ namespace CppAD {
                         CGOpCode type = arg.getOperationType();
                         if (type == CGLoopEndOp || type == CGElseIfOp || type == CGElseOp || type == CGEndIfOp) {
                             /**
-                             * Some types of operations must be added immediatelly 
+                             * Some types of operations must be added immediately 
                              * after its arguments
                              * in order to avoid having other arguments inside
                              * that stack frame (or scope)
@@ -1283,7 +1271,7 @@ namespace CppAD {
             if (code.getOperationType() == CGLoopEndOp) {
                 /**
                  * temporary variables from outside the loop which are used
-                 * whithin the loop cannot be overwritten inside that loop
+                 * within the loop cannot be overwritten inside that loop
                  */
                 const std::set<OperationNode<Base>*>& outerLoopUsages = _loopOuterVars.back();
                 typename std::set<OperationNode<Base>*>::const_iterator it;
