@@ -62,10 +62,6 @@ namespace CppAD {
                 return it->second;
         }
 
-        //        inline void combine(const IndexedIndependent<Base>& other) {
-        //            op2Arguments.insert(other.op2Arguments.begin(), other.op2Arguments.end());
-        //        }
-
     };
 
     /**
@@ -79,10 +75,10 @@ namespace CppAD {
         const size_t depRefIndex;
         std::set<size_t> dependents;
         /**
-         * maps operations used by all dependents to the operations of the 
+         * maps node ID used by all dependents to the operations of the 
          * reference dependent
          */
-        std::map<const OperationNode<Base>*, OperationNode<Base>*> operation2Reference;
+        std::vector<OperationNode<Base>*> operationEO2Reference;
         /**
          * Maps the operations that used an indexed independents as direct
          * arguments (reference operation -> argument indexes -> independents)
@@ -93,14 +89,11 @@ namespace CppAD {
          */
         std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependents;
 
-        /**
-         * reference independent -> independents
-         */
-        //std::map<const OperationNode<Base>*, std::vector<const OperationNode<Base>*> > independents;
-        //std::set<const OperationNode<Base>*> commonIndependents;
-        //std::map<const OperationNode<Base>*, std::set<size_t> > indexedOperationArguments;
     private:
+        std::list<OperationIndexedIndependents<Base>*> garbage_;
         size_t currDep_;
+        size_t minColor_;
+        size_t cmpColor_;
     public:
 
         explicit EquationPattern(const CG<Base>& ref,
@@ -110,21 +103,36 @@ namespace CppAD {
             dependents.insert(iDepRef);
         }
 
-        bool testAdd(size_t iDep2, const CG<Base>& dep2) throw (CGException) {
+        bool testAdd(size_t iDep2, const CG<Base>& dep2, size_t& minColor) throw (CGException) {
             IndexedIndependent<Base> independentsBackup = indexedOpIndep;
             std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependentsBackup = constOperationIndependents;
-            std::map<const OperationNode<Base>*, OperationNode<Base>*> operation2ReferenceBackup = operation2Reference;
+            std::vector<OperationNode<Base>*> operation2ReferenceBackup = operationEO2Reference;
 
             currDep_ = iDep2;
+            minColor_ = minColor;
+            cmpColor_ = minColor_;
 
-            if (comparePath(depRef, dep2)) {
+            bool equals = comparePath(depRef, dep2);
+
+            minColor = cmpColor_;
+
+            if (equals) {
                 dependents.insert(iDep2);
+                garbage_.clear();
+
                 return true; // matches the reference pattern
             } else {
                 // restore
                 indexedOpIndep.op2Arguments.swap(independentsBackup.op2Arguments);
                 constOperationIndependents.swap(constOperationIndependentsBackup);
-                operation2Reference.swap(operation2ReferenceBackup);
+                operationEO2Reference.swap(operation2ReferenceBackup);
+
+                typename std::list<OperationIndexedIndependents<Base>*>::const_iterator it;
+                for (it = garbage_.begin(); it != garbage_.end(); ++it) {
+                    delete *it;
+                }
+                garbage_.clear();
+
                 return false; // cannot be added
             }
         }
@@ -174,16 +182,29 @@ namespace CppAD {
             }
         }
 
-        static inline void uncolor(OperationNode<Base>* sc) {
-            if (sc == NULL || sc->getColor() == 0)
+        static inline void uncolor(OperationNode<Base>* node) {
+            if (node == NULL || node->getColor() == 0)
                 return;
 
-            sc->setColor(0);
+            node->setColor(0);
 
-            const std::vector<Argument<Base> >& args = sc->getArguments();
+            const std::vector<Argument<Base> >& args = node->getArguments();
             size_t size = args.size();
             for (size_t a = 0; a < size; a++) {
                 uncolor(args[a].getOperation());
+            }
+        }
+
+        static inline void clearEvaluationOrder(OperationNode<Base>* node) {
+            if (node == NULL || node->getEvaluationOrder() == 0)
+                return;
+
+            node->setEvaluationOrder(0);
+
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            size_t size = args.size();
+            for (size_t a = 0; a < size; a++) {
+                clearEvaluationOrder(args[a].getOperation());
             }
         }
 
@@ -286,9 +307,9 @@ namespace CppAD {
 
         bool comparePath(OperationNode<Base>* scRef,
                          OperationNode<Base>* sc2) {
-            operation2Reference[sc2] = scRef;
+            saveOperationReference(sc2, scRef);
             if (dependents.size() == 1) {
-                operation2Reference[scRef] = scRef;
+                saveOperationReference(scRef, scRef);
             }
 
             while (scRef->getOperationType() == CGAliasOp) {
@@ -299,6 +320,15 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
                 sc2 = sc2->getArguments()[0].getOperation();
             }
+
+            // check if these nodes where visited before
+            if (sc2->getColor() >= minColor_ || scRef->getColor() >= minColor_) {
+                return sc2->getColor() == scRef->getColor(); // been here before
+            }
+            scRef->setColor(cmpColor_);
+            sc2->setColor(cmpColor_);
+            cmpColor_++;
+
 
             if (scRef->getOperationType() != sc2->getOperationType()) {
                 return false;
@@ -352,6 +382,18 @@ namespace CppAD {
             return true; // same pattern
         }
 
+        void saveOperationReference(const OperationNode<Base>* sc2,
+                                    OperationNode<Base>* scRef) {
+            size_t order = sc2->getEvaluationOrder();
+            if (order >= operationEO2Reference.size()) {
+                if (order >= operationEO2Reference.capacity()) {
+                    operationEO2Reference.reserve(4 * (order + 1) / 3);
+                }
+                operationEO2Reference.resize(order + 1);
+            }
+            operationEO2Reference[order] = scRef;
+        }
+
         bool saveIndependent(const OperationNode<Base>* parentOp,
                              size_t argIndex,
                              const OperationNode<Base>* argRefOp,
@@ -361,7 +403,7 @@ namespace CppAD {
             }
 
             /**
-             * Must consider that the independet might change from iteration to
+             * Must consider that the independent might change from iteration to
              * iteration (even if now it won't)
              */
             typename std::map<const OperationNode<Base>*, std::set<size_t> >::const_iterator it;
@@ -376,6 +418,7 @@ namespace CppAD {
             if (opIndexedIndep == NULL) {
                 opIndexedIndep = new OperationIndexedIndependents<Base>();
                 indexedOpIndep.op2Arguments[parentOp] = opIndexedIndep;
+                garbage_.push_back(opIndexedIndep);
             }
 
             std::map<size_t, const OperationNode<Base>*>& dep2Indeps = opIndexedIndep->arg2Independents[argIndex];

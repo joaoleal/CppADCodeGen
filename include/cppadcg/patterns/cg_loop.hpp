@@ -194,9 +194,6 @@ namespace CppAD {
 
             equations.insert(other.equations.begin(), other.equations.end());
             other.equations.clear(); // so that it does not delete the equations
-            //indexedOpIndep.combine(other.indexedOpIndep); // must be determined later for a different reference
-            //constOperationIndependents.insert(other.constOperationIndependents.begin(),
-            //                                  other.constOperationIndependents.end());
 
             return true;
         }
@@ -322,7 +319,7 @@ namespace CppAD {
                                         EquationPattern<Base>& eq2,
                                         const OperationNode<Base>& sharedTemp) {
             // convert to the reference operation
-            OperationNode<Base>* sharedTempRef1 = eq1.operation2Reference.at(&sharedTemp);
+            OperationNode<Base>* sharedTempRef1 = eq1.operationEO2Reference.at(sharedTemp.getEvaluationOrder());
 
             // must have indexed independents at the same locations in all equations
             const std::set<const OperationNode<Base>*> opWithIndepArgs = EquationPattern<Base>::findOperationsUsingIndependents(*sharedTempRef1);
@@ -336,7 +333,7 @@ namespace CppAD {
                 indexed1It = eq1.indexedOpIndep.op2Arguments.find(op1);
 
                 typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>*>::const_iterator indexed2It;
-                indexed2It = eq2.indexedOpIndep.op2Arguments.find(eq2.operation2Reference.at(op1));
+                indexed2It = eq2.indexedOpIndep.op2Arguments.find(eq2.operationEO2Reference.at(op1->getEvaluationOrder()));
 
                 if (indexed1It == eq1.indexedOpIndep.op2Arguments.end()) {
                     if (indexed2It != eq2.indexedOpIndep.op2Arguments.end()) {
@@ -544,7 +541,7 @@ namespace CppAD {
             typename std::set<const OperationNode<Base>*>::const_iterator it;
             for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
                 const OperationNode<Base>* opLoopRef = *it;
-                const OperationNode<Base>* opEqRef = eq->operation2Reference.at(opLoopRef);
+                const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(opLoopRef->getEvaluationOrder());
                 indexedOpIndep.op2Arguments[opLoopRef] = eq->indexedOpIndep.arguments(opEqRef);
             }
         }
@@ -937,7 +934,7 @@ namespace CppAD {
                                                            OperationNode<Base>& independent,
                                                            OperationNode<Base>*& operationRef) {
             if (operationRef == NULL && operation != NULL) {
-                operationRef = eq.operation2Reference.at(operation);
+                operationRef = eq.operationEO2Reference.at(operation->getEvaluationOrder());
             }
 
             // is it an indexed independent?
@@ -1032,7 +1029,9 @@ namespace CppAD {
                 return;
             }
 
-            node.resetHandlerCounters();
+            node.setVariableID(0);
+            node.resetUsageCount();
+            node.setLastUsageEvaluationOrder(0);
 
             const std::vector<Argument<Base> >& args = node.getArguments();
             size_t arg_size = args.size();

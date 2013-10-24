@@ -41,6 +41,8 @@ namespace CppAD {
         std::map<OperationNode<Base>*, size_t> origTemp2Index_;
         std::vector<std::set<size_t> > id2Deps;
         size_t idCounter_;
+        /// used to mark visited nodes and indexed nodes
+        size_t color_;
     public:
 
         /**
@@ -57,7 +59,9 @@ namespace CppAD {
                                 std::vector<CGBase>& independents) :
             relatedDepCandidates_(relatedDepCandidates),
             dependents_(dependents),
-            independents_(independents) {
+            independents_(independents),
+            idCounter_(0),
+            color_(0) {
             assert(independents_.size() > 0);
             assert(independents_[0].getCodeHandler() != NULL);
             equations_.reserve(relatedDepCandidates_.size());
@@ -108,10 +112,15 @@ namespace CppAD {
          * @return information about the detected loops
          */
         virtual std::vector<Loop<Base>*> findLoops() throw (CGException) {
+
+            // assign a unique Id to each node
+            assignIds();
+            id2Deps.resize(idCounter_ + 1);
+
             /**
              * Determine the equation patterns
              */
-            findRelatedVariables(dependents_, independents_);
+            findRelatedVariables();
 
             const size_t eq_size = equations_.size();
             for (size_t e = 0; e < eq_size; e++) {
@@ -123,10 +132,6 @@ namespace CppAD {
                 }
             }
 
-            // assign a unique Id to each node
-            assignIds(dependents_);
-            id2Deps.resize(idCounter_ + 1);
-
             loops_.reserve(eq_size);
 
             std::map<EquationPattern<Base>*, std::set<Loop<Base>* > > blackList;
@@ -136,6 +141,8 @@ namespace CppAD {
              * Combine related equations in the same loops
              * (equations that share temporary variables)
              */
+            color_++; // this is the color used to mark indexed nodes (must be higher than any previously used color)
+
             for (size_t e = 0; e < eq_size; e++) {
                 EquationPattern<Base>* eq = equations_[e];
                 eqCurr_ = eq;
@@ -143,7 +150,7 @@ namespace CppAD {
 
                 for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
                     OperationNode<Base>* node = dependents_[*depIt].getOperationNode();
-                    // will define the dependents associared with each operation
+                    // will define the dependents associated with each operation
                     markOperationsWithDependent(node, *depIt);
                 }
 
@@ -152,8 +159,7 @@ namespace CppAD {
                  */
                 sharedTemps_.clear();
                 for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                    //// called too many times to get the same shared variables??????
-                    findSharedTemporaries(dependents_[*depIt], *depIt);
+                    findSharedTemporaries(dependents_[*depIt]);
                 }
 
                 /**
@@ -208,7 +214,7 @@ namespace CppAD {
                                 if (otherEq == eq)
                                     continue;
 
-                                bool compatibleEqs = otherEq->dependents.size() == eq->dependents.size() && // must have the apropriate number of iterations
+                                bool compatibleEqs = otherEq->dependents.size() == eq->dependents.size() && // must have the appropriate number of iterations
                                         deps.size() == timesShared; // must show up the same number of times otherwise it is an indexed variable in one equation and non-indexed in another
 
                                 if (!compatibleEqs) {
@@ -366,6 +372,20 @@ namespace CppAD {
                 loop->createLoopModel(dependents_, independents_, dep2Equation_, origTemp2Index_);
             }
 
+            /**
+             * clean-up evaluation order
+             */
+            resetHandlerCounters();
+
+            /**
+             * clean-up colors
+             */
+            size_t m = dependents_.size();
+            for (size_t i = 0; i < m; i++) {
+                OperationNode<Base>* node = dependents_[i].getOperationNode();
+                EquationPattern<Base>::uncolor(node);
+            }
+
             return loops_;
         }
 
@@ -464,21 +484,9 @@ namespace CppAD {
             return new LoopFreeModel<Base>(tapeNoLoops.release(), depTape2Orig);
         }
 
-        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
-                                                                 const std::vector<CGBase>& independents) throw (CGException) {
-            size_t n = independents.size();
-            std::vector<OperationNode<Base>*> indep(n);
-            for (size_t j = 0; j < n; j++) {
-                indep[j] = independents[j].getOperationNode();
-                assert(indep[j] != NULL);
-            }
-
-            return findRelatedVariables(dependents, indep);
-        }
-
-        std::vector<EquationPattern<Base>*> findRelatedVariables(const std::vector<CGBase>& dependents,
-                                                                 const std::vector<OperationNode<Base>*>& independents) throw (CGException) {
+        std::vector<EquationPattern<Base>*> findRelatedVariables() throw (CGException) {
             eqCurr_ = NULL;
+            color_ = 1; // used to mark visited nodes
 
             size_t rSize = relatedDepCandidates_.size();
             for (size_t r = 0; r < rSize; r++) {
@@ -497,7 +505,7 @@ namespace CppAD {
                     }
 
                     if (eqCurr_ == NULL || used.size() > 0) {
-                        eqCurr_ = new EquationPattern<Base>(dependents[iDepRef], iDepRef);
+                        eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
                         equations_.push_back(eqCurr_);
                     }
 
@@ -509,7 +517,7 @@ namespace CppAD {
                             continue;
                         }
 
-                        if (eqCurr_->testAdd(iDep, dependents[iDep])) {
+                        if (eqCurr_->testAdd(iDep, dependents_[iDep], color_)) {
                             used.insert(iDep);
                         }
                     }
@@ -534,21 +542,33 @@ namespace CppAD {
             return equations_;
         }
 
-        inline bool findSharedTemporaries(const CG<Base>& value, size_t dep) {
+        /**
+         * Finds nodes which can be shared with other equation patterns
+         * 
+         * @param value the CG object to visit
+         * @return true if this operation is indexed
+         */
+        inline bool findSharedTemporaries(const CG<Base>& value) {
             OperationNode<Base>* depNode = value.getOperationNode();
-            if (findSharedTemporaries(depNode, dep)) {
-                depNode->setColor(1);
+            if (findSharedTemporaries(depNode)) {
+                depNode->setColor(color_);
                 return true;
             }
             return false;
         }
 
-        inline bool findSharedTemporaries(OperationNode<Base>* node, size_t dep) {
+        /**
+         * Finds nodes which can be shared with other equation patterns
+         * 
+         * @param node the node to visit
+         * @return true if this operation is indexed
+         */
+        inline bool findSharedTemporaries(OperationNode<Base>* node) {
             if (node == NULL)
                 return false; // nothing to do
 
             if (node->getUsageCount() > 0)
-                return node->getColor() > 0;
+                return node->getColor() == color_;
 
             node->increaseUsageCount();
 
@@ -559,7 +579,7 @@ namespace CppAD {
                 OperationNode<Base>*argOp = args[a].getOperation();
                 if (argOp != NULL) {
                     if (argOp->getOperationType() != CGInvOp) {
-                        indexedOperation |= findSharedTemporaries(argOp, dep);
+                        indexedOperation |= findSharedTemporaries(argOp);
                     } else {
                         indexedOperation |= !eqCurr_->containsConstantIndependent(node, a);
                     }
@@ -567,7 +587,9 @@ namespace CppAD {
             }
 
             if (indexedOperation) {
-                node->setColor(1); // mark this operation as being indexed
+                node->setColor(color_); // mark this operation as being indexed
+            } else {
+                node->setColor(0); // mark this operation as being not-indexed
             }
 
             size_t id = node->getVariableID();
@@ -605,11 +627,10 @@ namespace CppAD {
             if (deps.size() == 0) {
                 deps.insert(dep); // here for the first time 
             } else {
-                std::set<size_t>::iterator itDep = deps.find(dep);
-                if (itDep != deps.end()) {
+                std::pair < std::set<size_t>::iterator, bool> added = deps.insert(dep);
+                if (!added.second) {
                     return; // already been here
                 }
-                deps.insert(deps.end(), dep);
             }
 
             const std::vector<Argument<Base> >& args = node->getArguments();
@@ -619,7 +640,7 @@ namespace CppAD {
             }
         }
 
-        void assignIds(const std::vector<CGBase>& dependents) {
+        void assignIds() {
             idCounter_ = 1;
 
             size_t rSize = relatedDepCandidates_.size();
@@ -628,7 +649,7 @@ namespace CppAD {
 
                 std::set<size_t>::const_iterator it;
                 for (it = candidates.begin(); it != candidates.end(); ++it) {
-                    assignIds(dependents[*it].getOperationNode());
+                    assignIds(dependents_[*it].getOperationNode());
                 }
             }
         }
@@ -637,12 +658,39 @@ namespace CppAD {
             if (node == NULL || node->getVariableID() > 0)
                 return;
 
-            node->setVariableID(idCounter_++);
+            node->setVariableID(idCounter_);
+            node->setEvaluationOrder(idCounter_);
+            idCounter_++;
 
             const std::vector<Argument<Base> >& args = node->getArguments();
             size_t arg_size = args.size();
             for (size_t i = 0; i < arg_size; i++) {
                 assignIds(args[i].getOperation());
+            }
+        }
+
+        void resetHandlerCounters() {
+            size_t rSize = relatedDepCandidates_.size();
+            for (size_t r = 0; r < rSize; r++) {
+                const std::set<size_t>& candidates = relatedDepCandidates_[r];
+
+                std::set<size_t>::const_iterator it;
+                for (it = candidates.begin(); it != candidates.end(); ++it) {
+                    resetHandlerCounters(dependents_[*it].getOperationNode());
+                }
+            }
+        }
+
+        static void resetHandlerCounters(OperationNode<Base>* node) {
+            if (node == NULL || node->getVariableID() == 0 || node->getEvaluationOrder() == 0)
+                return;
+
+            node->resetHandlerCounters();
+
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            size_t arg_size = args.size();
+            for (size_t i = 0; i < arg_size; i++) {
+                resetHandlerCounters(args[i].getOperation());
             }
         }
 

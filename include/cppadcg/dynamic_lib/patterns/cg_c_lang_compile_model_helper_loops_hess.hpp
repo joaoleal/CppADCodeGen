@@ -872,7 +872,7 @@ namespace CppAD {
             info.dzDxx.clear();
 
             /**
-             * move no-nindexed expressions outside loop
+             * move non-indexed expressions outside loop
              */
             moveNonIndexedOutsideLoop(*info.loopStart, *info.loopEnd);
         }

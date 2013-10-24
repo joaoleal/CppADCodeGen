@@ -167,6 +167,9 @@ namespace CppAD {
 
     template<class Base>
     class SmartVectorPointer;
+    
+    template<class Base>
+    class SmartListPointer;
 
     template<class Key, class Value>
     class SmartMapValuePointer;
