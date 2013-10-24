@@ -37,9 +37,8 @@ namespace CppAD {
     public:
 
         inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
-        CppADCGPatternTest(verbose, printValues),
-        xx(na) {
-            this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
+            CppADCGPatternTest(verbose, printValues),
+            xx(na) {
 
             /**
              * CSTR model values
@@ -250,6 +249,9 @@ using namespace CppAD;
  */
 TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
     using namespace CppAD;
+
+    //this->epsilonA_ = 6e-10;
+    this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 5e6;
 
     /**
      * create atomic function for the ODE

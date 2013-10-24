@@ -80,7 +80,7 @@ namespace CppAD {
             size_t n2 = repeat * n;
             std::vector<Base> x(n2);
             for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
+                x[j] = 0.5 * (j + 1);
 
             testLibCreation(libName, model, m, repeat, mExtra, x);
         }
@@ -245,8 +245,6 @@ namespace CppAD {
                 testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, false, true, false, true);
             }
         }
-
-    private:
 
         std::vector<std::set<size_t> > createRelatedDepCandidates(size_t m, size_t repeat) {
             std::vector<std::set<size_t> > relatedDepCandidates(m);
@@ -426,14 +424,10 @@ namespace CppAD {
             /**
              * Compare results
              */
-            size_t nFull = modelL->Domain();
             ASSERT_EQ(modelL->Domain(), model->Domain());
             ASSERT_EQ(modelL->Range(), model->Range());
 
-            std::vector<double> x(nFull);
-            for (size_t j = 0; j < nFull; j++) {
-                x[j] = j + 1;
-            }
+            std::vector<double> x = xTypical;
 
             // test model (zero-order)
             if (compHelp.isCreateForwardZero()) {
@@ -469,8 +463,7 @@ namespace CppAD {
                 modelL->SparseHessian(x, w, hessl, rowsl, colsl);
                 model->SparseHessian(x, w, hess, rows, cols);
 
-                ASSERT_TRUE(compareValues(hessl, hess,
-                                          epsilonR_, epsilonA_));
+                ASSERT_TRUE(compareValues(hessl, hess, epsilonR_, epsilonA_));
             }
 
         }
