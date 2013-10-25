@@ -400,7 +400,7 @@ namespace CppAD {
                 langC.setFunctionIndexArgument(indexJrowDcl);
 
                 std::ostringstream code;
-                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
+                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
                 CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                 /**
@@ -541,7 +541,7 @@ namespace CppAD {
                     langC.setGenerateFunction(functionName);
 
                     std::ostringstream code;
-                    std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px", "x", "var", "array"));
+                    std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
                     CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                     handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);

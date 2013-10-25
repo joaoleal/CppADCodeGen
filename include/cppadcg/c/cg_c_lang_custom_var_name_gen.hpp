@@ -32,18 +32,11 @@ namespace CppAD {
     public:
 
         CLangCustomVariableNameGenerator(const std::vector<std::string>& depNames,
-                                         const std::vector<std::string>& indepNames) :
-            CLangDefaultVariableNameGenerator<Base>(),
-            depNames_(depNames),
-            indepNames_(indepNames) {
-        }
-
-        CLangCustomVariableNameGenerator(const std::vector<std::string>& depNames,
                                          const std::vector<std::string>& indepNames,
-                                         const std::string& depName,
-                                         const std::string& indepName,
-                                         const std::string& tmpName,
-                                         const std::string& tmpArrayName) :
+                                         const std::string& depName = "y",
+                                         const std::string& indepName = "x",
+                                         const std::string& tmpName = "v",
+                                         const std::string& tmpArrayName = "array") :
             CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
             depNames_(depNames),
             indepNames_(indepNames) {

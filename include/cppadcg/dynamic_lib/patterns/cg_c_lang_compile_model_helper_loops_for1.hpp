@@ -369,7 +369,7 @@ namespace CppAD {
 
                 _cache.str("");
                 std::ostringstream code;
-                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "x", "var", "array"));
+                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
                 CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
                 /**
@@ -453,7 +453,7 @@ namespace CppAD {
         langC.setGenerateFunction(_cache.str());
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy", "x", "var", "array"));
+        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
         handler.generateCode(code, langC, jacCol, nameGenHess, _atomicFunctions, jobName);

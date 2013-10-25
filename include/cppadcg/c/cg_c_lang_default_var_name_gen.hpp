@@ -43,21 +43,10 @@ namespace CppAD {
         size_t _maxTemporaryArrayID;
     public:
 
-        inline CLangDefaultVariableNameGenerator() :
-            _depName("y"),
-            _indepName("x"),
-            _tmpName("var"),
-            _tmpArrayName("array") {
-            this->_independent.push_back(FuncArgument(_indepName));
-            this->_dependent.push_back(FuncArgument(_depName));
-            this->_temporary.push_back(FuncArgument(_tmpName));
-            this->_temporary.push_back(FuncArgument(_tmpArrayName));
-        }
-
-        inline CLangDefaultVariableNameGenerator(const std::string& depName,
-                                                 const std::string& indepName,
-                                                 const std::string& tmpName,
-                                                 const std::string& tmpArrayName) :
+        inline CLangDefaultVariableNameGenerator(const std::string& depName = "y",
+                                                 const std::string& indepName = "x",
+                                                 const std::string& tmpName = "v",
+                                                 const std::string& tmpArrayName = "array") :
             _depName(depName),
             _indepName(indepName),
             _tmpName(tmpName),

@@ -81,10 +81,10 @@ namespace CppAD {
     const std::string CLangCompileModelHelper<Base>::CONST = "const";
 
     template<class Base>
-    VariableNameGenerator<Base>* CLangCompileModelHelper<Base>::createVariableNameGenerator(const std::string& depName,
-                                                                                            const std::string& indepName,
-                                                                                            const std::string& tmpName,
-                                                                                            const std::string& tmpArrayName) {
+    VariableNameGenerator<Base>* CLangCompileModelHelper<Base>::createVariableNameGenerator(const std::string& depName = "y",
+                                                                                            const std::string& indepName = "x",
+                                                                                            const std::string& tmpName = "v",
+                                                                                            const std::string& tmpArrayName = "array") {
         return new CLangDefaultVariableNameGenerator<Base > (depName, indepName, tmpName, tmpArrayName);
     }
 
@@ -182,7 +182,7 @@ namespace CppAD {
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator("y", "x", "var", "array"));
+        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator());
 
         _cache.str("");
         _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
