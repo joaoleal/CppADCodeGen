@@ -948,6 +948,10 @@ namespace CppAD {
         if (!constainsAtomics) {
             vector<size_t> row, col;
             generateSparsityIndexes(evalSparsity, row, col);
+
+            if (row.size() == 0)
+                return dyDxT; // nothing to do
+
             vector<CGBase> jacLoop(row.size());
 
             CppAD::sparse_jacobian_work work; // temporary structure for CppAD

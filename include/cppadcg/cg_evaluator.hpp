@@ -81,10 +81,6 @@ namespace CppAD {
                 throw CGException(ss.str());
             }
 
-            if (indep.empty()) {
-                return std::vector<AD<BaseOut> >(0); // nothing in, nothing out
-            }
-
             indep_ = &indep;
 
             clear(); // clean-up

@@ -736,30 +736,39 @@ namespace CppAD {
             size_t nTmpIndexed = independentsTemp_.size();
 
             // tape independent array
-            std::vector<ADCGB> loopIndeps(independentsIndexed_.size() +
-                                          independentsNonIndexed_.size() +
-                                          independentsTemp_.size());
+            size_t nIndep = independentsIndexed_.size() +
+                    independentsNonIndexed_.size() +
+                    independentsTemp_.size();
+            std::vector<ADCGB> loopIndeps(nIndep);
 
-            /**
-             * assign values from the original model if possible (to avoid NaN)
-             */
-            for (size_t j = 0; j < nIndexed; j++) {
-                const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
-                loopIndeps[j] = iv.second;
-            }
-
-            s = 0;
-            typename std::map<size_t, const OperationNode<Base>*>::const_iterator origJ2CloneIt;
-            for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
-                const IndexValue& iv = independentsNonIndexed_.at(origJ2CloneIt->second);
-                loopIndeps[nIndexed + s] = iv.second;
-            }
-
-            s = 0;
             typename std::map<const OperationNode<Base>*, IndexValue>::const_iterator itt;
-            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
-                const IndexValue& iv = itt->second;
-                loopIndeps[nIndexed + nNonIndexed + s] = iv.second;
+            typename std::map<size_t, const OperationNode<Base>*>::const_iterator origJ2CloneIt;
+
+            if (nIndep == 0) {
+                loopIndeps.resize(1); // the tape cannot have 0 independents
+                loopIndeps[0] = Base(0);
+
+            } else {
+
+                /**
+                 * assign values from the original model if possible (to avoid NaN)
+                 */
+                for (size_t j = 0; j < nIndexed; j++) {
+                    const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
+                    loopIndeps[j] = iv.second;
+                }
+
+                s = 0;
+                for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
+                    const IndexValue& iv = independentsNonIndexed_.at(origJ2CloneIt->second);
+                    loopIndeps[nIndexed + s] = iv.second;
+                }
+
+                s = 0;
+                for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
+                    const IndexValue& iv = itt->second;
+                    loopIndeps[nIndexed + nNonIndexed + s] = iv.second;
+                }
             }
 
             /**
@@ -770,24 +779,25 @@ namespace CppAD {
             /**
              * Reorder independent variables for the new tape (1st iteration only)
              */
-            std::vector<ADCGB> localIndeps(loopIndeps.size());
+            std::vector<ADCGB> localIndeps(nIndep);
+            if (nIndep > 0) {
+                for (size_t j = 0; j < nIndexed; j++) {
+                    const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
+                    size_t localIndex = iv.first;
+                    localIndeps[localIndex] = loopIndeps[j];
+                }
 
-            for (size_t j = 0; j < nIndexed; j++) {
-                const IndexValue& iv = independentsIndexed_.at(indexedCloneOrder[j]);
-                size_t localIndex = iv.first;
-                localIndeps[localIndex] = loopIndeps[j];
-            }
+                s = 0;
+                for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
+                    size_t localIndex = independentsNonIndexed_.at(origJ2CloneIt->second).first;
+                    localIndeps[localIndex] = loopIndeps[nIndexed + s];
+                }
 
-            s = 0;
-            for (origJ2CloneIt = nonIndexedCloneOrder.begin(); origJ2CloneIt != nonIndexedCloneOrder.end(); ++origJ2CloneIt, s++) {
-                size_t localIndex = independentsNonIndexed_.at(origJ2CloneIt->second).first;
-                localIndeps[localIndex] = loopIndeps[nIndexed + s];
-            }
-
-            s = 0;
-            for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
-                size_t localIndex = itt->second.first;
-                localIndeps[localIndex] = loopIndeps[nIndexed + nNonIndexed + s];
+                s = 0;
+                for (itt = independentsTemp_.begin(); itt != independentsTemp_.end(); ++itt, s++) {
+                    size_t localIndex = itt->second.first;
+                    localIndeps[localIndex] = loopIndeps[nIndexed + nNonIndexed + s];
+                }
             }
 
             /**

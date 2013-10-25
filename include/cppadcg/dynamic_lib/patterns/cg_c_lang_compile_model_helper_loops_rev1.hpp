@@ -397,6 +397,10 @@ namespace CppAD {
         if (!constainsAtomics) {
             vector<size_t> row, col;
             generateSparsityIndexes(evalSparsity, row, col);
+
+            if (row.size() == 0)
+                return dyDx; // nothing to do
+
             vector<CGBase> jacLoop(row.size());
 
             CppAD::sparse_jacobian_work work; // temporary structure for CppAD
@@ -423,7 +427,7 @@ namespace CppAD {
 
                 w[i] = Base(1);
                 vector<CGBase> dw = fun.Reverse(1, w);
-                assert(dw.size() ==  fun.Domain());
+                assert(dw.size() == fun.Domain());
                 w[i] = Base(0);
 
                 map<size_t, CGBase>& dyIDx = dyDx[i];

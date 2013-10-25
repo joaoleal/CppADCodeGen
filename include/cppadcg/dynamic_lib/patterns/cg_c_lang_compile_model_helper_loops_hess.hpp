@@ -567,7 +567,7 @@ namespace CppAD {
         }
 
         /**
-         * Calculate hessians and jacobians
+         * Calculate Hessians and Jacobians
          */
         /**
          * Loops - evaluate Jacobian and Hessian
@@ -590,7 +590,7 @@ namespace CppAD {
         /**
          * No loops
          */
-        // jacobian for temporaries
+        // Jacobian for temporaries
         map<size_t, map<size_t, CGBase> > dzDx;
 
         if (_funNoLoops != NULL) {
@@ -618,7 +618,7 @@ namespace CppAD {
             }
 
             /**
-             * hessian - original equations
+             * Hessian - original equations
              */
             _funNoLoops->calculateHessian4OrignalEquations(x, w,
                                                            noLoopEvalHessSparsity, noLoopEvalHessLocations,

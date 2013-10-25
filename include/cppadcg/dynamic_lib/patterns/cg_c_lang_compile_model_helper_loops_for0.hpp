@@ -80,7 +80,10 @@ namespace CppAD {
              */
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
-
+            if (xl.size() == 0) {
+                xl.resize(1); // does not depend on any variable but CppAD requires at least one
+                xl[0] = Base(0);
+            }
             vector<CGBase> yl = lModel.getTape().Forward(0, xl);
 
             /**

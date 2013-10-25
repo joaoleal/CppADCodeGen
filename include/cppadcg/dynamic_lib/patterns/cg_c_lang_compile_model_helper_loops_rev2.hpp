@@ -307,7 +307,7 @@ namespace CppAD {
 
                 if (itPattern.get() == NULL) {
                     // did not match!
-                     itPattern.reset(new Random2DIndexPattern(jrow2localIt2ModelIt));
+                    itPattern.reset(new Random2DIndexPattern(jrow2localIt2ModelIt));
                 }
 
                 /**
@@ -1349,24 +1349,29 @@ namespace CppAD {
             size_t n = fun.Domain();
 
             jac.resize(m);
+            vhess.resize(vw.size());
 
             if (!individualColoring) {
                 /**
                  * No atomics
                  */
 
-                // jacobian for temporaries
+                // Jacobian for temporaries
                 std::vector<size_t> jacRow, jacCol;
                 generateSparsityIndexes(jacEvalSparsity, jacRow, jacCol);
 
-                // jacobian for equations outside loops
+                // Jacobian for equations outside loops
                 vector<CGB> jacFlat(jacRow.size());
 
                 /**
-                 * hessian - temporary variables
+                 * Hessian - temporary variables
                  */
                 std::vector<size_t> hesRow, hesCol;
                 generateSparsityIndexes(hesEvalSparsity, hesRow, hesCol);
+
+                if (jacRow.empty() && hesRow.empty()) {
+                    return; // nothing to do
+                }
 
                 vector<vector<CGB> > vhessFlat(vw.size());
                 for (size_t l = 0; l < vw.size(); l++) {
@@ -1391,7 +1396,6 @@ namespace CppAD {
                 }
 
                 // save Hessian
-                vhess.resize(vw.size());
                 for (size_t l = 0; l < vw.size(); l++) {
                     vector<CGB>& hessFlat = vhessFlat[l];
                     map<size_t, map<size_t, CGB> >& hess = vhess[l];
@@ -1413,7 +1417,6 @@ namespace CppAD {
                 transposePattern(jacEvalSparsity, jacEvalSparsityT);
 
                 vector<CGB> tx1v(n);
-                vhess.resize(vw.size());
 
                 for (size_t j1 = 0; j1 < n; j1++) {
                     if (jacEvalSparsityT[j1].empty() && hesEvalSparsity[j1].empty()) {

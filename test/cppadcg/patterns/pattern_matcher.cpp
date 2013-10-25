@@ -23,6 +23,32 @@ using namespace CppAD;
 /**
  * @test All variables are indexed, no temporaries
  */
+std::vector<ADCGD> modelEmpty(std::vector<ADCGD>& x, size_t repeat) {
+    size_t m = 2;
+    size_t m2 = repeat * m;
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(m2);
+
+    for (size_t i = 0; i < repeat; i++) {
+        y[i * m] = 1;
+        y[i * m + 1] = 2;
+    }
+
+    return y;
+}
+
+TEST_F(CppADCGPatternTest, modelEmpty) {
+    size_t m = 2;
+    size_t n = 2;
+
+    testPatternDetection(modelEmpty, m, n, 6);
+    testLibCreation("modelEmpty", modelEmpty, m, n, 6);
+}
+
+/**
+ * @test All variables are indexed, no temporaries
+ */
 std::vector<ADCGD> model0(std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;

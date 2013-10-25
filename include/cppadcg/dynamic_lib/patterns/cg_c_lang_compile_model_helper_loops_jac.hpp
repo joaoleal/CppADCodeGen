@@ -266,10 +266,10 @@ namespace CppAD {
         // temporaries (zero orders)
         vector<CGBase> tmps;
 
-        // jacobian for temporaries
+        // Jacobian for temporaries
         std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != NULL ? _funNoLoops->getTemporaryDependentCount() : 0);
 
-        // jacobian for equations outside loops
+        // Jacobian for equations outside loops
         vector<CGBase> jacNoLoop;
         if (_funNoLoops != NULL) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
@@ -341,7 +341,7 @@ namespace CppAD {
             indexesOps.insert(iterationIndexOp);
 
             /**
-             * evaluate loop model jacobian
+             * evaluate loop model Jacobian
              */
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
@@ -350,6 +350,10 @@ namespace CppAD {
             generateSparsityIndexes(loopsEvalSparsities[&lModel], row, col);
             jacLoop.resize(row.size());
 
+            if (row.size() == 0) {
+                continue;
+            }
+            
             CppAD::sparse_jacobian_work work; // temporary structure for CppAD
             if (forward) {
                 fun.SparseJacobianForward(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
@@ -365,7 +369,7 @@ namespace CppAD {
                 dyiDxtape[tapeI][tapeJ] = jacLoop[el];
             }
 
-            // all assigned elements in the compressed jacobian by this loop
+            // all assigned elements in the compressed Jacobian by this loop
             std::set<size_t> allLocations;
 
             // store results in indexedLoopResults
@@ -410,7 +414,7 @@ namespace CppAD {
             }
 
             /**
-             * move no-nindexed expressions outside loop
+             * move non-indexed expressions outside loop
              */
             moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
         }
