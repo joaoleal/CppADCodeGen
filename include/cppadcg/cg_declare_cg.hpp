@@ -167,7 +167,7 @@ namespace CppAD {
 
     template<class Base>
     class SmartVectorPointer;
-    
+
     template<class Base>
     class SmartListPointer;
 
@@ -331,6 +331,13 @@ namespace CppAD {
     /***************************************************************************
      * Enums
      **************************************************************************/
+
+    /**
+     * Verbosity level for print-outs
+     */
+    enum Verbosity {
+        VERBOSITY_NONE, VERBOSITY_LOW, VERBOSITY_HIGH
+    };
 
     /**
      * Automatic Differentiation modes used to determine the Jacobian

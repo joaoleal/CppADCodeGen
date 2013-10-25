@@ -30,9 +30,11 @@ namespace CppAD {
         /**
          * The original model
          */
-        ADFun<CG<Base> >* const fun_;
+        ADFun<CG<Base> > * const fun_;
         // DAE variable information
         std::vector<DaeVarInfo> varInfo_;
+        // verbosity level
+        Verbosity verbosity_;
     public:
 
         /**
@@ -45,7 +47,8 @@ namespace CppAD {
         DaeIndexReduction(ADFun<CG<Base> >* fun,
                           const std::vector<DaeVarInfo>& varInfo) :
             fun_(fun),
-            varInfo_(varInfo) {
+            varInfo_(varInfo),
+            verbosity_(VERBOSITY_LOW) {
             assert(fun_ != NULL);
             assert(varInfo_.size() == fun->Domain());
             for (size_t j = 0; j < varInfo_.size(); ++j) {
@@ -64,6 +67,14 @@ namespace CppAD {
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 determineVariableOrder(varInfo_[j]);
             }
+        }
+
+        inline void setVerbosity(Verbosity verbosity) {
+            verbosity_ = verbosity;
+        }
+
+        inline Verbosity getVerbosity() const {
+            return verbosity_;
         }
 
         inline virtual ~DaeIndexReduction() {

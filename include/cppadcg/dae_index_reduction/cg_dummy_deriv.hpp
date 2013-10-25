@@ -333,17 +333,17 @@ namespace CppAD {
 
             while (true) {
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "# equation selection: ";
-                for (size_t i = 0; i < eqs.size(); i++)
-                    std::cout << *eqs[i] << "; ";
-                std::cout << "\n";
+                if (this->verbosity_ >= VERBOSITY_HIGH) {
+                    std::cout << "# equation selection: ";
+                    for (size_t i = 0; i < eqs.size(); i++)
+                        std::cout << *eqs[i] << "; ";
+                    std::cout << "\n";
 
-                std::cout << "# variable selection: ";
-                for (size_t j = 0; j < vars.size(); j++)
-                    std::cout << *vars[j] << "; ";
-                std::cout << "\n";
-#endif
+                    std::cout << "# variable selection: ";
+                    for (size_t j = 0; j < vars.size(); j++)
+                        std::cout << *vars[j] << "; ";
+                    std::cout << "\n";
+                }
 
                 // Exploit the current equations for elimination of candidates
                 selectDummyDerivatives(eqs, vars, workJac);
@@ -403,14 +403,14 @@ namespace CppAD {
                 newVarInfo[(*j)->antiDerivative()->tapeIndex()].setDerivative(-1);
             }
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "## dummy derivatives:\n";
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                std::cout << "## dummy derivatives:\n";
 
-            for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
-                std::cout << "# " << **j << "   \t" << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
-            std::cout << "# \n";
-            Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
-#endif
+                for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
+                    std::cout << "# " << **j << "   \t" << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
+                std::cout << "# \n";
+                Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
+            }
 
         }
 
@@ -476,10 +476,8 @@ namespace CppAD {
              * attempt to eliminate dummy derivatives and the equation they are
              * assigned to
              */
-#ifdef CPPAD_CG_DAE_VERBOSE
             set<size_t> erasedVariables;
             set<size_t> erasedEquations;
-#endif
 
             typename vector<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
@@ -490,9 +488,9 @@ namespace CppAD {
                  */
                 map<int, int>::const_iterator ita = assignedVar2Eq.find(dummy->tapeIndex());
                 if (ita == assignedVar2Eq.end()) {
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "unable to solve for variable " << dummy->name() << "." << std::endl;
-#endif
+                    if (this->verbosity_ >= VERBOSITY_HIGH)
+                        std::cout << "unable to solve for variable " << dummy->name() << "." << std::endl;
+
                     continue; // unable to solve for a dummy variable: keep the equation and variable
                 }
                 int bestEquation = ita->second;
@@ -503,17 +501,17 @@ namespace CppAD {
                     tapeIndexReduced2Short[dummy->tapeIndex()] = -1;
                     eqIndexReduced2Short[bestEquation] = -1;
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "######### use equation " << bestEquation << " to solve for variable " << dummy->name() << std::endl;
-                    erasedVariables.insert(dummy->tapeIndex());
-                    erasedEquations.insert(bestEquation);
-                    printModel(handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
-#endif
+                    if (this->verbosity_ >= VERBOSITY_HIGH) {
+                        std::cout << "######### use equation " << bestEquation << " to solve for variable " << dummy->name() << std::endl;
+                        erasedVariables.insert(dummy->tapeIndex());
+                        erasedEquations.insert(bestEquation);
+                        printModel(handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
+                    }
+
                 } catch (const CGException& ex) {
                     // unable to solve for a dummy variable: keep the equation and variable
-#ifdef CPPAD_CG_DAE_VERBOSE
-                    std::cout << "unable to use equation " << bestEquation << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
-#endif
+                    if (this->verbosity_ >= VERBOSITY_HIGH)
+                        std::cout << "unable to use equation " << bestEquation << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
                 }
             }
 
@@ -586,10 +584,10 @@ namespace CppAD {
                                                                            reducedVarInfo, newVarInfo,
                                                                            reducedEqInfo, newEqInfo));
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "DAE with less equations and variables:\n";
-            Pantelides<Base>::printModel(shortFun.get(), newVarInfo);
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                std::cout << "DAE with less equations and variables:\n";
+                Pantelides<Base>::printModel(shortFun.get(), newVarInfo);
+            }
 
             return shortFun;
         }
@@ -708,10 +706,10 @@ namespace CppAD {
              */
             std::auto_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "Semi-Eplicit DAE:\n";
-            Pantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                std::cout << "Semi-Eplicit DAE:\n";
+                Pantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
+            }
 
             return semiExplicitFun;
         }
@@ -952,15 +950,15 @@ namespace CppAD {
                 throw;
             }
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            typename vector<Vnode<Base>*>::const_iterator itj;
-            for (itj = variables.begin(); itj != variables.end(); ++itj) {
-                Vnode<Base>* j = *itj;
-                if (j->assigmentEquation() != NULL)
-                    std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                typename vector<Vnode<Base>*>::const_iterator itj;
+                for (itj = variables.begin(); itj != variables.end(); ++itj) {
+                    Vnode<Base>* j = *itj;
+                    if (j->assigmentEquation() != NULL)
+                        std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
-#endif
             deleteVectorValues(diffVariables);
             deleteVectorValues(dummyVariables);
             deleteVectorValues(equations);
@@ -1115,16 +1113,12 @@ namespace CppAD {
             handler.removeIndependent(*indep.getOperationNode());
 
             /**
-             * Implement the assigment in the graph
+             * Implement the assignment in the graph
              */
-            j.setAssigmentEquation(i);
-            j.deleteNode();
+            j.setAssigmentEquation(i, this->verbosity_);
+            j.deleteNode(this->verbosity_);
 
             jacSparsity = localJacSparsity;
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-            //printGraphSparsity(jacSparsity, tape2FreeVariables, equations, n);
-#endif  
 
             return true;
         }
@@ -1245,10 +1239,10 @@ namespace CppAD {
              */
             std::auto_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "reordered DAE equations and variables:\n";
-            Pantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                std::cout << "reordered DAE equations and variables:\n";
+                Pantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
+            }
 
             return reorderedFun;
         }
@@ -1383,10 +1377,10 @@ namespace CppAD {
 
             jacobian_.makeCompressed();
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            cout << "partial jacobian:\n" << jacobian_ << "\n\n";
-            //cout << jacobian_.triangularView<Eigen::Lower > () << "\n\n";
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                cout << "partial jacobian:\n" << jacobian_ << "\n\n";
+                //cout << jacobian_.triangularView<Eigen::Lower > () << "\n\n";
+            }
         }
 
         inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
@@ -1395,12 +1389,12 @@ namespace CppAD {
 
             if (eqs.size() == vars.size()) {
                 dummyD_.insert(dummyD_.end(), vars.begin(), vars.end());
-#ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "# new dummy derivatives: ";
-                for (size_t j = 0; j < vars.size(); j++)
-                    std::cout << *vars[j] << "; ";
-                std::cout << " \n";
-#endif
+                if (this->verbosity_ >= VERBOSITY_HIGH) {
+                    std::cout << "# new dummy derivatives: ";
+                    for (size_t j = 0; j < vars.size(); j++)
+                        std::cout << *vars[j] << "; ";
+                    std::cout << " \n";
+                }
 #ifndef NDEBUG
                 for (typename std::vector<Vnode<Base>* >::const_iterator it = vars.begin(); it != vars.end(); ++it) {
                     assert(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
@@ -1452,9 +1446,9 @@ namespace CppAD {
                     }
                 }
             }
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "subset Jac:\n" << work << "\n";
-#endif
+
+            if (this->verbosity_ >= VERBOSITY_HIGH)
+                std::cout << "subset Jac:\n" << work << "\n";
 
             Eigen::ColPivHouseholderQR<MatrixB> qr(work);
             qr.compute(work);
@@ -1478,12 +1472,12 @@ namespace CppAD {
                 newDummies.push_back(varsLocal[indices(i)]);
             }
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
-            for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it)
-                std::cout << **it << "; ";
-            std::cout << " \n\n";
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH) {
+                std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
+                for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it)
+                    std::cout << **it << "; ";
+                std::cout << " \n\n";
+            }
 #ifndef NDEBUG
             for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it) {
                 assert(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());

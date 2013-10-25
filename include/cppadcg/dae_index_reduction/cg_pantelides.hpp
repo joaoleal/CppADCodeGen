@@ -15,8 +15,8 @@
  * Author: Joao Leal
  */
 
-#include <cppadcg/dae_index_reduction/cg_bipartite.hpp>
 #include <cppadcg/dae_index_reduction/cg_dae_index_reduction.hpp>
+#include <cppadcg/dae_index_reduction/cg_bipartite.hpp>
 #include <cppadcg/dae_index_reduction/cg_dae_equation_info.hpp>
 #include <cppadcg/dae_index_reduction/cg_time_diff.hpp>
 
@@ -227,9 +227,8 @@ namespace CppAD {
 
             detectSubset2Dif();
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            printResultInfo();
-#endif
+            if (this->verbosity_ >= VERBOSITY_HIGH)
+                printResultInfo();
 
             generateNewModel(newVarInfo, equationInfo);
 
@@ -352,9 +351,10 @@ namespace CppAD {
             size_t Ndash = enodes_.size();
             for (size_t k = 0; k < Ndash; k++) {
                 Enode<Base>* i = enodes_[k];
-#ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "Outer loop: equation k = " << *i << "\n";
-#endif
+
+                if (this->verbosity_ >= VERBOSITY_HIGH)
+                    std::cout << "Outer loop: equation k = " << *i << "\n";
+
                 bool pathfound = false;
                 while (!pathfound) {
 
@@ -366,7 +366,7 @@ namespace CppAD {
                     for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
                         jj = *j;
                         if (!jj->isDeleted() && jj->derivative() != NULL) {
-                            jj->deleteNode();
+                            jj->deleteNode(this->verbosity_);
                         }
                     }
 
@@ -385,9 +385,10 @@ namespace CppAD {
 
                                 Vnode<Base>* jDiff = new Vnode<Base > (vnodes_.size(), tapeIndex, jj);
                                 vnodes_.push_back(jDiff);
-#ifdef CPPAD_CG_DAE_VERBOSE
-                                std::cout << "Created " << *jDiff << "\n";
-#endif
+
+                                if (this->verbosity_ >= VERBOSITY_HIGH)
+                                    std::cout << "Created " << *jDiff << "\n";
+
                             }
                         }
 
@@ -401,9 +402,10 @@ namespace CppAD {
 
                                 // differentiate newI and create edges!!!
                                 dirtyDifferentiateEq(*ll, *lDiff);
-#ifdef CPPAD_CG_DAE_VERBOSE
-                                std::cout << "Created " << *lDiff << "\n";
-#endif
+
+                                if (this->verbosity_ >= VERBOSITY_HIGH)
+                                    std::cout << "Created " << *lDiff << "\n";
+
                             }
                         }
 
@@ -426,14 +428,15 @@ namespace CppAD {
                             jj = *j;
                             if (jj->isColored() && !jj->isDeleted()) {
                                 Vnode<Base>* jDiff = jj->derivative();
-                                jDiff->setAssigmentEquation(*jj->assigmentEquation()->derivative());
+                                jDiff->setAssigmentEquation(*jj->assigmentEquation()->derivative(), this->verbosity_);
                             }
                         }
 
                         i = i->derivative();
-#ifdef CPPAD_CG_DAE_VERBOSE
-                        std::cout << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
-#endif
+
+                        if (this->verbosity_ >= VERBOSITY_HIGH)
+                            std::cout << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
+
                     }
                 }
 
@@ -447,7 +450,7 @@ namespace CppAD {
          * @return true if an augmented path was found
          */
         bool augmentPath(Enode<Base>& i) {
-            i.color();
+            i.color(this->verbosity_);
 
             const std::vector<Vnode<Base>*>& vars = i.variables();
             typename std::vector<Vnode<Base>*>::const_iterator j;
@@ -456,7 +459,7 @@ namespace CppAD {
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
                 if (jj->antiDerivative() != NULL && jj->assigmentEquation() == NULL) {
-                    jj->setAssigmentEquation(i);
+                    jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
                 }
             }
@@ -465,7 +468,7 @@ namespace CppAD {
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
                 if (jj->antiDerivative() == NULL && jj->assigmentEquation() == NULL) {
-                    jj->setAssigmentEquation(i);
+                    jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
                 }
             }
@@ -474,11 +477,12 @@ namespace CppAD {
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
                 if (!jj->isColored()) {
-                    jj->color();
+                    jj->color(this->verbosity_);
+
                     Enode<Base>& k = *jj->assigmentEquation();
                     bool pathFound = augmentPath(k);
                     if (pathFound) {
-                        jj->setAssigmentEquation(i);
+                        jj->setAssigmentEquation(i, this->verbosity_);
                         return true;
                     }
                 }
@@ -642,11 +646,10 @@ namespace CppAD {
                     throw CGException(std::string("Failed to create ADFun: ") + ex.what());
                 }
 
-
-#ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << "Original model:\n";
-                printModel(reducedFun_, newVarInfo);
-#endif
+                if (this->verbosity_ >= VERBOSITY_HIGH) {
+                    std::cout << "Original model:\n";
+                    printModel(reducedFun_, newVarInfo);
+                }
             }
 
 
@@ -717,10 +720,10 @@ namespace CppAD {
                     throw CGException(std::string("Failed to create ADFun: ") + ex.what());
                 }
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-                std::cout << equations.size() << " new equations:\n";
-                printModel(reducedFun_, newVarInfo);
-#endif
+                if (this->verbosity_ >= VERBOSITY_HIGH) {
+                    std::cout << equations.size() << " new equations:\n";
+                    printModel(reducedFun_, newVarInfo);
+                }
             }
 
         }

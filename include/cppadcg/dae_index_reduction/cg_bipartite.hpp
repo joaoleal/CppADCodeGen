@@ -38,12 +38,11 @@ namespace CppAD {
             colored_(false) {
         }
 
-        inline void color() {
+        inline void color(Verbosity verbosity = VERBOSITY_NONE) {
             colored_ = true;
 
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "      Coloured " << nodeType() << " " << name() << "\n";
-#endif
+            if (verbosity >= VERBOSITY_HIGH)
+                std::cout << "      Coloured " << nodeType() << " " << name() << "\n";
         }
 
         inline void uncolor() {
@@ -331,19 +330,18 @@ namespace CppAD {
             return deleted_;
         }
 
-        inline void makeParameter() {
+        inline void makeParameter(Verbosity verbosity = VERBOSITY_NONE) {
             parameter_ = true;
-            deleteNode();
+            deleteNode(verbosity);
         }
 
         inline bool isParameter() const {
             return parameter_;
         }
 
-        inline void deleteNode() {
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "Deleting " << *this << "\n";
-#endif
+        inline void deleteNode(Verbosity verbosity = VERBOSITY_NONE) {
+            if (verbosity >= VERBOSITY_HIGH)
+                std::cout << "Deleting " << *this << "\n";
 
             deleted_ = true;
             for (typename std::vector<Enode<Base>*>::iterator i = enodes_.begin(); i != enodes_.end(); ++i) {
@@ -356,10 +354,10 @@ namespace CppAD {
             return assign_;
         }
 
-        inline void setAssigmentEquation(Enode<Base>& i) {
-#ifdef CPPAD_CG_DAE_VERBOSE
-            std::cout << "      Assigning " << *this << " to " << i << "\n";
-#endif
+        inline void setAssigmentEquation(Enode<Base>& i, Verbosity verbosity = VERBOSITY_NONE) {
+            if (verbosity >= VERBOSITY_HIGH)
+                std::cout << "      Assigning " << *this << " to " << i << "\n";
+
             assign_ = &i;
             i.setAssigmentVariable(*this);
         }
