@@ -399,7 +399,14 @@ namespace CppAD {
             compHelp.setCreateForwardOne(false);
             compHelp.setCreateReverseOne(false);
             compHelp.setCreateReverseTwo(reverseTwo);
+            compHelp.setTypicalIndependentValues(xTypical);
             //compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
+
+            if (!customJacSparsity_.empty())
+                compHelp.setCustomSparseJacobianElements(customJacSparsity_);
+
+            if (!customHessSparsity_.empty())
+                compHelp.setCustomSparseHessianElements(customHessSparsity_);
 
             compiler.setSourcesFolder("sources_" + libBaseName);
 
@@ -436,7 +443,7 @@ namespace CppAD {
                 ASSERT_TRUE(compareValues(yl, y));
             }
 
-            // test jacobian
+            // test Jacobian
             if (compHelp.isCreateSparseJacobian()) {
                 compareVectorSetValues(modelL->JacobianSparsitySet(),
                                        model->JacobianSparsitySet());
@@ -449,7 +456,7 @@ namespace CppAD {
                 ASSERT_TRUE(compareValues(jacl, jac));
             }
 
-            // test hessian
+            // test Hessian
             if (compHelp.isCreateSparseHessian()) {
                 compareVectorSetValues(modelL->HessianSparsitySet(),
                                        model->HessianSparsitySet());

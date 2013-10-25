@@ -25,6 +25,8 @@ namespace CppAD {
         typedef CppAD::AD<CGD> ADCGD;
     protected:
         const size_t nStage; // number of stages
+        const size_t ns;
+        const size_t nm;
         const size_t m; // total number of equations in the model 
         const size_t n; // number of independent variables
         std::vector<Base> xb; // values for the model
@@ -33,8 +35,10 @@ namespace CppAD {
         inline CppADCGPatternDistillationTest(bool verbose = false, bool printValues = false) :
             CppADCGPatternTest(verbose, printValues),
             nStage(8),
+            ns(nStage * 6),
+            nm(4),
             m(nStage * 6),
-            n((nStage * 6 - 1 + 1) + 4 + 4),
+            n(ns + nm + 4),
             xb(n, 1.0) {
 
             // this->testZeroOrder_ = false;
@@ -53,6 +57,7 @@ namespace CppAD {
             for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 360; // T[i]
             for (size_t i = 0; i < nStage - 1; i++, j++) xNorm_[j] = 8; // V[i]
             xNorm_[j++] = 150e3; // Qc
+            assert(j == ns);
 
             xNorm_[j++] = 250e3; // Qsteam 
             xNorm_[j++] = 0.1; // Fdistillate
@@ -65,6 +70,36 @@ namespace CppAD {
             xNorm_[j++] = 366; // Tfeed
         }
 
+        /**
+         * test
+         */
+        inline void test(ADFun<CGD>& fun) {
+
+            std::string libName = "modelDistillation";
+            std::vector<atomic_base<Base>*> atoms;
+
+            std::vector<std::set<size_t> > relatedDepCandidates(6);
+            size_t j = 0;
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[0].insert(j); // mWater
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[1].insert(j); // mEthanol
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[2].insert(j); // yWater
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[3].insert(j); // yEthanol
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[4].insert(j); // T
+            for (size_t i = 0; i < nStage - 1; i++, j++) relatedDepCandidates[5].insert(j); // V
+
+
+            testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, testJacobian_, testHessian_);
+            if (testJacobian_) {
+                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, true, false, true);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false, true);
+            }
+
+            if (testHessian_) {
+                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, false, true, false, true);
+            }
+        }
+
     };
 
 }
@@ -74,7 +109,7 @@ using namespace CppAD;
 /**
  * @test test the usage of loops for the generation of distillation model
  */
-TEST_F(CppADCGPatternDistillationTest, distillation) {
+TEST_F(CppADCGPatternDistillationTest, distillationAllVars) {
     using namespace CppAD;
 
     /**
@@ -100,28 +135,62 @@ TEST_F(CppADCGPatternDistillationTest, distillation) {
     ADFun<CGD> fun;
     fun.Dependent(y);
 
-    std::string libName = "modelDistillation";
-    std::vector<atomic_base<Base>*> atoms;
+    /**
+     * test
+     */
+    test(fun);
 
-    std::vector<std::set<size_t> > relatedDepCandidates(6);
-    size_t j = 0;
-    for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[0].insert(j); // mWater
-    for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[1].insert(j); // mEthanol
-    for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[2].insert(j); // yWater
-    for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[3].insert(j); // yEthanol
-    for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[4].insert(j); // T
-    for (size_t i = 0; i < nStage - 1; i++, j++) relatedDepCandidates[5].insert(j); // V
+}
 
+TEST_F(CppADCGPatternDistillationTest, distillation) {
+    using namespace CppAD::extra;
 
-    testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, testJacobian_, testHessian_);
-    if (testJacobian_) {
-        testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, true, false, true);
-        testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false);
-        testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false, true);
+    /**
+     * Tape model
+     */
+    std::vector<ADCGD> x(xb.size());
+    for (size_t j = 0; j < xb.size(); j++)
+        x[j] = xb[j];
+    CppAD::Independent(x);
+    if (xNorm_.size() > 0) {
+        ASSERT_EQ(x.size(), xNorm_.size());
+        for (size_t j = 0; j < x.size(); j++)
+            x[j] *= xNorm_[j];
     }
 
-    if (testHessian_) {
-        testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, false, true, false, true);
+    std::vector<ADCGD> y = distillationFunc(x);
+    if (eqNorm_.size() > 0) {
+        ASSERT_EQ(y.size(), eqNorm_.size());
+        for (size_t i = 0; i < y.size(); i++)
+            y[i] /= eqNorm_[i];
     }
+
+    ADFun<CGD> fun;
+    fun.Dependent(y);
+
+    /**
+     * Determine the relevant elements
+     */
+    std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
+    customJacSparsity_.resize(jacSparAll.size());
+    for (size_t i = 0; i < jacSparAll.size(); i++) {
+        // only differential information for states and controls
+        std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
+        if (itEnd != jacSparAll[i].begin())
+            customJacSparsity_[i].insert(jacSparAll[i].begin(), itEnd);
+    }
+
+    std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+    customHessSparsity_.resize(hessSparAll.size());
+    for (size_t i = 0; i < ns + nm; i++) {
+        std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
+        if (it != hessSparAll[i].begin())
+            customHessSparsity_[i].insert(hessSparAll[i].begin(), it);
+    }
+
+    /**
+     * test
+     */
+    test(fun);
 
 }
