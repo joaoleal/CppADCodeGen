@@ -509,7 +509,7 @@ namespace CppAD {
         map<LoopModel<Base>*, HessianWithLoopsInfo<Base> > loopHessInfo;
 
         /** 
-         * Load locations in the compressed hessian
+         * Load locations in the compressed Hessian
          * d      d y_i
          * d x_j2 d x_j1
          */
@@ -928,7 +928,7 @@ namespace CppAD {
             if (results.size() == 1 && locations.begin()->second.size() == positions.size()) {
                 // same expression present in all iterations
 
-                // generate the index pattern for the hessian compressed element
+                // generate the index pattern for the Hessian compressed element
                 IndexPattern* pattern = IndexPattern::detect(locations.begin()->second);
                 handler.manageLoopDependentIndexPattern(pattern);
 
