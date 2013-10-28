@@ -322,8 +322,16 @@ namespace CppAD {
             }
 
             // check if these nodes where visited before
-            if (sc2->getColor() >= minColor_ || scRef->getColor() >= minColor_) {
-                return sc2->getColor() == scRef->getColor(); // been here before
+            if (sc2->getColor() >= minColor_ && scRef->getColor() >= minColor_) {
+                /**
+                 * been here before for both nodes
+                 *  warning: it can fail to detect some patterns! e.g.:
+                 *    it ref ->  v1 + v1 + v2
+                 *    it 2   ->  v3 + v1 + v1
+                 *   where v1, v2, v3 have the same expression pattern but 
+                 *   correspond to different nodes
+                 */
+                return sc2->getColor() == scRef->getColor();
             }
             scRef->setColor(cmpColor_);
             sc2->setColor(cmpColor_);
