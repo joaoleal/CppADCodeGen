@@ -1,3 +1,12 @@
+cppadcodegen (1.3.2-1) unstable; urgency=low
+
+  * performance improvements in equation pattern detection
+  * bugfix in adding operations pointed by alias operations to the operation queue
+  * bugfix in printing floats/doubles in the source code when they can also be represented as integers
+  * other minor improvements
+
+ -- Joao Leal <development@ciengis.com>  Fri, 25 Oct 2013 13:00:00 +0000
+
 cppadcodegen (1.3.1-1) unstable; urgency=low
 
   * implemented random index patterns
