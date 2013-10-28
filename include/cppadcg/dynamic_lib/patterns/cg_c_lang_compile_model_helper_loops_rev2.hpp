@@ -1369,17 +1369,21 @@ namespace CppAD {
                 std::vector<size_t> hesRow, hesCol;
                 generateSparsityIndexes(hesEvalSparsity, hesRow, hesCol);
 
-                if (jacRow.empty() && hesRow.empty()) {
-                    return; // nothing to do
-                }
-
                 vector<vector<CGB> > vhessFlat(vw.size());
                 for (size_t l = 0; l < vw.size(); l++) {
                     vhessFlat[l].resize(hesRow.size());
                 }
 
+                vector<CG<Base> > xl;
+                if (x.size() == 0) {
+                    xl.resize(1); // does not depend on any variable but CppAD requires at least one
+                    xl[0] = Base(0);
+                } else {
+                    xl = x;
+                }
+
                 SparseForjacHessianWork work;
-                sparseForJacHessian(fun, x, vw,
+                sparseForJacHessian(fun, xl, vw,
                                     y,
                                     jacSparsity,
                                     jacRow, jacCol, jacFlat,
