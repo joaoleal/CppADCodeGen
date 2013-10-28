@@ -68,6 +68,38 @@ namespace CppAD {
             xNorm_[j++] = 1.01325e5; // P
             xNorm_[j++] = 0.7; // xFWater
             xNorm_[j++] = 366; // Tfeed
+
+            j = 0;
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 + 100 * i) / xNorm_[j]; // mWater
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 - 100 * i) / xNorm_[j]; // mEthanol[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.3 + 0.05 * i) / xNorm_[j]; // yWater[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.7 - 0.05 * i) / xNorm_[j]; // yEthanol[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (360 + i * 2) / xNorm_[j]; // T[i]
+        }
+
+        inline void tape(std::auto_ptr<ADFun<CGD> >& fun) {
+            /**
+             * Tape model
+             */
+            std::vector<ADCGD> x(xb.size());
+            for (size_t j = 0; j < xb.size(); j++)
+                x[j] = xb[j];
+            CppAD::Independent(x);
+            if (xNorm_.size() > 0) {
+                ASSERT_EQ(x.size(), xNorm_.size());
+                for (size_t j = 0; j < x.size(); j++)
+                    x[j] *= xNorm_[j];
+            }
+
+            std::vector<ADCGD> y = distillationFunc(x);
+            if (eqNorm_.size() > 0) {
+                ASSERT_EQ(y.size(), eqNorm_.size());
+                for (size_t i = 0; i < y.size(); i++)
+                    y[i] /= eqNorm_[i];
+            }
+
+            fun.reset(new ADFun<CGD>());
+            fun->Dependent(y);
         }
 
         /**
@@ -110,68 +142,29 @@ using namespace CppAD;
  * @test test the usage of loops for the generation of distillation model
  */
 TEST_F(CppADCGPatternDistillationTest, distillationAllVars) {
-    using namespace CppAD;
-
     /**
      * Tape model
      */
-    std::vector<ADCGD> x(xb.size());
-    for (size_t j = 0; j < xb.size(); j++)
-        x[j] = xb[j];
-    CppAD::Independent(x);
-    if (xNorm_.size() > 0) {
-        ASSERT_EQ(x.size(), xNorm_.size());
-        for (size_t j = 0; j < x.size(); j++)
-            x[j] *= xNorm_[j];
-    }
-
-    std::vector<ADCGD> y = distillationFunc(x);
-    if (eqNorm_.size() > 0) {
-        ASSERT_EQ(y.size(), eqNorm_.size());
-        for (size_t i = 0; i < y.size(); i++)
-            y[i] /= eqNorm_[i];
-    }
-
-    ADFun<CGD> fun;
-    fun.Dependent(y);
+    std::auto_ptr<ADFun<CGD> > fun;
+    tape(fun);
 
     /**
      * test
      */
-    test(fun);
+    test(*fun.get());
 
 }
 
 TEST_F(CppADCGPatternDistillationTest, distillation) {
     using namespace CppAD::extra;
 
-    /**
-     * Tape model
-     */
-    std::vector<ADCGD> x(xb.size());
-    for (size_t j = 0; j < xb.size(); j++)
-        x[j] = xb[j];
-    CppAD::Independent(x);
-    if (xNorm_.size() > 0) {
-        ASSERT_EQ(x.size(), xNorm_.size());
-        for (size_t j = 0; j < x.size(); j++)
-            x[j] *= xNorm_[j];
-    }
-
-    std::vector<ADCGD> y = distillationFunc(x);
-    if (eqNorm_.size() > 0) {
-        ASSERT_EQ(y.size(), eqNorm_.size());
-        for (size_t i = 0; i < y.size(); i++)
-            y[i] /= eqNorm_[i];
-    }
-
-    ADFun<CGD> fun;
-    fun.Dependent(y);
+    std::auto_ptr<ADFun<CGD> > fun;
+    tape(fun);
 
     /**
      * Determine the relevant elements
      */
-    std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
+    std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(*fun.get());
     customJacSparsity_.resize(jacSparAll.size());
     for (size_t i = 0; i < jacSparAll.size(); i++) {
         // only differential information for states and controls
@@ -180,7 +173,7 @@ TEST_F(CppADCGPatternDistillationTest, distillation) {
             customJacSparsity_[i].insert(jacSparAll[i].begin(), itEnd);
     }
 
-    std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+    std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(*fun.get());
     customHessSparsity_.resize(hessSparAll.size());
     for (size_t i = 0; i < ns + nm; i++) {
         std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
@@ -191,6 +184,6 @@ TEST_F(CppADCGPatternDistillationTest, distillation) {
     /**
      * test
      */
-    test(fun);
+    test(*fun.get());
 
 }
