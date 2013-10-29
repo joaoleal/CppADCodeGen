@@ -45,16 +45,16 @@ namespace CppAD {
             // this->testJacobian_ = false;
             // this->testHessian_ = false;
             this->verbose_ = true;
-            this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
+            //this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
 
             xNorm_.resize(n, 1.0);
 
             size_t j = 0;
             for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 12000; // mWater
             for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 12000; // mEthanol[i]
+            for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 360; // T[i]
             for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 0.5; // yWater[i]
             for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 0.5; // yEthanol[i]
-            for (size_t i = 0; i < nStage; i++, j++) xNorm_[j] = 360; // T[i]
             for (size_t i = 0; i < nStage - 1; i++, j++) xNorm_[j] = 8; // V[i]
             xNorm_[j++] = 150e3; // Qc
             assert(j == ns);
@@ -72,9 +72,9 @@ namespace CppAD {
             j = 0;
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 + 100 * i) / xNorm_[j]; // mWater
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 - 100 * i) / xNorm_[j]; // mEthanol[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (360 + i * 2) / xNorm_[j]; // T[i]
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.3 + 0.05 * i) / xNorm_[j]; // yWater[i]
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.7 - 0.05 * i) / xNorm_[j]; // yEthanol[i]
-            for (size_t i = 0; i < nStage; i++, j++) xb[j] = (360 + i * 2) / xNorm_[j]; // T[i]
         }
 
         inline void tape(std::auto_ptr<ADFun<CGD> >& fun) {
@@ -114,9 +114,9 @@ namespace CppAD {
             size_t j = 0;
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[0].insert(j); // mWater
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[1].insert(j); // mEthanol
+            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[4].insert(j); // T
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[2].insert(j); // yWater
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[3].insert(j); // yEthanol
-            for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[4].insert(j); // T
             for (size_t i = 0; i < nStage - 1; i++, j++) relatedDepCandidates[5].insert(j); // V
 
 

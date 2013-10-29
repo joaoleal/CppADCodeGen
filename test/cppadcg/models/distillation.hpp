@@ -45,9 +45,9 @@ std::vector<CppAD::AD<B> > distillationFunc(const std::vector<CppAD::AD<B> >& in
     size_t j = 0;
     for (size_t i = 0; i < mWater.size(); i++, j++) mWater[i] = ind[j];
     for (size_t i = 0; i < mEthanol.size(); i++, j++) mEthanol[i] = ind[j];
+    for (size_t i = 0; i < T.size(); i++, j++) T[i] = ind[j];
     for (size_t i = 0; i < yWater.size(); i++, j++) yWater[i] = ind[j];
     for (size_t i = 0; i < yEthanol.size(); i++, j++) yEthanol[i] = ind[j];
-    for (size_t i = 0; i < T.size(); i++, j++) T[i] = ind[j];
     for (size_t i = 0; i < V.size(); i++, j++) V[i] = ind[j];
     Qc = ind[j++];
 
@@ -60,7 +60,7 @@ std::vector<CppAD::AD<B> > distillationFunc(const std::vector<CppAD::AD<B> >& in
     P = ind[j++];
     xFWater = ind[j++];
     Tfeed = ind[j++];
-    
+
     assert(j == ind.size());
 
     // dependent variable vector (time derivatives and residuals)
