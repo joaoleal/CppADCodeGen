@@ -24,7 +24,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class CLangCompileModelHelper : protected JobTime {
+    class CLangCompileModelHelper : protected JobTimer {
         typedef CppAD::CG<Base> CGBase;
         typedef CppAD::AD<CGBase> ADCG;
         typedef CppAD::vector<std::set<size_t> > SparsitySetType;
