@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_JOB_TIME_INCLUDED
-#define CPPAD_CG_JOB_TIME_INCLUDED
+#ifndef CPPAD_CG_JOB_TIMER_INCLUDED
+#define CPPAD_CG_JOB_TIMER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -17,40 +17,65 @@
 
 namespace CppAD {
 
+    class Job {
+    private:
+        /**
+         * Job name
+         */
+        std::string _name;
+        /**
+         * Job starting time (seconds)
+         */
+        double _beginTime;
+        /**
+         * Whether or not there are/were other jobs inside
+         */
+        bool _nestedJobs;
+    public:
+
+        inline Job(const std::string& name) :
+            _name(name),
+            _beginTime(system::currentTime()),
+            _nestedJobs(false) {
+        }
+
+        inline const std::string& name() const {
+            return _name;
+        }
+
+        inline double beginTime() const {
+            return _beginTime;
+        }
+
+        friend class JobTimer;
+    };
+
     /**
      * Utility class used to print elapsed times of jobs
      */
-    class JobTime {
+    class JobTimer {
     protected:
         /**
          * Whether or not to print progress information to the standard 
          * output
          */
         bool _verbose;
+    private:
         /**
          * saves the current job names
          */
-        std::vector<std::string> _jobNames;
-        /**
-         * Whether or not there are jobs inside other jobs
-         */
-        std::vector<bool> _nestedJobs;
-        /**
-         * auxiliary variable to measure the elapsed time for each job
-         */
-        std::vector<double> _beginTimes;
+        std::vector<Job> _jobs;
         /**
          * 
          */
         size_t _maxLineWidth;
-    private:
         /**
          * 
          */
         std::ostringstream _os;
     public:
 
-        JobTime() :
+        JobTimer() :
             _maxLineWidth(80) {
         }
 
@@ -66,55 +91,52 @@ namespace CppAD {
             if (!_verbose) {
                 return;
             }
-            
+
+            Job* parent = _jobs.empty() ? NULL : &_jobs.back();
+            _jobs.push_back(Job(jobName));
+            Job& job = _jobs.back();
+
             size_t ident = 0;
-            if (!_jobNames.empty()) {
-                if (!_nestedJobs.back())
+            if (parent != NULL) {
+                if (!parent->_nestedJobs) {
+                    parent->_nestedJobs = true;
                     std::cout << "\n";
-                ident = 3 * _jobNames.size();
+                }
+                ident = 3 * (_jobs.size() - 1);
             }
 
             _os.str("");
             if (ident > 0)
                 _os << std::string(ident, ' ');
-            _os << "generating " << jobName << " ...";
+            _os << "generating " << job.name() << " ...";
 
             std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
             std::cout.flush();
-
-            std::fill(_nestedJobs.begin(), _nestedJobs.end(), true);
-
-            _nestedJobs.push_back(false);
-            _jobNames.push_back(jobName);
-            _beginTimes.push_back(system::currentTime());
-
         }
 
         inline void finishedJob() {
             if (!_verbose) {
                 return;
             }
-            
-            assert(_nestedJobs.size() > 0);
 
-            double beginTime = _beginTimes.back();
-            double endTime = system::currentTime();
-            double elapsed = endTime - beginTime;
-            if (_nestedJobs.back()) {
+            assert(_jobs.size() > 0);
+            Job& job = _jobs.back();
+
+            double elapsed = system::currentTime() - job.beginTime();
+            if (job._nestedJobs) {
                 _os.str("");
-                if (!_jobNames.empty())
-                    _os << std::string(3 * (_jobNames.size() - 1), ' ');
-                _os << "generated " << _jobNames.back() << " ...";
+                if (!_jobs.empty())
+                    _os << std::string(3 * (_jobs.size() - 1), ' ');
+                _os << "generated " << job.name() << " ...";
 
                 std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
             }
 
             std::cout << " done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;
 
-            _nestedJobs.pop_back();
-            _jobNames.pop_back();
-            _beginTimes.pop_back();
+            _jobs.pop_back();
         }
+
     };
 }
 

@@ -98,7 +98,7 @@ namespace CppAD {
         //
         bool _verbose;
         //
-        JobTime* _jobTimer;
+        JobTimer* _jobTimer;
     public:
 
         CodeHandler(size_t varCount = 50) :
@@ -181,11 +181,11 @@ namespace CppAD {
             _verbose = verbose;
         }
 
-        inline JobTime* getJobTimer() const {
+        inline JobTimer* getJobTimer() const {
             return _jobTimer;
         }
 
-        inline void setJobTimer(JobTime* jobTimer) {
+        inline void setJobTimer(JobTimer* jobTimer) {
             _jobTimer = jobTimer;
         }
 
