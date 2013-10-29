@@ -182,7 +182,7 @@ namespace CppAD {
             vector<map<size_t, map<size_t, CGB> > > vhessNoLoop(loopHessInfo.size());
 
             /**
-             * hessian - temporary variables
+             * Hessian - temporary variables
              */
             vector<std::set<size_t> > noLoopEvalHessTempsSparsity(n);
 

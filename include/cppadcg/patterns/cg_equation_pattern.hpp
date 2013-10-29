@@ -37,29 +37,21 @@ namespace CppAD {
     template<class Base>
     class IndexedIndependent {
     public:
-        std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>* > op2Arguments;
+        std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> > op2Arguments;
     public:
 
-        OperationIndexedIndependents<Base>* arguments(const OperationNode<Base>* operation) const {
+        const OperationIndexedIndependents<Base>& arguments(const OperationNode<Base>* operation) const {
             return op2Arguments.at(operation);
         }
 
         bool isIndexedOperationArgument(const OperationNode<Base>* node, size_t argIndex) const {
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>*>::const_iterator itIndexes;
+            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator itIndexes;
             itIndexes = op2Arguments.find(node);
             if (itIndexes == op2Arguments.end()) {
                 return false;
             }
-            const OperationIndexedIndependents<Base>* indexedArgs = itIndexes->second;
-            return indexedArgs->arg2Independents.find(argIndex) != indexedArgs->arg2Independents.end();
-        }
-
-        inline OperationIndexedIndependents<Base>* find(const OperationNode<Base>* operation) const {
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>* >::const_iterator it = op2Arguments.find(operation);
-            if (it == op2Arguments.end())
-                return NULL;
-            else
-                return it->second;
+            const OperationIndexedIndependents<Base>& indexedArgs = itIndexes->second;
+            return indexedArgs.arg2Independents.find(argIndex) != indexedArgs.arg2Independents.end();
         }
 
     };
@@ -90,7 +82,6 @@ namespace CppAD {
         std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependents;
 
     private:
-        std::list<OperationIndexedIndependents<Base>*> garbage_;
         size_t currDep_;
         size_t minColor_;
         size_t cmpColor_;
@@ -118,7 +109,6 @@ namespace CppAD {
 
             if (equals) {
                 dependents.insert(iDep2);
-                garbage_.clear();
 
                 return true; // matches the reference pattern
             } else {
@@ -126,12 +116,6 @@ namespace CppAD {
                 indexedOpIndep.op2Arguments.swap(independentsBackup.op2Arguments);
                 constOperationIndependents.swap(constOperationIndependentsBackup);
                 operationEO2Reference.swap(operation2ReferenceBackup);
-
-                typename std::list<OperationIndexedIndependents<Base>*>::const_iterator it;
-                for (it = garbage_.begin(); it != garbage_.end(); ++it) {
-                    delete *it;
-                }
-                garbage_.clear();
 
                 return false; // cannot be added
             }
@@ -219,18 +203,22 @@ namespace CppAD {
             return false;
         }
 
+        /**
+         * Determine which independent variables in the loop model do not
+         * require an index (always the same for all iterations)
+         */
         inline void detectNonIndexedIndependents() {
             typedef typename OperationIndexedIndependents<Base>::MapIndep2Dep_type MapIndep2Dep_type;
 
             // loop operations using independents
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>* >::iterator itop2a = indexedOpIndep.op2Arguments.begin();
+            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::iterator itop2a = indexedOpIndep.op2Arguments.begin();
             while (itop2a != indexedOpIndep.op2Arguments.end()) {
                 const OperationNode<Base>* parentOp = itop2a->first;
-                OperationIndexedIndependents<Base>* arg2It = itop2a->second;
+                OperationIndexedIndependents<Base>& arg2It = itop2a->second;
 
                 // loop the arguments 
-                typename std::map<size_t, MapIndep2Dep_type>::iterator ita2It = arg2It->arg2Independents.begin();
-                while (ita2It != arg2It->arg2Independents.end()) {
+                typename std::map<size_t, MapIndep2Dep_type>::iterator ita2It = arg2It.arg2Independents.begin();
+                while (ita2It != arg2It.arg2Independents.end()) {
                     size_t argIndex = ita2It->first;
                     const MapIndep2Dep_type& dep2Ind = ita2It->second;
 
@@ -251,15 +239,14 @@ namespace CppAD {
                         constOperationIndependents[parentOp].insert(argIndex);
 
                         // remove it from the indexed independents
-                        arg2It->arg2Independents.erase(ita2It++);
+                        arg2It.arg2Independents.erase(ita2It++);
                     } else {
                         ++ita2It;
                     }
 
                 }
 
-                if (arg2It->arg2Independents.empty()) {
-                    delete arg2It;
+                if (arg2It.arg2Independents.empty()) {
                     indexedOpIndep.op2Arguments.erase(itop2a++);
                 } else {
                     ++itop2a;
@@ -270,12 +257,6 @@ namespace CppAD {
         }
 
         virtual ~EquationPattern() {
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>* >::const_iterator it;
-
-            for (it = indexedOpIndep.op2Arguments.begin(); it != indexedOpIndep.op2Arguments.end(); ++it) {
-                delete it->second;
-            }
-
         }
 
     private:
@@ -422,14 +403,8 @@ namespace CppAD {
                 }
             }
 
-            OperationIndexedIndependents<Base>* opIndexedIndep = indexedOpIndep.op2Arguments[parentOp];
-            if (opIndexedIndep == NULL) {
-                opIndexedIndep = new OperationIndexedIndependents<Base>();
-                indexedOpIndep.op2Arguments[parentOp] = opIndexedIndep;
-                garbage_.push_back(opIndexedIndep);
-            }
-
-            std::map<size_t, const OperationNode<Base>*>& dep2Indeps = opIndexedIndep->arg2Independents[argIndex];
+            OperationIndexedIndependents<Base>& opIndexedIndep = indexedOpIndep.op2Arguments[parentOp];
+            std::map<size_t, const OperationNode<Base>*>& dep2Indeps = opIndexedIndep.arg2Independents[argIndex];
             if (dep2Indeps.empty())
                 dep2Indeps[depRefIndex] = argRefOp;
             dep2Indeps[currDep_] = arg2Op;

@@ -269,8 +269,17 @@ namespace CppAD {
                     indexedOpIndep.op2Arguments.insert(eq->indexedOpIndep.op2Arguments.begin(),
                                                        eq->indexedOpIndep.op2Arguments.end());
                 } else {
-                    generateLoopOperationReferences(eq, indexedOperations);
+                    // generate loop references
+                    typename std::set<const OperationNode<Base>*>::const_iterator it;
+                    for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
+                        const OperationNode<Base>* opLoopRef = *it;
+                        const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(opLoopRef->getEvaluationOrder());
+                        indexedOpIndep.op2Arguments[opLoopRef] = eq->indexedOpIndep.arguments(opEqRef);
+                    }
                 }
+                
+                // not need anymore (lets free this memory now)
+                eq->indexedOpIndep.op2Arguments.clear();
             }
 
             generateIndependentLoopIndexes(dep2Equation);
@@ -289,6 +298,9 @@ namespace CppAD {
             resetCounters(dependents);
         }
 
+        /**
+         * Destructor
+         */
         virtual ~Loop() {
             typename std::map<const OperationNode<Base>*, std::vector<IndependentOrder<Base>*> >::const_iterator itf;
             for (itf = firstIndep2orders_.begin(); itf != firstIndep2orders_.end(); ++itf) {
@@ -315,8 +327,8 @@ namespace CppAD {
         /***********************************************************************
          *                        public static methods
          **********************************************************************/
-        static bool canCombineEquations(EquationPattern<Base>& eq1,
-                                        EquationPattern<Base>& eq2,
+        static bool canCombineEquations(const EquationPattern<Base>& eq1,
+                                        const EquationPattern<Base>& eq2,
                                         const OperationNode<Base>& sharedTemp) {
             // convert to the reference operation
             OperationNode<Base>* sharedTempRef1 = eq1.operationEO2Reference.at(sharedTemp.getEvaluationOrder());
@@ -329,10 +341,10 @@ namespace CppAD {
             for (itOp = opWithIndepArgs.begin(); itOp != opWithIndepArgs.end(); ++itOp) {
                 const OperationNode<Base>* op1 = *itOp;
 
-                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>*>::const_iterator indexed1It;
+                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed1It;
                 indexed1It = eq1.indexedOpIndep.op2Arguments.find(op1);
 
-                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>*>::const_iterator indexed2It;
+                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed2It;
                 indexed2It = eq2.indexedOpIndep.op2Arguments.find(eq2.operationEO2Reference.at(op1->getEvaluationOrder()));
 
                 if (indexed1It == eq1.indexedOpIndep.op2Arguments.end()) {
@@ -343,8 +355,8 @@ namespace CppAD {
                     if (indexed2It == eq2.indexedOpIndep.op2Arguments.end()) {
                         return false;
                     }
-                    const OperationIndexedIndependents<Base>& indexed1Ops = *indexed1It->second;
-                    const OperationIndexedIndependents<Base>& indexed2Ops = *indexed2It->second;
+                    const OperationIndexedIndependents<Base>& indexed1Ops = indexed1It->second;
+                    const OperationIndexedIndependents<Base>& indexed2Ops = indexed2It->second;
                     if (indexed1Ops.arg2Independents.size() != indexed2Ops.arg2Independents.size()) {
                         return false;
                     }
@@ -536,16 +548,6 @@ namespace CppAD {
 
         }
 
-        void generateLoopOperationReferences(const EquationPattern<Base>* eq,
-                                             const std::set<const OperationNode<Base>*>& indexedOperations) {
-            typename std::set<const OperationNode<Base>*>::const_iterator it;
-            for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
-                const OperationNode<Base>* opLoopRef = *it;
-                const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(opLoopRef->getEvaluationOrder());
-                indexedOpIndep.op2Arguments[opLoopRef] = eq->indexedOpIndep.arguments(opEqRef);
-            }
-        }
-
         void generateIndependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
             /**
              * find indexed independents with the same order
@@ -563,10 +565,10 @@ namespace CppAD {
             }
 
             // loop all operations from the reference dependents which use indexed independents
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base>*>::const_iterator it;
+            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator it;
             for (it = indexedOpIndep.op2Arguments.begin(); it != indexedOpIndep.op2Arguments.end(); ++it) {
                 const OperationNode<Base>* operation = it->first;
-                const OperationIndexedIndependents<Base>& opInd = *it->second;
+                const OperationIndexedIndependents<Base>& opInd = it->second;
 
                 OperationArgumentsIndepOrder<Base>* arg2orderPos = new OperationArgumentsIndepOrder<Base>();
                 op2Arg2IndepOrder_[operation] = arg2orderPos;
@@ -649,6 +651,14 @@ namespace CppAD {
             }
         }
 
+        /**
+         * Creates the model for the loop equations
+         * 
+         * @param dependents original model dependent variable vector
+         * @param independents original model independent variable vector
+         * @param dep2Equation maps an equation/dependent index to an equation pattern
+         * @param origTemp2Index 
+         */
         void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
                                   const std::vector<CG<Base> >& independents,
                                   const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
@@ -677,8 +687,7 @@ namespace CppAD {
 
                 if (node != NULL) {
                     if (node->getOperationType() == CGInvOp) {
-                        OperationNode<Base>* nodeRef = NULL;
-                        aClone = Argument<Base>(createIndependentClone(*eq, NULL, 0, *node, nodeRef));
+                        aClone = Argument<Base>(createIndependentClone(*eq, NULL, 0, *node));
                     } else {
                         aClone = makeGraphClones(*eq, *node);
                     }
@@ -901,7 +910,6 @@ namespace CppAD {
                  * part of the operation path that depends on the loop indexes
                  * or its an array with constant elements
                  */
-                OperationNode<Base>* nodeRef = NULL;
                 const std::vector<Argument<Base> >& args = node.getArguments();
                 size_t arg_size = args.size();
                 std::vector<Argument<Base> > cloneArgs(arg_size);
@@ -914,7 +922,7 @@ namespace CppAD {
                     } else {
                         // variable
                         if (argOp->getOperationType() == CGInvOp) {
-                            cloneArgs[a] = Argument<Base>(createIndependentClone(eq, &node, a, *argOp, nodeRef));
+                            cloneArgs[a] = Argument<Base>(createIndependentClone(eq, &node, a, *argOp));
                         } else {
                             cloneArgs[a] = makeGraphClones(eq, *argOp);
                         }
@@ -940,19 +948,16 @@ namespace CppAD {
         }
 
         inline OperationNode<Base>& createIndependentClone(const EquationPattern<Base>& eq,
-                                                           OperationNode<Base>* operation, size_t argumentIndex,
-                                                           OperationNode<Base>& independent,
-                                                           OperationNode<Base>*& operationRef) {
-            if (operationRef == NULL && operation != NULL) {
-                operationRef = eq.operationEO2Reference.at(operation->getEvaluationOrder());
-            }
+                                                           OperationNode<Base>* operation,
+                                                           size_t argumentIndex,
+                                                           OperationNode<Base>& independent) {
 
             // is it an indexed independent?
-            OperationIndexedIndependents<Base>* yyy = eq.indexedOpIndep.find(operationRef);
-            if (yyy != NULL) {
-                typename std::map<size_t, std::map<size_t, const OperationNode<Base>*> >::const_iterator itadi;
-                itadi = yyy->arg2Independents.find(argumentIndex);
-                if (itadi != yyy->arg2Independents.end()) {
+            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator it = indexedOpIndep.op2Arguments.find(operation);
+            if (it != indexedOpIndep.op2Arguments.end()) {
+                const OperationIndexedIndependents<Base>& yyy = it->second;
+
+                if (yyy.arg2Independents.find(argumentIndex) != yyy.arg2Independents.end()) {
                     // yes
                     return getIndexedIndependentClone(operation, argumentIndex);
                 }
