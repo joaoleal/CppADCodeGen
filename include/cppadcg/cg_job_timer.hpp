@@ -92,14 +92,14 @@ namespace CppAD {
                 return;
             }
 
-            Job* parent = _jobs.empty() ? NULL : &_jobs.back();
             _jobs.push_back(Job(jobName));
             Job& job = _jobs.back();
-
+            
             size_t ident = 0;
-            if (parent != NULL) {
-                if (!parent->_nestedJobs) {
-                    parent->_nestedJobs = true;
+            if (_jobs.size() > 1) {
+                Job& parent = _jobs[_jobs.size() - 2]; // must be after adding job
+                if (!parent._nestedJobs) {
+                    parent._nestedJobs = true;
                     std::cout << "\n";
                 }
                 ident = 3 * (_jobs.size() - 1);
