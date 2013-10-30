@@ -280,8 +280,13 @@ namespace CppAD {
                 "\n"
                 "      in[0] = x;\n"
                 "      in[1] = &tx[j * 2 + 1];\n"
-                "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, " << args << ");\n"
+                "      out[0] = compressed;\n";
+        if (!_loopTapes.empty()) {
+            _cache << "      for(ePos = 0; ePos < nnz; ePos++)\n"
+                    "         compressed[ePos] = 0;\n"
+                    "\n";
+        }
+        _cache << "      " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(j, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         ty[pos[ePos] * 2 + 1] += compressed[ePos];\n"

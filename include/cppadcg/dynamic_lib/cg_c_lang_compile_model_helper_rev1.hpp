@@ -284,8 +284,13 @@ namespace CppAD {
                 "\n"
                 "      in[0] = x;\n"
                 "      in[1] = &py[i];\n"
-                "      out[0] = compressed;\n"
-                "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, " << args << ");\n"
+                "      out[0] = compressed;\n";
+        if (!_loopTapes.empty()) {
+            _cache << "      for(ePos = 0; ePos < nnz; ePos++)\n"
+                    "         compressed[ePos] = 0;\n"
+                    "\n";
+        }
+        _cache << "      " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(i, " << args << ");\n"
                 "\n"
                 "      for (ePos = 0; ePos < nnz; ePos++) {\n"
                 "         px[pos[ePos]] += compressed[ePos];\n"
