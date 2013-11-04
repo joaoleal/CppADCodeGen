@@ -285,6 +285,7 @@ namespace CppAD {
                  */
                 CLanguage<Base> langC(_baseTypeName);
                 langC.setFunctionIndexArgument(indexJrowDcl);
+                langC.setParameterPrecision(_parameterPrecision);
 
                 _cache.str("");
                 std::ostringstream code;
@@ -367,6 +368,7 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_noloop_dep" << i;
         langC.setGenerateFunction(_cache.str());

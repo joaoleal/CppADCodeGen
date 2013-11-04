@@ -148,6 +148,10 @@ namespace CppAD {
          */
         const std::string _baseTypeName;
         /**
+         * the maximum precision used to print values
+         */
+        size_t _parameterPrecision;
+        /**
          * Typical values of the independent vector 
          */
         std::vector<Base> _x;
@@ -255,6 +259,7 @@ namespace CppAD {
             _funNoLoops(NULL),
             _name(model),
             _baseTypeName(CLangCompileModelHelper<Base>::baseTypeName()),
+            _parameterPrecision(std::numeric_limits<Base>::digits10),
             _zero(true),
             _zeroEvaluated(false),
             _jacobian(false),
@@ -316,6 +321,26 @@ namespace CppAD {
 
         inline const std::vector<std::set<size_t> >& getRelatedDependents() const {
             return _relatedDepCandidates;
+        }
+
+        /**
+         * Provides the maximum precision used to print constant values in the
+         * generated source code
+         * 
+         * @return the maximum number of digits
+         */
+        virtual size_t getParameterPrecision() const {
+            return _parameterPrecision;
+        }
+
+        /**
+         * Defines the maximum precision used to print constant values in the
+         * generated source code
+         * 
+         * @param p the maximum number of digits
+         */
+        virtual void setParameterPrecision(size_t p) {
+            _parameterPrecision = p;
         }
 
         /**

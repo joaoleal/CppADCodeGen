@@ -50,6 +50,7 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        langC.setParameterPrecision(_parameterPrecision);
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
@@ -131,6 +132,7 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        langC.setParameterPrecision(_parameterPrecision);
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;

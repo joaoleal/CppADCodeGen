@@ -49,6 +49,7 @@ namespace CppAD {
 
         CLanguage<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+        langC.setParameterPrecision(_parameterPrecision);
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;

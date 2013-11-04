@@ -122,6 +122,7 @@ namespace CppAD {
 
             CLanguage<Base> langC(_baseTypeName);
             langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+            langC.setParameterPrecision(_parameterPrecision);
             _cache.str("");
             _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_dep" << i;
             langC.setGenerateFunction(_cache.str());
@@ -208,6 +209,7 @@ namespace CppAD {
 
             CLanguage<Base> langC(_baseTypeName);
             langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+            langC.setParameterPrecision(_parameterPrecision);
             _cache.str("");
             _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_dep" << i;
             langC.setGenerateFunction(_cache.str());

@@ -398,6 +398,7 @@ namespace CppAD {
 
                 CLanguage<Base> langC(_baseTypeName);
                 langC.setFunctionIndexArgument(indexJrowDcl);
+                langC.setParameterPrecision(_parameterPrecision);
 
                 std::ostringstream code;
                 std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
@@ -535,6 +536,7 @@ namespace CppAD {
 
                     CLanguage<Base> langC(_baseTypeName);
                     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &sources);
+                    langC.setParameterPrecision(_parameterPrecision);
                     _cache.str("");
                     _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_noloop_indep" << j;
                     string functionName = _cache.str();

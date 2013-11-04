@@ -46,11 +46,11 @@ namespace CppAD {
         const std::string _baseTypeName;
         // spaces for 1 level indentation
         const std::string _spaces;
-        // currrent identation
+        // current indentation
         std::string _indentation;
         // variable name used for the inlet variable
         std::string _inArgName;
-        // variable name used for the oulet variable
+        // variable name used for the outlet variable
         std::string _outArgName;
         // variable name used for the atomic functions array
         std::string _atomicArgName;
@@ -98,6 +98,8 @@ namespace CppAD {
         const std::vector<IndexPattern*>* _loopDependentIndexPatterns;
         const std::vector<IndexPattern*>* _loopIndependentIndexPatterns;
         std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
+        // the maximum precision used to print values
+        size_t _parameterPrecision;
     private:
         std::string funcArgDcl_;
         std::string localFuncArgDcl_;
@@ -128,7 +130,8 @@ namespace CppAD {
             _indexes(NULL),
             _indexRandomPatterns(NULL),
             _loopDependentIndexPatterns(NULL),
-            _loopIndependentIndexPatterns(NULL) {
+            _loopIndependentIndexPatterns(NULL),
+            _parameterPrecision(std::numeric_limits<Base>::digits10) {
         }
 
         inline const std::string& getArgumentIn() const {
@@ -188,7 +191,28 @@ namespace CppAD {
             return _funcArgIndexes;
         }
 
-        virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction, std::map<std::string, std::string>* sources) {
+        /**
+         * Provides the maximum precision used to print constant values in the
+         * generated source code
+         * 
+         * @return the maximum number of digits
+         */
+        virtual size_t getParameterPrecision() const {
+            return _parameterPrecision;
+        }
+
+        /**
+         * Defines the maximum precision used to print constant values in the
+         * generated source code
+         * 
+         * @param p the maximum number of digits
+         */
+        virtual void setParameterPrecision(size_t p) {
+            _parameterPrecision = p;
+        }
+
+        virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction,
+                                                 std::map<std::string, std::string>* sources) {
             _maxAssigmentsPerFunction = maxAssigmentsPerFunction;
             _sources = sources;
         }
@@ -1614,8 +1638,7 @@ namespace CppAD {
         virtual void printParameter(const Base& value) {
             // make sure all digits of floating point values are printed
             std::ostringstream os;
-            int p = std::numeric_limits<Base>::digits10 + 2;
-            os << std::setprecision(p) << value;
+            os << std::setprecision(_parameterPrecision) << value;
 
             std::string number = os.str();
             _code << number;
