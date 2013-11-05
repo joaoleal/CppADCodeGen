@@ -769,6 +769,7 @@ namespace CppAD {
                                                       const loops::JacobianWithLoopsRowInfo& rowInfo,
                                                       const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
                                                       const std::vector<std::map<size_t, CGBase> >& dzDx,
+                                                      const CGBase& py,
                                                       IndexOperationNode<Base>& iterationIndexOp,
                                                       vector<loops::IfElseInfo<Base> >& ifElses,
                                                       size_t& jacLE,

@@ -48,6 +48,7 @@ namespace CppAD {
                                                                           HessianRowGroup<Base>& group,
                                                                           const std::vector<HessianElement>& positions,
                                                                           const CG<Base>& ddfdxdx,
+                                                                          const CG<Base>& tx1,
                                                                           IndexOperationNode<Base>& iterationIndexOp,
                                                                           std::map<size_t, std::set<size_t> >& jrow2CompressedLoc);
     }
@@ -650,10 +651,8 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.indexedIndexedPositions.at(*it);
 
-                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
-
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
-                                                                              positions, val,
+                                                                              positions, info.hess.at(tapeJ1).at(tapeJ2), tx1,
                                                                               iterationIndexOp,
                                                                               jrow2CompressedLoc);
             }
@@ -666,10 +665,8 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.indexedNonIndexedPositions.at(*it);
 
-                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
-
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
-                                                                              positions, val,
+                                                                              positions, info.hess.at(tapeJ1).at(tapeJ2), tx1,
                                                                               iterationIndexOp,
                                                                               jrow2CompressedLoc);
             }
@@ -690,10 +687,9 @@ namespace CppAD {
                     size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
                     val += info.hess.at(tapeJ1).at(tapeK) * dzDx.at(k).at(j2);
                 }
-                val *= tx1;
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
-                                                                              positions, val,
+                                                                              positions, val, tx1,
                                                                               iterationIndexOp,
                                                                               jrow2CompressedLoc);
             }
@@ -707,10 +703,8 @@ namespace CppAD {
                 size_t tapeJ2 = it->second;
                 const std::vector<HessianElement>& positions = info.nonIndexedIndexedPositions.at(*it);
 
-                CGBase val = info.hess.at(tapeJ1).at(tapeJ2) * tx1;
-
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
-                                                                              positions, val,
+                                                                              positions, info.hess.at(tapeJ1).at(tapeJ2), tx1,
                                                                               iterationIndexOp,
                                                                               jrow2CompressedLoc);
             }
@@ -734,10 +728,9 @@ namespace CppAD {
                     size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
                     val += info.hess.at(tapeK).at(tapeJ2) * dzDx.at(k).at(j1);
                 }
-                val *= tx1;
 
                 indexedLoopResults[hessLE++] = createReverseMode2Contribution(handler, group,
-                                                                              positions, val,
+                                                                              positions, val, tx1,
                                                                               iterationIndexOp,
                                                                               jrow2CompressedLoc);
             }
@@ -1094,6 +1087,7 @@ namespace CppAD {
                                                                           HessianRowGroup<Base>& group,
                                                                           const std::vector<HessianElement>& positions,
                                                                           const CG<Base>& ddfdxdx,
+                                                                          const CG<Base>& tx1,
                                                                           IndexOperationNode<Base>& iterationIndexOp,
                                                                           std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
             using namespace std;
@@ -1131,7 +1125,7 @@ namespace CppAD {
                 for (size_t c = 1; c < count; c++)
                     val += ddfdxdx;
 
-                results[count] = val;
+                results[count] = val * tx1;
             }
 
             if (results.size() == 1 && locations.begin()->second.size() == group.iterations.size()) {

@@ -353,7 +353,7 @@ namespace CppAD {
             if (row.size() == 0) {
                 continue;
             }
-            
+
             CppAD::sparse_jacobian_work work; // temporary structure for CppAD
             if (forward) {
                 fun.SparseJacobianForward(xl, lModel.getJacobianSparsity(), row, col, jacLoop, work);
@@ -390,6 +390,7 @@ namespace CppAD {
                 prepareSparseJacobianRowWithLoops(handler, lModel,
                                                   tapeI, rowInfo,
                                                   dyiDxtape, dzDx,
+                                                  CGBase(1),
                                                   *iterationIndexOp, ifElses,
                                                   jacLE, indexedLoopResults, allLocations);
             }
@@ -429,6 +430,7 @@ namespace CppAD {
                                                                           const loops::JacobianWithLoopsRowInfo& rowInfo,
                                                                           const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
                                                                           const std::vector<std::map<size_t, CGBase> >& dzDx,
+                                                                          const CGBase& py,
                                                                           IndexOperationNode<Base>& iterationIndexOp,
                                                                           vector<loops::IfElseInfo<Base> >& ifElses,
                                                                           size_t& jacLE,
@@ -451,8 +453,10 @@ namespace CppAD {
             size_t tapeJ = itJ2Pos->first;
             const std::vector<size_t>& positions = itJ2Pos->second;
 
+            CGBase jacVal = dyiDxtape[tapeI].at(tapeJ) * py;
+
             indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
-                                                                dyiDxtape[tapeI].at(tapeJ), iterationIndexOp, ifElses,
+                                                                jacVal, iterationIndexOp, ifElses,
                                                                 allLocations);
         }
 
@@ -488,6 +492,8 @@ namespace CppAD {
                     jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx[k].at(j);
                 }
             }
+
+            jacVal *= py;
 
             indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
                                                                 jacVal, iterationIndexOp, ifElses,

@@ -33,7 +33,7 @@ namespace CppAD {
         using namespace CppAD::loops;
         using namespace CppAD::extra;
         using CppAD::vector;
-        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
+        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
         size_t n = _fun.Domain();
 
@@ -249,6 +249,7 @@ namespace CppAD {
                 prepareSparseJacobianRowWithLoops(handler, lModel,
                                                   tapeI, rowInfo,
                                                   dyiDxtape, dzDx,
+                                                  py,
                                                   iterationIndexOp, ifElses,
                                                   jacLE, indexedLoopResults, allLocations);
                 indexedLoopResults.resize(jacLE);
@@ -256,7 +257,7 @@ namespace CppAD {
                 vector<CGBase> pxCustom(indexedLoopResults.size());
 
                 for (size_t i = 0; i < indexedLoopResults.size(); i++) {
-                    const CGBase& val = indexedLoopResults[i].first * py;
+                    const CGBase& val = indexedLoopResults[i].first;
                     IndexPattern* ip = indexedLoopResults[i].second;
 
                     pxCustom[i] = createLoopDependentFunctionResult(handler, i, val, ip, iterationIndexOp);
