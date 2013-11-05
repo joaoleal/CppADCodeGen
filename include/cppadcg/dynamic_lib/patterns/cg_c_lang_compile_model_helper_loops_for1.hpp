@@ -28,7 +28,7 @@ namespace CppAD {
         using namespace CppAD::loops;
         using namespace CppAD::extra;
         using CppAD::vector;
-        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
+        //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
         size_t n = _fun.Domain();
 
@@ -167,11 +167,13 @@ namespace CppAD {
             }
 
             /**
-             * Create source for each variable present in equations outisde loops
+             * Create source for each variable present in equations outside loops
              */
             typename map<size_t, vector<CGBase> >::iterator itJ;
             for (itJ = jacNl.begin(); itJ != jacNl.end(); ++itJ) {
-                createForwardOneWithLoopsNL(handler, itJ->first, itJ->second, sources);
+                size_t j = itJ->first;
+                if (_nonLoopFor1Elements.find(j) != _nonLoopFor1Elements.end()) // make sure there are elements
+                    createForwardOneWithLoopsNL(handler, j, itJ->second, sources);
             }
         }
 
