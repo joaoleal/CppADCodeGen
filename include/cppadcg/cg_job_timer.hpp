@@ -94,7 +94,7 @@ namespace CppAD {
 
             _jobs.push_back(Job(jobName));
             Job& job = _jobs.back();
-            
+
             size_t ident = 0;
             if (_jobs.size() > 1) {
                 Job& parent = _jobs[_jobs.size() - 2]; // must be after adding job
@@ -110,8 +110,10 @@ namespace CppAD {
                 _os << std::string(ident, ' ');
             _os << "generating " << job.name() << " ...";
 
+            char f = std::cout.fill();
             std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
             std::cout.flush();
+            std::cout.fill(f); // restore fill character
         }
 
         inline void finishedJob() {
@@ -129,7 +131,9 @@ namespace CppAD {
                     _os << std::string(3 * (_jobs.size() - 1), ' ');
                 _os << "generated " << job.name() << " ...";
 
+                char f = std::cout.fill();
                 std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
+                std::cout.fill(f); // restore fill character
             }
 
             std::cout << " done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;

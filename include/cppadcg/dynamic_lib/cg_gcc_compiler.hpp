@@ -155,11 +155,13 @@ namespace CppAD {
                 double beginTime = 0.0;
                 if (_verbose) {
                     beginTime = system::currentTime();
-                    std::cout << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count 
+                    char f = std::cout.fill();
+                    std::cout << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count
                             << "/" << sources.size() << "] compiling "
                             << std::setw(maxsize + 9) << std::setfill('.') << std::left
                             << ("'" + file + "' ") << " ";
                     std::cout.flush();
+                    std::cout.fill(f); // restore fill character
                 }
 
                 compile(it->second, file, posIndepCode);
