@@ -359,7 +359,7 @@ namespace CppAD {
                               const std::string& name,
                               size_t m) {
         vector<std::set<size_t> > sparsity(m);
-        generateSparsitySet(row, col, sparsity);
+        extra::generateSparsitySet(row, col, sparsity);
         printSparsityPattern(sparsity, name);
     }
 
