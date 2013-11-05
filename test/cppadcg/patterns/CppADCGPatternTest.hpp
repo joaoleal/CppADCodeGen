@@ -31,6 +31,8 @@ namespace CppAD {
         std::vector<Base> eqNorm_;
         Base epsilonA_;
         Base epsilonR_;
+        Base hessianEpsilonA_;
+        Base hessianEpsilonR_;
         std::vector<std::set<size_t> > customJacSparsity_;
         std::vector<std::set<size_t> > customHessSparsity_;
     public:
@@ -41,7 +43,9 @@ namespace CppAD {
             testJacobian_(true),
             testHessian_(true),
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
-            epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
+            epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2),
+            hessianEpsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
+            hessianEpsilonR_(std::numeric_limits<Base>::epsilon() * 1e2){
             //this->verbose_ = true;
         }
 
@@ -440,7 +444,7 @@ namespace CppAD {
             if (compHelp.isCreateForwardZero()) {
                 std::vector<double> yl = modelL->ForwardZero(x);
                 std::vector<double> y = model->ForwardZero(x);
-                ASSERT_TRUE(compareValues(yl, y));
+                ASSERT_TRUE(compareValues(yl, y, epsilonR_, epsilonA_));
             }
 
             // test Jacobian
@@ -453,7 +457,7 @@ namespace CppAD {
                 modelL->SparseJacobian(x, jacl, rowsl, colsl);
                 model->SparseJacobian(x, jac, rows, cols);
 
-                ASSERT_TRUE(compareValues(jacl, jac));
+                ASSERT_TRUE(compareValues(jacl, jac, epsilonR_, epsilonA_));
             }
 
             // test Hessian
@@ -470,7 +474,7 @@ namespace CppAD {
                 modelL->SparseHessian(x, w, hessl, rowsl, colsl);
                 model->SparseHessian(x, w, hess, rows, cols);
 
-                ASSERT_TRUE(compareValues(hessl, hess, epsilonR_, epsilonA_));
+                ASSERT_TRUE(compareValues(hessl, hess, hessianEpsilonR_, hessianEpsilonA_));
             }
 
         }

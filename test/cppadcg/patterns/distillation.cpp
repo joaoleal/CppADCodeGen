@@ -12,41 +12,39 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#include "CppADCGPatternTest.hpp"
+#include "CppADCGPatternModelTest.hpp"
 #include "../models/distillation.hpp"
 
 
 namespace CppAD {
 
-    class CppADCGPatternDistillationTest : public CppADCGPatternTest {
+    const size_t nStage = 8; // number of stages
+
+    class CppADCGPatternDistillationTest : public CppADCGPatternModelTest {
     public:
         typedef double Base;
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
-    protected:
-        const size_t nStage; // number of stages
-        const size_t ns;
-        const size_t nm;
-        const size_t m; // total number of equations in the model 
-        const size_t n; // number of independent variables
-        std::vector<Base> xb; // values for the model
     public:
 
         inline CppADCGPatternDistillationTest(bool verbose = false, bool printValues = false) :
-            CppADCGPatternTest(verbose, printValues),
-            nStage(8),
-            ns(nStage * 6),
-            nm(4),
-            m(nStage * 6),
-            n(ns + nm + 4),
-            xb(n, 1.0) {
+            CppADCGPatternModelTest("Distillation",
+                                    nStage * 6, //ns
+                                    4, // nm
+                                    4, // npar
+                                    nStage * 6, // m
+                                    verbose, printValues) {
 
             // this->testZeroOrder_ = false;
             // this->testJacobian_ = false;
             // this->testHessian_ = false;
-            this->verbose_ = true;
+            //this->verbose_ = true;
             //this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
 
+#if 1
+            /**
+             * with normalization
+             */
             xNorm_.resize(n, 1.0);
 
             size_t j = 0;
@@ -69,47 +67,45 @@ namespace CppAD {
             xNorm_[j++] = 0.7; // xFWater
             xNorm_[j++] = 366; // Tfeed
 
+            xb = std::vector<Base>(n, 1.0);
             j = 0;
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 + 100 * i) / xNorm_[j]; // mWater
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (12000 - 100 * i) / xNorm_[j]; // mEthanol[i]
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (360 + i * 2) / xNorm_[j]; // T[i]
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.3 + 0.05 * i) / xNorm_[j]; // yWater[i]
             for (size_t i = 0; i < nStage; i++, j++) xb[j] = (0.7 - 0.05 * i) / xNorm_[j]; // yEthanol[i]
-        }
-
-        inline void tape(std::auto_ptr<ADFun<CGD> >& fun) {
+#else
             /**
-             * Tape model
+             * without normalization 
              */
-            std::vector<ADCGD> x(xb.size());
-            for (size_t j = 0; j < xb.size(); j++)
-                x[j] = xb[j];
-            CppAD::Independent(x);
-            if (xNorm_.size() > 0) {
-                ASSERT_EQ(x.size(), xNorm_.size());
-                for (size_t j = 0; j < x.size(); j++)
-                    x[j] *= xNorm_[j];
-            }
+            size_t j = 0;
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = 12000 + 1; // mWater
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = 12000 + 1; // mEthanol[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = 360 + (i + 1); // T[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = 0.3 + 0.05 * i; // yWater[i]
+            for (size_t i = 0; i < nStage; i++, j++) xb[j] = 0.7 - 0.05 * i; // yEthanol[i]
+            for (size_t i = 0; i < nStage - 1; i++, j++) xb[j] = 8 + 0.1 * i; // V[i]
+            xb[j++] = 150e3; // Qc
+            assert(j == ns);
 
-            std::vector<ADCGD> y = distillationFunc(x);
-            if (eqNorm_.size() > 0) {
-                ASSERT_EQ(y.size(), eqNorm_.size());
-                for (size_t i = 0; i < y.size(); i++)
-                    y[i] /= eqNorm_[i];
-            }
+            xb[j++] = 250e3; // Qsteam 
+            xb[j++] = 0.1; // Fdistillate
+            xb[j++] = 2.5; // reflux
+            xb[j++] = 4; // Frectifier
 
-            fun.reset(new ADFun<CGD>());
-            fun->Dependent(y);
+            xb[j++] = 30; // feed
+            xb[j++] = 1.01325e5; // P
+            xb[j++] = 0.7; // xFWater
+            xb[j++] = 366; // Tfeed
+
+#endif
         }
 
-        /**
-         * test
-         */
-        inline void test(ADFun<CGD>& fun) {
+        virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) {
+            return distillationFunc(x);
+        }
 
-            std::string libName = "modelDistillation";
-            std::vector<atomic_base<Base>*> atoms;
-
+        virtual std::vector<std::set<size_t> > getRelatedCandidates() {
             std::vector<std::set<size_t> > relatedDepCandidates(6);
             size_t j = 0;
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[0].insert(j); // mWater
@@ -118,18 +114,7 @@ namespace CppAD {
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[2].insert(j); // yWater
             for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[3].insert(j); // yEthanol
             for (size_t i = 0; i < nStage - 1; i++, j++) relatedDepCandidates[5].insert(j); // V
-
-
-            testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, testJacobian_, testHessian_);
-            if (testJacobian_) {
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, true, false, true);
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false);
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false, true);
-            }
-
-            if (testHessian_) {
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, false, true, false, true);
-            }
+            return relatedDepCandidates;
         }
 
     };
@@ -142,48 +127,38 @@ using namespace CppAD;
  * @test test the usage of loops for the generation of distillation model
  */
 TEST_F(CppADCGPatternDistillationTest, distillationAllVars) {
+    modelName += "AllVars";
+
     /**
      * Tape model
      */
     std::auto_ptr<ADFun<CGD> > fun;
-    tape(fun);
+    this->tape(fun);
 
     /**
      * test
      */
-    test(*fun.get());
+    this->test(*fun.get());
 
 }
 
 TEST_F(CppADCGPatternDistillationTest, distillation) {
     using namespace CppAD::extra;
 
+    /**
+     * Tape model
+     */
     std::auto_ptr<ADFun<CGD> > fun;
-    tape(fun);
+    this->tape(fun);
 
     /**
      * Determine the relevant elements
      */
-    std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(*fun.get());
-    customJacSparsity_.resize(jacSparAll.size());
-    for (size_t i = 0; i < jacSparAll.size(); i++) {
-        // only differential information for states and controls
-        std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
-        if (itEnd != jacSparAll[i].begin())
-            customJacSparsity_[i].insert(jacSparAll[i].begin(), itEnd);
-    }
-
-    std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(*fun.get());
-    customHessSparsity_.resize(hessSparAll.size());
-    for (size_t i = 0; i < ns + nm; i++) {
-        std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
-        if (it != hessSparAll[i].begin())
-            customHessSparsity_[i].insert(hessSparAll[i].begin(), it);
-    }
+    this->defineCustomSparsity(*fun.get());
 
     /**
      * test
      */
-    test(*fun.get());
+    this->test(*fun.get());
 
 }

@@ -13,37 +13,47 @@
  * Author: Joao Leal
  */
 #include "CppADCGPatternModelTest.hpp"
-#include "../models/tank_battery.hpp"
+#include "../models/plug_flow.hpp"
 
 
 namespace CppAD {
 
-    const size_t nTanks = 6; // number of stages
+    const size_t nEls = 6; // number of discretization elements
 
-    class CppADCGPatternTankBatTest : public CppADCGPatternModelTest {
+    class CppADCGPatternPlugFlowTest : public CppADCGPatternModelTest {
     public:
         typedef double Base;
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
     public:
 
-        inline CppADCGPatternTankBatTest(bool verbose = false, bool printValues = false) :
-            CppADCGPatternModelTest("TankBattery",
-                                    nTanks, // ns
+        inline CppADCGPatternPlugFlowTest(bool verbose = false, bool printValues = false) :
+            CppADCGPatternModelTest("PlugFlow",
+                                    4 * nEls, // ns
                                     1, // nm
-                                    1, // npar
-                                    nTanks * 1, // m
+                                    4, // npar
+                                    nEls * 4, // m
                                     verbose, printValues) {
-            this->verbose_ = true;
+            //this->verbose_ = true;
+
+            this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 5e2; // ~ (1.1102230246251565e-13)
+            this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 3e4; // ~ (6.6613381477509392e-13)
+            this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e8; // ~ (2.2204460492503131e-08)
+
         }
 
         virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) {
-            return tankBatteryFunc(x);
+            return plugFlowFunc(x);
         }
 
         virtual std::vector<std::set<size_t> > getRelatedCandidates() {
-            std::vector<std::set<size_t> > relatedDepCandidates(1);
-            for (size_t i = 0; i < nTanks; i++) relatedDepCandidates[0].insert(i);
+            std::vector<std::set<size_t> > relatedDepCandidates(4);
+            for (size_t i = 0; i < nEls; i++) {
+                relatedDepCandidates[0].insert(0 * nEls + i);
+                relatedDepCandidates[1].insert(1 * nEls + i);
+                relatedDepCandidates[2].insert(2 * nEls + i);
+                relatedDepCandidates[3].insert(3 * nEls + i);
+            }
             return relatedDepCandidates;
         }
 
@@ -54,12 +64,12 @@ namespace CppAD {
 using namespace CppAD;
 
 /**
- * @test test the usage of loops for the generation of the tank battery model
+ * @test test the usage of loops for the generation of the plug flow model
  *       with the creation of differential information for all variables
  */
-TEST_F(CppADCGPatternTankBatTest, tankBatteryAllVars) {
+TEST_F(CppADCGPatternPlugFlowTest, plugflowAllVars) {
     modelName += "AllVars";
-    
+
     /**
      * Tape model
      */
@@ -74,11 +84,11 @@ TEST_F(CppADCGPatternTankBatTest, tankBatteryAllVars) {
 }
 
 /**
- * @test test the usage of loops for the generation of the tank battery model
+ * @test test the usage of loops for the generation of the plug flow model
  *       with the creation of differential information only for states and
  *       controls
  */
-TEST_F(CppADCGPatternTankBatTest, tankBattery) {
+TEST_F(CppADCGPatternPlugFlowTest, plugflow) {
     using namespace CppAD::extra;
 
     /**

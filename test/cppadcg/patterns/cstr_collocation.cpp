@@ -39,6 +39,8 @@ namespace CppAD {
         inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
             CppADCGPatternTest(verbose, printValues),
             xx(na) {
+            this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 3e6;
+            this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e3;
 
             /**
              * CSTR model values
