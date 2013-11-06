@@ -398,13 +398,7 @@ TEST_F(CppADCGPatternCstrTest, Atomic) {
     std::auto_ptr<DynamicLibModel<Base> > modelLib(dynamicLib->model(modelName));
 
     std::vector<atomic_base<double>*> atomics(1);
-#if 1
-    checkpoint<double> atomicfun("atomicFunc", atomicFunction<double>, ax, ay);
-    atomics[0] = &atomicfun;
-#else
-    createAtomicLib();
-    atomics[0] = &atomicModel_->asAtomic();
-#endif
+    atomics[0] = &modelLib->asAtomic();
 
     testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
     testLibCreationWithAtomics("modelCstrAtomic", modelCollocation, atomics, m, x, repeat);
