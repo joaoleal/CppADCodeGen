@@ -34,12 +34,14 @@ namespace CppAD {
         static const size_t repeat; // number of time intervals
         std::vector<Base> xx; // default CSTR model values
         std::vector<Base> x; // values for the collocation model
+        std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
+        std::auto_ptr<DynamicLibModel<double> > atomicModel_;
     public:
 
         inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
             CppADCGPatternTest(verbose, printValues),
             xx(na) {
-            this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 3e6;
+            this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 4e6;
             this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e3;
 
             /**
@@ -105,6 +107,7 @@ namespace CppAD {
                 // K = 1
                 // states
                 for (size_t j = 0; j < ns; j++) {
+                    x[s] = 1.0 + 0.01 * i;
                     xNorm_[s++] = xx[j];
                 }
 
@@ -229,6 +232,54 @@ namespace CppAD {
         static void atomicFunction(const std::vector<AD<T> >& x, std::vector<AD<T> >& y) {
             y = CstrFunc(x);
         }
+
+        void createAtomicLib() {
+            /**
+             * Tape model
+             */
+            std::vector<ADCGD> xa(na);
+            for (size_t j = 0; j < na; j++)
+                xa[j] = xx[j];
+            CppAD::Independent(xa);
+
+            std::vector<ADCGD> ya(ns);
+
+            atomicFunction(xa, ya);
+
+            ADFun<CGD> fun;
+            fun.Dependent(ya);
+
+            /**
+             * Compile
+             */
+            std::string lName = "cstrAtom";
+            CLangCompileModelHelper<double> compHelpL(fun, lName);
+            compHelpL.setCreateForwardZero(true);
+            compHelpL.setCreateForwardOne(true);
+            compHelpL.setCreateReverseOne(true);
+            compHelpL.setCreateReverseTwo(true);
+            compHelpL.setTypicalIndependentValues(xx);
+
+            GccCompiler<double> compiler;
+            std::vector<std::string> flags;
+            flags.push_back("-O0");
+            flags.push_back("-g");
+            flags.push_back("-ggdb");
+            flags.push_back("-D_FORTIFY_SOURCE=2");
+            compiler.setCompileFlags(flags);
+            compiler.setSourcesFolder("sources_" + lName);
+
+            CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
+            compDynHelpL.setVerbose(this->verbose_);
+            compDynHelpL.setLibraryName("atomiccstr");
+
+            atomicDynamicLib_.reset(compDynHelpL.createDynamicLibrary(compiler));
+
+            /**
+             * load the model
+             */
+            atomicModel_.reset(atomicDynamicLib_->model(lName));
+        }
     };
 
     const size_t CppADCGPatternCstrTest::ns = 4;
@@ -252,9 +303,6 @@ using namespace CppAD;
 TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
     using namespace CppAD;
 
-    //this->epsilonA_ = 6e-10;
-    this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 5e6;
-
     /**
      * create atomic function for the ODE
      */
@@ -262,9 +310,14 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
     for (size_t j = 0; j < na; j++)
         ax[j] = xx[j];
 
-    checkpoint<double> atomicfun("atomicFunc", atomicFunction<double>, ax, ay);
     std::vector<atomic_base<double>*> atomics(1);
+#if 1
+    checkpoint<double> atomicfun("atomicFunc", atomicFunction<double>, ax, ay);
     atomics[0] = &atomicfun;
+#else
+    createAtomicLib();
+    atomics[0] = &atomicModel_->asAtomic();
+#endif
 
     testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
     testLibCreationWithAtomics("modelCstrAtomicAllVars", modelCollocation, atomics, m, x, repeat);
@@ -345,7 +398,13 @@ TEST_F(CppADCGPatternCstrTest, Atomic) {
     std::auto_ptr<DynamicLibModel<Base> > modelLib(dynamicLib->model(modelName));
 
     std::vector<atomic_base<double>*> atomics(1);
-    atomics[0] = &modelLib->asAtomic();
+#if 1
+    checkpoint<double> atomicfun("atomicFunc", atomicFunction<double>, ax, ay);
+    atomics[0] = &atomicfun;
+#else
+    createAtomicLib();
+    atomics[0] = &atomicModel_->asAtomic();
+#endif
 
     testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
     testLibCreationWithAtomics("modelCstrAtomic", modelCollocation, atomics, m, x, repeat);

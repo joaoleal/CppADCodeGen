@@ -45,7 +45,7 @@ namespace CppAD {
             epsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
             epsilonR_(std::numeric_limits<Base>::epsilon() * 1e2),
             hessianEpsilonA_(std::numeric_limits<Base>::epsilon() * 1e2),
-            hessianEpsilonR_(std::numeric_limits<Base>::epsilon() * 1e2){
+            hessianEpsilonR_(std::numeric_limits<Base>::epsilon() * 1e2) {
             //this->verbose_ = true;
         }
 
@@ -387,6 +387,7 @@ namespace CppAD {
             std::auto_ptr<DynamicLibModel<double> > modelL;
             if (loadModels) {
                 modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
+                ASSERT_TRUE(modelL.get() != NULL);
                 for (size_t i = 0; i < atoms.size(); i++)
                     modelL->addAtomicFunction(*atoms[i]);
             }
