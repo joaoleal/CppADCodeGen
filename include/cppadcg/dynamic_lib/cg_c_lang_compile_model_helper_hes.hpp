@@ -21,7 +21,7 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateHessianSource(std::map<std::string, std::string>& sources) {
         const std::string jobName = "Hessian";
 
-        startingJob("operation graph for '" + jobName + "'");
+        startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
         CodeHandler<Base> handler;
         handler.setJobTimer(_jobTimer);
@@ -154,7 +154,7 @@ namespace CppAD {
         /**
          * 
          */
-        startingJob("operation graph for '" + jobName + "'");
+        startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
         CodeHandler<Base> handler;
         handler.setJobTimer(_jobTimer);

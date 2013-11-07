@@ -21,7 +21,7 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateZeroSource(std::map<std::string, std::string>& sources) {
         const std::string jobName = "model (zero-order forward)";
 
-        startingJob("operation graph for '" + jobName + "'");
+        startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
         CodeHandler<Base> handler;
         handler.setJobTimer(_jobTimer);

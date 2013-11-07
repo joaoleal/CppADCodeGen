@@ -25,7 +25,7 @@ namespace CppAD {
         using namespace std;
         using namespace CppAD::loops;
 
-        startingJob("source for 'sparse Hessian'");
+        startingJob("'sparse Hessian'", JobTimer::SOURCE_GENERATION);
 
         /**
          * Generate the source code

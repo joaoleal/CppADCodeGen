@@ -96,7 +96,7 @@ namespace CppAD {
 
         generateLoops();
 
-        startingJob("source-code");
+        startingJob("'" + _name + "'", JobTimer::SOURCE_FOR_MODEL);
 
         std::map<std::string, std::string> sources;
         if (_zero) {
@@ -149,7 +149,7 @@ namespace CppAD {
 
         finishedJob();
 
-        startingJob("object files (compiling)");
+        startingJob("", JobTimer::COMPILING_FOR_MODEL);
         compiler.compileSources(sources, posIndepCode, true, _jobTimer);
         finishedJob();
     }
@@ -160,7 +160,7 @@ namespace CppAD {
             return; //nothing to do
         }
 
-        startingJob("Loop detection");
+        startingJob("", JobTimer::LOOP_DETECTION);
 
         CodeHandler<Base> handler;
         handler.setJobTimer(_jobTimer);
@@ -558,9 +558,10 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileModelHelper<Base>::startingJob(const std::string& jobName) {
+    void CLangCompileModelHelper<Base>::startingJob(const std::string& jobName,
+                                                    const JobType& type) {
         if (_jobTimer != NULL)
-            _jobTimer->startingJob(jobName);
+            _jobTimer->startingJob(jobName, type);
     }
 
     template<class Base>

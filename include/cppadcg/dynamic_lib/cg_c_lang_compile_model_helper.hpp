@@ -1033,7 +1033,8 @@ namespace CppAD {
         /**
          * 
          */
-        inline void startingJob(const std::string& jobName);
+        inline void startingJob(const std::string& jobName,
+                                const JobType& type = JobTypeHolder<>::DEFAULT);
 
         inline void finishedJob();
 

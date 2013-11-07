@@ -580,7 +580,7 @@ namespace CppAD {
             _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
             _cache.str("");
-            startingJob("operation graph for '" + jobName + "'");
+            startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
             info.evalLoopModelJacobianHessian(false);
 
@@ -600,7 +600,7 @@ namespace CppAD {
             /**
              * Jacobian and Hessian - temporary variables
              */
-            startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
+            startingJob("'model (Jacobian + Hessian, temporaries)'", JobTimer::GRAPH);
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
                                                                     noLoopEvalJacSparsity,

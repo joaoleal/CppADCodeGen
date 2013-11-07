@@ -199,9 +199,9 @@ namespace CppAD {
             std::string jobName = _cache.str();
 
             /**
-             * evaluate loop model jacobian
+             * evaluate loop model Jacobian
              */
-            startingJob("operation graph for '" + jobName + "'");
+            startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);

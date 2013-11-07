@@ -45,7 +45,7 @@ namespace CppAD {
 
         if (!evalRows.empty()) {
 
-            startingJob("source for 'model (reverse two)'");
+            startingJob("'model (reverse two)'", JobTimer::SOURCE_GENERATION);
 
             if (isAtomicsUsed()) {
                 generateSparseReverseTwoSourcesWithAtomics(sources, elements);
@@ -85,7 +85,7 @@ namespace CppAD {
             _cache << "model (reverse two, indep " << j << ")";
             const std::string subJobName = _cache.str();
 
-            startingJob("operation graph for '" + subJobName + "'");
+            startingJob("'" + subJobName + "'", JobTimer::GRAPH);
 
             CodeHandler<Base> handler;
             handler.setJobTimer(_jobTimer);

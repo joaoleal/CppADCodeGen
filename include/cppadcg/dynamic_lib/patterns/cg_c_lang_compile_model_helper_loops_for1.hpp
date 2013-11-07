@@ -205,7 +205,7 @@ namespace CppAD {
             /**
              * evaluate loop model jacobian
              */
-            startingJob("operation graph for '" + jobName + "'");
+            startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
             vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
             vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);

@@ -33,6 +33,8 @@ namespace CppAD {
 
     template<class Base>
     DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException) {
+        startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
+
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
@@ -59,6 +61,8 @@ namespace CppAD {
         }
         compiler.cleanup();
 
+        finishedJob();
+
         return loadDynamicLibrary();
     }
 
@@ -66,6 +70,8 @@ namespace CppAD {
     void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler,
                                                               Archiver& ar,
                                                               bool posIndepCode) {
+        startingJob("", JobTimer::STATIC_MODEL_LIBRARY);
+
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
@@ -92,6 +98,8 @@ namespace CppAD {
             throw;
         }
         compiler.cleanup();
+
+        finishedJob();
     }
 
     template<class Base>

@@ -199,7 +199,7 @@ namespace CppAD {
             _cache << "model (Jacobian + Hessian, loop " << lModel.getLoopId() << ")";
             std::string jobName = _cache.str();
 
-            startingJob("operation graph for '" + jobName + "'");
+            startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
             info.evalLoopModelJacobianHessian(hasAtomics);
 
@@ -217,7 +217,7 @@ namespace CppAD {
             /**
              * Jacobian and Hessian - temporary variables
              */
-            startingJob("operation graph for 'model (Jacobian + Hessian, temporaries)'");
+            startingJob("'model (Jacobian + Hessian, temporaries)'", JobTimer::GRAPH);
 
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(loopHessInfo, x, yNL,
                                                                     noLoopEvalJacSparsity,
@@ -465,7 +465,7 @@ namespace CppAD {
 
             if (row.size() > 0) {
                 const string jobName = "model (reverse two, no loops)";
-                startingJob("source for '" + jobName + "'");
+                startingJob("'" + jobName + "'", JobTimer::SOURCE_GENERATION);
 
                 // we can use a new handler to reduce memmory usage
                 CodeHandler<Base> handlerNL;

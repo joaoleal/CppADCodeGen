@@ -39,7 +39,7 @@ namespace CppAD {
         /**
          * Generate one function for each dependent variable
          */
-        startingJob("source for 'model (reverse one)'");
+        startingJob("'model (reverse one)'", JobTimer::SOURCE_GENERATION);
 
         if (isAtomicsUsed()) {
             generateSparseReverseOneSourcesWithAtomics(sources, elements);
@@ -74,7 +74,7 @@ namespace CppAD {
          * Generate one function for each dependent variable
          */
         const std::string jobName = "model (reverse one)";
-        startingJob("source for '" + jobName + "'");
+        startingJob("'" + jobName + "'", JobTimer::SOURCE_GENERATION);
 
         std::map<size_t, std::vector<size_t> >::const_iterator it;
         for (it = elements.begin(); it != elements.end(); ++it) {
@@ -85,7 +85,7 @@ namespace CppAD {
             _cache << "model (reverse one, dep " << i << ")";
             const std::string subJobName = _cache.str();
 
-            startingJob("operation graph for '" + subJobName + "'");
+            startingJob("'" + subJobName + "'", JobTimer::GRAPH);
 
             CodeHandler<Base> handler;
             handler.setJobTimer(_jobTimer);

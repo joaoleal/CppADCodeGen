@@ -146,12 +146,9 @@ namespace CppAD {
 
             size_t countWidth = std::ceil(std::log10(sources.size()));
 
-            std::string prevAction;
             size_t count = 0;
             if (timer != NULL) {
-                prevAction = timer->getActionName();
-                timer->setActionName("compiling");
-                size_t ms = 3 + 2 * countWidth + 1 + timer->getActionName().size() + 2 + maxsize + 5;
+                size_t ms = 3 + 2 * countWidth + 1 + JobTypeHolder<>::COMPILING.getActionName().size() + 2 + maxsize + 5;
                 ms += timer->getJobCount() * 2;
                 if (timer->getMaxLineWidth() < ms)
                     timer->setMaxLineWidth(ms);
@@ -174,7 +171,7 @@ namespace CppAD {
                 }
 
                 if (timer != NULL) {
-                    timer->startingJob("'" + file + "'", os.str());
+                    timer->startingJob("'" + file + "'", JobTypeHolder<>::COMPILING, os.str());
                     os.str("");
                 } else if (_verbose) {
                     beginTime = system::currentTime();
@@ -200,9 +197,6 @@ namespace CppAD {
 
             }
 
-            if (timer != NULL) {
-                timer->setActionName(prevAction);
-            }
         }
 
         /**
