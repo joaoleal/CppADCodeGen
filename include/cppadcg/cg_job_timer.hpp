@@ -50,6 +50,13 @@ namespace CppAD {
         friend class JobTimer;
     };
 
+    class JobListener {
+    public:
+        virtual void jobStarted(const std::vector<Job>& job) = 0;
+
+        virtual void jobEndended(const std::vector<Job>& job, double elapsed) = 0;
+    };
+
     /**
      * Utility class used to print elapsed times of jobs
      */
@@ -70,13 +77,32 @@ namespace CppAD {
          */
         size_t _maxLineWidth;
         /**
+         * number of spaces per indentation level
+         */
+        size_t _indent;
+        /**
          * 
          */
         std::ostringstream _os;
+        /**
+         * 
+         */
+        std::string _action;
+        /**
+         * 
+         */
+        std::string _actionEnd;
+        /**
+         * 
+         */
+        std::set<JobListener*> _listeners;
     public:
 
         JobTimer() :
-            _maxLineWidth(80) {
+            _maxLineWidth(80),
+            _indent(2),
+            _action("generating"),
+            _actionEnd("generated") {
         }
 
         inline bool isVerbose() const {
@@ -87,7 +113,49 @@ namespace CppAD {
             _verbose = verbose;
         }
 
-        inline void startingJob(const std::string& jobName) {
+        inline const std::string& getActionName() const {
+            return _action;
+        }
+
+        inline void setActionName(const std::string& action) {
+            _action = action;
+        }
+
+        inline const std::string& getActionEndName()const {
+            return _actionEnd;
+        }
+
+        inline void setActionEndName(const std::string& actionEnd) {
+            _actionEnd = actionEnd;
+        }
+
+        inline size_t getMaxLineWidth() const {
+            return _maxLineWidth;
+        }
+
+        inline void setMaxLineWidth(size_t width) {
+            _maxLineWidth = width;
+        }
+
+        /**
+         * Provides the number of currently running jobs
+         * 
+         * @return the number of running jobs
+         */
+        inline size_t getJobCount() const {
+            return _jobs.size();
+        }
+
+        inline void addListener(JobListener& l) {
+            _listeners.insert(&l);
+        }
+
+        inline bool removeListener(JobListener& l) {
+            return _listeners.erase(&l) > 0;
+        }
+
+        inline void startingJob(const std::string& jobName,
+                                const std::string& prefix = "") {
             if (!_verbose) {
                 return;
             }
@@ -95,25 +163,31 @@ namespace CppAD {
             _jobs.push_back(Job(jobName));
             Job& job = _jobs.back();
 
-            size_t ident = 0;
+            size_t indent = 0;
             if (_jobs.size() > 1) {
                 Job& parent = _jobs[_jobs.size() - 2]; // must be after adding job
                 if (!parent._nestedJobs) {
                     parent._nestedJobs = true;
                     std::cout << "\n";
                 }
-                ident = 3 * (_jobs.size() - 1);
+                indent = _indent * (_jobs.size() - 1);
             }
 
             _os.str("");
-            if (ident > 0)
-                _os << std::string(ident, ' ');
-            _os << "generating " << job.name() << " ...";
+            if (indent > 0) _os << std::string(indent, ' ');
+            if (!prefix.empty()) _os << prefix << " ";
+            _os << _action << " " << job.name() << " ...";
 
             char f = std::cout.fill();
             std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
             std::cout.flush();
             std::cout.fill(f); // restore fill character
+
+            // notify listeners
+            std::set<JobListener*>::const_iterator itl;
+            for (itl = _listeners.begin(); itl != _listeners.end(); ++itl) {
+                (*itl)->jobStarted(_jobs);
+            }
         }
 
         inline void finishedJob() {
@@ -128,8 +202,8 @@ namespace CppAD {
             if (job._nestedJobs) {
                 _os.str("");
                 if (!_jobs.empty())
-                    _os << std::string(3 * (_jobs.size() - 1), ' ');
-                _os << "generated " << job.name() << " ...";
+                    _os << std::string(_indent * (_jobs.size() - 1), ' ');
+                _os << _actionEnd << " " << job.name() << " ...";
 
                 char f = std::cout.fill();
                 std::cout << std::setw(_maxLineWidth) << std::setfill('.') << std::left << _os.str();
@@ -137,6 +211,12 @@ namespace CppAD {
             }
 
             std::cout << " done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;
+
+            // notify listeners
+            std::set<JobListener*>::const_iterator itl;
+            for (itl = _listeners.begin(); itl != _listeners.end(); ++itl) {
+                (*itl)->jobEndended(_jobs, elapsed);
+            }
 
             _jobs.pop_back();
         }

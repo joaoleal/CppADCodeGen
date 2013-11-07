@@ -88,7 +88,7 @@ namespace CppAD {
             startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setJobTimer(this);
+            handler.setJobTimer(_jobTimer);
 
             vector<CGBase> indVars(_fun.Domain());
             handler.makeVariables(indVars);
@@ -139,13 +139,13 @@ namespace CppAD {
     void CLangCompileModelHelper<Base>::generateSparseReverseOneSourcesNoAtomics(std::map<std::string, std::string>& sources,
                                                                                  const std::map<size_t, std::vector<size_t> >& elements) {
         /**
-         * jacobian
+         * Jacobian
          */
         size_t m = _fun.Range();
         size_t n = _fun.Domain();
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
 
         vector<CGBase> x(n);
         handler.makeVariables(x);

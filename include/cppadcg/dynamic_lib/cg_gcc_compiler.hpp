@@ -115,7 +115,8 @@ namespace CppAD {
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool posIndepCode,
-                                    bool savefiles) {
+                                    bool savefiles,
+                                    JobTimer* timer = NULL) {
 
             if (savefiles) {
                 system::createFolder(this->_sourcesFolder);
@@ -143,34 +144,64 @@ namespace CppAD {
                 maxsize = std::max(maxsize, file.size());
             }
 
+            size_t countWidth = std::ceil(std::log10(sources.size()));
+
+            std::string prevAction;
             size_t count = 0;
-            if (_verbose) {
+            if (timer != NULL) {
+                prevAction = timer->getActionName();
+                timer->setActionName("compiling");
+                size_t ms = 3 + 2 * countWidth + 1 + timer->getActionName().size() + 2 + maxsize + 5;
+                ms += timer->getJobCount() * 2;
+                if (timer->getMaxLineWidth() < ms)
+                    timer->setMaxLineWidth(ms);
+            } else if (_verbose) {
                 std::cout << std::endl;
             }
-            size_t countWidth = std::ceil(std::log10(sources.size()));
+
+            std::ostringstream os;
+
+
             for (it = sources.begin(); it != sources.end(); ++it) {
                 count++;
                 std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
 
                 double beginTime = 0.0;
-                if (_verbose) {
+
+                if (timer != NULL || _verbose) {
+                    os << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count
+                            << "/" << sources.size() << "]";
+                }
+
+                if (timer != NULL) {
+                    timer->startingJob("'" + file + "'", os.str());
+                    os.str("");
+                } else if (_verbose) {
                     beginTime = system::currentTime();
                     char f = std::cout.fill();
-                    std::cout << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count
-                            << "/" << sources.size() << "] compiling "
+                    std::cout << os.str() << " compiling "
                             << std::setw(maxsize + 9) << std::setfill('.') << std::left
                             << ("'" + file + "' ") << " ";
+                    os.str("");
                     std::cout.flush();
                     std::cout.fill(f); // restore fill character
                 }
 
                 compile(it->second, file, posIndepCode);
 
-                if (_verbose) {
+
+                if (timer != NULL) {
+                    timer->finishedJob();
+                } else if (_verbose) {
                     double endTime = system::currentTime();
                     std::cout << "done [" << std::fixed << std::setprecision(3)
                             << (endTime - beginTime) << "]" << std::endl;
                 }
+
+            }
+
+            if (timer != NULL) {
+                timer->setActionName(prevAction);
             }
         }
 
@@ -179,7 +210,8 @@ namespace CppAD {
          * 
          * @param library the path to the dynamic library to be created
          */
-        virtual void buildDynamic(const std::string& library) {
+        virtual void buildDynamic(const std::string& library,
+                                  JobTimer* timer = NULL) {
 
             std::string linkerFlags = "-Wl,-soname," + system::filenameFromPath(library);
             for (size_t i = 0; i < _linkFlags.size(); i++)
@@ -196,10 +228,17 @@ namespace CppAD {
                 args.push_back(*it);
             }
 
-            if (_verbose) {
+            if (timer != NULL) {
+                timer->startingJob("dynamic library '" + library + "'");
+            } else if (_verbose) {
                 std::cout << "building library '" << library << "'" << std::endl;
             }
+
             system::callExecutable(_gccPath, args);
+
+            if (timer != NULL) {
+                timer->finishedJob();
+            }
         }
 
         virtual void cleanup() {

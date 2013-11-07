@@ -50,7 +50,9 @@ namespace CppAD {
             _flags = flags;
         }
 
-        inline virtual void create(const std::string& library, const std::set<std::string>& objectFiles) {
+        inline virtual void create(const std::string& library,
+                                   const std::set<std::string>& objectFiles,
+                                   JobTimer* timer = NULL) {
             std::vector<std::string> args;
             args.push_back("ar");
             args.push_back("rcs");
@@ -58,11 +60,17 @@ namespace CppAD {
             args.push_back(library); // Output file name
             args.insert(args.end(), objectFiles.begin(), objectFiles.end());
 
-            if (_verbose) {
+            if (timer != NULL) {
+                timer->startingJob("static library '" + library + "'");
+            } else if (_verbose) {
                 std::cout << "building library '" << library << "'" << std::endl;
             }
 
             system::callExecutable(_arPath, args);
+
+            if (timer != NULL) {
+                timer->finishedJob();
+            }
         }
 
     };

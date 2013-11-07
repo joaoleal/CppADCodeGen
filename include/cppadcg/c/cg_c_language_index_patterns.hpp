@@ -55,7 +55,7 @@ namespace CppAD {
 
     template<class Base>
     inline void CLanguage<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
-                                                                    const std::string& identation,
+                                                                    const std::string& indentation,
                                                                     const std::set<RandomIndexPattern*>& randomPatterns) {
         typename std::set<RandomIndexPattern*>::const_iterator itr;
         for (itr = randomPatterns.begin(); itr != randomPatterns.end(); ++itr) {
@@ -72,7 +72,7 @@ namespace CppAD {
                 for (it = x2y.begin(); it != x2y.end(); ++it)
                     y[it->first] = it->second;
 
-                os << identation;
+                os << indentation;
                 printStaticIndexArray(os, ip->getName(), y);
             } else {
                 assert(ip->getType() == RANDOM2D);
@@ -80,7 +80,7 @@ namespace CppAD {
                  * 2D
                  */
                 Random2DIndexPattern* ip2 = static_cast<Random2DIndexPattern*> (ip);
-                os << identation;
+                os << indentation;
                 printStaticIndexMatrix(os, ip->getName(), ip2->getValues());
             }
         }

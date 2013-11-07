@@ -28,7 +28,9 @@ namespace CppAD {
 
         virtual void setVerbose(bool verbose) = 0;
 
-        virtual void create(const std::string& library, const std::set<std::string>& objectFiles) = 0;
+        virtual void create(const std::string& library,
+                            const std::set<std::string>& objectFiles,
+                            JobTimer* timer = NULL) = 0;
 
         inline virtual ~Archiver() {
         };

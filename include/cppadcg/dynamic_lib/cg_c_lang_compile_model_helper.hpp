@@ -24,7 +24,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class CLangCompileModelHelper : protected JobTimer {
+    class CLangCompileModelHelper {
         typedef CppAD::CG<Base> CGBase;
         typedef CppAD::AD<CGBase> ADCG;
         typedef CppAD::vector<std::set<size_t> > SparsitySetType;
@@ -209,8 +209,6 @@ namespace CppAD {
          * maximum number of assignments per function (~ lines)
          */
         size_t _maxAssignPerFunc;
-
-
         /**
          * 
          */
@@ -245,6 +243,10 @@ namespace CppAD {
          *  [var]{compressed reverse 2 position}
          */
         std::map<size_t, std::set<size_t> > _nonLoopRev2Elements;
+        /**
+         * 
+         */
+        JobTimer* _jobTimer;
     public:
 
         /**
@@ -272,7 +274,8 @@ namespace CppAD {
             _reverseTwo(false),
             _jacMode(AUTOMATIC),
             _atomicsIndeps(NULL),
-            _maxAssignPerFunc(20000) {
+            _maxAssignPerFunc(20000),
+            _jobTimer(NULL) {
 
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
             CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
@@ -700,7 +703,9 @@ namespace CppAD {
                                                                          const std::string& tmpName,
                                                                          const std::string& tmpArrayName);
 
-        virtual void compileSources(CLangCompiler<Base>& compiler, bool posIndepCode) throw (CGException);
+        virtual void compileSources(CLangCompiler<Base>& compiler,
+                                    bool posIndepCode,
+                                    JobTimer* timer = NULL) throw (CGException);
 
         virtual void generateLoops() throw (CGException);
 
@@ -713,7 +718,7 @@ namespace CppAD {
         virtual const std::map<size_t, std::set<size_t> >& getAtomicsIndeps();
 
         /***********************************************************************
-         * zero order (the orginal model)
+         * zero order (the original model)
          **********************************************************************/
 
         virtual void generateZeroSource(std::map<std::string, std::string>& sources);
@@ -1025,6 +1030,12 @@ namespace CppAD {
         static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                             const std::vector<size_t>& userRows,
                                                                                             const std::vector<size_t>& userCols);
+        /**
+         * 
+         */
+        inline void startingJob(const std::string& jobName);
+
+        inline void finishedJob();
 
     private:
         CLangCompileModelHelper(const CLangCompileModelHelper&); // not implemented

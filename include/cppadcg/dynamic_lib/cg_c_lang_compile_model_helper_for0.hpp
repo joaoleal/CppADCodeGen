@@ -24,7 +24,7 @@ namespace CppAD {
         startingJob("operation graph for '" + jobName + "'");
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
 
         vector<CGBase> indVars(_fun.Domain());
         handler.makeVariables(indVars);

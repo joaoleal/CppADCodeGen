@@ -33,14 +33,10 @@ namespace CppAD {
 
     template<class Base>
     DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException) {
-
-        compiler.setVerbose(_verbose);
-
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
-                it->second->setVerbose(_verbose);
-                it->second->compileSources(compiler, true);
+                it->second->compileSources(compiler, true, this);
             }
 
             std::map<std::string, std::string> sources;
@@ -49,14 +45,14 @@ namespace CppAD {
 
             sources.insert(_customSource.begin(), _customSource.end());
 
-            compiler.compileSources(sources, true, _saveSourceFiles);
+            compiler.compileSources(sources, true, _saveSourceFiles, this);
 
             std::string libname = _libraryName;
             if (_customLibExtension != NULL)
                 libname += *_customLibExtension;
             else
                 libname += system::SystemInfo<>::DYNAMIC_LIB_EXTENSION;
-            compiler.buildDynamic(libname);
+            compiler.buildDynamic(libname, this);
         } catch (...) {
             compiler.cleanup();
             throw;
@@ -67,10 +63,9 @@ namespace CppAD {
     }
 
     template<class Base>
-    void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode) {
-        compiler.setVerbose(_verbose);
-        ar.setVerbose(_verbose);
-
+    void CLangCompileDynamicHelper<Base>::createStaticLibrary(CLangCompiler<Base>& compiler,
+                                                              Archiver& ar,
+                                                              bool posIndepCode) {
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
@@ -84,14 +79,14 @@ namespace CppAD {
 
             sources.insert(_customSource.begin(), _customSource.end());
 
-            compiler.compileSources(sources, posIndepCode, _saveSourceFiles);
+            compiler.compileSources(sources, posIndepCode, _saveSourceFiles, this);
 
             std::string libname = _libraryName;
             if (_customLibExtension != NULL)
                 libname += *_customLibExtension;
             else
                 libname += system::SystemInfo<>::STATIC_LIB_EXTENSION;
-            ar.create(libname, compiler.getObjectFiles());
+            ar.create(libname, compiler.getObjectFiles(), this);
         } catch (...) {
             compiler.cleanup();
             throw;

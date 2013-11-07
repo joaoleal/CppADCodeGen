@@ -24,7 +24,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class CLangCompileDynamicHelper {
+    class CLangCompileDynamicHelper : public JobTimer {
     public:
         static const std::string FUNCTION_VERSION;
         static const std::string FUNCTION_MODELS;
@@ -38,8 +38,10 @@ namespace CppAD {
         const std::string* _customLibExtension; // a custom extension for the dynamic library (e.g. ".so.1")
         std::ostringstream _cache;
         bool _saveSourceFiles;
-        //
-        bool _verbose;
+        /**
+         * 
+         */
+        std::set<JobListener*> _listeners;
     public:
 
         /**
@@ -49,14 +51,14 @@ namespace CppAD {
          * @param model a model compilation helper (must only be deleted after
          *              this object)
          * @param saveSourceFiles whether or not to write the generated source
-         *                        files to disk (for visualisation purposes 
+         *                        files to disk (for visualization purposes 
          *                        only).
          */
-        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>& model, bool saveSourceFiles = true) :
+        CLangCompileDynamicHelper(CLangCompileModelHelper<Base>& model,
+                                  bool saveSourceFiles = true) :
             _libraryName("cppad_cg_model"),
             _customLibExtension(NULL),
-            _saveSourceFiles(saveSourceFiles),
-            _verbose(false) {
+            _saveSourceFiles(saveSourceFiles) {
 
             _models[model.getName()] = &model;
         }
@@ -96,14 +98,6 @@ namespace CppAD {
         inline void removeCustomLibraryExtension() {
             delete _customLibExtension;
             _customLibExtension = NULL;
-        }
-
-        inline bool isVerbose() const {
-            return _verbose;
-        }
-
-        inline void setVerbose(bool verbose) {
-            _verbose = verbose;
         }
 
         /**

@@ -764,26 +764,26 @@ namespace CppAD {
 
                         const map<size_t, set<size_t> >& key2Compressed = loopGroups.at(&loop).at(g);
 
-                        string ident = itCount == 1 ? "   " : "      "; //identation
+                        string indent = itCount == 1 ? "   " : "      "; //indentation
 
                         if (group->startLocPattern.get() != NULL) {
                             // determine hessRowStart = f(it)
-                            out << ident << "outLocal[0] = &" << resultName << "[" << CLanguage<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
+                            out << indent << "outLocal[0] = &" << resultName << "[" << CLanguage<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
                         } else {
                             if (!lastCompressed) {
-                                out << ident << "outLocal[0] = compressed;\n";
+                                out << indent << "outLocal[0] = compressed;\n";
                             }
-                            out << ident << "for(e = 0; e < " << maxCompressedSize << "; e++)  compressed[e] = 0;\n";
+                            out << indent << "for(e = 0; e < " << maxCompressedSize << "; e++)  compressed[e] = 0;\n";
                         }
 
                         if (itCount > 1) {
-                            out << ident << keyIndexName << " = " << CLanguage<Base>::indexPattern2String(*group->pattern, indexIt) << ";\n";
-                            out << ident;
+                            out << indent << keyIndexName << " = " << CLanguage<Base>::indexPattern2String(*group->pattern, indexIt) << ";\n";
+                            out << indent;
                             (*generateLocalFunctionName)(out, modelName, loop, g);
                             out << "(" << keyIndexName << ", " << loopFArgs << ");\n";
                         } else {
                             size_t key = key2Compressed.begin()->first; // only one jrow
-                            out << ident;
+                            out << indent;
                             (*generateLocalFunctionName)(out, modelName, loop, g);
                             out << "(" << key << ", " << loopFArgs << ");\n";
                         }
@@ -810,9 +810,9 @@ namespace CppAD {
                                 const ArrayElementGroup* eg = itc->second;
                                 assert(!eg->elements.empty());
 
-                                string ident2 = ident;
+                                string indent2 = indent;
                                 if (withIfs) {
-                                    out << ident;
+                                    out << indent;
                                     if (itc != group->elCount2elements.m.begin())
                                         out << "} else ";
                                     if (itc->first != group->elCount2elements.m.rbegin()->first) { // check that it is not the last branch
@@ -826,13 +826,13 @@ namespace CppAD {
                                         usedIter.insert(eg->keys.begin(), eg->keys.end());
                                     }
                                     out << "{\n";
-                                    ident2 += "   ";
+                                    indent2 += "   ";
                                 }
 
                                 for (size_t e = 0; e < eg->elements.size(); e++) {
                                     const ArrayElementCopyPattern& ePos = eg->elements[e];
 
-                                    out << ident2 << resultName << "["
+                                    out << indent2 << resultName << "["
                                             << CLanguage<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
                                             << "] += compressed["
                                             << CLanguage<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
@@ -841,7 +841,7 @@ namespace CppAD {
                             }
 
                             if (withIfs) {
-                                out << ident << "}\n";
+                                out << indent << "}\n";
                             }
                         }
 

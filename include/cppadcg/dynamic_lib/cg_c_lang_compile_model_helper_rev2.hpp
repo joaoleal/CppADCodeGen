@@ -88,7 +88,7 @@ namespace CppAD {
             startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setJobTimer(this);
+            handler.setJobTimer(_jobTimer);
 
             vector<CGBase> tx0(n);
             handler.makeVariables(tx0);
@@ -166,9 +166,9 @@ namespace CppAD {
             }
         }
 
-        // we can use a new handler to reduce memmory usage
+        // we can use a new handler to reduce memory usage
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
 
         vector<CGBase> tx0(n);
         handler.makeVariables(tx0);

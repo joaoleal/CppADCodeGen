@@ -49,7 +49,7 @@ namespace CppAD {
         localNodes[3] = &jrowIndexOp;
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
         handler.setZeroDependents(false);
 
         size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;

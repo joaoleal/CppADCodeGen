@@ -83,7 +83,7 @@ namespace CppAD {
             startingJob("operation graph for '" + subJobName + "'");
 
             CodeHandler<Base> handler;
-            handler.setJobTimer(this);
+            handler.setJobTimer(_jobTimer);
 
             vector<CGBase> indVars(n);
             handler.makeVariables(indVars);
@@ -138,7 +138,7 @@ namespace CppAD {
         size_t n = _fun.Domain();
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
 
         vector<CGBase> x(n);
         handler.makeVariables(x);

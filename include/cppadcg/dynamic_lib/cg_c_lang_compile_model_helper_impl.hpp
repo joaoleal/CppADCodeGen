@@ -90,8 +90,13 @@ namespace CppAD {
 
     template<class Base>
     void CLangCompileModelHelper<Base>::compileSources(CLangCompiler<Base>& compiler,
-                                                       bool posIndepCode) throw (CGException) {
+                                                       bool posIndepCode,
+                                                       JobTimer* timer) throw (CGException) {
+        _jobTimer = timer;
+
         generateLoops();
+
+        startingJob("source-code");
 
         std::map<std::string, std::string> sources;
         if (_zero) {
@@ -142,7 +147,11 @@ namespace CppAD {
 
         generateAtomicFuncNames(sources);
 
-        compiler.compileSources(sources, posIndepCode, true);
+        finishedJob();
+
+        startingJob("object files (compiling)");
+        compiler.compileSources(sources, posIndepCode, true, _jobTimer);
+        finishedJob();
     }
 
     template<class Base>
@@ -154,7 +163,7 @@ namespace CppAD {
         startingJob("Loop detection");
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
 
         std::vector<CGBase> xx(_fun.Domain());
         handler.makeVariables(xx);
@@ -170,7 +179,7 @@ namespace CppAD {
         matcher.generateTapes(_funNoLoops, _loopTapes);
 
         finishedJob();
-        if (_verbose) {
+        if (_jobTimer != NULL && _jobTimer->isVerbose()) {
             std::cout << " equation patterns: " << matcher.getEquationPatterns().size() <<
                     "  loops: " << matcher.getLoops().size() << std::endl;
         }
@@ -546,6 +555,18 @@ namespace CppAD {
         }
 
         return userLocation;
+    }
+
+    template<class Base>
+    void CLangCompileModelHelper<Base>::startingJob(const std::string& jobName) {
+        if (_jobTimer != NULL)
+            _jobTimer->startingJob(jobName);
+    }
+
+    template<class Base>
+    inline void CLangCompileModelHelper<Base>::finishedJob() {
+        if (_jobTimer != NULL)
+            _jobTimer->finishedJob();
     }
 
     /**

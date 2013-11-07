@@ -82,7 +82,7 @@ namespace CppAD {
         localNodes[4] = &jrowIndexOp;
 
         CodeHandler<Base> handler;
-        handler.setJobTimer(this);
+        handler.setJobTimer(_jobTimer);
         handler.setZeroDependents(false);
 
         // independent variables
@@ -469,7 +469,7 @@ namespace CppAD {
 
                 // we can use a new handler to reduce memmory usage
                 CodeHandler<Base> handlerNL;
-                handlerNL.setJobTimer(this);
+                handlerNL.setJobTimer(_jobTimer);
 
                 vector<CGBase> tx0(n);
                 handlerNL.makeVariables(tx0);
