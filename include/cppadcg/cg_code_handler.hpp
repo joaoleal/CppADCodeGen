@@ -873,101 +873,106 @@ namespace CppAD {
         virtual void checkVariableCreation(OperationNode<Base>& code) {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
-            typename std::vector<Argument<Base> >::const_iterator it;
+            size_t aSize = args.size();
+            
+            for (size_t a = 0; a < aSize; a++) {
+                if (args[a].getOperation() == NULL) {
+                    continue;
+                }
 
-            for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != NULL) {
-                    OperationNode<Base>& arg = *it->getOperation();
+                OperationNode<Base>& arg = *args[a].getOperation();
 
-                    if (arg.getUsageCount() == 0) {
-                        // dependencies not visited yet
-                        checkVariableCreation(arg);
+                if (arg.getUsageCount() == 0) {
+                    // dependencies not visited yet
+                    checkVariableCreation(arg);
 
-                        CGOpCode type = arg.getOperationType();
-                        if (type == CGLoopEndOp || type == CGElseIfOp || type == CGElseOp || type == CGEndIfOp) {
-                            /**
-                             * Some types of operations must be added immediately 
-                             * after its arguments
-                             * in order to avoid having other arguments inside
-                             * that stack frame (or scope)
-                             */
-                            if (arg.getVariableID() == 0) {
-                                addToEvaluationQueue(arg);
-                                // ID value is not really used but must be non-zero
-                                arg.setVariableID(std::numeric_limits<size_t>::max());
-                            }
-                        } else if (type == CGAtomicForwardOp || type == CGAtomicReverseOp) {
-                            /**
-                             * Save atomic function related information
-                             */
-                            assert(arg.getArguments().size() > 1);
-                            assert(arg.getInfo().size() > 1);
-                            size_t id = arg.getInfo()[0];
-                            const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
-                            if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
-                                _atomicFunctionsSet.insert(atomicName);
-                                _atomicFunctionsOrder->push_back(atomicName);
-                            }
+                    CGOpCode type = arg.getOperationType();
+                    if (type == CGLoopEndOp || type == CGElseIfOp || type == CGElseOp || type == CGEndIfOp) {
+                        /**
+                         * Some types of operations must be added immediately 
+                         * after its arguments
+                         * in order to avoid having other arguments inside
+                         * that stack frame (or scope)
+                         */
+                        if (arg.getVariableID() == 0) {
+                            addToEvaluationQueue(arg);
+                            // ID value is not really used but must be non-zero
+                            arg.setVariableID(std::numeric_limits<size_t>::max());
+                        }
+                    } else if (type == CGAtomicForwardOp || type == CGAtomicReverseOp) {
+                        /**
+                         * Save atomic function related information
+                         */
+                        assert(arg.getArguments().size() > 1);
+                        assert(arg.getInfo().size() > 1);
+                        size_t id = arg.getInfo()[0];
+                        const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
+                        if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
+                            _atomicFunctionsSet.insert(atomicName);
+                            _atomicFunctionsOrder->push_back(atomicName);
                         }
                     }
                 }
+
             }
 
-            for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != NULL) {
-                    OperationNode<Base>& arg = *it->getOperation();
-                    CGOpCode aType = arg.getOperationType();
-                    /**
-                     * make sure new temporary variables are NOT created for
-                     * the independent variables and that a dependency did
-                     * not use it first
-                     */
-                    if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
-                        if (aType == CGLoopIndexedIndepOp) {
-                            // ID value not really used but must be non-zero
+            for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
+                if (args[argIndex].getOperation() == NULL) {
+                    continue;
+                }
+
+                OperationNode<Base>& arg = *args[argIndex].getOperation();
+                CGOpCode aType = arg.getOperationType();
+                /**
+                 * make sure new temporary variables are NOT created for
+                 * the independent variables and that a dependency did
+                 * not use it first
+                 */
+                if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
+                    if (aType == CGLoopIndexedIndepOp) {
+                        // ID value not really used but must be non-zero
+                        arg.setVariableID(std::numeric_limits<size_t>::max());
+                    } else if (aType == CGLoopEndOp || aType == CGElseIfOp ||
+                            aType == CGElseOp || aType == CGEndIfOp) {
+                        continue; // already added
+                    } else if (aType == CGAliasOp) {
+                        continue; // should never be added to the evaluation queue
+                    } else if (aType == CGLoopStartOp) {
+                        if (arg.getVariableID() == 0) {
+                            addToEvaluationQueue(arg);
+                            // ID value is not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
-                        } else if (aType == CGLoopEndOp || aType == CGElseIfOp ||
-                                aType == CGElseOp || aType == CGEndIfOp) {
-                            continue; // already added
-                        } else if (aType == CGAliasOp) {
-                            continue; // should never be added to the evaluation queue
-                        } else if (aType == CGLoopStartOp) {
+                        }
+                    } else {
+                        if (_lang->createsNewVariable(arg) ||
+                                _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+
+                            addToEvaluationQueue(arg);
+
                             if (arg.getVariableID() == 0) {
-                                addToEvaluationQueue(arg);
-                                // ID value is not really used but must be non-zero
-                                arg.setVariableID(std::numeric_limits<size_t>::max());
-                            }
-                        } else {
-                            size_t argIndex = it - args.begin();
-                            if (_lang->createsNewVariable(arg) ||
-                                    _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
-
-                                addToEvaluationQueue(arg);
-
-                                if (arg.getVariableID() == 0) {
-                                    if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
-                                        arg.setVariableID(_idAtomicCount);
-                                        _idAtomicCount++;
-                                    } else if (aType == CGLoopIndexedDepOp) {
-                                        // ID value not really used but must be non-zero
-                                        arg.setVariableID(std::numeric_limits<size_t>::max());
-                                    } else if (aType == CGArrayCreationOp) {
-                                        // a temporary array
-                                        size_t arraySize = arg.getArguments().size();
-                                        arg.setVariableID(_idArrayCount);
-                                        _idArrayCount += arraySize;
-                                    } else {
-                                        // a single temporary variable
-                                        arg.setVariableID(_idCount);
-                                        _idCount++;
-                                    }
+                                if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
+                                    arg.setVariableID(_idAtomicCount);
+                                    _idAtomicCount++;
+                                } else if (aType == CGLoopIndexedDepOp) {
+                                    // ID value not really used but must be non-zero
+                                    arg.setVariableID(std::numeric_limits<size_t>::max());
+                                } else if (aType == CGArrayCreationOp) {
+                                    // a temporary array
+                                    size_t arraySize = arg.getArguments().size();
+                                    arg.setVariableID(_idArrayCount);
+                                    _idArrayCount += arraySize;
+                                } else {
+                                    // a single temporary variable
+                                    arg.setVariableID(_idCount);
+                                    _idCount++;
                                 }
                             }
                         }
                     }
-
-                    arg.increaseUsageCount();
                 }
+
+                arg.increaseUsageCount();
+
             }
 
         }
