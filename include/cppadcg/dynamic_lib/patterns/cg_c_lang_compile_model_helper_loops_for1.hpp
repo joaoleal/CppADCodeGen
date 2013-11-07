@@ -735,10 +735,6 @@ namespace CppAD {
             typedef CG<Base> CGBase;
 
             const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = lModel.getIndexedIndepIndexes();
-            const std::vector<LoopPosition>& nonIndexedIndepIndexes = lModel.getNonIndexedIndepIndexes();
-
-            size_t nIndexed = indexedIndepIndexes.size();
-            size_t nNonIndexed = nonIndexedIndepIndexes.size();
 
             size_t jacElSize = group.size();
 
@@ -806,7 +802,7 @@ namespace CppAD {
                             set<size_t>::const_iterator itk;
                             for (itk = ks.begin(); itk != ks.end(); ++itk) {
                                 size_t k = *itk;
-                                size_t tapeJ = nIndexed + nNonIndexed + k;
+                                size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
 
                                 jacVal += dyiDxtapeT.at(tapeJ).at(tapeI) * dzDx.at(k).at(j);
                             }

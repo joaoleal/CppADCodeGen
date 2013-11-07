@@ -191,7 +191,8 @@ namespace CppAD {
 
                     // loop temporary variables
                     for (; itz != loopRow.end(); ++itz) {
-                        size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
+                        size_t tapeJ = *itz;
+                        size_t k = temporaryIndependents[tapeJ - nIndexed - nNonIndexed].original;
 
                         /**
                          * check if this temporary depends on j
@@ -217,7 +218,7 @@ namespace CppAD {
 
                         if (used) {
                             // this temporary variable should be evaluated
-                            loopEvalRow.insert(*itz);
+                            loopEvalRow.insert(tapeJ);
                         }
                     }
                 }
@@ -441,8 +442,6 @@ namespace CppAD {
         using CppAD::vector;
 
         size_t nnz = _jacSparsity.rows.size();
-        size_t nIndexed = lModel.getIndexedIndepIndexes().size();
-        size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
 
         /**
          * indexed variable contributions
@@ -487,7 +486,7 @@ namespace CppAD {
                 std::set<size_t>::const_iterator itk;
                 for (itk = ks.begin(); itk != ks.end(); ++itk) {
                     size_t k = *itk;
-                    size_t tapeJ = nIndexed + nNonIndexed + k;
+                    size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
 
                     jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx[k].at(j);
                 }
