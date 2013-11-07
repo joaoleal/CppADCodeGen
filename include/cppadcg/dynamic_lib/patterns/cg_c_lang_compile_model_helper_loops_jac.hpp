@@ -320,7 +320,6 @@ namespace CppAD {
         handler.manageOperationNodeMemory(iterationIndexDcl);
 
         vector<CGBase> jacLoop;
-        vector<IfElseInfo<Base> > ifElses;
 
         // loop loops :)
         typename map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> >::iterator itl2Eq;
@@ -328,6 +327,8 @@ namespace CppAD {
             LoopModel<Base>& lModel = *itl2Eq->first;
             std::vector<JacobianWithLoopsRowInfo>& eqs = itl2Eq->second;
             ADFun<CGBase>& fun = lModel.getTape();
+
+            vector<IfElseInfo<Base> > ifElses;
 
             /**
              * make the loop start
