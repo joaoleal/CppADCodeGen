@@ -217,7 +217,8 @@ namespace CppAD {
 
                             // loop temporary variables
                             for (; itz != loopHess[tapeJ1].end(); ++itz) {
-                                size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
+                                size_t tapeJ = *itz;
+                                size_t k = temporaryIndependents[tapeJ - nIndexed - nNonIndexed].original;
 
                                 /**
                                  * check if this temporary depends on j2
@@ -307,7 +308,8 @@ namespace CppAD {
 
                     // loop temporary variables
                     for (; itz != hessRow.end(); ++itz) {
-                        size_t k = temporaryIndependents[*itz - nIndexed - nNonIndexed].original;
+                        size_t tapeJ = *itz;
+                        size_t k = temporaryIndependents[tapeJ - nIndexed - nNonIndexed].original;
 
                         //jacobian of g for k must have j2
                         const set<size_t>& gJacRow = _funNoLoops->getJacobianSparsity()[nonIndexdedEqSize + k];

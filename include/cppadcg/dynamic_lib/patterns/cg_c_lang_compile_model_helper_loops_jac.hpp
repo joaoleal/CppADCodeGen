@@ -128,7 +128,6 @@ namespace CppAD {
 
                 size_t nIndexed = indexedIndepIndexes.size();
                 size_t nNonIndexed = nonIndexedIndepIndexes.size();
-                //size_t nTape = nIndexed + nNonIndexed + temporaryIndependents.size();
 
                 const vector<std::set<size_t> >& loopSparsity = loop->getJacobianSparsity();
                 const std::set<size_t>& loopRow = loopSparsity[tapeI];
