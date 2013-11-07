@@ -75,7 +75,6 @@ namespace CppAD {
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
-                it->second->setVerbose(_verbose);
                 it->second->compileSources(compiler, posIndepCode);
             }
 
