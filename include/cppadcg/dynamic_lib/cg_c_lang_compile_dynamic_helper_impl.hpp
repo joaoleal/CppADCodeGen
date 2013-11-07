@@ -75,7 +75,7 @@ namespace CppAD {
         try {
             typename std::map<std::string, CLangCompileModelHelper<Base>*>::const_iterator it;
             for (it = _models.begin(); it != _models.end(); ++it) {
-                it->second->compileSources(compiler, posIndepCode);
+                it->second->compileSources(compiler, posIndepCode, this);
             }
 
             std::map<std::string, std::string> sources;
