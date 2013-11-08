@@ -225,15 +225,14 @@ namespace CppAD {
                 /**
                  * determine iteration index through the row index
                  */
-                map<size_t, size_t> jrow2It;
-                std::map<size_t, std::set<size_t> >& row2position = _loopRev1Groups[&lModel][tapeI];
+                map<size_t, size_t> irow2It;
                 for (size_t it = 0; it < nIterations; it++) {
                     size_t i = dependentIndexes[tapeI][it].original;
-
-                    jrow2It[i] = it;
+                    if (i < _fun.Range()) // some equations are not present in all iteration
+                        irow2It[i] = it;
                 }
 
-                std::auto_ptr<IndexPattern> itPattern(IndexPattern::detect(jrow2It));
+                std::auto_ptr<IndexPattern> itPattern(IndexPattern::detect(irow2It));
                 IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), jrowIndexOp);
                 iterationIndexOp.makeAssigmentDependent(iterationIndexPatternOp);
 
@@ -266,18 +265,22 @@ namespace CppAD {
                 /**
                  * save information on: row->{compressed reverse 1 position}
                  */
+                std::map<size_t, std::set<size_t> >& row2position = _loopRev1Groups[&lModel][tapeI];
+
                 for (size_t it = 0; it < nIterations; it++) {
                     size_t i = dependentIndexes[tapeI][it].original;
-                    std::set<size_t>& positions = row2position[i];
+                    if (i < _fun.Range()) { // some equations are not present in all iteration
+                        std::set<size_t>& positions = row2position[i];
 
-                    map<size_t, std::vector<size_t> >::const_iterator itc;
-                    for (itc = rowInfo.indexedPositions.begin(); itc != rowInfo.indexedPositions.end(); ++itc) {
-                        const std::vector<size_t>& positionsC = itc->second;
-                        positions.insert(positionsC[it]);
-                    }
-                    for (itc = rowInfo.nonIndexedPositions.begin(); itc != rowInfo.nonIndexedPositions.end(); ++itc) {
-                        const std::vector<size_t>& positionsC = itc->second;
-                        positions.insert(positionsC[it]);
+                        map<size_t, std::vector<size_t> >::const_iterator itc;
+                        for (itc = rowInfo.indexedPositions.begin(); itc != rowInfo.indexedPositions.end(); ++itc) {
+                            const std::vector<size_t>& positionsC = itc->second;
+                            positions.insert(positionsC[it]);
+                        }
+                        for (itc = rowInfo.nonIndexedPositions.begin(); itc != rowInfo.nonIndexedPositions.end(); ++itc) {
+                            const std::vector<size_t>& positionsC = itc->second;
+                            positions.insert(positionsC[it]);
+                        }
                     }
                 }
 

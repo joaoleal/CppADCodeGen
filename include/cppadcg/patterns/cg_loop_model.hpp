@@ -399,7 +399,7 @@ namespace CppAD {
             }
         }
 
-        inline void detectIndexPatterns() {
+        inline void detectIndexPatterns(size_t m) {
             if (indepIndexPatterns_.size() > 0)
                 return; // already done
 
@@ -414,10 +414,13 @@ namespace CppAD {
 
             depIndexPatterns_.resize(dependentIndexes_.size());
             for (size_t j = 0; j < depIndexPatterns_.size(); j++) {
-                vector<size_t> indexes(iterationCount_);
+                std::map<size_t, size_t> indexes;
                 for (size_t it = 0; it < iterationCount_; it++) {
-                    indexes[it] = dependentIndexes_[j][it].original;
+                    size_t e = dependentIndexes_[j][it].original;
+                    if (e < m)// some equations are not present in all iteration
+                        indexes[it] = e;
                 }
+
                 depIndexPatterns_[j] = IndexPattern::detect(indexes);
             }
         }

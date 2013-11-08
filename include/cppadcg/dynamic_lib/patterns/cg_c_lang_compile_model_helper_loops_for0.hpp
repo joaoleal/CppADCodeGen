@@ -28,7 +28,9 @@ namespace CppAD {
         using namespace loops;
         using CppAD::vector;
 
-        vector<CGBase> y(_fun.Range());
+        size_t m = _fun.Range();
+
+        vector<CGBase> y(m);
 
         // temporaries
         vector<CGBase> tmps;
@@ -75,6 +77,8 @@ namespace CppAD {
             std::set<IndexOperationNode<Base>*> indexesOps;
             indexesOps.insert(iterationIndexOp);
 
+            vector<IfElseInfo<Base> > ifElses;
+
             /**
              * evaluate the loop body
              */
@@ -89,12 +93,24 @@ namespace CppAD {
             /**
              * make the loop end
              */
+            size_t assignOrAdd = 0;
+
             const vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
             vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
             for (size_t i = 0; i < yl.size(); i++) {
-                indexedLoopResults[i] = std::make_pair(yl[i], depPatterns[i]);
+                std::map<size_t, size_t> locationsIter2Pos;
+
+                for (size_t it = 0; it < nIterations; it++) {
+                    if (dependents[i][it].original < m) {
+                        locationsIter2Pos[it] = dependents[i][it].original;
+                    }
+                }
+
+                indexedLoopResults[i] = createLoopResult(handler, locationsIter2Pos, nIterations,
+                                                         yl[i], depPatterns[i], assignOrAdd,
+                                                         *iterationIndexOp, ifElses);
             }
-            size_t assignOrAdd = 0;
+
             LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
             std::vector<size_t> info(1);
@@ -103,9 +119,11 @@ namespace CppAD {
                 for (size_t it = 0; it < nIterations; it++) {
                     // an additional alias variable is required so that each dependent variable can have its own ID
                     size_t e = dependents[i][it].original;
-                    info[0] = e;
-                    args[0] = Argument<Base>(*loopEnd);
-                    y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                    if (e < m) { // some equations are not present in all iteration
+                        info[0] = e;
+                        args[0] = Argument<Base>(*loopEnd);
+                        y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                    }
                 }
             }
 

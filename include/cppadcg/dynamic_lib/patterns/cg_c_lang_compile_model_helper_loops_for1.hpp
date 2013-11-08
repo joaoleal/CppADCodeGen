@@ -836,97 +836,40 @@ namespace CppAD {
             /**
              * Determine index pattern
              */
-            map<size_t, size_t> locations;
+            map<size_t, size_t> locationsIter2Pos;
 
             set<size_t>::const_iterator itIt;
             for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
                 size_t iter = *itIt;
-                locations[iter] = positions[iter];
+                locationsIter2Pos[iter] = positions[iter];
                 jcol2CompressedLoc[jcols[iter]].insert(positions[iter]);
             }
 
-            if (locations.size() == group.iterations.size()) {
+            IndexPattern* pattern;
+            if (locationsIter2Pos.size() == group.iterations.size()) {
                 /**
                  *  present in all iterations
                  */
 
-                // generate the index pattern for the jacobian compressed element
-                IndexPattern* pattern = IndexPattern::detect(positions);
+                // generate the index pattern for the Jacobian compressed element
+                pattern = IndexPattern::detect(positions);
                 handler.manageLoopDependentIndexPattern(pattern);
-
-                return make_pair(dfdx, pattern);
-
             } else {
                 /**
                  * must create a conditional element so that this 
-                 * contribution to the jacobian is only evaluated at the
+                 * contribution to the Jacobian is only evaluated at the
                  * relevant iterations
                  */
 
-                // generate the index pattern for the jacobian compressed element
-                IndexPattern* pattern = IndexPattern::detect(locations);
+                // generate the index pattern for the Jacobian compressed element
+                pattern = IndexPattern::detect(locationsIter2Pos);
                 handler.manageLoopDependentIndexPattern(pattern);
-
-                // try to find an existing if-else where these operations can be added
-                map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
-
-
-                SizeN1stIt pos(group.iterations.size(), *group.iterations.begin());
-                firstIt2Count2Iterations[pos] = make_pair(*group.iterations.begin(), group.iterations);
-
-                IfElseInfo<Base>* ifElseBranches = findExistingIfElse(group.ifElses, firstIt2Count2Iterations);
-                bool reusingIfElse = ifElseBranches != NULL;
-                if (!reusingIfElse) {
-                    size_t s = group.ifElses.size();
-                    group.ifElses.resize(s + 1);
-                    ifElseBranches = &group.ifElses[s];
-                }
-
-                OperationNode<Base>* ifStart;
-
-                if (reusingIfElse) {
-                    //reuse existing node
-                    ifStart = ifElseBranches->firstIt2Branch.at(pos).node;
-                } else {
-                    // depends on the iterations indexes
-                    set<size_t> usedIter;
-                    OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(group.iterations, usedIter, positions.size() - 1, iterationIndexOp);
-                    handler.manageOperationNodeMemory(cond);
-
-                    ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
-                    handler.manageOperationNodeMemory(ifStart);
-                }
-
-                std::vector<size_t> ainfo(2);
-                ainfo[0] = handler.addLoopDependentIndexPattern(*pattern); // dependent index pattern location
-                ainfo[1] = 1; // assignOrAdd
-                std::vector<Argument<Base> > indexedArgs(2);
-                indexedArgs[0] = asArgument(dfdx); // indexed expression
-                indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
-                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
-                handler.manageOperationNodeMemory(yIndexed);
-
-                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*yIndexed));
-                handler.manageOperationNodeMemory(ifAssign);
-
-                if (!reusingIfElse) {
-                    // existing 'if' with the same iterations
-                    IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
-                    branch.iterations = group.iterations;
-                    branch.node = ifStart;
-                }
-
-                if (reusingIfElse) {
-                    ifElseBranches->endIf->getArguments().push_back(Argument<Base>(*ifAssign));
-                } else {
-                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
-                    handler.manageOperationNodeMemory(ifElseBranches->endIf);
-                }
-
-                IndexPattern* p = NULL;
-                return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), p);
             }
 
+            size_t assignOrAdd = 1;
+            return createLoopResult(handler, locationsIter2Pos, positions.size(),
+                                    dfdx, pattern, assignOrAdd,
+                                    iterationIndexOp, group.ifElses);
         }
 
     }

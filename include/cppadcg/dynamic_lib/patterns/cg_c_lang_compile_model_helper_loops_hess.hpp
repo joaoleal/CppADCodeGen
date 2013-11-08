@@ -915,7 +915,7 @@ namespace CppAD {
 
             map<size_t, CG<Base> > results;
 
-            // generate the index pattern for the hessian compressed element
+            // generate the index pattern for the Hessian compressed element
             map<size_t, map<size_t, size_t> >::const_iterator countIt;
             for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
                 size_t count = countIt->first;
@@ -939,7 +939,7 @@ namespace CppAD {
             } else {
                 /**
                  * must create a conditional element so that this 
-                 * contribution to the hessian is only evaluated at the
+                 * contribution to the Hessian is only evaluated at the
                  * relevant iterations
                  */
                 map<size_t, map<size_t, size_t> >::const_iterator countIt;
