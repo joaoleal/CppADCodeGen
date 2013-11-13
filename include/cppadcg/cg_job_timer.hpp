@@ -86,13 +86,13 @@ namespace CppAD {
 
     template<int T>
     const JobType JobTypeHolder<T>::SOURCE_FOR_MODEL("source-code for model", "source-code for model");
-    
+
     template<int T>
     const JobType JobTypeHolder<T>::SOURCE_GENERATION("generating source for", "generated source for");
 
     template<int T>
     const JobType JobTypeHolder<T>::COMPILING_FOR_MODEL("compiling object files", "compiled object files");
-    
+
     template<int T>
     const JobType JobTypeHolder<T>::COMPILING("compiling", "compiled");
 
@@ -204,6 +204,7 @@ namespace CppAD {
     public:
 
         JobTimer() :
+            _verbose(false),
             _maxLineWidth(80),
             _indent(2) {
         }
