@@ -173,6 +173,21 @@ namespace CppAD {
 
     template<class Key, class Value>
     class SmartMapValuePointer;
+    
+    template<class Base>
+    inline void print(const Base& v);
+
+    template<class Key, class Value>
+    inline void print(const std::map<Key, Value>& m);
+
+    template<class Base>
+    inline void print(const std::set<Base>& s);
+
+    template<class Base>
+    inline void print(const std::set<Base*>& s);
+
+    template<class Base>
+    inline void print(const std::vector<Base>& v);
 
     /***************************************************************************
      * 

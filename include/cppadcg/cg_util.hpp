@@ -324,18 +324,29 @@ namespace CppAD {
 
     template<class VectorSet>
     void printSparsityPattern(const VectorSet& sparsity,
-                              const std::string& name) {
+                              const std::string& name,
+                              bool printLocationByRow = false) {
         size_t maxDim = sparsity.size();
+        size_t nnz = 0;
         for (size_t i = 0; i < sparsity.size(); i++) {
             if (sparsity[i].size() > 0 && *sparsity[i].rbegin() > maxDim) {
                 maxDim = *sparsity[i].rbegin();
             }
+            nnz += sparsity[i].size();
         }
 
         size_t width = std::ceil(std::log10(maxDim));
+        size_t width2;
+        size_t width3 = width;
+        if (printLocationByRow) {
+            width2 = std::ceil(std::log10(nnz));
+            width3 += width2 + 1;
+        }
         if (!name.empty()) {
             std::cout << name << "  sparsity:\n";
         }
+
+        size_t e = 0;
         std::set<size_t>::const_iterator it;
         for (size_t i = 0; i < sparsity.size(); i++) {
             std::cout << " " << std::setw(width) << i << ": ";
@@ -343,10 +354,13 @@ namespace CppAD {
             for (it = sparsity[i].begin(); it != sparsity[i].end(); ++it) {
                 size_t j = *it;
                 if (j != 0 && long(j) != last + 1) {
-                    std::cout << std::setw((j - last - 1) * (width + 1)) << " ";
+                    std::cout << std::setw((j - last - 1) * (width3 + 1)) << " ";
                 }
+                if (printLocationByRow)
+                    std::cout << std::setw(width2) << e << ":";
                 std::cout << std::setw(width) << j << " ";
                 last = j;
+                e++;
             }
             std::cout << "\n";
         }
@@ -471,8 +485,8 @@ namespace CppAD {
             }
         }
     };
-    
-        /**
+
+    /**
      * Smart set of pointers.
      * Deletes all set values on destruction.
      */
@@ -669,6 +683,65 @@ namespace CppAD {
         handler.generateCode(code, langC, dep0, nameGen);
         std::cout << "\n" << code.str() << std::endl;
     }
+
+    /***************************************************************************
+     * Generic functions for printing stl containers
+     **************************************************************************/
+    template<class Base>
+    inline void print(const Base& v) {
+        std::cout << v;
+    }
+
+    template<class Key, class Value>
+    inline void print(const std::map<Key, Value>& m) {
+        typename std::map<Key, Value>::const_iterator iti;
+        for (iti = m.begin(); iti != m.end(); ++iti) {
+            std::cout << iti->first << " : ";
+            print(iti->second);
+            std::cout << std::endl;
+        }
+    }
+
+    template<class Base>
+    inline void print(const std::set<Base>& s) {
+        std::cout << "[";
+
+        typename std::set<Base>::const_iterator itj;
+        for (itj = s.begin(); itj != s.end(); ++itj) {
+            if (itj != s.begin()) std::cout << " ";
+            print(*itj);
+        }
+        std::cout << "]";
+        std::cout.flush();
+    }
+
+    template<class Base>
+    inline void print(const std::set<Base*>& s) {
+        std::cout << "[";
+
+        typename std::set<Base*>::const_iterator itj;
+        for (itj = s.begin(); itj != s.end(); ++itj) {
+            if (itj != s.begin()) std::cout << " ";
+            Base* v = *itj;
+            if (v == NULL) std::cout << "NULL";
+            else print(*v);
+        }
+        std::cout << "]";
+        std::cout.flush();
+    }
+
+    template<class Base>
+    inline void print(const std::vector<Base>& v) {
+        std::cout << "[";
+
+        for (size_t i = 0; i < v.size(); i++) {
+            if (i != 0) std::cout << " ";
+            print(v[i]);
+        }
+        std::cout << "]";
+        std::cout.flush();
+    }
+
 }
 
 #endif
