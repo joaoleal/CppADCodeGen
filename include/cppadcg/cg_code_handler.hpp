@@ -44,8 +44,15 @@ namespace CppAD {
         vector<CG<Base> >* _dependents;
         // all the source code blocks created with the CG<Base> objects
         std::vector<OperationNode<Base> *> _codeBlocks;
-        // the order for the variable creation in the source code
+        /**
+         * the order for the variable creation in the source code 
+         */
         std::vector<OperationNode<Base> *> _variableOrder;
+        /**
+         * the order for the variable creation in the source code 
+         * (each level represents a different variable scope)
+         */
+        std::vector<std::vector<OperationNode<Base> *> > _scopedVariableOrder;
         // maps the ids of the atomic functions
         std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
         // maps the loop ids of the loop atomic functions
@@ -106,6 +113,7 @@ namespace CppAD {
             _idArrayCount(1),
             _idAtomicCount(1),
             _dependents(NULL),
+            _scopedVariableOrder(1),
             _atomicFunctionsOrder(NULL),
             _used(false),
             _reuseIDs(true),
@@ -118,7 +126,9 @@ namespace CppAD {
             _verbose(false),
             _jobTimer(NULL) {
             _codeBlocks.reserve(varCount);
-            _variableOrder.reserve(1 + varCount / 3);
+            //_variableOrder.reserve(1 + varCount / 3);
+            _scopedVariableOrder[0].reserve(1 + varCount / 3);
+
         }
 
         inline void setReuseVariableIDs(bool reuse) {
@@ -422,6 +432,32 @@ namespace CppAD {
                 }
             }
 
+            /**
+             * Generate flat variable order (without scopes)
+             */
+            if (_scopedVariableOrder.size() == 1) {
+                _variableOrder.swap(_scopedVariableOrder[0]); // most common situation
+            } else {
+                size_t vosize = 0;
+                for (size_t s = 0; s < _scopedVariableOrder.size(); s++) {
+                    vosize += _scopedVariableOrder[s].size();
+                }
+                _variableOrder.resize(vosize);
+
+                size_t e = 0;
+                addScopeToVarOrder(0, e);
+                assert(_variableOrder.size() == e);
+            }
+
+            for (size_t p = 0; p < _variableOrder.size(); p++) {
+                OperationNode<Base>& arg = *_variableOrder[p];
+                arg.setEvaluationOrder(p + 1);
+                dependentAdded2EvaluationQueue(arg);
+            }
+
+            /**
+             * Reuse temporary variables
+             */
             if (_reuseIDs) {
                 reduceTemporaryVariables(dependent);
             }
@@ -820,6 +856,27 @@ namespace CppAD {
             }
         }
 
+        inline void addScopeToVarOrder(size_t scope, size_t& e) {
+            std::vector<OperationNode<Base> *>& vorder = _scopedVariableOrder[scope];
+
+            const size_t vsize = vorder.size();
+            for (size_t p = 0; p < vsize; p++) {
+                OperationNode<Base>* node = vorder[p];
+                CGOpCode op = node->getOperationType();
+
+                if (op == CGLoopEndOp || op == CGEndIfOp || op == CGElseIfOp || op == CGElseOp) {
+                    assert(!node->getArguments().empty());
+
+                    OperationNode<Base>* beginScopeNode = node->getArguments()[0].getOperation();
+                    assert(beginScopeNode != NULL);
+
+                    addScopeToVarOrder(beginScopeNode->getColor(), e);
+                }
+
+                _variableOrder[e++] = vorder[p];
+            }
+        }
+
         inline std::set<size_t> findFirstDifferentScopeNodes(size_t color1, size_t color2, size_t& depth) {
             assert(color1 < _scopes.size());
             assert(color2 < _scopes.size());
@@ -874,32 +931,24 @@ namespace CppAD {
             const std::vector<Argument<Base> >& args = code.arguments_;
 
             size_t aSize = args.size();
-            
-            for (size_t a = 0; a < aSize; a++) {
-                if (args[a].getOperation() == NULL) {
+            for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
+                if (args[argIndex].getOperation() == NULL) {
                     continue;
                 }
 
-                OperationNode<Base>& arg = *args[a].getOperation();
+                OperationNode<Base>& arg = *args[argIndex].getOperation();
+                CGOpCode aType = arg.getOperationType();
 
                 if (arg.getUsageCount() == 0) {
                     // dependencies not visited yet
                     checkVariableCreation(arg);
 
-                    CGOpCode type = arg.getOperationType();
-                    if (type == CGLoopEndOp || type == CGElseIfOp || type == CGElseOp || type == CGEndIfOp) {
-                        /**
-                         * Some types of operations must be added immediately 
-                         * after its arguments
-                         * in order to avoid having other arguments inside
-                         * that stack frame (or scope)
-                         */
+                    if (aType == CGLoopEndOp || aType == CGElseIfOp || aType == CGElseOp || aType == CGEndIfOp) {
                         if (arg.getVariableID() == 0) {
-                            addToEvaluationQueue(arg);
                             // ID value is not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
                         }
-                    } else if (type == CGAtomicForwardOp || type == CGAtomicReverseOp) {
+                    } else if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
                         /**
                          * Save atomic function related information
                          */
@@ -912,39 +961,34 @@ namespace CppAD {
                             _atomicFunctionsOrder->push_back(atomicName);
                         }
                     }
-                }
 
-            }
-
-            for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
-                if (args[argIndex].getOperation() == NULL) {
-                    continue;
-                }
-
-                OperationNode<Base>& arg = *args[argIndex].getOperation();
-                CGOpCode aType = arg.getOperationType();
-                /**
-                 * make sure new temporary variables are NOT created for
-                 * the independent variables and that a dependency did
-                 * not use it first
-                 */
-                if ((arg.getVariableID() == 0 || !isIndependent(arg)) && arg.getUsageCount() == 0) {
-                    if (aType == CGLoopIndexedIndepOp) {
-                        // ID value not really used but must be non-zero
-                        arg.setVariableID(std::numeric_limits<size_t>::max());
-                    } else if (aType == CGLoopEndOp || aType == CGElseIfOp ||
-                            aType == CGElseOp || aType == CGEndIfOp) {
-                        continue; // already added
-                    } else if (aType == CGAliasOp) {
-                        continue; // should never be added to the evaluation queue
-                    } else if (aType == CGLoopStartOp) {
-                        if (arg.getVariableID() == 0) {
-                            addToEvaluationQueue(arg);
-                            // ID value is not really used but must be non-zero
+                    /**
+                     * make sure new temporary variables are NOT created for
+                     * the independent variables and that a dependency did
+                     * not use it first
+                     */
+                    if (arg.getVariableID() == 0 || !isIndependent(arg)) {
+                        if (aType == CGLoopIndexedIndepOp) {
+                            // ID value not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
-                        }
-                    } else {
-                        if (_lang->createsNewVariable(arg) ||
+                        } else if (aType == CGAliasOp) {
+                            continue; // should never be added to the evaluation queue
+                        } else if (aType == CGLoopStartOp ||
+                                aType == CGLoopEndOp ||
+                                aType == CGStartIfOp ||
+                                aType == CGElseIfOp ||
+                                aType == CGElseOp ||
+                                aType == CGEndIfOp) {
+                            /**
+                             * Operation that mark a change in variable scope
+                             * are always added
+                             */
+                            addToEvaluationQueue(arg);
+                            if (arg.getVariableID() == 0) {
+                                // ID value is not really used but must be non-zero
+                                arg.setVariableID(std::numeric_limits<size_t>::max());
+                            }
+                        } else if (_lang->createsNewVariable(arg) ||
                                 _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
 
                             addToEvaluationQueue(arg);
@@ -968,6 +1012,7 @@ namespace CppAD {
                                 }
                             }
                         }
+
                     }
                 }
 
@@ -978,14 +1023,17 @@ namespace CppAD {
         }
 
         inline void addToEvaluationQueue(OperationNode<Base>& arg) {
-            if (_variableOrder.size() == _variableOrder.capacity()) {
-                _variableOrder.reserve((_variableOrder.size()*3) / 2 + 1);
+            size_t scope = arg.getColor();
+            if (scope >= _scopedVariableOrder.size()) {
+                _scopedVariableOrder.resize(scope + 1);
+            }
+            std::vector<OperationNode<Base> *>& varOrder = _scopedVariableOrder[scope];
+
+            if (varOrder.size() == varOrder.capacity()) {
+                varOrder.reserve((varOrder.size() * 3) / 2 + 1);
             }
 
-            _variableOrder.push_back(&arg);
-            arg.setEvaluationOrder(_variableOrder.size());
-
-            dependentAdded2EvaluationQueue(arg);
+            varOrder.push_back(&arg);
         }
 
         inline void reduceTemporaryVariables(vector<CG<Base> >& dependent) {
@@ -1371,6 +1419,8 @@ namespace CppAD {
 
         inline void resetManagedNodes() {
             _variableOrder.clear();
+            _scopedVariableOrder.resize(1);
+            _scopedVariableOrder[0].clear();
 
             for (typename std::vector<OperationNode<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
                 OperationNode<Base>* block = *it;
