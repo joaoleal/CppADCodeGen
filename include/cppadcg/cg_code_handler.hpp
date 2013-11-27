@@ -835,24 +835,70 @@ namespace CppAD {
                 // been to this node before
 
                 if (code.getColor() != _currentScopeColor) {
+                    size_t oldScope = code.getColor();
                     /**
                      * node previously used in a different scope
                      * must make sure it is defined before being used in both
                      * scopes
                      */
                     size_t depth;
-                    std::set<size_t> divergence = findFirstDifferentScopeNodes(code.getColor(), _currentScopeColor, depth);
+                    std::set<size_t> divergence = findFirstDifferentScopeNodes(oldScope, _currentScopeColor, depth);
                     std::set<size_t>::const_iterator itScope;
                     for (itScope = divergence.begin(); itScope != divergence.end(); ++itScope) {
                         _scopeExtraDependecy[*itScope].insert(&code);
                     }
 
                     // update the scope where it should be defined
+                    size_t newScope;
                     if (depth == 0)
-                        code.setColor(0);
+                        newScope = 0;
                     else
-                        code.setColor(_scopes[_currentScopeColor][depth - 1].color);
+                        newScope = _scopes[_currentScopeColor][depth - 1].color;
+
+                    if (oldScope != newScope) {
+                        code.setColor(newScope);
+
+                        /**
+                         * Must also update the scope of the arguments used by this operation
+                         */
+                        const std::vector<Argument<Base> >& args = code.getArguments();
+                        size_t aSize = args.size();
+                        for (size_t a = 0; a < aSize; a++) {
+                            updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
+                        }
+                    }
                 }
+            }
+        }
+
+        inline void updateVarScopeUsage(OperationNode<Base>* node,
+                                        size_t usageScope,
+                                        size_t oldUsageScope) {
+            if (node == NULL || node->getColor() == usageScope)
+                return;
+
+
+            size_t oldScope = node->getColor();
+            size_t newScope;
+
+            if (oldScope == oldUsageScope) {
+                newScope = usageScope;
+            } else {
+                size_t depth;
+                std::set<size_t> divergence = findFirstDifferentScopeNodes(oldScope, usageScope, depth);
+
+                newScope = (depth == 0) ? 0 : _scopes[usageScope][depth - 1].color;
+            }
+
+            if (newScope == oldScope)
+                return;
+
+            node->setColor(newScope);
+
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            size_t aSize = args.size();
+            for (size_t a = 0; a < aSize; a++) {
+                updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
             }
         }
 
@@ -1032,6 +1078,13 @@ namespace CppAD {
             if (varOrder.size() == varOrder.capacity()) {
                 varOrder.reserve((varOrder.size() * 3) / 2 + 1);
             }
+
+            assert(scope == 0 || // the upper most scope does not need any special node at the beginning
+                   !varOrder.empty() ||
+                   arg.getOperationType() == CGLoopStartOp || // the first node must be a beginning of a scope
+                   arg.getOperationType() == CGStartIfOp ||
+                   arg.getOperationType() == CGElseIfOp ||
+                   arg.getOperationType() == CGElseOp);
 
             varOrder.push_back(&arg);
         }
@@ -1284,7 +1337,7 @@ namespace CppAD {
                 _loopStartEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
 
             } else if (code.getOperationType() == CGLoopStartOp) {
-                _loopDepth--; // leaving the currrent loop
+                _loopDepth--; // leaving the current loop
             }
 
             /**
@@ -1342,7 +1395,7 @@ namespace CppAD {
                 _loopStartEvalOrder.pop_back();
 
             } else if (code.getOperationType() == CGLoopStartOp) {
-                _loopDepth++; // comming back to the loop
+                _loopDepth++; // coming back to the loop
             }
 
         }
@@ -1393,6 +1446,10 @@ namespace CppAD {
                     op != CGAtomicReverseOp &&
                     op != CGLoopStartOp &&
                     op != CGLoopEndOp &&
+                    op != CGStartIfOp &&
+                    op != CGElseIfOp &&
+                    op != CGElseOp &&
+                    op != CGEndIfOp &&
                     op != CGLoopIndexedDepOp &&
                     op != CGLoopIndexedIndepOp &&
                     op != CGIndexOp &&
