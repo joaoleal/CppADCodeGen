@@ -583,6 +583,8 @@ namespace CppAD {
                                    std::vector<size_t>& col) {
             CPPADCG_ASSERT_KNOWN(_dynLib != NULL, "Dynamic library closed");
             CPPADCG_ASSERT_KNOWN(_sparseHessian != NULL, "No sparse Hessian function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+            CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
             CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                                  " please use the variable size methods");
             CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
