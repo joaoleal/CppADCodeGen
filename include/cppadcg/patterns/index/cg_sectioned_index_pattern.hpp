@@ -91,7 +91,7 @@ namespace CppAD {
                 LinearIndexPattern* p = new LinearIndexPattern(xOffset, dy, dx, b);
                 if (dy == 0 && prevPattern != NULL) { // constant
                     // can we take the last element out of the previous section?
-                    if (prevPattern->evaluate(xStart - 1) == b) {
+                    while (xStart > 0 && prevPattern->evaluate(xStart - 1) == b) {
                         // yes
                         xStart--;
                         if (prevXStart + 1 == xStart) {
@@ -122,7 +122,7 @@ namespace CppAD {
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
 
             LinearIndexPattern* prevPattern = NULL;
-            size_t prevXStart = 0;
+            std::map<size_t, size_t>::const_iterator prevStart = x2y.begin();
 
             std::map<size_t, size_t>::const_iterator pStart = x2y.begin();
             while (pStart != x2y.end()) {
@@ -169,12 +169,15 @@ namespace CppAD {
                 size_t xStart = pStart->first;
                 if (dy == 0 && prevPattern != NULL) { // constant
                     // can we take the last element from the previous section?
-                    if (prevPattern->evaluate(xStart - 1) == b) {
+                    while (pStart != x2y.begin() && prevPattern->evaluate(xStart - 1) == b) {
                         // yes
-                        xStart--;
-                        if (prevXStart + 1 == xStart) {
+                        --pStart;
+                        xStart = pStart->first;
+                        std::map<size_t, size_t>::const_iterator prevStartN = prevStart;
+                        prevStartN++;
+                        if (prevStartN == pStart) {
                             // it has only one element -> make it a constant section
-                            size_t bb = prevPattern->evaluate(prevXStart);
+                            size_t bb = prevPattern->evaluate(prevStart->first);
                             prevPattern->setLinearSlopeDy(0);
                             prevPattern->setLinearConstantTerm(bb);
                         }
@@ -182,7 +185,7 @@ namespace CppAD {
                 }
                 linearSections.m[xStart] = p;
 
-                prevXStart = xStart;
+                prevStart = pStart;
                 prevPattern = p;
                 pStart = pNextSection;
 

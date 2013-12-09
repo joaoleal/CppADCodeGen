@@ -183,7 +183,7 @@ namespace CppAD {
     template<class Base>
     inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
                                                             const IndexDclrOperationNode<Base>& index) {
-        std::vector<const IndexDclrOperationNode<Base>*>indexes(1);
+        std::vector<const IndexDclrOperationNode<Base>*> indexes(1);
         indexes[0] = &index;
         return indexPattern2String(ip, indexes);
     }
@@ -226,15 +226,19 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
                 std::string indexExpr;
                 const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
-                if (pip.getPattern1() != NULL) {
-                    indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
-                }
+                bool useParens = pip.getPattern1() != NULL && pip.getPattern2() != NULL;
 
-                if (pip.getPattern2() != NULL) {
-                    if (pip.getPattern1() != NULL)
-                        indexExpr += " + ";
+                if (useParens) indexExpr += "(";
+                
+                if (pip.getPattern1() != NULL)
+                    indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
+
+                if (useParens) indexExpr += ") + (";
+
+                if (pip.getPattern2() != NULL)
                     indexExpr += indexPattern2String(*pip.getPattern2(), *indexes.back());
-                }
+
+                if (useParens) indexExpr += ")";
 
                 return indexExpr;
             }

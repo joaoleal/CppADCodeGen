@@ -134,7 +134,7 @@ namespace CppAD {
             }
 
             /**
-             * try to detect a pattern for the initial iteration index based on jrow
+             * try to detect a pattern for the initial iteration index based on x
              */
             std::auto_ptr<IndexPattern> fx;
 
@@ -143,9 +143,7 @@ namespace CppAD {
                 return NULL; // does not fit the pattern
             }
 
-            /**
-             * detected a pattern for the first z based on x
-             */
+            // detected a pattern for the first z based on x
             if (startSections.size() == 1) {
                 fx = std::auto_ptr<IndexPattern> (startSections.begin()->second);
             } else {
@@ -161,9 +159,7 @@ namespace CppAD {
                 return NULL; // does not fit the pattern
             }
 
-            /**
-             * detected a pattern for the z offset based on y
-             */
+            // detected a pattern for the z offset based on y
             std::auto_ptr<IndexPattern> fy;
             if (sections.size() == 1) {
                 fy = std::auto_ptr<IndexPattern> (sections.begin()->second);
@@ -171,6 +167,7 @@ namespace CppAD {
                 fy = std::auto_ptr<IndexPattern> (new SectionedIndexPattern(sections));
             }
 
+            // simplify when both patterns are constant
             if (fx->getType() == LINEAR && fy->getType() == LINEAR) {
                 LinearIndexPattern* ipx = static_cast<LinearIndexPattern*> (fx.get());
                 LinearIndexPattern* ipy = static_cast<LinearIndexPattern*> (fy.get());
