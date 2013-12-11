@@ -157,13 +157,89 @@ namespace CppAD {
         }
 
         /**
-         * Determines the hessian for the temporary variables only used by
+         * Creates conditional nodes for temporary variables
+         * 
+         * @param handler source code handler
+         * @param iterations the iterations where the value should be evaluated
+         * @param iterCount the number of iteration of the loop
+         * @param value the value determined inside the loop
+         * @param iterationIndexOp the iteration index operation for this loop
+         * @return 
+         */
+        inline CG<Base> createConditionalOperation(CodeHandler<Base>& handler,
+                                                   const std::set<size_t>& iterations,
+                                                   size_t iterCount,
+                                                   const CG<Base>& value,
+                                                   IndexOperationNode<Base>& iterationIndexOp) {
+            using namespace std;
+
+            if (iterations.size() == iterCount) {
+                // present in all iterations
+
+                return value;
+
+            } else {
+
+                // no point in creating branches where both branch sides are zero
+                if (value.isParameter() && value.IdenticalZero())
+                    return value;
+
+                /**
+                 * must create a conditional element so that this 
+                 * contribution is only evaluated at the relevant iterations
+                 */
+                OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGTmpDclOp);
+                handler.manageOperationNodeMemory(tmpDclVar);
+                Argument<Base> tmpArg(*tmpDclVar);
+
+                set<size_t> usedIter;
+                OperationNode<Base>* cond = loops::createIndexConditionExpressionOp<Base>(iterations, usedIter, iterCount - 1, iterationIndexOp);
+                handler.manageOperationNodeMemory(cond);
+
+                // if
+                OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                handler.manageOperationNodeMemory(ifStart);
+
+
+                OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, asArgument(value));
+                handler.manageOperationNodeMemory(tmpAssign1);
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*tmpAssign1));
+                handler.manageOperationNodeMemory(ifAssign);
+
+                // else
+                OperationNode<Base>* elseStart = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+                handler.manageOperationNodeMemory(elseStart);
+
+                OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, Argument<Base>(Base(0)));
+                handler.manageOperationNodeMemory(tmpAssign2);
+                OperationNode<Base>* elseAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*elseStart), Argument<Base>(*tmpAssign2));
+                handler.manageOperationNodeMemory(elseAssign);
+
+                // end if
+                OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*elseStart), Argument<Base>(*elseAssign));
+                handler.manageOperationNodeMemory(endIf);
+
+                //
+                OperationNode<Base>* tmpVar = new OperationNode<Base>(CGTmpOp, tmpArg, Argument<Base>(*endIf));
+                return handler.createCG(tmpVar);
+            }
+
+        }
+
+        /**
+         * Determines the Hessian for the temporary variables only used by
          * each loop
          * 
-         * @param loopHessInfo loops
+         * @param loopHessInfo
          * @param x the independent variables
+         * @param temps
+         * @param noLoopEvalJacSparsity
+         * @param individualColoring
+         * @param iterationIndexOp
+         * @return 
          */
-        inline std::map<size_t, std::map<size_t, CGB> > calculateJacobianHessianUsedByLoops(std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
+        inline std::map<size_t, std::map<size_t, CGB> > calculateJacobianHessianUsedByLoops(CodeHandler<Base>& handler,
+                                                                                            std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
                                                                                             const vector<CGB>& x,
                                                                                             vector<CGB>& temps,
                                                                                             const vector<std::set<size_t> >& noLoopEvalJacSparsity,
@@ -199,6 +275,9 @@ namespace CppAD {
             for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info, l++) {
                 LoopModel<Base>* loop = itLoop2Info->first;
                 HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+                const std::vector<IterEquationGroup<Base> >& eqGroups = loop->getEquationsGroups();
+                size_t nIterations = loop->getIterationCount();
+                size_t nEqGroups = eqGroups.size();
 
                 vector<CGB>& wNoLoop = vwNoLoop[l];
                 wNoLoop.resize(m);
@@ -211,14 +290,34 @@ namespace CppAD {
                     const LoopPosition* posK = loop->getTempIndepIndexes(k);
 
                     if (posK != NULL) {
-                        for (size_t i = 0; i < info.dyiDzk.size(); i++) {
-                            const map<size_t, CGB>& row = info.dyiDzk[i];
-                            typename map<size_t, CGB>::const_iterator itCol = row.find(posK->tape);
-                            if (itCol != row.end()) {
-                                const CGB& val = itCol->second;
-                                wNoLoop[inl] += val * info.w[i];
+
+                        for (size_t g = 0; g < nEqGroups; g++) {
+                            const IterEquationGroup<Base>& group = eqGroups[g];
+
+                            CGB v = Base(0);
+
+                            for (set<size_t>::const_iterator itTapeI = group.tapeI.begin(); itTapeI != group.tapeI.end(); ++itTapeI) {
+                                size_t tapeI = *itTapeI;
+                                const map<size_t, CGB>& row = info.dyiDzk[tapeI];
+                                typename map<size_t, CGB>::const_iterator itCol = row.find(posK->tape);
+                                if (itCol != row.end()) {
+                                    const CGB& dydz = itCol->second;
+                                    v += dydz * info.w[tapeI];
+                                }
                             }
+
+                            /**
+                             * Some equations are not present in all iterations
+                             */
+                            v = createConditionalOperation(handler,
+                                                           group.iterations,
+                                                           nIterations,
+                                                           v,
+                                                           *info.iterationIndexOp);
+
+                            wNoLoop[inl] += v;
                         }
+
                     }
                 }
             }

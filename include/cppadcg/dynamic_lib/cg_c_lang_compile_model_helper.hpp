@@ -778,7 +778,7 @@ namespace CppAD {
                                                       IndexOperationNode<Base>& iterationIndexOp,
                                                       vector<loops::IfElseInfo<Base> >& ifElses,
                                                       size_t& jacLE,
-                                                      vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                      std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                       std::set<size_t>& allLocations);
 
         inline void analyseSparseJacobianWithLoops(const std::vector<size_t>& rows,

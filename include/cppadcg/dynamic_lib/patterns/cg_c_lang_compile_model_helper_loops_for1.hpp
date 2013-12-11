@@ -106,7 +106,7 @@ namespace CppAD {
         // temporaries (zero orders)
         vector<CGBase> tmps;
 
-        // jacobian for temporaries
+        // Jacobian for temporaries
         map<size_t, map<size_t, CGBase> > dzDx;
 
         /*******************************************************************
@@ -125,7 +125,7 @@ namespace CppAD {
                 tmps[i] = depNL[nonIndexdedEqSize + i];
 
             /**
-             * jacobian
+             * Jacobian
              */
             bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
             map<size_t, map<size_t, CGBase> > dydxT = generateLoopFor1Jac(fun,
@@ -139,7 +139,7 @@ namespace CppAD {
                 size_t j = itDydxT->first;
                 const map<size_t, CGBase>& dydxjT = itDydxT->second;
 
-                // prepare space for the jacobian of the original equations
+                // prepare space for the Jacobian of the original equations
                 vector<CGBase>& col = jacNl[j];
                 col.resize(elements.at(j).size());
 
@@ -151,7 +151,7 @@ namespace CppAD {
                         // (dy_i/dx_v) elements from equations outside loops
                         const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
-                        assert(locations.size() == 1); // one jacobian element should not be placed in several locations
+                        assert(locations.size() == 1); // one Jacobian element should not be placed in several locations
                         size_t e = *locations.begin();
 
                         col[e] = itiv->second * dx;
@@ -203,7 +203,7 @@ namespace CppAD {
             std::string jobName = _cache.str();
 
             /**
-             * evaluate loop model jacobian
+             * evaluate loop model Jacobian
              */
             startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
@@ -316,11 +316,10 @@ namespace CppAD {
                 iterationIndexOp.makeAssigmentDependent(iterationIndexPatternOp);
 
                 map<size_t, set<size_t> > jcol2CompressedLoc;
-                vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
+                std::vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
 
                 indexedLoopResults = generateForwardOneGroupOps(handler, lModel, info,
                                                                 group, iterationIndexOp,
-                                                                nnz,
                                                                 dx, dyiDxtapeT, dzDx,
                                                                 jcol2CompressedLoc);
 
@@ -338,9 +337,9 @@ namespace CppAD {
                     loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
                     /**
-                     * move no-nindexed expressions outside loop
+                     * move non-indexed expressions outside loop
                      */
-                    moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
+                    moveNonIndexedOutsideLoop(handler, *loopStart, *loopEnd);
 
                     /**
                      * 
@@ -562,7 +561,7 @@ namespace CppAD {
             map<size_t, set<size_t> > nonIndexed2Iter;
 
             map<JacobianTermContrib<Base>, set<size_t> > contrib2jcols = groupForOneByContrib(lModel, loopEqInfo,
-                                                                                              max, n,
+                                                                                              n,
                                                                                               indexed2jcol2Iter,
                                                                                               nonIndexed2Iter);
 
@@ -586,11 +585,13 @@ namespace CppAD {
 
         /**
          * Create groups with the same contributions at the same Jacobian columns
+         * 
+         * @return maps each contribution group to the affected columns in the
+         *         Jacobian
          */
         template<class Base>
         std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(const LoopModel<Base>& lModel,
                                                                                     const std::vector<JacobianWithLoopsRowInfo>& loopEqInfo,
-                                                                                    size_t max,
                                                                                     size_t n,
                                                                                     std::map<size_t, std::map<size_t, std::set<size_t> > >& indexed2jcol2Iter,
                                                                                     std::map<size_t, std::set<size_t> >& nonIndexed2Iter) {
@@ -617,7 +618,9 @@ namespace CppAD {
                     map<size_t, set<size_t> >& jcol2Iter = indexed2jcol2Iter[tapeJ];
 
                     for (size_t iter = 0; iter < nIterations; iter++) {
-                        if (positions[iter] != max) {
+                        // it is present in all iterations but the user might request fewer elements in the Jacobian
+                        // (it may be because the equation might not exist for this iteration)
+                        if (positions[iter] != std::numeric_limits<size_t>::max()) {
                             size_t j = indexedIndepIndexes[tapeJ][iter].original;
                             jcols[j].indexed.insert(tapeJ);
                             jcol2Iter[j].insert(iter);
@@ -630,13 +633,18 @@ namespace CppAD {
                     size_t j = it->first;
                     const std::vector<size_t>& positions = it->second;
                     set<size_t>& jcol2Iter = nonIndexed2Iter[j];
+                    bool used = false;
 
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         // it is present in all iterations but the user might request fewer elements in the Jacobian
-                        if (positions[iter] != max) {
-                            jcols[j].nonIndexed.insert(j);
+                        // (it may be because the equation might not exist for this iteration)
+                        if (positions[iter] != std::numeric_limits<size_t>::max()) {
+                            used = true;
                             jcol2Iter.insert(iter);
                         }
+                    }
+                    if (used) {
+                        jcols[j].nonIndexed.insert(j);
                     }
                 }
 
@@ -655,9 +663,9 @@ namespace CppAD {
         }
 
         /**
-         * Create subgroups from goups with the same contributions at the 
+         * Create subgroups from groups with the same contributions at the 
          * same Jacobian columns. Each subgroup has a sub-set of the group's 
-         * contributions wich have the same relations between Jacobian column
+         * contributions which have the same relations between Jacobian column
          * index and set of iteration indexes.
          */
         template<class Base>
@@ -690,7 +698,8 @@ namespace CppAD {
             for (it = c.nonIndexed.begin(); it != c.nonIndexed.end(); ++it) {
                 size_t j = *it;
 
-                // it is present in all iterations but the user might request fewer elements in the Jacobian
+                // probably present in all iterations but the user might request fewer elements in the Jacobian
+                // (it may be because the equation might not exist for this iteration)
                 const set<size_t>& iters = nonIndexed2Iter.at(j);
                 Forward1Jcol2Iter k(j, iters);
                 contribs[k].nonIndexed.insert(j);
@@ -718,16 +727,15 @@ namespace CppAD {
         }
 
         template<class Base>
-        vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(CodeHandler<Base>& handler,
-                                                                               const LoopModel<Base>& lModel,
-                                                                               const std::vector<JacobianWithLoopsRowInfo>& info,
-                                                                               JacobianColGroup<Base>& group,
-                                                                               IndexOperationNode<Base>& iterationIndexOp,
-                                                                               size_t nnz,
-                                                                               const CG<Base>& dx,
-                                                                               const std::map<size_t, std::map<size_t, CG<Base> > >& dyiDxtapeT,
-                                                                               const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
-                                                                               std::map<size_t, std::set<size_t> >& jcol2CompressedLoc) {
+        std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(CodeHandler<Base>& handler,
+                                                                                    const LoopModel<Base>& lModel,
+                                                                                    const std::vector<JacobianWithLoopsRowInfo>& info,
+                                                                                    JacobianColGroup<Base>& group,
+                                                                                    IndexOperationNode<Base>& iterationIndexOp,
+                                                                                    const CG<Base>& dx,
+                                                                                    const std::map<size_t, std::map<size_t, CG<Base> > >& dyiDxtapeT,
+                                                                                    const std::map<size_t, std::map<size_t, CG<Base> > >& dzDx,
+                                                                                    std::map<size_t, std::set<size_t> >& jcol2CompressedLoc) {
             using namespace std;
             using namespace CppAD::loops;
             using CppAD::vector;
@@ -738,11 +746,12 @@ namespace CppAD {
 
             size_t jacElSize = group.size();
 
-            vector<pair<CGBase, IndexPattern*> > indexedLoopResults(jacElSize * info.size());
+            std::vector<pair<CGBase, IndexPattern*> > indexedLoopResults(jacElSize * info.size());
             size_t jacLE = 0;
 
-            size_t nIterations = lModel.getIterationCount();
-            std::vector<size_t> iter2jcols(nIterations);
+            map<size_t, size_t> iter2jcols;
+
+            set<size_t>::const_iterator itIt;
 
             for (size_t tapeI = 0; tapeI < info.size(); tapeI++) {
                 const JacobianWithLoopsRowInfo& jlrw = info[tapeI];
@@ -757,15 +766,23 @@ namespace CppAD {
 
                     map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.indexedPositions.find(tapeJ);
                     if (itPos != jlrw.indexedPositions.end()) {
-                        const std::vector<size_t>& positions = itPos->second;
+                        const std::vector<size_t>& positions = itPos->second; // compressed positions
 
                         const std::vector<LoopPosition>& tapeJPos = indexedIndepIndexes[tapeJ];
-                        for (size_t iter = 0; iter < nIterations; iter++)
-                            iter2jcols[iter] = tapeJPos[iter].original;
+                        iter2jcols.clear();
+                        for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
+                            size_t iter = *itIt;
+                            if (positions[iter] != std::numeric_limits<size_t>::max()) { // the element must have been requested
+                                assert(tapeJPos[iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                                iter2jcols[iter] = tapeJPos[iter].original;
+                            }
+                        }
 
-                        CGBase val = dyiDxtapeT.at(tapeJ).at(tapeI) * dx;
-                        indexedLoopResults[jacLE++] = createForwardOneElement(handler, group, positions, iter2jcols, nnz,
-                                                                              val, iterationIndexOp, jcol2CompressedLoc);
+                        if (!iter2jcols.empty()) {
+                            CGBase val = dyiDxtapeT.at(tapeJ).at(tapeI) * dx;
+                            indexedLoopResults[jacLE++] = createForwardOneElement(handler, group, positions, iter2jcols,
+                                                                                  val, iterationIndexOp, jcol2CompressedLoc);
+                        }
                     }
                 }
 
@@ -778,8 +795,20 @@ namespace CppAD {
                     size_t j = *itJ;
 
                     map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.nonIndexedPositions.find(j);
-                    if (itPos != jlrw.nonIndexedPositions.end()) {
-                        const std::vector<size_t>& positions = itPos->second;
+                    if (itPos == jlrw.nonIndexedPositions.end()) {
+                        continue;
+                    }
+                    const std::vector<size_t>& positions = itPos->second;
+
+                    iter2jcols.clear();
+                    for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
+                        size_t iter = *itIt;
+                        if (positions[iter] != std::numeric_limits<size_t>::max()) {// the element must have been requested
+                            assert(lModel.getDependentIndexes()[tapeI][iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                            iter2jcols[iter] = j;
+                        }
+                    }
+                    if (!iter2jcols.empty()) {
 
                         CGBase jacVal = Base(0);
 
@@ -808,10 +837,8 @@ namespace CppAD {
                             }
                         }
 
-                        std::fill(iter2jcols.begin(), iter2jcols.end(), j);
-
                         CGBase val = jacVal * dx;
-                        indexedLoopResults[jacLE++] = createForwardOneElement(handler, group, positions, iter2jcols, nnz,
+                        indexedLoopResults[jacLE++] = createForwardOneElement(handler, group, positions, iter2jcols,
                                                                               val, iterationIndexOp, jcol2CompressedLoc);
                     }
                 }
@@ -826,8 +853,7 @@ namespace CppAD {
         std::pair<CG<Base>, IndexPattern*> createForwardOneElement(CodeHandler<Base>& handler,
                                                                    JacobianColGroup<Base>& group,
                                                                    const std::vector<size_t>& positions,
-                                                                   const std::vector<size_t>& jcols,
-                                                                   size_t maxPos,
+                                                                   const std::map<size_t, size_t>& iter2jcols,
                                                                    const CG<Base>& dfdx,
                                                                    IndexOperationNode<Base>& iterationIndexOp,
                                                                    std::map<size_t, std::set<size_t> >& jcol2CompressedLoc) {
@@ -838,33 +864,18 @@ namespace CppAD {
              */
             map<size_t, size_t> locationsIter2Pos;
 
-            set<size_t>::const_iterator itIt;
-            for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
-                size_t iter = *itIt;
+            std::map<size_t, size_t>::const_iterator itIt;
+            for (itIt = iter2jcols.begin(); itIt != iter2jcols.end(); ++itIt) {
+                size_t iter = itIt->first;
+                size_t jcol = itIt->second;
+                assert(positions[iter] != std::numeric_limits<size_t>::max());
                 locationsIter2Pos[iter] = positions[iter];
-                jcol2CompressedLoc[jcols[iter]].insert(positions[iter]);
+                jcol2CompressedLoc[jcol].insert(positions[iter]);
             }
 
-            IndexPattern* pattern;
-            if (locationsIter2Pos.size() == group.iterations.size()) {
-                /**
-                 *  present in all iterations
-                 */
-
-                // generate the index pattern for the Jacobian compressed element
-                pattern = IndexPattern::detect(positions);
-                handler.manageLoopDependentIndexPattern(pattern);
-            } else {
-                /**
-                 * must create a conditional element so that this 
-                 * contribution to the Jacobian is only evaluated at the
-                 * relevant iterations
-                 */
-
-                // generate the index pattern for the Jacobian compressed element
-                pattern = IndexPattern::detect(locationsIter2Pos);
-                handler.manageLoopDependentIndexPattern(pattern);
-            }
+            // generate the index pattern for the Jacobian compressed element
+            IndexPattern* pattern = IndexPattern::detect(locationsIter2Pos);
+            handler.manageLoopDependentIndexPattern(pattern);
 
             size_t assignOrAdd = 1;
             return createLoopResult(handler, locationsIter2Pos, positions.size(),

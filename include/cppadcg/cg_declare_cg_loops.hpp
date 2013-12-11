@@ -32,6 +32,9 @@ namespace CppAD {
         class HessianElement;
 
         template<class Base>
+        class LoopNonIndexedLocator;
+
+        template<class Base>
         class IfBranchInfo;
 
         template <class Base>
@@ -47,10 +50,13 @@ namespace CppAD {
         class HessianWithLoopsInfo;
 
         template<class Base>
+        class HessianWithLoopsEquationGroupInfo;
+
+        template<class Base>
         class HessianRowGroup;
 
         class ArrayGroup;
-        
+
         template<class Base>
         inline vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
                                                            LoopModel<Base>& loop,
@@ -76,7 +82,7 @@ namespace CppAD {
         template<class Base>
         inline LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
                                                          LoopStartOperationNode<Base>& loopStart,
-                                                         const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                         const std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                          const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                          size_t assignOrAdd);
 

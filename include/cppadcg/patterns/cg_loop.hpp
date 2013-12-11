@@ -53,32 +53,41 @@ namespace CppAD {
         typedef std::pair<size_t, CG<Base> > IndexValue;
     public:
         /**
-         * The number of iterations this loop will have
-         */
-        const size_t iterationCount;
-        /**
          * The equations inside the loop
          */
         std::set<EquationPattern<Base>*> equations;
         /**
          * Which argument positions of operations (from the reference dependent)
-         * use indexed independent variables
+         * use indexed independent variables 
+         * (operation -> argument index -> iteration -> independent)
          */
         IndexedIndependent<Base> indexedOpIndep;
-        /**
-         * Which dependents (equation indexes) must be evaluated at the same 
-         * time due to shared temporary variables
-         */
-        std::vector<std::set<size_t> > linkedDependents;
     private:
+        /**
+         * The number of iterations this loop will have
+         */
+        size_t iterationCount_;
         /**
          * code handler for the operations in the loop
          */
         LoopCodeHandler<Base> handler_;
         /**
-         * The order of the equation patterns in the loop's tape
+         * Groups of equations which share common temporary variables
+         */
+        std::vector<EquationGroup<Base> > eqGroups_;
+        /**
+         * The order of equation patterns in the loop's tape
          */
         std::map<EquationPattern<Base>*, size_t> equationOrder_;
+        /**
+         * The evaluated dependents in each loop iteration
+         * ([iteration 1]{dep1, dep3, ...}; [iteration 2]{dep5, dep6, ...}; ...)
+         */
+        std::vector<std::set<size_t> > iterationDependents_;
+        /**
+         * Map each dependent to its corresponding iteration
+         */
+        std::map<size_t, size_t> dep2Iteration_;
         /**
          * total number of independent variables in the loop's tape
          */
@@ -116,11 +125,6 @@ namespace CppAD {
          */
         std::map<const IndependentOrder<Base>*, OperationNode<Base>*> indexedIndep2clone_;
         /**
-         * The evaluated dependents in each loop iteration
-         * ([iteration 1]{dep1, dep3, ...}; [iteration 2]{dep5, dep6, ...}; ...)
-         */
-        std::vector<std::set<size_t> > iterationDependents_;
-        /**
          * Maps the independent from the first loop iteration to its independent
          * variable order
          * (first independent in the order -> all possible orders)
@@ -141,104 +145,119 @@ namespace CppAD {
         size_t idCounter_;
     public:
 
-        Loop(EquationPattern<Base>& eq) :
-            iterationCount(eq.dependents.size()),
+        inline Loop(EquationPattern<Base>& eq) :
+            iterationCount_(0), // not known yet (only after all equations have been added)
+            eqGroups_(1),
             nIndependents_(0),
             loopModel_(NULL) {
             //indexedOpIndep(eq.indexedOpIndep), // must be determined later for a different reference
             //constOperationIndependents(eq.constOperationIndependents) {
             equations.insert(&eq);
+            eqGroups_[0].equations.insert(&eq);
         }
 
-        void addEquation(EquationPattern<Base>& eq,
-                         const std::vector<std::set<size_t> >& newLinkedDependents) {
-            assert(eq.dependents.size() == iterationCount);
+        inline void addEquation(EquationPattern<Base>& eq) {
+            equations.insert(&eq);
+            eqGroups_[0].equations.insert(&eq);
+        }
 
-            if (equations.insert(&eq).second)
-                return; //it had already been added
+        inline void setLinkedDependents(const std::set<std::set<size_t>*>& newLoopRelations) {
+            assert(eqGroups_.size() == 1);
 
-            //indexedOpIndep.combine(eq.indexedOpIndep); // must be determined later for a different reference
-            //constOperationIndependents.insert(eq.constOperationIndependents.begin(),
-            //                                  eq.constOperationIndependents.end());
+            eqGroups_[0].linkedDependents.clear();
+            eqGroups_[0].linkedDependents.reserve(newLoopRelations.size());
+
+            std::set<std::set<size_t>*>::const_iterator it;
+            for (it = newLoopRelations.begin(); it != newLoopRelations.end(); ++it)
+                eqGroups_[0].linkedDependents.push_back(**it);
+        }
+
+        inline void addLinkedEquationsByNonIndexed(EquationPattern<Base>* eq1,
+                                                   EquationPattern<Base>* eq2) {
+            eqGroups_[0].addLinkedEquationsByNonIndexed(eq1, eq2);
+        }
+
+        inline size_t getLinkedEquationsByNonIndexedCount() const {
+            return eqGroups_[0].getLinkedEquationsByNonIndexedCount();
+        }
+
+        /**
+         * The number of iterations this loop will have
+         */
+        inline size_t getIterationCount() const {
+            return iterationCount_;
         }
 
         const std::vector<std::set<size_t> >& getIterationDependents() const {
             return iterationDependents_;
         }
 
-        LoopModel<Base>* getModel() const {
+        inline LoopModel<Base>* getModel() const {
             return loopModel_;
         }
 
-        LoopModel<Base>* releaseLoopModel() {
+        inline LoopModel<Base>* releaseLoopModel() {
             LoopModel<Base>* loopAtomic = loopModel_;
             loopModel_ = NULL;
             return loopAtomic;
         }
 
         /**
-         * Attempts to combine the provided loop with the current one
+         * Combines the provided loop with the current one
          * 
          * @param other The other loop
-         * @return true if the other loop was merged into this one, false otherwise
          */
-        bool merge(Loop<Base>& other) {
-            if (iterationCount != other.iterationCount) {
-                return false;
-            }
+        void merge(Loop<Base>& other,
+                   const std::set<EquationPattern<Base>*>& indexedLoopRelations,
+                   const std::vector<std::pair<EquationPattern<Base>*, EquationPattern<Base>*> >& nonIndexedLoopRelations) {
+            assert(iterationCount_ == other.iterationCount_);
 
-            size_t osize = other.linkedDependents.size();
-            for (size_t oe = 0; oe < osize; oe++) {
-                combineDependentRelations(other.linkedDependents, linkedDependents);
-            }
 
             equations.insert(other.equations.begin(), other.equations.end());
             other.equations.clear(); // so that it does not delete the equations
 
-            return true;
+            assert(eqGroups_.size() == 1);
+            assert(other.eqGroups_.size() == 1);
+
+            EquationGroup<Base>& g = eqGroups_[0];
+            EquationGroup<Base>& og = other.eqGroups_[0];
+            g.equations.insert(og.equations.begin(), og.equations.end());
+
+            assert(equationOrder_.empty());
+            assert(iterationDependents_.empty());
+
+            g.linkedEquationsByNonIndexed.insert(og.linkedEquationsByNonIndexed.begin(), og.linkedEquationsByNonIndexed.end());
+            typename std::set<EquationPattern<Base>*>::const_iterator itNIndexed;
+            for (itNIndexed = indexedLoopRelations.begin(); itNIndexed != indexedLoopRelations.end(); ++itNIndexed) {
+                g.linkedEquationsByNonIndexed.erase(*itNIndexed);
+            }
+
+            for (size_t e = 0; e < nonIndexedLoopRelations.size(); e++) {
+                g.addLinkedEquationsByNonIndexed(nonIndexedLoopRelations[e].first, nonIndexedLoopRelations[e].second);
+            }
+
         }
 
-        /**
-         * Checks if there would be only one depenedent from the same equation
-         * for the same loop iteration
-         * 
-         * @param newRelations the indexes of the dependent variables that must
-         *                     evaluated in the same iteration
-         * @param dep2Eq maps the dependent variable indexes to their equation patterns
-         * @return true if there is only dependent from each equation in all 
-         *         loop iterations, false otherwise
-         */
-        bool isCompatibleWithDepRelationships(const std::vector<std::set<size_t> >& newRelations,
-                                              const std::map<size_t, EquationPattern<Base>*>& dep2Eq) const {
-            /**
-             * create what would be the new relationships
-             */
-            std::vector<std::set<size_t> > linksAfter = linkedDependents; //copy
+        void mergeEqGroups(Loop<Base>& other) {
+            eqGroups_.insert(eqGroups_.end(), other.eqGroups_.begin(), other.eqGroups_.end());
 
-            size_t osize = newRelations.size();
-            for (size_t oe = 0; oe < osize; oe++) {
-                combineDependentRelations(newRelations[oe], linksAfter);
-            }
+            size_t nEq = equations.size();
+            equations.insert(other.equations.begin(), other.equations.end());
+            other.equations.clear(); // so that it does not delete the equations
 
             /**
-             * Cannot have more than one dependent from the same equation in
-             * the same relationship
+             * Update equation index
              */
-            size_t l_size = linksAfter.size();
-            for (size_t l = 0; l < l_size; l++) {
-                const std::set<size_t>& deps = linksAfter[l];
-                std::set<EquationPattern<Base>*> equations;
-
-                std::set<size_t>::const_iterator it;
-                for (it = deps.begin(); it != deps.end(); ++it) {
-                    EquationPattern<Base>* eq = dep2Eq.at(*it);
-                    if (!equations.insert(eq).second) {
-                        return false; // more than one dependent for the same equation
-                    }
-                }
+            typename std::map<EquationPattern<Base>*, size_t>::const_iterator it;
+            for (it = other.equationOrder_.begin(); it != other.equationOrder_.end(); ++it) {
+                equationOrder_[it->first] = it->second + nEq;
             }
 
-            return true; // all OK
+            assert(iterationDependents_.size() == other.iterationDependents_.size());
+            for (size_t iter = 0; iter < iterationDependents_.size(); iter++) {
+                iterationDependents_[iter].insert(other.iterationDependents_[iter].begin(), other.iterationDependents_[iter].end());
+            }
+
         }
 
         void createLoopModel(const std::vector<CG<Base> >& dependents,
@@ -246,43 +265,91 @@ namespace CppAD {
                              const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
 
-            generateDependentLoopIndexes(dep2Equation);
+            assert(dep2Iteration_.empty());
+            for (size_t iter = 0; iter < iterationCount_; iter++) {
+                const std::set<size_t>& deps = iterationDependents_[iter];
 
-            const std::set<size_t>& firstItDep = iterationDependents_[0];
-            assert(firstItDep.size() == equations.size());
+                std::set<size_t>::const_iterator itDeps;
+                for (itDeps = deps.begin(); itDeps != deps.end(); ++itDeps) {
+                    dep2Iteration_[*itDeps] = iter;
+                }
+            }
+
+            /**
+             * Determine the reference iteration for each
+             */
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                eqGroups_[g].findReferenceIteration();
+#ifdef CPPADCG_PRINT_DEBUG
+                std::cout << "reference iteration=" << eqGroups_[g].refIteration << "\n";
+                print(eqGroups_[g].iterationDependents);
+                std::cout << std::endl;
+
+                typename std::set<EquationPattern<Base>*>::const_iterator iteq;
+                for (iteq = eqGroups_[g].equations.begin(); iteq != eqGroups_[g].equations.end(); ++iteq) {
+                    std::cout << "eq dependents=";
+                    print((*iteq)->dependents);
+                    std::cout << std::endl;
+                }
+#endif
+            }
+
 
             std::set<size_t>::const_iterator itDep;
-            for (itDep = firstItDep.begin(); itDep != firstItDep.end(); ++itDep) {
-                size_t dep = *itDep;
-                EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
-            }
 
-            for (itDep = firstItDep.begin(); itDep != firstItDep.end(); ++itDep) {
-                size_t dep = *itDep;
-                EquationPattern<Base>* eq = dep2Equation.at(dep);
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                const EquationGroup<Base>& group = eqGroups_[g];
+                const std::set<size_t>& refItDep = group.iterationDependents[group.refIteration];
+                assert(refItDep.size() == group.equations.size());
 
-                // operations that use indexed independent variables in the first iteration
-                std::set<const OperationNode<Base>*> indexedOperations;
-
-                eq->colorIndexedPath(dep, dependents, 1, indexedOperations);
-                if (dep == eq->depRefIndex) {
-                    indexedOpIndep.op2Arguments.insert(eq->indexedOpIndep.op2Arguments.begin(),
-                                                       eq->indexedOpIndep.op2Arguments.end());
-                } else {
-                    // generate loop references
-                    typename std::set<const OperationNode<Base>*>::const_iterator it;
-                    for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
-                        const OperationNode<Base>* opLoopRef = *it;
-                        const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(opLoopRef->getEvaluationOrder());
-                        indexedOpIndep.op2Arguments[opLoopRef] = eq->indexedOpIndep.arguments(opEqRef);
-                    }
+                for (itDep = refItDep.begin(); itDep != refItDep.end(); ++itDep) {
+                    size_t dep = *itDep;
+                    EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
                 }
-                
-                // not need anymore (lets free this memory now)
-                eq->indexedOpIndep.op2Arguments.clear();
+
+                for (itDep = refItDep.begin(); itDep != refItDep.end(); ++itDep) {
+                    size_t dep = *itDep;
+                    EquationPattern<Base>* eq = dep2Equation.at(dep);
+
+                    // operations that use indexed independent variables in the reference iteration
+                    std::set<const OperationNode<Base>*> indexedOperations;
+
+                    eq->colorIndexedPath(dep, dependents, 1, indexedOperations);
+                    if (dep == eq->depRefIndex) {
+                        const std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >& op2Arguments = eq->indexedOpIndep.op2Arguments;
+                        typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator itop2a;
+                        for (itop2a = op2Arguments.begin(); itop2a != op2Arguments.end(); ++itop2a) {
+                            // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
+                            // since both operations which use indexed independents would be NULL (the dependent)
+                            // an alias is used for these cases
+                            assert(itop2a->first != NULL);
+                            addOperationArguments2Loop(itop2a->first, itop2a->second);
+                        }
+
+                    } else {
+                        // generate loop references
+                        typename std::set<const OperationNode<Base>*>::const_iterator it;
+                        for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
+                            const OperationNode<Base>* opLoopRef = *it;
+                            // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
+                            // since both operations which use indexed independents would be NULL (the dependent)
+                            // an alias is used for these cases
+                            assert(opLoopRef != NULL);
+
+                            const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef); /////////////////////////////////////////////////////
+                            addOperationArguments2Loop(opLoopRef, eq->indexedOpIndep.op2Arguments.at(opEqRef));
+                        }
+                    }
+
+                    // not need anymore (lets free this memory now)
+                    eq->indexedOpIndep.op2Arguments.clear();
+                }
             }
 
-            generateIndependentLoopIndexes(dep2Equation);
+            /**
+             * independent variable index patterns
+             */
+            generateIndependentLoopIndexes();
 
             resetCounters(dependents);
 
@@ -291,11 +358,198 @@ namespace CppAD {
             /**
              * Clean-up
              */
-            for (itDep = firstItDep.begin(); itDep != firstItDep.end(); ++itDep) {
-                size_t dep = *itDep;
-                EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                const EquationGroup<Base>& group = eqGroups_[g];
+                const std::set<size_t>& refItDep = group.iterationDependents[group.refIteration];
+                for (itDep = refItDep.begin(); itDep != refItDep.end(); ++itDep) {
+                    size_t dep = *itDep;
+                    EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
+                }
             }
             resetCounters(dependents);
+        }
+
+        void generateDependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
+            iterationDependents_.clear();
+            equationOrder_.clear();
+            iterationCount_ = 0;
+            size_t nMaxIt = 0;
+            /**
+             * assign a dependent variable from each equation to an iteration
+             */
+            std::map<EquationPattern<Base>*, std::set<size_t> > depsInEq;
+
+            typename std::set<EquationPattern<Base>*>::const_iterator eqIt;
+            for (eqIt = equations.begin(); eqIt != equations.end(); ++eqIt) {
+                EquationPattern<Base>* eq = *eqIt;
+                depsInEq[eq] = eq->dependents;
+                nMaxIt = std::max(nMaxIt, eq->dependents.size());
+            }
+
+            iterationDependents_.reserve(nMaxIt + 2 * equations.size());
+
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                EquationGroup<Base>& group = eqGroups_[g];
+                const std::set<EquationPattern<Base>*>& eqs = group.equations;
+                const std::vector<std::set<size_t> >& linkedDependents = group.linkedDependents;
+                std::vector<std::set<size_t> >& relatedEqIterationDeps = group.iterationDependents;
+
+                relatedEqIterationDeps.reserve(iterationDependents_.size());
+
+                // assign an index to each equation
+                typename std::set<EquationPattern<Base>*>::const_iterator eqIt;
+                for (eqIt = eqs.begin(); eqIt != eqs.end(); ++eqIt) {
+                    EquationPattern<Base>* eq = *eqIt;
+                    size_t eqo_size = equationOrder_.size();
+                    equationOrder_[eq] = eqo_size;
+                }
+
+                // sort dependents
+                std::set<size_t> dependents;
+                for (eqIt = eqs.begin(); eqIt != eqs.end(); ++eqIt) {
+                    EquationPattern<Base>* eq = *eqIt;
+                    dependents.insert(eq->dependents.begin(), eq->dependents.end());
+                }
+
+                std::map<size_t, std::map<EquationPattern<Base>*, std::set<size_t> > > nIndexedGroupPos2Eq2deps;
+
+                std::set<size_t>::const_iterator itDep = dependents.begin();
+                size_t i = 0; // iteration counter
+                while (itDep != dependents.end()) {
+                    size_t dep = *itDep;
+                    itDep++;
+
+                    if (iterationDependents_.size() <= i)
+                        iterationDependents_.resize(i + 1);
+                    std::set<size_t>& itDepi = iterationDependents_[i];
+
+                    if (relatedEqIterationDeps.size() <= i)
+                        relatedEqIterationDeps.resize(i + 1);
+                    std::set<size_t>& ritDepi = relatedEqIterationDeps[i];
+
+                    long pos = group.findIndexedLinkedDependent(dep);
+                    if (pos >= 0) {
+                        // assign the dependent to the first iteration with all its relationships
+                        std::set<size_t>::const_iterator itDep2;
+                        for (itDep2 = linkedDependents[pos].begin(); itDep2 != linkedDependents[pos].end(); ++itDep2) {
+                            size_t dep2 = *itDep2;
+                            if (dep2 == *itDep) itDep++; //make sure the iterator is valid
+                            itDepi.insert(dep2);
+                            ritDepi.insert(dep2);
+                            dependents.erase(dep2);
+                        }
+
+                        i++;
+                    } else {
+                        // maybe this dependent shares a non-indexed temporary variable
+                        EquationPattern<Base>* eq = dep2Equation.at(dep);
+
+                        long posN = group.findNonIndexedLinkedRel(eq);
+                        if (posN >= 0) {
+                            // there are only non-indexed shared relations with other equations (delay processing...)
+                            dependents.erase(dep);
+                            nIndexedGroupPos2Eq2deps[posN][eq].insert(dep);
+                        } else {
+                            itDepi.insert(dep);
+                            ritDepi.insert(dep);
+
+                            i++;
+                        }
+                    }
+
+                }
+
+                /**
+                 * place dependents which only share non-indexed variables
+                 */
+                if (!nIndexedGroupPos2Eq2deps.empty()) {
+
+                    std::map<EquationPattern<Base>*, std::set<size_t> > eqIterations;
+                    for (size_t i = 0; i < relatedEqIterationDeps.size(); i++) {
+                        const std::set<size_t>& deps = relatedEqIterationDeps[i];
+                        std::set<size_t>::const_iterator itDep;
+                        for (itDep = deps.begin(); itDep != deps.end(); ++itDep) {
+                            size_t dep = *itDep;
+                            eqIterations[dep2Equation.at(dep)].insert(i);
+                        }
+                    }
+
+                    typename std::map<size_t, std::map<EquationPattern<Base>*, std::set<size_t> > >::iterator itPos2Eq2Dep;
+                    for (itPos2Eq2Dep = nIndexedGroupPos2Eq2deps.begin(); itPos2Eq2Dep != nIndexedGroupPos2Eq2deps.end(); ++itPos2Eq2Dep) {
+                        size_t posN = itPos2Eq2Dep->first;
+                        // must pick one dependent from each equation for each iteration
+                        std::vector<size_t> deps;
+                        deps.reserve(itPos2Eq2Dep->second.size());
+
+                        std::set<size_t> usedIterations; // iterations used by these equations 
+                        // determine used iteration indexes
+                        const std::set<EquationPattern<Base>*>& relations = group.linkedEquationsByNonIndexedRel[posN];
+                        typename std::set<EquationPattern<Base>*>::const_iterator itRel;
+                        for (itRel = relations.begin(); itRel != relations.end(); ++itRel) {
+                            const std::set<size_t>& iters = eqIterations[*itRel];
+                            usedIterations.insert(iters.begin(), iters.end());
+                        }
+                        
+                        while (true) {
+                            
+                            // must pick one dependent from each equation for each iteration
+                            deps.clear();
+                            
+                            typename std::map<EquationPattern<Base>*, std::set<size_t> >::iterator itEq2Dep;
+                            for (itEq2Dep = itPos2Eq2Dep->second.begin(); itEq2Dep != itPos2Eq2Dep->second.end(); ++itEq2Dep) {
+                                if (!itEq2Dep->second.empty()) {
+                                    deps.push_back(*itEq2Dep->second.begin());
+                                    itEq2Dep->second.erase(itEq2Dep->second.begin());
+                                }
+                            }
+
+                            if (deps.empty()) {
+                                break; // done
+                            }
+
+                            // find a free iteration index
+                            size_t i = 0;
+                            std::set<size_t>::const_iterator itIter;
+                            for (itIter = usedIterations.begin(); itIter != usedIterations.end();) {
+                                size_t i1 = *itIter;
+                                ++itIter;
+                                if (itIter != usedIterations.end()) {
+                                    size_t i2 = *itIter;
+                                    if (i2 - i1 != 1) {
+                                        i = i1 + 1;
+                                        break;
+                                    }
+                                } else {
+                                    i = i1 + 1;
+                                }
+                            }
+
+                            // add the dependents to the iteration
+                            usedIterations.insert(i);
+
+                            if (iterationDependents_.size() <= i)
+                                iterationDependents_.resize(i + 1);
+                            std::set<size_t>& itDepi = iterationDependents_[i];
+
+                            if (relatedEqIterationDeps.size() <= i)
+                                relatedEqIterationDeps.resize(i + 1);
+                            std::set<size_t>& ritDepi = relatedEqIterationDeps[i];
+                            itDepi.insert(deps.begin(), deps.end());
+                            ritDepi.insert(deps.begin(), deps.end());
+                        }
+                    }
+                    /**
+                     * @todo reorder iterations according to the lowest
+                     *       dependent in each iteration if there were new
+                     *       iterations only with dependents related by
+                     *       non-indexed shared variables
+                     */
+
+                }
+                
+                iterationCount_ = std::max(iterationCount_, iterationDependents_.size());
+            }
+
         }
 
         /**
@@ -325,244 +579,34 @@ namespace CppAD {
         }
 
         /***********************************************************************
-         *                        public static methods
-         **********************************************************************/
-        static bool canCombineEquations(const EquationPattern<Base>& eq1,
-                                        const EquationPattern<Base>& eq2,
-                                        const OperationNode<Base>& sharedTemp) {
-            // convert to the reference operation
-            OperationNode<Base>* sharedTempRef1 = eq1.operationEO2Reference.at(sharedTemp.getEvaluationOrder());
-
-            // must have indexed independents at the same locations in all equations
-            const std::set<const OperationNode<Base>*> opWithIndepArgs = EquationPattern<Base>::findOperationsUsingIndependents(*sharedTempRef1);
-
-            // must have indexed independents at the same locations in both equations
-            typename std::set<const OperationNode<Base>*>::const_iterator itOp;
-            for (itOp = opWithIndepArgs.begin(); itOp != opWithIndepArgs.end(); ++itOp) {
-                const OperationNode<Base>* op1 = *itOp;
-
-                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed1It;
-                indexed1It = eq1.indexedOpIndep.op2Arguments.find(op1);
-
-                typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed2It;
-                indexed2It = eq2.indexedOpIndep.op2Arguments.find(eq2.operationEO2Reference.at(op1->getEvaluationOrder()));
-
-                if (indexed1It == eq1.indexedOpIndep.op2Arguments.end()) {
-                    if (indexed2It != eq2.indexedOpIndep.op2Arguments.end()) {
-                        return false;
-                    }
-                } else {
-                    if (indexed2It == eq2.indexedOpIndep.op2Arguments.end()) {
-                        return false;
-                    }
-                    const OperationIndexedIndependents<Base>& indexed1Ops = indexed1It->second;
-                    const OperationIndexedIndependents<Base>& indexed2Ops = indexed2It->second;
-                    if (indexed1Ops.arg2Independents.size() != indexed2Ops.arg2Independents.size()) {
-                        return false;
-                    }
-
-                    typename std::map<size_t, std::map<size_t, const OperationNode<Base>*> >::const_iterator argPos1It = indexed1Ops.arg2Independents.begin();
-                    typename std::map<size_t, std::map<size_t, const OperationNode<Base>*> >::const_iterator argPos2It = indexed2Ops.arg2Independents.begin();
-
-                    for (; argPos2It != indexed2Ops.arg2Independents.end(); ++argPos1It, ++argPos2It) {
-                        if (argPos1It->first != argPos2It->first)
-                            return false;
-                    }
-                }
-            }
-
-            return true;
-        }
-
-        static void combineDependentRelations(const std::vector<std::set<size_t> >& newDependentLinks,
-                                              std::vector<std::set<size_t> >& linkedDependents) {
-            size_t size = newDependentLinks.size();
-            for (size_t l = 0; l < size; l++) {
-                combineDependentRelations(newDependentLinks[l], linkedDependents);
-            }
-        }
-
-        static void combineDependentRelations(const std::set<size_t>& oSameIndex,
-                                              std::vector<std::set<size_t> >& linkedDependents) {
-            std::set<size_t> pos;
-
-            if (linkedDependents.size() > 0) {
-                std::set<size_t>::const_iterator oIt;
-                for (oIt = oSameIndex.begin(); oIt != oSameIndex.end(); ++oIt) {
-                    size_t otherDep = *oIt;
-                    long e = findLinkedDependent(otherDep, linkedDependents);
-                    if (e >= 0) {
-                        pos.insert(e); // found
-                    }
-                }
-            }
-
-            if (pos.size() > 0) {
-                size_t init = *pos.begin();
-                linkedDependents[init].insert(oSameIndex.begin(), oSameIndex.end());
-
-                std::set<size_t>::const_reverse_iterator itr;
-                for (itr = pos.rbegin(); itr != pos.rend();) {
-                    size_t e = *itr;
-                    ++itr;
-                    if (e != init) {
-                        linkedDependents[init].insert(linkedDependents[e].begin(), linkedDependents[e].end());
-                        linkedDependents.erase(linkedDependents.begin() + e);
-                    }
-                }
-
-            } else {
-                size_t size = linkedDependents.size();
-                linkedDependents.resize(size + 1);
-                linkedDependents[size].insert(oSameIndex.begin(), oSameIndex.end());
-            }
-        }
-
-        /***********************************************************************
          *                            private
          **********************************************************************/
     private:
 
-        inline long findLinkedDependent(size_t dep) const {
-            return findLinkedDependent(dep, linkedDependents);
-        }
+        void addOperationArguments2Loop(const OperationNode<Base>* op,
+                                        const OperationIndexedIndependents<Base>& eqOpIndeIndep) {
+            assert(!dep2Iteration_.empty());
 
-        static inline long findLinkedDependent(size_t dep,
-                                               const std::vector<std::set<size_t> >& linkedDependents) {
-            size_t size = linkedDependents.size();
-            for (size_t pos = 0; pos < size; pos++) {
-                const std::set<size_t>& sameIndex = linkedDependents[pos];
-                if (sameIndex.find(dep) != sameIndex.end()) {
-                    return pos;
-                }
-            }
+            OperationIndexedIndependents<Base>& loopOpIndeIndep = indexedOpIndep.op2Arguments[op];
+            loopOpIndeIndep.arg2Independents.resize(eqOpIndeIndep.arg2Independents.size());
 
-            return -1;
-        }
+            // some iterations might have not been defined by previous equation patterns
+            for (size_t a = 0; a < eqOpIndeIndep.arg2Independents.size(); a++) {
+                if (eqOpIndeIndep.arg2Independents[a].empty())
+                    continue;
 
-        inline bool containsDepOutsideIndex(size_t dep, size_t el) const {
-            return containsDepOutsideIndex(dep, el, linkedDependents);
-        }
-
-        static inline bool containsDepOutsideIndex(size_t dep,
-                                                   size_t pos,
-                                                   const std::vector<std::set<size_t> >& linkedDependents) {
-            size_t size = linkedDependents.size();
-            for (size_t e = 0; e < size; e++) {
-                if (e != pos) {
-                    const std::set<size_t>& sameIndex = linkedDependents[e];
-                    if (sameIndex.find(dep) != sameIndex.end()) {
-                        // already used with a different dependent (index)
-                        return true;
-                    }
-                }
-            }
-
-            return false;
-        }
-
-        void generateDependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
-            iterationDependents_.clear();
-            iterationDependents_.resize(iterationCount);
-
-            equationOrder_.clear();
-
-            /**
-             * assign a dependent variable from each equation to an iteration
-             */
-            std::map<EquationPattern<Base>*, std::set<size_t> > depsInEq;
-
-            typename std::set<EquationPattern<Base>*>::const_iterator eqIt;
-            for (eqIt = equations.begin(); eqIt != equations.end(); ++eqIt) {
-                EquationPattern<Base>* eq = *eqIt;
-                depsInEq[eq] = eq->dependents;
-            }
-
-            /**
-             * Determine the dependents of the first iteration
-             */
-            std::set<EquationPattern<Base>* > eqs = equations;
-            std::set<size_t>& iterationDeps0 = iterationDependents_[0];
-            std::map<EquationPattern<Base>*, std::vector<size_t> > masterEquations; // equation that define the order
-
-            while (eqs.size() > 0) {
-                // find the lowest dependent variable index of the remaining equations
-                size_t lowestDep = std::numeric_limits<size_t>::max();
-                typename std::set<EquationPattern<Base>* >::iterator itEq;
-                for (itEq = eqs.begin(); itEq != eqs.end(); ++itEq) {
-                    EquationPattern<Base>* eq = *itEq;
-                    size_t lDep = *depsInEq.at(eq).begin();
-                    if (lDep < lowestDep)
-                        lowestDep = lDep;
-                }
-
-                EquationPattern<Base>* masterEq = dep2Equation.at(lowestDep);
-                std::vector<size_t>& depOrder = masterEquations[masterEq];
-                depOrder.insert(depOrder.begin(), masterEq->dependents.begin(), masterEq->dependents.end());
-
-                long pos = findLinkedDependent(lowestDep);
-                if (pos >= 0) {
-                    // assign the dependent to the first iteration with all its relationships
-                    std::set<size_t>::const_iterator itDep;
-                    for (itDep = linkedDependents[pos].begin(); itDep != linkedDependents[pos].end(); ++itDep) {
-                        size_t dep = *itDep;
-                        iterationDeps0.insert(dep);
-                        EquationPattern<Base>* eq = dep2Equation.at(dep);
-                        size_t eqo_size = equationOrder_.size();
-                        equationOrder_[eq] = eqo_size;
-                        depsInEq.at(eq).erase(dep);
-                        eqs.erase(eq);
-                    }
-                } else {
-                    iterationDeps0.insert(lowestDep);
-                    size_t eqo_size = equationOrder_.size();
-                    equationOrder_[masterEq] = eqo_size;
-                    depsInEq.at(masterEq).erase(lowestDep);
-                    eqs.erase(masterEq);
-                }
-            }
-
-            /**
-             * Determine the dependent variable indexes of the following 
-             * iterations
-             */
-            for (size_t i = 1; i < iterationCount; i++) {
-                std::set<size_t>& iterationDeps = iterationDependents_[i];
-
-                typename std::map<EquationPattern<Base>*, std::vector<size_t> >::const_iterator itm;
-                for (itm = masterEquations.begin(); itm != masterEquations.end(); ++itm) {
-                    const std::vector<size_t>& depOrder = itm->second;
-                    size_t mDep = depOrder[i];
-                    long pos = findLinkedDependent(mDep);
-                    if (pos >= 0) {
-                        // place the dependent with all its relationships
-                        std::set<size_t>::const_iterator itDep;
-                        for (itDep = linkedDependents[pos].begin(); itDep != linkedDependents[pos].end(); ++itDep) {
-                            iterationDeps.insert(*itDep);
-                        }
-                    } else {
-                        iterationDeps.insert(mDep);
-                    }
+                typename std::map<size_t, const OperationNode<Base>*>::const_iterator itDepIndep;
+                for (itDepIndep = eqOpIndeIndep.arg2Independents[a].begin(); itDepIndep != eqOpIndeIndep.arg2Independents[a].end(); ++itDepIndep) {
+                    size_t dep = itDepIndep->first;
+                    size_t iter = dep2Iteration_.at(dep);
+                    loopOpIndeIndep.arg2Independents[a][iter] = itDepIndep->second;
                 }
             }
 
         }
 
-        void generateIndependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
-            /**
-             * find indexed independents with the same order
-             * so that they can be defined as a single variable 
-             * in the atomic function
-             */
-            std::map<size_t, size_t> dep2Iteration;
-            for (size_t iter = 0; iter < iterationCount; iter++) {
-                const std::set<size_t>& deps = iterationDependents_[iter];
-
-                std::set<size_t>::const_iterator itDeps;
-                for (itDeps = deps.begin(); itDeps != deps.end(); ++itDeps) {
-                    dep2Iteration[*itDeps] = iter;
-                }
-            }
+        void generateIndependentLoopIndexes() {
+            assert(iterationCount_ > 0); //number of iterations and dependent indexes must have already been determined
 
             // loop all operations from the reference dependents which use indexed independents
             typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator it;
@@ -576,24 +620,22 @@ namespace CppAD {
                 arg2IndepOrder_.push_front(arg2orderPos);
 
                 // loop all arguments
-                typename std::map<size_t, std::map<size_t, const OperationNode<Base>* > >::const_iterator it2;
-                for (it2 = opInd.arg2Independents.begin(); it2 != opInd.arg2Independents.end(); ++it2) {
-                    size_t argumentIndex = it2->first;
-                    const std::map<size_t, const OperationNode<Base>*>& dep2Indep = it2->second;
+                size_t aSize = opInd.arg2Independents.size();
+                for (size_t argumentIndex = 0; argumentIndex < aSize; argumentIndex++) {
+                    const std::map<size_t, const OperationNode<Base>*>& dep2Indep = opInd.arg2Independents[argumentIndex];
+                    if (dep2Indep.empty())
+                        continue; // not an indexed variable
 
-                    std::vector<const OperationNode<Base>*> order(iterationCount);
+                    std::vector<const OperationNode<Base>*> order(iterationCount_);
 
                     /**
                      * create the independent variable order
                      */
-                    assert(dep2Indep.size() == iterationCount);
+                    assert(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_);
                     typename std::map<size_t, const OperationNode<Base>*>::const_iterator itDep2Indep;
                     for (itDep2Indep = dep2Indep.begin(); itDep2Indep != dep2Indep.end(); ++itDep2Indep) {
-                        size_t dep = itDep2Indep->first;
+                        size_t iterationIndex = itDep2Indep->first;
                         const OperationNode<Base>* indep = itDep2Indep->second;
-
-                        // find one of the dependents -> iteration index
-                        size_t iterationIndex = dep2Iteration.at(dep);
 
                         order[iterationIndex] = indep;
                     }
@@ -608,7 +650,7 @@ namespace CppAD {
                     for (long o = 0; o < a_size; o++) {
                         IndependentOrder<Base>* orderO = availableOrders[o];
                         bool ok = true;
-                        for (size_t iterationIndex = 0; iterationIndex < iterationCount; iterationIndex++) {
+                        for (size_t iterationIndex = 0; iterationIndex < iterationCount_; iterationIndex++) {
                             if (orderO->order[iterationIndex] != order[iterationIndex]) {
                                 ok = false;
                                 break;
@@ -636,17 +678,23 @@ namespace CppAD {
         }
 
         /**
-         * Resets the counters for the first loop iteration
+         * Resets the node counters for the reference iteration of each equation
+         * group
          * 
          * @param dependents
          */
         void resetCounters(const std::vector<CG<Base> >& dependents) {
-            std::set<size_t>::const_iterator depIt;
-            for (depIt = iterationDependents_[0].begin(); depIt != iterationDependents_[0].end(); ++depIt) {
-                size_t depIndex = *depIt;
-                OperationNode<Base>* node = dependents[depIndex].getOperationNode();
-                if (node != NULL) {
-                    Loop<Base>::resetCounters(*node);
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                const EquationGroup<Base>& group = eqGroups_[g];
+                const std::set<size_t>& itDeps = group.iterationDependents[group.refIteration];
+
+                std::set<size_t>::const_iterator depIt;
+                for (depIt = itDeps.begin(); depIt != itDeps.end(); ++depIt) {
+                    size_t depIndex = *depIt;
+                    OperationNode<Base>* node = dependents[depIndex].getOperationNode();
+                    if (node != NULL) {
+                        Loop<Base>::resetCounters(*node);
+                    }
                 }
             }
         }
@@ -670,37 +718,44 @@ namespace CppAD {
             CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
 
             /**
-             * create the new/clone operations for the first iteration only
+             * create the new/clone operations for the reference iteration only
              */
             nIndependents_ = 0;
             idCounter_ = 1;
 
-            std::vector<CGB> deps(iterationDependents_[0].size());
+            assert(equationOrder_.size() == equations.size());
 
-            std::set<size_t>::const_iterator depIt;
-            for (depIt = iterationDependents_[0].begin(); depIt != iterationDependents_[0].end(); ++depIt) {
-                size_t depIndex = *depIt;
-                EquationPattern<Base>* eq = dep2Equation.at(depIndex);
-                OperationNode<Base>* node = dependents[depIndex].getOperationNode();
+            std::vector<CGB> deps(equations.size());
 
-                Argument<Base> aClone;
+            for (size_t g = 0; g < eqGroups_.size(); g++) {
+                const EquationGroup<Base>& group = eqGroups_[g];
+                const std::set<size_t>& iterationDependents = group.iterationDependents[group.refIteration];
 
-                if (node != NULL) {
-                    if (node->getOperationType() == CGInvOp) {
-                        aClone = Argument<Base>(createIndependentClone(*eq, NULL, 0, *node));
+                std::set<size_t>::const_iterator depIt;
+                for (depIt = iterationDependents.begin(); depIt != iterationDependents.end(); ++depIt) {
+                    size_t depIndex = *depIt;
+                    EquationPattern<Base>* eq = dep2Equation.at(depIndex);
+                    OperationNode<Base>* node = dependents[depIndex].getOperationNode();
+
+                    Argument<Base> aClone;
+
+                    if (node != NULL) {
+                        if (node->getOperationType() == CGInvOp) {
+                            aClone = Argument<Base>(createIndependentClone(NULL, 0, *node));
+                        } else {
+                            aClone = makeGraphClones(*eq, *node);
+                        }
                     } else {
-                        aClone = makeGraphClones(*eq, *node);
+                        aClone = Argument<Base>(dependents[depIndex].getValue());
                     }
-                } else {
-                    aClone = Argument<Base>(dependents[depIndex].getValue());
-                }
 
-                size_t i = equationOrder_.at(eq);
-                deps[i] = CGB(handler_, aClone);
+                    size_t i = equationOrder_.at(eq);
+                    deps[i] = CGB(handler_, aClone);
+                }
             }
 
             /*******************************************************************
-             * create the tape for the first iteration
+             * create the tape for the reference iteration
              ******************************************************************/
             std::map<const OperationNode<Base>*, size_t> origModelIndepOrder;
             size_t nOrigIndep = independents.size();
@@ -786,7 +841,7 @@ namespace CppAD {
             CppAD::Independent(loopIndeps);
 
             /**
-             * Reorder independent variables for the new tape (1st iteration only)
+             * Reorder independent variables for the new tape (reference iteration only)
              */
             std::vector<ADCGB> localIndeps(nIndep);
             if (nIndep > 0) {
@@ -828,8 +883,8 @@ namespace CppAD {
             /*******************************************************************
              * create the atomic loop function
              ******************************************************************/
-            std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount));
-            for (size_t it = 0; it < iterationCount; it++) {
+            std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount_, std::numeric_limits<size_t>::max()));
+            for (size_t it = 0; it < iterationCount_; it++) {
                 const std::set<size_t>& itDeps = iterationDependents_[it];
                 std::set<size_t>::const_iterator itDep;
                 for (itDep = itDeps.begin(); itDep != itDeps.end(); ++itDep) {
@@ -841,11 +896,17 @@ namespace CppAD {
             }
 
             //[tape variable][iteration] =  original independent index
-            std::vector<std::vector<size_t> > indexedIndependents(nIndexed, std::vector<size_t>(iterationCount));
+            std::vector<std::vector<size_t> > indexedIndependents(nIndexed, std::vector<size_t>(iterationCount_));
             for (size_t j = 0; j < indexedCloneOrder.size(); j++) {
                 const IndependentOrder<Base>* origOrder = clone2indexedIndep.at(indexedCloneOrder[j]);
-                for (size_t it = 0; it < iterationCount; it++) {
-                    size_t index = origModelIndepOrder.at(origOrder->order[it]);
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    const OperationNode<Base>* indep = origOrder->order[it];
+                    size_t index;
+                    if (indep != NULL) {
+                        index = origModelIndepOrder.at(indep);
+                    } else {
+                        index = std::numeric_limits<size_t>::max(); // not used at this iteration by any equation
+                    }
                     indexedIndependents[j][it] = index;
                 }
             }
@@ -879,7 +940,7 @@ namespace CppAD {
             }
 
             loopModel_ = new LoopModel<Base>(funIndexed.release(),
-                    iterationCount,
+                    iterationCount_,
                     dependentOrigIndexes,
                     indexedIndependents,
                     nonIndexedIndependents,
@@ -922,7 +983,7 @@ namespace CppAD {
                     } else {
                         // variable
                         if (argOp->getOperationType() == CGInvOp) {
-                            cloneArgs[a] = Argument<Base>(createIndependentClone(eq, &node, a, *argOp));
+                            cloneArgs[a] = Argument<Base>(createIndependentClone(&node, a, *argOp));
                         } else {
                             cloneArgs[a] = makeGraphClones(eq, *argOp);
                         }
@@ -947,8 +1008,7 @@ namespace CppAD {
             }
         }
 
-        inline OperationNode<Base>& createIndependentClone(const EquationPattern<Base>& eq,
-                                                           OperationNode<Base>* operation,
+        inline OperationNode<Base>& createIndependentClone(OperationNode<Base>* operation,
                                                            size_t argumentIndex,
                                                            OperationNode<Base>& independent) {
 
@@ -957,7 +1017,7 @@ namespace CppAD {
             if (it != indexedOpIndep.op2Arguments.end()) {
                 const OperationIndexedIndependents<Base>& yyy = it->second;
 
-                if (yyy.arg2Independents.find(argumentIndex) != yyy.arg2Independents.end()) {
+                if (!yyy.arg2Independents[argumentIndex].empty()) {
                     // yes
                     return getIndexedIndependentClone(operation, argumentIndex);
                 }
@@ -1078,8 +1138,20 @@ namespace CppAD {
 
                 size_t size = indepOrder1->order.size();
                 for (size_t j = 0; j < size; j++) {
-                    size_t index1 = origModelIndepOrder.at(indepOrder1->order[j]);
-                    size_t index2 = origModelIndepOrder.at(indepOrder2->order[j]);
+                    const OperationNode<Base>* indep1 = indepOrder1->order[j];
+                    const OperationNode<Base>* indep2 = indepOrder2->order[j];
+                    // some variables are not used in all iterations
+                    if (indep1 == NULL) {
+                        if (indep2 == NULL) {
+                            continue;
+                        }
+                        return false;
+                    } else if (indep2 == NULL) {
+                        return true;
+                    }
+
+                    size_t index1 = origModelIndepOrder.at(indep1);
+                    size_t index2 = origModelIndepOrder.at(indep2);
                     if (index1 < index2)
                         return true;
                     else if (index1 > index2)

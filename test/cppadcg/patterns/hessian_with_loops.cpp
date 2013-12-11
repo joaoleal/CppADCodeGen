@@ -28,7 +28,7 @@ namespace CppAD {
     public:
 
         inline CppADCGHessLoopTest(bool verbose = false, bool printValues = false) :
-        CppADCGPatternTest(verbose, printValues) {
+            CppADCGPatternTest(verbose, printValues) {
             this->testJacobian_ = false;
         }
     };

@@ -146,6 +146,10 @@ namespace CppAD {
             const CGOpCode code = node.getOperationType();
             AD<BaseOut> result;
             switch (code) {
+                case CGAssignOp:
+                    CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()");
+                    result = evalArg(args[0]);
+                    break;
                 case CGAbsOp: //  abs(variable)
                     CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");
                     result = abs(evalArg(args[0]));

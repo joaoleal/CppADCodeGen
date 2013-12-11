@@ -74,7 +74,6 @@ namespace CppAD {
             last_usage_order_(0),
             color_(0),
             name_(NULL) {
-            assert(arg.getOperation() != NULL);
             arguments_[0] = arg;
         }
 
@@ -338,6 +337,7 @@ namespace CppAD {
         s.insert(CGIndexOp);
         s.insert(CGLoopStartOp);
         s.insert(CGLoopEndOp);
+        s.insert(CGPriOp);
         return s;
     }
 
@@ -348,30 +348,13 @@ namespace CppAD {
     inline std::ostream& operator <<(
             std::ostream& os, //< stream to write to
             const CppAD::OperationNode<Base>& c) {
-        switch (c.getOperationType()) {
-            case CGAbsOp:
-                os << "abs( $1 )";
-                break;
-            case CGAcosOp:
-                os << "acos( $1 )";
-                break;
-            case CGAddOp:
-                os << "$1 + $2";
-                break;
-            case CGAliasOp:
-                os << "alias($1)";
-                break;
+        CGOpCode op = c.getOperationType();
+        switch (op) {
             case CGArrayCreationOp:
                 os << "new $1[" << c.getArguments().size() << "]";
                 break;
             case CGArrayElementOp:
                 os << "$1[" << c.getInfo()[0] << "]";
-                break;
-            case CGAsinOp:
-                os << "asin( $1 )";
-                break;
-            case CGAtanOp:
-                os << "atan( $1 )";
                 break;
             case CGAtomicForwardOp:
                 os << "atomicFunction.forward(" << c.getInfo()[0] << ", " << c.getInfo()[1] << ", vx, vy, $1, $2)";
@@ -379,74 +362,12 @@ namespace CppAD {
             case CGAtomicReverseOp:
                 os << "atomicFunction.reverse(" << c.getInfo()[0] << ", $1, $2, $3, $4)";
                 break;
-            case CGComOpLt:
-                os << "($1 < $2)? $3 : $4";
-                break;
-            case CGComOpLe:
-                os << "($1 <= $2)? $3 : $4";
-                break;
-            case CGComOpEq:
-                os << "($1 == $2)? $3 : $4";
-                break;
-            case CGComOpGe:
-                os << "($1 > $2)? $3 : $4";
-                break;
-            case CGComOpGt:
-                os << "($1 >= $2)? $3 : $4";
-                break;
-            case CGComOpNe:
-                os << "($1 != $2)? $3 : $4";
-                break;
-            case CGCoshOp:
-                os << "cosh( $1 )";
-                break;
-            case CGCosOp:
-                os << "cosh( $1 )";
-                break;
-            case CGDivOp:
-                os << "$1 / $2";
-                break;
-            case CGExpOp:
-                os << "e^$1";
-                break;
-            case CGInvOp:
-                os << "independent( $1 )";
-                break;
-            case CGLogOp:
-                os << "log( $1 )";
-                break;
-            case CGMulOp:
-                os << "$1 * $2";
-                break;
-            case CGPowOp:
-                os << "$1^$2";
-                break;
             case CGSignOp:
                 os << "if($1 > 0) { 1 } else if($1 == 0) { 0 } else { -1 }";
                 break;
-            case CGSinhOp:
-                os << "sinh( $1 )";
-                break;
-            case CGSinOp:
-                os << "sin( $1 )";
-                break;
-            case CGSqrtOp:
-                os << "sqrt( $1 )";
-                break;
-            case CGSubOp:
-                os << "$1 - $2";
-                break;
-            case CGTanhOp:
-                os << "tanh( $1 )";
-                break;
-            case CGTanOp:
-                os << "tan( $1 )";
-                break;
-            case CGUnMinusOp:
-                os << "-$1";
-                break;
+
             default:
-                os << "???";
+                os << op;
         }
 
         return os;

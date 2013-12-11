@@ -367,7 +367,7 @@ std::vector<ADCGD> model5(std::vector<ADCGD>& x, size_t repeat) {
         ADCGD tmp = x[1] * x[i];
         y[i * m] = cos(x[i * n]) + tmp;
 
-        if (i == 1) {
+        if (i == 0) {
             for (size_t i2 = 0; i2 < repeat; i2++) {
                 y[i2 * m + 1] = x[i2 * n + 1] * x[i2 * n] + tmp;
             }
@@ -535,7 +535,16 @@ std::vector<ADCGD> modelWrongEqs(std::vector<ADCGD>& x, size_t repeat) {
 TEST_F(CppADCGPatternTest, modelWrongEqs) {
     size_t m = 2;
     size_t n = 2;
+    size_t repeat = 8;
 
-    testPatternDetection(modelWrongEqs, m, n, 8, 2);
-    testLibCreation("modelWrongEqs", modelWrongEqs, m, n, 6);
+    std::vector<std::vector<std::set<size_t> > > loops(1);
+    loops[0].resize(2);
+    for (size_t i = 0; i < repeat; i++) {
+        if (i != 2 && i != 3)
+            loops[0][0].insert(i * m);
+        loops[0][1].insert(i * m + 1);
+    }
+
+    testPatternDetection(modelWrongEqs, m, n, repeat, loops);
+    testLibCreation("modelWrongEqs", modelWrongEqs, m, n, repeat);
 }

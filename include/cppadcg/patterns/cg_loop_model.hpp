@@ -27,15 +27,12 @@ namespace CppAD {
     public:
         typedef CppAD::CG<Base> CGB;
         typedef Argument<Base> Arg;
+        typedef std::pair<size_t, size_t> pairss;
     public:
         static const std::string ITERATION_INDEX_NAME;
-        typedef std::pair<size_t, size_t> pairss;
-    protected:
+    private:
         static const std::set<size_t> EMPTYSET;
-        static const std::vector<std::set<pairss> > EMPTYVECTORSETSS;
-        static const std::vector<std::set<size_t> > EMPTYVECTORSETS;
-
-    protected:
+    private:
         const size_t loopId_;
         /**
          * The tape for a single loop iteration
@@ -72,6 +69,11 @@ namespace CppAD {
          */
         std::map<size_t, LoopIndexedPosition> depOrigIndexes_;
         /**
+         * 
+         */
+        std::vector<IterEquationGroup<Base> > equationGroups_;
+        std::vector<std::set<const IterEquationGroup<Base>*> > iteration2eqGroups_;
+        /**
          * iteration -> original indep index -> tape indexes
          */
         std::vector<std::map<size_t, std::set<size_t> > > iteration2orig2indexedIndepIndexes_;
@@ -97,36 +99,10 @@ namespace CppAD {
         vector<std::set<size_t> > jacTapeSparsity_;
         bool jacSparsity_;
         /**
-         * hessian sparsity pattern of the tape
+         * Hessian sparsity pattern of the tape
          */
         vector<std::set<size_t> > hessTapeSparsity_;
         bool hessSparsity_;
-        /**
-         * indexed hessian elements
-         * [{orig J1, orig J2}] -> [iteration -> [{tape J1, tape J2}]]
-         */
-        std::map<pairss, std::vector<std::set<pairss> > > hessOrig2Iter2TapeJ1TapeJ2_;
-        /**
-         * indexed hessian elements
-         * [{orig J1, orig J2}] -> [iteration -> [{tape J1}]]
-         */
-        std::map<pairss, std::vector<std::set<size_t> > > hessOrig2Iter2TapeJ1OrigJ2_;
-        /**
-         * non-indexed hessian elements
-         * [{orig J1, orig J2}] -> [iteration -> [{tape J2}]]
-         */
-        std::map<pairss, std::vector<std::set<size_t> > > hessOrig2Iter2OrigJ1TapeJ2_;
-        /**
-         * non-indexed hessian elements
-         * [{orig J1, orig J2}]
-         */
-        std::set<pairss> hessOrigJ1OrigJ2_;
-        /**
-         * temporary hessian elements
-         * [{k1, orig J2}] -> [iteration -> [{tape J2}]]
-         */
-        std::map<pairss, std::vector<std::set<size_t> > > hessOrig2Iter2TempTapeJ2_;
-
     public:
 
         /**
@@ -167,9 +143,48 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     size_t orig = dependentOrigIndexes[i][it];
                     dependentIndexes_[i][it] = LoopPosition(i, orig);
-                    depOrigIndexes_[orig] = LoopIndexedPosition(dependentIndexes_[i][it].tape,
-                                                                dependentIndexes_[i][it].original,
-                                                                it);
+                    if (orig != std::numeric_limits<size_t>::max()) // some equations are not present in all iterations
+                        depOrigIndexes_[orig] = LoopIndexedPosition(dependentIndexes_[i][it].tape,
+                                                                    dependentIndexes_[i][it].original,
+                                                                    it);
+                }
+            }
+
+            /**
+             * Must determine the equations which are present at the same iterations
+             * (some equations may not be present at some iterations)
+             */
+            std::map<std::set<size_t>, std::set<size_t>, SetComparator<size_t> > iterations2equations;
+            size_t lm = dependentIndexes_.size();
+
+            for (size_t i = 0; i < lm; i++) {
+                std::set<size_t> iterations;
+                for (size_t it = 0; it < iterationCount_; it++) {
+                    if (dependentIndexes_[i][it].original != std::numeric_limits<size_t>::max()) {
+                        iterations.insert(it);
+                    }
+                }
+                iterations2equations[iterations].insert(i);
+            }
+
+            equationGroups_.resize(iterations2equations.size());
+            iteration2eqGroups_.resize(iterationCount_);
+
+            std::map<std::set<size_t>, std::set<size_t>, SetComparator<size_t> >::const_iterator itEqeIt;
+            size_t g = 0;
+            for (itEqeIt = iterations2equations.begin(); itEqeIt != iterations2equations.end(); ++itEqeIt, g++) {
+                const std::set<size_t>& iterations = itEqeIt->first;
+
+                IterEquationGroup<Base>& group = equationGroups_[g];
+                group.index = g;
+                group.tapeI = itEqeIt->second;
+                group.iterations = iterations;
+                group.model = this;
+
+                // map iterations to the equation groups
+                std::set<size_t>::const_iterator itIt;
+                for (itIt = iterations.begin(); itIt != iterations.end(); ++itIt) {
+                    iteration2eqGroups_[*itIt].insert(&group);
                 }
             }
 
@@ -183,11 +198,12 @@ namespace CppAD {
                 for (size_t j = 0; j < nIndexed; j++) {
                     size_t orig = indexedIndepOrigIndexes[j][it];
                     indexedIndepIndexes_[j][it] = LoopPosition(j, orig);
-                    iteration2orig2indexedIndepIndexes_[it][orig].insert(j);
+                    if (orig != std::numeric_limits<size_t>::max()) //some variables are not present in all iterations
+                        iteration2orig2indexedIndepIndexes_[it][orig].insert(j);
                 }
             }
 
-            // nonindexed
+            // non-indexed
             size_t nNonIndexed = nonIndexedIndepOrigIndexes.size();
             for (size_t j = 0; j < nNonIndexed; j++) {
                 size_t orig = nonIndexedIndepOrigIndexes[j];
@@ -233,6 +249,17 @@ namespace CppAD {
          */
         inline const std::vector<std::vector<LoopPosition> >& getDependentIndexes() const {
             return dependentIndexes_;
+        }
+
+        /**
+         * Provides groups of equations present at the same iterations
+         */
+        inline const std::vector<IterEquationGroup<Base> >& getEquationsGroups() const {
+            return equationGroups_;
+        }
+
+        inline const std::vector<std::set<const IterEquationGroup<Base>*> >& getIterationEquationsGroup() const {
+            return iteration2eqGroups_;
         }
 
         /**
@@ -336,78 +363,17 @@ namespace CppAD {
             return iter2TapeJs;
         }
 
-        /**
-         * 
-         * @param origJ1
-         * @param origJ2
-         * @return maps each iteration to the pair of tape indexes present in 
-         *         the Hessian
-         */
-        inline const std::vector<std::set<pairss> >& getHessianIndexedIndexedTapeIndexes(size_t origJ1,
-                                                                                         size_t origJ2) const {
-            pairss orig(origJ1, origJ2);
-
-            std::map<pairss, std::vector<std::set<pairss> > >::const_iterator it;
-            it = hessOrig2Iter2TapeJ1TapeJ2_.find(orig);
-            if (it != hessOrig2Iter2TapeJ1TapeJ2_.end()) {
-                return it->second;
-            } else {
-                return EMPTYVECTORSETSS;
-            }
-        }
-
-        inline const std::vector<std::set<size_t> >& getHessianIndexedNonIndexedTapeIndexes(size_t origJ1,
-                                                                                            size_t origJ2) const {
-            pairss orig(origJ1, origJ2);
-
-            std::map<pairss, std::vector<std::set<size_t> > > ::const_iterator it;
-            it = hessOrig2Iter2TapeJ1OrigJ2_.find(orig);
-            if (it != hessOrig2Iter2TapeJ1OrigJ2_.end()) {
-                return it->second;
-            } else {
-                return EMPTYVECTORSETS;
-            }
-        }
-
-        inline const std::vector<std::set<size_t> >& getHessianNonIndexedIndexedTapeIndexes(size_t origJ1,
-                                                                                            size_t origJ2) const {
-            pairss orig(origJ1, origJ2);
-
-            std::map<pairss, std::vector<std::set<size_t> > >::const_iterator it;
-            it = hessOrig2Iter2OrigJ1TapeJ2_.find(orig);
-            if (it != hessOrig2Iter2OrigJ1TapeJ2_.end()) {
-                return it->second;
-            } else {
-                return EMPTYVECTORSETS;
-            }
-        }
-
-        inline const std::set<std::pair<size_t, size_t> >& getHessianNonIndexedNonIndexedIndexes() const {
-            return hessOrigJ1OrigJ2_;
-        }
-
-        inline const std::vector<std::set<size_t> >& getHessianTempIndexedTapeIndexes(size_t k1,
-                                                                                      size_t origJ2) const {
-            pairss pos(k1, origJ2);
-
-            std::map<pairss, std::vector<std::set<size_t> > >::const_iterator it;
-            it = hessOrig2Iter2TempTapeJ2_.find(pos);
-            if (it != hessOrig2Iter2TempTapeJ2_.end()) {
-                return it->second;
-            } else {
-                return EMPTYVECTORSETS;
-            }
-        }
-
-        inline void detectIndexPatterns(size_t m) {
+        inline void detectIndexPatterns() {
             if (indepIndexPatterns_.size() > 0)
                 return; // already done
 
             indepIndexPatterns_.resize(indexedIndepIndexes_.size());
             for (size_t j = 0; j < indepIndexPatterns_.size(); j++) {
-                vector<size_t> indexes(iterationCount_);
+                std::map<size_t, size_t> indexes;
                 for (size_t it = 0; it < iterationCount_; it++) {
-                    indexes[it] = indexedIndepIndexes_[j][it].original;
+                    size_t orig = indexedIndepIndexes_[j][it].original;
+                    if (orig != std::numeric_limits<size_t>::max()) // some variables are not present in all iteration
+                        indexes[it] = orig;
                 }
                 indepIndexPatterns_[j] = IndexPattern::detect(indexes);
             }
@@ -417,7 +383,7 @@ namespace CppAD {
                 std::map<size_t, size_t> indexes;
                 for (size_t it = 0; it < iterationCount_; it++) {
                     size_t e = dependentIndexes_[j][it].original;
-                    if (e < m)// some equations are not present in all iteration
+                    if (e != std::numeric_limits<size_t>::max()) // some equations are not present in all iteration
                         indexes[it] = e;
                 }
 
@@ -457,81 +423,14 @@ namespace CppAD {
 
         inline void evalHessianSparsity() {
             if (!hessSparsity_) {
-                hessTapeSparsity_ = extra::hessianSparsitySet<vector<std::set<size_t> >, CGB>(*fun_);
+                size_t n = fun_->Domain();
+                hessTapeSparsity_.resize(n);
 
-                /**
-                 * make a database of the hessian elements
-                 */
-                size_t nIndexed = indexedIndepIndexes_.size();
-                size_t nNonIndexed = nonIndexedIndepIndexes_.size();
-                size_t nTemp = temporaryIndependents_.size();
-
-                for (size_t iter = 0; iter < iterationCount_; iter++) {
-                    /**
-                     * indexed tapeJ1
-                     */
-                    for (size_t tapeJ1 = 0; tapeJ1 < nIndexed; tapeJ1++) {
-                        const std::set<size_t>& hessRow = hessTapeSparsity_[tapeJ1];
-                        size_t j1 = indexedIndepIndexes_[tapeJ1][iter].original;
-
-                        std::set<size_t> ::const_iterator itTape2;
-                        for (itTape2 = hessRow.begin(); itTape2 != hessRow.end() && *itTape2 < nIndexed; ++itTape2) {
-                            size_t j2 = indexedIndepIndexes_[*itTape2][iter].original;
-                            pairss orig(j1, j2);
-                            pairss tapeTape(tapeJ1, *itTape2);
-                            std::vector<std::set<pairss> >& iterations = hessOrig2Iter2TapeJ1TapeJ2_[orig];
-                            iterations.resize(iterationCount_);
-                            iterations[iter].insert(tapeTape);
-                        }
-
-                        for (; itTape2 != hessRow.end() && *itTape2 < nIndexed + nNonIndexed; ++itTape2) {
-                            size_t j2 = nonIndexedIndepIndexes_[*itTape2 - nIndexed].original;
-                            pairss orig(j1, j2);
-                            std::vector<std::set<size_t> >& iterations = hessOrig2Iter2TapeJ1OrigJ2_[orig];
-                            iterations.resize(iterationCount_);
-                            iterations[iter].insert(tapeJ1);
-                        }
-                    }
-
-                    /**
-                     * non-indexed tapeJ1
-                     */
-                    for (size_t tapeJ1 = nIndexed; tapeJ1 < nIndexed + nNonIndexed; tapeJ1++) {
-                        const std::set<size_t>& hessRow = hessTapeSparsity_[tapeJ1];
-                        size_t j1 = nonIndexedIndepIndexes_[tapeJ1 - nIndexed].original;
-
-                        std::set<size_t> ::const_iterator itTape2;
-                        for (itTape2 = hessRow.begin(); itTape2 != hessRow.end() && *itTape2 < nIndexed; ++itTape2) {
-                            size_t j2 = indexedIndepIndexes_[*itTape2][iter].original;
-                            pairss orig(j1, j2);
-                            std::vector<std::set<size_t> >& iterations = hessOrig2Iter2OrigJ1TapeJ2_[orig];
-                            iterations.resize(iterationCount_);
-                            iterations[iter].insert(*itTape2);
-                        }
-
-                        for (; itTape2 != hessRow.end() && *itTape2 < nIndexed + nNonIndexed; ++itTape2) {
-                            size_t j2 = nonIndexedIndepIndexes_[*itTape2 - nIndexed].original;
-                            pairss orig(j1, j2);
-                            hessOrigJ1OrigJ2_.insert(orig);
-                        }
-                    }
-
-                    /**
-                     * temporaries tapeJ1
-                     */
-                    for (size_t tapeJ1 = nIndexed + nNonIndexed; tapeJ1 < nIndexed + nNonIndexed + nTemp; tapeJ1++) {
-                        const std::set<size_t>& hessRow = hessTapeSparsity_[tapeJ1];
-                        size_t k1 = temporaryIndependents_[tapeJ1 - nIndexed - nNonIndexed].original;
-
-                        std::set<size_t> ::const_iterator itTape2;
-                        for (itTape2 = hessRow.begin(); itTape2 != hessRow.end() && *itTape2 < nIndexed; ++itTape2) {
-                            size_t j2 = indexedIndepIndexes_[*itTape2][iter].original;
-                            pairss pos(k1, j2);
-                            std::vector<std::set<size_t> >& iterations = hessOrig2Iter2TempTapeJ2_[pos];
-                            iterations.resize(iterationCount_);
-                            iterations[iter].insert(*itTape2);
-                        }
-
+                for (size_t g = 0; g < equationGroups_.size(); g++) {
+                    equationGroups_[g].evalHessianSparsity();
+                    const vector<std::set<size_t> >& ghess = equationGroups_[g].getHessianSparsity();
+                    for (size_t j = 0; j < n; j++) {
+                        hessTapeSparsity_[j].insert(ghess[j].begin(), ghess[j].end());
                     }
                 }
 
@@ -581,12 +480,6 @@ namespace CppAD {
 
     template<class Base>
     const std::set<size_t> LoopModel<Base>::EMPTYSET;
-
-    template<class Base>
-    const std::vector<std::set<std::pair<size_t, size_t> > > LoopModel<Base>::EMPTYVECTORSETSS;
-
-    template<class Base>
-    const std::vector<std::set<size_t> > LoopModel<Base>::EMPTYVECTORSETS;
 
 }
 

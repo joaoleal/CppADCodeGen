@@ -27,6 +27,12 @@ namespace CppAD {
         static const std::string name("fabs");
         return name;
     }
+
+    template<>
+    inline const std::string& CLanguage<double>::getPrintfBaseFormat() {
+        static const std::string format("%f");
+        return format;
+    }
 }
 
 #endif

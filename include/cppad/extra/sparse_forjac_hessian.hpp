@@ -450,7 +450,7 @@ namespace CppAD {
          *                      or @c std::set<size_t>.
          * @tparam VectorSize   is a simple vector class with elements of type @c size_t.
          * 
-         * @param x  is a vector specifing the point at which to compute the Hessian.
+         * @param x  is a vector specifying the point at which to compute the Hessian.
          * @param w  is the weighting vector that defines a scalar valued function
          *           by a weighted sum of the components of the vector valued 
          *           function $latex F(x)$$.
@@ -468,7 +468,7 @@ namespace CppAD {
          * @param hes_col is the vector of columns indices for the returned Hessian values.
          *                It must have the same size are r.
          * @param hes is the vector of Hessian values. It must have the same size 
-         *            are r. The return value <code>hes[k]</code> is the second 
+         *            as r. The return value <code>hes[k]</code> is the second 
          *            partial of \f$ w^{\rm T} F(x)\f$ with respect to the
          *            <code>row[k]</code> and <code>col[k]</code> component of 
          *            \f$ x\f$.

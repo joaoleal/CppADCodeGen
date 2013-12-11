@@ -22,7 +22,6 @@ namespace CppAD {
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createJacobianElement(CodeHandler<Base>& handler,
                                                                  const std::vector<size_t>& positions,
-                                                                 size_t maxPos,
                                                                  const CG<Base>& dfdx,
                                                                  IndexOperationNode<Base>& iterationIndexOp,
                                                                  vector<IfElseInfo<Base> >& ifElses,
@@ -63,7 +62,7 @@ namespace CppAD {
             _funNoLoops->evalJacobianSparsity();
 
         /**
-         * Generate index patterns for the jacobian elements resulting from loops
+         * Generate index patterns for the Jacobian elements resulting from loops
          */
         size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
         noLoopEvalSparsity.resize(_funNoLoops != NULL ? _funNoLoops->getTapeDependentCount() : 0);
@@ -81,7 +80,7 @@ namespace CppAD {
         size_t nnz = rows.size();
 
         /** 
-         * Load locations in the compressed jacobian
+         * Load locations in the compressed Jacobian
          */
         for (size_t el = 0; el < nnz; el++) {
             size_t i = rows[el];
@@ -149,8 +148,8 @@ namespace CppAD {
 
                         //this indexed variable must be request for all iterations 
                         std::vector<size_t>& positions = rowInfo.indexedPositions[tapeJ];
-                        positions.resize(iterations, nnz);
-                        if (positions[iteration] != nnz) {
+                        positions.resize(iterations, std::numeric_limits<size_t>::max());
+                        if (positions[iteration] != std::numeric_limits<size_t>::max()) {
                             std::ostringstream ss;
                             ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
                             throw CGException(ss.str());
@@ -169,8 +168,8 @@ namespace CppAD {
 
                     //this non-indexed element must be request for all iterations 
                     std::vector<size_t>& positions = rowInfo.nonIndexedPositions[j];
-                    positions.resize(iterations, nnz);
-                    if (positions[iteration] != nnz) {
+                    positions.resize(iterations, std::numeric_limits<size_t>::max());
+                    if (positions[iteration] != std::numeric_limits<size_t>::max()) {
                         std::ostringstream ss;
                         ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
                         throw CGException(ss.str());
@@ -202,8 +201,8 @@ namespace CppAD {
                             noLoopEvalSparsity[nonIndexdedEqSize + k].insert(j); // element required
                             if (!jInNonIndexed) {
                                 std::vector<size_t>& positions = rowInfo.nonIndexedPositions[j];
-                                positions.resize(iterations, nnz);
-                                if (positions[iteration] != nnz) {
+                                positions.resize(iterations, std::numeric_limits<size_t>::max());
+                                if (positions[iteration] != std::numeric_limits<size_t>::max()) {
                                     std::ostringstream ss;
                                     ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
                                     throw CGException(ss.str());
@@ -284,7 +283,7 @@ namespace CppAD {
                 tmps[i] = depNL[nonIndexdedEqSize + i];
 
             /**
-             * jacobian
+             * Jacobian
              */
             vector<size_t> row, col;
             generateSparsityIndexes(noLoopEvalSparsity, row, col);
@@ -381,7 +380,7 @@ namespace CppAD {
                 maxJacElSize += rowInfo.nonIndexedPositions.size();
             }
 
-            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(maxJacElSize);
+            std::vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(maxJacElSize);
 
             // create the dependents (jac elements) for indexed and constant 
             size_t jacLE = 0;
@@ -418,7 +417,7 @@ namespace CppAD {
             /**
              * move non-indexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
+            moveNonIndexedOutsideLoop(handler, *loopStart, *loopEnd);
         }
 
         return jac;
@@ -435,13 +434,11 @@ namespace CppAD {
                                                                           IndexOperationNode<Base>& iterationIndexOp,
                                                                           vector<loops::IfElseInfo<Base> >& ifElses,
                                                                           size_t& jacLE,
-                                                                          vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                                          std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                                           std::set<size_t>& allLocations) {
         using namespace std;
         using namespace loops;
         using CppAD::vector;
-
-        size_t nnz = _jacSparsity.rows.size();
 
         /**
          * indexed variable contributions
@@ -454,7 +451,7 @@ namespace CppAD {
 
             CGBase jacVal = dyiDxtape[tapeI].at(tapeJ) * py;
 
-            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions,
                                                                 jacVal, iterationIndexOp, ifElses,
                                                                 allLocations);
         }
@@ -494,7 +491,7 @@ namespace CppAD {
 
             jacVal *= py;
 
-            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions, nnz,
+            indexedLoopResults[jacLE++] = createJacobianElement(handler, positions,
                                                                 jacVal, iterationIndexOp, ifElses,
                                                                 allLocations);
         }
@@ -506,7 +503,6 @@ namespace CppAD {
         template<class Base>
         std::pair<CG<Base>, IndexPattern*> createJacobianElement(CodeHandler<Base>& handler,
                                                                  const std::vector<size_t>& positions,
-                                                                 size_t maxPos,
                                                                  const CG<Base>& dfdx,
                                                                  IndexOperationNode<Base>& iterationIndexOp,
                                                                  vector<IfElseInfo<Base> >& ifElses,
@@ -517,7 +513,7 @@ namespace CppAD {
 
             map<size_t, size_t> locations;
             for (size_t iter = 0; iter < nIter; iter++) {
-                if (positions[iter] != maxPos) {
+                if (positions[iter] != std::numeric_limits<size_t>::max()) {
                     locations[iter] = positions[iter];
                     allLocations.insert(positions[iter]);
                 }
@@ -527,17 +523,17 @@ namespace CppAD {
             if (locations.size() == nIter) {
                 // present in all iterations
 
-                // generate the index pattern for the jacobian compressed element
+                // generate the index pattern for the Jacobian compressed element
                 pattern = IndexPattern::detect(positions);
                 handler.manageLoopDependentIndexPattern(pattern);
             } else {
                 /**
                  * must create a conditional element so that this 
-                 * contribution to the jacobian is only evaluated at the
+                 * contribution to the Jacobian is only evaluated at the
                  * relevant iterations
                  */
 
-                // generate the index pattern for the jacobian compressed element
+                // generate the index pattern for the Jacobian compressed element
                 pattern = IndexPattern::detect(locations);
                 handler.manageLoopDependentIndexPattern(pattern);
             }

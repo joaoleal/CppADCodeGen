@@ -31,10 +31,10 @@ namespace CppAD {
             CppADCGPatternModelTest("PlugFlow",
                                     4 * nEls, // ns
                                     1, // nm
-                                    4, // npar
+                                    5, // npar
                                     nEls * 4, // m
                                     verbose, printValues) {
-            //this->verbose_ = true;
+            this->verbose_ = false;
 
             this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 5e2; // ~ (1.1102230246251565e-13)
             this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 3e4; // ~ (6.6613381477509392e-13)
@@ -75,6 +75,16 @@ TEST_F(CppADCGPatternPlugFlowTest, plugflowAllVars) {
      */
     std::auto_ptr<ADFun<CGD> > fun;
     this->tape(fun);
+
+    //std::vector<std::set<size_t> > jacSparAll = extra::jacobianSparsitySet<std::vector<std::set<size_t> > >(*fun);
+    //printSparsityPattern(jacSparAll, "jacobian", true);
+    //this->customJacSparsity_.resize(fun->Range());
+    //this->customJacSparsity_[15].insert(25);
+
+    //std::vector<std::set<size_t> > hesSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(*fun);
+    //printSparsityPattern(hesSparAll, "hessian", true);
+    //this->customHessSparsity_.resize(fun->Domain());
+    //this->customHessSparsity_[0].insert(25);
 
     /**
      * test

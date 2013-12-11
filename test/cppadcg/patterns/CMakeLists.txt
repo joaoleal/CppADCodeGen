@@ -18,6 +18,8 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 
 add_cppadcg_test(plug_flow.cpp)
 add_cppadcg_test(pattern_matcher.cpp)
+add_cppadcg_test(missing_equation.cpp)
+add_cppadcg_test(cross_iteration.cpp)
 add_cppadcg_test(hessian_with_loops.cpp)
 add_cppadcg_test(cstr_collocation.cpp)
 add_cppadcg_test(tank_battery.cpp)

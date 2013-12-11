@@ -638,8 +638,16 @@ namespace CppAD {
         }
     }
 
+    template<class T>
+    struct SetComparator {
+
+        bool operator() (const std::set<T>& lhs, const std::set<T>& rhs) const {
+            return compare(lhs, rhs) == -1;
+        }
+    };
+
     /**
-     * Prints the model to standad output
+     * Prints the model to standard output
      * 
      * @param fun the model
      */
@@ -651,7 +659,7 @@ namespace CppAD {
     }
 
     /**
-     * Prints the model to standad output
+     * Prints the model to standard output
      * 
      * @param fun the model
      * @param depNames the names to be used for the dependent variables
@@ -742,6 +750,26 @@ namespace CppAD {
         std::cout.flush();
     }
 
+    /***************************************************************************
+     * String related utilities
+     **************************************************************************/
+
+    /**
+     * Replaces all occurances of a string.
+     * 
+     * @param text the text where the search and replacement will be performed
+     * @param toReplace the text to be replaced
+     * @param replacement the replacement text
+     */
+    inline void replaceString(std::string& text,
+                              const std::string& toReplace,
+                              const std::string& replacement) {
+        size_t pos = 0;
+        while ((pos = text.find(toReplace, pos)) != std::string::npos) {
+            text.replace(pos, toReplace.length(), replacement);
+            pos += replacement.length();
+        }
+    }
 }
 
 #endif

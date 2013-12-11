@@ -20,10 +20,8 @@ namespace CppAD {
     namespace loops {
 
         template<class Base>
-        class HessianWithLoopsInfo {
+        class HessianWithLoopsEquationGroupInfo {
         public:
-            CppAD::LoopModel<Base>* model;
-            vector<std::set<size_t> > evalJacSparsity;
             vector<std::set<size_t> > evalHessSparsity;
             // (tapeJ1, tapeJ2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > indexedIndexedPositions;
@@ -31,15 +29,10 @@ namespace CppAD {
             std::map<pairss, std::vector<HessianElement> > indexedNonIndexedPositions;
             // (tapeJ1, j2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > indexedTempPositions;
-
             // (tapeJ1(j1), tapeJ2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > nonIndexedIndexedPositions;
-            //(j1, j2) -> position
-            std::map<pairss, size_t> nonIndexedNonIndexedPosition;
-
             // (j1, tapeJ2) -> [positions]
             std::map<pairss, std::vector<HessianElement> > tempIndexedPositions;
-
             // (tapeJ1, j2) -> [k]
             std::map<pairss, std::set<size_t> > indexedTempEvals;
             // [(j1, j2)]
@@ -50,6 +43,30 @@ namespace CppAD {
             std::map<pairss, std::set<size_t> > tempNonIndexedEvals;
             // (j1, j2) -> k1 -> [k2]
             std::map<pairss, std::map<size_t, std::set<size_t> > > tempTempEvals;
+            /**
+             * Hessian
+             */
+            std::map<size_t, std::map<size_t, CG<Base> > > hess;
+
+            inline HessianWithLoopsEquationGroupInfo() {
+            }
+
+            inline HessianWithLoopsEquationGroupInfo(const CppAD::LoopModel<Base>& loop) :
+                evalHessSparsity(loop.getTapeIndependentCount()) {
+
+            }
+        };
+
+        template<class Base>
+        class HessianWithLoopsInfo {
+        public:
+            CppAD::LoopModel<Base>* model;
+            //
+            vector<std::set<size_t> > evalJacSparsity;
+            //
+            std::vector<HessianWithLoopsEquationGroupInfo<Base> > equationGroups;
+            //(j1, j2) -> position
+            std::map<pairss, size_t> nonIndexedNonIndexedPosition;
             // (j1 ,j2) -> [k1]
             std::map<pairss, std::set<size_t> > nonLoopNonIndexedNonIndexed;
 
@@ -58,17 +75,17 @@ namespace CppAD {
             IndexOperationNode<Base>* iterationIndexOp;
             vector<CG<Base> > x; // loop independent variables
             vector<CG<Base> > w;
+            /**
+             * Jacobian
+             */
             vector<std::map<size_t, CG<Base> > > dyiDzk;
-
-            std::map<size_t, std::map<size_t, CG<Base> > > hess;
-
             vector<std::set<size_t> > noLoopEvalHessTempsSparsity;
             std::map<size_t, std::map<size_t, CG<Base> > > dzDxx;
 
             // if-else branches
             vector<IfElseInfo<Base> > ifElses;
 
-            HessianWithLoopsInfo() :
+            inline HessianWithLoopsInfo() :
                 model(NULL),
                 loopStart(NULL),
                 loopEnd(NULL),
@@ -76,71 +93,64 @@ namespace CppAD {
 
             }
 
-            HessianWithLoopsInfo(CppAD::LoopModel<Base>& loop) :
+            inline HessianWithLoopsInfo(CppAD::LoopModel<Base>& loop) :
                 model(&loop),
                 evalJacSparsity(loop.getTapeDependentCount()),
-                evalHessSparsity(loop.getTapeIndependentCount()),
+                equationGroups(loop.getEquationsGroups().size(), HessianWithLoopsEquationGroupInfo<Base>(loop)),
                 loopStart(NULL),
                 loopEnd(NULL),
                 iterationIndexOp(NULL) {
 
             }
 
-            inline void evalLoopModelJacobian() {
-                ADFun<CG<Base> >& fun = model->getTape();
-                const vector<std::set<size_t> >& jacTapeSparsity = model->getJacobianSparsity();
-
-                //printSparsityPattern(jacTapeSparsity, "jac - loop");
-                //printSparsityPattern(info.evalJacSparsity, "jac - loop -eval");
-
-                /**
-                 * evaluate loop model jacobian
-                 */
-                std::vector<size_t> row, col;
-                extra::generateSparsityIndexes(evalJacSparsity, row, col);
-                if (row.size() > 0) {
-                    vector<CG<Base> > jacLoop(row.size());
-
-                    CppAD::sparse_jacobian_work work; // temporary structure for CppAD
-                    if (extra::estimateBestJacobianADMode(row, col)) {
-                        fun.SparseJacobianForward(x, jacTapeSparsity, row, col, jacLoop, work);
-                    } else {
-                        fun.SparseJacobianReverse(x, jacTapeSparsity, row, col, jacLoop, work);
-                    }
-
-                    // save/organize results
-                    dyiDzk.resize(model->getTapeDependentCount());
-                    for (size_t el = 0; el < jacLoop.size(); el++) {
-                        size_t tapeI = row[el];
-                        size_t tapeJ = col[el];
-                        dyiDzk[tapeI][tapeJ] = jacLoop[el];
-                    }
-                }
-
-            }
-
+            /**
+             * Evaluates the Jacobian and the Hessian of the loop model
+             * 
+             * @param individualColoring whether or not there are atomic
+             *                           functions in the model
+             */
             inline void evalLoopModelJacobianHessian(bool individualColoring) {
                 using namespace CppAD::extra;
 
                 ADFun<CG<Base> >& fun = model->getTape();
+                const std::vector<IterEquationGroup<Base> >& eqGroups = model->getEquationsGroups();
 
                 vector<vector<CG<Base> > > vw(1);
-                vw[0] = w;
+                vw[0].resize(w.size());
 
                 vector<CG<Base> > y;
-                vector<std::map<size_t, std::map<size_t, CG<Base> > > > vhess;
 
-                generateLoopForJacHes(fun, x, vw, y,
-                                      model->getJacobianSparsity(),
-                                      evalJacSparsity,
-                                      dyiDzk,
-                                      model->getHessianSparsity(),
-                                      evalHessSparsity,
-                                      vhess,
-                                      individualColoring);
+                size_t nEqGroups = equationGroups.size();
 
-                //Hessian
-                hess = vhess[0];
+                vector<std::set<size_t> > empty;
+                vector<std::map<size_t, CG<Base> > > emptyJac;
+
+                for (size_t g = 0; g < nEqGroups; g++) {
+                    const IterEquationGroup<Base>& group = eqGroups[g];
+
+                    vector<std::map<size_t, std::map<size_t, CG<Base> > > > vhess;
+
+                    for (size_t i = 0; i < w.size(); i++) {
+                        vw[0][i] = Base(0);
+                    }
+
+                    std::set<size_t>::const_iterator itI;
+                    for (itI = group.tapeI.begin(); itI != group.tapeI.end(); ++itI) {
+                        vw[0][*itI] = w[*itI];
+                    }
+
+                    generateLoopForJacHes(fun, x, vw, y,
+                                          model->getJacobianSparsity(),
+                                          g == 0 ? evalJacSparsity : empty,
+                                          g == 0 ? dyiDzk : emptyJac,
+                                          model->getHessianSparsity(),
+                                          equationGroups[g].evalHessSparsity,
+                                          vhess,
+                                          individualColoring);
+
+                    //Hessian
+                    equationGroups[g].hess = vhess[0];
+                }
             }
 
         };

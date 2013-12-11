@@ -96,7 +96,7 @@ namespace CppAD {
             size_t assignOrAdd = 0;
 
             const vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
-            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
+            std::vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
             for (size_t i = 0; i < yl.size(); i++) {
                 std::map<size_t, size_t> locationsIter2Pos;
 
@@ -130,7 +130,7 @@ namespace CppAD {
             /**
              * move non-indexed expressions outside loop
              */
-            moveNonIndexedOutsideLoop(*loopStart, *loopEnd);
+            moveNonIndexedOutsideLoop(handler, *loopStart, *loopEnd);
         }
 
         return y;

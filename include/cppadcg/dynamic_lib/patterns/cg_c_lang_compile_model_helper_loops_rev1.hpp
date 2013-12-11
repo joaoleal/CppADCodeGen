@@ -214,7 +214,7 @@ namespace CppAD {
             /**
              * process each equation pattern (row in the loop tape)
              */
-            vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults;
+            std::vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults;
             for (size_t tapeI = 0; tapeI < info.size(); tapeI++) {
                 const JacobianWithLoopsRowInfo& rowInfo = info[tapeI];
 
@@ -270,17 +270,22 @@ namespace CppAD {
                 for (size_t it = 0; it < nIterations; it++) {
                     size_t i = dependentIndexes[tapeI][it].original;
                     if (i < _fun.Range()) { // some equations are not present in all iteration
-                        std::set<size_t>& positions = row2position[i];
+                        std::set<size_t> positions;
 
                         map<size_t, std::vector<size_t> >::const_iterator itc;
                         for (itc = rowInfo.indexedPositions.begin(); itc != rowInfo.indexedPositions.end(); ++itc) {
                             const std::vector<size_t>& positionsC = itc->second;
-                            positions.insert(positionsC[it]);
+                            if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
+                                positions.insert(positionsC[it]);
                         }
                         for (itc = rowInfo.nonIndexedPositions.begin(); itc != rowInfo.nonIndexedPositions.end(); ++itc) {
                             const std::vector<size_t>& positionsC = itc->second;
-                            positions.insert(positionsC[it]);
+                            if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
+                                positions.insert(positionsC[it]);
                         }
+
+                        if (!positions.empty())
+                            row2position[i].swap(positions);
                     }
                 }
 

@@ -22,6 +22,22 @@ namespace CppAD {
         /***********************************************************************
          *  Utility classes
          **********************************************************************/
+        template<class Base>
+        class IfBranchData {
+        public:
+            CG<Base> value;
+            std::map<size_t, size_t> locations;
+        public:
+
+            inline IfBranchData() {
+            }
+
+            inline IfBranchData(const CG<Base>& v,
+                                const std::map<size_t, size_t>& loc) :
+                value(v),
+                locations(loc) {
+            }
+        };
 
         template<class Base>
         class IfBranchInfo {
@@ -192,7 +208,7 @@ namespace CppAD {
         template<class Base>
         LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
                                                   LoopStartOperationNode<Base>& loopStart,
-                                                  const vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                  const std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                   const std::set<IndexOperationNode<Base>*>& indexesOps,
                                                   size_t assignOrAdd) {
             std::vector<Argument<Base> > endArgs;
@@ -233,7 +249,8 @@ namespace CppAD {
         }
 
         template<class Base>
-        inline void moveNonIndexedOutsideLoop(LoopStartOperationNode<Base>& loopStart,
+        inline void moveNonIndexedOutsideLoop(CodeHandler<Base>& handler,
+                                              LoopStartOperationNode<Base>& loopStart,
                                               LoopEndOperationNode<Base>& loopEnd) {
             //EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
             const IndexDclrOperationNode<Base>& loopIndex = loopStart.getIndex();
@@ -242,7 +259,7 @@ namespace CppAD {
             const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
             for (size_t i = 0; i < endArgs.size(); i++) {
                 assert(endArgs[i].getOperation() != NULL);
-                findNonIndexedNodes(*endArgs[i].getOperation(), nonIndexed, loopIndex);
+                LoopNonIndexedLocator<Base>(handler, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
             }
 
             std::vector<Argument<Base> >& startArgs = loopStart.getArguments();
@@ -257,54 +274,81 @@ namespace CppAD {
         }
 
         template<class Base>
-        inline bool findNonIndexedNodes(OperationNode<Base>& node,
-                                        std::set<OperationNode<Base>*>& nonIndexed,
-                                        const IndexDclrOperationNode<Base>& loopIndex) {
-            if (node.getColor() > 0)
-                return node.getColor() == 1;
+        class LoopNonIndexedLocator {
+        private:
+            CodeHandler<Base>& handler_;
+            std::set<OperationNode<Base>*>& nonIndexed_;
+            const IndexDclrOperationNode<Base>& loopIndex_;
+        public:
 
-            if (node.getOperationType() == CGIndexDeclarationOp) {
-                if (&node == &loopIndex) {
-                    node.setColor(2);
-                    return false; // depends on the loop index
-                }
+            inline LoopNonIndexedLocator(CodeHandler<Base>& handler,
+                                         std::set<OperationNode<Base>*>& nonIndexed,
+                                         const IndexDclrOperationNode<Base>& loopIndex) :
+                handler_(handler),
+                nonIndexed_(nonIndexed),
+                loopIndex_(loopIndex) {
             }
 
-            const std::vector<Argument<Base> >& args = node.getArguments();
-            size_t size = args.size();
+            inline bool findNonIndexedNodes(OperationNode<Base>& node) {
+                if (node.getColor() > 0)
+                    return node.getColor() == 1;
 
-            bool indexedPath = false; // whether or not this node depends on indexed independents
-            bool nonIndexedArgs = false; // whether or not there are non indexed arguments
-            for (size_t a = 0; a < size; a++) {
-                OperationNode<Base>* arg = args[a].getOperation();
-                if (arg != NULL) {
-                    bool nonIndexedArg = findNonIndexedNodes(*arg, nonIndexed, loopIndex);
-                    nonIndexedArgs |= nonIndexedArg;
-                    indexedPath |= !nonIndexedArg;
-                }
-            }
-
-            node.setColor(indexedPath ? 2 : 1);
-
-            if (node.getOperationType() == CGArrayElementOp ||
-                    node.getOperationType() == CGAtomicForwardOp ||
-                    node.getOperationType() == CGAtomicReverseOp) {
-                return !indexedPath; // should not move array creation elements outside the loop
-            }
-
-            if (indexedPath && nonIndexedArgs) {
-                for (size_t a = 0; a < size; a++) {
-                    OperationNode<Base>* arg = args[a].getOperation();
-                    if (arg != NULL && arg->getColor() == 1 && // must be a non indexed expression
-                            arg->getOperationType() != CGInvOp) {// no point in moving just one variable outside
-
-                        nonIndexed.insert(arg);
+                if (node.getOperationType() == CGIndexDeclarationOp) {
+                    if (&node == &loopIndex_) {
+                        node.setColor(2);
+                        return false; // depends on the loop index
                     }
                 }
-            }
 
-            return !indexedPath;
-        }
+                const std::vector<Argument<Base> >& args = node.getArguments();
+                size_t size = args.size();
+
+                bool indexedPath = false; // whether or not this node depends on indexed independents
+                bool nonIndexedArgs = false; // whether or not there are non indexed arguments
+                for (size_t a = 0; a < size; a++) {
+                    OperationNode<Base>* arg = args[a].getOperation();
+                    if (arg != NULL) {
+                        bool nonIndexedArg = findNonIndexedNodes(*arg);
+                        nonIndexedArgs |= nonIndexedArg;
+                        indexedPath |= !nonIndexedArg;
+                    }
+                }
+
+                node.setColor(indexedPath ? 2 : 1);
+
+                if (node.getOperationType() == CGArrayElementOp ||
+                        node.getOperationType() == CGAtomicForwardOp ||
+                        node.getOperationType() == CGAtomicReverseOp) {
+                    return !indexedPath; // should not move array creation elements outside the loop
+                }
+
+                if (indexedPath && nonIndexedArgs) {
+                    for (size_t a = 0; a < size; a++) {
+                        OperationNode<Base>* arg = args[a].getOperation();
+                        if (arg != NULL && arg->getColor() == 1) {// must be a non indexed expression
+                            CGOpCode op = arg->getOperationType();
+                            if (op != CGInvOp && op != CGTmpDclOp) {// no point in moving just one variable outside
+
+                                if (op == CGLoopIndexedTmpOp) {
+                                    // must not place a CGLoopIndexedTmpOp operation outside the loop
+                                    Argument<Base> assignArg = arg->getArguments()[1];
+                                    if (assignArg.getOperation() != NULL) { // no point in moving a constant value outside
+                                        OperationNode<Base>* assignNode = new OperationNode<Base>(CGAssignOp, assignArg);
+                                        handler_.manageOperationNodeMemory(assignNode);
+                                        arg->getArguments()[1] = Argument<Base>(*assignNode);
+                                        nonIndexed_.insert(assignNode);
+                                    }
+                                } else {
+                                    nonIndexed_.insert(arg);
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return !indexedPath;
+            }
+        };
 
         template<class Base>
         inline IfElseInfo<Base>* findExistingIfElse(vector<IfElseInfo<Base> >& ifElses,
@@ -412,10 +456,208 @@ namespace CppAD {
             return info;
         }
 
+        template<class Base>
+        inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
+                                                      const std::map<size_t, IfBranchData<Base> >& branches,
+                                                      size_t maxIter,
+                                                      size_t nLocalIter,
+                                                      IndexOperationNode<Base>& iterationIndexOp,
+                                                      vector<IfElseInfo<Base> >& ifElses,
+                                                      bool printResult = false) {
+            using namespace std;
+
+            map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
+            typename map<size_t, IfBranchData<Base> >::const_iterator itb;
+            for (itb = branches.begin(); itb != branches.end(); ++itb) {
+                set<size_t> iterations;
+                mapKeys(itb->second.locations, iterations);
+                firstIt2Count2Iterations[SizeN1stIt(iterations.size(), *iterations.begin())] = make_pair(itb->first, iterations);
+            }
+
+            IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
+            bool reusingIfElse = ifElseBranches != NULL;
+            if (!reusingIfElse) {
+                size_t s = ifElses.size();
+                ifElses.resize(s + 1);
+                ifElseBranches = &ifElses[s];
+            }
+
+            /**
+             * create/change each if/else branch
+             */
+            OperationNode<Base>* ifStart = NULL;
+            OperationNode<Base>* ifBranch = NULL;
+            Argument<Base> nextBranchArg;
+            set<size_t> usedIter;
+
+            map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
+            for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
+                size_t firstIt = it1st2Count2Iters->first.second;
+                size_t count = it1st2Count2Iters->second.first;
+                const set<size_t>& iterations = it1st2Count2Iters->second.second;
+                const IfBranchData<Base>& branchData = branches.at(count);
+
+                size_t iterCount = iterations.size();
+
+                SizeN1stIt pos(iterCount, firstIt);
+
+                if (reusingIfElse) {
+                    //reuse existing node
+                    ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
+                    if (nextBranchArg.getOperation() != NULL)
+                        ifBranch->getArguments().push_back(nextBranchArg);
+
+                } else if (usedIter.size() + iterCount == nLocalIter) {
+                    // all other iterations: ELSE
+                    ifBranch = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifBranch), nextBranchArg);
+                    handler.manageOperationNodeMemory(ifBranch);
+                } else {
+                    // depends on the iteration index
+                    OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
+                    handler.manageOperationNodeMemory(cond);
+
+                    if (ifStart == NULL) {
+                        // IF
+                        ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                        ifBranch = ifStart;
+                    } else {
+                        // ELSE IF
+                        ifBranch = new OperationNode<Base>(CGElseIfOp, Argument<Base>(*ifBranch), Argument<Base>(*cond), nextBranchArg);
+                    }
+
+                    handler.manageOperationNodeMemory(ifBranch);
+
+                    usedIter.insert(iterations.begin(), iterations.end());
+                }
+
+                IndexPattern* pattern = IndexPattern::detect(branchData.locations);
+                handler.manageLoopDependentIndexPattern(pattern);
+
+                Argument<Base> value;
+                if (printResult) {
+                    PrintOperationNode<Base>* printNode = new PrintOperationNode<Base>("__________", asArgument(branchData.value), "\n");
+                    handler.manageOperationNodeMemory(printNode);
+                    value = Argument<Base>(*printNode);
+                } else {
+                    value = asArgument(branchData.value);
+                }
+
+                std::vector<size_t> ainfo(2);
+                ainfo[0] = handler.addLoopDependentIndexPattern(*pattern); // dependent index pattern location
+                ainfo[1] = 1; // assignOrAdd
+                std::vector<Argument<Base> > indexedArgs(2);
+                indexedArgs[0] = value; // indexed expression
+                indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+                OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+                handler.manageOperationNodeMemory(yIndexed);
+
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
+                handler.manageOperationNodeMemory(ifAssign);
+                nextBranchArg = Argument<Base>(*ifAssign);
+
+                if (!reusingIfElse) {
+                    IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
+                    branch.iterations = iterations;
+                    branch.node = ifBranch;
+                }
+            }
+
+            /**
+             * end if
+             */
+            if (reusingIfElse) {
+                ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
+            } else {
+                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
+                handler.manageOperationNodeMemory(ifElseBranches->endIf);
+            }
+
+            return handler.createCG(Argument<Base>(*ifElseBranches->endIf));
+        }
+
+        /**
+         * Contribution to a constant location
+         */
+        template<class Base>
+        CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
+                                               LinearIndexPattern& pattern,
+                                               const std::set<size_t>& iterations,
+                                               size_t maxIter,
+                                               const CG<Base>& ddfdxdx,
+                                               IndexOperationNode<Base>& iterationIndexOp,
+                                               vector<IfElseInfo<Base> >& ifElses) {
+            using namespace std;
+
+            assert(pattern.getLinearSlopeDy() == 0); // must be a constant index
+
+            // try to find an existing if-else where these operations can be added
+            map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
+            SizeN1stIt pos(iterations.size(), *iterations.begin());
+            firstIt2Count2Iterations[pos] = make_pair(1, iterations);
+
+            IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
+            bool reusingIfElse = ifElseBranches != NULL;
+            if (!reusingIfElse) {
+                size_t s = ifElses.size();
+                ifElses.resize(s + 1);
+                ifElseBranches = &ifElses[s];
+            }
+
+            /**
+             * create/change each if/else branch
+             */
+            OperationNode<Base>* ifBranch = NULL;
+
+            if (reusingIfElse) {
+                //reuse existing node
+                ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
+
+            } else {
+                // depends on the iterations indexes
+                const set<size_t> usedIter;
+                OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
+                handler.manageOperationNodeMemory(cond);
+
+                ifBranch = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                handler.manageOperationNodeMemory(ifBranch);
+            }
+
+            std::vector<size_t> ainfo(2);
+            ainfo[0] = handler.addLoopDependentIndexPattern(pattern); // dependent index pattern location
+            ainfo[1] = 1; // assignOrAdd
+            std::vector<Argument<Base> > indexedArgs(2);
+            indexedArgs[0] = asArgument(ddfdxdx); // indexed expression
+            indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+            handler.manageOperationNodeMemory(yIndexed);
+
+            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
+            handler.manageOperationNodeMemory(ifAssign);
+            Argument<Base> nextBranchArg = Argument<Base>(*ifAssign);
+
+            if (!reusingIfElse) {
+                IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
+                branch.iterations = iterations;
+                branch.node = ifBranch;
+            }
+
+            /**
+             * end if
+             */
+            if (reusingIfElse) {
+                ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
+            } else {
+                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
+                handler.manageOperationNodeMemory(ifElseBranches->endIf);
+            }
+
+            return handler.createCG(Argument<Base>(*ifElseBranches->endIf));
+        }
+
         /**
          * 
-         * @param handler
-         * @param locationsIter2Pos
+         * @param handler source code handler
+         * @param locationsIter2Pos maps each iteration to the location of the result
          * @param iterCount the number of iteration of the loop
          * @param value the value determined inside the loop
          * @param pattern the pattern used to save the value
@@ -554,7 +796,7 @@ namespace CppAD {
 
         /**
          * 
-         * @param loopGroups Used elemets from the arrays provided by the group
+         * @param loopGroups Used elements from the arrays provided by the group
          *                   function calls (loop->group->{array->{compressed position} })
          * @param userElLocation maps each element to its position 
          *                      (array -> [compressed elements { original index }] )
@@ -682,7 +924,7 @@ namespace CppAD {
         }
 
         /**
-         * @param loopGroups Used elemets from the arrays provided by the group
+         * @param loopGroups Used elements from the arrays provided by the group
          *                   function calls (loop->group->{array->{compressed position} })
          * @param nonLoopElements Used elements from non loop function calls
          *                        ([array]{compressed position})
@@ -709,7 +951,7 @@ namespace CppAD {
             using namespace std;
 
             /**
-             * determine to which functions we can provide the hessian row directly
+             * determine to which functions we can provide the Hessian row directly
              * without needing a temporary array (compressed)
              */
             SmartVectorPointer<ArrayGroup> garbage;
@@ -717,7 +959,7 @@ namespace CppAD {
 
             /**
              * Determine jrow index patterns and
-             * hessian row start patterns
+             * Hessian row start patterns
              */
             determineForRevUsagePatterns(loopGroups, userElLocation, jcolOrdered,
                                          loopCalls, garbage);
@@ -807,7 +1049,7 @@ namespace CppAD {
 
             /**
              * contributions from equations NOT belonging to loops
-             * (must come before the loop related values because of the assigments)
+             * (must come before the loop related values because of the assignments)
              */
             langC.setArgumentIn("inLocal");
             langC.setArgumentOut("outLocal");
@@ -961,7 +1203,7 @@ namespace CppAD {
         /**
          * 
          * @param elements
-         * @param loopGroups Used elemets from the arrays provided by the group
+         * @param loopGroups Used elements from the arrays provided by the group
          *                   function calls (loop->group->{array->{compressed position} })
          * @param nonLoopElements Used elements from non loop function calls
          *                        ([array]{compressed position})
@@ -1028,7 +1270,7 @@ namespace CppAD {
 
                 /**
                  * contributions from equations not in loops 
-                 * (must come before contributions from loops because of the assigments)
+                 * (must come before contributions from loops because of the assignments)
                  */
                 map<size_t, set<size_t> >::const_iterator itnl = nonLoopElements.find(jrow);
                 if (itnl != nonLoopElements.end()) {

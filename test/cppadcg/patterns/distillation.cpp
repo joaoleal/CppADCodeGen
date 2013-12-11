@@ -38,7 +38,7 @@ namespace CppAD {
             // this->testZeroOrder_ = false;
             // this->testJacobian_ = false;
             // this->testHessian_ = false;
-            //this->verbose_ = true;
+            this->verbose_ = true;
             //this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 4e3;
 
 #if 1

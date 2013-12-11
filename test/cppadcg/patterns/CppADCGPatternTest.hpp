@@ -54,6 +54,15 @@ namespace CppAD {
                                   size_t n,
                                   size_t repeat,
                                   size_t n_loops = 1) {
+            std::vector<std::vector<std::set<size_t> > > loops(n_loops);
+            testPatternDetection(model, m, n, repeat, loops);
+        }
+
+        void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
+                                  size_t m,
+                                  size_t n,
+                                  size_t repeat,
+                                  const std::vector<std::vector<std::set<size_t> > >& loops) {
             using namespace CppAD;
 
             //size_t m2 = repeat * m;
@@ -72,7 +81,7 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testPatternDetectionResults(fun, m, repeat, n_loops);
+            testPatternDetectionResults(fun, m, repeat, loops);
         }
 
         void testLibCreation(const std::string& libName,
@@ -154,6 +163,17 @@ namespace CppAD {
                                              size_t repeat,
                                              size_t n_loops = 1) {
 
+            std::vector<std::vector<std::set<size_t> > > loops(n_loops);
+            testPatternDetectionWithAtomics(model, atoms, m, xb, repeat, loops);
+        }
+
+        void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
+                                             const std::vector<atomic_base<Base>* >& atoms,
+                                             size_t m,
+                                             const std::vector<Base>& xb,
+                                             size_t repeat,
+                                             const std::vector<std::vector<std::set<size_t> > >& loops) {
+
             using namespace CppAD;
 
             std::vector<CGAbstractAtomicFun<double>*> atomics(atoms.size());
@@ -187,7 +207,7 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testPatternDetectionResults(fun, m, repeat, n_loops);
+            testPatternDetectionResults(fun, m, repeat, loops);
 
             for (size_t a = 0; a < atomics.size(); a++) {
                 delete atomics[a];
@@ -250,7 +270,8 @@ namespace CppAD {
             }
         }
 
-        std::vector<std::set<size_t> > createRelatedDepCandidates(size_t m, size_t repeat) {
+        std::vector<std::set<size_t> > createRelatedDepCandidates(size_t m,
+                                                                  size_t repeat) {
             std::vector<std::set<size_t> > relatedDepCandidates(m);
             for (size_t i = 0; i < repeat; i++) {
                 for (size_t ii = 0; ii < m; ii++) {
@@ -260,7 +281,12 @@ namespace CppAD {
             return relatedDepCandidates;
         }
 
-        void testPatternDetectionResults(ADFun<CGD>& fun, size_t m, size_t repeat, size_t n_loops) {
+        void testPatternDetectionResults(ADFun<CGD>& fun,
+                                         size_t m,
+                                         size_t repeat,
+                                         const std::vector<std::vector<std::set<size_t> > >& loops) {
+            using namespace std;
+
             /**
              * Generate operation graph
              */
@@ -286,10 +312,78 @@ namespace CppAD {
             delete nonLoopTape;
 
             //std::cout << "loops: " << matcher.getLoops().size() << std::endl;
-            ASSERT_EQ(loopTapes.s.size(), n_loops);
+            ASSERT_EQ(loopTapes.s.size(), loops.size());
 
             //std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
-            ASSERT_EQ(matcher.getEquationPatterns().size(), m);
+
+            /**
+             * order loops and equation patterns by the lowest used dependent
+             */
+            //  - calculated
+            map<size_t, map<size_t, set<size_t> > > orderedCalcLoops;
+
+            const std::vector<Loop<Base>*>& calcLoops = matcher.getLoops();
+            for (size_t l = 0; l < calcLoops.size(); l++) {
+                Loop<Base>* loop = calcLoops[l];
+                size_t minDep = std::numeric_limits<size_t>::max();
+
+                map<size_t, set<size_t> > dependents;
+                set<EquationPattern<Base>*>::const_iterator iteq;
+                for (iteq = loop->equations.begin(); iteq != loop->equations.end(); ++iteq) {
+                    EquationPattern<Base>* eq = *iteq;
+                    size_t minEqDep = *eq->dependents.begin();
+                    minDep = std::min(minDep, *eq->dependents.begin());
+                    dependents[minEqDep] = eq->dependents;
+                }
+
+                orderedCalcLoops[minDep] = dependents;
+            }
+
+            //  - expected
+            bool defined = false;
+            map<size_t, map<size_t, set<size_t> > > orderedExpectedLoops;
+            for (size_t l = 0; l < loops.size(); l++) {
+                const std::vector<set<size_t> >& eqPatterns = loops[l];
+
+                if (!eqPatterns.empty()) {
+                    defined = true;
+                    /**
+                     * check every equation
+                     */
+                    size_t minDep = std::numeric_limits<size_t>::max();
+
+                    map<size_t, set<size_t> > dependents;
+                    for (size_t eq = 0; eq < eqPatterns.size(); eq++) {
+                        size_t minEqDep = *eqPatterns[eq].begin();
+                        minDep = std::min(minDep, *eqPatterns[eq].begin());
+                        dependents[minEqDep] = eqPatterns[eq];
+                    }
+                    orderedExpectedLoops[minDep] = dependents;
+                }
+            }
+
+            if (defined) {
+                map<size_t, map<size_t, set<size_t> > >::const_iterator itLexp = orderedExpectedLoops.begin();
+                map<size_t, map<size_t, set<size_t> > >::const_iterator itLcalc = orderedCalcLoops.begin();
+                for (; itLexp != orderedExpectedLoops.end(); ++itLexp, ++itLcalc) {
+                    ASSERT_EQ(itLexp->first, itLcalc->first);
+                    ASSERT_EQ(itLexp->second.size(), itLcalc->second.size());
+
+                    map<size_t, set<size_t> >::const_iterator itEexp = itLexp->second.begin();
+                    map<size_t, set<size_t> >::const_iterator itEcalc = itLcalc->second.begin();
+                    for (; itEexp != itLexp->second.end(); ++itEexp, ++itEcalc) {
+                        ASSERT_EQ(itEexp->first, itEcalc->first);
+                        ASSERT_TRUE(itEexp->second == itEcalc->second);
+                    }
+                }
+
+            } else {
+                ASSERT_EQ(matcher.getEquationPatterns().size(), m);
+                for (size_t eq = 0; eq < matcher.getEquationPatterns().size(); eq++) {
+                    EquationPattern<Base>* eqp = matcher.getEquationPatterns()[eq];
+                    ASSERT_EQ(eqp->dependents.size(), repeat);
+                }
+            }
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,

@@ -1017,7 +1017,7 @@ namespace CppAD {
                         if (aType == CGLoopIndexedIndepOp) {
                             // ID value not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
-                        } else if (aType == CGAliasOp) {
+                        } else if (aType == CGAliasOp || aType == CGTmpOp) {
                             continue; // should never be added to the evaluation queue
                         } else if (aType == CGLoopStartOp ||
                                 aType == CGLoopEndOp ||
@@ -1034,6 +1034,18 @@ namespace CppAD {
                                 // ID value is not really used but must be non-zero
                                 arg.setVariableID(std::numeric_limits<size_t>::max());
                             }
+                        } else if (aType == CGPriOp) {
+                            addToEvaluationQueue(arg);
+                            if (arg.getVariableID() == 0) {
+                                // ID value is not really used but must be non-zero
+                                arg.setVariableID(std::numeric_limits<size_t>::max());
+                            }
+                        } else if (aType == CGTmpDclOp) {
+                            addToEvaluationQueue(arg);
+
+                            arg.setVariableID(_idCount);
+                            _idCount++;
+
                         } else if (_lang->createsNewVariable(arg) ||
                                 _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
 
@@ -1043,7 +1055,7 @@ namespace CppAD {
                                 if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
                                     arg.setVariableID(_idAtomicCount);
                                     _idAtomicCount++;
-                                } else if (aType == CGLoopIndexedDepOp) {
+                                } else if (aType == CGLoopIndexedDepOp || aType == CGLoopIndexedTmpOp) {
                                     // ID value not really used but must be non-zero
                                     arg.setVariableID(std::numeric_limits<size_t>::max());
                                 } else if (aType == CGArrayCreationOp) {

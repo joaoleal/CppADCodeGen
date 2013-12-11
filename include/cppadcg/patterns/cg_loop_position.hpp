@@ -26,8 +26,8 @@ namespace CppAD {
         size_t original;
 
         inline LoopPosition() :
-            tape(-1),
-            original(-1) {
+            tape(std::numeric_limits<size_t>::max()),
+            original(std::numeric_limits<size_t>::max()) {
         }
 
         inline LoopPosition(size_t t, size_t o) :
