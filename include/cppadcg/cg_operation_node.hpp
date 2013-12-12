@@ -323,7 +323,7 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(orig.last_usage_order_),
             color_(orig.color_),
-            name_(orig.name_ != NULL ? name_ = new std::string(*orig.name_) : NULL) {
+            name_(orig.name_ != NULL ? new std::string(*orig.name_) : NULL) {
         }
 
         friend class CodeHandler<Base>;
