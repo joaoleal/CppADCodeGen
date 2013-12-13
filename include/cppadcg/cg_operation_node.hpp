@@ -232,6 +232,10 @@ namespace CppAD {
             return total_use_count_;
         }
 
+        inline void setTotalUsageCount(size_t cout) {
+            total_use_count_ = cout;
+        }
+
         inline void increaseTotalUsageCount() {
             total_use_count_++;
         }
