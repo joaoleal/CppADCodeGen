@@ -459,6 +459,7 @@ namespace CppAD {
             //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
             compHelpL.setRelatedDependents(relatedDepCandidates);
             compHelpL.setTypicalIndependentValues(xTypical);
+            compHelpL.setParameterPrecision(std::numeric_limits<Base>::digits10 + 4);
 
             if (!customJacSparsity_.empty())
                 compHelpL.setCustomSparseJacobianElements(customJacSparsity_);
@@ -499,6 +500,7 @@ namespace CppAD {
             compHelp.setCreateReverseOne(false);
             compHelp.setCreateReverseTwo(reverseTwo);
             compHelp.setTypicalIndependentValues(xTypical);
+            compHelp.setParameterPrecision(std::numeric_limits<Base>::digits10 + 4);
             //compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
             if (!customJacSparsity_.empty())
