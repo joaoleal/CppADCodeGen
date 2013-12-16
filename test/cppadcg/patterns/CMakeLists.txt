@@ -23,4 +23,4 @@ add_cppadcg_test(cross_iteration.cpp)
 add_cppadcg_test(hessian_with_loops.cpp)
 add_cppadcg_test(cstr_collocation.cpp)
 add_cppadcg_test(tank_battery.cpp)
-add_cppadcg_test(distillation.cpp)
+#add_cppadcg_test(distillation.cpp)# takes too long
