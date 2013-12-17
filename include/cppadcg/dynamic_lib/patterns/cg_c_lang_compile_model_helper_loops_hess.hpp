@@ -505,7 +505,7 @@ namespace CppAD {
                                     groupHessInfo.tempTempEvals[orig][k1].insert(k2);
                                     groupHessInfo.evalHessSparsity[posK1->tape].insert(tapeK2);
 
-                                    noLoopEvalJacSparsity[nOrigEq + k2].insert(j2); /////// @todo: repeated operation for each group (only one needed)
+                                    noLoopEvalJacSparsity[nOrigEq + k2].insert(j2); // @todo: repeated operation for each group (only one needed)
                                 }
                             }
                         }

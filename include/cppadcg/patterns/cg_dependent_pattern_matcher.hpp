@@ -397,9 +397,6 @@ namespace CppAD {
                                                     loopRelations.insert(itr->second);
                                                     nonIndexedOnly = false;
                                                 }
-
-                                                ////////////////////////////////////////////////////////////////////////////////////////////////////
-                                                //  how about no indexed shared variables... (only non indexed)
                                             }
                                         }
                                     }

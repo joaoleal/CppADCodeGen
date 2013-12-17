@@ -336,12 +336,12 @@ namespace CppAD {
                             // an alias is used for these cases
                             assert(opLoopRef != NULL);
 
-                            const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef); /////////////////////////////////////////////////////
+                            const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef);
                             addOperationArguments2Loop(opLoopRef, eq->indexedOpIndep.op2Arguments.at(opEqRef));
                         }
                     }
 
-                    // not need anymore (lets free this memory now)
+                    // not needed anymore (lets free this memory now)
                     eq->indexedOpIndep.op2Arguments.clear();
                 }
             }
