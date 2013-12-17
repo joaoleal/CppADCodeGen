@@ -918,14 +918,13 @@ namespace CppAD {
                     OperationNode<Base>* tmpVar = var.getArguments()[0].getOperation();
                     CPPADCG_ASSERT_KNOWN(tmpVar != NULL, "Invalid argument for print operation");
                     return createVariableName(*tmpVar);
-                    
-                } else if (op == CGLoopIndexedTmpOp) {
-                    CPPADCG_ASSERT_KNOWN(var.getArguments().size() == 2, "Invalid number of arguments for loop indexed temporary operation");
+
+                } else if (op == CGLoopIndexedTmpOp || op == CGTmpOp) {
+                    CPPADCG_ASSERT_KNOWN(var.getArguments().size() >= 1, "Invalid number of arguments for loop indexed temporary operation");
                     OperationNode<Base>* tmpVar = var.getArguments()[0].getOperation();
                     CPPADCG_ASSERT_KNOWN(tmpVar != NULL && tmpVar->getOperationType() == CGTmpDclOp, "Invalid arguments for loop indexed temporary operation");
-                    assert(tmpVar->getName() != NULL);
-                    return *tmpVar->getName();
-
+                    return createVariableName(*tmpVar);
+                    
                 } else {
                     // temporary variable
                     var.setName(_nameGen->generateTemporary(var));

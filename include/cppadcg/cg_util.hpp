@@ -755,7 +755,7 @@ namespace CppAD {
      **************************************************************************/
 
     /**
-     * Replaces all occurances of a string.
+     * Replaces all occurrence of a string.
      * 
      * @param text the text where the search and replacement will be performed
      * @param toReplace the text to be replaced

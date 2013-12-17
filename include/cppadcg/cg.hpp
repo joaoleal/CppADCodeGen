@@ -92,6 +92,7 @@
 #include <cppadcg/cg_default.hpp>
 #include <cppadcg/cg_variable.hpp>
 #include <cppadcg/cg_identical.hpp>
+#include <cppadcg/cg_range.hpp>
 #include <cppadcg/cg_atomic_dependency_locator.hpp>
 #include <cppadcg/cg_variable_name_generator.hpp>
 #include <cppadcg/cg_job_timer.hpp>

@@ -91,8 +91,8 @@ namespace CppAD {
         size_t _currentScopeColor;
         // all the scopes
         std::vector<ScopePath> _scopes;
-        //
-        std::map<size_t, std::set<OperationNode<Base>*> > _scopeExtraDependecy;
+        // possible altered nodes due to scope conditionals (altered node <-> clone of original)
+        std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > > _alteredNodes;
         // the language used for source code generation
         Language<Base>* _lang;
         // the lowest ID used for temporary variables
@@ -348,7 +348,8 @@ namespace CppAD {
             _scopeColorCount = 0;
             _currentScopeColor = 0;
             _scopes.reserve(4);
-            _scopeExtraDependecy.clear();
+            _scopes.resize(1);
+            _alteredNodes.clear();
             _loopStartEvalOrder.clear();
             for (size_t i = 0; i < atomicFunctions.size(); i++) {
                 _atomicFunctionsSet.insert(atomicFunctions[i]);
@@ -388,31 +389,10 @@ namespace CppAD {
             }
 
             /**
-             * add some additional arguments to some nodes (loops, ifs) related
-             * with other nodes being used in different scopes
-             */
-            typename std::map<size_t, std::set<OperationNode<Base>*> >::const_iterator itse;
-            for (itse = _scopeExtraDependecy.begin(); itse != _scopeExtraDependecy.end(); ++itse) {
-                assert(itse->first < _scopes.size());
-                assert(!_scopes[itse->first].empty());
-                assert(_scopes[itse->first].back().beginning != NULL);
-
-                OperationNode<Base>& div = *_scopes[itse->first].back().beginning;
-                const std::set<OperationNode<Base>*>& extraDeps = itse->second;
-
-                typename std::set<OperationNode<Base>*>::const_iterator itn;
-                for (itn = extraDeps.begin(); itn != extraDeps.end(); ++itn) {
-                    OperationNode<Base>& code = **itn;
-                    if (!containsArgument(div, code)) {
-                        div.getArguments().push_back(Argument<Base>(code));
-                    }
-                }
-            }
-            _scopeExtraDependecy.clear();
-
-            /**
              * determine the variable creation order
              */
+            _scopedVariableOrder.reserve(std::min(size_t(1), _scopes.size()));
+
             for (size_t i = 0; i < m; i++) {
                 CG<Base>& var = dependent[i];
                 if (var.getOperationNode() != NULL) {
@@ -438,6 +418,8 @@ namespace CppAD {
             if (_scopedVariableOrder.size() == 1) {
                 _variableOrder.swap(_scopedVariableOrder[0]); // most common situation
             } else {
+                optimizeIfs(); // reduce the number of adjoining ifs
+
                 size_t vosize = 0;
                 for (size_t s = 0; s < _scopedVariableOrder.size(); s++) {
                     vosize += _scopedVariableOrder[s].size();
@@ -446,6 +428,9 @@ namespace CppAD {
 
                 size_t e = 0;
                 addScopeToVarOrder(0, e);
+
+                // if e > vosize then some nodes (marking the beginning of scopes)
+                // must have been added more than once
                 assert(_variableOrder.size() == e);
             }
 
@@ -494,7 +479,22 @@ namespace CppAD {
                                               _zeroDependents);
             lang.generateSourceCode(out, info);
 
+            /**
+             * clean-up
+             */
             _atomicFunctionsSet.clear();
+
+            // restore altered nodes
+            typename std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > >::const_iterator itAlt;
+            for (itAlt = _alteredNodes.begin(); itAlt != _alteredNodes.end(); ++itAlt) {
+                OperationNode<Base>* tmp = itAlt->first;
+                OperationNode<Base>* opClone = itAlt->second;
+                if (tmp->getOperationType() == CGTmpOp && !tmp->getInfo().empty()) { // some might have already been restored
+                    tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
+                    tmp->getInfo() = opClone->getInfo();
+                }
+            }
+            _alteredNodes.clear();
 
             if (_jobTimer != NULL) {
                 _jobTimer->finishedJob();
@@ -658,9 +658,9 @@ namespace CppAD {
          * 
          * @param indep The independent variable to eliminate.
          * @param dep The dependent variable representing a residual
-         * @param removeFromIndeps Whether or not to immediatelly remove the
+         * @param removeFromIndeps Whether or not to immediately remove the
          *                         independent variable from the list of
-         *                         independents in the model. The subtitution
+         *                         independents in the model. The substitution
          *                         operation can only be reversed if the 
          *                         variable is not removed.
          */
@@ -673,7 +673,7 @@ namespace CppAD {
                                           bool removeFromIndeps = true) throw (CGException);
 
         /**
-         * Reverts a subtitution of an independent variable that has not been 
+         * Reverts a substitution of an independent variable that has not been 
          * removed from the list of independents yet.
          * Warning: it does not recover any custom name assigned to the variable.
          * 
@@ -682,9 +682,9 @@ namespace CppAD {
         inline void undoSubstituteIndependent(OperationNode<Base>& indep) throw (CGException);
 
         /**
-         * Finallizes the subtitution of an independent variable by eliminating
+         * Finalizes the substitution of an independent variable by eliminating
          * it from the list of independents. After this operation the variable
-         * subtitution cannot be undone.
+         * substitution cannot be undone.
          * 
          * @param indep The independent variable
          */
@@ -695,7 +695,7 @@ namespace CppAD {
          * handler is destroyed.
          * 
          * @param code The operation node to be managed.
-         * @return true if the node was successfuly added to the list or
+         * @return true if the node was successfully added to the list or
          *         false if it had already been previously added.
          */
         inline bool manageOperationNodeMemory(OperationNode<Base>* code) {
@@ -728,8 +728,9 @@ namespace CppAD {
             code.increaseTotalUsageCount();
 
             CGOpCode op = code.getOperationType();
-
-            if (op == CGAliasOp) {
+            if (isIndependent(code)) {
+                return; // nothing to do
+            } else if (op == CGAliasOp) {
                 /**
                  * Alias operations are always followed so that there is a 
                  * correct usage count at the operation that it points to
@@ -834,19 +835,27 @@ namespace CppAD {
             } else {
                 // been to this node before
 
-                if (code.getColor() != _currentScopeColor) {
+                if (op == CGTmpOp && !code.getInfo().empty()) {
+                    /**
+                     * this node was previously altered to ensure that the 
+                     * evaluation of the expression is only performed for the 
+                     * required iterations
+                     */
+                    if (code.getColor() == _currentScopeColor) {
+                        // outside an if (defined for all iterations)
+                        restoreTemporaryVar(code);
+                    } else {
+                        updateTemporaryVarInDiffScopes(code);
+                    }
+
+                } else if (code.getColor() != _currentScopeColor && op != CGLoopIndexedIndepOp) {
                     size_t oldScope = code.getColor();
                     /**
                      * node previously used in a different scope
                      * must make sure it is defined before being used in both
                      * scopes
                      */
-                    size_t depth;
-                    std::set<size_t> divergence = findFirstDifferentScopeNodes(oldScope, _currentScopeColor, depth);
-                    std::set<size_t>::const_iterator itScope;
-                    for (itScope = divergence.begin(); itScope != divergence.end(); ++itScope) {
-                        _scopeExtraDependecy[*itScope].insert(&code);
-                    }
+                    size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
 
                     // update the scope where it should be defined
                     size_t newScope;
@@ -856,18 +865,282 @@ namespace CppAD {
                         newScope = _scopes[_currentScopeColor][depth - 1].color;
 
                     if (oldScope != newScope) {
-                        code.setColor(newScope);
-
                         /**
-                         * Must also update the scope of the arguments used by this operation
+                         * does this variable require a condition based on indexes?
                          */
-                        const std::vector<Argument<Base> >& args = code.getArguments();
-                        size_t aSize = args.size();
-                        for (size_t a = 0; a < aSize; a++) {
-                            updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
+                        bool addedIf = handleTemporaryVarInDiffScopes(code, oldScope, newScope);
+
+                        if (!addedIf) {
+                            code.setColor(newScope);
+
+                            /**
+                             * Must also update the scope of the arguments used by this operation
+                             */
+                            const std::vector<Argument<Base> >& args = code.getArguments();
+                            size_t aSize = args.size();
+                            for (size_t a = 0; a < aSize; a++) {
+                                updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
+                            }
                         }
                     }
                 }
+            }
+        }
+
+        inline bool handleTemporaryVarInDiffScopes(OperationNode<Base>& code,
+                                                   size_t oldScope, size_t newScope) {
+            if (_currentScopeColor == 0)
+                return false;
+
+            /**
+             * does this variable require a condition based on indexes?
+             */
+            std::vector<size_t> iterationRegions;
+            OperationNode<Base>* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
+            OperationNode<Base>* bScopeOldEnd = _scopes[oldScope].back().end;
+
+            CGOpCode bNewOp = bScopeNewEnd->getOperationType();
+            CGOpCode bOldOp = bScopeOldEnd->getOperationType();
+
+            if ((bNewOp == CGEndIfOp || bNewOp == CGElseOp || bNewOp == CGElseIfOp) &&
+                    (bOldOp == CGEndIfOp || bOldOp == CGElseOp || bOldOp == CGElseIfOp)) {
+                // used in 2 different if/else branches
+
+                /**
+                 * determine the iterations which use this temporary variable
+                 */
+                OperationNode<Base>* bScopeNew = bScopeNewEnd->getArguments()[0].getOperation();
+                OperationNode<Base>* bScopeOld = bScopeOldEnd->getArguments()[0].getOperation();
+
+                IndexOperationNode<Base>* newIterIndexOp = NULL;
+                iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
+                assert(iterationRegions.size() >= 2);
+
+                IndexOperationNode<Base>* oldIterIndexOp = NULL;
+                std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
+                combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
+                assert(iterationRegions.size() >= 2);
+                assert(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+
+                if (iterationRegions.size() > 2 ||
+                        iterationRegions[0] != 0 ||
+                        iterationRegions[1] != std::numeric_limits<size_t>::max()) {
+                    // this temporary variable is not used by all iterations
+
+                    replaceWithConditionalTempVar(code, *newIterIndexOp, iterationRegions, oldScope, newScope);
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
+        inline void replaceWithConditionalTempVar(OperationNode<Base>& tmp,
+                                                  IndexOperationNode<Base>& iterationIndexOp,
+                                                  const std::vector<size_t>& iterationRegions,
+                                                  size_t oldScope,
+                                                  size_t commonScopeColor) {
+            /**
+             * clone
+             */
+            OperationNode<Base>* opClone = new OperationNode<Base>(tmp);
+            manageOperationNode(opClone);
+
+            /**
+             * Create condition
+             */
+            OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGTmpDclOp);
+            manageOperationNode(tmpDclVar);
+            Argument<Base> tmpArg(*tmpDclVar);
+
+            std::vector<Argument<Base> > args(1);
+            args[0] = Argument<Base>(iterationIndexOp);
+            OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions, args);
+            manageOperationNode(cond);
+
+            // if
+            OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+            manageOperationNode(ifStart);
+
+            OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, Argument<Base>(*opClone));
+            manageOperationNode(tmpAssign);
+            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*tmpAssign));
+            manageOperationNode(ifAssign);
+
+            // end if
+            OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+            manageOperationNode(endIf);
+            
+            /**
+             * Change original variable
+             */
+            std::vector<Argument<Base> > arguments(2);
+            arguments[0] = tmpArg;
+            arguments[1] = Argument<Base>(*endIf);
+            tmp.setOperation(CGTmpOp, arguments);
+            tmp.getInfo().resize(1); // used to mark that this node was altered here
+
+            /**
+             * add the new scope
+             */
+            size_t newScopeColor = ++_scopeColorCount;
+            _scopes.resize(newScopeColor + 1);
+            _scopes[newScopeColor] = _scopes[commonScopeColor];
+
+            // one more scope level
+            _scopes[newScopeColor].push_back(ScopePathElement<Base>(newScopeColor, endIf, ifStart));
+
+            // apply scope colors
+            tmpDclVar->setColor(commonScopeColor);
+            ifStart->setColor(newScopeColor);
+            cond->setColor(newScopeColor);
+            opClone->setColor(newScopeColor);
+            ifAssign->setColor(newScopeColor);
+            tmpAssign->setColor(newScopeColor);
+            endIf->setColor(commonScopeColor);
+            tmp.setColor(commonScopeColor);
+
+            // total usage count
+            tmpDclVar->setTotalUsageCount(1);
+            ifStart->setTotalUsageCount(1);
+            cond->setTotalUsageCount(1);
+            opClone->setTotalUsageCount(1);
+            ifAssign->setTotalUsageCount(1);
+            tmpAssign->setTotalUsageCount(1);
+            endIf-> setTotalUsageCount(1);
+
+            /**
+             * Must also update the scope of the arguments used by this operation
+             */
+            const std::vector<Argument<Base> >& cargs = opClone->getArguments();
+            size_t aSize = cargs.size();
+            for (size_t a = 0; a < aSize; a++) {
+                updateVarScopeUsage(cargs[a].getOperation(), newScopeColor, oldScope);
+            }
+
+            _alteredNodes.push_back(std::make_pair(&tmp, opClone));
+        }
+
+        inline void updateTemporaryVarInDiffScopes(OperationNode<Base>& code) {
+            if (code.getColor() != _currentScopeColor) {
+                return; //nothing to change
+            }
+
+            /**
+             * does this variable require a condition based on indexes?
+             */
+            if (_currentScopeColor == 0)
+                restoreTemporaryVar(code);
+
+            /**
+             * Determine if it should be moved into a different scope
+             * so that it is defined before being used in both
+             * scopes
+             */
+            size_t oldScope = code.getColor();
+
+            size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
+
+            // update the scope where it should be defined
+            size_t newScope = depth == 0 ? 0 : _scopes[_currentScopeColor][depth - 1].color;
+
+            /**
+             * does this variable require a condition based on indexes?
+             */
+            std::vector<size_t> iterationRegions;
+            OperationNode<Base>* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
+            OperationNode<Base>* endif = code.getArguments()[0].getOperation();
+            assert(endif->getOperationType() == CGEndIfOp);
+            OperationNode<Base>* bScopeOldEnd = _scopes[endif->getColor()].back().end;
+
+            CGOpCode bNewOp = bScopeNewEnd->getOperationType();
+
+            if (bNewOp == CGEndIfOp || bNewOp == CGElseOp || bNewOp == CGElseIfOp) {
+                // used in 2 different if/else branches
+
+                /**
+                 * determine the iterations which use this temporary variable
+                 */
+                OperationNode<Base>* bScopeNew = bScopeNewEnd->getArguments()[0].getOperation();
+                OperationNode<Base>* bScopeOld = bScopeOldEnd->getArguments()[0].getOperation();
+
+                IndexOperationNode<Base>* newIterIndexOp = NULL;
+                iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
+                assert(iterationRegions.size() >= 2);
+
+                IndexOperationNode<Base>* oldIterIndexOp = NULL;
+                const std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
+                combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
+                assert(iterationRegions.size() >= 2);
+                assert(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+
+                if (iterationRegions.size() == 2 &&
+                        (iterationRegions[0] == 0 ||
+                        iterationRegions[1] == std::numeric_limits<size_t>::max())) {
+                    // this temporary variable is used by all iterations
+                    // there is no need for an 'if'
+                    restoreTemporaryVar(code);
+
+                } else if (oldIterRegions != iterationRegions) {
+                    OperationNode<Base>* cond = bScopeOld->getArguments()[0].getOperation();
+                    assert(cond->getOperationType() == CGIndexCondExprOp);
+                    cond->getInfo() = iterationRegions;
+                }
+
+            }
+
+            if (oldScope != newScope) {
+                code.setColor(newScope);
+                /**
+                 * Must also update the scope of the arguments used by this operation
+                 */
+                const std::vector<Argument<Base> >& cargs = code.getArguments();
+                size_t aSize = cargs.size();
+                for (size_t a = 0; a < aSize; a++) {
+                    updateVarScopeUsage(cargs[a].getOperation(), newScope, oldScope);
+                }
+            }
+
+        }
+
+        inline void restoreTemporaryVar(OperationNode<Base>& tmp) {
+            assert(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
+
+            OperationNode<Base>* endIf = tmp.getArguments()[1].getOperation();
+            OperationNode<Base>* ifAssign = endIf->getArguments()[1].getOperation();
+            OperationNode<Base>* tmpAssign = ifAssign->getArguments()[1].getOperation();
+            OperationNode<Base>* opClone = tmpAssign->getArguments()[1].getOperation();
+            tmp.setOperation(opClone->getOperationType(), opClone->getArguments());
+            tmp.getInfo() = opClone->getInfo();
+
+            tmp.setColor(_currentScopeColor);
+
+            /**
+             * Must also update the scope of the arguments used by this operation
+             */
+            const std::vector<Argument<Base> >& args = tmp.getArguments();
+            size_t aSize = args.size();
+            for (size_t a = 0; a < aSize; a++) {
+                updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, opClone->getColor());
+            }
+        }
+
+        inline void restoreTemporaryVar(OperationNode<Base>* tmp,
+                                        OperationNode<Base>* opClone) {
+            assert(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
+
+            tmp.setOperation(opClone->getOperationType(), opClone->getArguments());
+            tmp.getInfo() = opClone->getInfo();
+
+            tmp.setColor(_currentScopeColor);
+
+            /**
+             * Must also update the scope of the arguments used by this operation
+             */
+            const std::vector<Argument<Base> >& args = tmp.getArguments();
+            size_t aSize = args.size();
+            for (size_t a = 0; a < aSize; a++) {
+                updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, opClone->getColor());
             }
         }
 
@@ -884,8 +1157,7 @@ namespace CppAD {
             if (oldScope == oldUsageScope) {
                 newScope = usageScope;
             } else {
-                size_t depth;
-                std::set<size_t> divergence = findFirstDifferentScopeNodes(oldScope, usageScope, depth);
+                size_t depth = findFirstDifferentScope(oldScope, usageScope);
 
                 newScope = (depth == 0) ? 0 : _scopes[usageScope][depth - 1].color;
             }
@@ -919,11 +1191,20 @@ namespace CppAD {
                     addScopeToVarOrder(beginScopeNode->getColor(), e);
                 }
 
+                //std::cout << "e:" << e << "  " << vorder[p] << "  scope:" << scope << "  p:" << p << "  " << *vorder[p] << std::endl;
                 _variableOrder[e++] = vorder[p];
             }
         }
 
-        inline std::set<size_t> findFirstDifferentScopeNodes(size_t color1, size_t color2, size_t& depth) {
+        /**
+         * Determines the depth of the first different scope from scope paths of
+         * two scopes
+         * 
+         * @param color1 scope color 1
+         * @param color2 scope color 2
+         * @return the depth of the first different scope
+         */
+        inline size_t findFirstDifferentScope(size_t color1, size_t color2) {
             assert(color1 < _scopes.size());
             assert(color2 < _scopes.size());
 
@@ -932,23 +1213,168 @@ namespace CppAD {
 
             size_t s1 = scopePath1.size();
             size_t s2 = scopePath2.size();
-
-            std::set<size_t> divergence;
+            size_t depth;
             for (depth = 0; depth < s1 && depth < s2; depth++) {
                 if (scopePath1[depth].color != scopePath2[depth].color) {
-                    divergence.insert(scopePath1[depth].color);
-                    divergence.insert(scopePath2[depth].color);
-                    return divergence;
+                    break;
                 }
             }
 
-            if (s1 < s2) {
-                divergence.insert(scopePath2[s1].color);
-            } else {
-                divergence.insert(scopePath1[s2].color);
+            return depth;
+        }
+
+        /**
+         * Attempt to reduce the number of ifs when there consecutive ifs with
+         * the same condition
+         */
+        inline void optimizeIfs() {
+            if (_scopedVariableOrder.size() < 3)
+                return; // there has to be at least 2 ifs
+
+            for (size_t scope = 0; scope < _scopedVariableOrder.size(); scope++) {
+                std::vector<OperationNode<Base> *>& vorder = _scopedVariableOrder[scope];
+
+                for (long p = vorder.size() - 1; p > 0; p--) {
+                    OperationNode<Base>* endIf = vorder[p];
+                    if (endIf->getOperationType() != CGEndIfOp)
+                        continue;
+
+                    long p1 = p - 1;
+                    while (p1 >= 0) {
+                        if (vorder[p1]->getOperationType() == CGTmpDclOp) {
+                            p1--;
+                        } else {
+                            break;
+                        }
+                    }
+                    OperationNode<Base>* endIf1 = vorder[p1];
+                    if (endIf1->getOperationType() != CGEndIfOp)
+                        continue;
+
+                    // 2 consecutive ifs
+                    OperationNode<Base>* startIf = endIf->getArguments()[0].getOperation();
+                    OperationNode<Base>* startIf1 = endIf1->getArguments()[0].getOperation();
+                    if (startIf->getOperationType() != CGStartIfOp || startIf1->getOperationType() != CGStartIfOp)
+                        continue;
+
+                    OperationNode<Base>* cond = startIf->getArguments()[0].getOperation();
+                    OperationNode<Base>* cond1 = startIf1->getArguments()[0].getOperation();
+
+                    assert(cond->getOperationType() == CGIndexCondExprOp || cond1->getOperationType() == CGIndexCondExprOp);
+                    if (cond->getInfo() == cond1->getInfo()) {
+                        /**
+                         * same condition -> combine the contents into a single if
+                         */
+                        const std::vector<Argument<Base> >& eArgs = endIf->getArguments();
+                        std::vector<Argument<Base> >& eArgs1 = endIf1->getArguments();
+
+                        size_t ifScope = startIf->getColor();
+                        size_t ifScope1 = startIf1->getColor();
+                        std::vector<OperationNode<Base> *>& vorderIf = _scopedVariableOrder[ifScope];
+                        std::vector<OperationNode<Base> *>& vorderIf1 = _scopedVariableOrder[ifScope1];
+
+                        // break cycles caused by dependencies on the previous if
+                        for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
+                            assert(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            breakCyclicDependency(eArgs[a].getOperation(), ifScope, endIf1);
+                            replaceScope(eArgs[a].getOperation(), ifScope, ifScope1); // update scope
+                        }
+
+                        vorderIf1.insert(vorderIf1.end(), vorderIf.begin() + 1, vorderIf.end()); // exclude the initial startIf
+
+                        vorderIf.clear();
+
+                        // update startIf
+                        for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
+                            assert(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            eArgs[a].getOperation()->getArguments()[0] = Argument<Base>(*startIf1);
+                        }
+
+                        // update endIf
+                        eArgs1.insert(eArgs1.end(), eArgs.begin() + 1, eArgs.end());
+
+                        // replace endIf
+                        std::vector<Argument<Base> > endIfArgs(1);
+                        endIfArgs[0] = Argument<Base>(*endIf1);
+                        endIf->setOperation(CGAliasOp, endIfArgs);
+
+                        // remove one of the ifs
+                        vorder.erase(vorder.begin() + p);
+
+                        // move nodes in scope containing the ifs
+                        for (long pp = p1; pp < p - 1; pp++) {
+                            vorder[pp] = vorder[pp + 1];
+                        }
+                        vorder[p - 1] = endIf1;
+                    }
+                }
+            }
+        }
+
+        inline void replaceScope(OperationNode<Base>* node, size_t oldScope, size_t newScope) {
+            if (node == NULL || node->getColor() != oldScope)
+                return;
+
+            node->setColor(newScope);
+
+            const std::vector<Argument<Base> >& args = node->getArguments();
+            for (size_t a = 0; a < args.size(); a++) {
+                replaceScope(args[a].getOperation(), oldScope, newScope);
+            }
+        }
+
+        /**
+         * Removes cyclic dependencies when 'ifs' are merged together.
+         * Relative variable order must have already been defined.
+         * 
+         * @todo: avoid visiting the same node!
+         * 
+         * @param node the node being visited
+         * @param scope the scope where the cyclic dependency could appear (or scopes inside it)
+         * @param endIf the dependency to remove
+         */
+        inline void breakCyclicDependency(OperationNode<Base>* node,
+                                          size_t scope,
+                                          OperationNode<Base>* endIf) {
+            if (node == NULL)
+                return;
+
+            CGOpCode op = node->getOperationType();
+            std::vector<Argument<Base> >& args = node->getArguments();
+
+            if (op == CGTmpOp && args.size() > 1) {
+                OperationNode<Base>* arg = args[1].getOperation();
+                if (arg == endIf) {
+                    // a dependency on CGLoopIndexedTmpOp could be added but
+                    // it is not required since variable order was already decided
+                    args.erase(args.begin() + 1);
+                }
             }
 
-            return divergence;
+            if (!containedInScope(*node, scope)) {
+                return;
+            }
+
+            for (size_t a = 0; a < args.size(); a++) {
+                OperationNode<Base>* arg = args[a].getOperation();
+                if (arg == endIf) {
+                    if (op == CGStartIfOp || op == CGLoopStartOp) {
+                        args.erase(args.begin() + a);
+                        a--;
+                    }
+                } else {
+                    breakCyclicDependency(arg, scope, endIf);
+                }
+            }
+        }
+
+        inline bool containedInScope(const OperationNode<Base>& node, size_t scope) {
+            size_t nScope = node.getColor();
+            if (nScope == scope)
+                return true;
+
+            return _scopes[nScope].size() >= _scopes[scope].size() &&
+                    _scopes[nScope][_scopes[scope].size() - 1].color == scope;
         }
 
         inline static bool containsArgument(const OperationNode<Base>& node, const OperationNode<Base>& arg) {
@@ -1017,8 +1443,10 @@ namespace CppAD {
                         if (aType == CGLoopIndexedIndepOp) {
                             // ID value not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
-                        } else if (aType == CGAliasOp || aType == CGTmpOp) {
+                        } else if (aType == CGAliasOp) {
                             continue; // should never be added to the evaluation queue
+                        } else if (aType == CGTmpOp) {
+                            arg.setVariableID(std::numeric_limits<size_t>::max());
                         } else if (aType == CGLoopStartOp ||
                                 aType == CGLoopEndOp ||
                                 aType == CGStartIfOp ||
@@ -1091,12 +1519,12 @@ namespace CppAD {
                 varOrder.reserve((varOrder.size() * 3) / 2 + 1);
             }
 
-            assert(scope == 0 || // the upper most scope does not need any special node at the beginning
-                   !varOrder.empty() ||
-                   arg.getOperationType() == CGLoopStartOp || // the first node must be a beginning of a scope
-                   arg.getOperationType() == CGStartIfOp ||
-                   arg.getOperationType() == CGElseIfOp ||
-                   arg.getOperationType() == CGElseOp);
+            if (varOrder.empty() &&
+                    scope != 0 && // the upper most scope does not need any special node at the beginning
+                    _scopes[scope].back().end->getArguments()[0].getOperation() != &arg) {
+                 // the first node must be a beginning of a scope
+                checkVariableCreation(*_scopes[scope].back().end); // go inside a scope from the end 
+            }
 
             varOrder.push_back(&arg);
         }
@@ -1342,13 +1770,15 @@ namespace CppAD {
          * @param code The current node to determine the number of usages
          */
         inline void determineLastTempVarUsage(OperationNode<Base>& code) {
-            if (code.getOperationType() == CGLoopEndOp) {
+            CGOpCode op = code.getOperationType();
+
+            if (op == CGLoopEndOp) {
                 LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (code);
                 _loopDepth++;
                 _loopOuterVars.resize(_loopDepth + 1);
                 _loopStartEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
 
-            } else if (code.getOperationType() == CGLoopStartOp) {
+            } else if (op == CGLoopStartOp) {
                 _loopDepth--; // leaving the current loop
             }
 
@@ -1386,7 +1816,7 @@ namespace CppAD {
                 }
             }
 
-            if (code.getOperationType() == CGLoopEndOp) {
+            if (op == CGLoopEndOp) {
                 /**
                  * temporary variables from outside the loop which are used
                  * within the loop cannot be overwritten inside that loop
@@ -1406,7 +1836,7 @@ namespace CppAD {
                 _loopOuterVars.pop_back();
                 _loopStartEvalOrder.pop_back();
 
-            } else if (code.getOperationType() == CGLoopStartOp) {
+            } else if (op == CGLoopStartOp) {
                 _loopDepth++; // coming back to the loop
             }
 
@@ -1464,8 +1894,10 @@ namespace CppAD {
                     op != CGEndIfOp &&
                     op != CGLoopIndexedDepOp &&
                     op != CGLoopIndexedIndepOp &&
+                    op != CGLoopIndexedTmpOp && // not considered as a temporary (the temporary is CGTmpDclOp)
                     op != CGIndexOp &&
                     op != CGIndexAssignOp &&
+                    op != CGTmpOp && // not considered as a temporary (the temporary is CGTmpDclOp)
                     arg.getVariableID() >= _minTemporaryVarID;
         }
 

@@ -274,6 +274,12 @@ namespace CppAD {
                 if (array->getLastUsageEvaluationOrder() < last) {
                     array->setLastUsageEvaluationOrder(last);
                 }
+            } else if (operation_ == CGTmpOp) {
+                OperationNode<Base>* declr = arguments_[0].getOperation();
+                assert(declr->getOperationType() == CGTmpDclOp);
+                if (declr->getLastUsageEvaluationOrder() < last) {
+                    declr->setLastUsageEvaluationOrder(last);
+                }
             }
         }
 
