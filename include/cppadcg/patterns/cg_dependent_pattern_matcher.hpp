@@ -97,8 +97,8 @@ namespace CppAD {
             independents_(independents),
             idCounter_(0),
             color_(0) {
-            assert(independents_.size() > 0);
-            assert(independents_[0].getCodeHandler() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != NULL);
             equations_.reserve(relatedDepCandidates_.size());
         }
 
@@ -461,7 +461,7 @@ namespace CppAD {
                         loop1->merge(*loop2, indexedLoopRelations, nonIndexedLoopRelations);
 
                         typename std::vector<Loop<Base>*>::iterator it = std::find(loops_.begin(), loops_.end(), loop2);
-                        assert(it != loops_.end());
+                        CPPADCG_ASSERT_UNKNOWN(it != loops_.end());
                         loops_.erase(it);
                         delete loop2;
 
@@ -697,7 +697,7 @@ namespace CppAD {
                     }
                 }
             }
-            assert(inl == nonLoopEq);
+            CPPADCG_ASSERT_UNKNOWN(inl == nonLoopEq);
 
             /**
              * Place new dependents for the temporary variables used by the loops

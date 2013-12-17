@@ -278,7 +278,7 @@ namespace CppAD {
             } else if (dep1.isVariable() && dep2.isVariable()) {
                 OperationNode<Base>* depRefOp = dep1.getOperationNode();
                 OperationNode<Base>* dep2Op = dep2.getOperationNode();
-                assert(depRefOp->getOperationType() != CGInvOp);
+                CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGInvOp);
 
                 return comparePath(depRefOp, dep2Op, dep2Index);
             }
@@ -330,7 +330,7 @@ namespace CppAD {
                 return false;
             }
 
-            assert(scRef->getOperationType() != CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGInvOp);
 
             const std::vector<size_t>& info1 = scRef->getInfo();
             const std::vector<size_t>& info2 = sc2->getInfo();
@@ -454,7 +454,7 @@ namespace CppAD {
                 sc2 = sc;
             }
 
-            assert(scRef->getOperationType() == sc2->getOperationType());
+            CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() == sc2->getOperationType());
 
             const std::vector<Argument<Base> >& argsRef = scRef->getArguments();
 
@@ -484,7 +484,7 @@ namespace CppAD {
 
                     if (!indexedArg) {
                         const std::vector<Argument<Base> >& args2 = sc2->getArguments();
-                        assert(size == args2.size());
+                        CPPADCG_ASSERT_UNKNOWN(size == args2.size());
                         indexedDependentPath |= colorIndexedPath(argsRef[a].getOperation(), args2[a].getOperation(), color, indexedOperations);
                     }
                 }

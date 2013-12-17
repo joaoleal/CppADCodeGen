@@ -97,7 +97,7 @@ namespace CppAD {
             unsigned long n;
             (*_atomicFunctions)(&names, &n);
 
-            assert(_atomic.size() == n);
+            CPPADCG_ASSERT_UNKNOWN(_atomic.size() == n);
 
             for (unsigned long i = 0; i < n; i++) {
                 if (atomic.afun_name() == names[i]) {
@@ -704,7 +704,7 @@ namespace CppAD {
             _hessianSparsity(NULL),
             _hessianSparsity2(NULL) {
 
-            assert(_dynLib != NULL);
+            CPPADCG_ASSERT_UNKNOWN(_dynLib != NULL);
 
             // validate the dynamic library
             validate();

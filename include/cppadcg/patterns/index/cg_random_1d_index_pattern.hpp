@@ -28,14 +28,14 @@ namespace CppAD {
 
         template<class VectorSizeT>
         inline Random1DIndexPattern(const VectorSizeT& x2y) {
-            assert(x2y.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(x2y.size() > 0);
             for (size_t x = 0; x < x2y.size(); x++)
                 indexes_[x] = x2y[x];
         }
 
         inline Random1DIndexPattern(const std::map<size_t, size_t>& x2y) :
             indexes_(x2y) {
-            assert(!indexes_.empty());
+            CPPADCG_ASSERT_UNKNOWN(!indexes_.empty());
         }
 
         inline virtual IndexPatternType getType() const {

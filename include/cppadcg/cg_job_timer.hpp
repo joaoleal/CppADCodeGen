@@ -280,7 +280,7 @@ namespace CppAD {
         }
 
         inline void finishedJob() {
-            assert(_jobs.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(_jobs.size() > 0);
 
             Job& job = _jobs.back();
 

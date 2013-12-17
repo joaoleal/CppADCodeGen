@@ -395,9 +395,9 @@ namespace CppAD {
             newVarInfo = varInfo; //copy
             typename std::vector<Vnode<Base>* >::const_iterator j;
             for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                assert((*j)->tapeIndex() >= 0);
-                assert((*j)->antiDerivative() != NULL);
-                assert((*j)->antiDerivative()->tapeIndex() >= 0);
+                CPPADCG_ASSERT_UNKNOWN((*j)->tapeIndex() >= 0);
+                CPPADCG_ASSERT_UNKNOWN((*j)->antiDerivative() != NULL);
+                CPPADCG_ASSERT_UNKNOWN((*j)->antiDerivative()->tapeIndex() >= 0);
 
                 newVarInfo[(*j)->tapeIndex()].setAntiDerivative(-1);
                 newVarInfo[(*j)->antiDerivative()->tapeIndex()].setDerivative(-1);
@@ -430,8 +430,8 @@ namespace CppAD {
             using std::map;
             using std::map;
 
-            assert(reducedVarInfo.size() == this->reducedFun_->Domain());
-            assert(reducedEqInfo.size() == this->reducedFun_->Range());
+            CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == this->reducedFun_->Domain());
+            CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == this->reducedFun_->Range());
 
             newEqInfo = reducedEqInfo; // copy
 
@@ -541,7 +541,7 @@ namespace CppAD {
             /**
              * Prepare the output information
              */
-            assert(tapeIndexReduced2Short.size() == reducedVarInfo.size());
+            CPPADCG_ASSERT_UNKNOWN(tapeIndexReduced2Short.size() == reducedVarInfo.size());
 
             newVarInfo = reducedVarInfo; // copy
             for (int p = tapeIndexReduced2Short.size() - 1; p >= 0; p--) {
@@ -653,7 +653,7 @@ namespace CppAD {
                     handler.substituteIndependent(indep, dep); // removes indep from the list of variables
 
                     OperationNode<Base>* alias = indep.getOperationNode();
-                    assert(alias != NULL && alias->getOperationType() == CGAliasOp);
+                    CPPADCG_ASSERT_UNKNOWN(alias != NULL && alias->getOperationType() == CGAliasOp);
                     dep.getOperationNode()->makeAlias(alias->getArguments()[0]); // not a residual anymore but equal to alias (explicit equation)
 
                     // it is now an explicit differential equation
@@ -721,9 +721,9 @@ namespace CppAD {
             using std::map;
             typedef vector<OperationPathNode<Base> > SourceCodePath;
 
-            assert(eqInfo.size() == this->enodes_.size());
-            assert(varInfo.size() == this->reducedFun_->Domain());
-            assert(eqInfo.size() == this->reducedFun_->Range());
+            CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == this->enodes_.size());
+            CPPADCG_ASSERT_UNKNOWN(varInfo.size() == this->reducedFun_->Domain());
+            CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == this->reducedFun_->Range());
 
             CodeHandler<Base> handler;
 
@@ -995,7 +995,7 @@ namespace CppAD {
                 handler.substituteIndependent(indep, dep, false); // indep not removed from the list of variables yet
 
                 OperationNode<Base>* alias = indep.getOperationNode();
-                assert(alias != NULL && alias->getOperationType() == CGAliasOp);
+                CPPADCG_ASSERT_UNKNOWN(alias != NULL && alias->getOperationType() == CGAliasOp);
 
                 // it is now an explicit differential equation
                 //newEqInfo[bestEquation].setExplicit(true);
@@ -1256,7 +1256,7 @@ namespace CppAD {
             using std::vector;
 
             vector<ADCG> indepNewOrder(handler.getIndependentVariableSize());
-            assert(indepNewOrder.size() == newVarInfo.size());
+            CPPADCG_ASSERT_UNKNOWN(indepNewOrder.size() == newVarInfo.size());
 
             for (size_t p = 0; p < newVarInfo.size(); p++) {
                 int origIndex = newVarInfo[p].getOriginalIndex();
@@ -1332,7 +1332,7 @@ namespace CppAD {
 
             for (size_t i = diffEqStart_; i < m; i++) {
                 for (size_t j = diffVarStart_; j < this->vnodes_.size(); j++) {
-                    assert(this->vnodes_[j]->antiDerivative() != NULL);
+                    CPPADCG_ASSERT_UNKNOWN(this->vnodes_[j]->antiDerivative() != NULL);
                     size_t t = this->vnodes_[j]->tapeIndex();
                     if (jacSparsity_[i * n + t]) {
                         row.push_back(i);
@@ -1397,7 +1397,7 @@ namespace CppAD {
                 }
 #ifndef NDEBUG
                 for (typename std::vector<Vnode<Base>* >::const_iterator it = vars.begin(); it != vars.end(); ++it) {
-                    assert(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
+                    CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
                 }
 #endif
                 return;
@@ -1480,7 +1480,7 @@ namespace CppAD {
             }
 #ifndef NDEBUG
             for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it) {
-                assert(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
+                CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
             }
 #endif
 
@@ -1499,7 +1499,7 @@ namespace CppAD {
                     indepNames.push_back(varInfo[p].getName());
                 }
             }
-            assert(handler.getIndependentVariableSize() == indepNames.size());
+            CPPADCG_ASSERT_UNKNOWN(handler.getIndependentVariableSize() == indepNames.size());
 
             CLanguage<Base> lang("double");
             vector<CGBase> resAux;

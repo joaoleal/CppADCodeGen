@@ -245,8 +245,8 @@ namespace CppAD {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-            assert(els.size() == location.size());
-            assert(els.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+            CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
             bool passed = true;
             size_t hessRowStart = *location[0].begin();
@@ -262,7 +262,7 @@ namespace CppAD {
             }
             ordered[index] = passed;
         }
-        assert(elements.size() == ordered.size());
+        CPPADCG_ASSERT_UNKNOWN(elements.size() == ordered.size());
 
         /**
          * determine the maximum size of the temporary array
@@ -319,8 +319,8 @@ namespace CppAD {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userHessElLocation.at(index);
-            assert(els.size() == location.size());
-            assert(els.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+            CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
             _cache << "\n";
             if (itOrd->second) {

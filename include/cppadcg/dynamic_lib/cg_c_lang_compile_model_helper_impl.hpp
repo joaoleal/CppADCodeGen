@@ -387,7 +387,7 @@ namespace CppAD {
         const std::vector<size_t>& rows = sparsity.rows;
         const std::vector<size_t>& cols = sparsity.cols;
 
-        assert(rows.size() == cols.size());
+        CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
 
         _cache << "void " << function << "("
                 "unsigned long const** row,"
@@ -421,7 +421,7 @@ namespace CppAD {
         for (size_t i = 0; i < sparsities.size(); i++) {
             const std::vector<size_t>& rows = sparsities[i].rows;
             const std::vector<size_t>& cols = sparsities[i].cols;
-            assert(rows.size() == cols.size());
+            CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
             if (!rows.empty()) {
                 os.str("");
                 os << "rows" << i;

@@ -219,7 +219,7 @@ namespace CppAD {
 
         virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false,
                                                                  bool zeroArrayDependents = false) {
-            assert(_nameGen != NULL);
+            CPPADCG_ASSERT_UNKNOWN(_nameGen != NULL);
 
             // declare variables
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
@@ -880,14 +880,14 @@ namespace CppAD {
 
         inline const std::string& createVariableName(OperationNode<Base>& var) {
             CGOpCode op = var.getOperationType();
-            assert(var.getVariableID() > 0);
-            assert(op != CGAtomicForwardOp);
-            assert(op != CGAtomicReverseOp);
-            assert(op != CGLoopStartOp);
-            assert(op != CGLoopEndOp);
-            assert(op != CGIndexOp);
-            assert(op != CGIndexAssignOp);
-            assert(op != CGIndexDeclarationOp);
+            CPPADCG_ASSERT_UNKNOWN(var.getVariableID() > 0);
+            CPPADCG_ASSERT_UNKNOWN(op != CGAtomicForwardOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGAtomicReverseOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGLoopStartOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGLoopEndOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGIndexOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGIndexAssignOp);
+            CPPADCG_ASSERT_UNKNOWN(op != CGIndexDeclarationOp);
 
             if (var.getName() == NULL) {
                 if (op == CGArrayCreationOp) {
@@ -909,7 +909,7 @@ namespace CppAD {
                 } else if (var.getVariableID() < _minTemporaryVarID) {
                     // dependent variable
                     std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.getVariableID());
-                    assert(it != _dependentIDs.end());
+                    CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
 
                     size_t index = it->second;
                     var.setName(_nameGen->generateDependent(index));
@@ -1164,8 +1164,8 @@ namespace CppAD {
 
         virtual void printSignFunction(OperationNode<Base>& op) throw (CGException) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for sign() function");
-            assert(op.getArguments()[0].getOperation() != NULL);
-            assert(op.getArguments()[0].getOperation()->getVariableID() > 0);
+            CPPADCG_ASSERT_UNKNOWN(op.getArguments()[0].getOperation() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(op.getArguments()[0].getOperation()->getVariableID() > 0);
 
             OperationNode<Base>& arg = *op.getArguments()[0].getOperation();
 
@@ -1339,7 +1339,7 @@ namespace CppAD {
         }
 
         virtual void printConditionalAssignment(OperationNode<Base>& node) {
-            assert(node.getVariableID() > 0);
+            CPPADCG_ASSERT_UNKNOWN(node.getVariableID() > 0);
 
             const std::vector<Argument<Base> >& args = node.getArguments();
             const Argument<Base> &left = args[0];

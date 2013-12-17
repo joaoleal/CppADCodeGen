@@ -168,7 +168,7 @@ namespace CppAD {
                 int tapeIndex0 = this->varInfo_[tapeIndex].getAntiDerivative();
                 const std::string& name = this->varInfo_[tapeIndex].getName();
 
-                assert(this->varInfo_[tapeIndex].isFunctionOfIntegrated());
+                CPPADCG_ASSERT_UNKNOWN(this->varInfo_[tapeIndex].isFunctionOfIntegrated());
 
                 if (tapeIndex0 < 0) {
                     // generate the variable name
@@ -331,8 +331,8 @@ namespace CppAD {
             if (varInfo[index].isFunctionOfIntegrated()) {
                 derivOrder = 0;
                 while (varInfo[j0].getAntiDerivative() >= 0) {
-                    assert(j0 < varInfo.size());
-                    assert(varInfo[j0].isFunctionOfIntegrated());
+                    CPPADCG_ASSERT_UNKNOWN(j0 < varInfo.size());
+                    CPPADCG_ASSERT_UNKNOWN(varInfo[j0].isFunctionOfIntegrated());
                     derivOrder++;
                     j0 = varInfo[j0].getAntiDerivative();
                 }
@@ -536,7 +536,7 @@ namespace CppAD {
             size_t origM = this->fun_->Range();
             for (size_t i = 0; i < origM; i++) {
                 if (enodes_[i]->derivative() != NULL) {
-                    assert(enodes_[i]->derivativeOf() == NULL);
+                    CPPADCG_ASSERT_UNKNOWN(enodes_[i]->derivativeOf() == NULL);
                     newEqs.push_back(enodes_[i]->derivative());
                 }
             }
@@ -560,7 +560,7 @@ namespace CppAD {
             /**
              * Add the relationship between variables and derivatives
              */
-            assert(reducedFun_ == NULL);
+            CPPADCG_ASSERT_UNKNOWN(reducedFun_ == NULL);
 
             /**
              * Prepare the output information
@@ -571,7 +571,7 @@ namespace CppAD {
             for (size_t j = origTimeDependentCount_; j < vnodes_.size(); j++) {
                 // new variable derivative added by the Pantelides method
                 Vnode<Base>* jj = vnodes_[j];
-                assert(jj->antiDerivative() != NULL);
+                CPPADCG_ASSERT_UNKNOWN(jj->antiDerivative() != NULL);
                 size_t antiDeriv = jj->antiDerivative()->tapeIndex();
                 size_t id = newVarInfo.size();
                 newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name(), id)); // create the new variable
@@ -792,7 +792,7 @@ namespace CppAD {
         inline std::vector<AD<CG<Base> > > prepareTimeDependentVariables(const std::vector<AD<CG<Base> > >& indepOrig,
                                                                          const std::vector<DaeVarInfo>& newVarInfo,
                                                                          size_t timeTapeIndex) const {
-            assert(timeTapeIndex < indepOrig.size());
+            CPPADCG_ASSERT_UNKNOWN(timeTapeIndex < indepOrig.size());
 
             using std::vector;
             typedef AD<CGBase> ADCGBase;
@@ -847,8 +847,8 @@ namespace CppAD {
          */
         inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<std::string>& indepNames) {
 
-            assert(fun != NULL);
-            assert(fun->Domain() == indepNames.size() || fun->Domain() == indepNames.size() + 1); // with or without time
+            CPPADCG_ASSERT_UNKNOWN(fun != NULL);
+            CPPADCG_ASSERT_UNKNOWN(fun->Domain() == indepNames.size() || fun->Domain() == indepNames.size() + 1); // with or without time
 
             CodeHandler<Base> handler;
 

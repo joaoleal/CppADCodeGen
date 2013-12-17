@@ -69,7 +69,7 @@ namespace CppAD {
 
     template<class Base>
     inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation) {
-        assert(operation != NULL);
+        CPPADCG_ASSERT_UNKNOWN(operation != NULL);
         opNode_ = operation;
         handler_ = &handler;
         delete value_;

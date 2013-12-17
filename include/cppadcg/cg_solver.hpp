@@ -37,7 +37,7 @@ namespace CppAD {
                               " the provided variable was found in multiple locations (not yet supported)");
         }
 
-        assert(paths[0].back().node == &code);
+        CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &code);
 
         return solveFor(paths[0]);
     }

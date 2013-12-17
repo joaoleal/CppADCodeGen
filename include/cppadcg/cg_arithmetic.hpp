@@ -21,7 +21,7 @@ namespace CppAD {
     CodeHandler<Base>* getHandler(const CG<Base> &left,
                                   const CG<Base> &right) throw (CGException) {
 
-        assert(!left.isParameter() || !right.isParameter());
+        CPPADCG_ASSERT_UNKNOWN(!left.isParameter() || !right.isParameter());
 
         CodeHandler<Base>* handler;
         if (left.isParameter()) {

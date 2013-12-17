@@ -184,8 +184,8 @@ namespace CppAD {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userJacElLocation.at(index);
-            assert(els.size() == location.size());
-            assert(els.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+            CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
             bool passed = true;
             size_t jacArrayStart = *location[0].begin();
@@ -201,7 +201,7 @@ namespace CppAD {
             }
             ordered[index] = passed;
         }
-        assert(elements.size() == ordered.size());
+        CPPADCG_ASSERT_UNKNOWN(elements.size() == ordered.size());
 
         size_t maxCompressedSize = 0;
         map<size_t, bool>::const_iterator itOrd;
@@ -261,7 +261,7 @@ namespace CppAD {
             size_t index = it->first;
             const std::vector<size_t>& els = it->second;
             const std::vector<set<size_t> >& location = userJacElLocation.at(index);
-            assert(els.size() == location.size());
+            CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
 
             _cache << "\n";
             if (itOrd->second) {

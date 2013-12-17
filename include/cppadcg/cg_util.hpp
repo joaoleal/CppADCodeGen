@@ -43,7 +43,7 @@ namespace CppAD {
 
     template<class VectorSet>
     inline bool isIdentityPattern(const VectorSet& pattern, size_t mRows) {
-        assert(pattern.size() >= mRows);
+        CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
         for (size_t i = 0; i < mRows; i++) {
             if (pattern[i].size() != 1 || *pattern[i].begin() != i) {
@@ -55,7 +55,7 @@ namespace CppAD {
 
     template<class VectorSet>
     inline VectorSet transposePattern(const VectorSet& pattern, size_t mRows, size_t nCols) {
-        assert(pattern.size() >= mRows);
+        CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
         VectorSet transpose(nCols);
         for (size_t i = 0; i < mRows; i++) {
@@ -74,7 +74,7 @@ namespace CppAD {
 
     template<class VectorSet, class VectorSet2>
     inline void transposePattern(const VectorSet& pattern, size_t mRows, VectorSet2& transpose) {
-        assert(pattern.size() >= mRows);
+        CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
         for (size_t i = 0; i < mRows; i++) {
             std::set<size_t>::const_iterator it;
@@ -94,7 +94,7 @@ namespace CppAD {
     template<class VectorSet, class VectorSet2>
     inline void addMatrixSparsity(const VectorSet& a,
                                   VectorSet2& result) {
-        assert(result.size() == a.size());
+        CPPADCG_ASSERT_UNKNOWN(result.size() == a.size());
 
         for (size_t i = 0; i < a.size(); i++) {
             result[i].insert(a[i].begin(), a[i].end());
@@ -138,9 +138,9 @@ namespace CppAD {
                                          size_t m,
                                          size_t n,
                                          size_t q) {
-        assert(a.size() >= m);
-        assert(b.size() >= n);
-        assert(result.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(a.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(b.size() >= n);
+        CPPADCG_ASSERT_UNKNOWN(result.size() >= m);
 
         //check if b is identity
         if (n == q) {
@@ -191,9 +191,9 @@ namespace CppAD {
                                               size_t m,
                                               size_t n,
                                               size_t q) {
-        assert(a.size() >= m);
-        assert(b.size() >= m);
-        assert(result.size() >= n);
+        CPPADCG_ASSERT_UNKNOWN(a.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(b.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(result.size() >= n);
 
         //check if B is empty
         bool empty = true;
@@ -263,8 +263,8 @@ namespace CppAD {
                                               size_t m,
                                               size_t n,
                                               size_t q) {
-        assert(aT.size() >= m);
-        assert(b.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(aT.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(b.size() >= m);
 
         //check if b is empty
         bool empty = true;
@@ -669,8 +669,8 @@ namespace CppAD {
     inline void printModel(ADFun<CG<Base> >& fun,
                            const std::vector<std::string>& depNames,
                            const std::vector<std::string>& indepNames) {
-        assert(depNames.size() <= fun.Range());
-        assert(indepNames.size() <= fun.Domain());
+        CPPADCG_ASSERT_UNKNOWN(depNames.size() <= fun.Range());
+        CPPADCG_ASSERT_UNKNOWN(indepNames.size() <= fun.Domain());
 
         CodeHandler<Base> handler;
 

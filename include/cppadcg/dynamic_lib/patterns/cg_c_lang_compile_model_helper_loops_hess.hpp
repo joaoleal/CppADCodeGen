@@ -1099,7 +1099,7 @@ namespace CppAD {
                 return ddfdxdx;
             }
 
-            assert(pattern.getLinearSlopeDy() == 0); // must be a constant index
+            CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0); // must be a constant index
 
             if (iterations.size() == nIterations) {
                 // same expression present in all iterations
@@ -1223,7 +1223,7 @@ namespace CppAD {
 
                     tx1v[j1] = Base(1);
                     vector<CGB> dy = fun.Forward(1, tx1v);
-                    assert(dy.size() == m);
+                    CPPADCG_ASSERT_UNKNOWN(dy.size() == m);
                     tx1v[j1] = Base(0);
 
                     // save Jacobian
@@ -1241,7 +1241,7 @@ namespace CppAD {
                         for (size_t l = 0; l < vw.size(); l++) {
 
                             vector<CGB> px = fun.Reverse(2, vw[l]);
-                            assert(px.size() == 2 * n);
+                            CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
 
                             // save Hessian
                             map<size_t, CGB>& hessRow = vhess[l][j1];

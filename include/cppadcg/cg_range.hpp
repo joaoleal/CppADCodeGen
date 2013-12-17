@@ -50,7 +50,7 @@ namespace CppAD {
                 itPos = iterRegions.insert(itPos, pos);
             }
         }
-        assert(iterRegions.size() % 2 == 0);
+        CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0);
     }
 
     /**
@@ -125,7 +125,7 @@ namespace CppAD {
             return inverted;
         }
 
-        assert(iterRegions.size() % 2 == 0);
+        CPPADCG_ASSERT_UNKNOWN(iterRegions.size() % 2 == 0);
         inverted.reserve(iterRegions.size() + 4);
 
         if (iterRegions[0] != 0) {
@@ -134,7 +134,7 @@ namespace CppAD {
         }
 
         for (size_t i = 2; i < iterRegions.size(); i += 2) {
-            assert(iterRegions[i - 1] < iterRegions[i]);
+            CPPADCG_ASSERT_UNKNOWN(iterRegions[i - 1] < iterRegions[i]);
             inverted.push_back(iterRegions[i - 1] + 1);
             inverted.push_back(iterRegions[i] - 1);
         }
@@ -162,28 +162,28 @@ namespace CppAD {
 
         if (bOp == CGStartIfOp || bOp == CGElseIfOp) {
             OperationNode<Base>* cond = bScope->getArguments()[bOp == CGStartIfOp ? 0 : 1].getOperation();
-            assert(cond->getOperationType() == CGIndexCondExprOp);
-            assert(cond->getArguments().size() == 1);
-            assert(cond->getArguments()[0].getOperation() != NULL);
-            assert(cond->getArguments()[0].getOperation()->getOperationType() == CGIndexOp);
+            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp);
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGIndexOp);
             iterationIndexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
             return cond->getInfo();
 
         } else {
             // else
-            assert(bOp == CGElseOp);
+            CPPADCG_ASSERT_UNKNOWN(bOp == CGElseOp);
 
             std::vector<size_t> nonIterationRegions;
             OperationNode<Base>* ifBranch = bScope->getArguments()[0].getOperation();
             do {
                 CGOpCode bbOp = ifBranch->getOperationType();
                 OperationNode<Base>* cond = ifBranch->getArguments()[bbOp == CGStartIfOp ? 0 : 1].getOperation();
-                assert(cond->getOperationType() == CGIndexCondExprOp);
-                assert(cond->getArguments().size() == 1);
-                assert(cond->getArguments()[0].getOperation() != NULL);
-                assert(cond->getArguments()[0].getOperation()->getOperationType() == CGIndexOp);
+                CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp);
+                CPPADCG_ASSERT_UNKNOWN(cond->getArguments().size() == 1);
+                CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation() != NULL);
+                CPPADCG_ASSERT_UNKNOWN(cond->getArguments()[0].getOperation()->getOperationType() == CGIndexOp);
                 IndexOperationNode<Base>* indexOp = static_cast<IndexOperationNode<Base>*> (cond->getArguments()[0].getOperation());
-                assert(iterationIndexOp == NULL || iterationIndexOp == indexOp);
+                CPPADCG_ASSERT_UNKNOWN(iterationIndexOp == NULL || iterationIndexOp == indexOp);
                 iterationIndexOp = indexOp;
 
                 combineOverlapingIterationRanges(nonIterationRegions, cond->getInfo());
@@ -191,7 +191,7 @@ namespace CppAD {
                 ifBranch = ifBranch->getArguments()[0].getOperation();
             } while (ifBranch->getOperationType() == CGElseIfOp);
 
-            assert(iterationIndexOp != NULL);
+            CPPADCG_ASSERT_UNKNOWN(iterationIndexOp != NULL);
 
             // invert
             return invertIterationRanges(nonIterationRegions);

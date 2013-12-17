@@ -32,7 +32,7 @@ namespace CppAD {
     handler_(&handler),
     opNode_(node),
     value_(NULL) {
-        assert(node != NULL);
+        CPPADCG_ASSERT_UNKNOWN(node != NULL);
         handler.manageOperationNode(node);
     }
 

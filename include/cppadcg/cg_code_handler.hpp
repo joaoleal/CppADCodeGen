@@ -168,7 +168,7 @@ namespace CppAD {
         }
 
         size_t getIndependentVariableIndex(const OperationNode<Base>& var) const throw (CGException) {
-            assert(var.getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGInvOp);
 
             typename std::vector<OperationNode<Base> *>::const_iterator it =
                     std::find(_independentVariables.begin(), _independentVariables.end(), &var);
@@ -431,7 +431,7 @@ namespace CppAD {
 
                 // if e > vosize then some nodes (marking the beginning of scopes)
                 // must have been added more than once
-                assert(_variableOrder.size() == e);
+                CPPADCG_ASSERT_UNKNOWN(_variableOrder.size() == e);
             }
 
             for (size_t p = 0; p < _variableOrder.size(); p++) {
@@ -716,7 +716,7 @@ namespace CppAD {
     protected:
 
         virtual void manageOperationNode(OperationNode<Base>* code) {
-            //assert(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
+            //CPPADCG_ASSERT_UNKNOWN(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
             if (_codeBlocks.capacity() == _codeBlocks.size()) {
                 _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
             }
@@ -735,7 +735,7 @@ namespace CppAD {
                  * Alias operations are always followed so that there is a 
                  * correct usage count at the operation that it points to
                  */
-                assert(code.getArguments().size() == 1);
+                CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
                 OperationNode<Base>* arg = code.getArguments()[0].getOperation();
                 if (arg != NULL) {
                     markCodeBlockUsed(*arg);
@@ -752,11 +752,11 @@ namespace CppAD {
                 if (op == CGLoopStartOp || op == CGStartIfOp || op == CGElseIfOp || op == CGElseOp) {
                     // leaving a scope
                     ScopePath& sPath = _scopes[_currentScopeColor];
-                    assert(sPath.back().beginning == NULL);
+                    CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == NULL);
                     if (op == CGLoopStartOp || op == CGStartIfOp) {
                         sPath.back().beginning = &code; // save the initial node
                     } else {
-                        assert(!code.getArguments().empty() &&
+                        CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
                                code.getArguments()[0].getOperation() != NULL &&
                                code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
                         sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
@@ -815,12 +815,12 @@ namespace CppAD {
                     findRandomIndexPatterns(ip, _indexRandomPatterns);
 
                 } else if (op == CGDependentRefRhsOp) {
-                    assert(code.getInfo().size() == 1);
+                    CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
                     size_t depIndex = code.getInfo()[0];
 
-                    assert(_dependents->size() > depIndex);
+                    CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
                     OperationNode<Base>* depNode = (*_dependents)[depIndex].getOperationNode();
-                    assert(depNode != NULL && depNode->getOperationType() != CGInvOp);
+                    CPPADCG_ASSERT_UNKNOWN(depNode != NULL && depNode->getOperationType() != CGInvOp);
 
                     code.setVariableID(depNode->getVariableID());
                 }
@@ -914,13 +914,13 @@ namespace CppAD {
 
                 IndexOperationNode<Base>* newIterIndexOp = NULL;
                 iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
-                assert(iterationRegions.size() >= 2);
+                CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
 
                 IndexOperationNode<Base>* oldIterIndexOp = NULL;
                 std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
                 combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
-                assert(iterationRegions.size() >= 2);
-                assert(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+                CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
+                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
 
                 if (iterationRegions.size() > 2 ||
                         iterationRegions[0] != 0 ||
@@ -1050,7 +1050,7 @@ namespace CppAD {
             std::vector<size_t> iterationRegions;
             OperationNode<Base>* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
             OperationNode<Base>* endif = code.getArguments()[0].getOperation();
-            assert(endif->getOperationType() == CGEndIfOp);
+            CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGEndIfOp);
             OperationNode<Base>* bScopeOldEnd = _scopes[endif->getColor()].back().end;
 
             CGOpCode bNewOp = bScopeNewEnd->getOperationType();
@@ -1066,13 +1066,13 @@ namespace CppAD {
 
                 IndexOperationNode<Base>* newIterIndexOp = NULL;
                 iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
-                assert(iterationRegions.size() >= 2);
+                CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
 
                 IndexOperationNode<Base>* oldIterIndexOp = NULL;
                 const std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
                 combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
-                assert(iterationRegions.size() >= 2);
-                assert(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+                CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
+                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
 
                 if (iterationRegions.size() == 2 &&
                         (iterationRegions[0] == 0 ||
@@ -1083,7 +1083,7 @@ namespace CppAD {
 
                 } else if (oldIterRegions != iterationRegions) {
                     OperationNode<Base>* cond = bScopeOld->getArguments()[0].getOperation();
-                    assert(cond->getOperationType() == CGIndexCondExprOp);
+                    CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp);
                     cond->getInfo() = iterationRegions;
                 }
 
@@ -1104,7 +1104,7 @@ namespace CppAD {
         }
 
         inline void restoreTemporaryVar(OperationNode<Base>& tmp) {
-            assert(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
+            CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
 
             OperationNode<Base>* endIf = tmp.getArguments()[1].getOperation();
             OperationNode<Base>* ifAssign = endIf->getArguments()[1].getOperation();
@@ -1127,7 +1127,7 @@ namespace CppAD {
 
         inline void restoreTemporaryVar(OperationNode<Base>* tmp,
                                         OperationNode<Base>* opClone) {
-            assert(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
+            CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
 
             tmp.setOperation(opClone->getOperationType(), opClone->getArguments());
             tmp.getInfo() = opClone->getInfo();
@@ -1183,10 +1183,10 @@ namespace CppAD {
                 CGOpCode op = node->getOperationType();
 
                 if (op == CGLoopEndOp || op == CGEndIfOp || op == CGElseIfOp || op == CGElseOp) {
-                    assert(!node->getArguments().empty());
+                    CPPADCG_ASSERT_UNKNOWN(!node->getArguments().empty());
 
                     OperationNode<Base>* beginScopeNode = node->getArguments()[0].getOperation();
-                    assert(beginScopeNode != NULL);
+                    CPPADCG_ASSERT_UNKNOWN(beginScopeNode != NULL);
 
                     addScopeToVarOrder(beginScopeNode->getColor(), e);
                 }
@@ -1205,8 +1205,8 @@ namespace CppAD {
          * @return the depth of the first different scope
          */
         inline size_t findFirstDifferentScope(size_t color1, size_t color2) {
-            assert(color1 < _scopes.size());
-            assert(color2 < _scopes.size());
+            CPPADCG_ASSERT_UNKNOWN(color1 < _scopes.size());
+            CPPADCG_ASSERT_UNKNOWN(color2 < _scopes.size());
 
             ScopePath& scopePath1 = _scopes[color1];
             ScopePath& scopePath2 = _scopes[color2];
@@ -1260,7 +1260,7 @@ namespace CppAD {
                     OperationNode<Base>* cond = startIf->getArguments()[0].getOperation();
                     OperationNode<Base>* cond1 = startIf1->getArguments()[0].getOperation();
 
-                    assert(cond->getOperationType() == CGIndexCondExprOp || cond1->getOperationType() == CGIndexCondExprOp);
+                    CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp || cond1->getOperationType() == CGIndexCondExprOp);
                     if (cond->getInfo() == cond1->getInfo()) {
                         /**
                          * same condition -> combine the contents into a single if
@@ -1275,7 +1275,7 @@ namespace CppAD {
 
                         // break cycles caused by dependencies on the previous if
                         for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                            assert(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
                             breakCyclicDependency(eArgs[a].getOperation(), ifScope, endIf1);
                             replaceScope(eArgs[a].getOperation(), ifScope, ifScope1); // update scope
                         }
@@ -1286,7 +1286,7 @@ namespace CppAD {
 
                         // update startIf
                         for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                            assert(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
                             eArgs[a].getOperation()->getArguments()[0] = Argument<Base>(*startIf1);
                         }
 
@@ -1424,8 +1424,8 @@ namespace CppAD {
                         /**
                          * Save atomic function related information
                          */
-                        assert(arg.getArguments().size() > 1);
-                        assert(arg.getInfo().size() > 1);
+                        CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1);
+                        CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1);
                         size_t id = arg.getInfo()[0];
                         const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
                         if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
@@ -1577,7 +1577,7 @@ namespace CppAD {
                         freedVariables.push_back(released[r]->getVariableID());
                     } else if (isTemporaryArray(*released[r])) {
                         addFreeArraySpace(*released[r], freeArrayStartSpace, freeArrayEndSpace);
-                        assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                        CPPADCG_ASSERT_UNKNOWN(freeArrayStartSpace.size() == freeArrayEndSpace.size());
                     }
                 }
 
@@ -1594,7 +1594,7 @@ namespace CppAD {
                 } else if (isTemporaryArray(var)) {
                     // a temporary array
                     size_t arrayStart = reserveArraySpace(var, freeArrayStartSpace, freeArrayEndSpace, tmpArrayValues);
-                    assert(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                    CPPADCG_ASSERT_UNKNOWN(freeArrayStartSpace.size() == freeArrayEndSpace.size());
                     var.setVariableID(arrayStart + 1);
                 }
 
@@ -1640,7 +1640,7 @@ namespace CppAD {
                 const OperationNode<Base>* argOp = args[i].getOperation();
                 if (argOp != NULL && argOp->getOperationType() == CGArrayElementOp) {
                     const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
-                    assert(otherArray.getVariableID() > 0); // make sure it had already been assigned space
+                    CPPADCG_ASSERT_UNKNOWN(otherArray.getVariableID() > 0); // make sure it had already been assigned space
                     size_t otherArrayStart = otherArray.getVariableID() - 1;
                     size_t index = argOp->getInfo()[0];
                     blackList.insert(otherArrayStart + index);
@@ -1911,7 +1911,7 @@ namespace CppAD {
             } else {
                 OperationNode<Base>* aa = &alias;
                 do {
-                    assert(aa->getArguments().size() == 1);
+                    CPPADCG_ASSERT_UNKNOWN(aa->getArguments().size() == 1);
                     aa = aa->getArguments()[0].getOperation();
                 } while (aa != NULL && aa->getOperationType() == CGAliasOp);
                 return aa;

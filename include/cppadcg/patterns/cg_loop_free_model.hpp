@@ -147,12 +147,12 @@ namespace CppAD {
         }
 
         inline const vector<std::set<size_t> >& getHessianTempEqsSparsity() const {
-            assert(hessSparsity_);
+            CPPADCG_ASSERT_UNKNOWN(hessSparsity_);
             return hessTapeTempSparsity_;
         }
 
         inline const vector<std::set<size_t> >& getHessianOrigEqsSparsity() const {
-            assert(hessSparsity_);
+            CPPADCG_ASSERT_UNKNOWN(hessSparsity_);
             return hessTapeOrigEqSparsity_;
         }
 
@@ -248,7 +248,7 @@ namespace CppAD {
             using namespace CppAD::loops;
             using namespace CppAD::extra;
 
-            assert(hessSparsity_); // check that the sparsities have been evaluated
+            CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated
 
             size_t mo = dependentIndexes_.size();
             size_t m = getTapeDependentCount();
@@ -359,7 +359,7 @@ namespace CppAD {
             using namespace CppAD::loops;
             using namespace CppAD::extra;
 
-            assert(hessSparsity_); // check that the sparsities have been evaluated
+            CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated
 
             vector<CGB> wNoLoop(getTapeDependentCount());
             vector<CGB> hessNoLoop;

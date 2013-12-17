@@ -49,8 +49,8 @@ namespace CppAD {
             fun_(fun),
             varInfo_(varInfo),
             verbosity_(VERBOSITY_LOW) {
-            assert(fun_ != NULL);
-            assert(varInfo_.size() == fun->Domain());
+            CPPADCG_ASSERT_UNKNOWN(fun_ != NULL);
+            CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == fun->Domain());
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 varInfo_[j].setOriginalIndex(j);
                 varInfo_[j].setId(j);
@@ -58,7 +58,7 @@ namespace CppAD {
 
             for (size_t j = 0; j < varInfo_.size(); ++j) {
                 int deriv = varInfo_[j].getAntiDerivative();
-                assert(deriv < int(varInfo_.size()));
+                CPPADCG_ASSERT_UNKNOWN(deriv < int(varInfo_.size()));
                 if (deriv >= 0) {
                     varInfo_[deriv].setDerivative(j);
                 }

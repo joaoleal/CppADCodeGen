@@ -46,8 +46,8 @@ namespace CppAD {
         using namespace loops;
         using CppAD::vector;
 
-        assert(rows.size() == cols.size());
-        assert(rows.size() == location.size());
+        CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
+        CPPADCG_ASSERT_UNKNOWN(rows.size() == location.size());
 
         /**
          * determine sparsities
@@ -109,7 +109,7 @@ namespace CppAD {
                 /**
                  * Equation present in the model without loops
                  */
-                assert(_funNoLoops != NULL);
+                CPPADCG_ASSERT_UNKNOWN(_funNoLoops != NULL);
                 size_t il = _funNoLoops->getLocalDependentIndex(i);
 
                 noLoopEvalSparsity[il].insert(j);

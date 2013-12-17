@@ -29,10 +29,10 @@ namespace CppAD {
                            vector<bool>& vzy,
                            const vector<CG<Base> >& tx,
                            vector<CG<Base> >& tzy) {
-        assert(n == 3); // [x, dxdt, t]
-        assert(m == 1);
-        assert(tx.size() >= (order + 1) * n);
-        assert(tzy.size() >= (order + 1) * m);
+        CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
+        CPPADCG_ASSERT_UNKNOWN(m == 1);
+        CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n);
+        CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m);
 
         size_t n_order = order + 1;
         const size_t xIndex = 0; // index of the variable in the argument list
@@ -41,8 +41,8 @@ namespace CppAD {
 
         // check if this is during the call to time_var(id, ax, ay)
         if (vx.size() > 0) {
-            assert(vx.size() >= n);
-            assert(vzy.size() >= m);
+            CPPADCG_ASSERT_UNKNOWN(vx.size() >= n);
+            CPPADCG_ASSERT_UNKNOWN(vzy.size() >= m);
 
             vzy[0] = vx[0] || vx[1] || vx[2];
         }
@@ -52,10 +52,10 @@ namespace CppAD {
         } else if (order == 1) {
             const CG<Base>& ttime = tx[timeIndex * n_order + order]; //
             const CG<Base>& txx = tx[xIndex * n_order + order]; //
-            assert(ttime.isParameter());
-            assert(txx.isParameter());
+            CPPADCG_ASSERT_UNKNOWN(ttime.isParameter());
+            CPPADCG_ASSERT_UNKNOWN(txx.isParameter());
             if (ttime.getValue() > 0) {
-                assert(txx.getValue() == 0);
+                CPPADCG_ASSERT_UNKNOWN(txx.getValue() == 0);
                 tzy[1] = ttime * tx[dxdtIndex * n_order + 0]; // transform x(t) into dx(t)/dt
             } else {
                 tzy[1] = txx; // do nothing
@@ -81,11 +81,11 @@ namespace CppAD {
                            vector<CG<Base> >& px,
                            const vector<CG<Base> >& pzy) {
 
-        assert(n == 3); // [x, dxdt, t]
-        assert(m == 1);
-        assert(tx.size() >= (order + 1) * n);
-        assert(tzy.size() >= (order + 1) * m);
-        assert(px.size() >= (order + 1) * n);
+        CPPADCG_ASSERT_UNKNOWN(n == 3); // [x, dxdt, t]
+        CPPADCG_ASSERT_UNKNOWN(m == 1);
+        CPPADCG_ASSERT_UNKNOWN(tx.size() >= (order + 1) * n);
+        CPPADCG_ASSERT_UNKNOWN(tzy.size() >= (order + 1) * m);
+        CPPADCG_ASSERT_UNKNOWN(px.size() >= (order + 1) * n);
 
         CG<Base>* pxx = &px[0];
         CG<Base>* pdxdt = &px[order + 1];
@@ -114,10 +114,10 @@ namespace CppAD {
                                   size_t q,
                                   const vector< std::set<size_t> >& r,
                                   vector< std::set<size_t> >& s) {
-        assert(n == 3);
-        assert(m == 1);
-        assert(r.size() >= n);
-        assert(s.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(n == 3);
+        CPPADCG_ASSERT_UNKNOWN(m == 1);
+        CPPADCG_ASSERT_UNKNOWN(r.size() >= n);
+        CPPADCG_ASSERT_UNKNOWN(s.size() >= m);
 
         // sparsity for z and y are the same as for x
         s[0] = r[0]; // x
@@ -136,10 +136,10 @@ namespace CppAD {
                                   size_t q,
                                   vector< std::set<size_t> >& r,
                                   const vector< std::set<size_t> >& s) {
-        assert(n == 3);
-        assert(m == 1);
-        assert(r.size() >= n);
-        assert(s.size() >= m);
+        CPPADCG_ASSERT_UNKNOWN(n == 3);
+        CPPADCG_ASSERT_UNKNOWN(m == 1);
+        CPPADCG_ASSERT_UNKNOWN(r.size() >= n);
+        CPPADCG_ASSERT_UNKNOWN(s.size() >= m);
 
         r[0] = s[0];
         r[2] = s[0];

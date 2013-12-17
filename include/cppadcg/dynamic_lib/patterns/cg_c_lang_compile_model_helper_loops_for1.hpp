@@ -77,7 +77,7 @@ namespace CppAD {
                 p++;
             }
         }
-        assert(p == nnz);
+        CPPADCG_ASSERT_UNKNOWN(p == nnz);
 
         analyseSparseJacobianWithLoops(rows, cols, locations,
                                        noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
@@ -151,7 +151,7 @@ namespace CppAD {
                         // (dy_i/dx_v) elements from equations outside loops
                         const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
-                        assert(locations.size() == 1); // one Jacobian element should not be placed in several locations
+                        CPPADCG_ASSERT_UNKNOWN(locations.size() == 1); // one Jacobian element should not be placed in several locations
                         size_t e = *locations.begin();
 
                         col[e] = itiv->second * dx;
@@ -773,7 +773,7 @@ namespace CppAD {
                         for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
                             size_t iter = *itIt;
                             if (positions[iter] != std::numeric_limits<size_t>::max()) { // the element must have been requested
-                                assert(tapeJPos[iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                                CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
                                 iter2jcols[iter] = tapeJPos[iter].original;
                             }
                         }
@@ -804,7 +804,7 @@ namespace CppAD {
                     for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
                         size_t iter = *itIt;
                         if (positions[iter] != std::numeric_limits<size_t>::max()) {// the element must have been requested
-                            assert(lModel.getDependentIndexes()[tapeI][iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
+                            CPPADCG_ASSERT_UNKNOWN(lModel.getDependentIndexes()[tapeI][iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
                             iter2jcols[iter] = j;
                         }
                     }
@@ -868,7 +868,7 @@ namespace CppAD {
             for (itIt = iter2jcols.begin(); itIt != iter2jcols.end(); ++itIt) {
                 size_t iter = itIt->first;
                 size_t jcol = itIt->second;
-                assert(positions[iter] != std::numeric_limits<size_t>::max());
+                CPPADCG_ASSERT_UNKNOWN(positions[iter] != std::numeric_limits<size_t>::max());
                 locationsIter2Pos[iter] = positions[iter];
                 jcol2CompressedLoc[jcol].insert(positions[iter]);
             }
@@ -935,7 +935,7 @@ namespace CppAD {
 
                 dx[j] = Base(1);
                 vector<CGBase> dy = fun.Forward(1, dx);
-                assert(dy.size() == fun.Range());
+                CPPADCG_ASSERT_UNKNOWN(dy.size() == fun.Range());
                 dx[j] = Base(0);
 
                 map<size_t, CGBase>& dyDxJT = dyDxT[j];

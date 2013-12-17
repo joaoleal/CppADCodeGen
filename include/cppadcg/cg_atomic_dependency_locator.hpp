@@ -82,7 +82,7 @@ namespace CppAD {
             indeps_[node] = indeps;
 
             if (op == CGAtomicForwardOp) {
-                assert(node->getInfo().size() > 1);
+                CPPADCG_ASSERT_UNKNOWN(node->getInfo().size() > 1);
                 size_t id = node->getInfo()[0];
                 atomicIndeps_[id].insert(indeps.begin(), indeps.end());
             }

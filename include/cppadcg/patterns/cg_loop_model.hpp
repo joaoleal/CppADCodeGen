@@ -331,7 +331,7 @@ namespace CppAD {
          * @return the indexes of tape variables where the variable is used
          */
         inline const std::set<size_t>& getIndexedTapeIndexes(size_t iteration, size_t origJ) const {
-            assert(iteration < iteration2orig2indexedIndepIndexes_.size());
+            CPPADCG_ASSERT_UNKNOWN(iteration < iteration2orig2indexedIndepIndexes_.size());
 
             const std::map<size_t, std::set<size_t> >& itOrigs = iteration2orig2indexedIndepIndexes_[iteration];
             std::map<size_t, std::set<size_t> >::const_iterator it = itOrigs.find(origJ);

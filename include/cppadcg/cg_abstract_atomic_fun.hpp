@@ -83,7 +83,7 @@ namespace CppAD {
                 if (!evalForwardValues(q, p, tx, tyb, ty.size()))
                     return false;
 
-                assert(tyb.size() == ty.size());
+                CPPADCG_ASSERT_UNKNOWN(tyb.size() == ty.size());
                 for (size_t i = 0; i < ty.size(); i++) {
                     ty[i] = tyb[i];
                 }
@@ -143,7 +143,7 @@ namespace CppAD {
             }
 
             CodeHandler<Base>* handler = findHandler(tx);
-            assert(handler != NULL);
+            CPPADCG_ASSERT_UNKNOWN(handler != NULL);
 
             OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
             OperationNode<Base>* tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
@@ -201,7 +201,7 @@ namespace CppAD {
                 if (!evalReverseValues(p, tx, ty, pxb, py))
                     return false;
 
-                assert(pxb.size() == px.size());
+                CPPADCG_ASSERT_UNKNOWN(pxb.size() == px.size());
 
                 for (size_t i = 0; i < px.size(); i++) {
                     px[i] = pxb[i];
@@ -300,7 +300,7 @@ namespace CppAD {
                     handler = findHandler(py);
                 }
             }
-            assert(handler != NULL);
+            CPPADCG_ASSERT_UNKNOWN(handler != NULL);
 
             OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
             OperationNode<Base>* tyArray;

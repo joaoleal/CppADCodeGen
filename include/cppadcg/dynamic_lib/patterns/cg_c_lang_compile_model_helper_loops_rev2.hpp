@@ -1257,7 +1257,7 @@ namespace CppAD {
                 return ddfdxdx;
             }
 
-            assert(pattern.getLinearSlopeDy() == 0); // must be a constant index
+            CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0); // must be a constant index
 
             if (iterations.size() == group.iterations.size()) {
                 // same expression present in all iterations

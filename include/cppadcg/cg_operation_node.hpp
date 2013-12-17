@@ -89,7 +89,7 @@ namespace CppAD {
             last_usage_order_(0),
             color_(0),
             name_(NULL) {
-            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
         }
@@ -107,7 +107,7 @@ namespace CppAD {
             last_usage_order_(0),
             color_(0),
             name_(NULL) {
-            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
+            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
                    arg3.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
@@ -128,7 +128,7 @@ namespace CppAD {
             last_usage_order_(0),
             color_(0),
             name_(NULL) {
-            assert(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
+            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
                    arg3.getOperation() != NULL || arg4.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
@@ -152,7 +152,7 @@ namespace CppAD {
         }
 
         inline void makeAlias(const Argument<Base>& other) {
-            assert(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
+            CPPADCG_ASSERT_UNKNOWN(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
 
             operation_ = CGAliasOp;
             arguments_.resize(1);
@@ -167,7 +167,7 @@ namespace CppAD {
         }
 
         inline void setOperation(CGOpCode op, const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
-            assert(op == operation_ || CUSTOM_NODE_CLASS.find(op) == CUSTOM_NODE_CLASS.end()); // cannot transform into a node with a custom class
+            CPPADCG_ASSERT_UNKNOWN(op == operation_ || CUSTOM_NODE_CLASS.find(op) == CUSTOM_NODE_CLASS.end()); // cannot transform into a node with a custom class
 
             operation_ = op;
             arguments_ = arguments;
@@ -270,13 +270,13 @@ namespace CppAD {
             last_usage_order_ = last;
             if (operation_ == CGArrayElementOp) {
                 OperationNode<Base>* array = arguments_[0].getOperation();
-                assert(array->getOperationType() == CGArrayCreationOp);
+                CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGArrayCreationOp);
                 if (array->getLastUsageEvaluationOrder() < last) {
                     array->setLastUsageEvaluationOrder(last);
                 }
             } else if (operation_ == CGTmpOp) {
                 OperationNode<Base>* declr = arguments_[0].getOperation();
-                assert(declr->getOperationType() == CGTmpDclOp);
+                CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGTmpDclOp);
                 if (declr->getLastUsageEvaluationOrder() < last) {
                     declr->setLastUsageEvaluationOrder(last);
                 }

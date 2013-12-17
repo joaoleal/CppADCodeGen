@@ -77,7 +77,7 @@ namespace CppAD {
                 p++;
             }
         }
-        assert(p == nnz);
+        CPPADCG_ASSERT_UNKNOWN(p == nnz);
 
         analyseSparseJacobianWithLoops(rows, cols, locations,
                                        noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
@@ -146,7 +146,7 @@ namespace CppAD {
                     // (dy_i/dx_v) elements from equations outside loops
                     const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
-                    assert(locations.size() == 1); // one jacobian element should not be placed in several locations
+                    CPPADCG_ASSERT_UNKNOWN(locations.size() == 1); // one jacobian element should not be placed in several locations
                     size_t e = *locations.begin();
 
                     row[e] = itjv->second * py;
@@ -438,7 +438,7 @@ namespace CppAD {
 
                 w[i] = Base(1);
                 vector<CGBase> dw = fun.Reverse(1, w);
-                assert(dw.size() == fun.Domain());
+                CPPADCG_ASSERT_UNKNOWN(dw.size() == fun.Domain());
                 w[i] = Base(0);
 
                 map<size_t, CGBase>& dyIDx = dyDx[i];

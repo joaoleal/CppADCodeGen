@@ -36,7 +36,7 @@ namespace CppAD {
                                    IndexPattern* pattern2) :
             pattern1_(pattern1),
             pattern2_(pattern2) {
-            assert(pattern1_ != NULL || pattern2_ != NULL);
+            CPPADCG_ASSERT_UNKNOWN(pattern1_ != NULL || pattern2_ != NULL);
         }
 
         inline const IndexPattern* getPattern1() const {

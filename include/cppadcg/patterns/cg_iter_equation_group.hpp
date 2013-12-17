@@ -82,7 +82,7 @@ namespace CppAD {
                 return; // already evaluated
             }
 
-            assert(model != NULL);
+            CPPADCG_ASSERT_UNKNOWN(model != NULL);
             size_t iterationCount = model->getIterationCount();
 
             const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = model->getIndexedIndepIndexes();

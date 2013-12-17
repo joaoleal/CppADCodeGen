@@ -106,7 +106,7 @@ namespace CppAD {
             _ss.clear();
             _ss.str("");
 
-            assert(variable.getOperationType() == CGArrayCreationOp);
+            CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGArrayCreationOp);
 
             size_t id = variable.getVariableID();
             _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
@@ -148,7 +148,7 @@ namespace CppAD {
             // if
             //  _minTemporaryID == _maxTemporaryID + 1
             // then no temporary variables are being used
-            assert(_minTemporaryID <= _maxTemporaryID + 1);
+            CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
         }
 
         inline virtual ~CLangDefaultVariableNameGenerator() {

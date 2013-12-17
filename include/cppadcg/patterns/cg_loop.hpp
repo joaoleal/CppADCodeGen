@@ -162,7 +162,7 @@ namespace CppAD {
         }
 
         inline void setLinkedDependents(const std::set<std::set<size_t>*>& newLoopRelations) {
-            assert(eqGroups_.size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1);
 
             eqGroups_[0].linkedDependents.clear();
             eqGroups_[0].linkedDependents.reserve(newLoopRelations.size());
@@ -210,21 +210,21 @@ namespace CppAD {
         void merge(Loop<Base>& other,
                    const std::set<EquationPattern<Base>*>& indexedLoopRelations,
                    const std::vector<std::pair<EquationPattern<Base>*, EquationPattern<Base>*> >& nonIndexedLoopRelations) {
-            assert(iterationCount_ == other.iterationCount_);
+            CPPADCG_ASSERT_UNKNOWN(iterationCount_ == other.iterationCount_);
 
 
             equations.insert(other.equations.begin(), other.equations.end());
             other.equations.clear(); // so that it does not delete the equations
 
-            assert(eqGroups_.size() == 1);
-            assert(other.eqGroups_.size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(eqGroups_.size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(other.eqGroups_.size() == 1);
 
             EquationGroup<Base>& g = eqGroups_[0];
             EquationGroup<Base>& og = other.eqGroups_[0];
             g.equations.insert(og.equations.begin(), og.equations.end());
 
-            assert(equationOrder_.empty());
-            assert(iterationDependents_.empty());
+            CPPADCG_ASSERT_UNKNOWN(equationOrder_.empty());
+            CPPADCG_ASSERT_UNKNOWN(iterationDependents_.empty());
 
             g.linkedEquationsByNonIndexed.insert(og.linkedEquationsByNonIndexed.begin(), og.linkedEquationsByNonIndexed.end());
             typename std::set<EquationPattern<Base>*>::const_iterator itNIndexed;
@@ -253,7 +253,7 @@ namespace CppAD {
                 equationOrder_[it->first] = it->second + nEq;
             }
 
-            assert(iterationDependents_.size() == other.iterationDependents_.size());
+            CPPADCG_ASSERT_UNKNOWN(iterationDependents_.size() == other.iterationDependents_.size());
             for (size_t iter = 0; iter < iterationDependents_.size(); iter++) {
                 iterationDependents_[iter].insert(other.iterationDependents_[iter].begin(), other.iterationDependents_[iter].end());
             }
@@ -265,7 +265,7 @@ namespace CppAD {
                              const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
 
-            assert(dep2Iteration_.empty());
+            CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty());
             for (size_t iter = 0; iter < iterationCount_; iter++) {
                 const std::set<size_t>& deps = iterationDependents_[iter];
 
@@ -300,7 +300,7 @@ namespace CppAD {
             for (size_t g = 0; g < eqGroups_.size(); g++) {
                 const EquationGroup<Base>& group = eqGroups_[g];
                 const std::set<size_t>& refItDep = group.iterationDependents[group.refIteration];
-                assert(refItDep.size() == group.equations.size());
+                CPPADCG_ASSERT_UNKNOWN(refItDep.size() == group.equations.size());
 
                 for (itDep = refItDep.begin(); itDep != refItDep.end(); ++itDep) {
                     size_t dep = *itDep;
@@ -322,7 +322,7 @@ namespace CppAD {
                             // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
                             // since both operations which use indexed independents would be NULL (the dependent)
                             // an alias is used for these cases
-                            assert(itop2a->first != NULL);
+                            CPPADCG_ASSERT_UNKNOWN(itop2a->first != NULL);
                             addOperationArguments2Loop(itop2a->first, itop2a->second);
                         }
 
@@ -334,7 +334,7 @@ namespace CppAD {
                             // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
                             // since both operations which use indexed independents would be NULL (the dependent)
                             // an alias is used for these cases
-                            assert(opLoopRef != NULL);
+                            CPPADCG_ASSERT_UNKNOWN(opLoopRef != NULL);
 
                             const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef);
                             addOperationArguments2Loop(opLoopRef, eq->indexedOpIndep.op2Arguments.at(opEqRef));
@@ -489,12 +489,12 @@ namespace CppAD {
                             const std::set<size_t>& iters = eqIterations[*itRel];
                             usedIterations.insert(iters.begin(), iters.end());
                         }
-                        
+
                         while (true) {
-                            
+
                             // must pick one dependent from each equation for each iteration
                             deps.clear();
-                            
+
                             typename std::map<EquationPattern<Base>*, std::set<size_t> >::iterator itEq2Dep;
                             for (itEq2Dep = itPos2Eq2Dep->second.begin(); itEq2Dep != itPos2Eq2Dep->second.end(); ++itEq2Dep) {
                                 if (!itEq2Dep->second.empty()) {
@@ -546,7 +546,7 @@ namespace CppAD {
                      */
 
                 }
-                
+
                 iterationCount_ = std::max(iterationCount_, iterationDependents_.size());
             }
 
@@ -585,7 +585,7 @@ namespace CppAD {
 
         void addOperationArguments2Loop(const OperationNode<Base>* op,
                                         const OperationIndexedIndependents<Base>& eqOpIndeIndep) {
-            assert(!dep2Iteration_.empty());
+            CPPADCG_ASSERT_UNKNOWN(!dep2Iteration_.empty());
 
             OperationIndexedIndependents<Base>& loopOpIndeIndep = indexedOpIndep.op2Arguments[op];
             loopOpIndeIndep.arg2Independents.resize(eqOpIndeIndep.arg2Independents.size());
@@ -606,7 +606,7 @@ namespace CppAD {
         }
 
         void generateIndependentLoopIndexes() {
-            assert(iterationCount_ > 0); //number of iterations and dependent indexes must have already been determined
+            CPPADCG_ASSERT_UNKNOWN(iterationCount_ > 0); //number of iterations and dependent indexes must have already been determined
 
             // loop all operations from the reference dependents which use indexed independents
             typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator it;
@@ -631,7 +631,7 @@ namespace CppAD {
                     /**
                      * create the independent variable order
                      */
-                    assert(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_);
+                    CPPADCG_ASSERT_UNKNOWN(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_);
                     typename std::map<size_t, const OperationNode<Base>*>::const_iterator itDep2Indep;
                     for (itDep2Indep = dep2Indep.begin(); itDep2Indep != dep2Indep.end(); ++itDep2Indep) {
                         size_t iterationIndex = itDep2Indep->first;
@@ -713,8 +713,8 @@ namespace CppAD {
                                   std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
             typedef CG<Base> CGB;
             typedef AD<CGB> ADCGB;
-            assert(independents.size() > 0);
-            assert(independents[0].getCodeHandler() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);
+            CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != NULL);
             CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
 
             /**
@@ -723,7 +723,7 @@ namespace CppAD {
             nIndependents_ = 0;
             idCounter_ = 1;
 
-            assert(equationOrder_.size() == equations.size());
+            CPPADCG_ASSERT_UNKNOWN(equationOrder_.size() == equations.size());
 
             std::vector<CGB> deps(equations.size());
 
@@ -764,7 +764,7 @@ namespace CppAD {
             }
 
             // indexed independents
-            assert(indexedIndep2clone_.size() == independentsIndexed_.size());
+            CPPADCG_ASSERT_UNKNOWN(indexedIndep2clone_.size() == independentsIndexed_.size());
 
             std::vector<const OperationNode<Base>*> indexedCloneOrder;
             indexedCloneOrder.reserve(indexedIndep2clone_.size());
@@ -952,7 +952,7 @@ namespace CppAD {
         inline Argument<Base> makeGraphClones(const EquationPattern<Base>& eq,
                                               OperationNode<Base>& node) {
 
-            assert(node.getOperationType() != CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGInvOp);
 
             size_t id = node.getVariableID();
 
@@ -1029,9 +1029,9 @@ namespace CppAD {
 
         OperationNode<Base>& getIndexedIndependentClone(const OperationNode<Base>* operation,
                                                         size_t argIndex) {
-            assert(operation == NULL || operation->getArguments().size() > argIndex);
-            assert(operation == NULL || operation->getArguments()[argIndex].getOperation() != NULL);
-            assert(operation == NULL || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments().size() > argIndex);
+            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments()[argIndex].getOperation() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGInvOp);
 
             OperationArgumentsIndepOrder<Base>* args2Order = op2Arg2IndepOrder_.at(operation);
             IndependentOrder<Base>* indepOrder = args2Order->arg2Order.at(argIndex);
@@ -1053,7 +1053,7 @@ namespace CppAD {
         }
 
         OperationNode<Base>& getNonIndexedIndependentClone(const OperationNode<Base>& node) {
-            assert(node.getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGInvOp);
 
             typename std::map<const OperationNode<Base>*, OperationNode<Base>*>::iterator it;
             it = orig2ConstIndepClone_.find(&node);
@@ -1078,8 +1078,8 @@ namespace CppAD {
          * @return the clone
          */
         OperationNode<Base>& makeTemporaryVarClone(OperationNode<Base>& node) {
-            assert(node.getOperationType() != CGInvOp);
-            assert(node.getOperationType() != CGArrayCreationOp);
+            CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGArrayCreationOp);
 
             CG<Base> newIndep;
             handler_.makeVariable(newIndep);
@@ -1134,7 +1134,7 @@ namespace CppAD {
                     const OperationNode<Base>* node2) {
                 const IndependentOrder<Base>* indepOrder1 = clone2indexedIndep.at(node1);
                 const IndependentOrder<Base>* indepOrder2 = clone2indexedIndep.at(node2);
-                assert(indepOrder1->order.size() == indepOrder2->order.size());
+                CPPADCG_ASSERT_UNKNOWN(indepOrder1->order.size() == indepOrder2->order.size());
 
                 size_t size = indepOrder1->order.size();
                 for (size_t j = 0; j < size; j++) {
@@ -1158,7 +1158,7 @@ namespace CppAD {
                         return false;
                 }
 
-                assert(false); // should never get here
+                CPPADCG_ASSERT_UNKNOWN(false); // should never get here
                 return false;
             }
         };

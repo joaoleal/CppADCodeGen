@@ -75,7 +75,7 @@ namespace CppAD {
                 os << indentation;
                 printStaticIndexArray(os, ip->getName(), y);
             } else {
-                assert(ip->getType() == RANDOM2D);
+                CPPADCG_ASSERT_UNKNOWN(ip->getType() == RANDOM2D);
                 /**
                  * 2D
                  */
@@ -205,7 +205,7 @@ namespace CppAD {
                 const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
                 const std::map<size_t, IndexPattern*>& sections = lip->getLinearSections();
                 size_t sSize = sections.size();
-                assert(sSize > 1);
+                CPPADCG_ASSERT_UNKNOWN(sSize > 1);
 
                 std::map<size_t, IndexPattern*>::const_iterator its = sections.begin();
                 for (size_t s = 0; s < sSize - 1; s++) {
@@ -257,7 +257,7 @@ namespace CppAD {
                 return rip.getName() + "[" + (*indexes[0]->getName()) + "][" + (*indexes[1]->getName()) + "]";
             }
             default:
-                assert(false); // should never reach this
+                CPPADCG_ASSERT_UNKNOWN(false); // should never reach this
                 return "";
         }
     }

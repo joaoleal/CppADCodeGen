@@ -237,7 +237,7 @@ namespace CppAD {
                     endArgs.push_back(Argument<Base>(*yIndexed));
                 } else {
                     OperationNode<Base>* n = depInfo.first.getOperationNode();
-                    assert(n != NULL);
+                    CPPADCG_ASSERT_UNKNOWN(n != NULL);
                     endArgs.push_back(Argument<Base>(*n));
                 }
             }
@@ -258,7 +258,7 @@ namespace CppAD {
 
             const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
             for (size_t i = 0; i < endArgs.size(); i++) {
-                assert(endArgs[i].getOperation() != NULL);
+                CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != NULL);
                 LoopNonIndexedLocator<Base>(handler, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
             }
 
@@ -395,7 +395,7 @@ namespace CppAD {
         std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
                                                            const std::set<size_t>& usedIter,
                                                            size_t maxIter) {
-            assert(!iterations.empty());
+            CPPADCG_ASSERT_UNKNOWN(!iterations.empty());
 
             std::map<size_t, bool> allIters;
             for (std::set<size_t>::const_iterator it = usedIter.begin(); it != usedIter.end(); ++it) {
@@ -588,7 +588,7 @@ namespace CppAD {
                                                vector<IfElseInfo<Base> >& ifElses) {
             using namespace std;
 
-            assert(pattern.getLinearSlopeDy() == 0); // must be a constant index
+            CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0); // must be a constant index
 
             // try to find an existing if-else where these operations can be added
             map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
@@ -897,7 +897,7 @@ namespace CppAD {
                                 set<size_t>::const_iterator itE;
                                 size_t e = 0;
                                 for (itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
-                                    assert(origPos[*itE].size() == 1);
+                                    CPPADCG_ASSERT_UNKNOWN(origPos[*itE].size() == 1);
                                     resultPos[e][localIt] = *origPos[*itE].begin();
 
                                     compressPos[e][localIt] = *itE;
@@ -1028,7 +1028,7 @@ namespace CppAD {
                     "   unsigned long " << itName << ";\n"
                     "   unsigned long " << keyIndexName << ";\n"
                     "   unsigned long e;\n";
-            assert(itName != "e" && keyIndexName != "e");
+            CPPADCG_ASSERT_UNKNOWN(itName != "e" && keyIndexName != "e");
             if (maxCompressedSize > 0) {
                 out << "   " << baseTypeName << " compressed[" << maxCompressedSize << "];\n";
             }
@@ -1061,8 +1061,8 @@ namespace CppAD {
                 size_t index = it->first;
                 const set<size_t>& elPos = it->second;
                 const std::vector<set<size_t> >& location = userElLocation.at(index);
-                assert(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
-                assert(elPos.size() > 0);
+                CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
+                CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0);
                 bool rowOrdered = jcolOrdered.at(index);
 
                 out << "\n";
@@ -1129,7 +1129,7 @@ namespace CppAD {
                         }
 
                         if (group->startLocPattern.get() == NULL) {
-                            assert(!group->elCount2elements.m.empty());
+                            CPPADCG_ASSERT_UNKNOWN(!group->elCount2elements.m.empty());
 
                             std::set<size_t> usedIter;
 
@@ -1148,7 +1148,7 @@ namespace CppAD {
                             map<size_t, ArrayElementGroup*>::const_iterator itc;
                             for (itc = group->elCount2elements.m.begin(); itc != group->elCount2elements.m.end(); ++itc) {
                                 const ArrayElementGroup* eg = itc->second;
-                                assert(!eg->elements.empty());
+                                CPPADCG_ASSERT_UNKNOWN(!eg->elements.empty());
 
                                 string indent2 = indent;
                                 if (withIfs) {

@@ -40,7 +40,7 @@ namespace CppAD {
                 handler = getCodeHandler();
 
             } else {
-                assert(getCodeHandler() == right.getCodeHandler());
+                CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
                 handler = getCodeHandler();
             }
 
@@ -71,7 +71,7 @@ namespace CppAD {
                 handler = getCodeHandler();
 
             } else {
-                assert(getCodeHandler() == right.getCodeHandler());
+                CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
                 handler = getCodeHandler();
             }
 
@@ -112,7 +112,7 @@ namespace CppAD {
                 handler = getCodeHandler();
 
             } else {
-                assert(getCodeHandler() == right.getCodeHandler());
+                CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
                 handler = getCodeHandler();
             }
 
@@ -147,7 +147,7 @@ namespace CppAD {
                 handler = getCodeHandler();
 
             } else {
-                assert(getCodeHandler() == right.getCodeHandler());
+                CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
                 handler = getCodeHandler();
             }
 

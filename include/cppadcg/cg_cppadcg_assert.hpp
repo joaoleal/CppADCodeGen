@@ -25,4 +25,19 @@
 		msg        );                   \
 }
 
+
+#ifdef NDEBUG
+#define CPPADCG_ASSERT_UNKNOWN(exp)      // do nothing
+#else
+#define CPPADCG_ASSERT_UNKNOWN(exp)              \
+{	if( ! ( exp ) )                         \
+	CppAD::ErrorHandler::Call(              \
+		false      ,                    \
+		__LINE__   ,                    \
+ 		__FILE__   ,                    \
+		#exp       ,                    \
+		""         );                   \
+}
+#endif
+
 #endif

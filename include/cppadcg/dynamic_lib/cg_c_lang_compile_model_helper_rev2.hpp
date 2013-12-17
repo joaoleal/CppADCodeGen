@@ -118,7 +118,7 @@ namespace CppAD {
             _fun.Forward(1, tx1v);
             tx1v[j] = Base(0);
             vector<CGBase> px = _fun.Reverse(2, py);
-            assert(px.size() == 2 * n);
+            CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
 
             vector<CGBase> pxCustom;
             std::vector<size_t>::const_iterator it2;
