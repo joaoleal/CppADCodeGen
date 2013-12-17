@@ -31,19 +31,34 @@ namespace CppAD {
             CppADCGPatternModelTest("PlugFlow",
                                     4 * nEls, // ns
                                     1, // nm
-                                    5, // npar
+                                    4, // npar
                                     nEls * 4, // m
                                     verbose, printValues) {
             this->verbose_ = false;
 
-            this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 5e2; // ~ (1.1102230246251565e-13)
-            this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 3e4; // ~ (6.6613381477509392e-13)
-            this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e8; // ~ (2.2204460492503131e-08)
+            //this->epsilonA_ = std::numeric_limits<Base>::epsilon() * 1e2; 
+            //this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 1e2; 
+            //this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e2; 
 
+            // states
+            for (size_t j = 0; j < 6; j++) this->xb[j] = std::sqrt(14 / 1000.) - j * 0.01; // Ca (mol/l)
+            for (size_t j = 0; j < 6; j++) this->xb[6 + j] = 1.2 - j * 0.01; // Cb (mol/l)
+            for (size_t j = 0; j < 6; j++) this->xb[12 + j] = j * 0.01; // Cc (mol/l)
+            for (size_t j = 0; j < 6; j++) this->xb[18 + j] = 50 + j * 0.1; // T (C)
+
+            //controls
+            this->xb[24] = 7; // Fin (l/min)
+
+            //parameters
+            this->xb[25] = std::sqrt(14 / 1000.); // Ca0 (mol/l)
+            this->xb[26] = 0.1; // Cb0 (mol/l)
+            this->xb[27] = 0.0; // Cc0 (mol/l)
+            this->xb[28] = 20; // T0 (C)
         }
 
         virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) {
-            return plugFlowFunc(x);
+            PlugFlowModel<CGD> m;
+            return m.model(x);
         }
 
         virtual std::vector<std::set<size_t> > getRelatedCandidates() {
@@ -79,7 +94,7 @@ TEST_F(CppADCGPatternPlugFlowTest, plugflowAllVars) {
     //std::vector<std::set<size_t> > jacSparAll = extra::jacobianSparsitySet<std::vector<std::set<size_t> > >(*fun);
     //printSparsityPattern(jacSparAll, "jacobian", true);
     //this->customJacSparsity_.resize(fun->Range());
-    //this->customJacSparsity_[15].insert(25);
+    //this->customJacSparsity_[2].insert(24);
 
     //std::vector<std::set<size_t> > hesSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(*fun);
     //printSparsityPattern(hesSparAll, "hessian", true);
