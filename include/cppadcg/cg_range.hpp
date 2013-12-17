@@ -77,7 +77,8 @@ namespace CppAD {
         for (size_t i = 0; i < newIterRegions.size(); i += 2) {
             std::pair<size_t, size_t> p(newIterRegions[i], newIterRegions[i + 1]);
             begin = std::lower_bound(begin, sorted.end(), p);
-            sorted.insert(begin, p);
+            begin = sorted.insert(begin, p);
+            begin++;
         }
 
         std::vector<std::pair<size_t, size_t> > result;
