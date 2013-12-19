@@ -32,7 +32,8 @@ namespace CppAD {
     const std::string CLangCompileDynamicHelper<Base>::CONST = "const";
 
     template<class Base>
-    DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException) {
+    DynamicLib<Base>* CLangCompileDynamicHelper<Base>::createDynamicLibrary(CLangCompiler<Base>& compiler,
+                                                                            bool loadLib) throw (CGException) {
         startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
 
         try {
@@ -65,7 +66,10 @@ namespace CppAD {
 
         finishedJob();
 
-        return loadDynamicLibrary();
+        if (loadLib)
+            return loadDynamicLibrary();
+        else
+            return NULL;
     }
 
     template<class Base>

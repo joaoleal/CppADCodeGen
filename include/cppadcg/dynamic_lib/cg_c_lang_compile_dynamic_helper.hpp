@@ -48,9 +48,9 @@ namespace CppAD {
          * Creates a new helper class for the generation of dynamic libraries
          * using the C language.
          * 
-         * @param model a model compilation helper (must only be deleted after
+         * @param model A model compilation helper (must only be deleted after
          *              this object)
-         * @param saveSourceFiles whether or not to write the generated source
+         * @param saveSourceFiles Whether or not to write the generated source
          *                        files to disk (for visualization purposes 
          *                        only).
          */
@@ -123,8 +123,27 @@ namespace CppAD {
             _customSource[filename] = source;
         }
 
-        DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler) throw (CGException);
+        /**
+         * Compiles all models and generates a dynamic library.
+         * 
+         * @param compiler The compiler used to compile the sources and create
+         *                 the dynamic library
+         * @param loadLib Whether or not to load the dynamic library
+         * @return The dynamic library if loadLib is true, NULL otherwise
+         */
+        DynamicLib<Base>* createDynamicLibrary(CLangCompiler<Base>& compiler,
+                                               bool loadLib = true) throw (CGException);
 
+        /**
+         * Compiles all models and generates a static library.
+         * 
+         * @param compiler The compiler used to compile the sources
+         * @param ar The archiver used to assemble the compiled source into a
+         *           static library
+         * @param posIndepCode Whether or not to compile the source 
+         *                     with position independent code (static libraries 
+         *                     typically do not use this feature)
+         */
         void createStaticLibrary(CLangCompiler<Base>& compiler, Archiver& ar, bool posIndepCode = false);
 
         inline virtual ~CLangCompileDynamicHelper() {
