@@ -61,7 +61,7 @@ namespace CppAD {
             args.insert(args.end(), objectFiles.begin(), objectFiles.end());
 
             if (timer != NULL) {
-                timer->startingJob("static library '" + library + "'");
+                timer->startingJob("'" + library + "'", JobTimer::ASSEMBLE_STATIC_LIBRARY);
             } else if (_verbose) {
                 std::cout << "building library '" << library << "'" << std::endl;
             }

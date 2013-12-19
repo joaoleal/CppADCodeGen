@@ -223,7 +223,7 @@ namespace CppAD {
             }
 
             if (timer != NULL) {
-                timer->startingJob("dynamic library '" + library + "'");
+                timer->startingJob("'" + library + "'", JobTimer::COMPILING_DYNAMIC_LIBRARY);
             } else if (_verbose) {
                 std::cout << "building library '" << library << "'" << std::endl;
             }

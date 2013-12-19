@@ -99,7 +99,7 @@ namespace CppAD {
     const JobType JobTypeHolder<T>::COMPILING("compiling", "compiled");
 
     template<int T>
-    const JobType JobTypeHolder<T>::COMPILING_DYNAMIC_LIBRARY("compiling library", "compiled library");
+    const JobType JobTypeHolder<T>::COMPILING_DYNAMIC_LIBRARY("compiling dynamic library", "compiled library");
 
     template<int T>
     const JobType JobTypeHolder<T>::DYNAMIC_MODEL_LIBRARY("creating library", "created library");
