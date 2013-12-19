@@ -71,8 +71,10 @@ namespace CppAD {
         static const JobType SOURCE_GENERATION;
         static const JobType COMPILING_FOR_MODEL;
         static const JobType COMPILING;
+        static const JobType COMPILING_DYNAMIC_LIBRARY;
         static const JobType DYNAMIC_MODEL_LIBRARY;
         static const JobType STATIC_MODEL_LIBRARY;
+        static const JobType ASSEMBLE_STATIC_LIBRARY;
     };
 
     template<int T>
@@ -97,10 +99,16 @@ namespace CppAD {
     const JobType JobTypeHolder<T>::COMPILING("compiling", "compiled");
 
     template<int T>
+    const JobType JobTypeHolder<T>::COMPILING_DYNAMIC_LIBRARY("compiling library", "compiled library");
+
+    template<int T>
     const JobType JobTypeHolder<T>::DYNAMIC_MODEL_LIBRARY("creating library", "created library");
 
     template<int T>
     const JobType JobTypeHolder<T>::STATIC_MODEL_LIBRARY("creating library", "created library");
+
+    template<int T>
+    const JobType JobTypeHolder<T>::ASSEMBLE_STATIC_LIBRARY("assembling static library", "assembled static library");
 
     /**
      * Represents a task for which the execution time will be determined

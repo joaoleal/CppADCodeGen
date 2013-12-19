@@ -138,6 +138,7 @@
 #include <cppadcg/patterns/index/cg_random_1d_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_random_2d_index_pattern.hpp>
 #include <cppadcg/patterns/index/cg_index_pattern_impl.hpp>
+#include <cppadcg/patterns/cg_independent_node_sorter.hpp>
 #include <cppadcg/patterns/cg_equation_group.hpp>
 #include <cppadcg/patterns/cg_iter_equation_group.hpp>
 #include <cppadcg/patterns/cg_loop_model.hpp>

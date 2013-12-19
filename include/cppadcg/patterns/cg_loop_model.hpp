@@ -43,7 +43,7 @@ namespace CppAD {
          */
         const size_t iterationCount_;
         /**
-         * loop tape dependent variable count (number of equation patterns)
+         * Loop tape dependent variable count (number of equation patterns)
          */
         const size_t m_;
         /**
@@ -110,8 +110,8 @@ namespace CppAD {
          * dependencies to calls of a user atomic function.
          * 
          * @param name The atomic function name.
-         * @param fun
-         * @param iterationCount
+         * @param fun The tape for a single loop iteration (loop model)
+         * @param iterationCount Number of loop iterations
          * @param dependentOrigIndexes
          * @param indexedIndepOrigIndexes
          * @param nonIndexedIndepOrigIndexes
@@ -228,18 +228,41 @@ namespace CppAD {
             return loopId_;
         }
 
+        /**
+         * Provides the number of iterations in the loop
+         * 
+         * @return the number of iterations in the loop
+         */
         inline const size_t getIterationCount() const {
             return iterationCount_;
         }
 
+        /**
+         * Provides the tape that represents the loop model
+         * 
+         * @return the tape of the loop model
+         */
         inline ADFun<CGB>& getTape() const {
             return *fun_;
         }
 
+        /**
+         * Provides the number of dependent variables in the loop tape/model 
+         * (number of equation patterns).
+         * 
+         * @return the number of dependents in the loop model 
+         *         (number of equation patterns)
+         */
         inline size_t getTapeDependentCount() const {
             return m_;
         }
 
+        /**
+         * Provides the number of independent variables in the loop tape/model 
+         * (number of indexed + non-indexed + temporary variables).
+         * 
+         * @return the number of independents in the loop model
+         */
         inline size_t getTapeIndependentCount() const {
             return fun_->Domain();
         }

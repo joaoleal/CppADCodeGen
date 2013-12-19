@@ -757,12 +757,6 @@ namespace CppAD {
             /*******************************************************************
              * create the tape for the reference iteration
              ******************************************************************/
-            std::map<const OperationNode<Base>*, size_t> origModelIndepOrder;
-            size_t nOrigIndep = independents.size();
-            for (size_t j = 0; j < nOrigIndep; j++) {
-                origModelIndepOrder[independents[j].getOperationNode()] = j;
-            }
-
             // indexed independents
             CPPADCG_ASSERT_UNKNOWN(indexedIndep2clone_.size() == independentsIndexed_.size());
 
@@ -776,7 +770,7 @@ namespace CppAD {
                 indexedCloneOrder.push_back(it->second);
             }
 
-            struct IndexedIndepSorter indexedSorter(clone2indexedIndep, origModelIndepOrder);
+            struct IndexedIndepSorter indexedSorter(clone2indexedIndep);
             std::sort(indexedCloneOrder.begin(), indexedCloneOrder.end(), indexedSorter);
 
             // original indep index -> non-indexed independent clones
@@ -790,7 +784,7 @@ namespace CppAD {
                 const OperationNode<Base>* orig = itc->first;
                 OperationNode<Base>* clone = itc->second;
 
-                size_t j = origModelIndepOrder.at(orig);
+                size_t j = orig->getInfo()[0];
                 clones2ConstIndep[clone] = orig;
                 nonIndexedCloneOrder[j] = clone;
             }
@@ -903,7 +897,7 @@ namespace CppAD {
                     const OperationNode<Base>* indep = origOrder->order[it];
                     size_t index;
                     if (indep != NULL) {
-                        index = origModelIndepOrder.at(indep);
+                        index = indep->getInfo()[0];
                     } else {
                         index = std::numeric_limits<size_t>::max(); // not used at this iteration by any equation
                     }
@@ -1122,12 +1116,9 @@ namespace CppAD {
          */
         struct IndexedIndepSorter {
             const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep;
-            const std::map<const OperationNode<Base>*, size_t>& origModelIndepOrder;
 
-            IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep_,
-                               const std::map<const OperationNode<Base>*, size_t>& origModelIndepOrder_) :
-                clone2indexedIndep(clone2indexedIndep_),
-                origModelIndepOrder(origModelIndepOrder_) {
+            IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep_) :
+                clone2indexedIndep(clone2indexedIndep_) {
             }
 
             bool operator()(const OperationNode<Base>* node1,
@@ -1150,8 +1141,8 @@ namespace CppAD {
                         return true;
                     }
 
-                    size_t index1 = origModelIndepOrder.at(indep1);
-                    size_t index2 = origModelIndepOrder.at(indep2);
+                    size_t index1 = indep1->getInfo()[0];
+                    size_t index2 = indep2->getInfo()[0];
                     if (index1 < index2)
                         return true;
                     else if (index1 > index2)

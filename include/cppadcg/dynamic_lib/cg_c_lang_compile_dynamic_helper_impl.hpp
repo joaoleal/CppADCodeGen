@@ -54,7 +54,11 @@ namespace CppAD {
                 libname += *_customLibExtension;
             else
                 libname += system::SystemInfo<>::DYNAMIC_LIB_EXTENSION;
+
+            startingJob(libname, JobTimer::COMPILING_DYNAMIC_LIBRARY);
             compiler.buildDynamic(libname, this);
+            finishedJob();
+
         } catch (...) {
             compiler.cleanup();
             throw;
@@ -91,7 +95,10 @@ namespace CppAD {
                 libname += *_customLibExtension;
             else
                 libname += system::SystemInfo<>::STATIC_LIB_EXTENSION;
+
+            startingJob(libname, JobTimer::ASSEMBLE_STATIC_LIBRARY);
             ar.create(libname, compiler.getObjectFiles(), this);
+            finishedJob();
         } catch (...) {
             compiler.cleanup();
             throw;
