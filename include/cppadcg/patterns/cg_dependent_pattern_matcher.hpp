@@ -357,25 +357,11 @@ namespace CppAD {
                                     size_t dep2 = depRel.second;
 
                                     const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared->second;
-
-                                    typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
-                                    for (itShared = shared.begin(); itShared != shared.end(); ++itShared) {
-                                        OperationNode<Base>* sharedNode = itShared->first;
-
-                                        // checks independents
-                                        compatible &= canCombineEquations(*eq1, dep1, *eq2, dep2, *sharedNode,
-                                                                          dep2Relations, dependentBlackListRelations, dependentRelations);
-
-                                        if (!compatible) break;
-                                    }
-
-                                    if (!compatible) break;
-
                                     /**
                                      * this dep1 <-> dep2 is used as a reference to combine
                                      * the two equations in the same loop
                                      */
-                                    compatible = findDepRelations(eq1, dep1, eq2, dep2, shared, itOp2Dep2Shared->second,
+                                    compatible = findDepRelations(eq1, dep1, eq2, dep2, shared,
                                                                   dep2Relations, dependentBlackListRelations, dependentRelations);
                                     if (!compatible) break;
                                 }
@@ -556,64 +542,33 @@ namespace CppAD {
             return loops_;
         }
 
+        /**
+         * Determines the relations between the dependents of two equation 
+         * patterns using two dependents as reference and the shared variables
+         * among the two patterns
+         * 
+         * @return true if these equation patterns are compatible 
+         *         (if they can be in the same loop)
+         */
         bool findDepRelations(EquationPattern<Base>* eq1,
                               size_t dep1,
                               EquationPattern<Base>* eq2,
                               size_t dep2,
-                              const std::map<OperationNode<Base>*, Indexed2OpCountType>& shared,
-                              const std::map<std::pair<size_t, size_t>, const std::map<OperationNode<Base>*, Indexed2OpCountType>* >& dep2Shared,
+                              const std::map<OperationNode<Base>*, Indexed2OpCountType>& sharedNodes,
                               std::vector<std::set<size_t>* >& dep2Relations,
                               std::map<size_t, std::set<size_t> >& dependentBlackListRelations,
                               SmartSetPointer<std::set<size_t> >& dependentRelations) {
             using namespace std;
 
-            /**
-             * this dep1 <-> dep2 is used as a reference to combine
-             * the two equations in the same loop
-             */
-            const map<const OperationNode<Base>*, OperationNode<Base>*>& eq1Op2Ref = eq1->operationEO2Reference.at(dep1);
-            const map<const OperationNode<Base>*, OperationNode<Base>*>& eq2Op2Ref = eq2->operationEO2Reference.at(dep2);
-
-            // find the relation between the other dependents
-
-            // they must the reference shared variables must match the ones in the relation dep1<->dep2
-            set<OperationNode<Base>*> sharedRefEq1, sharedRefEq2;
-
             typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
-            for (itShared = shared.begin(); itShared != shared.end(); ++itShared) {
+            for (itShared = sharedNodes.begin(); itShared != sharedNodes.end(); ++itShared) {
                 OperationNode<Base>* sharedNode = itShared->first;
 
-                OperationNode<Base>* eq1SharedRef = eq1Op2Ref.at(sharedNode);
-                OperationNode<Base>* eq2SharedRef = eq2Op2Ref.at(sharedNode);
+                // checks independents
+                bool compatible = canCombineEquations(*eq1, dep1, *eq2, dep2, *sharedNode,
+                                                      dep2Relations, dependentBlackListRelations, dependentRelations);
 
-                sharedRefEq1.insert(eq1SharedRef);
-                sharedRefEq2.insert(eq2SharedRef);
-            }
-
-            typename map<pair<size_t, size_t>, const map<OperationNode<Base>*, Indexed2OpCountType>* >::const_iterator itDep2Shared;
-            for (itDep2Shared = dep2Shared.begin(); itDep2Shared != dep2Shared.end(); ++itDep2Shared) {
-                pair<size_t, size_t> depRel = itDep2Shared->first;
-                const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared->second;
-
-                size_t dep11 = depRel.first;
-                size_t dep22 = depRel.second;
-
-                for (itShared = shared.begin(); itShared != shared.end(); ++itShared) {
-                    OperationNode<Base>* sharedNode = itShared->first;
-
-                    if (sharedRefEq1.find(eq1->operationEO2Reference.at(dep11).at(sharedNode)) == sharedRefEq1.end()) {
-                        break;
-                    }
-                    if (sharedRefEq2.find(eq2->operationEO2Reference.at(dep22).at(sharedNode)) == sharedRefEq2.end()) {
-                        break;
-                    }
-
-                    // checks independents
-                    bool compatible = canCombineEquations(*eq1, dep11, *eq2, dep22, *sharedNode,
-                                                          dep2Relations, dependentBlackListRelations, dependentRelations);
-
-                    if (!compatible) return false;
-                }
+                if (!compatible) return false;
             }
 
             return true;
@@ -1028,12 +983,10 @@ namespace CppAD {
             typename set<const OperationNode<Base>*>::const_iterator itOp;
             for (itOp = opWithIndepArgs.begin(); itOp != opWithIndepArgs.end(); ++itOp) {
                 const OperationNode<Base>* op = *itOp;
-                //size_t origID = op->getEvaluationOrder();
 
                 // get indexed independent variable information
                 // - equation 1
                 typename map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed1It;
-                eq1.operationEO2Reference.at(dep1); // convert to the reference of equation 1
                 OperationNode<Base>* op1 = eq1.operationEO2Reference.at(dep1).at(op); // convert to the reference of equation 1
                 indexed1It = eq1.indexedOpIndep.op2Arguments.find(op1);
 
@@ -1086,7 +1039,7 @@ namespace CppAD {
                         typename MapIndep2Dep::iterator hint = eq1Indep2Dep.begin();
                         typename map<size_t, const OperationNode<Base>*>::const_iterator d2i;
                         for (d2i = eq1Dep2Indep.begin(); d2i != eq1Dep2Indep.end(); ++d2i) {
-                            hint = eq1Indep2Dep.insert(hint, std::make_pair(d2i->second, d2i->first)); // 26%
+                            hint = eq1Indep2Dep.insert(hint, std::make_pair(d2i->second, d2i->first));
                             hint++; // assume that the relation dep<->indep is always ascending
                         }
 
@@ -1104,7 +1057,7 @@ namespace CppAD {
                                  * ascending order which is commonly true
                                  */
                                 it = itHint;
-                                itHint++; 
+                                itHint++;
                             } else {
                                 it = eq1Indep2Dep.find(indep);
                             }
