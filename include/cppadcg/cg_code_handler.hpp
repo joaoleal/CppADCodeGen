@@ -391,7 +391,7 @@ namespace CppAD {
             /**
              * determine the variable creation order
              */
-            _scopedVariableOrder.reserve(std::min(size_t(1), _scopes.size()));
+            _scopedVariableOrder.reserve(std::max(size_t(1), _scopes.size()) + 10); // some additional scopes might still be added
 
             for (size_t i = 0; i < m; i++) {
                 CG<Base>& var = dependent[i];
@@ -757,8 +757,8 @@ namespace CppAD {
                         sPath.back().beginning = &code; // save the initial node
                     } else {
                         CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
-                               code.getArguments()[0].getOperation() != NULL &&
-                               code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
+                                               code.getArguments()[0].getOperation() != NULL &&
+                                               code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
                         sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
                     }
                     _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
@@ -893,6 +893,11 @@ namespace CppAD {
                 return false;
 
             /**
+             * @TODO allow Array elements to use a CGTmp instead of a CGArrayCreationOp
+             */
+            CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGArrayCreationOp, "Not supported yet");
+
+            /**
              * does this variable require a condition based on indexes?
              */
             std::vector<size_t> iterationRegions;
@@ -970,7 +975,7 @@ namespace CppAD {
             // end if
             OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
             manageOperationNode(endIf);
-            
+
             /**
              * Change original variable
              */
@@ -1513,17 +1518,19 @@ namespace CppAD {
             if (scope >= _scopedVariableOrder.size()) {
                 _scopedVariableOrder.resize(scope + 1);
             }
+
+            if (_scopedVariableOrder[scope].empty() &&
+                    scope != 0 && // the upper most scope does not need any special node at the beginning
+                    _scopes[scope].back().end->getArguments()[0].getOperation() != &arg) {
+                // the first node must be a beginning of a scope
+                checkVariableCreation(*_scopes[scope].back().end); // go inside a scope from the end 
+            }
+
+            // must be after checkVariableCreation() because _scopedVariableOrder might be resized
             std::vector<OperationNode<Base> *>& varOrder = _scopedVariableOrder[scope];
 
             if (varOrder.size() == varOrder.capacity()) {
                 varOrder.reserve((varOrder.size() * 3) / 2 + 1);
-            }
-
-            if (varOrder.empty() &&
-                    scope != 0 && // the upper most scope does not need any special node at the beginning
-                    _scopes[scope].back().end->getArguments()[0].getOperation() != &arg) {
-                 // the first node must be a beginning of a scope
-                checkVariableCreation(*_scopes[scope].back().end); // go inside a scope from the end 
             }
 
             varOrder.push_back(&arg);
