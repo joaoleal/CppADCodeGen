@@ -18,7 +18,7 @@
 
 namespace CppAD {
 
-    class CppADCGPatternModelTest : public CppADCGPatternTest {
+    class CppADCGPatternModelTest : public CppADCGPatternTest, public PatternTestModel<CG<double> > {
     public:
         typedef double Base;
         typedef CppAD::CG<Base> CGD;
@@ -30,6 +30,7 @@ namespace CppAD {
         const size_t m; // total number of equations in the model 
         const size_t n; // number of independent variables
         std::vector<Base> xb; // values for the model
+        bool useCustomSparsity_;
     public:
 
         inline CppADCGPatternModelTest(const std::string& modelName_,
@@ -45,63 +46,30 @@ namespace CppAD {
             nm(nm_),
             m(m_),
             n(ns_ + nm_ + npar_),
-            xb(n) {
+            xb(n),
+            useCustomSparsity_(true) {
             for (size_t j = 0; j < n; j++)
                 xb[j] = 0.5 * (j + 1);
+
+            setModel(*this);
         }
 
-        virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) = 0;
+        virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t repeat) = 0;
 
-        virtual std::vector<std::set<size_t> > getRelatedCandidates() = 0;
+        void test(size_t repeat) {
 
-        inline void tape(std::auto_ptr<ADFun<CGD> >& fun) {
-            /**
-             * Tape model
-             */
-            std::vector<ADCGD> x(xb.size());
-            for (size_t j = 0; j < xb.size(); j++)
-                x[j] = xb[j];
-            CppAD::Independent(x);
-            if (xNorm_.size() > 0) {
-                ASSERT_EQ(x.size(), xNorm_.size());
-                for (size_t j = 0; j < x.size(); j++)
-                    x[j] *= xNorm_[j];
-            }
+            std::vector<std::set<size_t> > relatedDepCandidates = getRelatedCandidates(repeat);
 
-            std::vector<ADCGD> y = modelFunc(x);
-            if (eqNorm_.size() > 0) {
-                ASSERT_EQ(y.size(), eqNorm_.size());
-                for (size_t i = 0; i < y.size(); i++)
-                    y[i] /= eqNorm_[i];
-            }
-
-            fun.reset(new ADFun<CGD>());
-            fun->Dependent(y);
+            testLibCreation("model" + modelName, relatedDepCandidates, repeat, xb);
         }
 
-        /**
-         * test
-         */
-        inline void test(ADFun<CGD>& fun) {
 
-            std::string libName = "model" + modelName;
-            std::vector<atomic_base<Base>*> atoms;
+    protected:
 
-            std::vector<std::set<size_t> > relatedDepCandidates = getRelatedCandidates();
+        inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+            if (!useCustomSparsity_)
+                return;
 
-            testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, testJacobian_, testHessian_);
-            if (testJacobian_) {
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, true, false, true);
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false);
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, REVERSE, true, false, true);
-            }
-
-            if (testHessian_) {
-                testSourceCodeGen(fun, relatedDepCandidates, libName, atoms, xb, FORWARD, false, true, false, true);
-            }
-        }
-
-        inline void defineCustomSparsity(ADFun<CGD>& fun) {
             /**
              * Determine the relevant elements
              */

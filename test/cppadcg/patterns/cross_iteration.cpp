@@ -24,7 +24,7 @@ using namespace CppAD;
  * @test Model with 2 equations which share indexed temporary variables, but 
  *       also across iterations
  */
-std::vector<ADCGD> modelCrossIteration1(std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCrossIteration1(const std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -63,17 +63,19 @@ TEST_F(CppADCGPatternTest, modelCrossIteration1) {
             loops[0][0].insert(i * m);
         loops[0][1].insert(i * m + 1);
     }
+    
+    setModel(modelCrossIteration1);
+    
+    testPatternDetection(m, n, repeat, loops);
 
-    testPatternDetection(modelCrossIteration1, m, n, repeat, loops);
-
-    testLibCreation("modelCrossIteration1", modelCrossIteration1, m, n, repeat);
+    testLibCreation("modelCrossIteration1", m, n, repeat);
 }
 
 /**
  * @test Model with 2 equations which share indexed temporary variables, but 
  *       also across iterations
  */
-std::vector<ADCGD> modelCrossIteration2(std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCrossIteration2(const std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -116,8 +118,9 @@ TEST_F(CppADCGPatternTest, modelCrossIteration2) {
     //customJacSparsity_[1].insert(0);
     //customHessSparsity_.resize(n * repeat);
     //customHessSparsity_[0].insert(0);
+    setModel(modelCrossIteration2);
 
-    testPatternDetection(modelCrossIteration2, m, n, repeat, loops);
+    testPatternDetection(m, n, repeat, loops);
 
-    testLibCreation("modelCrossIteration2", modelCrossIteration2, m, n, repeat);
+    testLibCreation("modelCrossIteration2", m, n, repeat);
 }

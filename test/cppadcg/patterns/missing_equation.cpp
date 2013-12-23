@@ -24,7 +24,7 @@ using namespace CppAD;
  * @test Model with 2 equations (1 is not defined for one of the iterations)
  *        which share only a non-indexed temporary variable
  */
-std::vector<ADCGD> modelMissingEq1(std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelMissingEq1(const std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -59,16 +59,18 @@ TEST_F(CppADCGPatternTest, modelMissingEq1) {
         loops[0][1].insert(i * m + 1);
     }
 
-    testPatternDetection(modelMissingEq1, m, n, repeat, loops);
+    setModel(modelMissingEq1);
 
-    testLibCreation("modelMissingEq1", modelMissingEq1, m, n, repeat);
+    testPatternDetection(m, n, repeat, loops);
+
+    testLibCreation("modelMissingEq1", m, n, repeat);
 }
 
 /**
  * @test Model with 2 equations (1 is not defined for one of the iterations)
  *        which share an indexed and a non-indexed temporary variables
  */
-std::vector<ADCGD> modelMissingEq2(std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelMissingEq2(const std::vector<ADCGD>& x, size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -105,7 +107,9 @@ TEST_F(CppADCGPatternTest, modelMissingEq2) {
         loops[0][1].insert(i * m + 1);
     }
 
-    testPatternDetection(modelMissingEq2, m, n, repeat, loops);
+    setModel(modelMissingEq2);
 
-    testLibCreation("modelMissingEq2", modelMissingEq2, m, n, repeat);
+    testPatternDetection(m, n, repeat, loops);
+
+    testLibCreation("modelMissingEq2", m, n, repeat);
 }

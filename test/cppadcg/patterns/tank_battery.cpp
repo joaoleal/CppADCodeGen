@@ -37,13 +37,14 @@ namespace CppAD {
             this->verbose_ = true;
         }
 
-        virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) {
+        virtual std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x, size_t repeat) {
+            assert(repeat == nTanks);
             return tankBatteryFunc(x);
         }
 
-        virtual std::vector<std::set<size_t> > getRelatedCandidates() {
+        virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t repeat) {
             std::vector<std::set<size_t> > relatedDepCandidates(1);
-            for (size_t i = 0; i < nTanks; i++) relatedDepCandidates[0].insert(i);
+            for (size_t i = 0; i < repeat; i++) relatedDepCandidates[0].insert(i);
             return relatedDepCandidates;
         }
 
@@ -60,17 +61,12 @@ using namespace CppAD;
 TEST_F(CppADCGPatternTankBatTest, tankBatteryAllVars) {
     modelName += "AllVars";
     
-    /**
-     * Tape model
-     */
-    std::auto_ptr<ADFun<CGD> > fun;
-    this->tape(fun);
-
+    useCustomSparsity_ = false;
+    
     /**
      * test
      */
-    this->test(*fun.get());
-
+    this->test(6);
 }
 
 /**
@@ -79,22 +75,10 @@ TEST_F(CppADCGPatternTankBatTest, tankBatteryAllVars) {
  *       controls
  */
 TEST_F(CppADCGPatternTankBatTest, tankBattery) {
-    using namespace CppAD::extra;
-
-    /**
-     * Tape model
-     */
-    std::auto_ptr<ADFun<CGD> > fun;
-    this->tape(fun);
-
-    /**
-     * Determine the relevant elements
-     */
-    this->defineCustomSparsity(*fun.get());
+    useCustomSparsity_ = true;
 
     /**
      * test
      */
-    this->test(*fun.get());
-
+    this->test(6);
 }

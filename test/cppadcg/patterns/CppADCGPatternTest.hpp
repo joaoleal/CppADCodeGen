@@ -15,6 +15,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGTest.hpp"
+#include "pattern_test_model.hpp"
 
 namespace CppAD {
 
@@ -24,21 +25,26 @@ namespace CppAD {
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
     protected:
+        PatternTestModel<CG<Base> >* model_;
         bool testZeroOrder_;
         bool testJacobian_;
         bool testHessian_;
         std::vector<Base> xNorm_;
         std::vector<Base> eqNorm_;
+        std::vector<atomic_base<Base>*> atoms_;
         Base epsilonA_;
         Base epsilonR_;
         Base hessianEpsilonA_;
         Base hessianEpsilonR_;
         std::vector<std::set<size_t> > customJacSparsity_;
         std::vector<std::set<size_t> > customHessSparsity_;
+    private:
+        std::auto_ptr<DefaultPatternTestModel<CG<Base> > > modelMem_;
     public:
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
+            model_(NULL),
             testZeroOrder_(true),
             testJacobian_(true),
             testHessian_(true),
@@ -49,34 +55,69 @@ namespace CppAD {
             //this->verbose_ = true;
         }
 
-        void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
-                                  size_t m,
-                                  size_t n,
-                                  size_t repeat,
-                                  size_t n_loops = 1) {
-            std::vector<std::vector<std::set<size_t> > > loops(n_loops);
-            testPatternDetection(model, m, n, repeat, loops);
+        virtual void TearDown() {
+            modelMem_.reset(NULL);
+
+            CppADCGTest::TearDown();
         }
 
-        void testPatternDetection(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
-                                  size_t m,
+        void setModel(PatternTestModel<CG<Base> >& model) {
+            model_ = &model;
+        }
+
+        void setModel(std::vector<ADCGD> (*model)(const std::vector<ADCGD>& x, size_t repeat)) {
+            modelMem_.reset(new DefaultPatternTestModel<CG<Base> >(model));
+            setModel(*modelMem_.get());
+        }
+
+        void testPatternDetection(size_t m,
+                                  size_t n,
+                                  size_t repeat) {
+            testPatternDetection(m, n, repeat, 1);
+        }
+
+        void testPatternDetection(size_t m,
+                                  size_t n,
+                                  size_t repeat,
+                                  size_t n_loops) {
+            std::vector<std::vector<std::set<size_t> > > loops(n_loops);
+            testPatternDetection(m, n, repeat, loops);
+        }
+
+        void testPatternDetection(size_t m,
                                   size_t n,
                                   size_t repeat,
                                   const std::vector<std::vector<std::set<size_t> > >& loops) {
-            using namespace CppAD;
-
             //size_t m2 = repeat * m;
             size_t n2 = repeat * n;
 
             /**
              * Tape model
              */
-            std::vector<ADCGD> x(n2);
+            std::vector<Base> xb(n2);
             for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
+                xb[j] = 0.5;
+
+            testPatternDetection(m, xb, repeat, loops);
+        }
+
+        void testPatternDetection(size_t m,
+                                  const std::vector<Base>& xb,
+                                  size_t repeat,
+                                  const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
+            using namespace CppAD;
+
+            assert(model_ != NULL);
+
+            /**
+             * Tape model
+             */
+            std::vector<ADCGD> x(xb.size());
+            for (size_t j = 0; j < xb.size(); j++)
+                x[j] = xb[j];
             CppAD::Independent(x);
 
-            std::vector<ADCGD> y = (*model)(x, repeat);
+            std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
 
             ADFun<CGD> fun;
             fun.Dependent(y);
@@ -85,7 +126,6 @@ namespace CppAD {
         }
 
         void testLibCreation(const std::string& libName,
-                             std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
                              size_t m,
                              size_t n,
                              size_t repeat,
@@ -95,16 +135,27 @@ namespace CppAD {
             for (size_t j = 0; j < n2; j++)
                 x[j] = 0.5 * (j + 1);
 
-            testLibCreation(libName, model, m, repeat, mExtra, x);
+            testLibCreation(libName, m, repeat, x);
         }
 
         void testLibCreation(const std::string& libName,
-                             std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat),
                              size_t m,
                              size_t repeat,
-                             size_t mExtra,
+                             const std::vector<Base>& xb) {
+
+            std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
+
+            testLibCreation(libName, relatedDepCandidates, repeat, xb);
+        }
+
+        void testLibCreation(const std::string& libName,
+                             const std::vector<std::set<size_t> >& relatedDepCandidates,
+                             size_t repeat,
                              const std::vector<Base>& xb) {
             using namespace CppAD;
+
+            assert(!relatedDepCandidates.empty());
+            assert(model_ != NULL);
 
             /**
              * Tape model
@@ -119,7 +170,7 @@ namespace CppAD {
                     x[j] *= xNorm_[j];
             }
 
-            std::vector<ADCGD> y = (*model)(x, repeat);
+            std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
             if (eqNorm_.size() > 0) {
                 ASSERT_EQ(y.size(), eqNorm_.size());
                 for (size_t i = 0; i < y.size(); i++)
@@ -129,145 +180,19 @@ namespace CppAD {
             ADFun<CGD> fun;
             fun.Dependent(y);
 
-            testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, testJacobian_, testHessian_);
+            defineCustomSparsity(fun);
+
+            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, testJacobian_, testHessian_);
             if (testJacobian_) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, true, false, true);
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, true, false);
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, REVERSE, true, false, true);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, true, false, true);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, xb, REVERSE, true, false);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, xb, REVERSE, true, false, true);
             }
 
             if (testHessian_) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, false, true, false, true);
+                testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, false, true, false, true);
             }
 
-        }
-
-        void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                             const std::vector<atomic_base<Base>* >& atoms,
-                                             size_t m,
-                                             size_t n,
-                                             size_t repeat,
-                                             size_t n_loops = 1) {
-            size_t n2 = repeat * n;
-            std::vector<Base> x(n2);
-            for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
-
-            testPatternDetectionWithAtomics(model, atoms, m, x, repeat, n_loops);
-        }
-
-        void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                             const std::vector<atomic_base<Base>* >& atoms,
-                                             size_t m,
-                                             const std::vector<Base>& xb,
-                                             size_t repeat,
-                                             size_t n_loops = 1) {
-
-            std::vector<std::vector<std::set<size_t> > > loops(n_loops);
-            testPatternDetectionWithAtomics(model, atoms, m, xb, repeat, loops);
-        }
-
-        void testPatternDetectionWithAtomics(std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                             const std::vector<atomic_base<Base>* >& atoms,
-                                             size_t m,
-                                             const std::vector<Base>& xb,
-                                             size_t repeat,
-                                             const std::vector<std::vector<std::set<size_t> > >& loops) {
-
-            using namespace CppAD;
-
-            std::vector<CGAbstractAtomicFun<double>*> atomics(atoms.size());
-            for (size_t a = 0; a < atoms.size(); a++) {
-                atomics[a] = new CGAtomicFun<Base>(*atoms[a], true);
-            }
-
-            //size_t m2 = repeat * m;
-            size_t n2 = xb.size();
-
-            /**
-             * Tape model
-             */
-            std::vector<ADCGD> x(n2);
-            for (size_t j = 0; j < n2; j++)
-                x[j] = xb[j];
-            CppAD::Independent(x);
-            if (xNorm_.size() > 0) {
-                ASSERT_EQ(x.size(), xNorm_.size());
-                for (size_t j = 0; j < x.size(); j++)
-                    x[j] *= xNorm_[j];
-            }
-
-            std::vector<ADCGD> y = (*model)(x, repeat, atomics);
-            if (eqNorm_.size() > 0) {
-                ASSERT_EQ(y.size(), eqNorm_.size());
-                for (size_t i = 0; i < y.size(); i++)
-                    y[i] /= eqNorm_[i];
-            }
-
-            ADFun<CGD> fun;
-            fun.Dependent(y);
-
-            testPatternDetectionResults(fun, m, repeat, loops);
-
-            for (size_t a = 0; a < atomics.size(); a++) {
-                delete atomics[a];
-            }
-        }
-
-        void testLibCreationWithAtomics(const std::string& name,
-                                        std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                        const std::vector<atomic_base<Base>* >& atoms,
-                                        size_t m,
-                                        size_t n,
-                                        size_t repeat) {
-            size_t n2 = repeat * n;
-            std::vector<Base> x(n2);
-            for (size_t j = 0; j < n2; j++)
-                x[j] = 0.5;
-
-            testLibCreationWithAtomics(name, model, atoms, m, x, repeat);
-        }
-
-        void testLibCreationWithAtomics(const std::string& name,
-                                        std::vector<ADCGD> (*model)(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<Base>*>& atoms),
-                                        const std::vector<atomic_base<Base>* >& atoms,
-                                        size_t m,
-                                        const std::vector<Base>& xb,
-                                        size_t repeat) {
-            using namespace CppAD;
-
-            SmartVectorPointer<CGAbstractAtomicFun<double> > atomics(atoms.size());
-            for (size_t a = 0; a < atoms.size(); a++) {
-                atomics.v[a] = new CGAtomicFun<Base>(*atoms[a], true);
-            }
-
-            //size_t m2 = repeat * m;
-            size_t n2 = xb.size();
-
-            /**
-             * Tape model
-             */
-            std::vector<ADCGD> x(n2);
-            for (size_t j = 0; j < n2; j++)
-                x[j] = xb[j];
-            CppAD::Independent(x);
-
-            std::vector<ADCGD> y = (*model)(x, repeat, atomics.v);
-
-            ADFun<CGD> fun;
-            fun.Dependent(y);
-
-            size_t mExtra = 0;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, testJacobian_, testHessian_);
-            if (testJacobian_) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, true, false, true);
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, true, false);
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, REVERSE, true, false, true);
-            }
-
-            if (testHessian_) {
-                testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xb, FORWARD, false, true, false, true);
-            }
         }
 
         std::vector<std::set<size_t> > createRelatedDepCandidates(size_t m,
@@ -396,32 +321,16 @@ namespace CppAD {
                                bool hessian = true,
                                bool forReverseOne = false,
                                bool reverseTwo = false) {
-            std::vector<atomic_base<Base>*> atoms;
-            testSourceCodeGen(fun, m, repeat, mExtra, name, atoms, xTypical, jacMode, jacobian, hessian, forReverseOne, reverseTwo);
-        }
-
-        void testSourceCodeGen(ADFun<CGD>& fun,
-                               size_t m, size_t repeat,
-                               size_t mExtra,
-                               const std::string& name,
-                               const std::vector<atomic_base<Base>*>& atoms,
-                               const std::vector<Base>& xTypical,
-                               JacobianADMode jacMode,
-                               bool jacobian = true,
-                               bool hessian = true,
-                               bool forReverseOne = false,
-                               bool reverseTwo = false) {
 
             std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-            testSourceCodeGen(fun, relatedDepCandidates, name, atoms, xTypical,
+            testSourceCodeGen(fun, relatedDepCandidates, name, xTypical,
                               jacMode, jacobian, hessian, forReverseOne, reverseTwo);
         }
 
         void testSourceCodeGen(ADFun<CGD>& fun,
                                const std::vector<std::set<size_t> >& relatedDepCandidates,
                                const std::string& name,
-                               const std::vector<atomic_base<Base>*>& atoms,
                                const std::vector<Base>& xTypical,
                                JacobianADMode jacMode,
                                bool jacobian = true,
@@ -478,13 +387,14 @@ namespace CppAD {
 
             CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
             compDynHelpL.setVerbose(this->verbose_);
+            compDynHelpL.setLibraryName(libBaseName + "Loops");
             std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
             std::auto_ptr<DynamicLibModel<double> > modelL;
             if (loadModels) {
                 modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
                 ASSERT_TRUE(modelL.get() != NULL);
-                for (size_t i = 0; i < atoms.size(); i++)
-                    modelL->addAtomicFunction(*atoms[i]);
+                for (size_t i = 0; i < atoms_.size(); i++)
+                    modelL->addAtomicFunction(*atoms_[i]);
             }
             /**
              * Without the loops
@@ -513,7 +423,7 @@ namespace CppAD {
 
             CLangCompileDynamicHelper<double> compDynHelp(compHelp);
             compDynHelp.setVerbose(this->verbose_);
-            compDynHelp.setLibraryName("modelLibNoLoops");
+            compDynHelp.setLibraryName(libBaseName + "NoLoops");
             std::auto_ptr<DynamicLib<double> > dynamicLib(compDynHelp.createDynamicLibrary(compiler));
 
             /**
@@ -522,8 +432,8 @@ namespace CppAD {
             std::auto_ptr<DynamicLibModel<double> > model;
             if (loadModels) {
                 model.reset(dynamicLib->model(libBaseName + "NoLoops"));
-                for (size_t i = 0; i < atoms.size(); i++)
-                    model->addAtomicFunction(*atoms[i]);
+                for (size_t i = 0; i < atoms_.size(); i++)
+                    model->addAtomicFunction(*atoms_[i]);
             }
 
             if (!loadModels)
@@ -574,6 +484,10 @@ namespace CppAD {
                 ASSERT_TRUE(compareValues(hessl, hess, hessianEpsilonR_, hessianEpsilonA_));
             }
 
+        }
+    protected:
+
+        inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
         }
     };
 }

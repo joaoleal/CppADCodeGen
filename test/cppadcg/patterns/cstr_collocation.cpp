@@ -14,9 +14,37 @@
  */
 #include "CppADCGPatternTest.hpp"
 #include "../models/cstr.hpp"
+#include "../models/collocation.hpp"
 
 
 namespace CppAD {
+
+    /**
+     * Collocation model using the CSTR model
+     */
+    template<class T>
+    class CstrCollocationModel : public CollocationModel<T> {
+    public:
+
+        CstrCollocationModel() :
+            CollocationModel<T>(
+            4, // ns
+            2, // nm
+            22) // npar
+        {
+        }
+
+    protected:
+
+        virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
+                                    std::vector<AD<CG<double> > >& y) {
+            y = CstrFunc(x);
+        }
+
+        virtual std::string getAtomicLibName() {
+            return "cstrAtom";
+        }
+    };
 
     class CppADCGPatternCstrTest : public CppADCGPatternTest {
     public:
@@ -32,18 +60,26 @@ namespace CppAD {
         static const size_t m; // total number of equations in the collocation model 
         static const size_t na; // number of independent variables of the CSTR model
         static const size_t repeat; // number of time intervals
+        std::auto_ptr<CstrCollocationModel<CGD> > colModel_;
         std::vector<Base> xx; // default CSTR model values
         std::vector<Base> x; // values for the collocation model
         std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
         std::auto_ptr<DynamicLibModel<double> > atomicModel_;
+        std::vector<std::string> flags_;
     public:
 
         inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
             CppADCGPatternTest(verbose, printValues),
+            colModel_(new CstrCollocationModel<CGD>()),
             xx(na) {
             //this->verbose_ = true;
             this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 4e6;
             this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e3;
+
+            flags_.push_back("-O0");
+            flags_.push_back("-g");
+            flags_.push_back("-ggdb");
+            flags_.push_back("-D_FORTIFY_SOURCE=2");
 
             /**
              * CSTR model values
@@ -79,51 +115,13 @@ namespace CppAD {
             xx[26] = 0.014; //Vj
             xx[27] = 1e-7; //cwallr
 
+            colModel_->setTypicalAtomModelValues(xx);
+
             /**
              * collocation model values
              */
-            size_t nvarsk = ns;
-            size_t nMstart = npar + nvarsk * K * repeat + nvarsk;
-
-            x.resize(nMstart + repeat * nm, 1.0);
-            xNorm_.resize(nMstart + repeat * nm, 1.0);
-            // parameters
-            for (size_t j = 0; j < npar; j++)
-                xNorm_[j] = xx[ns + nm + j];
-
-            size_t s = npar;
-
-            // i = 0 K = 0
-            // states
-            for (size_t j = 0; j < ns; j++) {
-                xNorm_[s++] = xx[j];
-            }
-
-            for (size_t i = 0; i < repeat; i++) {
-                // controls
-                for (size_t j = 0; j < nm; j++) {
-                    xNorm_[nMstart + nm * i + j] = xx[ns + j];
-                }
-
-                // K = 1
-                // states
-                for (size_t j = 0; j < ns; j++) {
-                    x[s] = 1.0 + 0.01 * i;
-                    xNorm_[s++] = xx[j];
-                }
-
-                // K = 2
-                // states
-                for (size_t j = 0; j < ns; j++) {
-                    xNorm_[s++] = xx[j];
-                }
-
-                // K = 3
-                // states
-                for (size_t j = 0; j < ns; j++) {
-                    xNorm_[s++] = xx[j];
-                }
-            }
+            xNorm_ = colModel_->getTypicalValues(repeat);
+            x.resize(xNorm_.size(), 1.0);
 
 #if 0
             x = xNorm_;
@@ -143,144 +141,26 @@ namespace CppAD {
                 }
             }
 #endif
+
+            this->setModel(*colModel_.get());
         }
 
-        static std::vector<ADCGD> modelCollocation(std::vector<ADCGD>& x, size_t repeat, const std::vector<CGAbstractAtomicFun<double>*>& atoms) {
-            CGAbstractAtomicFun<Base>& atomicCstr = *atoms[0];
+        virtual void TearDown() {
+            atomicDynamicLib_.reset(NULL);
+            atomicModel_.reset(NULL);
+            colModel_.reset(NULL);
 
-            size_t m2 = repeat * m;
-
-            // dependent variable vector 
-            std::vector<ADCGD> dep(m2);
-
-            std::vector<ADCGD> dxikdt(ns);
-            std::vector<ADCGD> xik(na);
-
-            // parameters
-            for (size_t j = 0; j < npar; j++)
-                xik[ns + nm + j] = x[j];
-
-            size_t s = npar;
-            size_t nvarsk = ns;
-            size_t nMstart = npar + nvarsk * K * repeat + nvarsk;
-            size_t eq = 0;
-
-            for (size_t i = 0; i < repeat; i++) {
-                size_t s0 = s;
-
-                // controls
-                for (size_t j = 0; j < nm; j++) {
-                    xik[ns + j] = x[nMstart + nm * i + j];
-                }
-
-                // K = 1
-                for (size_t j = 0; j < ns; j++) {
-                    xik[j] = x[s + j]; // states
-                }
-                s += nvarsk;
-                // xik[ns + nm + npar] = x[s + ns];// time
-
-                atomicCstr(xik, dxikdt); // ODE
-                for (size_t j = 0; j < ns; j++) {
-                    dep[eq + j] = dxikdt[j]
-                            + 0.13797958971132715 * x[s0 + j]
-                            + -0.10749149571305303 * x[s0 + nvarsk + j]
-                            + -0.038928002823013501 * x[s0 + 2 * nvarsk + j]
-                            + 0.008439908824739363 * x[s0 + 3 * nvarsk + j];
-                }
-                eq += ns;
-
-                // K = 2
-                for (size_t j = 0; j < ns; j++) {
-                    xik[j] = x[s + j]; // states
-                }
-                s += nvarsk;
-                // xik[ns + nm + npar] = x[s + ns];// time
-
-                atomicCstr(xik, dxikdt); // ODE
-                for (size_t j = 0; j < ns; j++) {
-                    dep[eq + j] = dxikdt[j]
-                            + -0.057979589711327127 * x[s0 + j]
-                            + 0.11892800282301351 * x[s0 + nvarsk + j]
-                            + -0.025841837620280327 * x[s0 + 2 * nvarsk + j]
-                            + -0.035106575491406049 * x[s0 + 3 * nvarsk + j];
-                }
-                eq += ns;
-
-                // K = 3
-                for (size_t j = 0; j < ns; j++) {
-                    xik[j] = x[s + j]; // states
-                }
-                s += nvarsk;
-                // xik[ns + nm + npar] = x[s + ns];// time
-
-                atomicCstr(xik, dxikdt); // ODE
-                for (size_t j = 0; j < ns; j++) {
-                    dep[eq + j] = dxikdt[j]
-                            + 0.099999999999999978 * x[s0 + j]
-                            + -0.18439908824739357 * x[s0 + nvarsk + j]
-                            + 0.25106575491406025 * x[s0 + 2 * nvarsk + j]
-                            + -0.16666666666666669 * x[s0 + 3 * nvarsk + j];
-                }
-                eq += ns;
-
-            }
-
-            return dep;
+            CppADCGPatternTest::TearDown();
         }
 
-        template<class T>
-        static void atomicFunction(const std::vector<AD<T> >& x, std::vector<AD<T> >& y) {
-            y = CstrFunc(x);
+        inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+            CppADCGPatternTest::defineCustomSparsity(fun);
+            //std::vector<std::set<size_t> > hessSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+            //printSparsityPattern(hessSparAll, "Full Hessian");
+            //customHessSparsity_.resize(x.size());
+            //customHessSparsity_[22].insert(22);
         }
 
-        void createAtomicLib() {
-            /**
-             * Tape model
-             */
-            std::vector<ADCGD> xa(na);
-            for (size_t j = 0; j < na; j++)
-                xa[j] = xx[j];
-            CppAD::Independent(xa);
-
-            std::vector<ADCGD> ya(ns);
-
-            atomicFunction(xa, ya);
-
-            ADFun<CGD> fun;
-            fun.Dependent(ya);
-
-            /**
-             * Compile
-             */
-            std::string lName = "cstrAtom";
-            CLangCompileModelHelper<double> compHelpL(fun, lName);
-            compHelpL.setCreateForwardZero(true);
-            compHelpL.setCreateForwardOne(true);
-            compHelpL.setCreateReverseOne(true);
-            compHelpL.setCreateReverseTwo(true);
-            compHelpL.setTypicalIndependentValues(xx);
-
-            GccCompiler<double> compiler;
-            std::vector<std::string> flags;
-            flags.push_back("-O0");
-            flags.push_back("-g");
-            flags.push_back("-ggdb");
-            flags.push_back("-D_FORTIFY_SOURCE=2");
-            compiler.setCompileFlags(flags);
-            compiler.setSourcesFolder("sources_" + lName);
-
-            CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
-            compDynHelpL.setVerbose(this->verbose_);
-            compDynHelpL.setLibraryName("atomiccstr");
-
-            atomicDynamicLib_.reset(compDynHelpL.createDynamicLibrary(compiler));
-
-            /**
-             * load the model
-             */
-            atomicModel_.reset(atomicDynamicLib_->model(lName));
-        }
     };
 
     const size_t CppADCGPatternCstrTest::ns = 4;
@@ -307,21 +187,13 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
     /**
      * create atomic function for the ODE
      */
-    std::vector<AD<double> > ay(ns), ax(na);
-    for (size_t j = 0; j < na; j++)
-        ax[j] = xx[j];
+    colModel_->setIgnoreParameters(false);
+    colModel_->setCompilerFlags(flags_);
+    colModel_->createAtomicLib();
+    atoms_.push_back(&colModel_->getDoubleAtomic());
 
-    std::vector<atomic_base<double>*> atomics(1);
-#if 1
-    checkpoint<double> atomicfun("atomicFunc", atomicFunction<double>, ax, ay);
-    atomics[0] = &atomicfun;
-#else
-    createAtomicLib();
-    atomics[0] = &atomicModel_->asAtomic();
-#endif
-
-    testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
-    testLibCreationWithAtomics("modelCstrAtomicAllVars", modelCollocation, atomics, m, x, repeat);
+    testPatternDetection(m, x, repeat);
+    testLibCreation("modelCstrAtomicAllVars", m, repeat, x);
 }
 
 /**
@@ -332,76 +204,16 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
 TEST_F(CppADCGPatternCstrTest, Atomic) {
 
     using namespace CppAD;
-    using namespace CppAD::extra;
-
-    std::string modelName = "ctsr";
-
-    // independent variables
-    std::vector<ADCGD> ay(ns), ax(na);
-    for (size_t j = 0; j < na; j++)
-        ax[j] = xx[j];
-
-    CppAD::Independent(ax);
 
     /**
-     * create the CppAD tape as usual
+     * create atomic function for the ODE
      */
-    atomicFunction(ax, ay);
+    colModel_->setIgnoreParameters(true);
+    colModel_->setCompilerFlags(flags_);
+    colModel_->createAtomicLib();
+    atoms_.push_back(&colModel_->getDoubleAtomic());
 
-    ADFun<CGD> fun;
-    fun.Dependent(ay);
-
-    /**
-     * Create the dynamic library model
-     */
-    CLangCompileModelHelper<double> compHelp1(fun, modelName);
-    compHelp1.setCreateForwardZero(true);
-    compHelp1.setCreateForwardOne(true);
-    compHelp1.setCreateReverseOne(true);
-    compHelp1.setCreateReverseTwo(true);
-
-
-    std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
-    std::vector<std::set<size_t> > jacSpar(jacSparAll.size());
-    for (size_t i = 0; i < jacSparAll.size(); i++) {
-        // only differential information for states and controls
-        std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
-        if (itEnd != jacSparAll[i].begin())
-            jacSpar[i].insert(jacSparAll[i].begin(), itEnd);
-    }
-    compHelp1.setCustomSparseJacobianElements(jacSpar);
-
-    std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
-    std::vector<std::set<size_t> > hessSpar(hessSparAll.size());
-    for (size_t i = 0; i < ns + nm; i++) {
-        std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
-        if (it != hessSparAll[i].begin())
-            hessSpar[i].insert(hessSparAll[i].begin(), it);
-    }
-    compHelp1.setCustomSparseHessianElements(hessSpar);
-
-    /**
-     * Create the dynamic library
-     * (generate and compile source code)
-     */
-    GccCompiler<double> compiler1;
-    std::vector<std::string> flags;
-    flags.push_back("-O0");
-    flags.push_back("-g");
-    flags.push_back("-ggdb");
-    flags.push_back("-D_FORTIFY_SOURCE=2");
-    compiler1.setCompileFlags(flags);
-    compiler1.setSourcesFolder("sources_cstr_atomiclib_" + modelName);
-
-    CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
-    compDynHelp.setLibraryName("cstr");
-    std::auto_ptr<DynamicLib<Base> > dynamicLib(compDynHelp.createDynamicLibrary(compiler1));
-    std::auto_ptr<DynamicLibModel<Base> > modelLib(dynamicLib->model(modelName));
-
-    std::vector<atomic_base<double>*> atomics(1);
-    atomics[0] = &modelLib->asAtomic();
-
-    testPatternDetectionWithAtomics(modelCollocation, atomics, m, x, repeat);
-    testLibCreationWithAtomics("modelCstrAtomic", modelCollocation, atomics, m, x, repeat);
+    testPatternDetection(m, x, repeat);
+    testLibCreation("modelCstrAtomic", m, repeat, x);
 
 }
