@@ -127,7 +127,7 @@ namespace CppAD {
 
     protected:
         /**
-         * the orignal  model
+         * the original model
          */
         ADFun<CGBase>& _fun;
         /**

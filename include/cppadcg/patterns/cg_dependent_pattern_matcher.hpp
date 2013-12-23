@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+//#define CPPADCG_PRINT_DEBUG
+
 namespace CppAD {
 
     template<class Base>
@@ -56,6 +58,11 @@ namespace CppAD {
         };
         typedef std::pair<INDEXED_OPERATION_TYPE, size_t> Indexed2OpCountType;
         typedef std::map<size_t, std::map<size_t, std::map<OperationNode<Base>*, Indexed2OpCountType> > > Dep1Dep2SharedType;
+        typedef std::pair<size_t, size_t> DepPairType;
+        typedef std::map<size_t, std::map<DepPairType, const std::map<OperationNode<Base>*, Indexed2OpCountType>* > > TotalOps2validDepsType;
+        typedef std::map<UniqueEquationPair<Base>, TotalOps2validDepsType*> Eq2totalOps2validDepsType;
+        typedef std::map<size_t, Eq2totalOps2validDepsType> MaxOps2eq2totalOps2validDepsType;
+
     private:
         const std::vector<std::set<size_t> >& relatedDepCandidates_;
         std::vector<CGBase> dependents_; // a copy
@@ -65,6 +72,10 @@ namespace CppAD {
         std::map<size_t, EquationPattern<Base>*> dep2Equation_;
         std::map<EquationPattern<Base>*, Loop<Base>*> equation2Loop_;
         std::vector<Loop<Base>*> loops_;
+        /**
+         * Equations which cannot be in the same loop
+         */
+        std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>*> > incompatible_;
         /**
          * 
          */
@@ -202,7 +213,6 @@ namespace CppAD {
             SmartSetPointer<set<size_t> > dependentRelations;
             std::vector<set<size_t>*> dep2Relations(dependents_.size(), NULL);
             map<size_t, set<size_t> > dependentBlackListRelations;
-            map<EquationPattern<Base>*, set<EquationPattern<Base>*> > incompatible;
 
             /*******************************************************************
              * Combine related equations in the same loops
@@ -251,15 +261,116 @@ namespace CppAD {
             /*******************************************************************
              * Attempt to combine loops with shared variables
              ******************************************************************/
+            MaxOps2eq2totalOps2validDepsType maxOps2Eq2totalOps2validDeps;
+            Eq2totalOps2validDepsType eq2totalOps2validDeps;
+            SmartListPointer<TotalOps2validDepsType> totalOps2validDepsMem;
+
+            /**
+             * First organize pairs of equation patterns with shared variables
+             * by the maximum number of shared operations among two dependent
+             * variables.
+             */
             for (size_t l1 = 0; l1 < loops_.size(); l1++) {
-                //EquationPattern<Base>* eq1 = equations_[e];
                 Loop<Base>* loop1 = loops_[l1];
+                CPPADCG_ASSERT_UNKNOWN(loop1->equations.size() == 1);
+                EquationPattern<Base>* eq1 = *loop1->equations.begin();
 
-                for (size_t l2 = l1 + 1; l2 < loops_.size();) {
+                for (size_t l2 = l1 + 1; l2 < loops_.size(); l2++) {
                     Loop<Base>* loop2 = loops_[l2];
+                    CPPADCG_ASSERT_UNKNOWN(loop2->equations.size() == 1);
+                    EquationPattern<Base>* eq2 = *loop2->equations.begin();
 
-                    bool compatible = true;
-                    bool hasShared = false;
+                    UniqueEquationPair<Base> eqRel(eq1, eq2);
+                    typename map<UniqueEquationPair<Base>, Dep1Dep2SharedType>::const_iterator eqSharedit = equationShared_.find(eqRel);
+                    if (eqSharedit == equationShared_.end())
+                        continue; // nothing is shared between eq1 and eq2
+
+                    const Dep1Dep2SharedType& dep1Dep2Shared = eqSharedit->second;
+
+                    /**
+                     * There are shared variables among the two equation patterns
+                     */
+                    TotalOps2validDepsType* totalOps2validDeps = new TotalOps2validDepsType();
+                    totalOps2validDepsMem.l.push_back(totalOps2validDeps);
+                    size_t maxOps = 0; // the maximum number of shared operations between two dependents
+
+                    bool canCombine = true;
+
+                    /***************************************************
+                     * organize relations between dependents
+                     **************************************************/
+                    typename Dep1Dep2SharedType::const_iterator itDep1Dep2;
+                    for (itDep1Dep2 = dep1Dep2Shared.begin(); itDep1Dep2 != dep1Dep2Shared.end(); ++itDep1Dep2) {
+                        size_t dep1 = itDep1Dep2->first;
+                        const map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2->second;
+
+                        // multiple deps2 means multiple choices for a relation (only one dep1<->dep2 can be chosen)
+                        typename map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >::const_iterator itDep2;
+                        for (itDep2 = dep2Shared.begin(); itDep2 != dep2Shared.end(); ++itDep2) {
+                            size_t dep2 = itDep2->first;
+                            const map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2->second;
+
+                            size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
+                            typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
+                            for (itShared = sharedTmps.begin(); itShared != sharedTmps.end(); ++itShared) {
+                                if (itShared->second.first == INDEXED_OPERATION_TYPE_BOTH) {
+                                    /**
+                                     * one equation uses this temporary shared 
+                                     * variable as an indexed variable while the 
+                                     * other equation does not
+                                     */
+                                    canCombine = false;
+                                    break;
+                                } else {
+                                    totalOps += itShared->second.second;
+                                }
+                            }
+
+                            if (!canCombine) break;
+
+                            DepPairType depRel(dep1, dep2);
+                            (*totalOps2validDeps)[totalOps][depRel] = &sharedTmps;
+                            maxOps = std::max(maxOps, totalOps);
+                        }
+
+                        if (!canCombine) break;
+                    }
+
+                    if (canCombine) {
+                        maxOps2Eq2totalOps2validDeps[maxOps][eqRel] = totalOps2validDeps;
+                        eq2totalOps2validDeps[eqRel] = totalOps2validDeps;
+                    } else {
+                        incompatible_[eq1].insert(eq2);
+                        incompatible_[eq2].insert(eq1);
+                        totalOps2validDepsMem.l.pop_back();
+                        delete totalOps2validDeps;
+                    }
+                }
+            }
+
+            /**
+             * Try to merge loops with shared variables 
+             */
+            typename MaxOps2eq2totalOps2validDepsType::const_reverse_iterator itMaxOps;
+            for (itMaxOps = maxOps2Eq2totalOps2validDeps.rbegin(); itMaxOps != maxOps2Eq2totalOps2validDeps.rend(); ++itMaxOps) {
+#ifdef CPPADCG_PRINT_DEBUG
+                std::cout << "\n\nmaxOps: " << itMaxOps->first << "  count:" << itMaxOps->second.size() << std::endl;
+#endif
+
+                typename map<UniqueEquationPair<Base>, TotalOps2validDepsType*>::const_iterator itEqPair;
+                for (itEqPair = itMaxOps->second.begin(); itEqPair != itMaxOps->second.end(); ++itEqPair) {
+                    const UniqueEquationPair<Base>& eqRel = itEqPair->first;
+#ifdef CPPADCG_PRINT_DEBUG
+                    std::cout << "  eq1: " << *eqRel.eq1->dependents.begin() << "  eq2: " << *eqRel.eq2->dependents.begin() << std::endl;
+#endif
+
+                    Loop<Base>* loop1 = equation2Loop_.at(eqRel.eq1);
+                    Loop<Base>* loop2 = equation2Loop_.at(eqRel.eq2);
+
+                    if (loop1 == loop2)
+                        continue; // already done
+                    if (contains(incompatible_, eqRel.eq1, eqRel.eq2))
+                        continue; // incompatible
 
                     /**
                      * backup so that it is possible to revert the new relations if
@@ -271,178 +382,21 @@ namespace CppAD {
                         dependentRelationsBak.s.insert(new set<size_t>(**its));
                     }
 
+                    // relationships between dependents for the resulting merged loop
                     set<set<size_t>*> loopRelations;
 
                     set<EquationPattern<Base>*> indexedLoopRelations;
                     std::vector<std::pair<EquationPattern<Base>*, EquationPattern<Base>*> > nonIndexedLoopRelations;
 
-                    typename set<EquationPattern<Base>*>::const_iterator ite1;
-                    for (ite1 = loop1->equations.begin(); ite1 != loop1->equations.end(); ++ite1) {
-                        EquationPattern<Base>* eq1 = *ite1;
-
-                        typename set<EquationPattern<Base>*>::const_iterator ite2;
-                        for (ite2 = loop2->equations.begin(); ite2 != loop2->equations.end(); ++ite2) {
-                            EquationPattern<Base>* eq2 = *ite2;
-
-                            UniqueEquationPair<Base> eqRel(eq1, eq2);
-                            typename map<UniqueEquationPair<Base>, Dep1Dep2SharedType>::const_iterator eqSharedit = equationShared_.find(eqRel);
-                            if (eqSharedit == equationShared_.end())
-                                continue; // nothing is shared between eq1 and eq2
-
-                            bool flipped = eqRel.eq1 != eq1;
-                            const Dep1Dep2SharedType& dep1Dep2Shared = eqSharedit->second;
-
-                            /**
-                             * There are shared variables among the two equation patterns
-                             */
-                            hasShared = true;
-
-
-                            typedef pair<size_t, size_t> DepPairType;
-                            map<size_t, map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* > > totalOps2validDeps;
-
-                            /***************************************************
-                             * organize relations between dependents
-                             **************************************************/
-                            typename Dep1Dep2SharedType::const_iterator itDep1Dep2;
-                            for (itDep1Dep2 = dep1Dep2Shared.begin(); itDep1Dep2 != dep1Dep2Shared.end(); ++itDep1Dep2) {
-                                size_t dep1 = itDep1Dep2->first;
-                                const map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2->second;
-
-                                // multiple deps2 means multiple choices for a relation (only one dep1<->dep2 can be chosen)
-                                typename map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >::const_iterator itDep2;
-                                for (itDep2 = dep2Shared.begin(); itDep2 != dep2Shared.end(); ++itDep2) {
-                                    size_t dep2 = itDep2->first;
-                                    const map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2->second;
-
-                                    bool canCombine = true;
-                                    size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
-                                    typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
-                                    for (itShared = sharedTmps.begin(); itShared != sharedTmps.end(); ++itShared) {
-                                        if (itShared->second.first == INDEXED_OPERATION_TYPE_BOTH) {
-                                            /**
-                                             * one equation uses this temporary shared 
-                                             * variable as an indexed variable while the 
-                                             * other equation does not
-                                             */
-                                            canCombine = false;
-                                            break;
-                                        } else {
-                                            totalOps += itShared->second.second;
-                                        }
-                                    }
-
-                                    if (canCombine) {
-                                        DepPairType depRel(flipped ? dep2 : dep1, flipped ? dep1 : dep2);
-                                        totalOps2validDeps[totalOps][depRel] = &sharedTmps;
-                                    } else {
-                                        incompatible[eq1].insert(eq2);
-                                        incompatible[eq2].insert(eq1);
-                                        break;
-                                    }
-                                }
-                            }
-
-                            /***************************************************
-                             * attempt to combine dependents which share the 
-                             * highest number of operations first
-                             **************************************************/
-                            typename map<size_t, map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* > >::const_reverse_iterator itOp2Dep2Shared;
-                            for (itOp2Dep2Shared = totalOps2validDeps.rbegin(); itOp2Dep2Shared != totalOps2validDeps.rend(); ++itOp2Dep2Shared) {
-
-                                typename map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* >::const_iterator itDep2Shared;
-                                for (itDep2Shared = itOp2Dep2Shared->second.begin(); itDep2Shared != itOp2Dep2Shared->second.end(); ++itDep2Shared) {
-                                    DepPairType depRel = itDep2Shared->first;
-                                    size_t dep1 = depRel.first;
-                                    size_t dep2 = depRel.second;
-
-                                    const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared->second;
-                                    /**
-                                     * this dep1 <-> dep2 is used as a reference to combine
-                                     * the two equations in the same loop
-                                     */
-                                    compatible = findDepRelations(eq1, dep1, eq2, dep2, shared,
-                                                                  dep2Relations, dependentBlackListRelations, dependentRelations);
-                                    if (!compatible) break;
-                                }
-
-                                loopRelations.clear();
-
-                                if (compatible) {
-                                    /**
-                                     * there has to be at least one iteration with all equation patterns
-                                     */
-                                    typename set<EquationPattern<Base>*>::const_iterator ite;
-                                    std::vector<Loop<Base>*> loops(2);
-                                    loops[0] = loop1;
-                                    loops[1] = loop2;
-                                    bool nonIndexedOnly = true;
-                                    for (size_t l = 0; l < 2; l++) {
-                                        Loop<Base>* loop = loops[l];
-                                        for (ite = loop->equations.begin(); ite != loop->equations.end(); ++ite) { // equation
-                                            EquationPattern<Base>* eq = *ite;
-
-                                            set<size_t>::const_iterator itd;
-                                            for (itd = eq->dependents.begin(); itd != eq->dependents.end(); ++itd) { // dependent
-                                                size_t dep = *itd;
-                                                if (dep2Relations[dep] != NULL) {
-                                                    loopRelations.insert(dep2Relations[dep]);
-                                                    nonIndexedOnly = false;
-                                                }
-                                            }
-                                        }
-                                    }
-
-
-
-                                    if (nonIndexedOnly) {
-                                        nonIndexedLoopRelations.push_back(std::make_pair(eq1, eq2));
-                                    } else {
-                                        // there are shared indexed temporary variables
-                                        compatible = false;
-                                        set<set<size_t>*>::const_iterator itit;
-                                        size_t nNonIndexedRel1 = loop1->getLinkedEquationsByNonIndexedCount();
-                                        size_t nNonIndexedRel2 = loop2->getLinkedEquationsByNonIndexedCount();
-                                        size_t requiredSize = loop1->equations.size() + loop2->equations.size() - nNonIndexedRel1 - nNonIndexedRel2;
-
-                                        for (itit = loopRelations.begin(); itit != loopRelations.end(); ++itit) {
-                                            set<size_t>* relations = *itit;
-                                            if (relations->size() == requiredSize) {
-                                                compatible = true;
-                                                break;
-                                            }
-                                        }
-                                    }
-                                }
-
-                                if (!compatible) break;
-                            }
-
-                            if (!compatible) {
-                                incompatible[eq1].insert(eq2);
-                                incompatible[eq2].insert(eq1);
-                                break;
-                            } else {
-                                indexedLoopRelations.insert(eq1);
-                                indexedLoopRelations.insert(eq2);
-                            }
-                        }
-
-                        if (!compatible) break;
-                    }
-
-
-                    if (!hasShared) {
-                        l2++;
-                        continue; // nothing to do
-                    }
+                    /**
+                     * All equations from both loops must be compatible
+                     */
+                    bool compatible = isCompatible(loop1, loop2,
+                                                   eq2totalOps2validDeps,
+                                                   dep2Relations, dependentBlackListRelations, dependentRelations,
+                                                   loopRelations, indexedLoopRelations, nonIndexedLoopRelations);
 
                     if (compatible) {
-#ifdef CPPADCG_PRINT_DEBUG
-                        std::cout << "loopRelations=";
-                        print(loopRelations);
-                        std::cout << std::endl;
-#endif
                         // merge the two loops
 
                         // update the loop of the equations
@@ -473,9 +427,7 @@ namespace CppAD {
                             }
                         }
 
-                        l2++;
                     }
-
 
                 }
             }
@@ -499,7 +451,7 @@ namespace CppAD {
                         bool canMerge = loop1->getIterationCount() == loop2->getIterationCount();
                         if (canMerge) {
                             // check if there are equations in the blacklist
-                            canMerge = !find(loop1, loop2, incompatible);
+                            canMerge = !find(loop1, loop2, incompatible_);
                         }
 
                         if (canMerge) {
@@ -540,6 +492,165 @@ namespace CppAD {
             }
 
             return loops_;
+        }
+
+        /**
+         * Determines whether or not two loops which shared temporary variables 
+         * can be merged.
+         * 
+         * @param loop1 First loop
+         * @param loop2 Second loop
+         * @return true if the loops should be merged into a single loop
+         */
+        inline bool isCompatible(Loop<Base>* loop1,
+                                 Loop<Base>* loop2,
+                                 const Eq2totalOps2validDepsType& eq2totalOps2validDeps,
+                                 std::vector<std::set<size_t>* >& dep2Relations,
+                                 std::map<size_t, std::set<size_t> >& dependentBlackListRelations,
+                                 SmartSetPointer<std::set<size_t> >& dependentRelations,
+                                 std::set<std::set<size_t>*>& loopRelations,
+                                 std::set<EquationPattern<Base>*>& indexedLoopRelations,
+                                 std::vector<std::pair<EquationPattern<Base>*, EquationPattern<Base>*> >& nonIndexedLoopRelations) {
+            using namespace std;
+
+            bool compatible = true;
+
+            typedef pair<EquationPattern<Base>*, EquationPattern<Base>*> EqPairType;
+            /**
+             * Must order equation pairs property according to the highest 
+             * number of shared operations
+             */
+            map<size_t, map<UniqueEquationPair<Base>, TotalOps2validDepsType*> > totalOp2eq;
+
+            typename set<EquationPattern<Base>*>::const_iterator ite1;
+            typename set<EquationPattern<Base>*>::const_iterator ite2;
+
+            for (ite1 = loop1->equations.begin(); ite1 != loop1->equations.end(); ++ite1) {
+                EquationPattern<Base>* eq1 = *ite1;
+
+                for (ite2 = loop2->equations.begin(); ite2 != loop2->equations.end(); ++ite2) {
+                    EquationPattern<Base>* eq2 = *ite2;
+
+                    UniqueEquationPair<Base> eqRel(eq1, eq2);
+
+                    typename Eq2totalOps2validDepsType::const_iterator eqSharedit = eq2totalOps2validDeps.find(eqRel);
+                    if (eqSharedit == eq2totalOps2validDeps.end())
+                        continue; // nothing is shared between eq1 and eq2
+
+
+                    size_t maxOps = eqSharedit->second->rbegin()->first;
+                    totalOp2eq[maxOps][eqRel] = eqSharedit->second;
+                }
+            }
+
+            typename map<size_t, map<UniqueEquationPair<Base>, TotalOps2validDepsType*> >::const_reverse_iterator itr;
+            for (itr = totalOp2eq.rbegin(); itr != totalOp2eq.rend(); ++itr) {
+                // loop shared operation count
+
+                typename map<UniqueEquationPair<Base>, TotalOps2validDepsType*>::const_iterator itEq;
+                for (itEq = itr->second.begin(); itEq != itr->second.end(); ++itEq) {
+                    EquationPattern<Base>* eq1 = itEq->first.eq1;
+                    EquationPattern<Base>* eq2 = itEq->first.eq2;
+                    TotalOps2validDepsType& totalOps2validDeps = *itEq->second;
+
+                    /***************************************************
+                     * attempt to combine dependents which share the 
+                     * highest number of operations first
+                     **************************************************/
+                    typename map<size_t, map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* > >::const_reverse_iterator itOp2Dep2Shared;
+                    for (itOp2Dep2Shared = totalOps2validDeps.rbegin(); itOp2Dep2Shared != totalOps2validDeps.rend(); ++itOp2Dep2Shared) {
+#ifdef CPPADCG_PRINT_DEBUG
+                        std::cout << "    operation count: " << itOp2Dep2Shared->first << "  relations: " << itOp2Dep2Shared->second.size() << std::endl;
+#endif
+                        typename map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* >::const_iterator itDep2Shared;
+                        for (itDep2Shared = itOp2Dep2Shared->second.begin(); itDep2Shared != itOp2Dep2Shared->second.end(); ++itDep2Shared) {
+                            DepPairType depRel = itDep2Shared->first;
+                            size_t dep1 = depRel.first;
+                            size_t dep2 = depRel.second;
+
+                            const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared->second;
+                            /**
+                             * this dep1 <-> dep2 is used as a reference to combine
+                             * the two equations in the same loop
+                             */
+                            compatible = findDepRelations(eq1, dep1, eq2, dep2, shared,
+                                                          dep2Relations, dependentBlackListRelations, dependentRelations);
+                            if (!compatible) break;
+                        }
+
+                        loopRelations.clear();
+
+                        if (compatible) {
+                            /**
+                             * there has to be at least one iteration with all equation patterns
+                             */
+                            typename set<EquationPattern<Base>*>::const_iterator ite;
+                            std::vector<Loop<Base>*> loops(2);
+                            loops[0] = loop1;
+                            loops[1] = loop2;
+                            bool nonIndexedOnly = true;
+                            for (size_t l = 0; l < 2; l++) {
+                                Loop<Base>* loop = loops[l];
+                                for (ite = loop->equations.begin(); ite != loop->equations.end(); ++ite) { // equation
+                                    EquationPattern<Base>* eq = *ite;
+
+                                    set<size_t>::const_iterator itd;
+                                    for (itd = eq->dependents.begin(); itd != eq->dependents.end(); ++itd) { // dependent
+                                        size_t dep = *itd;
+                                        if (dep2Relations[dep] != NULL) {
+                                            loopRelations.insert(dep2Relations[dep]);
+                                            nonIndexedOnly = false;
+                                        }
+                                    }
+                                }
+                            }
+
+
+
+                            if (nonIndexedOnly) {
+                                nonIndexedLoopRelations.push_back(std::make_pair(eq1, eq2));
+                            } else {
+                                // there are shared indexed temporary variables
+                                compatible = false;
+                                set<set<size_t>*>::const_iterator itit;
+                                size_t nNonIndexedRel1 = loop1->getLinkedEquationsByNonIndexedCount();
+                                size_t nNonIndexedRel2 = loop2->getLinkedEquationsByNonIndexedCount();
+                                size_t requiredSize = loop1->equations.size() + loop2->equations.size() - nNonIndexedRel1 - nNonIndexedRel2;
+
+                                for (itit = loopRelations.begin(); itit != loopRelations.end(); ++itit) {
+                                    set<size_t>* relations = *itit;
+                                    if (relations->size() == requiredSize) {
+                                        compatible = true;
+                                        break;
+                                    }
+                                }
+#ifdef CPPADCG_PRINT_DEBUG
+                                if (compatible) {
+                                    std::cout << "    loopRelations:";
+                                    print(loopRelations);
+                                    std::cout << std::endl;
+                                }
+#endif
+                            }
+                        }
+
+                        if (!compatible) break;
+                    }
+
+                    if (!compatible) {
+                        incompatible_[eq1].insert(eq2);
+                        incompatible_[eq2].insert(eq1);
+                        break;
+                    } else {
+                        indexedLoopRelations.insert(eq1);
+                        indexedLoopRelations.insert(eq2);
+                    }
+                }
+
+                if (!compatible) break;
+            }
+
+            return compatible;
         }
 
         /**
@@ -756,7 +867,8 @@ namespace CppAD {
         /**
          * Finds nodes which can be shared with other equation patterns
          * 
-         * @param value the CG object to visit
+         * @param value The CG object to visit
+         * @param depIndex The index of the dependent variable
          * @return true if this operation is indexed
          */
         inline bool findSharedTemporaries(const CG<Base>& value,
@@ -773,7 +885,10 @@ namespace CppAD {
         /**
          * Finds nodes which can be shared with other equation patterns
          * 
-         * @param node the node to visit
+         * @param node The node to visit
+         * @param depIndex The index of the dependent variable
+         * @param opCount The number of operations which must be performed to 
+         *                generate this node
          * @return true if this operation is indexed (for the current equation pattern)
          */
         inline bool findSharedTemporaries(OperationNode<Base>* node,
@@ -854,7 +969,15 @@ namespace CppAD {
             return indexedOperation;
         }
 
-        inline void markOperationsWithDependent(const OperationNode<Base>* node, size_t dep) {
+        /**
+         * Marks a node (and all other nodes used by it) as being used by a
+         * given dependent variable.
+         * 
+         * @param node The node being visited
+         * @param dep Dependent variable index
+         */
+        inline void markOperationsWithDependent(const OperationNode<Base>* node,
+                                                size_t dep) {
             if (node == NULL || node->getOperationType() == CGInvOp)
                 return; // nothing to do
 
@@ -933,7 +1056,7 @@ namespace CppAD {
         }
 
         static bool find(Loop<Base>* loop1, Loop<Base>* loop2,
-                         std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>*> > blackList) {
+                         const std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>*> >& blackList) {
             typename std::set<EquationPattern<Base>*>::const_iterator iteq1;
             for (iteq1 = loop1->equations.begin(); iteq1 != loop1->equations.end(); ++iteq1) {
 
