@@ -20,6 +20,7 @@ include        The CppADCodeGen header files.
 example        CppADCodegen example files are here.
 pkgconfig      pkg-config support files.
 test           Contains tests for CppADCodeGen.
+speed          Contains some benchmarks for CppADCodeGen.
 
 
 Files          Description
