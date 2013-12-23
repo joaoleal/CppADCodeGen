@@ -1214,12 +1214,12 @@ namespace CppAD {
 
                 vector<CGB> tx1v(n);
 
+                y = fun.Forward(0, x);
+
                 for (size_t j1 = 0; j1 < n; j1++) {
                     if (jacEvalSparsityT[j1].empty() && hesEvalSparsity[j1].empty()) {
                         continue;
                     }
-
-                    y = fun.Forward(0, x);
 
                     tx1v[j1] = Base(1);
                     vector<CGB> dy = fun.Forward(1, tx1v);
