@@ -98,11 +98,11 @@ public:
 };
 
 int main(int argc, char **argv) {
-    size_t repeat = PatternSpeedTest::parseProgramArguments(argc, argv, 10); // time intervals
-    size_t nEls = 10; // number of CSTR elements
+    size_t repeat = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10); // time intervals
+    size_t nEls = PatternSpeedTest::parseProgramArguments(2, argc, argv, 10); // number of CSTR elements
     
     size_t K = 3;
     CollocationPatternSpeedTest speed(nEls);
-    speed.setNumberOfExecutions(2);
+    speed.setNumberOfExecutions(30);
     speed.measureSpeed(K * 4 * nEls, repeat, speed.getTypicalValues(repeat));
 }

@@ -41,7 +41,7 @@ public:
 };
 
 int main(int argc, char **argv) {
-    size_t nEles = PatternSpeedTest::parseProgramArguments(argc, argv, 10);
+    size_t nEles = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10);
 
     std::vector<Base> x = PlugFlowModel<Base>::getTypicalValues(nEles);
     std::vector<std::set<size_t> > relations = PlugFlowModel<Base>::getRelatedCandidates(nEles);

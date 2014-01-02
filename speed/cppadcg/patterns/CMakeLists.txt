@@ -39,3 +39,36 @@ ENDMACRO()
 add_speed_test("speed_plugflow")
 
 add_speed_test("speed_collocation")
+
+
+################################################################################
+# Execute benchmark for plugflow
+################################################################################
+FOREACH(nCstr 10 20 30 40 50 60 70 80 90 100)
+   SET(outputFile "speed_plugflow_${nCstr}.txt")
+   LIST(APPEND outputFiles ${outputFile})
+   ADD_CUSTOM_COMMAND(OUTPUT ${outputFile}
+                      COMMAND speed_plugflow ${nCstr} > ${outputFile}
+                      WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+ENDFOREACH()
+
+ADD_CUSTOM_TARGET(benchmark_plugflow 
+                  DEPENDS ${outputFiles})
+
+################################################################################
+# Execute benchmark for collocation
+################################################################################
+SET(outputFiles "")
+
+FOREACH(nCstr 10 30 50 70)
+   FOREACH(nTimeInt 5 10 20 30 40 50)
+      SET(outputFile "speed_collocation_${nTimeInt}int_${nCstr}el.txt")
+      LIST(APPEND outputFiles ${outputFile})
+      ADD_CUSTOM_COMMAND(OUTPUT ${outputFile}
+                         COMMAND speed_collocation ${nTimeInt} ${nCstr} > ${outputFile}
+                         WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
+   ENDFOREACH()
+ENDFOREACH()
+
+ADD_CUSTOM_TARGET(benchmark_collocation
+                  DEPENDS ${outputFiles})

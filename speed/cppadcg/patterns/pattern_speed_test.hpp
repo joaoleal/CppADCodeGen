@@ -165,9 +165,9 @@ namespace CppAD {
             measureSpeedCppAD(repeat, xb);
         }
 
-        inline static size_t parseProgramArguments(int argc, char **argv, size_t defaultRepeat) {
-            if (argc > 2) {
-                std::istringstream is(argv[1]);
+        inline static size_t parseProgramArguments(int pos, int argc, char **argv, size_t defaultRepeat) {
+            if (argc > pos) {
+                std::istringstream is(argv[pos]);
                 size_t repeat;
                 is >> repeat;
                 return repeat;
@@ -344,11 +344,11 @@ namespace CppAD {
                     q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
                 }
             } else {
+                median = (sorted[middle1] + sorted[middle1 - 1]) / 2;
                 if (sorted.size() <= 2) {
                     q25 = sorted.front();
                     q75 = sorted.back();
                 } else {
-                    median = (sorted[middle1] + sorted[middle1 - 1]) / 2;
                     size_t s = (middle1 - 1) / 2;
                     q25 = (sorted[s] + sorted[s - 1]) / 2;
                     q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
