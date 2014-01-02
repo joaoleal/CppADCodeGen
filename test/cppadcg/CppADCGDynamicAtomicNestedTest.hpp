@@ -31,10 +31,12 @@ namespace CppAD {
         checkpoint<CGD>* _atomicInnerModel;
         DynamicLib<Base>* _dynamicLib;
         DynamicLib<Base>* _dynamicLib2;
-        DynamicLibModel<Base>* _modelLib;
+        GenericModel<Base>* _modelLib;
     public:
 
-        inline CppADCGDynamicAtomicNestedTest(const std::string& modelName, bool verbose = false, bool printValues = false) :
+        inline CppADCGDynamicAtomicNestedTest(const std::string& modelName,
+                                              bool verbose = false,
+                                              bool printValues = false) :
             CppADCGTest(verbose, printValues),
             _modelName(modelName),
             _fun(NULL),
@@ -103,7 +105,7 @@ namespace CppAD {
             prepareAtomicLibAtomicLib(xOuter, xInner, xNorm, eqNorm);
             ASSERT_TRUE(_modelLib != NULL);
 
-            auto_ptr<DynamicLibModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
+            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
             ASSERT_TRUE(modelLibOuter.get() != NULL);
 
             test2LevelAtomicLibModel(_modelLib, modelLibOuter.get(),
@@ -122,8 +124,8 @@ namespace CppAD {
 
             prepareAtomicLibModelBridge(xOuter, xInner, xNorm, eqNorm);
 
-            auto_ptr<DynamicLibModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<DynamicLibModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModel(modelLib.get(), modelLibOuter.get(),
                                      xOuter,
@@ -151,8 +153,8 @@ namespace CppAD {
                                         jacOuter, hessOuter,
                                         createOuterReverse2);
 
-            auto_ptr<DynamicLibModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<DynamicLibModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
                                               xOuter,
@@ -162,8 +164,8 @@ namespace CppAD {
 
     private:
 
-        void test2LevelAtomicLibModel(DynamicLibModel<Base>* modelLib,
-                                      DynamicLibModel<Base>* modelLibOuter,
+        void test2LevelAtomicLibModel(GenericModel<Base>* modelLib,
+                                      GenericModel<Base>* modelLibOuter,
                                       const CppAD::vector<Base>& xOuter,
                                       const CppAD::vector<Base>& xInner,
                                       Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
@@ -341,8 +343,8 @@ namespace CppAD {
             ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
         }
 
-        void test2LevelAtomicLibModelCustomEls(DynamicLibModel<Base>* modelLib,
-                                               DynamicLibModel<Base>* modelLibOuter,
+        void test2LevelAtomicLibModelCustomEls(GenericModel<Base>* modelLib,
+                                               GenericModel<Base>* modelLibOuter,
                                                const CppAD::vector<Base>& xOuter,
                                                const std::vector<std::set<size_t> >& jacOuterSparsity,
                                                const std::vector<std::set<size_t> >& hessOuterSparsity,
@@ -446,16 +448,25 @@ namespace CppAD {
             /**
              * Create the dynamic library model
              */
-            CLangCompileModelHelper<double> compHelp1(*_fun, _modelName);
+            ModelCSourceGen<double> compHelp1(*_fun, _modelName);
             compHelp1.setCreateForwardZero(true);
             compHelp1.setCreateForwardOne(true);
             compHelp1.setCreateReverseOne(true);
             compHelp1.setCreateReverseTwo(true);
 
             /**
-             * Create the dynamic library
-             * (generate and compile source code)
+             * generate source code
              */
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
+
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "nested_sources_atomiclibatomiclib_" + _modelName);
+
+            /**
+             * Create the dynamic library
+             * (compile source code)
+             */
+            DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
+
             GccCompiler<double> compiler1;
             std::vector<std::string> flags;
             flags.push_back("-O0");
@@ -463,11 +474,8 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler1.setCompileFlags(flags);
-            compiler1.setSourcesFolder("nested_sources_atomiclibatomiclib_" + _modelName);
 
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
-            compDynHelp.setLibraryName("innerModel");
-            _dynamicLib = compDynHelp.createDynamicLibrary(compiler1);
+            _dynamicLib = p.createDynamicLibrary(compiler1);
             _modelLib = _dynamicLib->model(_modelName);
 
             /**
@@ -481,7 +489,7 @@ namespace CppAD {
 
             CppAD::Independent(u2);
 
-            CGAtomicLibModel<Base>& innerAtomicFun = _modelLib->asAtomic();
+            CGAtomicGenericModel<Base>& innerAtomicFun = _modelLib->asAtomic();
             CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, true); // required for taping
 
             std::vector<ADCGD> Z2 = modelOuter(u2, cgInnerAtomicFun, n, m);
@@ -490,7 +498,7 @@ namespace CppAD {
             ADFun<CGD> fun2;
             fun2.Dependent(Z2);
 
-            CLangCompileModelHelper<double> compHelp2(fun2, _modelName + "_outer");
+            ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
             compHelp2.setCreateForwardZero(true);
             compHelp2.setCreateForwardOne(true);
             compHelp2.setCreateReverseOne(true);
@@ -501,16 +509,20 @@ namespace CppAD {
             compHelp2.setCreateSparseHessian(true);
 
             /**
+             * generate source code
+             */
+            ModelLibraryCSourceGen<double> compDynHelp2(compHelp2);
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "nested_sources_atomiclibatomiclib_" + _modelName);
+
+            /**
              * Create the dynamic library
-             * (generate and compile source code)
+             * (compile source code)
              */
             GccCompiler<double> compiler2;
-            compiler2.setSourcesFolder("nested_sources_atomiclibatomiclib_" + _modelName);
             compiler2.setCompileFlags(flags);
 
-            CLangCompileDynamicHelper<double> compDynHelp2(compHelp2);
-            compDynHelp2.setLibraryName("outterModel");
-            _dynamicLib2 = compDynHelp2.createDynamicLibrary(compiler2);
+            DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
+            _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
             /**
              * 
@@ -563,7 +575,7 @@ namespace CppAD {
             /**
              * Create the dynamic library model
              */
-            CLangCompileModelHelper<double> compHelp1(*_fun, _modelName);
+            ModelCSourceGen<double> compHelp1(*_fun, _modelName);
             if (jacInner.size() > 0) {
                 compHelp1.setCustomSparseJacobianElements(jacInner);
             }
@@ -595,7 +607,7 @@ namespace CppAD {
             ADFun<CGD> fun2;
             fun2.Dependent(Z2);
 
-            CLangCompileModelHelper<double> compHelp2(fun2, _modelName + "_outer");
+            ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
 
             compHelp1.setCreateForwardZero(true);
             compHelp1.setCreateForwardOne(true);
@@ -617,10 +629,18 @@ namespace CppAD {
             if (hessOuter.size() > 0) {
                 compHelp2.setCustomSparseHessianElements(hessOuter);
             }
+            
+            /**
+             * generate source code
+             */
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
+            compDynHelp.addModel(compHelp2);
+            std::string folder = std::string("nested_sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName;
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, folder);
 
             /**
              * Create the dynamic library
-             * (generate and compile source code)
+             * (compile source code)
              */
             GccCompiler<double> compiler;
             std::vector<std::string> flags;
@@ -629,11 +649,10 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler.setCompileFlags(flags);
-            compiler.setSourcesFolder(std::string("nested_sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName);
 
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp1);
-            compDynHelp.addModel(compHelp2);
-            _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
+            DynamicModelLibraryProcessor<double> p(compDynHelp);
+
+            _dynamicLib = p.createDynamicLibrary(compiler);
 
             /**
              * 

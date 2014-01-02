@@ -37,17 +37,17 @@ namespace CppAD {
         CGAtomicFun<double>* _cgAtomicFun;
         ADFun<CGD>* _fun;
         DynamicLib<double>* _dynamicLib;
-        DynamicLibModel<double>* _model;
+        GenericModel<double>* _model;
     public:
 
         inline CppADCGDynamicAtomic2Test(bool verbose = false, bool printValues = false) :
-        CppADCGTest(verbose, printValues),
-        x(n),
-        _atomicFun(NULL),
-        _cgAtomicFun(NULL),
-        _fun(NULL),
-        _dynamicLib(NULL),
-        _model(NULL) {
+            CppADCGTest(verbose, printValues),
+            x(n),
+            _atomicFun(NULL),
+            _cgAtomicFun(NULL),
+            _fun(NULL),
+            _dynamicLib(NULL),
+            _model(NULL) {
         }
 
         virtual void SetUp() {
@@ -88,7 +88,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(*_fun, MODEL_NAME);
+            ModelCSourceGen<double> compHelp(*_fun, MODEL_NAME);
 
             compHelp.setCreateForwardZero(true);
             compHelp.setCreateForwardOne(true);
@@ -99,6 +99,11 @@ namespace CppAD {
             compHelp.setCreateSparseJacobian(true);
             compHelp.setCreateSparseHessian(true);
 
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp);
+
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, MODEL_NAME);
+
+            DynamicModelLibraryProcessor<double> p(compDynHelp);
             GccCompiler<double> compiler;
             std::vector<std::string> flags;
             flags.push_back("-O0");
@@ -106,9 +111,7 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler.setCompileFlags(flags);
-            compiler.setSourcesFolder(MODEL_NAME);
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp);
-            _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
+            _dynamicLib = p.createDynamicLibrary(compiler);
             _model = _dynamicLib->model(MODEL_NAME);
             _model->addAtomicFunction(*_atomicFun);
         }

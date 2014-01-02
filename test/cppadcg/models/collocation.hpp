@@ -33,7 +33,7 @@ namespace CppAD {
 
         std::vector<std::string> compilerFlags_;
         std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
-        std::auto_ptr<DynamicLibModel<double> > atomicModel_;
+        std::auto_ptr<GenericModel<double> > atomicModel_;
         std::vector<atomic_base<T>*> atoms_;
         bool ignoreParameters_;
         bool verbose_;
@@ -228,7 +228,7 @@ namespace CppAD {
              * Compile
              */
             std::string lName = getAtomicLibName()+(ignoreParameters_ ? "" : "All");
-            CLangCompileModelHelper<double> compHelpL(fun, lName);
+            ModelCSourceGen<double> compHelpL(fun, lName);
             compHelpL.setCreateForwardZero(true);
             compHelpL.setCreateForwardOne(true);
             compHelpL.setCreateReverseOne(true);
@@ -256,16 +256,16 @@ namespace CppAD {
                 compHelpL.setCustomSparseHessianElements(hessSpar);
             }
 
+            ModelLibraryCSourceGen<double> compDynHelpL(compHelpL);
+            compDynHelpL.setVerbose(verbose_);
+
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + lName);
+
+            DynamicModelLibraryProcessor<double> p(compDynHelpL, lName);
             GccCompiler<double> compiler;
-            compiler.setSourcesFolder("sources_" + lName);
             if (!compilerFlags_.empty())
                 compiler.setCompileFlags(compilerFlags_);
-
-            CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
-            compDynHelpL.setVerbose(verbose_);
-            compDynHelpL.setLibraryName(lName);
-
-            atomicDynamicLib_.reset(compDynHelpL.createDynamicLibrary(compiler));
+            atomicDynamicLib_.reset(p.createDynamicLibrary(compiler));
 
             /**
              * load the model
@@ -273,7 +273,7 @@ namespace CppAD {
             atomicModel_.reset(atomicDynamicLib_->model(lName));
         }
 
-        CGAtomicLibModel<double>& getDoubleAtomic() {
+        CGAtomicGenericModel<double>& getDoubleAtomic() {
             return atomicModel_->asAtomic();
         }
 

@@ -355,7 +355,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelpL(fun, libBaseName + "Loops");
+            ModelCSourceGen<double> compHelpL(fun, libBaseName + "Loops");
             compHelpL.setCreateForwardZero(true);
             compHelpL.setJacobianADMode(jacMode);
             compHelpL.setCreateJacobian(false);
@@ -383,13 +383,15 @@ namespace CppAD {
             flags.push_back("-ggdb");
             flags.push_back("-D_FORTIFY_SOURCE=2");
             compiler.setCompileFlags(flags);
-            compiler.setSourcesFolder("sources_" + libBaseName);
 
-            CLangCompileDynamicHelper<double> compDynHelpL(compHelpL);
+            ModelLibraryCSourceGen<double> compDynHelpL(compHelpL);
             compDynHelpL.setVerbose(this->verbose_);
-            compDynHelpL.setLibraryName(libBaseName + "Loops");
-            std::auto_ptr<DynamicLib<double> > dynamicLibL(compDynHelpL.createDynamicLibrary(compiler));
-            std::auto_ptr<DynamicLibModel<double> > modelL;
+
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL,"sources_" + libBaseName);
+            
+            DynamicModelLibraryProcessor<double> p(compDynHelpL, libBaseName + "Loops");
+            std::auto_ptr<DynamicLib<double> > dynamicLibL(p.createDynamicLibrary(compiler));
+            std::auto_ptr<GenericModel<double> > modelL;
             if (loadModels) {
                 modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
                 ASSERT_TRUE(modelL.get() != NULL);
@@ -399,7 +401,7 @@ namespace CppAD {
             /**
              * Without the loops
              */
-            CLangCompileModelHelper<double> compHelp(fun, libBaseName + "NoLoops");
+            ModelCSourceGen<double> compHelp(fun, libBaseName + "NoLoops");
             compHelp.setCreateForwardZero(testZeroOrder_);
             compHelp.setJacobianADMode(jacMode);
             compHelp.setCreateJacobian(false);
@@ -419,17 +421,18 @@ namespace CppAD {
             if (!customHessSparsity_.empty())
                 compHelp.setCustomSparseHessianElements(customHessSparsity_);
 
-            compiler.setSourcesFolder("sources_" + libBaseName);
-
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp);
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp);
             compDynHelp.setVerbose(this->verbose_);
-            compDynHelp.setLibraryName(libBaseName + "NoLoops");
-            std::auto_ptr<DynamicLib<double> > dynamicLib(compDynHelp.createDynamicLibrary(compiler));
+            
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp,"sources_" + libBaseName);
+
+            DynamicModelLibraryProcessor<double> p2(compDynHelp, libBaseName + "NoLoops");
+            std::auto_ptr<DynamicLib<double> > dynamicLib(p2.createDynamicLibrary(compiler));
 
             /**
              * reference library
              */
-            std::auto_ptr<DynamicLibModel<double> > model;
+            std::auto_ptr<GenericModel<double> > model;
             if (loadModels) {
                 model.reset(dynamicLib->model(libBaseName + "NoLoops"));
                 for (size_t i = 0; i < atoms_.size(); i++)

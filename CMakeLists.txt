@@ -35,6 +35,9 @@ IF( UNIX )
   FIND_PACKAGE(DL REQUIRED)
 ENDIF()
 
+FIND_PACKAGE(LLVM)
+FIND_PACKAGE(Clang)
+
 INCLUDE_DIRECTORIES( ${CPPAD_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include" ${EIGEN3_INCLUDE_DIR} ${DL_INCLUDE_DIRS})
 
 ################################################################################

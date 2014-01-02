@@ -41,18 +41,22 @@ int main(void) {
      * Create the dynamic library
      * (generates and compiles source code)
      */
-    CLangCompileModelHelper<double> compModelH(fun, "model");
-    compModelH.setCreateJacobian(true);
 
-    CLangCompileDynamicHelper<double> compDynH(compModelH);
+    // generates source code
+    ModelCSourceGen<double> compModelH(fun, "model");
+    compModelH.setCreateJacobian(true);
+    ModelLibraryCSourceGen<double> compDynH(compModelH);
+
+    // compile source code
+    DynamicModelLibraryProcessor<double> p(compDynH);
 
     GccCompiler<double> compiler;
-    DynamicLib<double>* dynamicLib = compDynH.createDynamicLibrary(compiler);
+    DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
 
     /**
      * Use the dynamic library
      */
-    DynamicLibModel<double>* model = dynamicLib->model("model");
+    GenericModel<double>* model = dynamicLib->model("model");
     std::vector<double> x(U.size());
     x[0] = 2.5;
     x[1] = 3.5;

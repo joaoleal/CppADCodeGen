@@ -31,10 +31,22 @@ namespace CppAD {
         double srcCodeComp;
         // compilation of the dynamic library
         double dynLibComp;
+        // JIT preparation time
+        double jit;
         // total time
         double total;
     public:
         JobSpeedListener();
+
+        inline void reset() {
+            patternDection = 0;
+            graphGen = 0;
+            srcCodeGen = 0;
+            srcCodeComp = 0;
+            dynLibComp = 0;
+            jit = 0;
+            total = 0;
+        }
 
         virtual void jobStarted(const std::vector<Job>& job);
 

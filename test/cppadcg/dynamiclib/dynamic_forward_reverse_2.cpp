@@ -26,7 +26,7 @@ namespace CppAD {
         std::vector<double> x;
         ADFun<CGD>* _fun;
         DynamicLib<double>* _dynamicLib;
-        DynamicLibModel<double>* _model;
+        GenericModel<double>* _model;
     public:
 
         inline CppADCGDynamicForRevTest(bool verbose = false, bool printValues = false) :
@@ -78,7 +78,7 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            CLangCompileModelHelper<double> compHelp(*_fun, _modelName);
+            ModelCSourceGen<double> compHelp(*_fun, _modelName);
 
             compHelp.setCreateForwardZero(true);
             compHelp.setCreateForwardOne(true);
@@ -89,8 +89,11 @@ namespace CppAD {
 
             GccCompiler<double> compiler;
 
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp);
-            _dynamicLib = compDynHelp.createDynamicLibrary(compiler);
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp);
+            
+            DynamicModelLibraryProcessor<double> p(compDynHelp);
+            
+            _dynamicLib = p.createDynamicLibrary(compiler);
             _model = _dynamicLib->model(_modelName);
 
             // dimensions

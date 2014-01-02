@@ -16,6 +16,7 @@
  */
 
 #include <cppadcg/cg.hpp>
+#include <cppadcg/model/llvm/v3_2/cg_llvm.hpp>
 #include "job_speed_listener.hpp"
 
 namespace CppAD {
@@ -70,8 +71,13 @@ namespace CppAD {
         std::vector<std::set<size_t> > customJacSparsity_;
         std::vector<std::set<size_t> > customHessSparsity_;
         std::auto_ptr<DynamicLib<Base> > dynamicLib_;
-        std::auto_ptr<DynamicLibModel<Base> > model_;
+        std::auto_ptr<LlvmModelLibrary<Base> > llvmLib_;
+        std::auto_ptr<GenericModel<Base> > model_;
         std::vector<atomic_base<Base>*> atoms_;
+        std::vector<std::string> compileFlags_;
+        std::auto_ptr<ModelCSourceGen<double> > modelSourceGen_;
+        std::auto_ptr<ModelLibraryCSourceGen<double> > libSourceGen_;
+        JobSpeedListener listener_;
         bool verbose_;
         size_t nTimes_;
     private:
@@ -80,6 +86,7 @@ namespace CppAD {
         std::vector<double> srcCodeGen_; /// source code generation
         std::vector<double> srcCodeComp_; /// source code compilation
         std::vector<double> dynLibComp_; /// compilation of the dynamic library
+        std::vector<double> jit_; /// compilation of the dynamic library
         std::vector<double> total_; /// total time
     public:
 
@@ -96,6 +103,10 @@ namespace CppAD {
 
         inline void setNumberOfExecutions(size_t nTimes) {
             nTimes_ = nTimes;
+        }
+
+        inline void setCompileFlags(const std::vector<std::string>& compileFlags) {
+            compileFlags_ = compileFlags;
         }
 
         virtual std::vector<ADCGD> modelCppADCG(const std::vector<ADCGD>& x, size_t repeat) = 0;
@@ -146,6 +157,8 @@ namespace CppAD {
              ******************************************************************/
             measureSpeedCppADWithLoops(relatedDepCandidates, repeat, xb);
 
+            measureSpeedCppADWithLoopsLlvm(relatedDepCandidates, repeat, xb);
+
             /*******************************************************************
              * CppAD
              ******************************************************************/
@@ -173,7 +186,7 @@ namespace CppAD {
              ******************************************************************/
             std::cout << "\n"
                     "********************************************************************************\n"
-                    "CppADCG (without Loops)\n"
+                    "CppADCG (without Loops) GCC\n"
                     "********************************************************************************\n" << std::endl;
             ModelCppADCG model(*this);
 
@@ -192,7 +205,7 @@ namespace CppAD {
                 // create dynamic lib
                 createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == nTimes_ - 1, REVERSE, testJacobian_, testHessian_);
             }
-            std::cout << "model tape: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+            printStat("model tape", dt);
             printCGResults();
 
             /**
@@ -209,7 +222,7 @@ namespace CppAD {
 
             std::cout << "\n"
                     "********************************************************************************\n"
-                    "CppADCG (with Loops)\n"
+                    "CppADCG (with Loops) GCC\n"
                     "********************************************************************************\n" << std::endl;
             ModelCppADCG model(*this);
 
@@ -228,7 +241,8 @@ namespace CppAD {
                 // create dynamic lib
                 createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == nTimes_ - 1, REVERSE, testJacobian_, testHessian_);
             }
-            std::cout << "model tape: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+            printStat("model tape", dt);
+
             printCGResults();
 
 
@@ -249,22 +263,108 @@ namespace CppAD {
             executionSpeedCppADCG(xb);
         }
 
+        inline void measureSpeedCppADWithLoopsLlvm(const std::vector<std::set<size_t> >& relatedDepCandidates,
+                                                   size_t repeat,
+                                                   const std::vector<Base>& xb) {
+            using namespace CppAD;
+
+            std::cout << "\n"
+                    "********************************************************************************\n"
+                    "CppADCG (with Loops) LLVM\n"
+                    "********************************************************************************\n" << std::endl;
+            JacobianADMode jacMode = REVERSE;
+            bool forReverseOne = false;
+            bool reverseTwo = false;
+
+            bool withLoops = !relatedDepCandidates.empty();
+            std::string libBaseName = createLibBaseName(jacMode, forReverseOne, reverseTwo);
+
+            /**
+             * preparation
+             */
+            for (size_t i = 0; i < nTimes_; i++) {
+                // create dynamic lib
+                createJitModelLib(libBaseName, xb, withLoops);
+            }
+            printCGResults();
+
+            /**
+             * execution
+             */
+            // evaluation speed
+            executionSpeedCppADCG(xb);
+        }
+
         inline void printCGResults() {
             // save results
             if (!patternDection_.empty())
-                std::cout << "         loop detection: " << mean(patternDection_) << " +- " << stdDev(patternDection_) << std::endl;
-            std::cout << "          (graph generation: " << mean(graphGen_) << " +- " << stdDev(graphGen_) << ")" << std::endl;
-            std::cout << "            code generation: " << mean(srcCodeGen_) << " +- " << stdDev(srcCodeGen_) << std::endl;
-            std::cout << "           code compilation: " << mean(srcCodeComp_) << " +- " << stdDev(srcCodeComp_) << std::endl;
-            std::cout << "dynamic library compilation: " << mean(dynLibComp_) << " +- " << stdDev(dynLibComp_) << std::endl;
-            std::cout << "                      total: " << mean(total_) << " +- " << stdDev(total_) << std::endl;
+                printStat("             loop detection", patternDection_);
+            if (!graphGen_.empty())
+                printStat("         (graph generation)", graphGen_);
+            if (!srcCodeGen_.empty())
+                printStat("            code generation", srcCodeGen_);
+            if (!srcCodeComp_.empty())
+                printStat("           code compilation", srcCodeComp_);
+            if (!dynLibComp_.empty())
+                printStat("dynamic library compilation", dynLibComp_);
+            if (!jit_.empty())
+                printStat("    JIT library preparation", jit_);
+            printStat("                      total", total_);
 
             patternDection_.clear();
             graphGen_.clear();
             srcCodeGen_.clear();
             srcCodeComp_.clear();
             dynLibComp_.clear();
+            jit_.clear();
             total_.clear();
+        }
+
+        static void printStat(const std::string& title, const std::vector<double>& times) {
+            std::cout << title << ": ";
+            printStat(times);
+            std::cout << std::endl;
+        }
+
+        static void printStat(const std::vector<double>& times) {
+            assert(!times.empty());
+            std::vector<double> sorted = times;
+            std::sort(sorted.begin(), sorted.end());
+
+            size_t middle1 = sorted.size() / 2;
+            double q25, median, q75;
+            if (sorted.size() % 2 == 1) {
+                median = sorted[middle1];
+                if (sorted.size() <= 3) {
+                    q25 = sorted.front();
+                    q75 = sorted.back();
+                } else {
+                    size_t s = middle1 / 2;
+                    q25 = (sorted[s] + sorted[s - 1]) / 2;
+                    q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
+                }
+            } else {
+                if (sorted.size() <= 2) {
+                    q25 = sorted.front();
+                    q75 = sorted.back();
+                } else {
+                    median = (sorted[middle1] + sorted[middle1 - 1]) / 2;
+                    size_t s = (middle1 - 1) / 2;
+                    q25 = (sorted[s] + sorted[s - 1]) / 2;
+                    q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
+                }
+            }
+
+            double min = sorted.front();
+            double max = sorted.back();
+
+            std::cout << std::setw(12) << mean(times) << " +- " << std::setw(12) << stdDev(times)
+                    << "      "
+                    << std::setw(12) << min << "|--["
+                    << std::setw(12) << q25 << ", "
+                    << std::setw(12) << median << ", "
+                    << std::setw(12) << q75 << "]--|"
+                    << std::setw(12) << max;
         }
 
         inline void measureSpeedCppAD(size_t repeat,
@@ -292,8 +392,8 @@ namespace CppAD {
                 fun->optimize();
                 dt2[i] = system::currentTime() - t0;
             }
-            std::cout << "model tape: " << mean(dt1) << " +- " << stdDev(dt1) << std::endl;
-            std::cout << "optimize tape: " << mean(dt2) << " +- " << stdDev(dt2) << std::endl;
+            printStat("model tape", dt1);
+            printStat("optimize tape", dt2);
 
             /**
              * execution
@@ -343,6 +443,92 @@ namespace CppAD {
             return relatedDepCandidates;
         }
 
+        inline std::string createLibBaseName(JacobianADMode jacMode,
+                                             bool jacobian = true,
+                                             bool hessian = true,
+                                             bool forReverseOne = false,
+                                             bool reverseTwo = false) const {
+            std::string libBaseName = libName_;
+            if (jacobian) {
+                if (!forReverseOne) libBaseName += "d";
+                if (jacMode == FORWARD) libBaseName += "F";
+                else if (jacMode == REVERSE) libBaseName += "R";
+            }
+            if (hessian && reverseTwo)
+                libBaseName += "rev2";
+            return libBaseName;
+        }
+
+        inline void createSource(const std::string& libBaseName,
+                                 ADFun<CGD>& fun,
+                                 const std::vector<std::set<size_t> >& relatedDepCandidates,
+                                 const std::vector<Base>& xTypical,
+                                 JacobianADMode jacMode,
+                                 bool jacobian = true,
+                                 bool hessian = true,
+                                 bool forReverseOne = false,
+                                 bool reverseTwo = false) {
+            bool withLoops = !relatedDepCandidates.empty();
+
+            assert(fun.Domain() == xTypical.size());
+
+            /**
+             * Create the source code
+             */
+            modelSourceGen_.reset(new ModelCSourceGen<double>(fun, libBaseName + (withLoops ? "Loops" : "NoLoops")));
+            modelSourceGen_->setCreateForwardZero(true);
+            modelSourceGen_->setJacobianADMode(jacMode);
+            modelSourceGen_->setCreateSparseJacobian(jacobian);
+            modelSourceGen_->setCreateSparseHessian(hessian);
+            modelSourceGen_->setCreateForwardOne(forReverseOne && jacMode == FORWARD);
+            modelSourceGen_->setCreateReverseOne(forReverseOne && jacMode == REVERSE);
+            modelSourceGen_->setCreateReverseTwo(reverseTwo);
+            modelSourceGen_->setRelatedDependents(relatedDepCandidates);
+            modelSourceGen_->setTypicalIndependentValues(xTypical);
+
+            if (!customJacSparsity_.empty())
+                modelSourceGen_->setCustomSparseJacobianElements(customJacSparsity_);
+
+            if (!customHessSparsity_.empty())
+                modelSourceGen_->setCustomSparseHessianElements(customHessSparsity_);
+
+            libSourceGen_.reset(new ModelLibraryCSourceGen<double>(*modelSourceGen_.get()));
+            libSourceGen_->setVerbose(this->verbose_);
+            libSourceGen_->addListener(listener_);
+
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(*libSourceGen_.get(), "sources_" + libBaseName);
+
+            if (!relatedDepCandidates.empty())
+                patternDection_.push_back(listener_.patternDection);
+            graphGen_.push_back(listener_.graphGen);
+            srcCodeGen_.push_back(listener_.srcCodeGen);
+        }
+
+        inline void createDynamicLib(const std::string& libBaseName,
+                                     const std::vector<Base>& xTypical,
+                                     bool loadLib,
+                                     bool withLoops) {
+            /**
+             * Create the dynamic library
+             * (compile source code)
+             */
+            DynamicModelLibraryProcessor<double> p(*libSourceGen_.get(), std::string("modelLib") + (withLoops ? "Loops" : "NoLoops"));
+            GccCompiler<double> compiler;
+            if (!compileFlags_.empty())
+                compiler.setCompileFlags(compileFlags_);
+            dynamicLib_.reset(p.createDynamicLibrary(compiler, loadLib));
+            if (loadLib) {
+                model_.reset(dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")));
+                assert(model_.get() != NULL);
+                for (size_t i = 0; i < atoms_.size(); i++)
+                    model_->addAtomicFunction(*atoms_[i]);
+            }
+
+            srcCodeComp_.push_back(listener_.srcCodeComp);
+            dynLibComp_.push_back(listener_.dynLibComp);
+            total_.push_back(listener_.total);
+        }
+
         inline void createDynamicLib(ADFun<CGD>& fun,
                                      const std::vector<std::set<size_t> >& relatedDepCandidates,
                                      const std::vector<Base>& xTypical,
@@ -352,66 +538,31 @@ namespace CppAD {
                                      bool hessian = true,
                                      bool forReverseOne = false,
                                      bool reverseTwo = false) {
+            listener_.reset();
 
-            std::string libBaseName = libName_;
-            if (jacobian) {
-                if (!forReverseOne) libBaseName += "d";
-                if (jacMode == FORWARD) libBaseName += "F";
-                else if (jacMode == REVERSE) libBaseName += "R";
-            }
-            if (hessian && reverseTwo)
-                libBaseName += "rev2";
+            std::string libBaseName = createLibBaseName(jacMode, forReverseOne, reverseTwo);
+            createSource(libBaseName, fun, relatedDepCandidates, xTypical, jacMode, jacobian, hessian, forReverseOne, reverseTwo);
 
             bool withLoops = !relatedDepCandidates.empty();
+            createDynamicLib(libBaseName, xTypical, loadLib, withLoops);
+        }
 
-            assert(fun.Domain() == xTypical.size());
+        inline void createJitModelLib(const std::string& libBaseName,
+                                      const std::vector<Base>& xTypical,
+                                      bool withLoops) {
+            listener_.reset();
+
             /**
-             * Create the dynamic library
-             * (generate and compile source code)
+             * Prepare JITed library
              */
-            CLangCompileModelHelper<double> compHelp(fun, libBaseName + (withLoops ? "Loops" : "NoLoops"));
-            compHelp.setCreateForwardZero(true);
-            compHelp.setJacobianADMode(jacMode);
-            compHelp.setCreateSparseJacobian(jacobian);
-            compHelp.setCreateSparseHessian(hessian);
-            compHelp.setCreateForwardOne(forReverseOne && jacMode == FORWARD);
-            compHelp.setCreateReverseOne(forReverseOne && jacMode == REVERSE);
-            compHelp.setCreateReverseTwo(reverseTwo);
-            compHelp.setRelatedDependents(relatedDepCandidates);
-            compHelp.setTypicalIndependentValues(xTypical);
+            llvmLib_.reset(LlvmModelLibraryProcessor<Base>::create(*libSourceGen_.get()));
+            model_.reset(llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"))); //must request model
+            assert(model_.get() != NULL);
+            for (size_t i = 0; i < atoms_.size(); i++)
+                model_->addAtomicFunction(*atoms_[i]);
 
-            if (!customJacSparsity_.empty())
-                compHelp.setCustomSparseJacobianElements(customJacSparsity_);
-
-            if (!customHessSparsity_.empty())
-                compHelp.setCustomSparseHessianElements(customHessSparsity_);
-
-            GccCompiler<double> compiler;
-            compiler.setSourcesFolder("sources_" + libBaseName);
-
-            JobSpeedListener listener;
-
-            CLangCompileDynamicHelper<double> compDynHelp(compHelp);
-            compDynHelp.setVerbose(this->verbose_);
-            compDynHelp.addListener(listener);
-            compDynHelp.setLibraryName(std::string("modelLib") + (withLoops ? "Loops" : "NoLoops"));
-
-            dynamicLib_.reset(compDynHelp.createDynamicLibrary(compiler, loadLib));
-            if (loadLib) {
-                model_.reset(dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")));
-                assert(model_.get() != NULL);
-                for (size_t i = 0; i < atoms_.size(); i++)
-                    model_->addAtomicFunction(*atoms_[i]);
-            }
-
-            if (!relatedDepCandidates.empty())
-                patternDection_.push_back(listener.patternDection);
-            graphGen_.push_back(listener.graphGen);
-            srcCodeGen_.push_back(listener.srcCodeGen);
-            srcCodeComp_.push_back(listener.srcCodeComp);
-            dynLibComp_.push_back(listener.dynLibComp);
-            total_.push_back(listener.total);
-
+            jit_.push_back(listener_.jit);
+            total_.push_back(listener_.total);
         }
 
         inline void executionSpeedCppADCG(const std::vector<double>& x,
@@ -429,7 +580,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "zero order: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("zero order", dt);
             }
 
             // Jacobian
@@ -444,7 +595,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "jacobian: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("  jacobian", dt);
             }
 
             // Hessian
@@ -460,7 +611,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "hessian: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("   hessian", dt);
             }
 
         }
@@ -480,7 +631,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "zero order: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("       zero order", dt);
             }
 
             std::vector<double> dt(nTimes_);
@@ -493,7 +644,7 @@ namespace CppAD {
                     sparsity = CppAD::extra::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
                     dt[i] = system::currentTime() - t0;
                 }
-                std::cout << "jacobian sparsity: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("jacobian sparsity", dt);
 
                 std::vector<size_t> rows, cols;
                 CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
@@ -508,7 +659,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "jacobian: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("         jacobian", dt);
             }
 
             // Hessian
@@ -519,7 +670,7 @@ namespace CppAD {
                     sparsity = CppAD::extra::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
                     dt[i] = system::currentTime() - t0;
                 }
-                std::cout << "hessian sparsity: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat(" hessian sparsity", dt);
 
                 std::vector<size_t> rows, cols;
                 CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
@@ -536,7 +687,8 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                std::cout << "hessian: " << mean(dt) << " +- " << stdDev(dt) << std::endl;
+                printStat("          hessian", dt);
+
             }
         }
 

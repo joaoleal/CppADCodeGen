@@ -120,14 +120,20 @@ namespace CppAD {
     class CLangCustomVariableNameGenerator;
 
     /***************************************************************************
+     * Models
+     **************************************************************************/
+    template<class Base>
+    class GenericModel;
+
+    template<class Base>
+    class ModelLibraryProcessor;
+
+    /***************************************************************************
      * Dynamic model compilation
      **************************************************************************/
 
     template<class Base>
-    class CLangCompiler;
-
-    template<class Base>
-    class DynamicLibModel;
+    class CCompiler;
 
     template<class Base>
     class DynamicLib;
@@ -136,10 +142,10 @@ namespace CppAD {
     class CGAtomicLibModel;
 
     template<class Base>
-    class CLangCompileModelHelper;
+    class ModelCSourceGen;
 
     template<class Base>
-    class CLangCompileDynamicHelper;
+    class ModelLibraryCSourceGen;
 
 #ifdef __linux__
     template<class Base>
@@ -173,7 +179,7 @@ namespace CppAD {
 
     template<class Key, class Value>
     class SmartMapValuePointer;
-    
+
     template<class Base>
     inline void print(const Base& v);
 

@@ -515,7 +515,6 @@ namespace CppAD {
 
             bool compatible = true;
 
-            typedef pair<EquationPattern<Base>*, EquationPattern<Base>*> EqPairType;
             /**
              * Must order equation pairs property according to the highest 
              * number of shared operations

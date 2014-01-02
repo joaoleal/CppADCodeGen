@@ -78,7 +78,7 @@ public:
         modelCppAD_.createAtomicLib();
         modelCppADCG_.createAtomicLib();
 
-        CGAtomicLibModel<double>& atom = modelCppAD_.getDoubleAtomic();
+        CGAtomicGenericModel<double>& atom = modelCppAD_.getDoubleAtomic();
         std::vector<atomic_base<Base>*> atoms(1);
         atoms[0] = &atom;
         setAtomics(atoms);

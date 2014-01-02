@@ -151,6 +151,7 @@ FUNCTION(add_cppadcg_test source_file)
                      --quiet
                      --error-exitcode=1
                      --log-file=${CMAKE_CURRENT_BINARY_DIR}/valgrind.log.${test_target_name}
+                     --num-callers=16
                      ./${test_target_name}
              COMMENT "Running valgrind on test \"${test_target_name}\"")
   ENDIF()

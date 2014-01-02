@@ -72,8 +72,8 @@
 
 // ---------------------------------------------------------------------------
 // system dependent files
-#include <cppadcg/dynamic_lib/cg_system.hpp>
-#include <cppadcg/dynamic_lib/linux/cg_linux_system.hpp>
+#include <cppadcg/model/cg_system.hpp>
+#include <cppadcg/model/dynamic_lib/linux/cg_linux_system.hpp>
 
 // ---------------------------------------------------------------------------
 // core files
@@ -127,7 +127,7 @@
 #include <cppadcg/cg_abstract_atomic_fun.hpp>
 #include <cppadcg/cg_atomic_fun.hpp>
 #include <cppadcg/cg_atomic_fun_bridge.hpp>
-#include <cppadcg/dynamic_lib/cg_atomic_lib_model.hpp>
+#include <cppadcg/model/cg_atomic_generic_model.hpp>
 
 // ---------------------------------------------------------------------------
 // loop/pattern detection
@@ -158,41 +158,53 @@
 #include <cppadcg/c/cg_c_lang_default_reverse2_var_name_gen.hpp>
 #include <cppadcg/c/cg_c_lang_custom_var_name_gen.hpp>
 
+//
+#include <cppadcg/model/cg_model_library_processor.hpp>
+#include <cppadcg/model/cg_model_library.hpp>
+#include <cppadcg/model/cg_generic_model.hpp>
+#include <cppadcg/model/cg_functor_generic_model.hpp>
+#include <cppadcg/model/cg_saved_files_model_library_processor.hpp>
+
 // automated static library creation
-#include <cppadcg/dynamic_lib/cg_archiver.hpp>
-#include <cppadcg/dynamic_lib/cg_ar_archiver.hpp>
+#include <cppadcg/model/dynamic_lib/cg_archiver.hpp>
+#include <cppadcg/model/dynamic_lib/cg_ar_archiver.hpp>
+
+// compiler
+#include <cppadcg/model/dynamic_lib/cg_c_compiler.hpp>
+#include <cppadcg/model/dynamic_lib/cg_gcc_compiler.hpp>
+
+// model source code generation helpers
+#include <cppadcg/model/cg_model_c_source_gen.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_impl.hpp>
+#include <cppadcg/model/cg_model_library_c_source_gen.hpp>
+#include <cppadcg/model/cg_model_library_c_source_gen_impl.hpp>
+
+#include <cppadcg/model/cg_model_c_source_gen_for0.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_for1.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_rev1.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_rev2.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_jac.hpp>
+#include <cppadcg/model/cg_model_c_source_gen_hes.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_for0.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_for1.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_jac.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_jac_fr1.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_hess.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_rev1.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_rev2.hpp>
+#include <cppadcg/model/patterns/cg_model_c_source_gen_loops_hess_r2.hpp>
+#include <cppadcg/model/patterns/cg_hessian_with_loops_info.hpp>
 
 // automated dynamic library creation
-#include <cppadcg/dynamic_lib/cg_dynamiclib.hpp>
-#include <cppadcg/dynamic_lib/cg_dynamiclib_model.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compiler.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_impl.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_for0.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_for1.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_rev1.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_rev2.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_jac.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_model_helper_hes.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_for0.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_for1.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_jac.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_jac_fr1.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_hess.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_rev1.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_rev2.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_c_lang_compile_model_helper_loops_hess_r2.hpp>
-#include <cppadcg/dynamic_lib/patterns/cg_hessian_with_loops_info.hpp>
-#include <cppadcg/dynamic_lib/cg_c_lang_compile_dynamic_helper_impl.hpp>
-#include <cppadcg/dynamic_lib/cg_gcc_compiler.hpp>
+#include <cppadcg/model/dynamic_lib/cg_dynamiclib.hpp>
+#include <cppadcg/model/dynamic_lib/cg_dynamic_library_processor.hpp>
 
 // ---------------------------------------------------------------------------
 // automated dynamic library creation for Linux
-#include <cppadcg/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>
-#include <cppadcg/dynamic_lib/linux/cg_linux_dynamiclib.hpp>
-#include <cppadcg/dynamic_lib/linux/cg_linux_c_lang_compile_dynamic_helper.hpp>
+#include <cppadcg/model/dynamic_lib/linux/cg_linux_dynamiclib_model.hpp>
+#include <cppadcg/model/dynamic_lib/linux/cg_linux_dynamiclib.hpp>
+#include <cppadcg/model/dynamic_lib/linux/cg_linux_dynamic_model_library_processor.hpp>
 
 // ---------------------------------------------------------------------------
 // automated DAE differential index reduction

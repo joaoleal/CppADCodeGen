@@ -46,6 +46,11 @@ int main(int argc, char **argv) {
     std::vector<Base> x = PlugFlowModel<Base>::getTypicalValues(nEles);
     std::vector<std::set<size_t> > relations = PlugFlowModel<Base>::getRelatedCandidates(nEles);
 
+    std::vector<std::string> flags;
+    //flags.push_back("-O2");
+    
     PlugFlowPatternSpeedTest speed;
+    speed.setNumberOfExecutions(50);
+    speed.setCompileFlags(flags);
     speed.measureSpeed(relations, nEles, x);
 }

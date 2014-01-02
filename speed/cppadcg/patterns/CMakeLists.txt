@@ -15,20 +15,27 @@
 #
 # ----------------------------------------------------------------------------
 
-ADD_EXECUTABLE("speed_plugflow"
-               # sources:
-               "job_speed_listener.cpp"
-               "speed_plugflow.cpp")
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
+LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
+ADD_DEFINITIONS(${LLVM_CFLAGS})
 
-IF( UNIX )
-  TARGET_LINK_LIBRARIES(speed_plugflow ${DL_LIBRARIES})
-ENDIF()
+MACRO(add_speed_test name)
+  ADD_EXECUTABLE(${name}
+                 # sources:
+                 "job_speed_listener.cpp"
+                 "${name}.cpp")
 
-ADD_EXECUTABLE("speed_collocation"
-               # sources:
-               "job_speed_listener.cpp"
-               "speed_collocation.cpp")
+  IF( UNIX )
+    TARGET_LINK_LIBRARIES(speed_plugflow ${DL_LIBRARIES})
+  ENDIF()
 
-IF( UNIX )
-  TARGET_LINK_LIBRARIES(speed_collocation ${DL_LIBRARIES})
-ENDIF()
+  TARGET_LINK_LIBRARIES(${name}
+                        ${CLANG_LIBS}
+                        ${LLVM_MODULE_LIBS}
+                        ${LLVM_LDFLAGS})
+
+ENDMACRO()
+
+add_speed_test("speed_plugflow")
+
+add_speed_test("speed_collocation")

@@ -75,6 +75,7 @@ namespace CppAD {
         static const JobType DYNAMIC_MODEL_LIBRARY;
         static const JobType STATIC_MODEL_LIBRARY;
         static const JobType ASSEMBLE_STATIC_LIBRARY;
+        static const JobType JIT_MODEL_LIBRARY;
     };
 
     template<int T>
@@ -109,6 +110,9 @@ namespace CppAD {
 
     template<int T>
     const JobType JobTypeHolder<T>::ASSEMBLE_STATIC_LIBRARY("assembling static library", "assembled static library");
+
+    template<int T>
+    const JobType JobTypeHolder<T>::JIT_MODEL_LIBRARY("preparing JIT library", "prepared JIT library");
 
     /**
      * Represents a task for which the execution time will be determined

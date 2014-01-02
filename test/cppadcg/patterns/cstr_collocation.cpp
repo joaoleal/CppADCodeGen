@@ -64,7 +64,7 @@ namespace CppAD {
         std::vector<Base> xx; // default CSTR model values
         std::vector<Base> x; // values for the collocation model
         std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
-        std::auto_ptr<DynamicLibModel<double> > atomicModel_;
+        std::auto_ptr<GenericModel<double> > atomicModel_;
         std::vector<std::string> flags_;
     public:
 

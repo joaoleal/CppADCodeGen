@@ -49,7 +49,7 @@ ELSE( CPPAD_FOUND )
   SET(CPPAD_LIBRARIES ${CPPAD_IPOPT_LIBRARY})
 
   INCLUDE(FindPackageHandleStandardArgs)
-  # handle the QUIETLY and REQUIRED arguments and set LIBIPOPT_FOUND to TRUE
+  # handle the QUIETLY and REQUIRED arguments and set CPPAD_FOUND to TRUE
   # if all listed variables are TRUE
   find_package_handle_standard_args(CPPAD  DEFAULT_MSG
                                     CPPAD_INCLUDE_DIRS)

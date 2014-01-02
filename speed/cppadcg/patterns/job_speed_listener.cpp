@@ -22,6 +22,7 @@ JobSpeedListener::JobSpeedListener() :
     srcCodeGen(0),
     srcCodeComp(0),
     dynLibComp(0),
+    jit(0),
     total(0) {
 }
 
@@ -50,6 +51,8 @@ void JobSpeedListener::jobEndended(const std::vector<Job>& job,
         dynLibComp = elapsed;
     } else if (&j.getType() == &JobTimer::DYNAMIC_MODEL_LIBRARY) {
         total = elapsed;
+    } else if (&j.getType() == &JobTimer::JIT_MODEL_LIBRARY) {
+        jit = elapsed;
     }
 
 }
