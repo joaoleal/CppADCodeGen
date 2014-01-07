@@ -45,10 +45,11 @@ add_speed_test("speed_collocation")
 # Execute benchmark for plugflow
 ################################################################################
 FOREACH(nCstr 10 20 30 40 50 60 70 80 90 100)
-   SET(outputFile "speed_plugflow_${nCstr}.txt")
-   LIST(APPEND outputFiles ${outputFile})
-   ADD_CUSTOM_COMMAND(OUTPUT ${outputFile}
-                      COMMAND speed_plugflow ${nCstr} > ${outputFile}
+   SET(outputStatFile "speed_plugflow_stat_${nCstr}.txt")
+   SET(outputDataFile "speed_plugflow_data_${nCstr}.txt")
+   LIST(APPEND outputFiles ${outputStatFile} ${outputDataFile})
+   ADD_CUSTOM_COMMAND(OUTPUT ${outputStatFile} ${outputDataFile}
+                      COMMAND speed_plugflow ${nCstr} > ${outputStatFile} 2> ${outputDataFile}
                       WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
 ENDFOREACH()
 
@@ -62,10 +63,11 @@ SET(outputFiles "")
 
 FOREACH(nCstr 10 30 50 70)
    FOREACH(nTimeInt 5 10 20 30 40 50)
-      SET(outputFile "speed_collocation_${nTimeInt}int_${nCstr}el.txt")
-      LIST(APPEND outputFiles ${outputFile})
-      ADD_CUSTOM_COMMAND(OUTPUT ${outputFile}
-                         COMMAND speed_collocation ${nTimeInt} ${nCstr} > ${outputFile}
+      SET(outputStatFile "speed_collocation_stat_${nTimeInt}int_${nCstr}el.txt")
+      SET(outputDataFile "speed_collocation_data_${nTimeInt}int_${nCstr}el.txt")
+      LIST(APPEND outputFiles ${outputStatFile} ${outputDataFile})
+      ADD_CUSTOM_COMMAND(OUTPUT ${outputStatFile} ${outputDataFile}
+                         COMMAND speed_collocation ${nTimeInt} ${nCstr} > ${outputStatFile} 2> ${outputDataFile}
                          WORKING_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}")
    ENDFOREACH()
 ENDFOREACH()

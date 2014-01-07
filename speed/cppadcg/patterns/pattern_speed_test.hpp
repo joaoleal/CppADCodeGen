@@ -146,6 +146,8 @@ namespace CppAD {
 
             std::cout << libName_ << "\n";
             std::cout << "n=" << repeat << "\n";
+            std::cerr << libName_ << "\n";
+            std::cerr << "n=" << repeat << "\n";
 
             /*******************************************************************
              * CppADCG (without Loops)
@@ -184,10 +186,12 @@ namespace CppAD {
             /*******************************************************************
              * CppADCG (without Loops)
              ******************************************************************/
-            std::cout << "\n"
+            std::string head = "\n"
                     "********************************************************************************\n"
                     "CppADCG (without Loops) GCC\n"
-                    "********************************************************************************\n" << std::endl;
+                    "********************************************************************************\n";
+            std::cout << head << std::endl;
+            std::cerr << head << std::endl;
             ModelCppADCG model(*this);
 
             std::auto_ptr<ADFun<CGD> > fun;
@@ -220,10 +224,12 @@ namespace CppAD {
                                                const std::vector<Base>& xb) {
             using namespace CppAD;
 
-            std::cout << "\n"
+            std::string head = "\n"
                     "********************************************************************************\n"
                     "CppADCG (with Loops) GCC\n"
-                    "********************************************************************************\n" << std::endl;
+                    "********************************************************************************\n";
+            std::cout << head << std::endl;
+            std::cerr << head << std::endl;
             ModelCppADCG model(*this);
 
             std::auto_ptr<ADFun<CGD> > fun;
@@ -268,10 +274,13 @@ namespace CppAD {
                                                    const std::vector<Base>& xb) {
             using namespace CppAD;
 
-            std::cout << "\n"
+            std::string head = "\n"
                     "********************************************************************************\n"
                     "CppADCG (with Loops) LLVM\n"
-                    "********************************************************************************\n" << std::endl;
+                    "********************************************************************************\n";
+            std::cout << head << std::endl;
+            std::cerr << head << std::endl;
+
             JacobianADMode jacMode = REVERSE;
             bool forReverseOne = false;
             bool reverseTwo = false;
@@ -298,18 +307,18 @@ namespace CppAD {
         inline void printCGResults() {
             // save results
             if (!patternDection_.empty())
-                printStat("             loop detection", patternDection_);
+                printStat("loop detection", patternDection_);
             if (!graphGen_.empty())
-                printStat("         (graph generation)", graphGen_);
+                printStat("(graph generation)", graphGen_);
             if (!srcCodeGen_.empty())
-                printStat("            code generation", srcCodeGen_);
+                printStat("code generation", srcCodeGen_);
             if (!srcCodeComp_.empty())
-                printStat("           code compilation", srcCodeComp_);
+                printStat("code compilation", srcCodeComp_);
             if (!dynLibComp_.empty())
                 printStat("dynamic library compilation", dynLibComp_);
             if (!jit_.empty())
-                printStat("    JIT library preparation", jit_);
-            printStat("                      total", total_);
+                printStat("JIT library preparation", jit_);
+            printStat("total", total_);
 
             patternDection_.clear();
             graphGen_.clear();
@@ -320,10 +329,16 @@ namespace CppAD {
             total_.clear();
         }
 
-        static void printStat(const std::string& title, const std::vector<double>& times) {
-            std::cout << title << ": ";
+        static void printStat(const std::string& title,
+                              const std::vector<double>& times) {
+            std::cout << std::setw(30) << title << ": ";
             printStat(times);
             std::cout << std::endl;
+
+            std::cerr << std::setw(30) << title << ": ";
+            for (size_t i = 0; i < times.size(); i++)
+                std::cerr << std::setw(12) << times[i] << " ";
+            std::cerr << std::endl;
         }
 
         static void printStat(const std::vector<double>& times) {
@@ -369,10 +384,13 @@ namespace CppAD {
 
         inline void measureSpeedCppAD(size_t repeat,
                                       const std::vector<Base>& xb) {
-            std::cout << "\n"
+            std::string head = "\n"
                     "********************************************************************************\n"
                     "CppAD\n"
-                    "********************************************************************************\n" << std::endl;
+                    "********************************************************************************\n";
+            std::cout << head << std::endl;
+            std::cerr << head << std::endl;
+
             ModelCppAD model(*this);
 
             std::auto_ptr<ADFun<Base> > fun;
@@ -595,7 +613,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                printStat("  jacobian", dt);
+                printStat("jacobian", dt);
             }
 
             // Hessian
@@ -611,7 +629,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                printStat("   hessian", dt);
+                printStat("hessian", dt);
             }
 
         }
@@ -631,7 +649,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                printStat("       zero order", dt);
+                printStat("zero order", dt);
             }
 
             std::vector<double> dt(nTimes_);
@@ -659,7 +677,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                printStat("         jacobian", dt);
+                printStat("jacobian", dt);
             }
 
             // Hessian
@@ -670,7 +688,7 @@ namespace CppAD {
                     sparsity = CppAD::extra::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
                     dt[i] = system::currentTime() - t0;
                 }
-                printStat(" hessian sparsity", dt);
+                printStat("hessian sparsity", dt);
 
                 std::vector<size_t> rows, cols;
                 CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
@@ -687,7 +705,7 @@ namespace CppAD {
                     dt[i] = system::currentTime() - t0;
                 }
                 // save result
-                printStat("          hessian", dt);
+                printStat("hessian", dt);
 
             }
         }
