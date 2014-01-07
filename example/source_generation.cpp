@@ -36,16 +36,16 @@ int main(void) {
     ADCG a = U[0] / 1. + U[1] * U[1];
     Z[0] = a / 2;
 
-    ADFun<CGD> fun(U, Z);
+    ADFun<CGD> fun(U, Z); // the model tape
 
-    // independent variable vector, indices, values, and declaration
+    // independent variable vector values
     CppAD::vector<double> u(2);
     u[0] = 2.;
     u[1] = 3.;
 
     /**
      * start the special steps for source code generation
-     * for a jacobian
+     * for a Jacobian
      */
     CodeHandler<double> handler;
 
