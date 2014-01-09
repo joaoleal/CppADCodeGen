@@ -29,13 +29,19 @@ namespace CppAD {
         const Base CpB; // heat capacity of B
         const Base CpC; // heat capacity of C
         const Base CpW; // heat capacity of water
+        const Base Cpcool; // heat capacity of the coolant
         const Base rho; // water specific mass
+        const Base rhoCool; // coolant specific mass
         const Base Mw; // molar mass of water
         const Base Ma; // molar mass of A
         const Base Mb; // molar mass of B
         const Base Mc; // molar mass of C
-        const Base r; // inner radius;
+        const Base Mcool; // molar mass of Coolant
+        const Base r0; // inner tube inner radius;
+        const Base r1; // inner tube outer radius;
+        const Base r2; // outer tube inner radius;
         const Base L; // cell length
+        const Base U;
     public:
 
         PlugFlowModel() :
@@ -46,94 +52,124 @@ namespace CppAD {
             CpB(1000.),
             CpC(2000.),
             CpW(4189.68014953824),
+            Cpcool(4189.68014953824),
             rho(1001.91585067007),
+            rhoCool(1001.91585067007),
             Mw(0.0180152833),
             Ma(0.05),
             Mb(0.07),
             Mc(0.12),
-            r(0.03), // inner radius;
-            L(5. / 20.) {
+            Mcool(0.12),
+            r0(0.03),
+            r1(0.033),
+            r2(0.045),
+            L(5. / 20.),
+            U(1. / (1. / 1000. + (r1 - r0) / 20. + 1 / 1000.)) {
         }
 
         static std::vector<std::set<size_t> > getRelatedCandidates(size_t nEls = 6) {
-            std::vector<std::set<size_t> > relatedDepCandidates(4);
+            std::vector<std::set<size_t> > relatedDepCandidates(5);
             for (size_t i = 0; i < nEls; i++) {
                 relatedDepCandidates[0].insert(0 * nEls + i);
                 relatedDepCandidates[1].insert(1 * nEls + i);
                 relatedDepCandidates[2].insert(2 * nEls + i);
                 relatedDepCandidates[3].insert(3 * nEls + i);
+                relatedDepCandidates[4].insert(4 * nEls + i);
             }
             return relatedDepCandidates;
         }
 
         static std::vector<double> getTypicalValues(size_t nEls = 6) {
-            size_t ns = 4;
+            size_t ns = 5;
+            size_t nm = 2;
 
-            std::vector<double> x(ns * nEls + 1 + 4);
+            std::vector<double> x(ns * nEls + nm + 5);
 
             // states
             for (size_t j = 0; j < nEls; j++) x[j] = std::sqrt(14 / 1000.) - j * 0.01; // Ca (mol/l)
-            for (size_t j = 0; j < nEls; j++) x[nEls + j] = 1.2 - j * 0.01; // Cb (mol/l)
+            for (size_t j = 0; j < nEls; j++) x[1 * nEls + j] = 1.2 - j * 0.01; // Cb (mol/l)
             for (size_t j = 0; j < nEls; j++) x[2 * nEls + j] = j * 0.01; // Cc (mol/l)
             for (size_t j = 0; j < nEls; j++) x[3 * nEls + j] = 50 + j * 0.1; // T (C)
+            for (size_t j = 0; j < nEls; j++) x[4 * nEls + j] = 10 + (nEls - j) * 0.1; // T (C)
 
             size_t nst = nEls * ns;
 
             //controls
             x[nst] = 7; // Fin (l/min)
+            x[nst + 1] = 7; // FCoolin (l/min)
 
             //parameters
-            x[nst + 1] = std::sqrt(14 / 1000.); // Ca0 (mol/l)
-            x[nst + 2] = 0.1; // Cb0 (mol/l)
-            x[nst + 3] = 0.0; // Cc0 (mol/l)
-            x[nst + 4] = 20; // T0 (C)
+            size_t p = nst + nm;
+            x[p + 0] = std::sqrt(14 / 1000.); // Ca0 (mol/l)
+            x[p + 1] = 0.1; // Cb0 (mol/l)
+            x[p + 2] = 0.0; // Cc0 (mol/l)
+            x[p + 3] = 20; // T0 (C)
+            x[p + 4] = 10; // TCool0 (C)
 
             return x;
         }
 
         std::vector<CppAD::AD<Base> > model2(const std::vector<CppAD::AD<Base> >& x, size_t nEls = 6) {
             using namespace CppAD;
+            typedef AD<Base> ADB;
 
             // dependent variable vector 
-            std::vector< AD<Base> > y(nEls * 4);
+            std::vector<ADB> y(nEls * 5);
 
-            size_t ns = 4 * nEls;
+            size_t ns = 5 * nEls;
+            size_t nm = 2;
+            size_t pars = ns + nm;
 
-            AD<Base> F = 1.66666666666667e-05 * x[ns]; // convert from l/min
-            AD<Base> V = L * 3.14159265358979 * r * r;
+            ADB F = (1e-3 / 60.) * x[ns]; // convert from l/min
+            ADB Fcool = (1e-3 / 60.) * x[ns + 1]; // convert from l/min
+            ADB Vin = L * 3.14159265358979 * r0 * r0;
+            ADB Vout = L * 3.14159265358979 * r2 * r2 - L * 3.14159265358979 * r1 * r1;
+            ADB area = L * 6.28318530717959 * r0;
+
             for (size_t j = 0; j < nEls; j++) {
 
-                AD<Base> Ca0 = 1000. * x[(j == 0) ? ns + 1 : j + -1]; // covert from mol/l
-                AD<Base> Cb0 = 1000. * x[(j == 0) ? ns + 2 : j + nEls - 1]; // covert from mol/l
-                AD<Base> Cc0 = 1000. * x[(j == 0) ? ns + 3 : j + 2 * nEls - 1]; // covert from mol/l
+                ADB Ca0 = 1000. * x[(j == 0) ? pars : j + -1]; // covert from mol/l
+                ADB Cb0 = 1000. * x[(j == 0) ? pars + 1 : j + nEls - 1]; // covert from mol/l
+                ADB Cc0 = 1000. * x[(j == 0) ? pars + 2 : j + 2 * nEls - 1]; // covert from mol/l
 
-                AD<Base> Ca1 = 1000. * x[j]; // covert from mol/l
-                AD<Base> Cb1 = 1000. * x[j + nEls]; // covert from mol/l
-                AD<Base> Cc1 = 1000. * x[j + 2 * nEls]; // covert from mol/l
+                ADB Ca1 = 1000. * x[j]; // covert from mol/l
+                ADB Cb1 = 1000. * x[j + nEls]; // covert from mol/l
+                ADB Cc1 = 1000. * x[j + 2 * nEls]; // covert from mol/l
 
-                AD<Base> Fina = Ca0 * F;
-                AD<Base> Finb = Cb0 * F;
-                AD<Base> Finc = Cc0 * F;
+                ADB Fina = Ca0 * F;
+                ADB Finb = Cb0 * F;
+                ADB Finc = Cc0 * F;
 
-                AD<Base> T0 = x[(j == 0) ? ns + 4 : j + 3 * nEls - 1] - -273.15; // convert from C
-                AD<Base> T1 = x[j + 3 * nEls] - -273.15; // convert from C
-                AD<Base> react = exp(logAk0 - Ea / (R * T1)) * Ca1 * Cb1;
+                ADB Tin = x[(j == 0) ? pars + 3 : j + 3 * nEls - 1] - -273.15; // convert from C
+                ADB T = x[j + 3 * nEls] - -273.15; // convert from C
+                ADB Tcool = x[j + 4 * nEls] - -273.15; // convert from C
+                ADB TcoolIn = x[(j == nEls - 1) ? pars + 4 : j + 4 * nEls + 1] - -273.15; // convert from C
+                ADB react = exp(logAk0 - Ea / (R * T)) * Ca1 * Cb1;
 
-                y[j] = 0.001 * (Fina - Ca1 * F - react * V) / V;
-                y[j + nEls] = 0.001 * (Finb - Cb1 * F - react * V) / V;
-                y[j + 2 * nEls] = 0.001 * (Finc - Cc1 * F + react * V) / V;
+                y[j] = 0.001 * (Fina - Ca1 * F - react * Vin) / Vin; // d CA / dt
+                y[j + nEls] = 0.001 * (Finb - Cb1 * F - react * Vin) / Vin; // d CB / dt
+                y[j + 2 * nEls] = 0.001 * (Finc - Cc1 * F + react * Vin) / Vin; // d CC / dt
 
-                AD<Base> Cw0 = (rho - (Ma * Ca0 + Mb * Cb0 + Mc * Cc0)) / Mw;
-                AD<Base> Cw1 = (rho - (Ma * Ca1 + Mb * Cb1 + Mc * Cc1)) / Mw;
-                AD<Base> CpMix = (CpA * Ma * Ca1 + CpB * Mb * Cb1 + CpC * Mc * Cc1 + CpW * Mw * Cw1) / (Ma * Ca1 + Mb * Cb1 + Mc * Cc1 + Mw * Cw1);
-                y[j + 3 * nEls] = ((Ma * Fina * CpA + Mb * Finb * CpB + Mc * Finc * CpC + Mw * Cw0 * F * CpW) * (T0 - T1) - -33488. * react * V) /
-                        (rho * CpMix);
+                ADB Cw0 = (rho - (Ma * Ca0 + Mb * Cb0 + Mc * Cc0)) / Mw;
+                ADB Cw1 = (rho - (Ma * Ca1 + Mb * Cb1 + Mc * Cc1)) / Mw;
+                ADB CpMix = (CpA * Ma * Ca1 + CpB * Mb * Cb1 + CpC * Mc * Cc1 + CpW * Mw * Cw1) / (Ma * Ca1 + Mb * Cb1 + Mc * Cc1 + Mw * Cw1);
+
+                ADB dQ = U * area * (T - Tcool);
+
+                ADB CpFin = (Ma * Fina * CpA + Mb * Finb * CpB + Mc * Finc * CpC + Mw * Cw0 * F * CpW);
+
+                y[j + 3 * nEls] = (CpFin * (Tin - T) - -33488. * react * Vin - dQ) /
+                        (rho * Vin * CpMix); // dT / dt
+
+                y[j + 4 * nEls] = (Cpcool * rhoCool * Fcool * (TcoolIn - Tcool) + dQ) /
+                        (rhoCool * Vout * Cpcool); // dTcool / dt
             }
 
             return y;
         }
 
         std::vector<CppAD::AD<Base> > model(const std::vector<CppAD::AD<Base> >& x) {
+            throw 1; // not update yet!
             using namespace CppAD;
 
             // dependent variable vector 
@@ -145,14 +181,14 @@ namespace CppAD {
             /**
              * Partial mass balance
              */
-            v[0] = 1.66666666666667e-05 * x[24];
+            v[0] = (1e-3 / 60.) * x[24];
             v[1] = 1000. * x[0];
             v[2] = 1000. * x[25] * v[0];
             v[3] = v[1] * v[0];
             v[4] = x[18] - -273.15;
             v[5] = 1000. * x[6];
             v[6] = exp(logAk0 - Ea / (R * v[4])) * v[1] * v[5];
-            v[7] = 3.14159265358979 * r * r;
+            v[7] = 3.14159265358979 * r0 * r0;
             v[8] = L * v[7];
             y[0] = 0.001 * (v[2] - v[3] + -1 * v[6] * v[8]) / v[8];
 

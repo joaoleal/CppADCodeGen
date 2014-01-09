@@ -33,9 +33,9 @@ protected:
 public:
 
     PlugFlowCollocationModel(size_t nEls) :
-        CollocationModel<T>(4 * nEls, // ns
-        1, // nm
-        4), // npar
+        CollocationModel<T>(5 * nEls, // ns
+        2, // nm
+        5), // npar
         nEls_(nEls) {
     }
 
@@ -102,7 +102,8 @@ int main(int argc, char **argv) {
     size_t nEls = PatternSpeedTest::parseProgramArguments(2, argc, argv, 10); // number of CSTR elements
     
     size_t K = 3;
+    size_t ns = 5;
     CollocationPatternSpeedTest speed(nEls);
     speed.setNumberOfExecutions(30);
-    speed.measureSpeed(K * 4 * nEls, repeat, speed.getTypicalValues(repeat));
+    speed.measureSpeed(K * ns * nEls, repeat, speed.getTypicalValues(repeat));
 }
