@@ -38,7 +38,6 @@ namespace CppAD {
          * Library level generated source files
          */
         std::map<std::string, std::string> _libSources;
-        bool _saveSourceFiles;
         /**
          * 
          */
@@ -51,19 +50,9 @@ namespace CppAD {
          * 
          * @param model A model compilation helper (must only be deleted after
          *              this object)
-         * @param saveSourceFiles Whether or not to write the generated source
-         *                        files to disk (for visualization purposes 
-         *                        only).
          */
-        ModelLibraryCSourceGen(ModelCSourceGen<Base>& model,
-                                    bool saveSourceFiles = true) :
-            _saveSourceFiles(saveSourceFiles) {
-
+        ModelLibraryCSourceGen(ModelCSourceGen<Base>& model) {
             _models[model.getName()] = &model;
-        }
-
-        inline bool isSaveSourceFiles() const {
-            return _saveSourceFiles;
         }
 
         /**

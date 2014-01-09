@@ -103,7 +103,7 @@ namespace CppAD {
             return _modelNames;
         }
 
-        virtual GenericModel<Base>* model(const std::string& modelName) {
+        virtual LlvmModel<Base>* model(const std::string& modelName) {
             typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
             if (it == _modelNames.end()) {
                 return NULL;

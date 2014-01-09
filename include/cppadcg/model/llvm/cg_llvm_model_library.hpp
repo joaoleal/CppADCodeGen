@@ -23,7 +23,7 @@ namespace CppAD {
      * @author Joao Leal
      */
     template<class Base>
-    class LlvmModelLibrary :public ModelLibrary<Base> {
+    class LlvmModelLibrary :public FunctorModelLibrary<Base> {
     public:
         
 

@@ -163,7 +163,8 @@
 #include <cppadcg/model/cg_model_library.hpp>
 #include <cppadcg/model/cg_generic_model.hpp>
 #include <cppadcg/model/cg_functor_generic_model.hpp>
-#include <cppadcg/model/cg_saved_files_model_library_processor.hpp>
+#include <cppadcg/model/cg_functor_model_library.hpp>
+#include <cppadcg/model/cg_save_files_model_library_processor.hpp>
 
 // automated static library creation
 #include <cppadcg/model/dynamic_lib/cg_archiver.hpp>

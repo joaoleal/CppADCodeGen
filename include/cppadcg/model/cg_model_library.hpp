@@ -43,28 +43,6 @@ namespace CppAD {
          */
         virtual GenericModel<Base>* model(const std::string& modelName) = 0;
 
-        /**
-         * Provides the API version used to create the dynamic library.
-         * 
-         * @return the API version
-         */
-        virtual unsigned long getAPIVersion() = 0;
-
-        /**
-         * Provides a pointer to a function in the dynamic library.
-         * 
-         * @param functionName The name of the function in the dynamic library
-         * @param required Whether or not the function symbol must exist in the
-         *                 library. If the function is required and does not
-         *                 exist then the CppAD error handler is called, if it 
-         *                 is not required and it does not exist then NULL is
-         *                 return.
-         * @return A pointer to the function symbol in the dynamic library if it
-         *         exists, NULL otherwise.
-         * @throws CGException If there is a problem loading the function symbol
-         */
-        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) = 0;
-
         inline virtual ~ModelLibrary() {
         }
 

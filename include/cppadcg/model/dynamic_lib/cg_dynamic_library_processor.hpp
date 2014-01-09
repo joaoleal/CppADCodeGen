@@ -159,7 +159,7 @@ namespace CppAD {
             try {
                 typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
                 for (it = models.begin(); it != models.end(); ++it) {
-                    const std::map<std::string, std::string>& modelSources = getSources(*it->second);
+                    const std::map<std::string, std::string>& modelSources = this->getSources(*it->second);
 
                     this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                     compiler.compileSources(modelSources, posIndepCode, this->modelLibraryHelper_);
