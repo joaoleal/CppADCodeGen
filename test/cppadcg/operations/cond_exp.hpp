@@ -25,7 +25,7 @@ CppAD::ADFun<T>* CondExp_pvvvFunc(const std::vector<CppAD::AD<T> >& X) {
     assert(X.size() == 3);
 
     // parameter value
-    AD<T> one = 1.;
+    AD<T> one = T(1.);
 
     // dependent variable vector 
     std::vector< AD<T> > Y(5);
@@ -49,7 +49,7 @@ CppAD::ADFun<T>* CondExp_vpvvFunc(const std::vector<CppAD::AD<T> >& X) {
     assert(X.size() == 3);
 
     // parameter value
-    AD<T> one = 1.;
+    AD<T> one = T(1.);
 
     // dependent variable vector 
     std::vector< AD<T> > Y(5);
@@ -73,7 +73,7 @@ CppAD::ADFun<T>* CondExp_vvpvFunc(const std::vector<CppAD::AD<T> >& X) {
     assert(X.size() == 3);
 
     // parameter value
-    AD<T> three = 3.;
+    AD<T> three = T(3.);
 
     // dependent variable vector 
     std::vector< AD<T> > Y(5);
@@ -97,7 +97,7 @@ CppAD::ADFun<T>* CondExp_vvvpFunc(const std::vector<CppAD::AD<T> >& X) {
     assert(X.size() == 3);
 
     // parameter value
-    AD<T> three = 3.;
+    AD<T> three = T(3.);
 
     // dependent variable vector 
     std::vector< AD<T> > Y(5);

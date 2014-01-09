@@ -28,8 +28,8 @@ CppAD::ADFun<T>* MulTestOneFunc(const std::vector<CppAD::AD<T> >& U) {
     size_t t = 1;
 
     // assign some parameters
-    AD<T> zero = 0.;
-    AD<T> one = 1.;
+    AD<T> zero = T(0.);
+    AD<T> one = T(1.);
 
     // dependent variable vector and indices
     std::vector< AD<T> > Z(5);
