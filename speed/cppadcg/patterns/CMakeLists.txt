@@ -44,7 +44,7 @@ add_speed_test("speed_collocation")
 ################################################################################
 # Execute benchmark for plugflow
 ################################################################################
-FOREACH(nCstr 10 20 30 40 50 60 70 80 90 100)
+FOREACH(nCstr 100 90 80 70 60 50 40 30 20 10)
    SET(outputStatFile "speed_plugflow_stat_${nCstr}.txt")
    SET(outputDataFile "speed_plugflow_data_${nCstr}.txt")
    LIST(APPEND outputFiles ${outputStatFile} ${outputDataFile})
@@ -61,8 +61,8 @@ ADD_CUSTOM_TARGET(benchmark_plugflow
 ################################################################################
 SET(outputFiles "")
 
-FOREACH(nCstr 10 30 50 70)
-   FOREACH(nTimeInt 5 10 20 30 40 50)
+FOREACH(nCstr 50 30 10)
+   FOREACH(nTimeInt 50 40 30 20 10 5)
       SET(outputStatFile "speed_collocation_stat_${nTimeInt}int_${nCstr}el.txt")
       SET(outputDataFile "speed_collocation_data_${nTimeInt}int_${nCstr}el.txt")
       LIST(APPEND outputFiles ${outputStatFile} ${outputDataFile})

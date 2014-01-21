@@ -61,9 +61,17 @@ namespace CppAD {
                 return self_.modelCppADCG(x, repeat);
             }
         };
+    public:
+        bool preparation;
+        bool zeroOrder;
+        bool sparseJacobian;
+        bool sparseHessian;
+        bool cppAD;
+        bool cppADCG;
+        bool cppADCGLoops;
+        bool cppADCGLoopsLlvm;
     protected:
         std::string libName_;
-        bool testZeroOrder_;
         bool testJacobian_;
         bool testHessian_;
         std::vector<Base> xNorm_;
@@ -73,7 +81,7 @@ namespace CppAD {
         std::auto_ptr<DynamicLib<Base> > dynamicLib_;
         std::auto_ptr<LlvmModelLibrary<Base> > llvmLib_;
         std::auto_ptr<GenericModel<Base> > model_;
-        std::vector<atomic_base<Base>*> atoms_;
+        std::vector<GenericModel<Base>*> externalModels_;
         std::vector<std::string> compileFlags_;
         std::auto_ptr<ModelCSourceGen<double> > modelSourceGen_;
         std::auto_ptr<ModelLibraryCSourceGen<double> > libSourceGen_;
@@ -92,8 +100,15 @@ namespace CppAD {
 
         inline PatternSpeedTest(const std::string& libName,
                                 bool verbose = false) :
+            preparation(true),
+            zeroOrder(true),
+            sparseJacobian(true),
+            sparseHessian(true),
+            cppAD(true),
+            cppADCG(true),
+            cppADCGLoops(true),
+            cppADCGLoopsLlvm(true),
             libName_(libName),
-            testZeroOrder_(true),
             testJacobian_(true),
             testHessian_(true),
             verbose_(verbose),
@@ -113,8 +128,8 @@ namespace CppAD {
 
         virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x, size_t repeat) = 0;
 
-        inline void setAtomics(const std::vector<atomic_base<Base>*>& atoms) {
-            atoms_ = atoms;
+        inline void setExternalModels(const std::vector<GenericModel<Base>*>& atoms) {
+            externalModels_ = atoms;
         }
 
         inline void measureSpeed(size_t m,
@@ -199,15 +214,15 @@ namespace CppAD {
             /**
              * preparation
              */
-            std::vector<double> dt(nTimes_);
-            for (size_t i = 0; i < nTimes_; i++) {
+            std::vector<double> dt(cppADCG ? (preparation ? nTimes_ : 1) : 0);
+            for (size_t i = 0; i < dt.size(); i++) {
                 // tape
                 double t0 = system::currentTime();
                 fun.reset(tapeModel(model, xb, repeat));
                 dt[i] = system::currentTime() - t0;
 
                 // create dynamic lib
-                createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == nTimes_ - 1, REVERSE, testJacobian_, testHessian_);
+                createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
             }
             printStat("model tape", dt);
             printCGResults();
@@ -216,7 +231,7 @@ namespace CppAD {
              * execution
              */
             // evaluation speed
-            executionSpeedCppADCG(xb);
+            executionSpeedCppADCG(xb, cppADCG);
         }
 
         inline void measureSpeedCppADWithLoops(const std::vector<std::set<size_t> >& relatedDepCandidates,
@@ -237,36 +252,25 @@ namespace CppAD {
             /**
              * preparation
              */
-            std::vector<double> dt(nTimes_);
-            for (size_t i = 0; i < nTimes_; i++) {
+            std::vector<double> dt(cppADCGLoops ? (preparation ? nTimes_ : 1) : 0);
+            for (size_t i = 0; i < dt.size(); i++) {
                 // tape
                 double t0 = system::currentTime();
                 fun.reset(tapeModel(model, xb, repeat));
                 dt[i] = system::currentTime() - t0;
 
                 // create dynamic lib
-                createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == nTimes_ - 1, REVERSE, testJacobian_, testHessian_);
+                createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
             }
             printStat("model tape", dt);
 
             printCGResults();
 
-
-            /*if (testJacobian_) {
-                testSourceCodeGen(fun, m, repeat, libName, xb, FORWARD, true, false, true);
-                testSourceCodeGen(fun, m, repeat, libName, xb, REVERSE, true, false);
-                testSourceCodeGen(fun, m, repeat, libName, xb, REVERSE, true, false, true);
-            }
-
-            if (testHessian_) {
-                testSourceCodeGen(fun, m, repeat, mExtra, libName, xb, FORWARD, false, true, false, true);
-            }*/
-
             /**
              * execution
              */
             // evaluation speed
-            executionSpeedCppADCG(xb);
+            executionSpeedCppADCG(xb, cppADCGLoops);
         }
 
         inline void measureSpeedCppADWithLoopsLlvm(const std::vector<std::set<size_t> >& relatedDepCandidates,
@@ -291,8 +295,20 @@ namespace CppAD {
             /**
              * preparation
              */
-            for (size_t i = 0; i < nTimes_; i++) {
-                // create dynamic lib
+            //create source code
+            if (modelSourceGen_.get() == NULL) {
+                listener_.reset();
+                // tape
+                ModelCppADCG model(*this);
+                std::auto_ptr<ADFun<CGD> > fun;
+                fun.reset(tapeModel(model, xb, repeat));
+
+                createSource(libBaseName, *fun.get(), relatedDepCandidates, xb, jacMode, testJacobian_, testHessian_, forReverseOne, reverseTwo);
+            }
+
+            size_t nTimes = cppADCGLoopsLlvm ? (preparation ? nTimes_ : 1) : 0;
+            for (size_t i = 0; i < nTimes; i++) {
+                // prepare LLVM module
                 createJitModelLib(libBaseName, xb, withLoops);
             }
             printCGResults();
@@ -301,7 +317,7 @@ namespace CppAD {
              * execution
              */
             // evaluation speed
-            executionSpeedCppADCG(xb);
+            executionSpeedCppADCG(xb, cppADCGLoopsLlvm);
         }
 
         inline void printCGResults() {
@@ -342,36 +358,41 @@ namespace CppAD {
         }
 
         static void printStat(const std::vector<double>& times) {
-            assert(!times.empty());
-            std::vector<double> sorted = times;
-            std::sort(sorted.begin(), sorted.end());
+            double min, q25, median, q75, max;
+            if (times.empty()) {
+                min = q25 = median = q75 = max = std::numeric_limits<double>::quiet_NaN();
 
-            size_t middle1 = sorted.size() / 2;
-            double q25, median, q75;
-            if (sorted.size() % 2 == 1) {
-                median = sorted[middle1];
-                if (sorted.size() <= 3) {
-                    q25 = sorted.front();
-                    q75 = sorted.back();
-                } else {
-                    size_t s = middle1 / 2;
-                    q25 = (sorted[s] + sorted[s - 1]) / 2;
-                    q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
-                }
             } else {
-                median = (sorted[middle1] + sorted[middle1 - 1]) / 2;
-                if (sorted.size() <= 2) {
-                    q25 = sorted.front();
-                    q75 = sorted.back();
-                } else {
-                    size_t s = (middle1 - 1) / 2;
-                    q25 = (sorted[s] + sorted[s - 1]) / 2;
-                    q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
-                }
-            }
 
-            double min = sorted.front();
-            double max = sorted.back();
+                std::vector<double> sorted = times;
+                std::sort(sorted.begin(), sorted.end());
+
+                size_t middle1 = sorted.size() / 2;
+                if (sorted.size() % 2 == 1) {
+                    median = sorted[middle1];
+                    if (sorted.size() <= 3) {
+                        q25 = sorted.front();
+                        q75 = sorted.back();
+                    } else {
+                        size_t s = middle1 / 2;
+                        q25 = (sorted[s] + sorted[s - 1]) / 2;
+                        q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
+                    }
+                } else {
+                    median = (sorted[middle1] + sorted[middle1 - 1]) / 2;
+                    if (sorted.size() <= 2) {
+                        q25 = sorted.front();
+                        q75 = sorted.back();
+                    } else {
+                        size_t s = (middle1 - 1) / 2;
+                        q25 = (sorted[s] + sorted[s - 1]) / 2;
+                        q75 = (sorted[middle1 + s] + sorted[middle1 + s + 1]) / 2;
+                    }
+                }
+
+                min = sorted.front();
+                max = sorted.back();
+            }
 
             std::cout << std::setw(12) << mean(times) << " +- " << std::setw(12) << stdDev(times)
                     << "      "
@@ -398,8 +419,9 @@ namespace CppAD {
             /**
              * preparation
              */
-            std::vector<double> dt1(nTimes_), dt2(nTimes_);
-            for (size_t i = 0; i < nTimes_; i++) {
+            size_t nTimes = cppAD && preparation ? nTimes_ : 1;
+            std::vector<double> dt1(nTimes), dt2(nTimes);
+            for (size_t i = 0; i < nTimes; i++) {
                 // tape
                 double t0 = system::currentTime();
                 fun.reset(tapeModel(model, xb, repeat));
@@ -538,13 +560,13 @@ namespace CppAD {
             if (loadLib) {
                 model_.reset(dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")));
                 assert(model_.get() != NULL);
-                for (size_t i = 0; i < atoms_.size(); i++)
-                    model_->addAtomicFunction(*atoms_[i]);
+                for (size_t i = 0; i < externalModels_.size(); i++)
+                    model_->addExternalModel(*externalModels_[i]);
             }
 
             srcCodeComp_.push_back(listener_.srcCodeComp);
             dynLibComp_.push_back(listener_.dynLibComp);
-            total_.push_back(listener_.total);
+            total_.push_back(listener_.totalLibrary);
         }
 
         inline void createDynamicLib(ADFun<CGD>& fun,
@@ -576,26 +598,30 @@ namespace CppAD {
             llvmLib_.reset(LlvmModelLibraryProcessor<Base>::create(*libSourceGen_.get()));
             model_.reset(llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"))); //must request model
             assert(model_.get() != NULL);
-            for (size_t i = 0; i < atoms_.size(); i++)
-                model_->addAtomicFunction(*atoms_[i]);
+            for (size_t i = 0; i < externalModels_.size(); i++)
+                model_->addExternalModel(*externalModels_[i]);
 
             jit_.push_back(listener_.jit);
-            total_.push_back(listener_.total);
+            total_.push_back(listener_.totalLibrary);
         }
 
         inline void executionSpeedCppADCG(const std::vector<double>& x,
+                                          bool eval,
                                           bool zero = true,
                                           bool jacobian = true,
                                           bool hessian = true) {
 
             // model (zero-order)
             if (zero) {
-                std::vector<double> y(model_->Range());
-                std::vector<double> dt(nTimes_);
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    model_->ForwardZero(x, y);
-                    dt[i] = system::currentTime() - t0;
+                std::vector<double> dt;
+                if (eval && zeroOrder) {
+                    dt.resize(nTimes_);
+                    std::vector<double> y(model_->Range());
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        model_->ForwardZero(x, y);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("zero order", dt);
@@ -603,14 +629,17 @@ namespace CppAD {
 
             // Jacobian
             if (jacobian) {
-                std::vector<double> jac;
-                std::vector<size_t> rows, cols;
+                std::vector<double> dt;
+                if (eval && sparseJacobian) {
+                    dt.resize(nTimes_);
+                    std::vector<double> jac;
+                    std::vector<size_t> rows, cols;
 
-                std::vector<double> dt(nTimes_);
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    model_->SparseJacobian(x, jac, rows, cols);
-                    dt[i] = system::currentTime() - t0;
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        model_->SparseJacobian(x, jac, rows, cols);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("jacobian", dt);
@@ -618,15 +647,18 @@ namespace CppAD {
 
             // Hessian
             if (hessian) {
-                std::vector<double> w(model_->Range(), 1.0);
-                std::vector<double> hess;
-                std::vector<size_t> rows, cols;
+                std::vector<double> dt;
+                if (eval && sparseHessian) {
+                    dt.resize(nTimes_);
+                    std::vector<double> w(model_->Range(), 1.0);
+                    std::vector<double> hess;
+                    std::vector<size_t> rows, cols;
 
-                std::vector<double> dt(nTimes_);
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    model_->SparseHessian(x, w, hess, rows, cols);
-                    dt[i] = system::currentTime() - t0;
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        model_->SparseHessian(x, w, hess, rows, cols);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("hessian", dt);
@@ -641,40 +673,46 @@ namespace CppAD {
                                         bool hessian = true) {
             // model (zero-order)
             if (zero) {
-                std::vector<double> y(fun.Range());
-                std::vector<double> dt(nTimes_);
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    y = fun.Forward(0, x);
-                    dt[i] = system::currentTime() - t0;
+                std::vector<double> dt;
+                if (cppAD && zeroOrder) {
+                    std::vector<double> y(fun.Range());
+                    dt.resize(nTimes_);
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        y = fun.Forward(0, x);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("zero order", dt);
             }
 
-            std::vector<double> dt(nTimes_);
-
             // Jacobian
             if (jacobian) {
+                size_t nTimes = cppAD ? (preparation ? nTimes_ : sparseJacobian ? 1 : 0) : 0;
+                std::vector<double> dtp(nTimes);
+
                 std::vector<std::set<size_t> > sparsity;
-                for (size_t i = 0; i < nTimes_; i++) {
+                for (size_t i = 0; i < dtp.size(); i++) {
                     double t0 = system::currentTime();
                     sparsity = CppAD::extra::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                    dt[i] = system::currentTime() - t0;
+                    dtp[i] = system::currentTime() - t0;
                 }
-                printStat("jacobian sparsity", dt);
+                printStat("jacobian sparsity", dtp);
 
-                std::vector<size_t> rows, cols;
-                CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
-                std::vector<double> jac(rows.size());
+                std::vector<double> dt;
+                if (cppAD && sparseJacobian) {
+                    std::vector<size_t> rows, cols;
+                    CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
+                    std::vector<double> jac(rows.size());
 
-                sparse_jacobian_work work;
-
-
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    fun.SparseJacobianReverse(x, sparsity, rows, cols, jac, work);
-                    dt[i] = system::currentTime() - t0;
+                    sparse_jacobian_work work;
+                    dt.resize(nTimes_);
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        fun.SparseJacobianReverse(x, sparsity, rows, cols, jac, work);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("jacobian", dt);
@@ -682,27 +720,33 @@ namespace CppAD {
 
             // Hessian
             if (hessian) {
+                size_t nTimes = cppAD ? (preparation ? nTimes_ : sparseHessian ? 1 : 0) : 0;
+                std::vector<double> dtp(nTimes);
+
                 std::vector<std::set<size_t> > sparsity;
-                for (size_t i = 0; i < nTimes_; i++) {
+                for (size_t i = 0; i < dtp.size(); i++) {
                     double t0 = system::currentTime();
                     sparsity = CppAD::extra::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                    dt[i] = system::currentTime() - t0;
+                    dtp[i] = system::currentTime() - t0;
                 }
-                printStat("hessian sparsity", dt);
+                printStat("hessian sparsity", dtp);
 
-                std::vector<size_t> rows, cols;
-                CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
-                std::vector<double> hess(rows.size());
+                std::vector<double> dt;
+                if (cppAD && sparseHessian) {
+                    std::vector<size_t> rows, cols;
+                    CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
+                    std::vector<double> hess(rows.size());
 
-                std::vector<double> w(model_->Range(), 1.0);
+                    std::vector<double> w(model_->Range(), 1.0);
 
-                sparse_hessian_work work;
+                    sparse_hessian_work work;
 
-                std::vector<double> dt(nTimes_);
-                for (size_t i = 0; i < nTimes_; i++) {
-                    double t0 = system::currentTime();
-                    fun.SparseHessian(x, w, sparsity, rows, cols, hess, work);
-                    dt[i] = system::currentTime() - t0;
+                    dt.resize(nTimes_);
+                    for (size_t i = 0; i < nTimes_; i++) {
+                        double t0 = system::currentTime();
+                        fun.SparseHessian(x, w, sparsity, rows, cols, hess, work);
+                        dt[i] = system::currentTime() - t0;
+                    }
                 }
                 // save result
                 printStat("hessian", dt);

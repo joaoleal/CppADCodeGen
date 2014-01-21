@@ -44,7 +44,7 @@ protected:
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
                                 std::vector<AD<CG<double> > >& y) {
         PlugFlowModel<CG<double> > m;
-        y = m.model2(x, nEls_);
+        y = m.model(x, nEls_);
     }
 
     virtual std::string getAtomicLibName() {
@@ -78,10 +78,10 @@ public:
         modelCppAD_.createAtomicLib();
         modelCppADCG_.createAtomicLib();
 
-        CGAtomicGenericModel<double>& atom = modelCppAD_.getDoubleAtomic();
-        std::vector<atomic_base<Base>*> atoms(1);
-        atoms[0] = &atom;
-        setAtomics(atoms);
+        GenericModel<Base>* atom = modelCppAD_.getGenericModel();
+        std::vector<GenericModel<Base>*> atoms(1);
+        atoms[0] = atom;
+        setExternalModels(atoms);
     }
 
     inline std::vector<double> getTypicalValues(size_t repeat) {
@@ -100,10 +100,23 @@ public:
 int main(int argc, char **argv) {
     size_t repeat = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10); // time intervals
     size_t nEls = PatternSpeedTest::parseProgramArguments(2, argc, argv, 10); // number of CSTR elements
-    
+
     size_t K = 3;
     size_t ns = 5;
     CollocationPatternSpeedTest speed(nEls);
     speed.setNumberOfExecutions(30);
+#if 0
+    speed.preparation = false;
+    speed.zeroOrder = false;
+    speed.sparseJacobian = false;
+    speed.cppADCG = false;
+    speed.cppADCGLoops = true;
+    speed.cppADCGLoopsLlvm = false;
+    std::vector<std::string> compileFlags(3);
+    compileFlags[0] = "-O2";
+    compileFlags[1] = "-g";
+    compileFlags[2] = "-ggdb";
+    speed.setCompileFlags(compileFlags);
+#endif
     speed.measureSpeed(K * ns * nEls, repeat, speed.getTypicalValues(repeat));
 }

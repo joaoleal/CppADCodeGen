@@ -25,7 +25,7 @@ namespace CppAD {
         double patternDection;
         // pattern detection
         double graphGen;
-        // source code generation
+        // total time used for source code generation
         double srcCodeGen;
         // source code compilation
         double srcCodeComp;
@@ -33,8 +33,8 @@ namespace CppAD {
         double dynLibComp;
         // JIT preparation time
         double jit;
-        // total time
-        double total;
+        // total time used to compile the sources and generate the library
+        double totalLibrary;
     public:
         JobSpeedListener();
 
@@ -45,7 +45,7 @@ namespace CppAD {
             srcCodeComp = 0;
             dynLibComp = 0;
             jit = 0;
-            total = 0;
+            totalLibrary = 0;
         }
 
         virtual void jobStarted(const std::vector<Job>& job);

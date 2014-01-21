@@ -31,12 +31,12 @@ public:
 
     virtual std::vector<AD<CGD> > modelCppADCG(const std::vector<AD<CGD> >& x, size_t repeat) {
         PlugFlowModel<CGD> m;
-        return m.model2(x, repeat);
+        return m.model(x, repeat);
     }
 
     virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x, size_t repeat) {
         PlugFlowModel<Base> m;
-        return m.model2(x, repeat);
+        return m.model(x, repeat);
     }
 };
 

@@ -23,7 +23,7 @@ JobSpeedListener::JobSpeedListener() :
     srcCodeComp(0),
     dynLibComp(0),
     jit(0),
-    total(0) {
+    totalLibrary(0) {
 }
 
 void JobSpeedListener::jobStarted(const std::vector<Job>& job) {
@@ -46,11 +46,11 @@ void JobSpeedListener::jobEndended(const std::vector<Job>& job,
         // source code compilation
         srcCodeComp = elapsed;
     } else if (&j.getType() == &JobTimer::SOURCE_GENERATION) {
-
+        // individual source files
     } else if (&j.getType() == &JobTimer::COMPILING_DYNAMIC_LIBRARY) {
         dynLibComp = elapsed;
     } else if (&j.getType() == &JobTimer::DYNAMIC_MODEL_LIBRARY) {
-        total = elapsed;
+        totalLibrary = elapsed;
     } else if (&j.getType() == &JobTimer::JIT_MODEL_LIBRARY) {
         jit = elapsed;
     }
