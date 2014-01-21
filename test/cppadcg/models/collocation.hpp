@@ -273,6 +273,10 @@ namespace CppAD {
             atomicModel_.reset(atomicDynamicLib_->model(lName));
         }
 
+        GenericModel<double>* getGenericModel() {
+            return atomicModel_.get();
+        }
+        
         CGAtomicGenericModel<double>& getDoubleAtomic() {
             return atomicModel_->asAtomic();
         }

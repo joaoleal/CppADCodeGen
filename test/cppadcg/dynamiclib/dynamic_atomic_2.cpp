@@ -12,7 +12,6 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#define NDEBUG
 #include "CppADCGTest.hpp"
 
 namespace CppAD {

@@ -13,7 +13,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGPatternModelTest.hpp"
-#include "../models/plug_flow.hpp"
+#include "../models/plug_flow2.hpp"
 
 
 namespace CppAD {
@@ -40,18 +40,18 @@ namespace CppAD {
             //this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 1e2; 
             //this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e2; 
 
-            this->xb = PlugFlowModel<CGD>::getTypicalValues(nEls);
+            this->xb = PlugFlowModel2<CGD>::getTypicalValues(nEls);
         }
 
         virtual std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x, size_t repeat) {
-            PlugFlowModel<CGD> m;
+            PlugFlowModel2<CGD> m;
 
             assert(repeat == nEls);
             return m.model(x);
         }
 
         virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t nEls) {
-            return PlugFlowModel<CGD>::getRelatedCandidates(nEls);
+            return PlugFlowModel2<CGD>::getRelatedCandidates(nEls);
         }
 
         inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {

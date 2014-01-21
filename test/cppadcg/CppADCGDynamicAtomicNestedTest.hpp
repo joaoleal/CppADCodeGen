@@ -177,7 +177,7 @@ namespace CppAD {
             const size_t n = _fun2->Domain();
             const size_t m = _fun2->Range();
 
-            modelLibOuter->addAtomicFunction(modelLib->asAtomic());
+            modelLibOuter->addExternalModel(*modelLib);
 
 
             /**
@@ -357,7 +357,7 @@ namespace CppAD {
             const size_t n2 = _fun2->Domain();
             const size_t m2 = _fun2->Range();
 
-            modelLibOuter->addAtomicFunction(modelLib->asAtomic());
+            modelLibOuter->addExternalModel(*modelLib);
 
             /**
              * Test zero order

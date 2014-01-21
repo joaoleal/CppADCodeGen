@@ -397,6 +397,7 @@ namespace CppAD {
             const size_t m = _fun2->Range();
 
             modelLibOuter->addAtomicFunction(modelLib->asAtomic());
+            //modelLibOuter->addExternalModel(*modelLib);
 
 
             /**
@@ -789,6 +790,7 @@ namespace CppAD {
             compHelp2.setCreateHessian(true);
             compHelp2.setCreateSparseJacobian(true);
             compHelp2.setCreateSparseHessian(true);
+            //compHelp2.setMaxAssignmentsPerFunc(20);
 
             /**
              * Create the dynamic library
@@ -797,7 +799,7 @@ namespace CppAD {
             ModelLibraryCSourceGen<double> compDynHelp2(compHelp2);
             compDynHelp2.setVerbose(this->verbose_);
 
-            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_atomiclibatomiclib_" + _modelName);
+            SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp2, "sources_atomiclibatomiclib_" + _modelName);
 
             DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
             GccCompiler<double> compiler2;
