@@ -28,7 +28,8 @@ namespace CppAD {
         CGAcosOp, // asin(variable)
         CGAddOp, //  a + b
         CGAliasOp, //  alias (reference to another operation)
-        CGArrayCreationOp, // {a, b, c ...}
+        CGArrayCreationOp, // dense array {a, b, c ...}
+        CGSparseArrayCreationOp, // {a, b, c ...}; {index1, index2, index3, ...};
         CGArrayElementOp, // x[i]
         CGAsinOp, // asin(variable)
         CGAtanOp, // atan(variable)
@@ -96,6 +97,9 @@ namespace CppAD {
                 break;
             case CGArrayCreationOp:
                 os << "new array[size]";
+                break;
+            case CGSparseArrayCreationOp:
+                os << "new sparseArray[size]";
                 break;
             case CGArrayElementOp:
                 os << "array[i]";

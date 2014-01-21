@@ -82,8 +82,9 @@ namespace CppAD {
         virtual size_t Range() const = 0;
 
         /**
-         * Defines an atomic function to be used by the compiled code.
-         * It should match an atomic function name previously provided to
+         * Defines a CppAD atomic function to be used as an external function 
+         * by the compiled code.
+         * It should match an external function name previously provided to
          * create the source.
          * 
          * @param atomic The atomic function. This object must only be deleted
@@ -92,6 +93,20 @@ namespace CppAD {
          *         if it will never be used.
          */
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) = 0;
+
+        /**
+         * Defines a generic model to be used as an external function by the
+         * compiled code.
+         * It should match an external function name previously provided to
+         * create the source. This form should be preferred over 
+         * ::addAtomicFunction whenever possible.
+         * 
+         * @param atomic The generic model. This object must only be deleted
+         *               after the model.
+         * @return true if the external function is required by the model, false
+         *         if it will never be used.
+         */
+        virtual bool addExternalModel(GenericModel<Base>& atomic) = 0;
 
         /**
          * Defines whether or not to evaluate a forward mode of an atomic 
@@ -231,7 +246,7 @@ namespace CppAD {
          * Computes the first-order Taylor coefficients for dependent variables
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
          * @param tx The Taylor coefficients of the independent variables 
@@ -258,7 +273,7 @@ namespace CppAD {
          * Computes the first-order Taylor coefficients for dependent variables
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
          * @param tx The Taylor coefficients of the independent variables 
@@ -275,7 +290,7 @@ namespace CppAD {
          * Computes the first-order Taylor coefficients for dependent variables
          * relative to a single independent variable.
          * This method can be used during the evaluation of the jacobian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic forward mode function!
          * 
          * @param tx The Taylor coefficients of the independent variables 
@@ -286,14 +301,39 @@ namespace CppAD {
         virtual void ForwardOne(const Base tx[], size_t tx_size,
                                 Base ty[], size_t ty_size) = 0;
 
+        /**
+         * Computes results during a first-order forward mode sweep, the
+         * first-order Taylor coefficients for dependent variables relative to
+         * a single independent variable.
+         * This method can be used during the evaluation of the jacobian when
+         * the model is used through a user defined external/atomic AD function.
+         * This method version avoids some data copies and can be more efficient.
+         * @warning do not used it as a generic forward mode function!
+         * 
+         * @param x independent variable vector
+         * @param x_size size of the independent variable vector
+         * @param tx1Nnz the number of non-zeros of the directional derivatives
+         *               of the independent variables (seed directions)
+         * @param idx the locations of the non-zero values the partial 
+         *            derivatives of the dependent variables (seeds)
+         * @param tx1 the non-zero values of the partial derivatives of the 
+         *           dependent variables (seeds)
+         * @param ty1
+         * @param ty1_size
+         */
+        virtual void ForwardOne(const Base x[], size_t x_size,
+                                size_t tx1Nnz, const size_t idx[], const Base tx1[],
+                                Base ty1[], size_t ty1_size) = 0;
+
         /***********************************************************************
          *                        Reverse one
          **********************************************************************/
 
         /**
-         * Computes results during a reverse mode sweep for the evaluation of
-         * the jacobian when the model is used through a user defined atomic AD
-         * function.
+         * Computes results during a reverse mode sweep (adjoints or partial
+         * derivatives of independent variables) for the evaluation of the
+         * jacobian when the model is used through a user defined 
+         * external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
@@ -312,9 +352,10 @@ namespace CppAD {
         }
 
         /**
-         * Computes results during a reverse mode sweep for the evaluation of
-         * the jacobian when the model is used through a user defined atomic AD
-         * function.
+         * Computes results during a reverse mode sweep (adjoints or partial
+         * derivatives of independent variables) for the evaluation of the
+         * jacobian when the model is used through a user defined 
+         * external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
@@ -334,9 +375,10 @@ namespace CppAD {
         }
 
         /**
-         * Computes results during a reverse mode sweep for the evaluation of
-         * the jacobian when the model is used through a user defined atomic AD
-         * function.
+         * Computes results during a reverse mode sweep (adjoints or partial
+         * derivatives of independent variables) for the evaluation of the
+         * jacobian when the model is used through a user defined 
+         * external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * 
          * @param tx
@@ -349,6 +391,30 @@ namespace CppAD {
                                 Base px[], size_t px_size,
                                 const Base py[], size_t py_size) = 0;
 
+        /**
+         * Computes results during a reverse mode sweep (adjoints or partial
+         * derivatives of independent variables) for the evaluation of the
+         * jacobian when the model is used through a user defined 
+         * external/atomic AD function.
+         * This method version avoids some data copies and can be more efficient.
+         * @warning do not used it as a generic reverse mode function!
+         * 
+         * @param x independent variable vector
+         * @param x_size size of the independent variable vector
+         * @param px partial derivatives of the independent variables
+         * @param px_size the size of the partial derivatives of the independent
+         *                variables (should be same as x_size)
+         * @param pyNnz the number of non-zeros of the partial derivatives of 
+         *              the dependent variables (weight functionals)
+         * @param idx the locations of the non-zero values the partial 
+         *            derivatives of the dependent variables (weight functionals)
+         * @param py the non-zero values of the partial derivatives of the 
+         *           dependent variables (weight functionals)
+         */
+        virtual void ReverseOne(const Base x[], size_t x_size,
+                                Base px[], size_t px_size,
+                                size_t pyNnz, const size_t idx[], const Base py[]) = 0;
+
         /***********************************************************************
          *                        Reverse two
          **********************************************************************/
@@ -356,7 +422,7 @@ namespace CppAD {
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
@@ -379,7 +445,7 @@ namespace CppAD {
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
@@ -403,7 +469,7 @@ namespace CppAD {
         /**
          * Computes second-order results during a reverse mode sweep (p = 2).
          * This method can be used during the evaluation of the hessian when
-         * the model is used through a user defined atomic AD function.
+         * the model is used through a user defined external/atomic AD function.
          * @warning do not used it as a generic reverse mode function!
          * @warning only the values for px[j * (k+1)] are defined, since
          *          px[j * (k+1) + 1] is not used during the hessian evaluation.
@@ -417,6 +483,32 @@ namespace CppAD {
                                 const Base ty[], size_t ty_size,
                                 Base px[], size_t px_size,
                                 const Base py[], size_t py_size) = 0;
+        /**
+         * Computes second-order results during a reverse mode sweep (p = 2).
+         * This method can be used during the evaluation of the hessian when
+         * the model is used through a user defined external AD function.
+         * This method version avoids some data copies and can be more efficient.
+         * @warning do not used it as a generic reverse mode function!
+         * 
+         * @param x independent variable vector
+         * @param x_size size of the independent variable vector
+         * @param tx1Nnz the number of non-zeros of the first-order Taylor
+         *               coefficients of the independents
+         * @param idx the locations of the non-zero values of the first-order
+         *            Taylor coefficients of the independents
+         * @param tx1 the values of the non-zero first-order Taylor coefficients
+         *            of the independents
+         * @param px2 second-order partials of the independents
+         * @param px2_size size of px2 
+         *                 (should be the number of independent variables)
+         * @param py2 second-order partials of the dependents
+         * @param py2_size size of py2 
+         *                 (should be the number of dependent variables)
+         */
+        virtual void ReverseTwo(const Base x[], size_t x_size,
+                                size_t tx1Nnz, const size_t idx[], const Base tx1[],
+                                Base px2[], size_t px2_size,
+                                const Base py2[], size_t py2_size) = 0;
 
         /***********************************************************************
          *                        Sparse Jacobians
@@ -556,8 +648,8 @@ namespace CppAD {
 
         /**
          * Provides a wrapper for this compiled model allowing it to be used as
-         * an atomic function. The compiled model must not be deleted while
-         * the atomic function is in used.
+         * an atomic function. The model must not be deleted while the atomic
+         * function is in use.
          * 
          * @return an atomic function wrapper for this model
          */

@@ -21,7 +21,7 @@ namespace CppAD {
     class OperationNode;
 
     /**
-     * An argument used by an operation wich can be either a constant value
+     * An argument used by an operation which can be either a constant value
      * or the result of another operation
      * 
      * @author Joao Leal

@@ -36,7 +36,7 @@ namespace CppAD {
         std::vector<const Base*> _inHess;
         std::vector<Base*> _out;
         CLangAtomicFun _atomicFuncArg;
-        std::vector<atomic_base<Base>* > _atomic;
+        std::vector<ExternalFunctionWrapper<Base>* > _atomic;
         size_t _missingAtomicFunctions;
         vector<Base> _tx, _ty, _px, _py;
         // original model function
@@ -62,11 +62,11 @@ namespace CppAD {
         // sparse hessian function in the dynamic library
         void (*_sparseHessian)(Base const*const*, Base * const*, CLangAtomicFun);
         //
-        void (*_forwardOneSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
+        void (*_forwardOneSparsity)(unsigned long, unsigned long const**, unsigned long*);
         //
-        void (*_reverseOneSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
+        void (*_reverseOneSparsity)(unsigned long, unsigned long const**, unsigned long*);
         //
-        void (*_reverseTwoSparsity)(unsigned long, unsigned long const**, unsigned long*, CLangAtomicFun);
+        void (*_reverseTwoSparsity)(unsigned long, unsigned long const**, unsigned long*);
         // jacobian sparsity function in the dynamic library
         void (*_jacobianSparsity)(unsigned long const** row,
                 unsigned long const** col,
@@ -89,22 +89,13 @@ namespace CppAD {
         }
 
         virtual bool addAtomicFunction(atomic_base<Base>& atomic) {
-            const char** names;
-            unsigned long n;
-            (*_atomicFunctions)(&names, &n);
+            return addExternalFunction<atomic_base<Base>, AtomicExternalFunctionWrapper<Base> >
+                    (atomic, atomic.afun_name());
+        }
 
-            CPPADCG_ASSERT_UNKNOWN(_atomic.size() == n);
-
-            for (unsigned long i = 0; i < n; i++) {
-                if (atomic.afun_name() == names[i]) {
-                    if (_atomic[i] == NULL) {
-                        _missingAtomicFunctions--;
-                    }
-                    _atomic[i] = &atomic;
-                    return true;
-                }
-            }
-            return false;
+        virtual bool addExternalModel(GenericModel<Base>& atomic) {
+            return addExternalFunction<GenericModel<Base>, GenericModelExternalFunctionWrapper<Base> >
+                    (atomic, atomic.getName());
         }
 
         // Jacobian sparsity
@@ -383,6 +374,43 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
         }
 
+        virtual void ForwardOne(const Base x[], size_t x_size,
+                                size_t tx1Nnz, const size_t idx[], const Base tx1[],
+                                Base ty1[], size_t ty1_size) {
+            CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
+            CPPADCG_ASSERT_KNOWN(_sparseForwardOne != NULL, "No sparse forward one function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(_forwardOneSparsity != NULL, "No forward one sparsity function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
+            CPPADCG_ASSERT_KNOWN(ty1_size >= _m, "Invalid ty1 size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
+
+            std::fill(ty1, ty1 + _m, Base(0));
+            if (tx1Nnz == 0)
+                return; //nothing to do
+
+            unsigned long const* pos;
+            size_t nnz = 0;
+
+            if (_ty.size() < _m)
+                _ty.resize(_m);
+            Base* compressed = &_ty[0];
+
+            _inHess[0] = x;
+            _out[0] = compressed;
+
+            for (size_t ej = 0; ej < tx1Nnz; ej++) {
+                size_t j = idx[ej];
+                (*_forwardOneSparsity)(j, &pos, &nnz);
+
+                _inHess[1] = &tx1[ej];
+                (*_sparseForwardOne)(j, &_inHess[0], &_out[0], _atomicFuncArg);
+
+                for (size_t ePos = 0; ePos < nnz; ePos++) {
+                    ty1[pos[ePos]] += compressed[ePos];
+                }
+            }
+        }
+
         virtual void ReverseOne(const Base tx[], size_t tx_size,
                                 const Base ty[], size_t ty_size,
                                 Base px[], size_t px_size,
@@ -401,6 +429,43 @@ namespace CppAD {
             int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
+        }
+
+        virtual void ReverseOne(const Base x[], size_t x_size,
+                                Base px[], size_t px_size,
+                                size_t pyNnz, const size_t idx[], const Base py[]) {
+            CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
+            CPPADCG_ASSERT_KNOWN(_sparseReverseOne != NULL, "No sparse reverse one function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(_reverseOneSparsity != NULL, "No reverse one sparsity function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
+            CPPADCG_ASSERT_KNOWN(px_size >= _n, "Invalid px size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
+
+            std::fill(px, px + _n, Base(0));
+            if (pyNnz == 0)
+                return; //nothing to do
+
+            unsigned long const* pos;
+            size_t nnz = 0;
+
+            if (_px.size() < _n)
+                _px.resize(_n);
+            Base* compressed = &_px[0];
+
+            _inHess[0] = x;
+            _out[0] = compressed;
+
+            for (size_t ei = 0; ei < pyNnz; ei++) {
+                size_t i = idx[ei];
+                (*_reverseOneSparsity)(i, &pos, &nnz);
+
+                _inHess[1] = &py[ei];
+                (*_sparseReverseOne)(i, &_inHess[0], &_out[0], _atomicFuncArg);
+
+                for (size_t ePos = 0; ePos < nnz; ePos++) {
+                    px[pos[ePos]] += compressed[ePos];
+                }
+            }
         }
 
         virtual void ReverseTwo(const Base tx[], size_t tx_size,
@@ -423,6 +488,47 @@ namespace CppAD {
 
             CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
             CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
+        }
+
+        virtual void ReverseTwo(const Base x[], size_t x_size,
+                                size_t tx1Nnz, const size_t idx[], const Base tx1[],
+                                Base px2[], size_t px2_size,
+                                const Base py2[], size_t py2_size) {
+            CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
+            CPPADCG_ASSERT_KNOWN(_sparseReverseTwo != NULL, "No sparse reverse two function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(_reverseTwoSparsity != NULL, "No reverse two sparsity function defined in the dynamic library");
+            CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
+            CPPADCG_ASSERT_KNOWN(px2_size >= _n, "Invalid px2 size");
+            CPPADCG_ASSERT_KNOWN(py2_size >= _m, "Invalid py2 size");
+            CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
+
+            std::fill(px2, px2 + _n, Base(0));
+            if (tx1Nnz == 0)
+                return; //nothing to do
+
+            unsigned long const* pos;
+            size_t nnz = 0;
+
+            if (_px.size() < _n)
+                _px.resize(_n);
+            Base* compressed = &_px[0];
+
+            const Base* in[3];
+            in[0] = x;
+            in[2] = py2;
+            _out[0] = compressed;
+
+            for (size_t ej = 0; ej < tx1Nnz; ej++) {
+                size_t j = idx[ej];
+                (*_reverseTwoSparsity)(j, &pos, &nnz);
+
+                in[1] = &tx1[ej];
+                (*_sparseReverseTwo)(j, &in[0], &_out[0], _atomicFuncArg);
+
+                for (size_t ePos = 0; ePos < nnz; ePos++) {
+                    px2[pos[ePos]] += compressed[ePos];
+                }
+            }
         }
 
         /// calculate sparse Jacobians 
@@ -656,7 +762,7 @@ namespace CppAD {
 
             if (nnz > 0) {
                 std::copy(x.begin(), x.end(), _inHess.begin());
-                _inHess.back() = w;
+                _inHess.back() = w; // the index might not be 1
                 _out[0] = hess;
 
                 (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
@@ -664,6 +770,9 @@ namespace CppAD {
         }
 
         virtual ~FunctorGenericModel() {
+            for (size_t i = 0; i < _atomic.size(); i++) {
+                delete _atomic[i];
+            }
         }
 
     protected:
@@ -737,7 +846,7 @@ namespace CppAD {
                                  "Invalid dimension received from the dynamic library.");
             CPPADCG_ASSERT_KNOWN(outSize > 0,
                                  "Invalid dimension received from the dynamic library.");
-            
+
             _isLibraryReady = true;
         }
 
@@ -849,72 +958,51 @@ namespace CppAD {
 
     private:
 
+        template<class ExtFunc, class Wrapper>
+        inline bool addExternalFunction(ExtFunc& atomic,
+                                        const std::string& name) {
+            const char** names;
+            unsigned long n;
+            (*_atomicFunctions)(&names, &n);
+
+            CPPADCG_ASSERT_UNKNOWN(_atomic.size() == n);
+
+            for (unsigned long i = 0; i < n; i++) {
+                if (name == names[i]) {
+                    if (_atomic[i] == NULL) {
+                        _missingAtomicFunctions--;
+                    } else {
+                        delete _atomic[i];
+                    }
+                    _atomic[i] = new Wrapper(atomic);
+                    return true;
+                }
+            }
+            return false;
+        }
+
         static int atomicForward(void* libModelIn,
                                  int atomicIndex,
                                  int q,
                                  int p,
-                                 const void* tx, unsigned long txSize,
-                                 void* ty, unsigned long tySize) {
+                                 const Array tx[],
+                                 Array* ty) {
             FunctorGenericModel<Base>* libModel = static_cast<FunctorGenericModel<Base>*> (libModelIn);
-            atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
-            const Base* txb = static_cast<const Base*> (tx);
-            Base* tyb = static_cast<Base*> (ty);
+            ExternalFunctionWrapper<Base>* externalFunc = libModel->_atomic[atomicIndex];
 
-            vector<bool> vx, vy;
-            libModel->_tx.resize(txSize);
-            libModel->_ty.resize(tySize);
-            std::copy(txb, txb + txSize, &libModel->_tx[0]);
-            if (p > 0) {
-                std::copy(tyb, tyb + tySize, &libModel->_ty[0]);
-            }
-
-            bool ret = atomicBase->forward(q, p, vx, vy, libModel->_tx, libModel->_ty);
-            std::copy(&libModel->_ty[0], &libModel->_ty[0] + tySize, tyb);
-
-            return ret;
+            return externalFunc->forward(*libModel, q, p, tx, *ty);
         }
 
         static int atomicReverse(void* libModelIn,
                                  int atomicIndex,
                                  int p,
-                                 const void* tx,
-                                 const void* ty,
-                                 void* px,
-                                 const void* py,
-                                 unsigned long xSize,
-                                 unsigned long ySize) {
+                                 const Array tx[],
+                                 Array* px,
+                                 const Array py[]) {
             FunctorGenericModel<Base>* libModel = static_cast<FunctorGenericModel<Base>*> (libModelIn);
-            atomic_base<Base>* atomicBase = libModel->_atomic[atomicIndex];
-            const Base* txb = static_cast<const Base*> (tx);
-            const Base* tyb = static_cast<const Base*> (ty);
-            Base* pxb = static_cast<Base*> (px);
-            const Base* pyb = static_cast<const Base*> (py);
+            ExternalFunctionWrapper<Base>* externalFunc = libModel->_atomic[atomicIndex];
 
-            libModel->_tx.resize(xSize);
-            libModel->_ty.resize(ySize);
-            libModel->_px.resize(xSize);
-            libModel->_py.resize(ySize);
-
-            std::copy(txb, txb + xSize, &libModel->_tx[0]);
-            std::copy(tyb, tyb + ySize, &libModel->_ty[0]);
-            if (p > 0) {
-                std::copy(pxb, pxb + xSize, &libModel->_px[0]);
-            }
-            std::copy(pyb, pyb + ySize, &libModel->_py[0]);
-
-#ifndef NDEBUG
-            if (libModel->_evalAtomicForwardOne4CppAD) {
-                // only required in order to avoid an issue with a validation inside CppAD 
-                vector<bool> vx, vy;
-                if (!atomicBase->forward(p, p, vx, vy, libModel->_tx, libModel->_ty))
-                    return false;
-            }
-#endif
-
-            bool ret = atomicBase->reverse(p, libModel->_tx, libModel->_ty, libModel->_px, libModel->_py);
-            std::copy(&libModel->_px[0], &libModel->_px[0] + xSize, pxb);
-
-            return ret;
+            return externalFunc->reverse(*libModel, p, tx, *px, py);
         }
 
         FunctorGenericModel(const FunctorGenericModel&); // not implemented
@@ -922,6 +1010,7 @@ namespace CppAD {
         FunctorGenericModel& operator=(const FunctorGenericModel&); // not implemented
 
         friend class LinuxDynamicLib<Base>;
+        friend class AtomicExternalFunctionWrapper<Base>;
     };
 
 }

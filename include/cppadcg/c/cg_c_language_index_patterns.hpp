@@ -88,18 +88,22 @@ namespace CppAD {
 
     template<class Base>
     inline void CLanguage<Base>::createIndexDeclaration() {
-        if (_indexes->empty())
+        if (_info == NULL || _info->get() == NULL)
+            return;
+
+        const LanguageGenerationData<Base>& info = *_info->get();
+        if (info.indexes.empty())
             return;
 
         std::set<const IndexDclrOperationNode<Base>*> funcArgs(_funcArgIndexes.begin(), _funcArgIndexes.end());
 
         bool first = true;
 
-        printRandomIndexPatternDeclaration(_ss, _spaces, *_indexRandomPatterns);
+        printRandomIndexPatternDeclaration(_ss, _spaces, (*_info)->indexRandomPatterns);
 
-        _ss << _spaces << "unsigned long";
+        _ss << _spaces << U_INDEX_TYPE;
         typename std::set<const IndexDclrOperationNode<Base>*>::const_iterator iti;
-        for (iti = _indexes->begin(); iti != _indexes->end(); ++iti) {
+        for (iti = info.indexes.begin(); iti != info.indexes.end(); ++iti) {
 
             if (funcArgs.find(*iti) == funcArgs.end()) {
                 if (first) first = false;
@@ -116,7 +120,7 @@ namespace CppAD {
     void CLanguage<Base>::printStaticIndexArray(std::ostringstream& os,
                                                 const std::string& name,
                                                 const std::vector<size_t>& values) {
-        os << "static unsigned long const " << name << "[" << values.size() << "] = {";
+        os << "static " << U_INDEX_TYPE << " const " << name << "[" << values.size() << "] = {";
         if (!values.empty()) {
             os << values[0];
             for (size_t i = 1; i < values.size(); i++) {
@@ -145,7 +149,7 @@ namespace CppAD {
             }
         }
 
-        os << "static unsigned long const " << name << "[" << m << "][" << n << "] = {";
+        os << "static " << U_INDEX_TYPE << " const " << name << "[" << m << "][" << n << "] = {";
         size_t x = 0;
         for (it = values.begin(); it != values.end(); ++it) {
             if (it->first != x) {
@@ -229,7 +233,7 @@ namespace CppAD {
                 bool useParens = pip.getPattern1() != NULL && pip.getPattern2() != NULL;
 
                 if (useParens) indexExpr += "(";
-                
+
                 if (pip.getPattern1() != NULL)
                     indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
 

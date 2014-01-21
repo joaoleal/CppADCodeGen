@@ -20,7 +20,7 @@
 namespace CppAD {
 
     template<class Base>
-    const unsigned long ModelLibraryCSourceGen<Base>::API_VERSION = 4;
+    const unsigned long ModelLibraryCSourceGen<Base>::API_VERSION = 5;
 
     template<class Base>
     const std::string ModelLibraryCSourceGen<Base>::FUNCTION_VERSION = "cppad_cg_version";

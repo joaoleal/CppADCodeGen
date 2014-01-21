@@ -48,13 +48,13 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::analyseSparseHessianWithLoops(const std::vector<size_t>& lowerHessRows,
-                                                                      const std::vector<size_t>& lowerHessCols,
-                                                                      const std::vector<size_t>& lowerHessOrder,
-                                                                      vector<std::set<size_t> >& noLoopEvalJacSparsity,
-                                                                      vector<std::set<size_t> >& noLoopEvalHessSparsity,
-                                                                      vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
-                                                                      std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
-                                                                      bool useSymmetry) {
+                                                              const std::vector<size_t>& lowerHessCols,
+                                                              const std::vector<size_t>& lowerHessOrder,
+                                                              vector<std::set<size_t> >& noLoopEvalJacSparsity,
+                                                              vector<std::set<size_t> >& noLoopEvalHessSparsity,
+                                                              vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
+                                                              std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
+                                                              bool useSymmetry) {
         using namespace std;
         using namespace CppAD::loops;
         using CppAD::vector;
@@ -138,8 +138,6 @@ namespace CppAD {
                 const LoopPosition* posJ2 = (j1 == j2) ? posJ1 : loop->getNonIndexedIndepIndexes(j2);
 
                 size_t nEqGroups = loopInfo.equationGroups.size();
-                typename set<const IterEquationGroup<Base>*>::const_iterator itg;
-
 
                 for (size_t g = 0; g < nEqGroups; g++) {
                     const IterEquationGroup<Base>& group = eqGroups[g];
@@ -559,12 +557,12 @@ namespace CppAD {
 
     template<class Base>
     vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
-                                                                                   vector<CGBase>& x,
-                                                                                   vector<CGBase>& w,
-                                                                                   const std::vector<size_t>& lowerHessRows,
-                                                                                   const std::vector<size_t>& lowerHessCols,
-                                                                                   const std::vector<size_t>& lowerHessOrder,
-                                                                                   const std::map<size_t, size_t>& duplicates) {
+                                                                           vector<CGBase>& x,
+                                                                           vector<CGBase>& w,
+                                                                           const std::vector<size_t>& lowerHessRows,
+                                                                           const std::vector<size_t>& lowerHessCols,
+                                                                           const std::vector<size_t>& lowerHessOrder,
+                                                                           const std::map<size_t, size_t>& duplicates) {
         using namespace std;
         using namespace CppAD::loops;
         using CppAD::vector;
@@ -645,8 +643,6 @@ namespace CppAD {
         /**
          * Loops - evaluate Jacobian and Hessian
          */
-        bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
-
         for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
             LoopModel<Base>& lModel = *itLoop2Info->first;
             HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
@@ -657,7 +653,7 @@ namespace CppAD {
             _cache.str("");
             startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
-            info.evalLoopModelJacobianHessian(hasAtomics);
+            info.evalLoopModelJacobianHessian(false);
 
             finishedJob();
         }
@@ -680,7 +676,7 @@ namespace CppAD {
             dzDx = _funNoLoops->calculateJacobianHessianUsedByLoops(handler,
                                                                     loopHessInfo, x, yNL,
                                                                     noLoopEvalJacSparsity,
-                                                                    hasAtomics);
+                                                                    false);
 
             finishedJob();
 

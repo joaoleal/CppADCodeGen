@@ -18,6 +18,35 @@
 extern "C" {
 
     /**
+     * A wrapper for an array.
+     * It is used to call forward and reverse functions of atomic functions in
+     * the generated C source-code.
+     */
+    typedef struct Array {
+        /**
+         * Array values. For dense arrays its size is defined by
+         * ::size otherwise by ::nnz.
+         */
+        void* data;
+        /**
+         * Total array size.
+         */
+        unsigned long size;
+        /**
+         * Whether or not it is a sparse array.
+         */
+        int sparse;
+        /**
+         * Indexes of sparse array (undefined for dense).
+         */
+        const unsigned long* idx;
+        /**
+         * Number of non-zeros (size of data; undefined for dense).
+         */
+        unsigned long nnz;
+    } Array;
+
+    /**
      * Holds function pointers that the compiled code uses to call atomic functions.
      */
     struct CLangAtomicFun {
@@ -25,25 +54,20 @@ extern "C" {
          * A pointer to the compiled model object (e.g. LinuxDynamicLibModel)
          */
         void* libModel;
-        
+
         int (*forward)(void* libModel,
                 int atomicIndex,
                 int q,
                 int p,
-                const void* tx,
-                unsigned long txSize,
-                void* ty,
-                unsigned long tySize);
+                const Array tx[],
+                Array* ty);
 
         int (*reverse)(void* libModel,
                 int atomicIndex,
                 int p,
-                const void* tx,
-                const void* ty,
-                void* px,
-                const void* py,
-                unsigned long xSize,
-                unsigned long ySize);
+                const Array tx[],
+                Array* px,
+                const Array py[]);
     };
 
 }

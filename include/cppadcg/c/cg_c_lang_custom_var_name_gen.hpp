@@ -59,6 +59,28 @@ namespace CppAD {
             }
         }
 
+        virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
+                                               const OperationNode<Base>& indepSecond) {
+            size_t index1 = indepFirst.getVariableID() - 1;
+            size_t index2 = indepSecond.getVariableID() - 1;
+
+            if ((index1 > indepNames_.size() || indepNames_[index1].empty()) &&
+                    (index2 > indepNames_.size() || indepNames_[index2].empty())) {
+                return index1 + 1 == index2;
+            } else {
+                return false; // individual names used (not elements of arrays)
+            }
+        }
+
+        virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
+                                              const OperationNode<Base>& indep2) {
+            size_t index1 = indep1.getVariableID() - 1;
+            size_t index2 = indep2.getVariableID() - 1;
+
+            return (index1 > indepNames_.size() || indepNames_[index1].empty()) &&
+                    (index2 > indepNames_.size() || indepNames_[index2].empty());
+        }
+
         inline virtual ~CLangCustomVariableNameGenerator() {
         }
 

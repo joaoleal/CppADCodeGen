@@ -875,7 +875,7 @@ namespace CppAD {
             funIndexed->Dependent(newDeps);
 
             /*******************************************************************
-             * create the atomic loop function
+             * create the loop model object
              ******************************************************************/
             std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount_, std::numeric_limits<size_t>::max()));
             for (size_t it = 0; it < iterationCount_; it++) {
@@ -1074,6 +1074,7 @@ namespace CppAD {
         OperationNode<Base>& makeTemporaryVarClone(OperationNode<Base>& node) {
             CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGInvOp);
             CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGArrayCreationOp);
+            CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGSparseArrayCreationOp);
 
             CG<Base> newIndep;
             handler_.makeVariable(newIndep);

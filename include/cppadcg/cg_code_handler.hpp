@@ -36,6 +36,8 @@ namespace CppAD {
         size_t _idCount;
         // counter used to generate array variable IDs
         size_t _idArrayCount;
+        // counter used to generate sparse array variable IDs
+        size_t _idSparseArrayCount;
         // counter used to generate IDs for atomic functions
         size_t _idAtomicCount;
         // the independent variables
@@ -53,8 +55,6 @@ namespace CppAD {
          * (each level represents a different variable scope)
          */
         std::vector<std::vector<OperationNode<Base> *> > _scopedVariableOrder;
-        // maps the ids of the atomic functions
-        std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopModel<Base>*> _loops;
         // the used indexes
@@ -66,15 +66,33 @@ namespace CppAD {
         std::vector<const IndexPattern*> _loopDependentIndexPatternManaged; // garbage collection
         std::vector<IndexPattern*> _loopIndependentIndexPatterns;
         /**
+         * maps the IDs of the atomic functions
+         */
+        std::map<size_t, CGAbstractAtomicFun<Base>*> _atomicFunctions;
+        /**
          * already used atomic function names (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
          */
-        std::set<std::string> _atomicFunctionsSet;
+        std::map<std::string, size_t> _atomicFunctionName2Index;
         /**
-         * the order of the atomic functions(may contain names which were 
+         * the order of the atomic functions (may contain names which were 
          * used by previous calls to this/other CondeHandlers)
          */
         std::vector<std::string>* _atomicFunctionsOrder;
+        /**
+         * 
+         */
+        std::map<size_t, size_t> _atomicFunctionId2Index;
+        /**
+         * the maximum forward mode order each atomic function is called
+         * (-1 means forward mode not used)
+         */
+        std::vector<int> _atomicFunctionsMaxForward;
+        /**
+         * the maximum reverse mode order each atomic function is called
+         * (-1 means reverse mode not used)
+         */
+        std::vector<int> _atomicFunctionsMaxReverse;
         // a flag indicating if this handler was previously used to generate code
         bool _used;
         // a flag indicating whether or not to reuse the IDs of destroyed variables
@@ -95,6 +113,10 @@ namespace CppAD {
         std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > > _alteredNodes;
         // the language used for source code generation
         Language<Base>* _lang;
+        /**
+         * information sent to the language
+         */
+        std::auto_ptr<LanguageGenerationData<Base> > _info;
         // the lowest ID used for temporary variables
         size_t _minTemporaryVarID;
         /**
@@ -104,13 +126,16 @@ namespace CppAD {
         bool _zeroDependents;
         //
         bool _verbose;
-        //
+        /**
+         * used to track evaluation times and print out messages
+         */
         JobTimer* _jobTimer;
     public:
 
         CodeHandler(size_t varCount = 50) :
             _idCount(1),
             _idArrayCount(1),
+            _idSparseArrayCount(1),
             _idAtomicCount(1),
             _dependents(NULL),
             _scopedVariableOrder(1),
@@ -211,7 +236,7 @@ namespace CppAD {
 
         /**
          * Defines whether or not the dependent variables should be set to zero
-         * executing the operation graph
+         * before executing the operation graph
          * 
          * @param true if the dependents should be zeroed
          */
@@ -246,6 +271,24 @@ namespace CppAD {
         }
 
         /**
+         * Provides the maximum forward mode order used by all atomic functions
+         * in the last call to ::generateCode 
+         * (-1 means forward mode not used).
+         */
+        const std::vector<int>& getExternalFuncMaxForwardOrder() const {
+            return _atomicFunctionsMaxForward;
+        }
+
+        /**
+         * Provides the maximum reverse mode order used by all atomic functions
+         * in the last call to ::generateCode
+         * (-1 means forward mode not used).
+         */
+        const std::vector<int>& getExternalFuncMaxReverseOrder() const {
+            return _atomicFunctionsMaxReverse;
+        }
+
+        /**
          * Provides the name used by a loop atomic function with a given ID.
          * 
          * @param id the atomic function ID.
@@ -269,11 +312,11 @@ namespace CppAD {
          *                   Graph management functions
          **********************************************************************/
         /**
-         * Finds occurences of a source code fragment in an operation graph.
+         * Finds occurrences of a source code fragment in an operation graph.
          * 
          * @param root the operation graph where to search
          * @param code the source code fragment to find in root
-         * @param max the maximum number of occurences of code to find in root
+         * @param max the maximum number of occurrences of code to find in root
          * @return the paths from root to code
          */
         inline std::vector<SourceCodePath> findPaths(OperationNode<Base>& root,
@@ -337,10 +380,13 @@ namespace CppAD {
             _lang = &lang;
             _idCount = 1;
             _idArrayCount = 1;
+            _idSparseArrayCount = 1;
             _idAtomicCount = 1;
             _dependents = &dependent;
             _atomicFunctionsOrder = &atomicFunctions;
-            _atomicFunctionsSet.clear();
+            _atomicFunctionsMaxForward.resize(atomicFunctions.size());
+            _atomicFunctionsMaxReverse.resize(atomicFunctions.size());
+            _atomicFunctionName2Index.clear();
             _indexes.clear();
             _indexRandomPatterns.clear();
             _loopOuterVars.clear();
@@ -352,8 +398,10 @@ namespace CppAD {
             _alteredNodes.clear();
             _loopStartEvalOrder.clear();
             for (size_t i = 0; i < atomicFunctions.size(); i++) {
-                _atomicFunctionsSet.insert(atomicFunctions[i]);
+                _atomicFunctionName2Index[atomicFunctions[i]] = i;
             }
+            std::fill(_atomicFunctionsMaxForward.begin(), _atomicFunctionsMaxForward.end(), -1);
+            std::fill(_atomicFunctionsMaxReverse.begin(), _atomicFunctionsMaxReverse.end(), -1);
 
             if (_used) {
                 resetManagedNodes();
@@ -447,7 +495,7 @@ namespace CppAD {
                 reduceTemporaryVariables(dependent);
             }
 
-            nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1);
+            nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1, _idSparseArrayCount - 1);
 
             std::map<std::string, size_t> atomicFunctionName2Id;
             typename std::map<size_t, CGAbstractAtomicFun<Base>*>::iterator itA;
@@ -469,20 +517,21 @@ namespace CppAD {
             /**
              * Creates the source code for a specific language
              */
-            LanguageGenerationData<Base> info(_independentVariables, dependent,
-                                              _minTemporaryVarID, _variableOrder,
-                                              nameGen,
-                                              atomicFunctionId2Index, atomicFunctionId2Name,
-                                              _reuseIDs,
-                                              _indexes, _indexRandomPatterns,
-                                              _loopDependentIndexPatterns, _loopIndependentIndexPatterns,
-                                              _zeroDependents);
-            lang.generateSourceCode(out, info);
+            _info.reset(new LanguageGenerationData<Base>(_independentVariables, dependent,
+                        _minTemporaryVarID, _variableOrder,
+                        nameGen,
+                        atomicFunctionId2Index, atomicFunctionId2Name,
+                        _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
+                        _reuseIDs,
+                        _indexes, _indexRandomPatterns,
+                        _loopDependentIndexPatterns, _loopIndependentIndexPatterns,
+                        _zeroDependents));
+            lang.generateSourceCode(out, _info);
 
             /**
              * clean-up
              */
-            _atomicFunctionsSet.clear();
+            _atomicFunctionName2Index.clear();
 
             // restore altered nodes
             typename std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > >::const_iterator itAlt;
@@ -516,6 +565,10 @@ namespace CppAD {
             return _idArrayCount - 1;
         }
 
+        size_t getTemporarySparseArraySize() const {
+            return _idSparseArrayCount - 1;
+        }
+
         /***********************************************************************
          *                   Reusing handler and nodes
          **********************************************************************/
@@ -533,6 +586,7 @@ namespace CppAD {
             _independentVariables.clear();
             _idCount = 1;
             _idArrayCount = 1;
+            _idSparseArrayCount = 1;
             _idAtomicCount = 1;
 
             _loops.clear();
@@ -896,6 +950,7 @@ namespace CppAD {
              * @TODO allow Array elements to use a CGTmp instead of a CGArrayCreationOp
              */
             CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGArrayCreationOp, "Not supported yet");
+            CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGSparseArrayCreationOp, "Not supported yet");
 
             /**
              * does this variable require a condition based on indexes?
@@ -1432,10 +1487,28 @@ namespace CppAD {
                         CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1);
                         CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1);
                         size_t id = arg.getInfo()[0];
+
+                        size_t pos;
                         const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
-                        if (_atomicFunctionsSet.find(atomicName) == _atomicFunctionsSet.end()) {
-                            _atomicFunctionsSet.insert(atomicName);
+                        std::map<std::string, size_t>::const_iterator itName2Idx;
+                        itName2Idx = _atomicFunctionName2Index.find(atomicName);
+
+                        if (itName2Idx == _atomicFunctionName2Index.end()) {
+                            pos = _atomicFunctionsOrder->size();
                             _atomicFunctionsOrder->push_back(atomicName);
+                            _atomicFunctionName2Index[atomicName] = pos;
+                            _atomicFunctionsMaxForward.push_back(-1);
+                            _atomicFunctionsMaxReverse.push_back(-1);
+                        } else {
+                            pos = itName2Idx->second;
+                        }
+
+                        if (aType == CGAtomicForwardOp) {
+                            int p = arg.getInfo()[2];
+                            _atomicFunctionsMaxForward[pos] = std::max(_atomicFunctionsMaxForward[pos], p);
+                        } else {
+                            int p = arg.getInfo()[1];
+                            _atomicFunctionsMaxReverse[pos] = std::max(_atomicFunctionsMaxReverse[pos], p);
                         }
                     }
 
@@ -1496,6 +1569,11 @@ namespace CppAD {
                                     size_t arraySize = arg.getArguments().size();
                                     arg.setVariableID(_idArrayCount);
                                     _idArrayCount += arraySize;
+                                } else if (aType == CGSparseArrayCreationOp) {
+                                    // a temporary array
+                                    size_t nnz = arg.getArguments().size();
+                                    arg.setVariableID(_idSparseArrayCount);
+                                    _idSparseArrayCount += nnz;
                                 } else {
                                     // a single temporary variable
                                     arg.setVariableID(_idCount);
@@ -1558,7 +1636,7 @@ namespace CppAD {
             vector<std::vector<OperationNode<Base>* > > tempVarRelease(_variableOrder.size());
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 OperationNode<Base>* var = _variableOrder[i];
-                if (isTemporary(*var) || isTemporaryArray(*var)) {
+                if (isTemporary(*var) || isTemporaryArray(*var) || isTemporarySparseArray(*var)) {
                     size_t releaseLocation = var->getLastUsageEvaluationOrder() - 1;
                     tempVarRelease[releaseLocation].push_back(var);
                 }
@@ -1569,11 +1647,9 @@ namespace CppAD {
              * Redefine temporary variable IDs
              */
             std::vector<size_t> freedVariables; // variable IDs no longer in use
-            std::vector<const Argument<Base>*> tmpArrayValues(_idArrayCount, NULL); //likely values in temporary array
-            std::map<size_t, size_t> freeArrayStartSpace; // [start] = end
-            std::map<size_t, size_t> freeArrayEndSpace; // [end] = start
             _idCount = _minTemporaryVarID;
-            _idArrayCount = 1;
+            ArrayIdCompresser<Base> arrayComp(_idArrayCount);
+            ArrayIdCompresser<Base> sparseArrayComp(_idSparseArrayCount);
 
             for (size_t i = 0; i < _variableOrder.size(); i++) {
                 OperationNode<Base>& var = *_variableOrder[i];
@@ -1583,8 +1659,9 @@ namespace CppAD {
                     if (isTemporary(*released[r])) {
                         freedVariables.push_back(released[r]->getVariableID());
                     } else if (isTemporaryArray(*released[r])) {
-                        addFreeArraySpace(*released[r], freeArrayStartSpace, freeArrayEndSpace);
-                        CPPADCG_ASSERT_UNKNOWN(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                        arrayComp.addFreeArraySpace(*released[r]);
+                    } else if (isTemporarySparseArray(*released[r])) {
+                        sparseArrayComp.addFreeArraySpace(*released[r]);
                     }
                 }
 
@@ -1600,174 +1677,18 @@ namespace CppAD {
                     }
                 } else if (isTemporaryArray(var)) {
                     // a temporary array
-                    size_t arrayStart = reserveArraySpace(var, freeArrayStartSpace, freeArrayEndSpace, tmpArrayValues);
-                    CPPADCG_ASSERT_UNKNOWN(freeArrayStartSpace.size() == freeArrayEndSpace.size());
+                    size_t arrayStart = arrayComp.reserveArraySpace(var);
+                    var.setVariableID(arrayStart + 1);
+                } else if (isTemporarySparseArray(var)) {
+                    // a temporary array
+                    size_t arrayStart = sparseArrayComp.reserveArraySpace(var);
                     var.setVariableID(arrayStart + 1);
                 }
 
             }
-        }
 
-        inline static void addFreeArraySpace(const OperationNode<Base>& released,
-                                             std::map<size_t, size_t>& freeArrayStartSpace,
-                                             std::map<size_t, size_t>& freeArrayEndSpace) {
-            size_t arrayStart = released.getVariableID() - 1;
-            const size_t arraySize = released.getArguments().size();
-            size_t arrayEnd = arrayStart + arraySize - 1;
-
-            std::map<size_t, size_t>::iterator it;
-            if (arrayStart > 0) {
-                it = freeArrayEndSpace.find(arrayStart - 1); // previous
-                if (it != freeArrayEndSpace.end()) {
-                    arrayStart = it->second; // merge space
-                    freeArrayEndSpace.erase(it);
-                    freeArrayStartSpace.erase(arrayStart);
-                }
-            }
-            it = freeArrayStartSpace.find(arrayEnd + 1); // next
-            if (it != freeArrayStartSpace.end()) {
-                arrayEnd = it->second; // merge space 
-                freeArrayStartSpace.erase(it);
-                freeArrayEndSpace.erase(arrayEnd);
-            }
-
-            freeArrayStartSpace[arrayStart] = arrayEnd;
-            freeArrayEndSpace[arrayEnd] = arrayStart;
-        }
-
-        inline size_t reserveArraySpace(const OperationNode<Base>& newArray,
-                                        std::map<size_t, size_t>& freeArrayStartSpace,
-                                        std::map<size_t, size_t>& freeArrayEndSpace,
-                                        std::vector<const Argument<Base>*>& tmpArrayValues) {
-            size_t arraySize = newArray.getArguments().size();
-
-            std::set<size_t> blackList;
-            const std::vector<Argument<Base> >& args = newArray.getArguments();
-            for (size_t i = 0; i < args.size(); i++) {
-                const OperationNode<Base>* argOp = args[i].getOperation();
-                if (argOp != NULL && argOp->getOperationType() == CGArrayElementOp) {
-                    const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
-                    CPPADCG_ASSERT_UNKNOWN(otherArray.getVariableID() > 0); // make sure it had already been assigned space
-                    size_t otherArrayStart = otherArray.getVariableID() - 1;
-                    size_t index = argOp->getInfo()[0];
-                    blackList.insert(otherArrayStart + index);
-                }
-            }
-
-            /**
-             * Find the best location for the new array
-             */
-            std::map<size_t, size_t>::reverse_iterator it;
-            std::map<size_t, size_t>::reverse_iterator itBestFit = freeArrayStartSpace.rend();
-            size_t bestCommonValues = 0; // the number of values likely to be the same
-            for (it = freeArrayStartSpace.rbegin(); it != freeArrayStartSpace.rend(); ++it) {
-                size_t start = it->first;
-                size_t end = it->second;
-                size_t space = end - start + 1;
-                if (space < arraySize) {
-                    continue;
-                }
-
-                std::set<size_t>::const_iterator itBlack = blackList.lower_bound(start);
-                if (itBlack != blackList.end() && *itBlack <= end) {
-                    continue; // cannot use this space
-                }
-
-                //possible candidate
-                if (itBestFit == freeArrayStartSpace.rend()) {
-                    itBestFit = it;
-                } else {
-                    size_t bestSpace = itBestFit->second - itBestFit->first + 1;
-
-                    size_t commonVals = 0;
-                    for (size_t i = 0; i < arraySize; i++) {
-                        if (isSameArrayElement(tmpArrayValues[start + i], args[i])) {
-                            commonVals++;
-                        }
-                    }
-
-                    if (space < bestSpace || commonVals > bestCommonValues) {
-                        // better fit
-                        itBestFit = it;
-                        bestCommonValues = commonVals;
-                        if (bestCommonValues == arraySize) {
-                            break; // jackpot
-                        }
-                    }
-                }
-            }
-
-            size_t bestStart = std::numeric_limits<size_t>::max();
-            if (itBestFit != freeArrayStartSpace.rend()) {
-                /**
-                 * Use available space
-                 */
-                bestStart = itBestFit->first;
-                size_t bestEnd = itBestFit->second;
-                size_t bestSpace = bestEnd - bestStart + 1;
-                freeArrayStartSpace.erase(bestStart);
-                if (bestSpace == arraySize) {
-                    // entire space 
-                    freeArrayEndSpace.erase(bestEnd);
-                } else {
-                    // some space left
-                    size_t newFreeStart = bestStart + arraySize;
-                    freeArrayStartSpace[newFreeStart] = bestEnd;
-                    freeArrayEndSpace.at(bestEnd) = newFreeStart;
-                }
-
-            } else {
-                /**
-                 * no space available, need more
-                 */
-                // check if there is some free space at the end
-                std::map<size_t, size_t>::iterator itEnd;
-                itEnd = freeArrayEndSpace.find(_idArrayCount - 1);
-                if (itEnd != freeArrayEndSpace.end()) {
-                    // check if it can be used
-                    size_t lastSpotStart = itEnd->second;
-                    size_t lastSpotEnd = itEnd->first;
-                    size_t lastSpotSize = lastSpotEnd - lastSpotStart + 1;
-                    std::set<size_t>::const_iterator itBlack = blackList.lower_bound(lastSpotStart);
-                    if (itBlack == blackList.end()) {
-                        // can use this space
-                        size_t newEnd = lastSpotStart + arraySize - 1;
-
-                        freeArrayEndSpace.erase(itEnd);
-                        freeArrayEndSpace[newEnd] = lastSpotStart;
-                        freeArrayStartSpace[lastSpotStart] = newEnd;
-
-                        _idArrayCount += arraySize - lastSpotSize;
-                        bestStart = lastSpotStart;
-                    }
-                }
-
-                if (bestStart == std::numeric_limits<size_t>::max()) {
-                    // brand new space
-                    size_t id = _idArrayCount;
-                    _idArrayCount += arraySize;
-                    bestStart = id - 1;
-                }
-            }
-
-            for (size_t i = 0; i < arraySize; i++) {
-                tmpArrayValues[bestStart + i] = &args[i];
-            }
-
-            return bestStart;
-        }
-
-        inline static bool isSameArrayElement(const Argument<Base>* oldArg, const Argument<Base>& arg) {
-            if (oldArg != NULL) {
-                if (oldArg->getParameter() != NULL) {
-                    if (arg.getParameter() != NULL) {
-                        return (*arg.getParameter() == *oldArg->getParameter());
-                    }
-                } else {
-                    return (arg.getOperation() == oldArg->getOperation());
-                }
-            }
-            return false;
+            _idArrayCount = arrayComp.getIdCount();
+            _idSparseArrayCount = sparseArrayComp.getIdCount();
         }
 
         /**
@@ -1879,18 +1800,13 @@ namespace CppAD {
         }
 
         inline bool isIndependent(const OperationNode<Base>& arg) const {
-            if (arg.getOperationType() == CGArrayCreationOp ||
-                    arg.getOperationType() == CGAtomicForwardOp ||
-                    arg.getOperationType() == CGAtomicReverseOp)
-                return false;
-
-            size_t id = arg.getVariableID();
-            return id > 0 && id <= _independentVariables.size();
+            return arg.getOperationType() == CGInvOp;
         }
 
         inline bool isTemporary(const OperationNode<Base>& arg) const {
             CGOpCode op = arg.getOperationType();
-            return op != CGArrayCreationOp &&
+            return op != CGArrayCreationOp && // classified as TemporaryArray
+                    op != CGSparseArrayCreationOp && // classified as TemporarySparseArray
                     op != CGAtomicForwardOp &&
                     op != CGAtomicReverseOp &&
                     op != CGLoopStartOp &&
@@ -1908,8 +1824,12 @@ namespace CppAD {
                     arg.getVariableID() >= _minTemporaryVarID;
         }
 
-        inline bool isTemporaryArray(const OperationNode<Base>& arg) const {
+        inline static bool isTemporaryArray(const OperationNode<Base>& arg) {
             return arg.getOperationType() == CGArrayCreationOp;
+        }
+
+        inline static bool isTemporarySparseArray(const OperationNode<Base>& arg) {
+            return arg.getOperationType() == CGSparseArrayCreationOp;
         }
 
         inline static OperationNode<Base>* getOperationFromAlias(OperationNode<Base>& alias) {

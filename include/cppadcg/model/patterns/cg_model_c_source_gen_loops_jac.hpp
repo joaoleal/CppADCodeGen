@@ -35,12 +35,12 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<size_t>& rows,
-                                                                       const std::vector<size_t>& cols,
-                                                                       const std::vector<size_t>& location,
-                                                                       vector<std::set<size_t> >& noLoopEvalSparsity,
-                                                                       vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
-                                                                       std::map<LoopModel<Base>*, vector<std::set<size_t> > >& loopsEvalSparsities,
-                                                                       std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException) {
+                                                               const std::vector<size_t>& cols,
+                                                               const std::vector<size_t>& location,
+                                                               vector<std::set<size_t> >& noLoopEvalSparsity,
+                                                               vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
+                                                               std::map<LoopModel<Base>*, vector<std::set<size_t> > >& loopsEvalSparsities,
+                                                               std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException) {
 
         using namespace std;
         using namespace loops;
@@ -227,8 +227,8 @@ namespace CppAD {
 
     template<class Base>
     vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
-                                                                                    const vector<CGBase>& x,
-                                                                                    bool forward) throw (CGException) {
+                                                                            const vector<CGBase>& x,
+                                                                            bool forward) throw (CGException) {
         using namespace std;
         using namespace CppAD::loops;
         using namespace CppAD::extra;
@@ -425,17 +425,17 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
-                                                                          LoopModel<Base>& lModel,
-                                                                          size_t tapeI,
-                                                                          const loops::JacobianWithLoopsRowInfo& rowInfo,
-                                                                          const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
-                                                                          const std::vector<std::map<size_t, CGBase> >& dzDx,
-                                                                          const CGBase& py,
-                                                                          IndexOperationNode<Base>& iterationIndexOp,
-                                                                          vector<loops::IfElseInfo<Base> >& ifElses,
-                                                                          size_t& jacLE,
-                                                                          std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
-                                                                          std::set<size_t>& allLocations) {
+                                                                  LoopModel<Base>& lModel,
+                                                                  size_t tapeI,
+                                                                  const loops::JacobianWithLoopsRowInfo& rowInfo,
+                                                                  const std::vector<std::map<size_t, CGBase> >& dyiDxtape,
+                                                                  const std::vector<std::map<size_t, CGBase> >& dzDx,
+                                                                  const CGBase& py,
+                                                                  IndexOperationNode<Base>& iterationIndexOp,
+                                                                  vector<loops::IfElseInfo<Base> >& ifElses,
+                                                                  size_t& jacLE,
+                                                                  std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
+                                                                  std::set<size_t>& allLocations) {
         using namespace std;
         using namespace loops;
         using CppAD::vector;

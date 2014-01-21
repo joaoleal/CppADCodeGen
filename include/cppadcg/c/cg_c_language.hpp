@@ -31,6 +31,7 @@ namespace CppAD {
     template<class Base>
     class CLanguage : public Language<Base> {
     public:
+        static const std::string U_INDEX_TYPE;
         static const std::string ATOMICFUN_STRUCT_DEFINITION;
     protected:
         static const std::string _C_COMP_OP_LT;
@@ -40,12 +41,19 @@ namespace CppAD {
         static const std::string _C_COMP_OP_GT;
         static const std::string _C_COMP_OP_NE;
         static const std::string _C_STATIC_INDEX_ARRAY;
+        static const std::string _C_SPARSE_INDEX_ARRAY;
+        static const std::string _ATOMIC_TX;
+        static const std::string _ATOMIC_TY;
+        static const std::string _ATOMIC_PX;
+        static const std::string _ATOMIC_PY;
 
     protected:
         // the type name of the Base class (e.g. "double")
         const std::string _baseTypeName;
         // spaces for 1 level indentation
         const std::string _spaces;
+        //
+        const std::auto_ptr<LanguageGenerationData<Base> >* _info;
         // current indentation
         std::string _indentation;
         // variable name used for the inlet variable
@@ -64,10 +72,6 @@ namespace CppAD {
         size_t _independentSize;
         //
         size_t _minTemporaryVarID;
-        // maps atomic function IDs to their internal index
-        std::map<size_t, size_t> _atomicFunctionId2Index;
-        // maps atomic function IDs to their names
-        std::map<size_t, std::string> _atomicFunctionId2Name;
         // maps the variable IDs to the their position in the dependent vector
         // (some IDs may be the same as the independent variables when dep = indep)
         std::map<size_t, size_t> _dependentIDs;
@@ -89,14 +93,10 @@ namespace CppAD {
         std::map<std::string, std::string>* _sources;
         // the values in the temporary array
         std::vector<const Argument<Base>*> _tmpArrayValues;
+        // the values in the temporary sparse array
+        std::vector<const Argument<Base>*> _tmpSparseArrayValues;
         // indexes defined as function arguments
         std::vector<const IndexDclrOperationNode<Base>*> _funcArgIndexes;
-        // all used indexes
-        const std::set<const IndexDclrOperationNode<Base>*>* _indexes;
-        // all used random index patterns
-        const std::set<RandomIndexPattern*>* _indexRandomPatterns;
-        const std::vector<IndexPattern*>* _loopDependentIndexPatterns;
-        const std::vector<IndexPattern*>* _loopIndependentIndexPatterns;
         std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
         // the maximum precision used to print values
         size_t _parameterPrecision;
@@ -117,6 +117,7 @@ namespace CppAD {
         CLanguage(const std::string& varTypeName, size_t spaces = 3) :
             _baseTypeName(varTypeName),
             _spaces(spaces, ' '),
+            _info(NULL),
             _inArgName("in"),
             _outArgName("out"),
             _atomicArgName("atomicFun"),
@@ -127,10 +128,6 @@ namespace CppAD {
             _ignoreZeroDepAssign(false),
             _maxAssigmentsPerFunction(0),
             _sources(NULL),
-            _indexes(NULL),
-            _indexRandomPatterns(NULL),
-            _loopDependentIndexPatterns(NULL),
-            _loopIndependentIndexPatterns(NULL),
             _parameterPrecision(std::numeric_limits<Base>::digits10) {
         }
 
@@ -217,14 +214,47 @@ namespace CppAD {
             _sources = sources;
         }
 
-        virtual std::string generateTemporaryVariableDeclaration(bool localOnly = false,
-                                                                 bool zeroArrayDependents = false) {
+        inline std::string generateTemporaryVariableDeclaration(bool isWrapperFunction,
+                                                                bool zeroArrayDependents,
+                                                                const std::vector<int>& atomicMaxForward,
+                                                                const std::vector<int>& atomicMaxReverse) {
+            int maxForward = -1;
+            if (!atomicMaxForward.empty())
+                maxForward = *std::max_element(atomicMaxForward.begin(), atomicMaxForward.end());
+
+            int maxReverse = -1;
+            if (!atomicMaxReverse.empty())
+                maxReverse = *std::max_element(atomicMaxReverse.begin(), atomicMaxReverse.end());
+
+            return generateTemporaryVariableDeclaration(isWrapperFunction, zeroArrayDependents,
+                                                        maxForward, maxReverse);
+        }
+
+        /**
+         * Declares temporary variables used by a function.
+         * 
+         * @param isWrapperFunction true if the declarations are for a wrapper
+         *                               function which calls other functions
+         *                               where the actual work is performed
+         * @param zeroArrayDependents  whether or not the dependent variables
+         *                             should be set to zero before executing 
+         *                             the operation graph
+         * @param maxForwardOrder the maximum order of forward mode calls to 
+         *                        atomic functions
+         * @param maxReverseOrder the maximum order of reverse mode calls to 
+         *                        atomic functions
+         * @return the string with the declarations for the temporary variables
+         */
+        virtual std::string generateTemporaryVariableDeclaration(bool isWrapperFunction = false,
+                                                                 bool zeroArrayDependents = false,
+                                                                 int maxForwardOrder = -1,
+                                                                 int maxReverseOrder = -1) {
             CPPADCG_ASSERT_UNKNOWN(_nameGen != NULL);
 
             // declare variables
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
 
-            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 2,
+            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 3,
                                  "There must be two temporary variables");
 
             _ss << _spaces << "// auxiliary variables\n";
@@ -233,7 +263,7 @@ namespace CppAD {
              */
             if (tmpArg[0].array) {
                 size_t size = _nameGen->getMaxTemporaryVariableID() + 1 - _nameGen->getMinTemporaryVariableID();
-                if (size > 0 || !localOnly) {
+                if (size > 0 || isWrapperFunction) {
                     _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
                 }
             } else if (_temporary.size() > 0) {
@@ -261,14 +291,31 @@ namespace CppAD {
              * temporary array variables
              */
             size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID();
-            if (arraySize > 0 || !localOnly) {
+            if (arraySize > 0 || isWrapperFunction) {
                 _ss << _spaces << _baseTypeName << " " << tmpArg[1].name << "[" << arraySize << "];\n";
-                if (localOnly && arraySize > 0) {
-                    _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
-                }
             }
-            if (arraySize > 0 || zeroArrayDependents) {
-                _ss << _spaces << "unsigned long i;\n";
+
+            /**
+             * temporary sparse array variables
+             */
+            size_t sArraySize = _nameGen->getMaxTemporarySparseArrayVariableID();
+            if (sArraySize > 0 || isWrapperFunction) {
+                _ss << _spaces << _baseTypeName << " " << tmpArg[2].name << "[" << sArraySize << "];\n";
+                _ss << _spaces << U_INDEX_TYPE << " " << _C_SPARSE_INDEX_ARRAY << "[" << sArraySize << "];\n";
+            }
+
+            if (!isWrapperFunction) {
+                generateArrayContainersDeclaration(_ss, maxForwardOrder, maxReverseOrder);
+            }
+
+            //
+            if (!isWrapperFunction && (arraySize > 0 || sArraySize > 0)) {
+                _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
+            }
+
+            if ((isWrapperFunction && zeroArrayDependents) ||
+                    (!isWrapperFunction && (arraySize > 0 || sArraySize > 0 || zeroArrayDependents))) {
+                _ss << _spaces << U_INDEX_TYPE << " i;\n";
             }
 
             // loop indexes
@@ -279,6 +326,34 @@ namespace CppAD {
             _ss.str("");
 
             return code;
+        }
+
+        inline void generateArrayContainersDeclaration(std::ostringstream& ss,
+                                                       const std::vector<int>& atomicMaxForward,
+                                                       const std::vector<int>& atomicMaxReverse) {
+            int maxForward = -1;
+            if (!atomicMaxForward.empty())
+                maxForward = *std::max_element(atomicMaxForward.begin(), atomicMaxForward.end());
+
+            int maxReverse = -1;
+            if (!atomicMaxReverse.empty())
+                maxReverse = *std::max_element(atomicMaxReverse.begin(), atomicMaxReverse.end());
+
+            generateArrayContainersDeclaration(ss, maxForward, maxReverse);
+        }
+
+        virtual void generateArrayContainersDeclaration(std::ostringstream& ss,
+                                                        int maxForwardOrder = -1,
+                                                        int maxReverseOrder = -1) {
+            if (maxForwardOrder >= 0 || maxReverseOrder >= 0) {
+                ss << _spaces << "Array " << _ATOMIC_TX << "[" << (std::max(maxForwardOrder, maxReverseOrder) + 1) << "];\n";
+                if (maxForwardOrder >= 0)
+                    ss << _spaces << "Array " << _ATOMIC_TY << ";\n";
+                if (maxReverseOrder >= 0) {
+                    ss << _spaces << "Array " << _ATOMIC_PX << ";\n";
+                    ss << _spaces << "Array " << _ATOMIC_PY << "[" << (maxReverseOrder + 1) << "];\n";
+                }
+            }
         }
 
         virtual std::string generateDependentVariableDeclaration() {
@@ -334,7 +409,7 @@ namespace CppAD {
             std::string argtxt;
             for (size_t a = 0; a < _funcArgIndexes.size(); a++) {
                 if (a > 0) argtxt += ", ";
-                argtxt += "unsigned long " + *_funcArgIndexes[a]->getName();
+                argtxt += U_INDEX_TYPE + " " + *_funcArgIndexes[a]->getName();
             }
             return argtxt;
         }
@@ -432,7 +507,7 @@ namespace CppAD {
 
     protected:
 
-        virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) {
+        virtual void generateSourceCode(std::ostream& out, const std::auto_ptr<LanguageGenerationData<Base> >& info) {
             const bool createFunction = !_functionName.empty();
             const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != NULL;
 
@@ -448,25 +523,23 @@ namespace CppAD {
             _currentLoops.clear();
 
             // save some info
-            _independentSize = info.independent.size();
-            _dependent = &info.dependent;
-            _nameGen = &info.nameGen;
-            _minTemporaryVarID = info.minTemporaryVarID;
-            _atomicFunctionId2Index = info.atomicFunctionId2Index;
-            _atomicFunctionId2Name = info.atomicFunctionId2Name;
-            const vector<CG<Base> >& dependent = info.dependent;
-            const std::vector<OperationNode<Base>*>& variableOrder = info.variableOrder;
+            _info = &info;
+            _independentSize = info->independent.size();
+            _dependent = &info->dependent;
+            _nameGen = &info->nameGen;
+            _minTemporaryVarID = info->minTemporaryVarID;
+            const vector<CG<Base> >& dependent = info->dependent;
+            const std::vector<OperationNode<Base>*>& variableOrder = info->variableOrder;
+
             _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());
             std::fill(_tmpArrayValues.begin(), _tmpArrayValues.end(), (Argument<Base>*) NULL);
-            _indexes = &info.indexes;
-            _indexRandomPatterns = &info.indexRandomPatterns;
-            _loopDependentIndexPatterns = &info.loopDependentIndexPatterns;
-            _loopIndependentIndexPatterns = &info.loopIndependentIndexPatterns;
+            _tmpSparseArrayValues.resize(_nameGen->getMaxTemporarySparseArrayVariableID());
+            std::fill(_tmpSparseArrayValues.begin(), _tmpSparseArrayValues.end(), (Argument<Base>*) NULL);
 
             /**
              * generate index array names (might be used for variable names)
              */
-            generateNames4RandomIndexPatterns(*_indexRandomPatterns);
+            generateNames4RandomIndexPatterns(info->indexRandomPatterns);
 
             /**
              * generate variable names
@@ -474,7 +547,7 @@ namespace CppAD {
             //generate names for the independent variables
             typename std::vector<OperationNode<Base> *>::const_iterator it;
             for (size_t j = 0; j < _independentSize; j++) {
-                OperationNode<Base>& op = *info.independent[j];
+                OperationNode<Base>& op = *info->independent[j];
                 if (op.getName() == NULL) {
                     op.setName(_nameGen->generateIndependent(op));
                 }
@@ -486,7 +559,7 @@ namespace CppAD {
                 if (node != NULL && node->getOperationType() != CGLoopEndOp && node->getName() == NULL) {
                     if (node->getOperationType() == CGLoopIndexedDepOp) {
                         size_t pos = node->getInfo()[0];
-                        const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
+                        const IndexPattern* ip = info->loopDependentIndexPatterns[pos];
                         node->setName(_nameGen->generateIndexedDependent(*node, *ip));
 
                     } else {
@@ -503,13 +576,21 @@ namespace CppAD {
             const std::vector<FuncArgument>& tmpArg = _nameGen->getTemporary();
             CPPADCG_ASSERT_KNOWN(indArg.size() > 0 && depArg.size() > 0,
                                  "There must be at least one dependent and one independent argument");
-            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 2,
-                                 "There must be two temporary variables");
+            CPPADCG_ASSERT_KNOWN(tmpArg.size() == 3,
+                                 "There must be three temporary variables");
 
             if (createFunction) {
                 funcArgDcl_ = generateFunctionArgumentsDcl();
-                localFuncArgDcl_ = funcArgDcl_ + ", " + argumentDeclaration(tmpArg[0]) + ", " + argumentDeclaration(tmpArg[1]);
-                localFuncArgs_ = generateDefaultFunctionArguments() + ", " + tmpArg[0].name + ", " + tmpArg[1].name;
+                localFuncArgDcl_ = funcArgDcl_ + ", "
+                        + argumentDeclaration(tmpArg[0]) + ", "
+                        + argumentDeclaration(tmpArg[1]) + ", "
+                        + argumentDeclaration(tmpArg[2]) + ", "
+                        + U_INDEX_TYPE + "* " + _C_SPARSE_INDEX_ARRAY;
+                localFuncArgs_ = generateDefaultFunctionArguments() + ", "
+                        + tmpArg[0].name + ", "
+                        + tmpArg[1].name + ", "
+                        + tmpArg[2].name + ", "
+                        + _C_SPARSE_INDEX_ARRAY;
             }
 
             auxArrayName_ = tmpArg[1].name + "p";
@@ -555,10 +636,12 @@ namespace CppAD {
                     CGOpCode op = node.getOperationType();
                     if (!isDependent(node) && op != CGIndexDeclarationOp) {
                         // variable names for temporaries must always be created since they might have been used before with a different name/id
-                        if (requiresVariableName(node) && op != CGArrayCreationOp) {
+                        if (requiresVariableName(node) && op != CGArrayCreationOp && op != CGSparseArrayCreationOp) {
                             node.setName(_nameGen->generateTemporary(node));
                         } else if (op == CGArrayCreationOp) {
                             node.setName(_nameGen->generateTemporaryArray(node));
+                        } else if (op == CGSparseArrayCreationOp) {
+                            node.setName(_nameGen->generateTemporarySparseArray(node));
                         }
                     }
                 }
@@ -566,7 +649,7 @@ namespace CppAD {
                 /**
                  * Source code generation magic!
                  */
-                if (info.zeroDependents) {
+                if (info->zeroDependents) {
                     // zero initial values
                     const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
                     for (size_t i = 0; i < depArg.size(); i++) {
@@ -587,7 +670,7 @@ namespace CppAD {
                     // check if a new function should start
                     if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoops.empty()) {
                         assignCount = 0;
-                        saveLocalFunction(localFuncNames, localFuncNames.empty() && info.zeroDependents);
+                        saveLocalFunction(localFuncNames, localFuncNames.empty() && info->zeroDependents);
                     }
 
                     OperationNode<Base>& node = **it;
@@ -599,9 +682,7 @@ namespace CppAD {
                         continue; // nothing to do (bogus operation)
                     }
 
-                    printAssigment(node);
-
-                    assignCount++;
+                    assignCount += printAssigment(node);
                 }
 
                 if (localFuncNames.size() > 0 && assignCount > 0) {
@@ -611,6 +692,9 @@ namespace CppAD {
             }
 
             if (localFuncNames.size() > 0) {
+                /**
+                 * Create the wrapper function which calls the other functions
+                 */
                 CPPADCG_ASSERT_KNOWN(tmpArg[0].array,
                                      "The temporary variables must be saved in an array in order to generate multiple functions");
 
@@ -624,7 +708,9 @@ namespace CppAD {
                 _nameGen->customFunctionVariableDeclarations(_code);
                 _code << generateIndependentVariableDeclaration() << "\n";
                 _code << generateDependentVariableDeclaration() << "\n";
-                _code << generateTemporaryVariableDeclaration(false) << "\n";
+                _code << generateTemporaryVariableDeclaration(true, false,
+                                                              info->atomicFunctionsMaxForward,
+                                                              info->atomicFunctionsMaxReverse) << "\n";
                 _nameGen->prepareCustomFunctionVariables(_code);
                 for (size_t i = 0; i < localFuncNames.size(); i++) {
                     _code << _spaces << localFuncNames[i] << "(" << localFuncArgs_ << ");\n";
@@ -681,7 +767,9 @@ namespace CppAD {
                     _nameGen->customFunctionVariableDeclarations(_ss);
                     _ss << generateIndependentVariableDeclaration() << "\n";
                     _ss << generateDependentVariableDeclaration() << "\n";
-                    _ss << generateTemporaryVariableDeclaration(true, info.zeroDependents) << "\n";
+                    _ss << generateTemporaryVariableDeclaration(false, info->zeroDependents,
+                                                                info->atomicFunctionsMaxForward,
+                                                                info->atomicFunctionsMaxReverse) << "\n";
                     _nameGen->prepareCustomFunctionVariables(_ss);
                     _ss << _code.str();
                     _nameGen->finalizeCustomFunctionVariables(_ss);
@@ -703,37 +791,44 @@ namespace CppAD {
             }
         }
 
-        inline void printAssigment(OperationNode<Base>& node) {
-            printAssigment(node, node);
+        inline unsigned printAssigment(OperationNode<Base>& node) {
+            return printAssigment(node, node);
         }
 
-        inline void printAssigment(OperationNode<Base>& nodeName,
-                                   const Argument<Base>& nodeRhs) {
+        inline unsigned printAssigment(OperationNode<Base>& nodeName,
+                                       const Argument<Base>& nodeRhs) {
             if (nodeRhs.getOperation() != NULL) {
-                printAssigment(nodeName, *nodeRhs.getOperation());
+                return printAssigment(nodeName, *nodeRhs.getOperation());
             } else {
                 printAssigmentStart(nodeName);
                 printParameter(*nodeRhs.getParameter());
                 printAssigmentEnd(nodeName);
+                return 1;
             }
         }
 
-        inline void printAssigment(OperationNode<Base>& nodeName,
-                                   OperationNode<Base>& nodeRhs) {
+        inline unsigned printAssigment(OperationNode<Base>& nodeName,
+                                       OperationNode<Base>& nodeRhs) {
             bool createsVar = directlyAssignsVariable(nodeRhs); // do we need to do the assignment here?
             if (!createsVar) {
                 printAssigmentStart(nodeName);
             }
-            printExpressionNoVarCheck(nodeRhs);
+            unsigned lines = printExpressionNoVarCheck(nodeRhs);
             if (!createsVar) {
                 printAssigmentEnd(nodeRhs);
             }
 
             if (nodeRhs.getOperationType() == CGArrayElementOp) {
-                size_t arrayId = nodeRhs.getArguments()[0].getOperation()->getVariableID();
+                OperationNode<Base>* array = nodeRhs.getArguments()[0].getOperation();
+                size_t arrayId = array->getVariableID();
                 size_t pos = nodeRhs.getInfo()[0];
-                _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
+                if (array->getOperationType() == CGArrayCreationOp)
+                    _tmpArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
+                else
+                    _tmpSparseArrayValues[arrayId - 1 + pos] = NULL; // this could probably be removed!
             }
+
+            return lines;
         }
 
         inline virtual void printAssigmentStart(OperationNode<Base>& op) {
@@ -784,12 +879,18 @@ namespace CppAD {
             _nameGen->customFunctionVariableDeclarations(_ss);
             _ss << generateIndependentVariableDeclaration() << "\n";
             _ss << generateDependentVariableDeclaration() << "\n";
-            size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID() - 1;
-            if (arraySize > 0) {
+            size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID();
+            size_t sArraySize = _nameGen->getMaxTemporarySparseArrayVariableID();
+            if (arraySize > 0 || sArraySize > 0) {
                 _ss << _spaces << _baseTypeName << "* " << auxArrayName_ << ";\n";
             }
-            if (arraySize > 0 || zeroDependentArray) {
-                _ss << _spaces << "unsigned long i;\n";
+
+            generateArrayContainersDeclaration(_ss,
+                                               _info->get()->atomicFunctionsMaxForward,
+                                               _info->get()->atomicFunctionsMaxReverse);
+
+            if (arraySize > 0 || sArraySize > 0 || zeroDependentArray) {
+                _ss << _spaces << U_INDEX_TYPE << " i;\n";
             }
 
             // loop indexes
@@ -813,6 +914,7 @@ namespace CppAD {
                 return op != CGArrayElementOp && op != CGIndexOp && op != CGIndexDeclarationOp && op != CGTmpOp;
             } else {
                 return ( op == CGArrayCreationOp ||
+                        op == CGSparseArrayCreationOp ||
                         op == CGAtomicForwardOp ||
                         op == CGAtomicReverseOp ||
                         op == CGComOpLt ||
@@ -860,6 +962,7 @@ namespace CppAD {
             return isCondAssign(op) ||
                     op == CGPriOp ||
                     op == CGArrayCreationOp ||
+                    op == CGSparseArrayCreationOp ||
                     op == CGAtomicForwardOp ||
                     op == CGAtomicReverseOp ||
                     op == CGDependentMultiAssignOp ||
@@ -892,14 +995,18 @@ namespace CppAD {
             if (var.getName() == NULL) {
                 if (op == CGArrayCreationOp) {
                     var.setName(_nameGen->generateTemporaryArray(var));
+
+                } else if (op == CGSparseArrayCreationOp) {
+                    var.setName(_nameGen->generateTemporarySparseArray(var));
+
                 } else if (op == CGLoopIndexedDepOp) {
                     size_t pos = var.getInfo()[0];
-                    const IndexPattern* ip = (*_loopDependentIndexPatterns)[pos];
+                    const IndexPattern* ip = (*_info)->loopDependentIndexPatterns[pos];
                     var.setName(_nameGen->generateIndexedDependent(var, *ip));
 
                 } else if (op == CGLoopIndexedIndepOp) {
                     size_t pos = var.getInfo()[1];
-                    const IndexPattern* ip = (*_loopIndependentIndexPatterns)[pos];
+                    const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
                     var.setName(_nameGen->generateIndexedIndependent(var, *ip));
 
                 } else if (var.getVariableID() <= _independentSize) {
@@ -924,7 +1031,7 @@ namespace CppAD {
                     OperationNode<Base>* tmpVar = var.getArguments()[0].getOperation();
                     CPPADCG_ASSERT_KNOWN(tmpVar != NULL && tmpVar->getOperationType() == CGTmpDclOp, "Invalid arguments for loop indexed temporary operation");
                     return createVariableName(*tmpVar);
-                    
+
                 } else {
                     // temporary variable
                     var.setName(_nameGen->generateTemporary(var));
@@ -941,38 +1048,43 @@ namespace CppAD {
             _code << _nameGen->generateIndependent(op);
         }
 
-        virtual void print(const Argument<Base>& arg) {
+        virtual unsigned print(const Argument<Base>& arg) {
             if (arg.getOperation() != NULL) {
                 // expression
-                printExpression(*arg.getOperation());
+                return printExpression(*arg.getOperation());
             } else {
                 // parameter
                 printParameter(*arg.getParameter());
+                return 1;
             }
         }
 
-        virtual void printExpression(OperationNode<Base>& op) throw (CGException) {
+        virtual unsigned printExpression(OperationNode<Base>& op) throw (CGException) {
             if (op.getVariableID() > 0) {
                 // use variable name
                 _code << createVariableName(op);
+                return 1;
             } else {
                 // print expression code
-                printExpressionNoVarCheck(op);
+                return printExpressionNoVarCheck(op);
             }
         }
 
-        virtual void printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
+        virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
             CGOpCode op = node.getOperationType();
             switch (op) {
                 case CGArrayCreationOp:
                     printArrayCreationOp(node);
                     break;
+                case CGSparseArrayCreationOp:
+                    printSparseArrayCreationOp(node);
+                    break;
                 case CGArrayElementOp:
                     printArrayElementOp(node);
                     break;
                 case CGAssignOp:
-                    printAssignOp(node);
-                    break;
+                    return printAssignOp(node);
+
                 case CGAbsOp:
                 case CGAcosOp:
                 case CGAsinOp:
@@ -998,8 +1110,8 @@ namespace CppAD {
                     printOperationAdd(node);
                     break;
                 case CGAliasOp:
-                    printOperationAlias(node);
-                    break;
+                    return printOperationAlias(node);
+
                 case CGComOpLt:
                 case CGComOpLe:
                 case CGComOpEq:
@@ -1035,16 +1147,15 @@ namespace CppAD {
                     break;
 
                 case CGDependentMultiAssignOp:
-                    printDependentMultiAssign(node);
-                    break;
+                    return printDependentMultiAssign(node);
 
                 case CGIndexOp:
-                    break; // nothing to do
+                    return 0; // nothing to do
                 case CGIndexAssignOp:
                     printIndexAssign(node);
                     break;
                 case CGIndexDeclarationOp:
-                    break; // already done
+                    return 0; // already done
 
                 case CGLoopStartOp:
                     printLoopStart(node);
@@ -1060,7 +1171,7 @@ namespace CppAD {
                     break;
                 case CGTmpDclOp:
                     // nothing to do
-                    break;
+                    return 0;
                 case CGTmpOp:
                     printTmpVar(node);
                     break;
@@ -1090,9 +1201,10 @@ namespace CppAD {
                     ss << "Unknown operation code '" << op << "'.";
                     throw CGException(ss.str());
             }
+            return 1;
         }
 
-        virtual void printAssignOp(OperationNode<Base>& node) throw (CGException) {
+        virtual unsigned printAssignOp(OperationNode<Base>& node) throw (CGException) {
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation");
 
             return print(node.getArguments()[0]);
@@ -1184,9 +1296,9 @@ namespace CppAD {
             _code << "))";
         }
 
-        virtual void printOperationAlias(OperationNode<Base>& op) {
+        virtual unsigned printOperationAlias(OperationNode<Base>& op) {
             CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for alias");
-            print(op.getArguments()[0]);
+            return print(op.getArguments()[0]);
         }
 
         virtual void printOperationAdd(OperationNode<Base>& op) {
@@ -1375,151 +1487,139 @@ namespace CppAD {
             }
         }
 
-        virtual void printArrayCreationOp(OperationNode<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
-
-            const size_t id = op.getVariableID();
-            const std::vector<Argument<Base> >& args = op.getArguments();
-            const size_t argSize = args.size();
-
-            if (argSize > 1 && args[0].getParameter() != NULL) {
-                const Base& value = *args[0].getParameter();
-                bool sameValue = true;
-                for (size_t i = 1; i < argSize; i++) {
-                    if (args[i].getParameter() == NULL || *args[i].getParameter() != value) {
-                        sameValue = false;
-                        break;
+        inline bool isSameArgument(const Argument<Base>& newArg,
+                                   const Argument<Base>* oldArg) {
+            if (oldArg != NULL) {
+                if (oldArg->getParameter() != NULL) {
+                    if (newArg.getParameter() != NULL) {
+                        return (*newArg.getParameter() == *oldArg->getParameter());
                     }
-                }
-                if (sameValue) {
-                    bool assign = false;
-                    for (size_t i = 0; i < argSize; i++) {
-                        const Argument<Base>* oldArg = _tmpArrayValues[id - 1 + i];
-                        if (oldArg == NULL || oldArg->getParameter() == NULL || *oldArg->getParameter() != value) {
-                            assign = true;
-                            break;
-                        }
-                    }
-                    if (assign) {
-                        _code << _indentation << "for(i = 0; i < " << argSize << "; i++) "
-                                "(" << _nameGen->generateTemporaryArray(op) << ")[i] = " << value << ";\n";
-
-                        for (size_t i = 0; i < argSize; i++) {
-                            _tmpArrayValues[id - 1 + i] = &args[i];
-                        }
-                    }
-                    return;
+                } else {
+                    return (newArg.getOperation() == oldArg->getOperation());
                 }
             }
+            return false;
+        }
 
-            bool firstElement = true;
-            for (size_t i = 0; i < argSize; i++) {
-                bool newValue = true;
-                if (_tmpArrayValues[id - 1 + i] != NULL) {
-                    const Argument<Base>& oldArg = *_tmpArrayValues[id - 1 + i];
-                    if (oldArg.getParameter() != NULL) {
-                        if (args[i].getParameter() != NULL) {
-                            newValue = (*args[i].getParameter() != *oldArg.getParameter());
-                        }
-                    } else {
-                        newValue = (args[i].getOperation() != oldArg.getOperation());
-                    }
-                }
+        virtual void printArrayCreationOp(OperationNode<Base>& op);
 
-                if (newValue) {
-                    if (firstElement) {
-                        _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(op) << "; // size: " << args.size() << "\n";
-                        firstElement = false;
-                    }
-                    _code << _indentation << auxArrayName_ << "[" << i << "] = ";
-                    print(args[i]);
-                    _code << ";\n";
+        virtual void printSparseArrayCreationOp(OperationNode<Base>& op);
 
-                    _tmpArrayValues[id - 1 + i] = &args[i];
-                }
+        inline void printArrayStructInit(const std::string& dataArrayName,
+                                         size_t pos,
+                                         const std::vector<OperationNode<Base>*>& arrays,
+                                         size_t k);
+
+        inline void printArrayStructInit(const std::string& dataArrayName,
+                                         OperationNode<Base>& array);
+
+        inline void markArrayChanged(OperationNode<Base>& ty);
+
+        inline size_t printArrayCreationUsingLoop(size_t startPos,
+                                                  OperationNode<Base>& array,
+                                                  size_t startj,
+                                                  std::vector<const Argument<Base>*>& tmpArrayValues);
+
+        inline std::string getTempArrayName(const OperationNode<Base>& op);
+
+        virtual void printArrayElementOp(OperationNode<Base>& op);
+
+        virtual void printAtomicForwardOp(OperationNode<Base>& atomicFor) {
+            CPPADCG_ASSERT_KNOWN(atomicFor.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation");
+            int q = atomicFor.getInfo()[1];
+            int p = atomicFor.getInfo()[2];
+            size_t p1 = p + 1;
+            const std::vector<Argument<Base> >& opArgs = atomicFor.getArguments();
+            CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2, "Invalid number of arguments for atomic forward operation");
+
+            size_t id = atomicFor.getInfo()[0];
+            size_t atomicIndex = (*_info)->atomicFunctionId2Index.at(id);
+
+            std::vector<OperationNode<Base>*> tx(p1), ty(p1);
+            for (size_t k = 0; k < p1; k++) {
+                tx[k] = opArgs[0 * p1 + k].getOperation();
+                ty[k] = opArgs[1 * p1 + k].getOperation();
             }
-        }
 
-        virtual void printArrayElementOp(OperationNode<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-            CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != NULL, "Invalid argument for array element operation");
-            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
+            CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+            CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
 
-            OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
-            _code << "(" << _nameGen->generateTemporaryArray(arrayOp) << ")[" << op.getInfo()[0] << "]";
-        }
+            CPPADCG_ASSERT_KNOWN(ty[p]->getOperationType() == CGArrayCreationOp, "Invalid array type");
 
-        virtual void printAtomicForwardOp(OperationNode<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for atomic forward operation");
-            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation");
-            size_t id = op.getInfo()[0];
-            size_t atomicIndex = _atomicFunctionId2Index.at(id);
-            int q = op.getInfo()[1];
-            int p = op.getInfo()[2];
-            OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
-            OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
-
-            createVariableName(tx);
-            createVariableName(ty);
+            // tx
+            for (size_t k = 0; k < p1; k++) {
+                _code << _indentation;
+                printArrayStructInit(_ATOMIC_TX, k, tx, k);
+            }
+            // ty
+            _code << _indentation;
+            printArrayStructInit(_ATOMIC_TY, *ty[p]);
+            _ss.str("");
 
             _code << _indentation << "atomicFun.forward(atomicFun.libModel, "
-                    << atomicIndex << ", "
-                    << q << ", "
-                    << p << ", "
-                    << *tx.getName() << ", " << tx.getArguments().size() << ", "
-                    << *ty.getName() << ", " << ty.getArguments().size() << "); // "
-                    << _atomicFunctionId2Name.at(id)
+                    << atomicIndex << ", " << q << ", " << p << ", "
+                    << _ATOMIC_TX << ", &" << _ATOMIC_TY << "); // "
+                    << (*_info)->atomicFunctionId2Name.at(id)
                     << "\n";
 
             /**
              * the values of ty are now changed
              */
-            markArrayChanged(ty);
+            markArrayChanged(*ty[p]);
         }
 
-        virtual void printAtomicReverseOp(OperationNode<Base>& op) {
-            CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 4, "Invalid number of arguments for atomic forward operation");
-            CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 2, "Invalid number of information elements for atomic forward operation");
-            size_t id = op.getInfo()[0];
-            int p = op.getInfo()[1];
-            size_t atomicIndex = _atomicFunctionId2Index.at(id);
-            OperationNode<Base>& tx = *op.getArguments()[0].getOperation();
-            OperationNode<Base>& ty = *op.getArguments()[1].getOperation();
-            OperationNode<Base>& px = *op.getArguments()[2].getOperation();
-            OperationNode<Base>& py = *op.getArguments()[3].getOperation();
+        virtual void printAtomicReverseOp(OperationNode<Base>& atomicRev) {
+            CPPADCG_ASSERT_KNOWN(atomicRev.getInfo().size() == 2, "Invalid number of information elements for atomic reverse operation");
+            int p = atomicRev.getInfo()[1];
+            size_t p1 = p + 1;
+            const std::vector<Argument<Base> >& opArgs = atomicRev.getArguments();
+            CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4, "Invalid number of arguments for atomic reverse operation");
 
-            CPPADCG_ASSERT_KNOWN(tx.getArguments().size() == px.getArguments().size(), "Invalid array length");
-            CPPADCG_ASSERT_KNOWN(ty.getArguments().size() == py.getArguments().size(), "Invalid array length");
+            size_t id = atomicRev.getInfo()[0];
+            size_t atomicIndex = (*_info)->atomicFunctionId2Index.at(id);
+            std::vector<OperationNode<Base>*> tx(p1), px(p1), py(p1);
+            for (size_t k = 0; k < p1; k++) {
+                tx[k] = opArgs[0 * p1 + k].getOperation();
+                px[k] = opArgs[2 * p1 + k].getOperation();
+                py[k] = opArgs[3 * p1 + k].getOperation();
+            }
 
-            createVariableName(tx);
-            createVariableName(ty);
-            createVariableName(px);
-            createVariableName(py);
+            CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+            CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
+
+            CPPADCG_ASSERT_KNOWN(px[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+
+            CPPADCG_ASSERT_KNOWN(py[0]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
+            CPPADCG_ASSERT_KNOWN(p == 0 || py[1]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+
+            // tx
+            for (size_t k = 0; k < p1; k++) {
+                _code << _indentation;
+                printArrayStructInit(_ATOMIC_TX, k, tx, k);
+            }
+            // py
+            for (size_t k = 0; k < p1; k++) {
+                _code << _indentation;
+                printArrayStructInit(_ATOMIC_PY, k, py, k);
+            }
+            // px
+            _code << _indentation;
+            printArrayStructInit(_ATOMIC_PX, *px[0]);
+            _ss.str("");
 
             _code << _indentation << "atomicFun.reverse(atomicFun.libModel, "
-                    << atomicIndex << ", "
-                    << p << ", "
-                    << *tx.getName() << ", " << *ty.getName() << ", "
-                    << *px.getName() << ", " << *py.getName() << ", "
-                    << tx.getArguments().size() << ", " << ty.getArguments().size() << "); // "
-                    << _atomicFunctionId2Name.at(id)
+                    << atomicIndex << ", " << p << ", "
+                    << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
+                    << (*_info)->atomicFunctionId2Name.at(id)
                     << "\n";
 
             /**
              * the values of px are now changed
              */
-            markArrayChanged(px);
+            markArrayChanged(*px[0]);
         }
 
-        inline void markArrayChanged(OperationNode<Base>& ty) {
-            size_t id = ty.getVariableID();
-            size_t tySize = ty.getArguments().size();
-            for (size_t i = 0; i < tySize; i++) {
-                _tmpArrayValues[id - 1 + i] = NULL;
-            }
-        }
-
-        virtual void printDependentMultiAssign(OperationNode<Base>& node) {
+        virtual unsigned printDependentMultiAssign(OperationNode<Base>& node) {
             CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGDependentMultiAssignOp, "Invalid node type");
             CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments");
 
@@ -1536,9 +1636,10 @@ namespace CppAD {
 
                 if (useArg) {
                     printAssigment(node, arg); // ignore other arguments!
-                    break;
+                    return 1;
                 }
             }
+            return 0;
         }
 
         virtual void printLoopStart(OperationNode<Base>& node) {
@@ -1587,7 +1688,7 @@ namespace CppAD {
 
             // CGLoopIndexedIndepOp
             size_t pos = node.getInfo()[1];
-            const IndexPattern* ip = (*_loopIndependentIndexPatterns)[pos];
+            const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
             _code << _nameGen->generateIndexedIndependent(node, *ip);
         }
 
@@ -1799,6 +1900,8 @@ namespace CppAD {
             }
         }
     };
+    template<class Base>
+    const std::string CLanguage<Base>::U_INDEX_TYPE = "unsigned long";
 
     template<class Base>
     const std::string CLanguage<Base>::_C_COMP_OP_LT = "<";
@@ -1817,10 +1920,33 @@ namespace CppAD {
     const std::string CLanguage<Base>::_C_STATIC_INDEX_ARRAY = "index";
 
     template<class Base>
-    const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "struct CLangAtomicFun {\n"
+    const std::string CLanguage<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
+
+    template<class Base>
+    const std::string CLanguage<Base>::_ATOMIC_TX = "atx";
+
+    template<class Base>
+    const std::string CLanguage<Base>::_ATOMIC_TY = "aty";
+
+    template<class Base>
+    const std::string CLanguage<Base>::_ATOMIC_PX = "apx";
+
+    template<class Base>
+    const std::string CLanguage<Base>::_ATOMIC_PY = "apy";
+
+    template<class Base>
+    const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct Array {\n"
+    "    void* data;\n"
+    "    " + U_INDEX_TYPE + " size;\n"
+    "    int sparse;\n"
+    "    const " + U_INDEX_TYPE + "* idx;\n"
+    "    " + U_INDEX_TYPE + " nnz;\n"
+    "} Array;\n"
+    "\n"
+    "struct CLangAtomicFun {\n"
     "    void* libModel;\n"
-    "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const void* tx, unsigned long txSize, void* ty, unsigned long tySize);\n"
-    "    int (*reverse)(void* libModel, int atomicIndex, int p, const void* tx, const void* ty, void* px, const void* py, unsigned long xSize, unsigned long ySize);\n"
+    "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const Array tx[], Array* ty);\n"
+    "    int (*reverse)(void* libModel, int atomicIndex, int p, const Array tx[], Array* px, const Array py[]);\n"
     "};";
 
 }

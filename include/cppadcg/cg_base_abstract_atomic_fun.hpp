@@ -66,44 +66,76 @@ namespace CppAD {
 
         static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
                                                      const vector<CGB>& tx) {
-            if (false && tx.size() > 0) {
-                /**
-                 * Cannot reuse arrays yet! :(
-                 * the usage of the new array elements would have to depend on
-                 * the last usage of all the elements in tx
-                 */
-                OperationNode<Base>* op = tx[0].getOperationNode();
-                if (op != NULL && op->getOperationType() == CGArrayElementOp) {
-                    OperationNode<Base>* otherArray = op->getArguments()[0].getOperation();
-                    bool reuseArray = true;
-                    for (size_t i = 0; i < tx.size(); i++) {
-                        op = tx[i].getOperationNode();
-                        if (op == NULL ||
-                                op->getOperationType() != CGArrayElementOp ||
-                                op->getArguments()[0].getOperation() != otherArray ||
-                                op->getInfo()[0] != i) {
-                            reuseArray = false;
-                            break;
-                        }
-                    }
-                    if (reuseArray) {
-                        return otherArray;
-                    }
-                }
-            }
             std::vector<Arg> arrayArgs = asArguments(tx);
             std::vector<size_t> info; // empty
             OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
             handler.manageOperationNode(array);
+
+            return array;
+        }
+
+        static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
+                                                     const vector<CGB>& tx,
+                                                     size_t p,
+                                                     size_t k) {
+            CPPADCG_ASSERT_UNKNOWN(k <= p);
+            size_t n = tx.size() / (p + 1);
+            std::vector<Arg> arrayArgs(n);
+            for (size_t i = 0; i < n; i++) {
+                arrayArgs[i] = asArgument(tx[i * (p + 1) + k]);
+            }
+
+            std::vector<size_t> info; // empty
+            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
+            handler.manageOperationNode(array);
+
             return array;
         }
 
         static inline OperationNode<Base>* makeZeroArray(CodeHandler<Base>& handler,
-                                                         const vector<CGB>& tx) {
-            vector<CGB> tx2(tx.size());
+                                                         size_t size) {
+            vector<CGB> tx2(size);
             std::vector<Arg> arrayArgs = asArguments(tx2);
             std::vector<size_t> info; // empty
             OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
+            handler.manageOperationNode(array);
+
+            return array;
+        }
+
+        static inline OperationNode<Base>* makeEmptySparseArray(CodeHandler<Base>& handler,
+                                                                size_t size) {
+            std::vector<Arg> arrayArgs; //empty
+            std::vector<size_t> info(1);
+            info[0] = size;
+            OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp, info, arrayArgs);
+            handler.manageOperationNode(array);
+            return array;
+        }
+
+        static inline OperationNode<Base>* makeSparseArray(CodeHandler<Base>& handler,
+                                                           const vector<CGB>& py,
+                                                           size_t p,
+                                                           size_t k) {
+            size_t p1 = p + 1;
+            CPPADCG_ASSERT_UNKNOWN(k < p1);
+            size_t n = py.size() / p1;
+
+            std::vector<Arg> arrayArgs;
+            std::vector<size_t> arrayIdx(1);
+            arrayIdx[0] = n; // array size
+
+            arrayArgs.reserve(py.size() / 3);
+            arrayIdx.reserve(1 + py.size() / 3);
+
+            for (size_t i = 0; i < n; i++) {
+                if (!py[i * p1 + k].isParameter() || !py[i * p1 + k].IdenticalZero()) {
+                    arrayArgs.push_back(asArgument(py[i * p1 + k]));
+                    arrayIdx.push_back(i);
+                }
+            }
+
+            OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp, arrayIdx, arrayArgs);
             handler.manageOperationNode(array);
             return array;
         }

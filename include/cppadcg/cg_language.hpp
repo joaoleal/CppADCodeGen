@@ -54,6 +54,16 @@ namespace CppAD {
          */
         const std::map<size_t, std::string>& atomicFunctionId2Name;
         /**
+         * the maximum forward mode order each atomic function is called 
+         * (-1 means forward mode not used)
+         */
+        const std::vector<int>& atomicFunctionsMaxForward;
+        /**
+         * the maximum reverse mode order each atomic function is called
+         * (-1 means reverse mode not used)
+         */
+        const std::vector<int>& atomicFunctionsMaxReverse;
+        /**
          * a flag indicating whether or not temporary variable IDs have been recycled
          */
         const bool reuseIDs;
@@ -79,6 +89,8 @@ namespace CppAD {
                                VariableNameGenerator<Base>& ng,
                                const std::map<size_t, size_t>& atomicId2Index,
                                const std::map<size_t, std::string>& atomicId2Name,
+                               const std::vector<int>& atomicMaxForward,
+                               const std::vector<int>& atomicMaxReverse,
                                const bool ri,
                                const std::set<const IndexDclrOperationNode<Base>*>& indexs,
                                const std::set<RandomIndexPattern*>& idxRandomPatterns,
@@ -92,6 +104,8 @@ namespace CppAD {
             nameGen(ng),
             atomicFunctionId2Index(atomicId2Index),
             atomicFunctionId2Name(atomicId2Name),
+            atomicFunctionsMaxForward(atomicMaxForward),
+            atomicFunctionsMaxReverse(atomicMaxReverse),
             reuseIDs(ri),
             indexes(indexs),
             indexRandomPatterns(idxRandomPatterns),
@@ -109,7 +123,7 @@ namespace CppAD {
     template<class Base>
     class Language {
     protected:
-        virtual void generateSourceCode(std::ostream& out, LanguageGenerationData<Base>& info) = 0;
+        virtual void generateSourceCode(std::ostream& out, const std::auto_ptr<LanguageGenerationData<Base> >& info) = 0;
 
         /**
          * Whether or not a new variable is created as a result of this operation

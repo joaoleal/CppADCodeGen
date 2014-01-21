@@ -166,7 +166,7 @@ namespace CppAD {
             }
 
             /**
-             * Create source for each variable present in equations outisde loops
+             * Create source for each variable present in equations outside loops
              */
             typename map<size_t, vector<CGBase> >::iterator itJ;
             for (itJ = jacNl.begin(); itJ != jacNl.end(); ++itJ) {
@@ -324,7 +324,9 @@ namespace CppAD {
                 nameGenHess.customFunctionVariableDeclarations(_cache);
                 _cache << langC.generateIndependentVariableDeclaration() << "\n";
                 _cache << langC.generateDependentVariableDeclaration() << "\n";
-                _cache << langC.generateTemporaryVariableDeclaration(true) << "\n";
+                _cache << langC.generateTemporaryVariableDeclaration(false, false,
+                                                                     handler.getExternalFuncMaxForwardOrder(),
+                                                                     handler.getExternalFuncMaxReverseOrder()) << "\n";
                 nameGenHess.prepareCustomFunctionVariables(_cache);
 
                 // code inside the loop
@@ -365,8 +367,8 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::createReverseOneWithLoopsNL(CodeHandler<Base>& handler,
-                                                                    size_t i,
-                                                                    vector<CG<Base> >& jacRow) {
+                                                            size_t i,
+                                                            vector<CG<Base> >& jacRow) {
         size_t n = _fun.Domain();
 
         _cache.str("");
@@ -391,10 +393,10 @@ namespace CppAD {
 
     template<class Base>
     std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev1Jac(ADFun<CGBase>& fun,
-                                                                                                 const vector<std::set<size_t> >& sparsity,
-                                                                                                 const vector<std::set<size_t> >& evalSparsity,
-                                                                                                 const vector<CGBase>& x,
-                                                                                                 bool constainsAtomics) {
+                                                                                         const vector<std::set<size_t> >& sparsity,
+                                                                                         const vector<std::set<size_t> >& evalSparsity,
+                                                                                         const vector<CGBase>& x,
+                                                                                         bool constainsAtomics) {
         using namespace std;
         using namespace CppAD::extra;
         using CppAD::vector;
@@ -455,16 +457,16 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopRev1(std::ostringstream& cache,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t tapeI) {
+                                                             const LoopModel<Base>& loop,
+                                                             size_t tapeI) {
         generateFunctionNameLoopRev1(cache, _name, loop, tapeI);
     }
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopRev1(std::ostringstream& cache,
-                                                                     const std::string& modelName,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t tapeI) {
+                                                             const std::string& modelName,
+                                                             const LoopModel<Base>& loop,
+                                                             size_t tapeI) {
         cache << modelName << "_" << FUNCTION_SPARSE_REVERSE_ONE <<
                 "_loop" << loop.getLoopId() << "_g" << tapeI;
     }

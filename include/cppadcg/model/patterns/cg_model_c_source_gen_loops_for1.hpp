@@ -397,7 +397,9 @@ namespace CppAD {
                 nameGenHess.customFunctionVariableDeclarations(_cache);
                 _cache << langC.generateIndependentVariableDeclaration() << "\n";
                 _cache << langC.generateDependentVariableDeclaration() << "\n";
-                _cache << langC.generateTemporaryVariableDeclaration(true) << "\n";
+                _cache << langC.generateTemporaryVariableDeclaration(false, false,
+                                                                     handler.getExternalFuncMaxForwardOrder(),
+                                                                     handler.getExternalFuncMaxReverseOrder()) << "\n";
                 nameGenHess.prepareCustomFunctionVariables(_cache);
 
                 // code inside the loop
@@ -438,8 +440,8 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
-                                                                    size_t j,
-                                                                    vector<CG<Base> >& jacCol) {
+                                                            size_t j,
+                                                            vector<CG<Base> >& jacCol) {
         size_t n = _fun.Domain();
 
         _cache.str("");
@@ -885,10 +887,10 @@ namespace CppAD {
 
     template<class Base>
     std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopFor1Jac(ADFun<CGBase>& fun,
-                                                                                                      const vector<std::set<size_t> >& sparsity,
-                                                                                                      const vector<std::set<size_t> >& evalSparsity,
-                                                                                                      const vector<CGBase>& x,
-                                                                                                      bool constainsAtomics) {
+                                                                                              const vector<std::set<size_t> >& sparsity,
+                                                                                              const vector<std::set<size_t> >& evalSparsity,
+                                                                                              const vector<CGBase>& x,
+                                                                                              bool constainsAtomics) {
         using namespace std;
         using namespace CppAD::extra;
         using CppAD::vector;
@@ -952,16 +954,16 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopFor1(std::ostringstream& cache,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t g) {
+                                                             const LoopModel<Base>& loop,
+                                                             size_t g) {
         generateFunctionNameLoopFor1(cache, _name, loop, g);
     }
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopFor1(std::ostringstream& cache,
-                                                                     const std::string& modelName,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t g) {
+                                                             const std::string& modelName,
+                                                             const LoopModel<Base>& loop,
+                                                             size_t g) {
         cache << modelName << "_" << FUNCTION_SPARSE_FORWARD_ONE <<
                 "_loop" << loop.getLoopId() << "_g" << g;
     }

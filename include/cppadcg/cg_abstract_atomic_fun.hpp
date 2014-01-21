@@ -90,6 +90,8 @@ namespace CppAD {
                 return true;
             }
 
+            size_t m = ty.size() / (p + 1);
+
             vector<bool> vyLocal;
             if (p == 0) {
                 vyLocal = vy;
@@ -98,7 +100,7 @@ namespace CppAD {
                  * Use the jacobian sparsity to determine which elements
                  * will always be zero
                  */
-                size_t m = ty.size() / (p + 1);
+
                 size_t n = tx.size() / (p + 1);
 
                 vector< std::set<size_t> > r(n);
@@ -145,16 +147,26 @@ namespace CppAD {
             CodeHandler<Base>* handler = findHandler(tx);
             CPPADCG_ASSERT_UNKNOWN(handler != NULL);
 
-            OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
-            OperationNode<Base>* tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
+            size_t p1 = p + 1;
+
+            std::vector<OperationNode<Base>*> txArray(p1), tyArray(p1);
+            for (size_t k = 0; k < p1; k++) {
+                if (k == 0)
+                    txArray[k] = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx, p, k);
+                else
+                    txArray[k] = BaseAbstractAtomicFun<Base>::makeSparseArray(*handler, tx, p, k);
+                tyArray[k] = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, m);
+            }
 
             std::vector<size_t> opInfo(3);
             opInfo[0] = id_;
             opInfo[1] = q;
             opInfo[2] = p;
-            std::vector<Argument<Base> > args(2);
-            args[0] = Argument<Base>(*txArray);
-            args[1] = Argument<Base>(*tyArray);
+            std::vector<Argument<Base> > args(2 * p1);
+            for (size_t k = 0; k < p1; k++) {
+                args[0 * p1 + k] = Argument<Base>(*txArray[k]);
+                args[1 * p1 + k] = Argument<Base>(*tyArray[k]);
+            }
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp, opInfo, args);
             handler->manageOperationNode(atomicOp);
@@ -162,19 +174,22 @@ namespace CppAD {
 
             opInfo.resize(1);
             args.resize(2);
-            for (size_t i = 0; i < ty.size(); i++) {
-                if (vyLocal.size() == 0 || vyLocal[i]) {
-                    opInfo[0] = i;
-                    args[0] = Argument<Base>(*tyArray);
-                    args[1] = Argument<Base>(*atomicOp);
+            for (size_t k = 0; k < p1; k++) {
+                for (size_t i = 0; i < m; i++) {
+                    size_t pos = i * p1 + k;
+                    if (vyLocal.size() == 0 || vyLocal[pos]) {
+                        opInfo[0] = i;
+                        args[0] = Argument<Base>(*tyArray[k]);
+                        args[1] = Argument<Base>(*atomicOp);
 
-                    ty[i] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
-                    if (valuesDefined) {
-                        ty[i].setValue(tyb[i]);
+                        ty[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
+                        if (valuesDefined) {
+                            ty[pos].setValue(tyb[pos]);
+                        }
+                    } else {
+                        CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[pos]), "Invalid value");
+                        ty[pos] = 0; // not a variable (zero)
                     }
-                } else {
-                    CPPADCG_ASSERT_KNOWN(tyb.size() == 0 || IdenticalZero(tyb[i]), "Invalid value");
-                    ty[i] = 0; // not a variable (zero)
                 }
             }
 
@@ -218,13 +233,14 @@ namespace CppAD {
                 vxLocal[j] = true;
             }
 
+            size_t p1 = p + 1;
             // k == 0
-            size_t m = ty.size() / (p + 1);
-            size_t n = tx.size() / (p + 1);
+            size_t m = ty.size() / p1;
+            size_t n = tx.size() / p1;
 
             vector< std::set<size_t> > rt(m);
             for (size_t i = 0; i < m; i++) {
-                if (!py[i * (p + 1)].isParameter() || !py[i * (p + 1)].IdenticalZero()) {
+                if (!py[i * p1].isParameter() || !py[i * p1].IdenticalZero()) {
                     rt[i].insert(0);
                 }
             }
@@ -232,7 +248,7 @@ namespace CppAD {
             this->rev_sparse_jac(1, rt, st);
 
             for (size_t j = 0; j < n; j++) {
-                vxLocal[j * (p + 1) + p] = st[j].size() > 0;
+                vxLocal[j * p1 + p] = st[j].size() > 0;
             }
 
             if (p >= 1) {
@@ -248,19 +264,19 @@ namespace CppAD {
                 vector< std::set<size_t> > v(n);
 
                 for (size_t j = 0; j < n; j++) {
-                    vx[j] = !tx[j * (p + 1)].isParameter();
-                    if (!tx[j * (p + 1) + 1].isParameter() || !tx[j * (p + 1) + 1].IdenticalZero()) {
+                    vx[j] = !tx[j * p1].isParameter();
+                    if (!tx[j * p1 + 1].isParameter() || !tx[j * p1 + 1].IdenticalZero()) {
                         r[j].insert(0);
                     }
                 }
                 for (size_t i = 0; i < m; i++) {
-                    s[i] = !py[i * (p + 1) + 1].isParameter() || !py[i * (p + 1) + 1].IdenticalZero();
+                    s[i] = !py[i * p1 + 1].isParameter() || !py[i * p1 + 1].IdenticalZero();
                 }
 
                 this->rev_sparse_hes(vx, s, t, 1, r, u, v);
 
                 for (size_t j = 0; j < n; j++) {
-                    vxLocal[j * (p + 1) + p - 1] = v[j].size() > 0;
+                    vxLocal[j * p1 + p - 1] = v[j].size() > 0;
                 }
             }
 
@@ -302,25 +318,40 @@ namespace CppAD {
             }
             CPPADCG_ASSERT_UNKNOWN(handler != NULL);
 
-            OperationNode<Base>* txArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx);
-            OperationNode<Base>* tyArray;
-            OperationNode<Base>* pxArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, px);
-            OperationNode<Base>* pyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, py);
+            std::vector<OperationNode<Base>*> txArray(p1), tyArray(p1), pxArray(p1), pyArray(p1);
+            for (size_t k = 0; k <= p; k++) {
+                if (k == 0)
+                    txArray[k] = BaseAbstractAtomicFun<Base>::makeArray(*handler, tx, p, k);
+                else
+                    txArray[k] = BaseAbstractAtomicFun<Base>::makeSparseArray(*handler, tx, p, k);
 
-            if (standAlone_) {
-                tyArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, ty);
-            } else {
-                tyArray = BaseAbstractAtomicFun<Base>::makeArray(*handler, ty);
+                if (standAlone_) {
+                    tyArray[k] = BaseAbstractAtomicFun<Base>::makeEmptySparseArray(*handler, m);
+                } else {
+                    tyArray[k] = BaseAbstractAtomicFun<Base>::makeSparseArray(*handler, ty, p, k);
+                }
+
+                if (k == 0)
+                    pxArray[k] = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, n);
+                else
+                    pxArray[k] = BaseAbstractAtomicFun<Base>::makeEmptySparseArray(*handler, n);
+
+                if (k == 0)
+                    pyArray[k] = BaseAbstractAtomicFun<Base>::makeSparseArray(*handler, py, p, k);
+                else
+                    pyArray[k] = BaseAbstractAtomicFun<Base>::makeArray(*handler, py, p, k);
             }
 
             std::vector<size_t> opInfo(2);
             opInfo[0] = id_;
             opInfo[1] = p;
-            std::vector<Argument<Base> > args(4);
-            args[0] = Argument<Base>(*txArray);
-            args[1] = Argument<Base>(*tyArray);
-            args[2] = Argument<Base>(*pxArray);
-            args[3] = Argument<Base>(*pyArray);
+            std::vector<Argument<Base> > args(4 * p1);
+            for (size_t k = 0; k <= p; k++) {
+                args[0 * p1 + k] = Argument<Base>(*txArray[k]);
+                args[1 * p1 + k] = Argument<Base>(*tyArray[k]);
+                args[2 * p1 + k] = Argument<Base>(*pxArray[k]);
+                args[3 * p1 + k] = Argument<Base>(*pyArray[k]);
+            }
 
             OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp, opInfo, args);
             handler->manageOperationNode(atomicOp);
@@ -328,20 +359,23 @@ namespace CppAD {
 
             opInfo.resize(1);
             args.resize(2);
-            for (size_t j = 0; j < px.size(); j++) {
-                if (vxLocal[j]) {
-                    opInfo[0] = j;
-                    args[0] = Argument<Base>(*pxArray);
-                    args[1] = Argument<Base>(*atomicOp);
+            for (size_t k = 0; k < p1; k++) {
+                for (size_t j = 0; j < n; j++) {
+                    size_t pos = j * p1 + k;
+                    if (vxLocal[pos]) {
+                        opInfo[0] = j;
+                        args[0] = Argument<Base>(*pxArray[k]);
+                        args[1] = Argument<Base>(*atomicOp);
 
-                    px[j] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
-                    if (valuesDefined) {
-                        px[j].setValue(pxb[j]);
+                        px[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
+                        if (valuesDefined) {
+                            px[pos].setValue(pxb[pos]);
+                        }
+                    } else {
+                        // CPPADCG_ASSERT_KNOWN(pxb.size() == 0 || IdenticalZero(pxb[j]), "Invalid value");
+                        // pxb[j] might be non-zero but it is not required (it might have been used to determine other pxbs)
+                        px[pos] = Base(0); // not a variable (zero)
                     }
-                } else {
-                    // CPPADCG_ASSERT_KNOWN(pxb.size() == 0 || IdenticalZero(pxb[j]), "Invalid value");
-                    // pxb[j] might be non-zero but it is not required (it might have been used to determine other pxbs)
-                    px[j] = Base(0); // not a variable (zero)
                 }
             }
 
@@ -360,7 +394,7 @@ namespace CppAD {
          * Used to evaluate function values and forward mode function values and
          * derivatives.
          * 
-         * @param q Lowerest order for this forward mode calculation.
+         * @param q Lowest order for this forward mode calculation.
          * @param p Highest order for this forward mode calculation.
          * @param vx If size not zero, which components of \c x are variables
          * @param vy If size not zero, which components of \c y are variables

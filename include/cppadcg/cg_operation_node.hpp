@@ -108,7 +108,7 @@ namespace CppAD {
             color_(0),
             name_(NULL) {
             CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
-                   arg3.getOperation() != NULL);
+                                   arg3.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
             arguments_[2] = arg3;
@@ -129,7 +129,7 @@ namespace CppAD {
             color_(0),
             name_(NULL) {
             CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
-                   arg3.getOperation() != NULL || arg4.getOperation() != NULL);
+                                   arg3.getOperation() != NULL || arg4.getOperation() != NULL);
             arguments_[0] = arg1;
             arguments_[1] = arg2;
             arguments_[2] = arg3;
@@ -362,6 +362,9 @@ namespace CppAD {
         switch (op) {
             case CGArrayCreationOp:
                 os << "new $1[" << c.getArguments().size() << "]";
+                break;
+            case CGSparseArrayCreationOp:
+                os << "new $1[" << c.getInfo()[0] << "]";
                 break;
             case CGArrayElementOp:
                 os << "$1[" << c.getInfo()[0] << "]";

@@ -81,6 +81,10 @@ namespace CppAD {
             return _nameGen->getMaxTemporaryArrayVariableID();
         }
 
+        virtual size_t getMaxTemporarySparseArrayVariableID() const {
+            return _nameGen->getMaxTemporarySparseArrayVariableID();
+        }
+
         virtual std::string generateDependent(size_t index) {
             return _nameGen->generateDependent(index);
         }
@@ -103,6 +107,10 @@ namespace CppAD {
 
         virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) {
             return _nameGen->generateTemporaryArray(variable);
+        }
+
+        virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) {
+            return _nameGen->generateTemporarySparseArray(variable);
         }
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
@@ -130,8 +138,58 @@ namespace CppAD {
             return _ss.str();
         }
 
-        virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) {
-            _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID);
+        virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) {
+            if (indep.getVariableID() < _minMultiplierID)
+                return _nameGen->getIndependentArrayName(indep);
+            else
+                return _multName;
+        }
+
+        virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) {
+            if (indep.getVariableID() < _minMultiplierID)
+                return _nameGen->getIndependentArrayIndex(indep);
+            else
+                return indep.getVariableID() - _minMultiplierID;
+        }
+
+        virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
+                                               const OperationNode<Base>& indepSecond) {
+            size_t id1 = indepFirst.getVariableID();
+            size_t id2 = indepSecond.getVariableID();
+
+            if ((id1 < _minMultiplierID) != (id2 < _minMultiplierID))
+                return false;
+
+            if (id1 < _minMultiplierID && id2 < _minMultiplierID)
+                return _nameGen->isConsecutiveInIndepArray(indepFirst, indepSecond);
+            else
+                return id1 + 1 == id2;
+        }
+
+        virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
+                                              const OperationNode<Base>& indep2) {
+            size_t l1;
+            if (indep1.getOperationType() == CGInvOp) {
+                l1 = indep1.getVariableID() < _minMultiplierID ? 0 : 1;
+            } else {
+                l1 = indep1.getInfo()[0]; //CGLoopIndexedIndepOp
+            }
+
+            size_t l2;
+            if (indep2.getOperationType() == CGInvOp) {
+                l2 = indep2.getVariableID() < _minMultiplierID ? 0 : 1;
+            } else {
+                l2 = indep2.getInfo()[0]; //CGLoopIndexedIndepOp
+            }
+
+            return l1 == l2;
+        }
+
+        virtual void setTemporaryVariableID(size_t minTempID,
+                                            size_t maxTempID,
+                                            size_t maxTempArrayID,
+                                            size_t maxTempSparseArrayID) {
+            _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID, maxTempSparseArrayID);
         }
 
         inline virtual ~CLangDefaultHessianVarNameGenerator() {

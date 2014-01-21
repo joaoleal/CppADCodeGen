@@ -35,26 +35,33 @@ namespace CppAD {
         std::string _tmpName;
         // array name of the temporary array variables
         std::string _tmpArrayName;
+        // sparse array name of the temporary array variables
+        std::string _tmpSparseArrayName;
         // the lowest variable ID used for the temporary variables
         size_t _minTemporaryID;
         // the highest variable ID used for the temporary variables
         size_t _maxTemporaryID;
         // the highest ID used for the temporary array variables
         size_t _maxTemporaryArrayID;
+        // the highest ID used for the temporary sparse array variables
+        size_t _maxTemporarySparseArrayID;
     public:
 
         inline CLangDefaultVariableNameGenerator(const std::string& depName = "y",
                                                  const std::string& indepName = "x",
                                                  const std::string& tmpName = "v",
-                                                 const std::string& tmpArrayName = "array") :
+                                                 const std::string& tmpArrayName = "array",
+                                                 const std::string& tmpSparseArrayName = "sarray") :
             _depName(depName),
             _indepName(indepName),
             _tmpName(tmpName),
-            _tmpArrayName(tmpArrayName) {
+            _tmpArrayName(tmpArrayName),
+            _tmpSparseArrayName(tmpSparseArrayName) {
             this->_independent.push_back(FuncArgument(_indepName));
             this->_dependent.push_back(FuncArgument(_depName));
             this->_temporary.push_back(FuncArgument(_tmpName));
             this->_temporary.push_back(FuncArgument(_tmpArrayName));
+            this->_temporary.push_back(FuncArgument(_tmpSparseArrayName));
         }
 
         inline virtual size_t getMinTemporaryVariableID() const {
@@ -67,6 +74,10 @@ namespace CppAD {
 
         inline virtual size_t getMaxTemporaryArrayVariableID() const {
             return _maxTemporaryArrayID;
+        }
+
+        virtual size_t getMaxTemporarySparseArrayVariableID() const {
+            return _maxTemporarySparseArrayID;
         }
 
         inline virtual std::string generateDependent(size_t index) {
@@ -114,6 +125,18 @@ namespace CppAD {
             return _ss.str();
         }
 
+        virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) {
+            _ss.clear();
+            _ss.str("");
+
+            CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGSparseArrayCreationOp);
+
+            size_t id = variable.getVariableID();
+            _ss << "&" << _tmpSparseArrayName << "[" << (id - 1) << "]";
+
+            return _ss.str();
+        }
+
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
                                                      const IndexPattern& ip) {
             CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGLoopIndexedDepOp, "Invalid node type");
@@ -140,15 +163,37 @@ namespace CppAD {
             return _ss.str();
         }
 
-        inline virtual void setTemporaryVariableID(size_t minTempID, size_t maxTempID, size_t maxTempArrayID) {
+        inline virtual void setTemporaryVariableID(size_t minTempID,
+                                                   size_t maxTempID,
+                                                   size_t maxTempArrayID,
+                                                   size_t maxTempSparseArrayID) {
             _minTemporaryID = minTempID;
             _maxTemporaryID = maxTempID;
             _maxTemporaryArrayID = maxTempArrayID;
+            _maxTemporarySparseArrayID = maxTempSparseArrayID;
 
             // if
             //  _minTemporaryID == _maxTemporaryID + 1
             // then no temporary variables are being used
             CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
+        }
+
+        virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) {
+            return _indepName;
+        }
+
+        virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) {
+            return indep.getVariableID() - 1;
+        }
+
+        virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
+                                               const OperationNode<Base>& indepSecond) {
+            return indepFirst.getVariableID() + 1 == indepSecond.getVariableID();
+        }
+
+        virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
+                                              const OperationNode<Base>& indep2) {
+            return true;
         }
 
         inline virtual ~CLangDefaultVariableNameGenerator() {

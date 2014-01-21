@@ -429,7 +429,9 @@ namespace CppAD {
                 nameGenRev2.customFunctionVariableDeclarations(_cache);
                 _cache << langC.generateIndependentVariableDeclaration() << "\n";
                 _cache << langC.generateDependentVariableDeclaration() << "\n";
-                _cache << langC.generateTemporaryVariableDeclaration(true) << "\n";
+                _cache << langC.generateTemporaryVariableDeclaration(false, false,
+                                                                     handler.getExternalFuncMaxForwardOrder(),
+                                                                     handler.getExternalFuncMaxReverseOrder()) << "\n";
                 nameGenRev2.prepareCustomFunctionVariables(_cache);
 
                 // code inside the loop
@@ -467,7 +469,7 @@ namespace CppAD {
                 const string jobName = "model (reverse two, no loops)";
                 startingJob("'" + jobName + "'", JobTimer::SOURCE_GENERATION);
 
-                // we can use a new handler to reduce memmory usage
+                // we can use a new handler to reduce memory usage
                 CodeHandler<Base> handlerNL;
                 handlerNL.setJobTimer(_jobTimer);
 
@@ -1038,7 +1040,7 @@ namespace CppAD {
         }
 
         /**
-         * Create subgroups from goups with the same contributions at the 
+         * Create subgroups from groups with the same contributions at the 
          * same Hessian rows. Each subgroup has a sub-set of the group's 
          * contributions which have the same relations between Hessian row index
          * and set of iteration indexes.
@@ -1353,16 +1355,16 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t g) {
+                                                             const LoopModel<Base>& loop,
+                                                             size_t g) {
         generateFunctionNameLoopRev2(cache, _name, loop, g);
     }
 
     template<class Base>
     void ModelCSourceGen<Base>::generateFunctionNameLoopRev2(std::ostringstream& cache,
-                                                                     const std::string& modelName,
-                                                                     const LoopModel<Base>& loop,
-                                                                     size_t g) {
+                                                             const std::string& modelName,
+                                                             const LoopModel<Base>& loop,
+                                                             size_t g) {
         cache << modelName << "_" << FUNCTION_SPARSE_REVERSE_TWO <<
                 "_loop" << loop.getLoopId() << "_g" << g;
     }

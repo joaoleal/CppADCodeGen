@@ -127,6 +127,9 @@ namespace CppAD {
 
     template<class Base>
     class ModelLibraryProcessor;
+    
+    template<class Base>
+    class FunctorGenericModel;
 
     /***************************************************************************
      * Dynamic model compilation

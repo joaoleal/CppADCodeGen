@@ -98,6 +98,7 @@
 #include <cppadcg/cg_job_timer.hpp>
 #include <cppadcg/cg_language.hpp>
 #include <cppadcg/cg_scope_path_element.hpp>
+#include <cppadcg/cg_array_id_compresser.hpp>
 #include <cppadcg/cg_code_handler.hpp>
 #include <cppadcg/patterns/cg_loop_position.hpp>
 #include <cppadcg/cg_code_handler_loops.hpp>
@@ -151,6 +152,7 @@
 // C source code generation
 #include <cppadcg/c/cg_c_lang_atomic_fun.hpp>
 #include <cppadcg/c/cg_c_language.hpp>
+#include <cppadcg/c/cg_c_language_arrays.hpp>
 #include <cppadcg/c/cg_c_language_index_patterns.hpp>
 #include <cppadcg/c/cg_c_language_double.hpp>
 #include <cppadcg/c/cg_c_lang_default_var_name_gen.hpp>
@@ -159,6 +161,9 @@
 #include <cppadcg/c/cg_c_lang_custom_var_name_gen.hpp>
 
 //
+#include <cppadcg/model/cg_external_function_wrapper.hpp>
+#include <cppadcg/model/cg_atomic_external_function_wrapper.hpp>
+#include <cppadcg/model/cg_generic_model_external_function_wrapper.hpp>
 #include <cppadcg/model/cg_model_library_processor.hpp>
 #include <cppadcg/model/cg_model_library.hpp>
 #include <cppadcg/model/cg_generic_model.hpp>
