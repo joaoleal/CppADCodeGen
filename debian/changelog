@@ -1,3 +1,12 @@
+cppadcodegen (1.5.0-1) unstable; urgency=low
+
+   * changed handling of external/atomic functions
+   * sparse arrays are used by external functions
+   * some bugfixes in array space reutilization
+   * improved array initialization in the generated source code
+
+ -- Joao Leal <development@ciengis.com>  Wed, 22 Jan 2013 13:00:00 +0000
+
 cppadcodegen (1.4.0-1) unstable; urgency=low
 
   * equation pattern detection allows equations to not be defined for some iterations
