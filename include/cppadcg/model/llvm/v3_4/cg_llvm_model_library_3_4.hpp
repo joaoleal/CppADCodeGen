@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_LLVM_MODEL_LIBRARY_3_2_INCLUDED
-#define CPPAD_CG_LLVM_MODEL_LIBRARY_3_2_INCLUDED
+#ifndef CPPAD_CG_LLVM_MODEL_LIBRARY_3_4_INCLUDED
+#define CPPAD_CG_LLVM_MODEL_LIBRARY_3_4_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -20,7 +20,7 @@
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JIT.h>
 #include <llvm/PassManager.h>
-#include <llvm/Module.h>
+#include <llvm/IR/Module.h>
 #include <llvm/Pass.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 
@@ -29,12 +29,12 @@ namespace CppAD {
     template<class Base> class LlvmModel;
 
     /**
-     * Class used to load JIT'ed models by LLVM 3.2
+     * Class used to load JIT'ed models by LLVM 3.4
      * 
      * @author Joao Leal
      */
     template<class Base>
-    class LlvmModelLibrary3_2 : public LlvmModelLibrary<Base> {
+    class LlvmModelLibrary3_4 : public LlvmModelLibrary<Base> {
     protected:
         llvm::Module* _module;
         std::auto_ptr<llvm::LLVMContext> _context;
@@ -42,7 +42,7 @@ namespace CppAD {
         std::auto_ptr<llvm::FunctionPassManager> _fpm;
     public:
 
-        LlvmModelLibrary3_2(llvm::Module* module,
+        LlvmModelLibrary3_4(llvm::Module* module,
                             llvm::LLVMContext* context) :
             _module(module),
             _context(context) {
@@ -116,7 +116,7 @@ namespace CppAD {
             return fPtr;
         }
 
-        inline virtual ~LlvmModelLibrary3_2() {
+        inline virtual ~LlvmModelLibrary3_4() {
         }
 
     protected:
@@ -148,9 +148,9 @@ namespace CppAD {
         }
 
     private:
-        LlvmModelLibrary3_2(const LlvmModelLibrary3_2&); // not implemented
+        LlvmModelLibrary3_4(const LlvmModelLibrary3_4&); // not implemented
 
-        LlvmModelLibrary3_2& operator=(const LlvmModelLibrary3_2&); // not implemented
+        LlvmModelLibrary3_4& operator=(const LlvmModelLibrary3_4&); // not implemented
 
         friend class LlvmModel<Base>;
 

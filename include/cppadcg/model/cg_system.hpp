@@ -66,7 +66,7 @@ namespace CppAD {
         inline void callExecutable(const std::string& executable,
                                    const std::vector<std::string>& args,
                                    bool pipe = false,
-                                   const std::string& message = "") throw(CGException);
+                                   const std::string& message = "") throw (CGException);
 
         inline double currentTime();
     }

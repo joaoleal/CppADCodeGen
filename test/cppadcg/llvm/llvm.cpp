@@ -13,7 +13,7 @@
  * Author: Joao Leal
  */
 #include <cppadcg/cg.hpp>
-#include <cppadcg/model/llvm/v3_2/cg_llvm.hpp>
+#include <cppadcg/model/llvm/cg_llvm.hpp>
 
 #include "CppADCGModelTest.hpp"
 
@@ -64,8 +64,8 @@ TEST_F(CppADCGModelTest, llvm) {
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
     std::auto_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create());
-    GenericModel<Base>* model = llvmModelLib->model("mySmallModel");
-    ASSERT_TRUE(model != NULL);
+    std::auto_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
+    ASSERT_TRUE(model.get() != NULL);
 
     this->testModelResults(*model, *fun.get(), x);
 

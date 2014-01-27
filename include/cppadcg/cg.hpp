@@ -176,8 +176,10 @@
 #include <cppadcg/model/dynamic_lib/cg_ar_archiver.hpp>
 
 // compiler
-#include <cppadcg/model/dynamic_lib/cg_c_compiler.hpp>
-#include <cppadcg/model/dynamic_lib/cg_gcc_compiler.hpp>
+#include <cppadcg/model/compiler/cg_c_compiler.hpp>
+#include <cppadcg/model/compiler/cg_abstract_c_compiler.hpp>
+#include <cppadcg/model/compiler/cg_gcc_compiler.hpp>
+#include <cppadcg/model/compiler/cg_clang_compiler.hpp>
 
 // model source code generation helpers
 #include <cppadcg/model/cg_model_c_source_gen.hpp>

@@ -20,10 +20,16 @@ create_temp_folder_target()
 
 LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
 ADD_DEFINITIONS(${LLVM_CFLAGS})
-               
+
 add_cppadcg_test(llvm.cpp)
 
-TARGET_LINK_LIBRARIES(llvm
-                      ${CLANG_LIBS}
-                      ${LLVM_MODULE_LIBS}
-                      ${LLVM_LDFLAGS})
+IF(${LLVM_VERSION_MAJOR} STREQUAL 3 AND ${LLVM_VERSION_MINOR} STREQUAL 2)
+  TARGET_LINK_LIBRARIES(llvm
+                        ${CLANG_LIBS}
+                        ${LLVM_MODULE_LIBS}
+                        ${LLVM_LDFLAGS})
+ELSE()
+  TARGET_LINK_LIBRARIES(llvm
+                        ${LLVM_MODULE_LIBS}
+                        ${LLVM_LDFLAGS})
+ENDIF()

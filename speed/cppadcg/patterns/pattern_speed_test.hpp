@@ -16,7 +16,7 @@
  */
 
 #include <cppadcg/cg.hpp>
-#include <cppadcg/model/llvm/v3_2/cg_llvm.hpp>
+#include <cppadcg/model/llvm/cg_llvm.hpp>
 #include "job_speed_listener.hpp"
 
 namespace CppAD {

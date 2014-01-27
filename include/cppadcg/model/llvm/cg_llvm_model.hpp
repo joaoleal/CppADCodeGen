@@ -26,7 +26,7 @@ namespace CppAD {
     class LlvmModel : public FunctorGenericModel<Base> {
     protected:
         /// the dynamic library
-        LlvmModelLibrary3_2<Base>* _dynLib;
+        LlvmModelLibrary<Base>* _dynLib;
 
     public:
 
@@ -43,7 +43,8 @@ namespace CppAD {
          * 
          * @param name The model name
          */
-        LlvmModel(LlvmModelLibrary3_2<Base>* dynLib, const std::string& name) :
+        LlvmModel(LlvmModelLibrary<Base>* dynLib,
+                  const std::string& name) :
             FunctorGenericModel<Base>(name),
             _dynLib(dynLib) {
 
@@ -67,7 +68,7 @@ namespace CppAD {
 
         LlvmModel& operator=(const LlvmModel&); // not implemented
 
-        friend class LlvmModelLibrary3_2<Base>;
+        friend class LlvmModelLibrary<Base>;
     };
 
 }

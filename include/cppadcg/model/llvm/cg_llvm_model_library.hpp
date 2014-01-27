@@ -17,19 +17,55 @@
 
 namespace CppAD {
 
+    template<class Base>
+    class LlvmModel;
+
     /**
      * Abstract class used to load JIT'ed models by LLVM
      * 
      * @author Joao Leal
      */
     template<class Base>
-    class LlvmModelLibrary :public FunctorModelLibrary<Base> {
+    class LlvmModelLibrary : public FunctorModelLibrary<Base> {
+    protected:
+        unsigned long _version; // API version
+        std::set<std::string> _modelNames;
+        std::set<LlvmModel<Base>*> _models;
     public:
-        
 
-        inline virtual ~LlvmModelLibrary() {
+        virtual std::set<std::string> getModelNames() {
+            return _modelNames;
         }
 
+        virtual LlvmModel<Base>* model(const std::string& modelName) {
+            typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
+            if (it == _modelNames.end()) {
+                return NULL;
+            }
+            LlvmModel<Base>* m = new LlvmModel<Base> (this, modelName);
+            _models.insert(m);
+            return m;
+        }
+
+        virtual unsigned long getAPIVersion() {
+            return _version;
+        }
+
+        inline virtual ~LlvmModelLibrary() {
+            typename std::set<LlvmModel<Base>*>::const_iterator it;
+            for (it = _models.begin(); it != _models.end(); ++it) {
+                LlvmModel<Base>* model = *it;
+                model->modelLibraryClosed();
+            }
+        }
+
+    protected:
+
+        virtual void destroyed(LlvmModel<Base>* model) {
+            _models.erase(model);
+        }
+
+        friend class LlvmModel<Base>;
     };
 
 }

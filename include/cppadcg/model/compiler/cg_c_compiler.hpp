@@ -24,13 +24,7 @@ namespace CppAD {
      */
     template<class Base>
     class CCompiler {
-    protected:
-        std::string _tmpFolder;
     public:
-
-        CCompiler() :
-            _tmpFolder("cppadcg_tmp") {
-        }
 
         /**
          * Provides the path to a temporary folder that should not exist
@@ -38,9 +32,7 @@ namespace CppAD {
          * 
          * @return path to a temporary folder.
          */
-        inline const std::string& getTemporaryFolder() const {
-            return _tmpFolder;
-        }
+        virtual const std::string& getTemporaryFolder() const = 0;
 
         /**
          * Defines the path to a temporary folder that should not exist
@@ -48,9 +40,7 @@ namespace CppAD {
          * 
          * @param tmpFolder path to a temporary folder.
          */
-        inline void setTemporaryFolder(const std::string& tmpFolder) {
-            _tmpFolder = tmpFolder;
-        }
+        virtual void setTemporaryFolder(const std::string& tmpFolder) = 0;
 
         virtual const std::set<std::string>& getObjectFiles() const = 0;
 

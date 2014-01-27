@@ -22,6 +22,7 @@ IF(NOT LLVM_INCLUDE_DIRS OR NOT LLVM_LIBRARY_DIRS)
 ENDIF()
 
 MACRO(findClangStaticLib _libname_)
+  UNSET(CLANG_${_libname_}_LIB CACHE)
   FIND_LIBRARY(CLANG_${_libname_}_LIB ${_libname_} ${LLVM_LIBRARY_DIRS} ${CLANG_LIBRARY_DIRS})
   MARK_AS_ADVANCED(CLANG_${_libname_}_LIB)
   IF(CLANG_${_libname_}_LIB)
@@ -51,6 +52,7 @@ findClangStaticLib(clangAST)
 findClangStaticLib(clangLex)
 findClangStaticLib(clangBasic)
 
+UNSET(CLANG_INCLUDE_DIRS CACHE)
 FIND_PATH(CLANG_INCLUDE_DIRS clang/Basic/Version.h HINTS ${LLVM_INCLUDE_DIRS})
 
 INCLUDE(FindPackageHandleStandardArgs)

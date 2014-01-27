@@ -21,7 +21,46 @@
 #  LLVM_LDFLAGS      - llvm linker flags
 #  LLVM_MODULE_LIBS  - list of llvm libs for working with modules.
 
-FIND_PROGRAM(LLVM_CONFIG llvm-config)
+IF(LLVM_FIND_VERSION AND NOT LLVM_FIND_VERSION_MINOR)
+  MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM, you must provide at least the major and minor version numbers, e.g., 3.4")
+ENDIF()
+
+# Lets make sure cache doesn't ruin the day
+UNSET(LLVM_CONFIG CACHE)
+UNSET(LLVM_FOUND CACHE)
+UNSET(LLVM_FOUND CACHE)
+UNSET(LLVM_INCLUDE_DIRS CACHE)
+UNSET(LLVM_LIBRARY_DIRS CACHE)
+UNSET(LLVM_CFLAGS CACHE)
+UNSET(LLVM_LDFLAGS CACHE)
+UNSET(LLVM_MODULE_LIBS CACHE)
+
+IF(LLVM_FIND_VERSION AND NOT LLVM_FIND_VERSION_EXACT)
+  SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "3.5" "3.4" "3.3" "3.2")
+  
+  # Select acceptable versions.
+  FOREACH(version ${_LLVM_KNOWN_VERSIONS})
+  
+    IF(NOT "${version}" VERSION_LESS "${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+      FIND_PROGRAM(LLVM_CONFIG "llvm-config-${version}")
+      IF(LLVM_CONFIG)
+        BREAK() # Found suitable version
+      ENDIF()
+    ELSE()
+      BREAK() # Lower version than requested
+    ENDIF()
+  ENDFOREACH()
+  
+ENDIF()
+
+IF(NOT LLVM_CONFIG AND LLVM_FIND_VERSION) # LLVM_FIND_VERSION_EXACT or failed to find using previous search
+  # Lets try to find the exact specified version
+  FIND_PROGRAM(LLVM_CONFIG "llvm-config-${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+ENDIF()
+
+IF(NOT LLVM_CONFIG)
+  FIND_PROGRAM(LLVM_CONFIG llvm-config)
+ENDIF()
 
 IF(LLVM_CONFIG)
   MESSAGE(STATUS "llvm-config found at: ${LLVM_CONFIG}")
@@ -40,6 +79,18 @@ STRING(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*" "\\1"
 STRING(REGEX REPLACE "^([0-9]+)\\.([0-9]+).*" "\\2"
        LLVM_VERSION_MINOR
        "${LLVM_VERSION}")
+
+# Version validation
+IF(LLVM_FIND_VERSION)
+  IF(LLVM_FIND_VERSION_EXACT)
+    IF(NOT ${LLVM_VERSION} VERSION_EQUAL "${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+      MESSAGE(FATAL_ERROR "Failed to find the specified version of LLVM")
+    ENDIF()
+  ELSEIF(${LLVM_VERSION} VERSION_LESS "${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+    MESSAGE(FATAL_ERROR "Failed to find a LLVM version equal or higher than ${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+  ENDIF()
+ENDIF()
+
 
 EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --includedir
                 OUTPUT_VARIABLE LLVM_INCLUDE_DIRS

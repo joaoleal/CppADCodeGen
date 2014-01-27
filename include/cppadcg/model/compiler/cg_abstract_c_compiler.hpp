@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_GCC_COMPILER_INCLUDED
-#define CPPAD_CG_GCC_COMPILER_INCLUDED
+#ifndef CPPAD_CG_ABSTRACT_C_COMPILER_INCLUDED
+#define CPPAD_CG_ABSTRACT_C_COMPILER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -18,14 +18,16 @@
 namespace CppAD {
 
     /**
-     * C compiler class used to create a dynamic library
+     * Default implementation of a C compiler class used to create 
+     * dynamic and static libraries
      * 
      * @author Joao Leal
      */
     template<class Base>
-    class GccCompiler : public CCompiler<Base> {
+    class AbstractCCompiler : public CCompiler<Base> {
     protected:
-        std::string _gccPath; // the path to the gcc executable
+        std::string _path; // the path to the gcc executable
+        std::string _tmpFolder;
         std::set<std::string> _ofiles; // compiled object files
         std::set<std::string> _sfiles; // compiled source files
         std::vector<std::string> _compileFlags;
@@ -34,33 +36,26 @@ namespace CppAD {
         bool _verbose;
     public:
 
-        GccCompiler() :
-            _gccPath("/usr/bin/gcc"),
+        AbstractCCompiler(const std::string& compilerPath) :
+            _path(compilerPath),
+            _tmpFolder("cppadcg_tmp"),
             _verbose(false) {
-
-            _compileFlags.push_back("-O2"); // Optimization level
-            _compileLibFlags.push_back("-O2"); // Optimization level
-            _compileLibFlags.push_back("-shared"); // Make shared object
-            _compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
-
         }
 
-        GccCompiler(const std::string& gccPath) :
-            _gccPath(gccPath),
-            _verbose(false) {
-
-            _compileFlags.push_back("-O2"); // Optimization level
-            _compileLibFlags.push_back("-O2"); // Optimization level
-            _compileLibFlags.push_back("-shared"); // Make shared object
-            _compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
+        std::string getCompilerPath() const {
+            return _path;
         }
 
-        std::string getGccPath() const {
-            return _gccPath;
+        void setCompilerPath(const std::string& path) {
+            _path = path;
         }
 
-        void setGccPath(const std::string& gccPath) {
-            _gccPath = gccPath;
+        virtual const std::string& getTemporaryFolder() const {
+            return _tmpFolder;
+        }
+
+        virtual void setTemporaryFolder(const std::string& tmpFolder) {
+            _tmpFolder = tmpFolder;
         }
 
         virtual const std::set<std::string>& getObjectFiles() const {
@@ -114,18 +109,25 @@ namespace CppAD {
         virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool posIndepCode,
                                     JobTimer* timer = NULL) {
+            compileSources(sources, posIndepCode, timer, ".o", _ofiles);
+        }
+
+        virtual void compileSources(const std::map<std::string, std::string>& sources,
+                                    bool posIndepCode,
+                                    JobTimer* timer,
+                                    const std::string& outputExtension,
+                                    std::set<std::string>& outputFiles) {
             if (sources.empty())
                 return; // nothing to do
 
             system::createFolder(this->_tmpFolder);
 
-            // compile each source code file into a different object file
+            // determine the maximum file name length
             size_t maxsize = 0;
             std::map<std::string, std::string>::const_iterator it;
             for (it = sources.begin(); it != sources.end(); ++it) {
                 _sfiles.insert(it->first);
-                std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
-                _ofiles.insert(file);
+                std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
                 maxsize = std::max(maxsize, file.size());
             }
 
@@ -143,11 +145,12 @@ namespace CppAD {
 
             std::ostringstream os;
 
-
+            // compile each source code file into a different object file
             for (it = sources.begin(); it != sources.end(); ++it) {
                 count++;
-                std::string file = system::createPath(this->_tmpFolder, it->first + ".o");
-
+                std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
+                outputFiles.insert(file);
+                
                 double beginTime = 0.0;
 
                 if (timer != NULL || _verbose) {
@@ -190,35 +193,7 @@ namespace CppAD {
          * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library,
-                                  JobTimer* timer = NULL) {
-
-            std::string linkerFlags = "-Wl,-soname," + system::filenameFromPath(library);
-            for (size_t i = 0; i < _linkFlags.size(); i++)
-                linkerFlags += "," + _linkFlags[i];
-
-            std::vector<std::string> args;
-            args.push_back("gcc");
-            args.insert(args.end(), _compileLibFlags.begin(), _compileLibFlags.end());
-            args.push_back(linkerFlags); // Pass suitable options to linker
-            args.push_back("-o"); // Output file name
-            args.push_back(library); // Output file name
-            std::set<std::string>::const_iterator it;
-            for (it = _ofiles.begin(); it != _ofiles.end(); ++it) {
-                args.push_back(*it);
-            }
-
-            if (timer != NULL) {
-                timer->startingJob("'" + library + "'", JobTimer::COMPILING_DYNAMIC_LIBRARY);
-            } else if (_verbose) {
-                std::cout << "building library '" << library << "'" << std::endl;
-            }
-
-            system::callExecutable(_gccPath, args);
-
-            if (timer != NULL) {
-                timer->finishedJob();
-            }
-        }
+                                  JobTimer* timer = NULL) = 0;
 
         virtual void cleanup() {
             // clean up
@@ -233,7 +208,7 @@ namespace CppAD {
             remove(this->_tmpFolder.c_str());
         }
 
-        virtual ~GccCompiler() {
+        virtual ~AbstractCCompiler() {
             cleanup();
         }
 
@@ -245,27 +220,12 @@ namespace CppAD {
          * @param source the content of the source file
          * @param output the compiled output file name (the object file path)
          */
-        virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) {
-            std::vector<std::string> args;
-            args.push_back("gcc");
-            args.push_back("-x");
-            args.push_back("c"); // C source files
-            args.insert(args.end(), _compileFlags.begin(), _compileFlags.end());
-            args.push_back("-c");
-            args.push_back("-");
-            if (posIndepCode) {
-                args.push_back("-fPIC"); // position-independent code for dynamic linking
-            }
-            args.push_back("-o");
-            args.push_back(output);
-
-            system::callExecutable(_gccPath, args, true, source);
-        }
+        virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) = 0;
 
     private:
 
-        GccCompiler(const GccCompiler& orig); // not implemented
-        GccCompiler& operator=(const GccCompiler& rhs); // not implemented
+        AbstractCCompiler(const AbstractCCompiler& orig); // not implemented
+        AbstractCCompiler& operator=(const AbstractCCompiler& rhs); // not implemented
     };
 
 }
