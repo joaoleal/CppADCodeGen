@@ -168,10 +168,10 @@ namespace CppAD {
      */
     class JobListener {
     public:
-        virtual void jobStarted(const std::vector<Job>& job) = 0;
+        virtual void jobStarted(const std::vector<Job>& job) throw (CGException) = 0;
 
         virtual void jobEndended(const std::vector<Job>& job,
-                                 double elapsed) = 0;
+                                 double elapsed) throw (CGException) = 0;
     };
 
     /**

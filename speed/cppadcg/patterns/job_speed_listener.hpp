@@ -48,10 +48,10 @@ namespace CppAD {
             totalLibrary = 0;
         }
 
-        virtual void jobStarted(const std::vector<Job>& job);
+        virtual void jobStarted(const std::vector<Job>& job) throw(CGException);
 
         virtual void jobEndended(const std::vector<Job>& job,
-                                 double elapsed);
+                                 double elapsed) throw(CGException);
     };
 
 }

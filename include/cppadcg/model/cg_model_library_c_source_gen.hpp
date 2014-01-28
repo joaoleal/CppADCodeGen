@@ -38,10 +38,6 @@ namespace CppAD {
          * Library level generated source files
          */
         std::map<std::string, std::string> _libSources;
-        /**
-         * 
-         */
-        std::set<JobListener*> _listeners;
     public:
 
         /**
