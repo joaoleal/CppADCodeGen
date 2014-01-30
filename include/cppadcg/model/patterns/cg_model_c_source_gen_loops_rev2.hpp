@@ -261,8 +261,8 @@ namespace CppAD {
             /*******************************************************************
              * generate the operation graph for each Hessian row subgroup
              ******************************************************************/
-            for (size_t g = 0; g < loopGroups.v.size(); g++) {
-                HessianRowGroup<Base>& group = *loopGroups.v[g];
+            for (size_t g = 0; g < loopGroups.size(); g++) {
+                HessianRowGroup<Base>& group = *loopGroups[g];
 
                 /**
                  * determine if a loop should be created
@@ -446,7 +446,7 @@ namespace CppAD {
                 /**
                  * prepare the nodes to be reused!
                  */
-                if (g + 1 < loopGroups.v.size()) {
+                if (g + 1 < loopGroups.size()) {
                     handler.resetNodes(); // uncolor nodes
                 }
             }
@@ -601,7 +601,7 @@ namespace CppAD {
                                                                                                   nonIndexedIndexed2jrow2Iter,
                                                                                                   tempIndexed2jrow2Iter);
 
-            loopGroups.v.reserve(contrib2jrows.size() *2); // TODO: improve this
+            loopGroups.reserve(contrib2jrows.size() *2); // TODO: improve this
 
             typename map<HessianTermContrib<Base>, set<size_t> >::const_iterator itC;
             for (itC = contrib2jrows.begin(); itC != contrib2jrows.end(); ++itC) {
@@ -1148,7 +1148,7 @@ namespace CppAD {
                     sg->iterations.insert(jrow2Iters.iterations.begin(), jrow2Iters.iterations.end());
                 } else {
                     HessianRowGroup<Base>* sg = new HessianRowGroup<Base>(hc, jrow2Iters);
-                    subGroups.v.push_back(sg);
+                    subGroups.push_back(sg);
                     c2subgroups[hc] = sg;
                 }
             }

@@ -102,13 +102,13 @@ namespace CppAD {
                         }
                     }
                 }
-                linearSections.m[xStart] = p;
+                linearSections[xStart] = p;
 
                 prevXStart = xStart;
                 prevPattern = p;
                 xStart = lastLinear;
 
-                if (linearSections.m.size() == maxCount && xStart != indexes.size()) {
+                if (linearSections.size() == maxCount && xStart != indexes.size()) {
                     // over the limit -> stop
                     return std::map<size_t, IndexPattern*>(); // empty
                 }
@@ -183,13 +183,13 @@ namespace CppAD {
                         }
                     }
                 }
-                linearSections.m[xStart] = p;
+                linearSections[xStart] = p;
 
                 prevStart = pStart;
                 prevPattern = p;
                 pStart = pNextSection;
 
-                if (linearSections.m.size() == maxCount && pStart != x2y.end()) {
+                if (linearSections.size() == maxCount && pStart != x2y.end()) {
                     // over the limit -> stop
                     return std::map<size_t, IndexPattern*>(); // empty
                 }

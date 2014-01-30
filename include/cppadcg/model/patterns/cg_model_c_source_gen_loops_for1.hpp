@@ -228,8 +228,8 @@ namespace CppAD {
             /*******************************************************************
              * generate the operation graph for each Jacobian column subgroup
              ******************************************************************/
-            for (size_t g = 0; g < loopGroups.v.size(); g++) {
-                JacobianColGroup<Base>& group = *loopGroups.v[g];
+            for (size_t g = 0; g < loopGroups.size(); g++) {
+                JacobianColGroup<Base>& group = *loopGroups[g];
 
                 /**
                  * determine if a loop should be created
@@ -414,7 +414,7 @@ namespace CppAD {
                 /**
                  * prepare the nodes to be reused!
                  */
-                if (g + 1 < loopGroups.v.size()) {
+                if (g + 1 < loopGroups.size()) {
                     handler.resetNodes(); // uncolor nodes
                 }
             }
@@ -565,7 +565,7 @@ namespace CppAD {
                                                                                               indexed2jcol2Iter,
                                                                                               nonIndexed2Iter);
 
-            loopGroups.v.reserve(contrib2jcols.size() * 2); // TODO: improve this
+            loopGroups.reserve(contrib2jcols.size() * 2); // TODO: improve this
             std::map<JacobianTermContrib<Base>, JacobianColGroup<Base>*> c2subgroups;
 
             typename map<JacobianTermContrib<Base>, set<size_t> >::const_iterator itC;
@@ -720,7 +720,7 @@ namespace CppAD {
                     sg->iterations.insert(jcol2Iters.iterations.begin(), jcol2Iters.iterations.end());
                 } else {
                     JacobianColGroup<Base>* sg = new JacobianColGroup<Base>(hc, jcol2Iters);
-                    subGroups.v.push_back(sg);
+                    subGroups.push_back(sg);
                     c2subgroups[hc] = sg;
                 }
             }

@@ -116,6 +116,7 @@
 // ---------------------------------------------------------------------------
 // additional utilities
 #include <cppadcg/cg_util.hpp>
+#include <cppadcg/cg_smart_containers.hpp>
 #include <cppadcg/cg_evaluator.hpp>
 #include <cppadcg/cg_operation_path.hpp>
 #include <cppadcg/cg_solver.hpp>

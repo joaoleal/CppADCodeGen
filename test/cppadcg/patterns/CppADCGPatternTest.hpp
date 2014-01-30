@@ -237,7 +237,7 @@ namespace CppAD {
             delete nonLoopTape;
 
             //std::cout << "loops: " << matcher.getLoops().size() << std::endl;
-            ASSERT_EQ(loopTapes.s.size(), loops.size());
+            ASSERT_EQ(loopTapes.size(), loops.size());
 
             //std::cout << "equation patterns: " << matcher.getEquationPatterns().size() << std::endl;
 

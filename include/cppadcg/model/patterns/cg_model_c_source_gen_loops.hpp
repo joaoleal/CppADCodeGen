@@ -823,7 +823,7 @@ namespace CppAD {
             for (itlge = loopGroups.begin(); itlge != loopGroups.end(); ++itlge) {
                 LoopModel<Base>* loop = itlge->first;
 
-                garbage.v.reserve(garbage.v.size() + itlge->second.size());
+                garbage.reserve(garbage.size() + itlge->second.size());
 
                 map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
                 for (itg = itlge->second.begin(); itg != itlge->second.end(); ++itg) {
@@ -905,7 +905,7 @@ namespace CppAD {
                             }
 
                             ArrayElementGroup* eg = new ArrayElementGroup(keys, commonElSize);
-                            data->elCount2elements.m[commonElSize] = eg;
+                            data->elCount2elements[commonElSize] = eg;
 
                             for (size_t e = 0; e < commonElSize; e++) {
                                 eg->elements[e].resultPattern = IndexPattern::detect(resultPos[e]);
@@ -918,7 +918,7 @@ namespace CppAD {
 
                     // group by number of iterations
                     loopCalls[localit2jcols.size()][loop][group] = data.get();
-                    garbage.v.push_back(data.release());
+                    garbage.push_back(data.release());
                 }
             }
         }
@@ -998,7 +998,7 @@ namespace CppAD {
 
                         } else {
                             map<size_t, ArrayElementGroup*>::const_iterator itc;
-                            for (itc = group->elCount2elements.m.begin(); itc != group->elCount2elements.m.end(); ++itc) {
+                            for (itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
                                 const ArrayElementGroup* eg = itc->second;
 
                                 for (size_t e = 0; e < eg->elements.size(); e++) {
@@ -1144,18 +1144,18 @@ namespace CppAD {
                                 eKey = key + 1;
                             }
 
-                            bool withIfs = group->elCount2elements.m.size() > 1;
+                            bool withIfs = group->elCount2elements.size() > 1;
                             map<size_t, ArrayElementGroup*>::const_iterator itc;
-                            for (itc = group->elCount2elements.m.begin(); itc != group->elCount2elements.m.end(); ++itc) {
+                            for (itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
                                 const ArrayElementGroup* eg = itc->second;
                                 CPPADCG_ASSERT_UNKNOWN(!eg->elements.empty());
 
                                 string indent2 = indent;
                                 if (withIfs) {
                                     out << indent;
-                                    if (itc != group->elCount2elements.m.begin())
+                                    if (itc != group->elCount2elements.begin())
                                         out << "} else ";
-                                    if (itc->first != group->elCount2elements.m.rbegin()->first) { // check that it is not the last branch
+                                    if (itc->first != group->elCount2elements.rbegin()->first) { // check that it is not the last branch
                                         out << "if(";
 
                                         size_t maxKey = key2Compressed.rbegin()->first;

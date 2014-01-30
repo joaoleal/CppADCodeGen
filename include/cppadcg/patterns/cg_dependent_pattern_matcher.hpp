@@ -291,7 +291,7 @@ namespace CppAD {
                      * There are shared variables among the two equation patterns
                      */
                     TotalOps2validDepsType* totalOps2validDeps = new TotalOps2validDepsType();
-                    totalOps2validDepsMem.l.push_back(totalOps2validDeps);
+                    totalOps2validDepsMem.push_back(totalOps2validDeps);
                     size_t maxOps = 0; // the maximum number of shared operations between two dependents
 
                     bool canCombine = true;
@@ -342,7 +342,7 @@ namespace CppAD {
                     } else {
                         incompatible_[eq1].insert(eq2);
                         incompatible_[eq2].insert(eq1);
-                        totalOps2validDepsMem.l.pop_back();
+                        totalOps2validDepsMem.pop_back();
                         delete totalOps2validDeps;
                     }
                 }
@@ -378,8 +378,8 @@ namespace CppAD {
                      */
                     SmartSetPointer<set<size_t> > dependentRelationsBak;
                     set<set<size_t>*>::const_iterator its;
-                    for (its = dependentRelations.s.begin(); its != dependentRelations.s.end(); ++its) {
-                        dependentRelationsBak.s.insert(new set<size_t>(**its));
+                    for (its = dependentRelations.begin(); its != dependentRelations.end(); ++its) {
+                        dependentRelationsBak.insert(new set<size_t>(**its));
                     }
 
                     // relationships between dependents for the resulting merged loop
@@ -419,7 +419,7 @@ namespace CppAD {
                         dependentRelations.s.swap(dependentRelationsBak.s);
                         // map each dependent to the relation set where it is present
                         std::fill(dep2Relations.begin(), dep2Relations.end(), (set<size_t>*) NULL);
-                        for (its = dependentRelations.s.begin(); its != dependentRelations.s.end(); ++its) {
+                        for (its = dependentRelations.begin(); its != dependentRelations.end(); ++its) {
                             set<size_t>* relation = *its;
                             set<size_t>::const_iterator itd;
                             for (itd = relation->begin(); itd != relation->end(); ++itd) {
@@ -1292,7 +1292,7 @@ namespace CppAD {
                             dep2Relations[dep3] = related1;
                         }
 
-                        dependentRelations.s.erase(related2);
+                        dependentRelations.erase(related2);
                         delete related2;
                     }
                     /**
@@ -1357,7 +1357,7 @@ namespace CppAD {
             } else {
                 // dependent 1 and dependent 2 not in any relation set
                 set<size_t>* related = new std::set<size_t>();
-                dependentRelations.s.insert(related);
+                dependentRelations.insert(related);
                 related->insert(dep1);
                 related->insert(dep2);
                 dep2Relations[dep1] = related;
