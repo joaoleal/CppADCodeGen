@@ -24,6 +24,10 @@ namespace CppAD {
     template<class Base>
     class SmartVectorPointer {
     public:
+        typedef typename std::vector<Base*>::iterator iterator;
+        typedef typename std::vector<Base*>::const_iterator const_iterator;
+        typedef typename std::vector<Base*>::reverse_iterator reverse_iterator;
+        typedef typename std::vector<Base*>::const_reverse_iterator const_reverse_iterator;
         std::vector<Base*> v;
 
         inline SmartVectorPointer() {
@@ -33,7 +37,7 @@ namespace CppAD {
             v(size) {
         }
 
-        inline SmartVectorPointer(const std::vector<Base*>& v_) {
+        inline SmartVectorPointer(std::vector<Base*>& v_) {
             v.swap(v_);
         }
 
@@ -59,6 +63,38 @@ namespace CppAD {
 
         inline Base*& operator[](size_t n) {
             return v[n];
+        }
+
+        inline iterator begin() {
+            return v.begin();
+        }
+
+        inline const_iterator begin() const {
+            return v.begin();
+        }
+
+        inline iterator end() {
+            return v.end();
+        }
+
+        inline const_iterator end() const {
+            return v.end();
+        }
+
+        inline reverse_iterator rbegin() {
+            return v.rbegin();
+        }
+
+        inline const_reverse_iterator rbegin() const {
+            return v.rbegin();
+        }
+
+        inline reverse_iterator rend() {
+            return v.rend();
+        }
+
+        inline const_reverse_iterator rend() const {
+            return v.rend();
         }
 
         inline std::vector<Base*> release() {
@@ -87,7 +123,7 @@ namespace CppAD {
         inline SmartSetPointer() {
         }
 
-        inline SmartSetPointer(const std::set<Base*>& s_) {
+        inline SmartSetPointer(std::set<Base*>& s_) {
             s.swap(s_);
         }
 
