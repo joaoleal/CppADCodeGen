@@ -48,9 +48,16 @@ int main(int argc, char **argv) {
 
     std::vector<std::string> flags;
     //flags.push_back("-O2");
-    
+
     PlugFlowPatternSpeedTest speed;
-    speed.setNumberOfExecutions(50);
+    //speed.cppAD = false;
+    //speed.cppADCG = true;
+    //speed.cppADCGLoops = false;
+    //speed.cppADCGLoopsLlvm = false;
+    //speed.zeroOrder = false;
+    //speed.sparseJacobian = false;
+    //speed.sparseHessian = false;
+    speed.setNumberOfExecutions(30);
     speed.setCompileFlags(flags);
     speed.measureSpeed(relations, nEles, x);
 }
