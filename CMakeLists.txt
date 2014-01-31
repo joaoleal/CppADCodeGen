@@ -18,7 +18,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "1.6.0" )
+SET(cppadcg_version      "2.0.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -65,7 +65,7 @@ IF(CMAKE_COMPILER_IS_GNUCXX)
   SET(warning_flags "${warning_flags} -Wno-system-headers") # do not issue warnings for system headers
   #SET(warning_flags "${warning_flags} -Woverloaded-virtual") # overloaded virtual function has a different signature
 
-  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warning_flags}")  
+  SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${warning_flags}")  
  
   SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -D_FORTIFY_SOURCE=2")
 
