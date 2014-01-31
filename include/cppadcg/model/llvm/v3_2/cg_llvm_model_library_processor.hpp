@@ -15,30 +15,6 @@
  * Author: Joao Leal
  */
 
-#include <clang/CodeGen/CodeGenAction.h>
-#include <clang/Basic/DiagnosticOptions.h>
-#include <clang/Basic/TargetInfo.h>
-#include <clang/Basic/SourceManager.h>
-#include <clang/Frontend/CompilerInstance.h>
-#include <clang/Frontend/CompilerInvocation.h>
-#include <clang/Frontend/FrontendDiagnostic.h>
-#include <clang/Frontend/TextDiagnosticPrinter.h>
-#include <clang/Frontend/Utils.h>
-#include <clang/Parse/ParseAST.h>
-#include <clang/Lex/Preprocessor.h>
-#include <llvm/ADT/OwningPtr.h>
-#include <llvm/ADT/SmallString.h>
-#include <llvm/LLVMContext.h>
-#include <llvm/Module.h>
-#include <llvm/Support/Host.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/Path.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/raw_ostream.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/Host.h>
-#include <llvm/Linker.h>
-
 namespace CppAD {
 
     /**
@@ -175,10 +151,10 @@ namespace CppAD {
             if (_linker.get() == NULL) {
                 _linker.reset(new llvm::Linker(std::string("MyLinker"), module));
             } else {
-                std::string errorMsg;
-                if (_linker->LinkInModule(module, &errorMsg)) {
-                    throw CGException(errorMsg);
-                }
+            std::string errorMsg;
+            if (_linker->LinkInModule(module, &errorMsg)) {
+                throw CGException(errorMsg);
+            }
             }
 
             // NO delete module;

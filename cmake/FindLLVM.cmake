@@ -14,12 +14,14 @@
 # - Try to find LLVM
 #
 # It defines the following variables
-#  LLVM_FOUND        - True if llvm found.
-#  LLVM_INCLUDE_DIRS - where to find llvm include files
-#  LLVM_LIBRARY_DIRS - where to find llvm libs
-#  LLVM_CFLAGS       - llvm compiler flags
-#  LLVM_LDFLAGS      - llvm linker flags
-#  LLVM_MODULE_LIBS  - list of llvm libs for working with modules.
+#  LLVM_FOUND            - True if llvm found.
+#  LLVM_INCLUDE_DIRS     - where to find llvm include files
+#  LLVM_LIBRARY_DIRS     - where to find llvm libs
+#  LLVM_CFLAGS           - llvm compiler flags
+#  LLVM_CFLAGS_NO_NDEBUG - llvm compiler flags without NDEBUG 
+#  LLVM_WITH_NDEBUG      - 1 if LLVM_CFLAGS contains NDEBUG, 0 otherwise
+#  LLVM_LDFLAGS          - llvm linker flags
+#  LLVM_MODULE_LIBS      - list of llvm libs for working with modules.
 
 IF(LLVM_FIND_VERSION AND NOT LLVM_FIND_VERSION_MINOR)
   MESSAGE(FATAL_ERROR "When requesting a specific version of LLVM, you must provide at least the major and minor version numbers, e.g., 3.4")
@@ -105,10 +107,14 @@ EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --cppflags
                 OUTPUT_STRIP_TRAILING_WHITESPACE)
 
 IF(LLVM_CFLAGS MATCHES "\\-DNDEBUG")
-    SET(LLVM_WITH_NDEBUG TRUE)
+    SET(LLVM_WITH_NDEBUG 1)
 ELSE()
-    SET(LLVM_WITH_NDEBUG FALSE)
+    SET(LLVM_WITH_NDEBUG 0)
 ENDIF()
+
+STRING(REPLACE "-DNDEBUG" ""
+       LLVM_CFLAGS_NO_NDEBUG
+       ${LLVM_CFLAGS})
 
 FIND_LIBRARY(LLVM_MODULE_LIBS LLVM-${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} ${LLVM_LIBRARY_DIRS})
 IF(NOT LLVM_MODULE_LIBS)

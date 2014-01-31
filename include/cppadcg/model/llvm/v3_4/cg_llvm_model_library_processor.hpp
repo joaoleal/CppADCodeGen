@@ -15,16 +15,6 @@
  * Author: Joao Leal
  */
 
-#include <llvm/ADT/OwningPtr.h>
-#include <llvm/Bitcode/ReaderWriter.h>
-#include <llvm/IR/LLVMContext.h>
-#include <llvm/IR/Module.h>
-#include <llvm/Support/ManagedStatic.h>
-#include <llvm/Support/MemoryBuffer.h>
-#include <llvm/Support/TargetSelect.h>
-#include <llvm/Support/system_error.h>
-#include <llvm/Linker.h>
-
 namespace CppAD {
 
     /**
