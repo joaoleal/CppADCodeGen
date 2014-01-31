@@ -25,9 +25,7 @@ namespace CppAD {
 
         // save existing names so that they are not to overridden 
         // (independent variable names might have already used them)
-        std::set<RandomIndexPattern*>::const_iterator it;
-        for (it = randomPatterns.begin(); it != randomPatterns.end(); ++it) {
-            RandomIndexPattern* ip = *it;
+        for (RandomIndexPattern* ip : randomPatterns) {
             if (!ip->getName().empty()) {
                 usedNames.insert(ip->getName());
             }
@@ -35,8 +33,7 @@ namespace CppAD {
 
         // create new names for the index pattern arrays without a name
         size_t c = 0;
-        for (it = randomPatterns.begin(); it != randomPatterns.end(); ++it) {
-            RandomIndexPattern* ip = *it;
+        for (RandomIndexPattern* ip : randomPatterns) {
             if (ip->getName().empty()) {
                 // new name required
                 std::string name;
@@ -57,9 +54,7 @@ namespace CppAD {
     inline void CLanguage<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
                                                                     const std::string& indentation,
                                                                     const std::set<RandomIndexPattern*>& randomPatterns) {
-        typename std::set<RandomIndexPattern*>::const_iterator itr;
-        for (itr = randomPatterns.begin(); itr != randomPatterns.end(); ++itr) {
-            RandomIndexPattern* ip = *itr;
+        for (RandomIndexPattern* ip : randomPatterns) {
             if (ip->getType() == RANDOM1D) {
                 /**
                  * 1D
@@ -68,9 +63,8 @@ namespace CppAD {
                 const std::map<size_t, size_t>& x2y = ip1->getValues();
 
                 std::vector<size_t> y(x2y.rbegin()->first + 1);
-                std::map<size_t, size_t>::const_iterator it;
-                for (it = x2y.begin(); it != x2y.end(); ++it)
-                    y[it->first] = it->second;
+                for (const std::pair<size_t, size_t>& p : x2y)
+                    y[p.first] = p.second;
 
                 os << indentation;
                 printStaticIndexArray(os, ip->getName(), y);
@@ -186,7 +180,7 @@ namespace CppAD {
     template<class Base>
     inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
                                                             const IndexDclrOperationNode<Base>& index) {
-        return indexPattern2String(ip, {&index});
+        return indexPattern2String(ip,{&index});
     }
 
     template<class Base>

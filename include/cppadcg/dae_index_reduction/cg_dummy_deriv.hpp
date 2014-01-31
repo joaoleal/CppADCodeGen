@@ -197,9 +197,7 @@ namespace CppAD {
             generateSemiExplicitDae_(false),
             reorder_(true) {
 
-            typename std::vector<Vnode<Base>*> ::const_iterator j;
-            for (j = this->vnodes_.begin(); j != this->vnodes_.end(); ++j) {
-                Vnode<Base>* jj = *j;
+            for (Vnode<Base>* jj : this->vnodes_) {
                 if (jj->antiDerivative() != nullptr) {
                     diffVarStart_ = jj->index();
                     break;
@@ -357,9 +355,8 @@ namespace CppAD {
                 std::vector<Enode<Base>* > newEqs;
                 newEqs.reserve(eqs.size());
 
-                typename std::vector<Enode<Base>* >::const_iterator i;
-                for (i = eqs.begin(); i != eqs.end(); ++i) {
-                    Enode<Base>* ii = (*i)->derivativeOf();
+                for (Enode<Base>* i : eqs) {
+                    Enode<Base>* ii = i->derivativeOf();
                     if (ii != nullptr && ii->derivativeOf() != nullptr) {
                         newEqs.push_back(ii);
                     }
@@ -378,9 +375,8 @@ namespace CppAD {
                  */
                 std::vector<Vnode<Base>* > varsNew;
                 varsNew.reserve(vars.size());
-                typename std::vector<Vnode<Base>* >::const_iterator j;
-                for (j = vars.begin(); j != vars.end(); ++j) {
-                    Vnode<Base>* v = (*j)->antiDerivative();
+                for (Vnode<Base>* j : vars) {
+                    Vnode<Base>* v = j->antiDerivative();
                     if (v != nullptr && v->antiDerivative() != nullptr) {
                         varsNew.push_back(v);
                     }
@@ -393,21 +389,20 @@ namespace CppAD {
              * Prepare the output information
              */
             newVarInfo = varInfo; //copy
-            typename std::vector<Vnode<Base>* >::const_iterator j;
-            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                CPPADCG_ASSERT_UNKNOWN((*j)->tapeIndex() >= 0);
-                CPPADCG_ASSERT_UNKNOWN((*j)->antiDerivative() != nullptr);
-                CPPADCG_ASSERT_UNKNOWN((*j)->antiDerivative()->tapeIndex() >= 0);
+            for (Vnode<Base>* j : dummyD_) {
+                CPPADCG_ASSERT_UNKNOWN(j->tapeIndex() >= 0);
+                CPPADCG_ASSERT_UNKNOWN(j->antiDerivative() != nullptr);
+                CPPADCG_ASSERT_UNKNOWN(j->antiDerivative()->tapeIndex() >= 0);
 
-                newVarInfo[(*j)->tapeIndex()].setAntiDerivative(-1);
-                newVarInfo[(*j)->antiDerivative()->tapeIndex()].setDerivative(-1);
+                newVarInfo[j->tapeIndex()].setAntiDerivative(-1);
+                newVarInfo[j->antiDerivative()->tapeIndex()].setDerivative(-1);
             }
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
                 std::cout << "## dummy derivatives:\n";
 
-                for (j = dummyD_.begin(); j != dummyD_.end(); ++j)
-                    std::cout << "# " << **j << "   \t" << newVarInfo[(*j)->tapeIndex()].getName() << "\n";
+                for (Vnode<Base>* j : dummyD_)
+                    std::cout << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
                 std::cout << "# \n";
                 Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
             }
@@ -479,9 +474,7 @@ namespace CppAD {
             set<size_t> erasedVariables;
             set<size_t> erasedEquations;
 
-            typename vector<Vnode<Base>* >::const_iterator j;
-            for (j = dummyD_.begin(); j != dummyD_.end(); ++j) {
-                Vnode<Base>* dummy = *j;
+            for (Vnode<Base>* dummy : dummyD_) {
 
                 /**
                  * Determine which equation to use to eliminate the dummy derivative
@@ -796,9 +789,7 @@ namespace CppAD {
                 }
 
                 map<size_t, Vnode<Base>*> tape2FreeVariables;
-                typename vector<Vnode<Base>*>::const_iterator itj;
-                for (itj = variables.begin(); itj != variables.end(); ++itj) {
-                    Vnode<Base>* j = *itj;
+                for (Vnode<Base>* j : variables) {
                     tape2FreeVariables[j->tapeIndex()] = j;
                 }
 
@@ -815,9 +806,7 @@ namespace CppAD {
                              */
                             do {
                                 assigned = 0;
-                                typename vector<Vnode<Base>*>::const_iterator itj;
-                                for (itj = diffVariables.begin(); itj != diffVariables.end(); ++itj) {
-                                    Vnode<Base>* j = *itj;
+                                for (Vnode<Base>* j : diffVariables) {
                                     if (!j->isDeleted() && j->equations().size() == 1) {
                                         Enode<Base>& i = *j->equations()[0];
                                         if (i.assigmentVariable() == nullptr) {
@@ -837,9 +826,7 @@ namespace CppAD {
                              * equation 
                              */
                             assigned = 0;
-                            typename vector<Vnode<Base>*>::const_iterator itj;
-                            for (itj = dummyVariables.begin(); itj != dummyVariables.end(); ++itj) {
-                                Vnode<Base>* j = *itj;
+                            for (Vnode<Base>* j : dummyVariables) {
                                 if (!j->isDeleted() && j->equations().size() == 1) {
                                     Enode<Base>& i = *j->equations()[0];
                                     if (i.assigmentVariable() == nullptr) {
@@ -857,12 +844,10 @@ namespace CppAD {
                          * a single variable
                          */
                         assigned = 0;
-                        typename vector<Enode<Base>*>::const_iterator iti;
-                        for (iti = equations.begin(); iti != equations.end(); ++iti) {
-                            Enode<Base>& i = **iti;
-                            if (i.assigmentVariable() == nullptr && i.variables().size() == 1) {
-                                Vnode<Base>* j = i.variables()[0];
-                                if (assignVar2Equation(i, res0, *j, indep0, handler,
+                        for (Enode<Base>* i : equations) {
+                            if (i->assigmentVariable() == nullptr && i->variables().size() == 1) {
+                                Vnode<Base>* j = i->variables()[0];
+                                if (assignVar2Equation(*i, res0, *j, indep0, handler,
                                                        jacSparsity, tape2FreeVariables,
                                                        equations, varInfo))
                                     assigned++;
@@ -876,17 +861,12 @@ namespace CppAD {
                      * and all equations have at least two variables
                      * choose a tearing variable/equation
                      */
-                    typename vector<Vnode<Base>*>::const_iterator itj;
-
                     assigned = 0;
-                    for (itj = variables.begin(); itj != variables.end(); ++itj) {
-                        Vnode<Base>* j = *itj;
+                    for (Vnode<Base>* j : variables) {
                         if (!j->isDeleted()) {
-                            typename vector<Enode<Base>*>::const_iterator iti;
-                            for (iti = j->equations().begin(); iti != j->equations().end(); ++iti) {
-                                Enode<Base>& i = **iti;
-                                if (i.assigmentVariable() == nullptr) {
-                                    if (assignVar2Equation(i, res0, *j, indep0, handler,
+                            for (Enode<Base>* i : j->equations()) {
+                                if (i->assigmentVariable() == nullptr) {
+                                    if (assignVar2Equation(*i, res0, *j, indep0, handler,
                                                            jacSparsity, tape2FreeVariables,
                                                            equations, varInfo)) {
                                         assigned++;
@@ -907,8 +887,7 @@ namespace CppAD {
                 /**
                  * save results
                  */
-                for (itj = variables.begin(); itj != variables.end(); ++itj) {
-                    Vnode<Base>* j = *itj;
+                for (Vnode<Base>* j : variables) {
                     if (j->assigmentEquation() != nullptr) {
                         int i = j->assigmentEquation()->index();
                         DaeEquationInfo& eq = eqInfo[i];
@@ -930,8 +909,7 @@ namespace CppAD {
                 // verify results
                 if (generateSemiExplicitDae_) {
                     std::string error;
-                    for (itj = diffVariables.begin(); itj != diffVariables.end(); ++itj) {
-                        Vnode<Base>* j = *itj;
+                    for (Vnode<Base>* j : diffVariables) {
                         if (j->assigmentEquation() == nullptr) {
                             // failed!!!
                             if (!error.empty())
@@ -951,9 +929,7 @@ namespace CppAD {
             }
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
-                typename vector<Vnode<Base>*>::const_iterator itj;
-                for (itj = variables.begin(); itj != variables.end(); ++itj) {
-                    Vnode<Base>* j = *itj;
+                for (Vnode<Base>* j : variables) {
                     if (j->assigmentEquation() != nullptr)
                         std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
                 }
@@ -1046,9 +1022,8 @@ namespace CppAD {
                 }
 
                 // redetermine solvability
-                typename set<Enode<Base>*>::const_iterator itAff;
-                for (itAff = affected.begin(); itAff != affected.end(); ++itAff) {
-                    Enode<Base>& a = **itAff;
+                for (Enode<Base>* itAff : affected) {
+                    Enode<Base>& a = *itAff;
                     for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
                         size_t j = it->first;
                         if (localJacSparsity[n * a.index() + j]) {
@@ -1090,8 +1065,8 @@ namespace CppAD {
                 /**
                  * Implement changes in graph
                  */
-                for (itAff = affected.begin(); itAff != affected.end(); ++itAff) {
-                    Enode<Base>& a = **itAff;
+                for (Enode<Base>* itAff : affected) {
+                    Enode<Base>& a = *itAff;
                     for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
                         size_t v = it->first;
                         if (localJacSparsity[n * a.index() + v]) {
@@ -1396,8 +1371,8 @@ namespace CppAD {
                     std::cout << " \n";
                 }
 #ifndef NDEBUG
-                for (typename std::vector<Vnode<Base>* >::const_iterator it = vars.begin(); it != vars.end(); ++it) {
-                    CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
+                for (Vnode<Base>* it : vars) {
+                    CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end());
                 }
 #endif
                 return;
@@ -1474,13 +1449,13 @@ namespace CppAD {
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
                 std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
-                for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it)
-                    std::cout << **it << "; ";
+                for (Vnode<Base>* it : newDummies)
+                    std::cout << *it << "; ";
                 std::cout << " \n\n";
             }
 #ifndef NDEBUG
-            for (typename std::vector<Vnode<Base>* >::const_iterator it = newDummies.begin(); it != newDummies.end(); ++it) {
-                CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), *it) == dummyD_.end());
+            for (Vnode<Base>* it : newDummies) {
+                CPPADCG_ASSERT_UNKNOWN(std::find(dummyD_.begin(), dummyD_.end(), it) == dummyD_.end());
             }
 #endif
 
@@ -1520,12 +1495,11 @@ namespace CppAD {
             for (size_t e = 0; e < equations.size(); ++e) {
                 Enode<Base>* eq = equations[e];
                 size_t count = 0;
-                typename std::map<size_t, Vnode<Base>*>::const_iterator it;
-                for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
-                    if (jacSparsity[n * eq->index() + it->first]) {
+                for (const auto& it : tape2FreeVariables) {
+                    if (jacSparsity[n * eq->index() + it.first]) {
                         if (count == 0)
                             std::cout << "# Equation " << e << ": \t";
-                        std::cout << " " << it->second->name();
+                        std::cout << " " << it.second->name();
                         count++;
                     }
                 }

@@ -32,6 +32,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <forward_list>
 #include <set>
 #include <stddef.h>
 #include <stdexcept>

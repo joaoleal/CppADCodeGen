@@ -138,7 +138,7 @@ namespace CppAD {
         /**
          * used just to keep pointers so that the objects can be deleted later
          */
-        std::list<OperationArgumentsIndepOrder<Base>*> arg2IndepOrder_; // consider changing to forward_list (C++11)
+        std::forward_list<OperationArgumentsIndepOrder<Base>*> arg2IndepOrder_;
         /**
          * Variable id counter
          */
@@ -373,6 +373,8 @@ namespace CppAD {
         }
 
         void generateDependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
+            using namespace std;
+
             iterationDependents_.clear();
             equationOrder_.clear();
             iterationCount_ = 0;
@@ -380,11 +382,9 @@ namespace CppAD {
             /**
              * assign a dependent variable from each equation to an iteration
              */
-            std::map<EquationPattern<Base>*, std::set<size_t> > depsInEq;
+            map<EquationPattern<Base>*, set<size_t> > depsInEq;
 
-            typename std::set<EquationPattern<Base>*>::const_iterator eqIt;
-            for (eqIt = equations.begin(); eqIt != equations.end(); ++eqIt) {
-                EquationPattern<Base>* eq = *eqIt;
+            for (EquationPattern<Base>* eq : equations) {
                 depsInEq[eq] = eq->dependents;
                 nMaxIt = std::max(nMaxIt, eq->dependents.size());
             }
@@ -400,23 +400,20 @@ namespace CppAD {
                 relatedEqIterationDeps.reserve(iterationDependents_.size());
 
                 // assign an index to each equation
-                typename std::set<EquationPattern<Base>*>::const_iterator eqIt;
-                for (eqIt = eqs.begin(); eqIt != eqs.end(); ++eqIt) {
-                    EquationPattern<Base>* eq = *eqIt;
+                for (EquationPattern<Base>* eq : eqs) {
                     size_t eqo_size = equationOrder_.size();
                     equationOrder_[eq] = eqo_size;
                 }
 
                 // sort dependents
                 std::set<size_t> dependents;
-                for (eqIt = eqs.begin(); eqIt != eqs.end(); ++eqIt) {
-                    EquationPattern<Base>* eq = *eqIt;
+                for (EquationPattern<Base>* eq : eqs) {
                     dependents.insert(eq->dependents.begin(), eq->dependents.end());
                 }
 
-                std::map<size_t, std::map<EquationPattern<Base>*, std::set<size_t> > > nIndexedGroupPos2Eq2deps;
+                map<size_t, map<EquationPattern<Base>*, set<size_t> > > nIndexedGroupPos2Eq2deps;
 
-                std::set<size_t>::const_iterator itDep = dependents.begin();
+                set<size_t>::const_iterator itDep = dependents.begin();
                 size_t i = 0; // iteration counter
                 while (itDep != dependents.end()) {
                     size_t dep = *itDep;
@@ -433,9 +430,7 @@ namespace CppAD {
                     long pos = group.findIndexedLinkedDependent(dep);
                     if (pos >= 0) {
                         // assign the dependent to the first iteration with all its relationships
-                        std::set<size_t>::const_iterator itDep2;
-                        for (itDep2 = linkedDependents[pos].begin(); itDep2 != linkedDependents[pos].end(); ++itDep2) {
-                            size_t dep2 = *itDep2;
+                        for (size_t dep2 : linkedDependents[pos]) {
                             if (dep2 == *itDep) itDep++; //make sure the iterator is valid
                             itDepi.insert(dep2);
                             ritDepi.insert(dep2);
@@ -467,7 +462,7 @@ namespace CppAD {
                  */
                 if (!nIndexedGroupPos2Eq2deps.empty()) {
 
-                    std::map<EquationPattern<Base>*, std::set<size_t> > eqIterations;
+                    map<EquationPattern<Base>*, set<size_t> > eqIterations;
                     for (size_t i = 0; i < relatedEqIterationDeps.size(); i++) {
                         const std::set<size_t>& deps = relatedEqIterationDeps[i];
                         std::set<size_t>::const_iterator itDep;
@@ -477,12 +472,11 @@ namespace CppAD {
                         }
                     }
 
-                    typename std::map<size_t, std::map<EquationPattern<Base>*, std::set<size_t> > >::iterator itPos2Eq2Dep;
-                    for (itPos2Eq2Dep = nIndexedGroupPos2Eq2deps.begin(); itPos2Eq2Dep != nIndexedGroupPos2Eq2deps.end(); ++itPos2Eq2Dep) {
-                        size_t posN = itPos2Eq2Dep->first;
+                    for (auto& itPos2Eq2Dep : nIndexedGroupPos2Eq2deps) {
+                        size_t posN = itPos2Eq2Dep.first;
                         // must pick one dependent from each equation for each iteration
                         std::vector<size_t> deps;
-                        deps.reserve(itPos2Eq2Dep->second.size());
+                        deps.reserve(itPos2Eq2Dep.second.size());
 
                         std::set<size_t> usedIterations; // iterations used by these equations 
                         // determine used iteration indexes
@@ -498,11 +492,10 @@ namespace CppAD {
                             // must pick one dependent from each equation for each iteration
                             deps.clear();
 
-                            typename std::map<EquationPattern<Base>*, std::set<size_t> >::iterator itEq2Dep;
-                            for (itEq2Dep = itPos2Eq2Dep->second.begin(); itEq2Dep != itPos2Eq2Dep->second.end(); ++itEq2Dep) {
-                                if (!itEq2Dep->second.empty()) {
-                                    deps.push_back(*itEq2Dep->second.begin());
-                                    itEq2Dep->second.erase(itEq2Dep->second.begin());
+                            for (auto& itEq2Dep : itPos2Eq2Dep.second) {
+                                if (!itEq2Dep.second.empty()) {
+                                    deps.push_back(*itEq2Dep.second.begin());
+                                    itEq2Dep.second.erase(itEq2Dep.second.begin());
                                 }
                             }
 
@@ -559,23 +552,18 @@ namespace CppAD {
          * Destructor
          */
         virtual ~Loop() {
-            typename std::map<const OperationNode<Base>*, std::vector<IndependentOrder<Base>*> >::const_iterator itf;
-            for (itf = firstIndep2orders_.begin(); itf != firstIndep2orders_.end(); ++itf) {
-                const std::vector<IndependentOrder<Base>*>& orders = itf->second;
-                typename std::vector<IndependentOrder<Base>*>::const_iterator ito;
-                for (ito = orders.begin(); ito != orders.end(); ++ito) {
-                    delete *ito;
+            for (const auto& itf : firstIndep2orders_) {
+                for (IndependentOrder<Base>* ito : itf.second) {
+                    delete ito;
                 }
             }
 
-            typename std::list<OperationArgumentsIndepOrder<Base>*>::const_iterator itio;
-            for (itio = arg2IndepOrder_.begin(); itio != arg2IndepOrder_.end(); ++itio) {
-                delete *itio;
+            for (OperationArgumentsIndepOrder<Base>* itio : arg2IndepOrder_) {
+                delete itio;
             }
 
-            typename std::set<EquationPattern<Base>*>::const_iterator it;
-            for (it = equations.begin(); it != equations.end(); ++it) {
-                delete *it;
+            for (EquationPattern<Base>* eq : equations) {
+                delete eq;
             }
 
             delete loopModel_;
@@ -635,10 +623,9 @@ namespace CppAD {
                      * create the independent variable order
                      */
                     CPPADCG_ASSERT_UNKNOWN(dep2Indep.size() > 0 && dep2Indep.size() <= iterationCount_);
-                    typename std::map<size_t, const OperationNode<Base>*>::const_iterator itDep2Indep;
-                    for (itDep2Indep = dep2Indep.begin(); itDep2Indep != dep2Indep.end(); ++itDep2Indep) {
-                        size_t iterationIndex = itDep2Indep->first;
-                        const OperationNode<Base>* indep = itDep2Indep->second;
+                    for (const auto& itDep2Indep : dep2Indep) {
+                        size_t iterationIndex = itDep2Indep.first;
+                        const OperationNode<Base>* indep = itDep2Indep.second;
 
                         order[iterationIndex] = indep;
                     }
@@ -691,9 +678,7 @@ namespace CppAD {
                 const EquationGroup<Base>& group = eqGroups_[g];
                 const std::set<size_t>& itDeps = group.iterationDependents[group.refIteration];
 
-                std::set<size_t>::const_iterator depIt;
-                for (depIt = itDeps.begin(); depIt != itDeps.end(); ++depIt) {
-                    size_t depIndex = *depIt;
+                for (size_t depIndex : itDeps) {
                     OperationNode<Base>* node = dependents[depIndex].getOperationNode();
                     if (node != nullptr) {
                         Loop<Base>::resetCounters(*node);
@@ -734,9 +719,7 @@ namespace CppAD {
                 const EquationGroup<Base>& group = eqGroups_[g];
                 const std::set<size_t>& iterationDependents = group.iterationDependents[group.refIteration];
 
-                std::set<size_t>::const_iterator depIt;
-                for (depIt = iterationDependents.begin(); depIt != iterationDependents.end(); ++depIt) {
-                    size_t depIndex = *depIt;
+                for (size_t depIndex : iterationDependents) {
                     EquationPattern<Base>* eq = dep2Equation.at(depIndex);
                     OperationNode<Base>* node = dependents[depIndex].getOperationNode();
 
@@ -767,10 +750,9 @@ namespace CppAD {
             indexedCloneOrder.reserve(indexedIndep2clone_.size());
 
             std::map<const OperationNode<Base>*, const IndependentOrder<Base>*> clone2indexedIndep;
-            typename std::map<const IndependentOrder<Base>*, OperationNode<Base>*>::const_iterator it;
-            for (it = indexedIndep2clone_.begin(); it != indexedIndep2clone_.end(); ++it) {
-                clone2indexedIndep[it->second] = it->first;
-                indexedCloneOrder.push_back(it->second);
+            for (const auto& it: indexedIndep2clone_) {
+                clone2indexedIndep[it.second] = it.first;
+                indexedCloneOrder.push_back(it.second);
             }
 
             struct IndexedIndepSorter indexedSorter(clone2indexedIndep);
@@ -781,9 +763,8 @@ namespace CppAD {
 
             // [tape variable] = original independent index
             std::map<const OperationNode<Base>*, const OperationNode<Base>*> clones2ConstIndep;
-            typename std::map<const OperationNode<Base>*, OperationNode<Base>*>::const_iterator itc;
             size_t s = 0;
-            for (itc = orig2ConstIndepClone_.begin(); itc != orig2ConstIndepClone_.end(); ++itc, s++) {
+            for (auto itc = orig2ConstIndepClone_.begin(); itc != orig2ConstIndepClone_.end(); ++itc, s++) {
                 const OperationNode<Base>* orig = itc->first;
                 OperationNode<Base>* clone = itc->second;
 
@@ -883,9 +864,7 @@ namespace CppAD {
             std::vector<std::vector<size_t> > dependentOrigIndexes(equations.size(), std::vector<size_t> (iterationCount_, std::numeric_limits<size_t>::max()));
             for (size_t it = 0; it < iterationCount_; it++) {
                 const std::set<size_t>& itDeps = iterationDependents_[it];
-                std::set<size_t>::const_iterator itDep;
-                for (itDep = itDeps.begin(); itDep != itDeps.end(); ++itDep) {
-                    size_t origDep = *itDep;
+                for (size_t origDep : itDeps) {
                     EquationPattern<Base>* eq = dep2Equation.at(origDep);
                     size_t i = equationOrder_.at(eq);
                     dependentOrigIndexes[i][it] = origDep;

@@ -269,8 +269,8 @@ namespace CppAD {
             } else if (_temporary.size() > 0) {
                 typename std::map<size_t, OperationNode<Base>*>::const_iterator it;
 
-                for (it = _temporary.begin(); it != _temporary.end(); ++it) {
-                    OperationNode<Base>* var = it->second;
+                for (const std::pair<size_t, OperationNode<Base>*>& p : _temporary) {
+                    OperationNode<Base>* var = p.second;
                     if (var->getName() == nullptr) {
                         var->setName(_nameGen->generateTemporary(*var));
                     }
@@ -631,17 +631,16 @@ namespace CppAD {
              */
             if (variableOrder.size() > 0) {
                 // generate names for temporary variables
-                for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
-                    OperationNode<Base>& node = **it;
-                    CGOpCode op = node.getOperationType();
-                    if (!isDependent(node) && op != CGIndexDeclarationOp) {
+                for (OperationNode<Base>* node : variableOrder) {
+                    CGOpCode op = node->getOperationType();
+                    if (!isDependent(*node) && op != CGIndexDeclarationOp) {
                         // variable names for temporaries must always be created since they might have been used before with a different name/id
-                        if (requiresVariableName(node) && op != CGArrayCreationOp && op != CGSparseArrayCreationOp) {
-                            node.setName(_nameGen->generateTemporary(node));
+                        if (requiresVariableName(*node) && op != CGArrayCreationOp && op != CGSparseArrayCreationOp) {
+                            node->setName(_nameGen->generateTemporary(*node));
                         } else if (op == CGArrayCreationOp) {
-                            node.setName(_nameGen->generateTemporaryArray(node));
+                            node->setName(_nameGen->generateTemporaryArray(*node));
                         } else if (op == CGSparseArrayCreationOp) {
-                            node.setName(_nameGen->generateTemporarySparseArray(node));
+                            node->setName(_nameGen->generateTemporarySparseArray(*node));
                         }
                     }
                 }
@@ -720,8 +719,7 @@ namespace CppAD {
             // dependent duplicates
             if (dependentDuplicates.size() > 0) {
                 _code << _spaces << "// variable duplicates: " << dependentDuplicates.size() << "\n";
-                for (std::set<size_t>::const_iterator it = dependentDuplicates.begin(); it != dependentDuplicates.end(); ++it) {
-                    size_t index = *it;
+                for (size_t index : dependentDuplicates) {
                     const CG<Base>& dep = (*_dependent)[index];
                     std::string varName = _nameGen->generateDependent(index);
                     const std::string& origVarName = *dep.getOperationNode()->getName();
