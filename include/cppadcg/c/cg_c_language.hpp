@@ -53,7 +53,7 @@ namespace CppAD {
         // spaces for 1 level indentation
         const std::string _spaces;
         //
-        const std::auto_ptr<LanguageGenerationData<Base> >* _info;
+        const std::unique_ptr<LanguageGenerationData<Base> >* _info;
         // current indentation
         std::string _indentation;
         // variable name used for the inlet variable
@@ -507,7 +507,7 @@ namespace CppAD {
 
     protected:
 
-        virtual void generateSourceCode(std::ostream& out, const std::auto_ptr<LanguageGenerationData<Base> >& info) {
+        virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) {
             const bool createFunction = !_functionName.empty();
             const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != NULL;
 

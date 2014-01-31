@@ -105,7 +105,7 @@ namespace CppAD {
             prepareAtomicLibAtomicLib(xOuter, xInner, xNorm, eqNorm);
             ASSERT_TRUE(_modelLib != NULL);
 
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
             ASSERT_TRUE(modelLibOuter.get() != NULL);
 
             test2LevelAtomicLibModel(_modelLib, modelLibOuter.get(),
@@ -124,8 +124,8 @@ namespace CppAD {
 
             prepareAtomicLibModelBridge(xOuter, xInner, xNorm, eqNorm);
 
-            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModel(modelLib.get(), modelLibOuter.get(),
                                      xOuter,
@@ -153,8 +153,8 @@ namespace CppAD {
                                         jacOuter, hessOuter,
                                         createOuterReverse2);
 
-            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
                                               xOuter,

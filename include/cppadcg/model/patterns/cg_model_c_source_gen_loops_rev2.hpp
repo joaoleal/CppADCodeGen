@@ -304,7 +304,7 @@ namespace CppAD {
                  * try to fit a combination of two patterns:
                  *  j = fStart(jrow) + flit(lit);
                  */
-                std::auto_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jrow2localIt2ModelIt));
+                std::unique_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jrow2localIt2ModelIt));
 
                 if (itPattern.get() == NULL) {
                     // did not match!
@@ -314,10 +314,10 @@ namespace CppAD {
                 /**
                  * Local iteration count pattern
                  */
-                std::auto_ptr<IndexOperationNode<Base> > localIterIndexOp;
-                std::auto_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
-                std::auto_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
-                std::auto_ptr<IndexPattern> indexLocalItCountPattern;
+                std::unique_ptr<IndexOperationNode<Base> > localIterIndexOp;
+                std::unique_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
+                std::unique_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
+                std::unique_ptr<IndexPattern> indexLocalItCountPattern;
 
                 if (createsLoop) {
                     map<size_t, size_t> jrow2litCount;
@@ -402,7 +402,7 @@ namespace CppAD {
                 langC.setParameterPrecision(_parameterPrecision);
 
                 std::ostringstream code;
-                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
+                std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
                 CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                 /**
@@ -546,7 +546,7 @@ namespace CppAD {
                     langC.setGenerateFunction(functionName);
 
                     std::ostringstream code;
-                    std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
+                    std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
                     CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                     handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);

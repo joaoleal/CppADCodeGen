@@ -53,7 +53,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_FORWAD_ZERO);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator());
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator());
 
         handler.generateCode(code, langC, dep, *nameGen, _atomicFunctions, jobName);
     }

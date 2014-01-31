@@ -60,11 +60,11 @@ namespace CppAD {
         static const size_t m; // total number of equations in the collocation model 
         static const size_t na; // number of independent variables of the CSTR model
         static const size_t repeat; // number of time intervals
-        std::auto_ptr<CstrCollocationModel<CGD> > colModel_;
+        std::unique_ptr<CstrCollocationModel<CGD> > colModel_;
         std::vector<Base> xx; // default CSTR model values
         std::vector<Base> x; // values for the collocation model
-        std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
-        std::auto_ptr<GenericModel<double> > atomicModel_;
+        std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
+        std::unique_ptr<GenericModel<double> > atomicModel_;
         std::vector<std::string> flags_;
     public:
 

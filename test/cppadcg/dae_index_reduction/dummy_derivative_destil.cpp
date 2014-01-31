@@ -109,7 +109,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     std::vector<DaeVarInfo> daeVar;
 
     // create f: U -> Z and vectors used for derivative calculations
-    std::auto_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
+    std::unique_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
 
     std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(fun->Range(), 1.0);

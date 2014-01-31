@@ -799,7 +799,7 @@ namespace CppAD {
             CppAD::Independent(x);
             std::vector<AD<CGBase> > y = evaluator.evaluate(x);
 
-            std::auto_ptr<ADFun<CGBase> > tapeNoLoops(new ADFun<CGBase>());
+            std::unique_ptr<ADFun<CGBase> > tapeNoLoops(new ADFun<CGBase>());
             tapeNoLoops->Dependent(y);
 
             return new LoopFreeModel<Base>(tapeNoLoops.release(), depTape2Orig);

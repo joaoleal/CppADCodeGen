@@ -252,7 +252,7 @@ namespace CppAD {
              */
             std::vector<DaeEquationInfo> reducedEqInfo;
 
-            std::auto_ptr<ADFun<CG<Base> > > fun(Pantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
+            std::unique_ptr<ADFun<CG<Base> > > fun(Pantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
             if (fun.get() == NULL)
                 return NULL; //nothing to do (no index reduction required)
 
@@ -266,17 +266,17 @@ namespace CppAD {
                 if (reduceEquations_) {
                     std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                     std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                    std::auto_ptr<ADFun<CG<Base> > > funShort = reduceEquations(varInfo, newVarInfo,
-                                                                                eqInfo, newEqInfo);
+                    std::unique_ptr<ADFun<CG<Base> > > funShort = reduceEquations(varInfo, newVarInfo,
+                                                                                  eqInfo, newEqInfo);
                     fun = funShort;
                 }
 
                 if (generateSemiExplicitDae_) {
                     std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                     std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                    std::auto_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(*fun.get(),
-                                                                                            varInfo, newVarInfo,
-                                                                                            eqInfo, newEqInfo);
+                    std::unique_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(*fun.get(),
+                                                                                              varInfo, newVarInfo,
+                                                                                              eqInfo, newEqInfo);
                     fun = semiExplicit;
                 }
             }
@@ -284,9 +284,9 @@ namespace CppAD {
             if (reorder_) {
                 std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                 std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                std::auto_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(*fun.get(),
-                                                                                    varInfo, newVarInfo,
-                                                                                    eqInfo, newEqInfo);
+                std::unique_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(*fun.get(),
+                                                                                      varInfo, newVarInfo,
+                                                                                      eqInfo, newEqInfo);
                 fun = reorderedFun;
             }
 
@@ -421,10 +421,10 @@ namespace CppAD {
          * @return The new DAE reduced model with (possibly) less equations and
          *         variables
          */
-        inline std::auto_ptr<ADFun<CGBase > > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
-                                                              std::vector<DaeVarInfo>& newVarInfo,
-                                                              const std::vector<DaeEquationInfo>& reducedEqInfo,
-                                                              std::vector<DaeEquationInfo>& newEqInfo) {
+        inline std::unique_ptr<ADFun<CGBase > > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
+                                                                std::vector<DaeVarInfo>& newVarInfo,
+                                                                const std::vector<DaeEquationInfo>& reducedEqInfo,
+                                                                std::vector<DaeEquationInfo>& newEqInfo) {
             using namespace std;
             using std::vector;
             using std::map;
@@ -580,9 +580,9 @@ namespace CppAD {
              * Implement the model after after the reduction of equations and 
              * variables by substitution
              */
-            std::auto_ptr<ADFun<CGBase > > shortFun(generateReorderedModel(handler, res0,
-                                                                           reducedVarInfo, newVarInfo,
-                                                                           reducedEqInfo, newEqInfo));
+            std::unique_ptr<ADFun<CGBase > > shortFun(generateReorderedModel(handler, res0,
+                                                                             reducedVarInfo, newVarInfo,
+                                                                             reducedEqInfo, newEqInfo));
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
                 std::cout << "DAE with less equations and variables:\n";
@@ -601,11 +601,11 @@ namespace CppAD {
          * @return The new semi-explicit DAE model with less variables (without
          *         the time derivative variables)
          */
-        inline std::auto_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
-                                                                      const std::vector<DaeVarInfo>& varInfo,
-                                                                      std::vector<DaeVarInfo>& newVarInfo,
-                                                                      const std::vector<DaeEquationInfo>& eqInfo,
-                                                                      std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
+        inline std::unique_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
+                                                                        const std::vector<DaeVarInfo>& varInfo,
+                                                                        std::vector<DaeVarInfo>& newVarInfo,
+                                                                        const std::vector<DaeEquationInfo>& eqInfo,
+                                                                        std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
             using namespace std;
             using std::vector;
             using std::map;
@@ -704,7 +704,7 @@ namespace CppAD {
              * Implement the reordering and derivative variable elimination in
              * the model
              */
-            std::auto_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+            std::unique_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
                 std::cout << "Semi-Eplicit DAE:\n";
@@ -1123,11 +1123,11 @@ namespace CppAD {
             return true;
         }
 
-        inline std::auto_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >& fun,
-                                                                  const std::vector<DaeVarInfo>& varInfo,
-                                                                  std::vector<DaeVarInfo>& newVarInfo,
-                                                                  const std::vector<DaeEquationInfo>& eqInfo,
-                                                                  std::vector<DaeEquationInfo>& newEqInfo) {
+        inline std::unique_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >& fun,
+                                                                    const std::vector<DaeVarInfo>& varInfo,
+                                                                    std::vector<DaeVarInfo>& newVarInfo,
+                                                                    const std::vector<DaeEquationInfo>& eqInfo,
+                                                                    std::vector<DaeEquationInfo>& newEqInfo) {
 
             using namespace std;
             using std::vector;
@@ -1237,7 +1237,7 @@ namespace CppAD {
             /**
              * Implement the reordering in the model
              */
-            std::auto_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+            std::unique_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
             if (this->verbosity_ >= VERBOSITY_HIGH) {
                 std::cout << "reordered DAE equations and variables:\n";

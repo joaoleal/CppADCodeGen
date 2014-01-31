@@ -26,8 +26,8 @@ namespace CppAD {
     class LlvmModelLibraryProcessor : public ModelLibraryProcessor<Base> {
     protected:
         std::vector<std::string> _includePaths;
-        std::auto_ptr<llvm::Linker> _linker;
-        std::auto_ptr<llvm::LLVMContext> _context;
+        std::unique_ptr<llvm::Linker> _linker;
+        std::unique_ptr<llvm::LLVMContext> _context;
     public:
 
         /**
@@ -163,7 +163,7 @@ namespace CppAD {
 
             ArrayRef<const char *> args(argv + 1, // skip program name
                                         argc - 1);
-            std::auto_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
+            std::unique_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
             if (invocation.get() == NULL)
                 throw CGException("Failed to create compiler invocation");
             CompilerInvocation::setLangDefaults(*invocation->getLangOpts(), IK_C,

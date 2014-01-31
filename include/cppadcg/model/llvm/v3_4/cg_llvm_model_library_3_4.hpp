@@ -28,9 +28,9 @@ namespace CppAD {
     class LlvmModelLibrary3_4 : public LlvmModelLibrary<Base> {
     protected:
         llvm::Module* _module;
-        std::auto_ptr<llvm::LLVMContext> _context;
-        std::auto_ptr<llvm::ExecutionEngine> _executionEngine;
-        std::auto_ptr<llvm::FunctionPassManager> _fpm;
+        std::unique_ptr<llvm::LLVMContext> _context;
+        std::unique_ptr<llvm::ExecutionEngine> _executionEngine;
+        std::unique_ptr<llvm::FunctionPassManager> _fpm;
     public:
 
         LlvmModelLibrary3_4(llvm::Module* module,

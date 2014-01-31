@@ -65,7 +65,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
@@ -209,7 +209,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
         handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
@@ -350,7 +350,7 @@ namespace CppAD {
 
     template<class Base>
     void ModelCSourceGen<Base>::determineSecondOrderElements4Eval(std::vector<size_t>& evalRows,
-                                                                          std::vector<size_t>& evalCols) {
+                                                                  std::vector<size_t>& evalCols) {
         /**
          * Atomic functions migth not have all the elements and thus there may 
          * be no symmetry. This will explore symmetry in order to provide the

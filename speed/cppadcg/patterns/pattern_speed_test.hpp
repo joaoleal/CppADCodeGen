@@ -78,13 +78,13 @@ namespace CppAD {
         std::vector<Base> eqNorm_;
         std::vector<std::set<size_t> > customJacSparsity_;
         std::vector<std::set<size_t> > customHessSparsity_;
-        std::auto_ptr<DynamicLib<Base> > dynamicLib_;
-        std::auto_ptr<LlvmModelLibrary<Base> > llvmLib_;
-        std::auto_ptr<GenericModel<Base> > model_;
+        std::unique_ptr<DynamicLib<Base> > dynamicLib_;
+        std::unique_ptr<LlvmModelLibrary<Base> > llvmLib_;
+        std::unique_ptr<GenericModel<Base> > model_;
         std::vector<GenericModel<Base>*> externalModels_;
         std::vector<std::string> compileFlags_;
-        std::auto_ptr<ModelCSourceGen<double> > modelSourceGen_;
-        std::auto_ptr<ModelLibraryCSourceGen<double> > libSourceGen_;
+        std::unique_ptr<ModelCSourceGen<double> > modelSourceGen_;
+        std::unique_ptr<ModelLibraryCSourceGen<double> > libSourceGen_;
         JobSpeedListener listener_;
         bool verbose_;
         size_t nTimes_;
@@ -209,7 +209,7 @@ namespace CppAD {
             std::cerr << head << std::endl;
             ModelCppADCG model(*this);
 
-            std::auto_ptr<ADFun<CGD> > fun;
+            std::unique_ptr<ADFun<CGD> > fun;
 
             /**
              * preparation
@@ -247,7 +247,7 @@ namespace CppAD {
             std::cerr << head << std::endl;
             ModelCppADCG model(*this);
 
-            std::auto_ptr<ADFun<CGD> > fun;
+            std::unique_ptr<ADFun<CGD> > fun;
 
             /**
              * preparation
@@ -300,7 +300,7 @@ namespace CppAD {
                 listener_.reset();
                 // tape
                 ModelCppADCG model(*this);
-                std::auto_ptr<ADFun<CGD> > fun;
+                std::unique_ptr<ADFun<CGD> > fun;
                 fun.reset(tapeModel(model, xb, repeat));
 
                 createSource(libBaseName, *fun.get(), relatedDepCandidates, xb, jacMode, testJacobian_, testHessian_, forReverseOne, reverseTwo);
@@ -414,7 +414,7 @@ namespace CppAD {
 
             ModelCppAD model(*this);
 
-            std::auto_ptr<ADFun<Base> > fun;
+            std::unique_ptr<ADFun<Base> > fun;
 
             /**
              * preparation
@@ -466,7 +466,7 @@ namespace CppAD {
                     y[i] /= eqNorm_[i];
             }
 
-            std::auto_ptr<ADFun<T> > fun(new ADFun<T>());
+            std::unique_ptr<ADFun<T> > fun(new ADFun<T>());
             fun->Dependent(y);
 
             return fun.release();

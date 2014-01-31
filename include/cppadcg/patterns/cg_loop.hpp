@@ -871,7 +871,7 @@ namespace CppAD {
 
             std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps);
 
-            std::auto_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
+            std::unique_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
             funIndexed->Dependent(newDeps);
 
             /*******************************************************************

@@ -123,7 +123,7 @@ namespace CppAD {
     template<class Base>
     class Language {
     protected:
-        virtual void generateSourceCode(std::ostream& out, const std::auto_ptr<LanguageGenerationData<Base> >& info) = 0;
+        virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
 
         /**
          * Whether or not a new variable is created as a result of this operation

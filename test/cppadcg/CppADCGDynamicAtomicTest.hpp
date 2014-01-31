@@ -116,7 +116,7 @@ namespace CppAD {
             vector<AD<double> > ay(m);
 
             // call user function and store CGAtomicLibModel(x) in au[0] 
-            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
             CGAtomicGenericModel<double>& atomicfun = modelLib->asAtomic();
 
             atomicfun(ax, ay);
@@ -325,7 +325,7 @@ namespace CppAD {
             prepareAtomicLibAtomicLib(x, xNorm, eqNorm);
             ASSERT_TRUE(_modelLib != NULL);
 
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
             ASSERT_TRUE(modelLibOuter.get() != NULL);
 
             test2LevelAtomicLibModel(_modelLib, modelLibOuter.get(),
@@ -343,8 +343,8 @@ namespace CppAD {
 
             prepareAtomicLibModelBridge(x, xNorm, eqNorm);
 
-            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModel(modelLib.get(), modelLibOuter.get(),
                                      x, xNorm, eqNorm, epsilonR, epsilonA);
@@ -369,8 +369,8 @@ namespace CppAD {
                                         jacOuter, hessOuter,
                                         createOuterReverse2);
 
-            auto_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-            auto_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+            unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+            unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
 
             test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
                                               x, xNorm, eqNorm,

@@ -32,13 +32,13 @@ namespace CppAD {
         std::vector<double> xa_; // default atomic model values
 
         std::vector<std::string> compilerFlags_;
-        std::auto_ptr<DynamicLib<double> > atomicDynamicLib_;
-        std::auto_ptr<GenericModel<double> > atomicModel_;
+        std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
+        std::unique_ptr<GenericModel<double> > atomicModel_;
         std::vector<atomic_base<T>*> atoms_;
         bool ignoreParameters_;
         bool verbose_;
     private:
-        std::auto_ptr<CGAtomicFun<double> > atomModel_;
+        std::unique_ptr<CGAtomicFun<double> > atomModel_;
     public:
 
         inline CollocationModel(size_t ns,

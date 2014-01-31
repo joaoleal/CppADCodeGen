@@ -231,7 +231,7 @@ namespace CppAD {
                         irow2It[i] = it;
                 }
 
-                std::auto_ptr<IndexPattern> itPattern(IndexPattern::detect(irow2It));
+                std::unique_ptr<IndexPattern> itPattern(IndexPattern::detect(irow2It));
                 IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), jrowIndexOp);
                 iterationIndexOp.makeAssigmentDependent(iterationIndexPatternOp);
 
@@ -297,7 +297,7 @@ namespace CppAD {
 
                 _cache.str("");
                 std::ostringstream code;
-                std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw"));
+                std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw"));
                 CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dy", n);
 
                 /**
@@ -383,7 +383,7 @@ namespace CppAD {
         langC.setGenerateFunction(_cache.str());
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw"));
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dw"));
         CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dy", n);
 
         handler.generateCode(code, langC, jacRow, nameGenHess, _atomicFunctions, jobName);

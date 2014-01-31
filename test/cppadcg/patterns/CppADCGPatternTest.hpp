@@ -39,7 +39,7 @@ namespace CppAD {
         std::vector<std::set<size_t> > customJacSparsity_;
         std::vector<std::set<size_t> > customHessSparsity_;
     private:
-        std::auto_ptr<DefaultPatternTestModel<CG<Base> > > modelMem_;
+        std::unique_ptr<DefaultPatternTestModel<CG<Base> > > modelMem_;
     public:
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
@@ -390,8 +390,8 @@ namespace CppAD {
             SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL,"sources_" + libBaseName);
             
             DynamicModelLibraryProcessor<double> p(compDynHelpL, libBaseName + "Loops");
-            std::auto_ptr<DynamicLib<double> > dynamicLibL(p.createDynamicLibrary(compiler));
-            std::auto_ptr<GenericModel<double> > modelL;
+            std::unique_ptr<DynamicLib<double> > dynamicLibL(p.createDynamicLibrary(compiler));
+            std::unique_ptr<GenericModel<double> > modelL;
             if (loadModels) {
                 modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
                 ASSERT_TRUE(modelL.get() != NULL);
@@ -427,12 +427,12 @@ namespace CppAD {
             SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp,"sources_" + libBaseName);
 
             DynamicModelLibraryProcessor<double> p2(compDynHelp, libBaseName + "NoLoops");
-            std::auto_ptr<DynamicLib<double> > dynamicLib(p2.createDynamicLibrary(compiler));
+            std::unique_ptr<DynamicLib<double> > dynamicLib(p2.createDynamicLibrary(compiler));
 
             /**
              * reference library
              */
-            std::auto_ptr<GenericModel<double> > model;
+            std::unique_ptr<GenericModel<double> > model;
             if (loadModels) {
                 model.reset(dynamicLib->model(libBaseName + "NoLoops"));
                 for (size_t i = 0; i < atoms_.size(); i++)

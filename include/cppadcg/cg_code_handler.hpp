@@ -116,7 +116,7 @@ namespace CppAD {
         /**
          * information sent to the language
          */
-        std::auto_ptr<LanguageGenerationData<Base> > _info;
+        std::unique_ptr<LanguageGenerationData<Base> > _info;
         // the lowest ID used for temporary variables
         size_t _minTemporaryVarID;
         /**

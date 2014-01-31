@@ -45,7 +45,7 @@ TEST_F(CppADCGModelTest, llvm) {
     std::vector<AD<CG<double> > > u(3);
     //u[0] = x[0];
 
-    std::auto_ptr<CppAD::ADFun<CG<Base> > > fun(modelFunc<CG<Base> >(u));
+    std::unique_ptr<CppAD::ADFun<CG<Base> > > fun(modelFunc<CG<Base> >(u));
 
     /**
      * Create the dynamic library
@@ -63,8 +63,8 @@ TEST_F(CppADCGModelTest, llvm) {
 
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
-    std::auto_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create());
-    std::auto_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
+    std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create());
+    std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
     ASSERT_TRUE(model.get() != NULL);
 
     this->testModelResults(*model, *fun.get(), x);

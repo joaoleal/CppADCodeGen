@@ -54,7 +54,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac"));
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }
@@ -135,7 +135,7 @@ namespace CppAD {
         langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
 
         std::ostringstream code;
-        std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac"));
+        std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("jac"));
 
         handler.generateCode(code, langC, jac, *nameGen, _atomicFunctions, jobName);
     }

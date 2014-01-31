@@ -135,7 +135,7 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
+            std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
             CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
             handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
@@ -234,7 +234,7 @@ namespace CppAD {
             langC.setGenerateFunction(_cache.str());
 
             std::ostringstream code;
-            std::auto_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
+            std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
             CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
             handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);

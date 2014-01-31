@@ -371,7 +371,7 @@ namespace CppAD {
         }
         Independent(u2);
 
-        std::auto_ptr<CppAD::ADFun<CG<double> > > f2((*func2)(u2));
+        std::unique_ptr<CppAD::ADFun<CG<double> > > f2((*func2)(u2));
 
         std::string library = "./tmp/test_" + test + ".so";
         std::string function = "test_" + test;
@@ -432,7 +432,7 @@ namespace CppAD {
         }
         Independent(u2);
 
-        std::auto_ptr<CppAD::ADFun<CG<double> > > f2((*func2)(u2));
+        std::unique_ptr<CppAD::ADFun<CG<double> > > f2((*func2)(u2));
 
         vector<vector<double> > depsCG;
 

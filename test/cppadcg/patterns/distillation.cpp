@@ -132,7 +132,7 @@ TEST_F(CppADCGPatternDistillationTest, distillationAllVars) {
     /**
      * Tape model
      */
-    std::auto_ptr<ADFun<CGD> > fun;
+    std::unique_ptr<ADFun<CGD> > fun;
     this->tape(fun);
 
     /**
@@ -148,7 +148,7 @@ TEST_F(CppADCGPatternDistillationTest, distillation) {
     /**
      * Tape model
      */
-    std::auto_ptr<ADFun<CGD> > fun;
+    std::unique_ptr<ADFun<CGD> > fun;
     this->tape(fun);
 
     /**

@@ -789,8 +789,8 @@ namespace CppAD {
 
         class ArrayGroup {
         public:
-            std::auto_ptr<IndexPattern> pattern;
-            std::auto_ptr<IndexPattern> startLocPattern;
+            std::unique_ptr<IndexPattern> pattern;
+            std::unique_ptr<IndexPattern> startLocPattern;
             SmartMapValuePointer<size_t, ArrayElementGroup> elCount2elements;
         };
 
@@ -831,7 +831,7 @@ namespace CppAD {
                     const map<size_t, set<size_t> >& jcols2e = itg->second;
 
                     // group by number of iterations
-                    std::auto_ptr<ArrayGroup> data(new ArrayGroup());
+                    std::unique_ptr<ArrayGroup> data(new ArrayGroup());
 
                     /**
                      * jcol pattern

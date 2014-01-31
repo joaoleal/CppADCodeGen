@@ -192,7 +192,7 @@ namespace CppAD {
 
         std::string funcName = _name + "_" + FUNCTION_INFO;
 
-        std::auto_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator());
+        std::unique_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator());
 
         _cache.str("");
         _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
