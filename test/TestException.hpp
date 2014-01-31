@@ -25,9 +25,12 @@ namespace CppAD {
         std::string _message;
 
     public:
+
         inline TestException(const std::string& message) throw () :
             _message(message) {
         }
+
+        TestException() throw () = delete;
 
         inline const char* what() const throw () {
             return _message.c_str();
@@ -36,8 +39,6 @@ namespace CppAD {
         inline virtual ~TestException() throw () {
         }
 
-    private:
-        TestException() throw (); // not implemented
     };
 
 }

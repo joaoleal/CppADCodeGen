@@ -219,6 +219,9 @@ namespace CppAD {
             }
         }
 
+        LoopModel(const LoopModel<Base>&) = delete;
+        LoopModel& operator=(const LoopModel<Base>&) = delete;
+
         /**
          * Provides a unique identifier for this loop.
          * 
@@ -491,10 +494,6 @@ namespace CppAD {
             count++;
             return count;
         }
-
-        LoopModel(const LoopModel<Base>&); // not implemented
-
-        LoopModel& operator=(const LoopModel<Base>&); // not implemented
 
     };
 

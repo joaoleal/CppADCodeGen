@@ -156,6 +156,9 @@ namespace CppAD {
 
         }
 
+        CodeHandler(const CodeHandler&) = delete;
+        CodeHandler& operator=(const CodeHandler&) = delete;
+
         inline void setReuseVariableIDs(bool reuse) {
             _reuseIDs = reuse;
         }
@@ -1014,7 +1017,7 @@ namespace CppAD {
             manageOperationNode(tmpDclVar);
             Argument<Base> tmpArg(*tmpDclVar);
 
-            OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions, {iterationIndexOp});
+            OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions,{iterationIndexOp});
             manageOperationNode(cond);
 
             // if
@@ -1350,7 +1353,7 @@ namespace CppAD {
                         eArgs1.insert(eArgs1.end(), eArgs.begin() + 1, eArgs.end());
 
                         // replace endIf
-                        endIf->setOperation(CGAliasOp, {*endIf1});
+                        endIf->setOperation(CGAliasOp,{*endIf1});
 
                         // remove one of the ifs
                         vorder.erase(vorder.begin() + p);
@@ -1862,12 +1865,6 @@ namespace CppAD {
 
         static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
                                                                     OperationNode<Base>& node);
-
-    private:
-
-        CodeHandler(const CodeHandler&); // not implemented
-
-        CodeHandler& operator=(const CodeHandler&); // not implemented
 
         friend class CG<Base>;
         friend class CGAbstractAtomicFun<Base>;

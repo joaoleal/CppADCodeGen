@@ -60,11 +60,14 @@ namespace CppAD {
             validate();
         }
 
-        virtual std::set<std::string> getModelNames() {
+        LinuxDynamicLib(const LinuxDynamicLib&) = delete;
+        LinuxDynamicLib& operator=(const LinuxDynamicLib&) = delete;
+
+        virtual std::set<std::string> getModelNames() override {
             return _modelNames;
         }
 
-        virtual LinuxDynamicLibModel<Base>* model(const std::string& modelName) {
+        virtual LinuxDynamicLibModel<Base>* model(const std::string& modelName) override {
             typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
             if (it == _modelNames.end()) {
                 return nullptr;
@@ -74,11 +77,11 @@ namespace CppAD {
             return m;
         }
 
-        virtual unsigned long getAPIVersion() {
+        virtual unsigned long getAPIVersion() override {
             return _version;
         }
 
-        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) {
+        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
             void* functor = dlsym(_dynLibHandle, functionName.c_str());
 
             if (required) {
@@ -134,11 +137,6 @@ namespace CppAD {
         virtual void destroyed(LinuxDynamicLibModel<Base>* model) {
             _models.erase(model);
         }
-
-    private:
-        LinuxDynamicLib(const LinuxDynamicLib&); // not implemented
-
-        LinuxDynamicLib& operator=(const LinuxDynamicLib&); // not implemented
 
         friend class LinuxDynamicLibModel<Base>;
 

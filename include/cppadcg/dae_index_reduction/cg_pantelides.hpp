@@ -211,6 +211,9 @@ namespace CppAD {
             }
         }
 
+        Pantelides(const Pantelides& p) = delete;
+        Pantelides& operator=(const Pantelides& p) = delete;
+
         /**
          * Performs the DAE differentiation index reductions
          * 
@@ -874,9 +877,6 @@ namespace CppAD {
             std::cout << "\n" << code.str() << std::endl;
         }
 
-    private:
-        Pantelides(const Pantelides& p); // not implemented
-        Pantelides& operator=(const Pantelides& p); // not implemented
     };
 
 }

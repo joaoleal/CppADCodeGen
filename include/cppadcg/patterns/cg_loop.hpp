@@ -156,6 +156,9 @@ namespace CppAD {
             eqGroups_[0].equations.insert(&eq);
         }
 
+        Loop(const Loop<Base>& other) = delete;
+        Loop& operator=(const Loop<Base>& rhs) = delete;
+
         inline void addEquation(EquationPattern<Base>& eq) {
             equations.insert(&eq);
             eqGroups_[0].equations.insert(&eq);
@@ -1090,9 +1093,6 @@ namespace CppAD {
 
             return *cloneOp;
         }
-
-        Loop(const Loop<Base>& other); // not implemented
-        Loop& operator=(const Loop<Base>& rhs); // not implemented
 
         static void resetCounters(OperationNode<Base>& node) {
             if (node.getVariableID() == 0) {

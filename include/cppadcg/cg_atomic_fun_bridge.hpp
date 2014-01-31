@@ -60,6 +60,9 @@ namespace CppAD {
             this->option(CppAD::atomic_base<CGB>::set_sparsity_enum);
         }
 
+        CGAtomicFunBridge(const CGAtomicFunBridge& orig) = delete;
+        CGAtomicFunBridge& operator=(const CGAtomicFunBridge& rhs) = delete;
+
         template <class ADVector>
         void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
             this->CGAbstractAtomicFun<Base>::operator()(ax, ay, id);
@@ -303,10 +306,6 @@ namespace CppAD {
                 to[i] = from[i].getValue();
             }
         }
-
-    private:
-        CGAtomicFunBridge(const CGAtomicFunBridge& orig); // not implemented
-        CGAtomicFunBridge& operator=(const CGAtomicFunBridge& rhs); // not implemented
 
     };
 

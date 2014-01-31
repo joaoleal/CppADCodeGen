@@ -633,8 +633,7 @@ namespace CppAD {
             /**
              * generate source code
              */
-            ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
-            compDynHelp.addModel(compHelp2);
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp1, compHelp2);
             std::string folder = std::string("nested_sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName;
             SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, folder);
 

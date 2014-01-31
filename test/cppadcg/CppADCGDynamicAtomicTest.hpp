@@ -921,9 +921,8 @@ namespace CppAD {
              * Create the dynamic library
              * (generate and compile source code)
              */
-            ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
+            ModelLibraryCSourceGen<double> compDynHelp(compHelp1, compHelp2);
             compDynHelp.setVerbose(this->verbose_);
-            compDynHelp.addModel(compHelp2);
 
             std::string folder = std::string("sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName;
             SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, folder);

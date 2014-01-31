@@ -57,6 +57,9 @@ namespace CppAD {
             this->init();
         }
 
+        LinuxDynamicLibModel(const LinuxDynamicLibModel&) = delete;
+        LinuxDynamicLibModel& operator=(const LinuxDynamicLibModel&) = delete;
+
         virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
             return _dynLib->loadFunction(functionName, required);
         }
@@ -65,12 +68,6 @@ namespace CppAD {
             _dynLib = nullptr;
             FunctorGenericModel<Base>::modelLibraryClosed();
         }
-
-    private:
-
-        LinuxDynamicLibModel(const LinuxDynamicLibModel&); // not implemented
-
-        LinuxDynamicLibModel& operator=(const LinuxDynamicLibModel&); // not implemented
 
         friend class LinuxDynamicLib<Base>;
     };

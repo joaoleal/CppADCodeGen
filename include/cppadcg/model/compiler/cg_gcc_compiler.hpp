@@ -45,6 +45,9 @@ namespace CppAD {
             this->_compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
         }
 
+        GccCompiler(const GccCompiler& orig) = delete;
+        GccCompiler& operator=(const GccCompiler& rhs) = delete;
+
         /**
          * Creates a dynamic library from a set of object files
          * 
@@ -109,10 +112,6 @@ namespace CppAD {
             system::callExecutable(this->_path, args, true, source);
         }
 
-    private:
-
-        GccCompiler(const GccCompiler& orig); // not implemented
-        GccCompiler& operator=(const GccCompiler& rhs); // not implemented
     };
 
 }

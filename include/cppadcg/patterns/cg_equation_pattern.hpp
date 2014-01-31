@@ -100,6 +100,9 @@ namespace CppAD {
             dependents.insert(iDepRef);
         }
 
+        EquationPattern(const EquationPattern<Base>& other) = delete;
+        EquationPattern& operator=(const EquationPattern<Base>& rhs) = delete;
+
         bool testAdd(size_t iDep2, const CG<Base>& dep2, size_t& minColor) throw (CGException) {
             IndexedIndependent<Base> independentsBackup = indexedOpIndep;
             std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependentsBackup = constOperationIndependents;
@@ -520,9 +523,6 @@ namespace CppAD {
                 }
             }
         }
-
-        EquationPattern(const EquationPattern<Base>& other); // not implemented
-        EquationPattern& operator=(const EquationPattern<Base>& rhs); // not implemented
 
     };
 

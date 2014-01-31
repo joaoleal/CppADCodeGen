@@ -47,6 +47,9 @@ namespace CppAD {
             this->_compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
         }
 
+        ClangCompiler(const ClangCompiler& orig) = delete;
+        ClangCompiler& operator=(const ClangCompiler& rhs) = delete;
+
         virtual const std::set<std::string>& getBitCodeFiles() const {
             return _bcfiles;
         }
@@ -142,10 +145,6 @@ namespace CppAD {
             system::callExecutable(this->_path, args, true, source);
         }
 
-    private:
-
-        ClangCompiler(const ClangCompiler& orig); // not implemented
-        ClangCompiler& operator=(const ClangCompiler& rhs); // not implemented
     };
 
 }

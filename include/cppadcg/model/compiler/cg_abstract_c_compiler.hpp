@@ -42,6 +42,9 @@ namespace CppAD {
             _verbose(false) {
         }
 
+        AbstractCCompiler(const AbstractCCompiler& orig) = delete;
+        AbstractCCompiler& operator=(const AbstractCCompiler& rhs) = delete;
+
         std::string getCompilerPath() const {
             return _path;
         }
@@ -118,7 +121,7 @@ namespace CppAD {
                                     const std::string& outputExtension,
                                     std::set<std::string>& outputFiles) {
             using namespace std::chrono;
-            
+
             if (sources.empty())
                 return; // nothing to do
 
@@ -152,7 +155,7 @@ namespace CppAD {
                 count++;
                 std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
                 outputFiles.insert(file);
-                
+
                 steady_clock::time_point beginTime;
 
                 if (timer != nullptr || _verbose) {
@@ -225,10 +228,6 @@ namespace CppAD {
          */
         virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) = 0;
 
-    private:
-
-        AbstractCCompiler(const AbstractCCompiler& orig); // not implemented
-        AbstractCCompiler& operator=(const AbstractCCompiler& rhs); // not implemented
     };
 
 }

@@ -61,6 +61,9 @@ namespace CppAD {
             validate();
         }
 
+        LlvmModelLibrary3_4(const LlvmModelLibrary3_4&) = delete;
+        LlvmModelLibrary3_4& operator=(const LlvmModelLibrary3_4&) = delete;
+
         /**
          * Set up the optimizer pipeline
          */
@@ -137,11 +140,6 @@ namespace CppAD {
                 this->_modelNames.insert(model_names[i]);
             }
         }
-
-    private:
-        LlvmModelLibrary3_4(const LlvmModelLibrary3_4&); // not implemented
-
-        LlvmModelLibrary3_4& operator=(const LlvmModelLibrary3_4&); // not implemented
 
         friend class LlvmModel<Base>;
 

@@ -76,6 +76,9 @@ namespace CppAD {
                 dependentOrig2Local[dependentIndexes_[il]] = il;
         }
 
+        LoopFreeModel(const LoopFreeModel<Base>&) = delete;
+        LoopFreeModel& operator=(const LoopFreeModel<Base>&) = delete;
+
         inline ADFun<CGB>& getTape() const {
             return *fun_;
         }
@@ -395,10 +398,6 @@ namespace CppAD {
             delete fun_;
         }
 
-    private:
-        LoopFreeModel(const LoopFreeModel<Base>&); // not implemented
-
-        LoopFreeModel& operator=(const LoopFreeModel<Base>&); // not implemented
     };
 
 }

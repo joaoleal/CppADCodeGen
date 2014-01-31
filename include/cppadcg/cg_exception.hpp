@@ -31,8 +31,9 @@ namespace CppAD {
 
         inline CGException(const std::string& message) throw () :
             _message(message) {
-
         }
+
+        CGException() throw () = delete;
 
         const char* what() const throw () {
             return _message.c_str();
@@ -41,8 +42,6 @@ namespace CppAD {
         virtual ~CGException() throw () {
         }
 
-    protected:
-        CGException() throw (); // not implemented
     };
 
 }

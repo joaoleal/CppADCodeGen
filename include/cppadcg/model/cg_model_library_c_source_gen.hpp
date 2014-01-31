@@ -47,9 +47,24 @@ namespace CppAD {
          * @param model A model compilation helper (must only be deleted after
          *              this object)
          */
-        ModelLibraryCSourceGen(ModelCSourceGen<Base>& model) {
-            _models[model.getName()] = &model;
+        inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& model) {
+            CPPADCG_ASSERT_KNOWN(_models.find(model.getName()) == _models.end(),
+                                 "Another model with the same name was already registered");
+
+            _models[model.getName()] = &model; // must not use initializer_list constructor of map!
         }
+
+        template<class... Ms>
+        inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& headModel, Ms&... rest) :
+            ModelLibraryCSourceGen(rest...) {
+            CPPADCG_ASSERT_KNOWN(_models.find(headModel.getName()) == _models.end(),
+                                 "Another model with the same name was already registered");
+
+            _models[headModel.getName()] = &headModel;
+        }
+
+        ModelLibraryCSourceGen(const ModelLibraryCSourceGen&) = delete;
+        ModelLibraryCSourceGen& operator=(const ModelLibraryCSourceGen&) = delete;
 
         /**
          * Adds additional models to be compiled into the created library.
@@ -105,11 +120,6 @@ namespace CppAD {
 
         static void saveSources(const std::string& sourcesFolder,
                                 const std::map<std::string, std::string>& sources);
-
-    private:
-        ModelLibraryCSourceGen(const ModelLibraryCSourceGen&); // not implemented
-
-        ModelLibraryCSourceGen& operator=(const ModelLibraryCSourceGen&); // not implemented
 
         friend class ModelLibraryProcessor<Base>;
     };

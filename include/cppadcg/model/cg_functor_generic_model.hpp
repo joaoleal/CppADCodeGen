@@ -84,6 +84,9 @@ namespace CppAD {
 
     public:
 
+        FunctorGenericModel(const FunctorGenericModel&) = delete;
+        FunctorGenericModel& operator=(const FunctorGenericModel&) = delete;
+
         virtual const std::string& getName() const override {
             return _name;
         }
@@ -1004,10 +1007,6 @@ namespace CppAD {
 
             return externalFunc->reverse(*libModel, p, tx, *px, py);
         }
-
-        FunctorGenericModel(const FunctorGenericModel&); // not implemented
-
-        FunctorGenericModel& operator=(const FunctorGenericModel&); // not implemented
 
         friend class LinuxDynamicLib<Base>;
         friend class AtomicExternalFunctionWrapper<Base>;

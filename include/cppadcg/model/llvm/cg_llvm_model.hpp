@@ -30,6 +30,9 @@ namespace CppAD {
 
     public:
 
+        LlvmModel(const LlvmModel&) = delete;
+        LlvmModel& operator=(const LlvmModel&) = delete;
+
         virtual ~LlvmModel() {
             if (_dynLib != nullptr) {
                 _dynLib->destroyed(this);
@@ -61,12 +64,6 @@ namespace CppAD {
             _dynLib = nullptr;
             FunctorGenericModel<Base>::modelLibraryClosed();
         }
-
-    private:
-
-        LlvmModel(const LlvmModel&); // not implemented
-
-        LlvmModel& operator=(const LlvmModel&); // not implemented
 
         friend class LlvmModelLibrary<Base>;
     };

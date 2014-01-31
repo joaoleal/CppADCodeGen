@@ -294,6 +294,9 @@ namespace CppAD {
             }
         }
 
+        ModelCSourceGen(const ModelCSourceGen&) = delete;
+        ModelCSourceGen& operator=(const ModelCSourceGen&) = delete;
+
         /**
          * Provides the model name which should be a valid C function name.
          * 
@@ -1024,11 +1027,6 @@ namespace CppAD {
                                 const JobType& type = JobTypeHolder<>::DEFAULT);
 
         inline void finishedJob();
-
-    private:
-        ModelCSourceGen(const ModelCSourceGen&); // not implemented
-
-        ModelCSourceGen& operator=(const ModelCSourceGen&); // not implemented
 
         friend class
         ModelLibraryCSourceGen<Base>;
