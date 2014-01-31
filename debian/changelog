@@ -1,9 +1,10 @@
-cppadcodegen (1.6.0-1) unstable; urgency=low
+cppadcodegen (2.0.0-1) unstable; urgency=low
 
+   * upgraded sources to C++11
    * added support for Clang/LLVM 3.3 and 3.4
    * compiler related files moved
 
- -- Joao Leal <development@ciengis.com>  Tue, 28 Jan 2013 13:00:00 +0000
+ -- Joao Leal <development@ciengis.com>  Fri, 31 Jan 2013 13:00:00 +0000
 
 cppadcodegen (1.5.0-1) unstable; urgency=low
 
