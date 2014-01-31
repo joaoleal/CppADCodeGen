@@ -283,20 +283,17 @@ namespace CppAD {
         inline void printResultInfo() {
             std::cout << "\nPantelides DAE differentiation index reduction:\n\n"
                     "   Equations count: " << enodes_.size() << "\n";
-            typename std::vector<Enode<Base>*>::const_iterator i;
-            for (i = enodes_.begin(); i != enodes_.end(); ++i) {
-                const Enode<Base>& ii = **i;
-                std::cout << "      " << ii.index() << " - " << ii << "\n";
+            for (Enode<Base>* ii : enodes_) {
+                std::cout << "      " << ii->index() << " - " << *ii << "\n";
             }
 
             std::cout << "\n   Variable count: " << vnodes_.size() << "\n";
-            typename std::vector<Vnode<Base>*>::const_iterator j;
-            for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
-                const Vnode<Base>& jj = **j;
-                std::cout << "      " << jj.index() << " - " << jj;
-                if (jj.assigmentEquation() != nullptr) {
-                    std::cout << " assigned to " << *jj.assigmentEquation() << "\n";
-                } else if (jj.isParameter()) {
+
+            for (const Vnode<Base>* jj : vnodes_) {
+                std::cout << "      " << jj->index() << " - " << *jj;
+                if (jj->assigmentEquation() != nullptr) {
+                    std::cout << " assigned to " << *jj->assigmentEquation() << "\n";
+                } else if (jj->isParameter()) {
                     std::cout << " is a parameter (time independent)\n";
                 } else {
                     std::cout << " NOT assigned to any equation\n";
@@ -348,7 +345,6 @@ namespace CppAD {
          * 
          */
         inline void detectSubset2Dif() {
-            Vnode<Base>* jj;
             Enode<Base>* ll;
 
             size_t Ndash = enodes_.size();
@@ -365,9 +361,7 @@ namespace CppAD {
                      * delete all V-nodes with A!=0 and their incident edges
                      * from the graph
                      */
-                    typename std::vector<Vnode<Base>*>::const_iterator j;
-                    for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
-                        jj = *j;
+                    for (Vnode<Base>* jj : vnodes_) {
                         if (!jj->isDeleted() && jj->derivative() != nullptr) {
                             jj->deleteNode(this->verbosity_);
                         }
@@ -380,7 +374,7 @@ namespace CppAD {
                     if (!pathfound) {
                         const size_t vsize = vnodes_.size(); // the size might change
                         for (size_t l = 0; l < vsize; ++l) {
-                            jj = vnodes_[l];
+                            Vnode<Base>* jj = vnodes_[l];
                             if (jj->isColored() && !jj->isDeleted()) {
                                 // add new variable derivatives of colored variables
                                 size_t newVarCount = vnodes_.size() - origTimeDependentCount_;
@@ -417,8 +411,8 @@ namespace CppAD {
                             ll = enodes_[l];
                             const std::vector<Vnode<Base>*>& nvars = ll->originalVariables();
                             bool ok = false;
-                            for (typename std::vector<Vnode<Base>*>::const_iterator js = nvars.begin(); js != nvars.end(); ++js) {
-                                if ((*js)->equations().size() > 1) {
+                            for (Vnode<Base>* js : nvars) {
+                                if (js->equations().size() > 1) {
                                     ok = true;
                                     break;
                                 }
@@ -427,8 +421,7 @@ namespace CppAD {
                                 throw CGException("Invalid equation structure. The model appears to be over-defined.");
                         }
 
-                        for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
-                            jj = *j;
+                        for (Vnode<Base>* jj : vnodes_) {
                             if (jj->isColored() && !jj->isDeleted()) {
                                 Vnode<Base>* jDiff = jj->derivative();
                                 jDiff->setAssigmentEquation(*jj->assigmentEquation()->derivative(), this->verbosity_);
@@ -456,11 +449,9 @@ namespace CppAD {
             i.color(this->verbosity_);
 
             const std::vector<Vnode<Base>*>& vars = i.variables();
-            typename std::vector<Vnode<Base>*>::const_iterator j;
 
             // first look for derivative variables
-            for (j = vars.begin(); j != vars.end(); ++j) {
-                Vnode<Base>* jj = *j;
+            for (Vnode<Base>* jj : vars) {
                 if (jj->antiDerivative() != nullptr && jj->assigmentEquation() == nullptr) {
                     jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
@@ -468,8 +459,7 @@ namespace CppAD {
             }
 
             // look for algebraic variables
-            for (j = vars.begin(); j != vars.end(); ++j) {
-                Vnode<Base>* jj = *j;
+            for (Vnode<Base>* jj : vars) {
                 if (jj->antiDerivative() == nullptr && jj->assigmentEquation() == nullptr) {
                     jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
@@ -477,8 +467,7 @@ namespace CppAD {
             }
 
 
-            for (j = vars.begin(); j != vars.end(); ++j) {
-                Vnode<Base>* jj = *j;
+            for (Vnode<Base>* jj : vars) {
                 if (!jj->isColored()) {
                     jj->color(this->verbosity_);
 
@@ -495,13 +484,12 @@ namespace CppAD {
         }
 
         inline void uncolorAll() {
-            typename std::vector<Vnode<Base>*>::const_iterator j;
-            for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
-                (*j)->uncolor();
+            for (Vnode<Base>* j : vnodes_) {
+                j->uncolor();
             }
-            typename std::vector<Enode<Base>*>::const_iterator i;
-            for (i = enodes_.begin(); i != enodes_.end(); ++i) {
-                (*i)->uncolor();
+
+            for (Enode<Base>* i : enodes_) {
+                i->uncolor();
             }
         }
 
@@ -514,10 +502,7 @@ namespace CppAD {
          * @param i equation node to differentiate
          */
         inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) throw (CGException) {
-            const std::vector<Vnode<Base>*>& vars = i.originalVariables();
-            typename std::vector<Vnode<Base>*>::const_iterator j;
-            for (j = vars.begin(); j != vars.end(); ++j) {
-                Vnode<Base>* jj = *j;
+            for (Vnode<Base>* jj : i.originalVariables()) {
                 newI.addVariable(jj);
                 if (jj->derivative() != nullptr) {
                     newI.addVariable(jj->derivative());
