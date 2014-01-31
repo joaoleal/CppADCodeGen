@@ -56,7 +56,7 @@ namespace CppAD {
     private:
 
         inline std::set<size_t> findAtomicsUsage(OperationNode<Base>* node) {
-            if (node == NULL)
+            if (node == nullptr)
                 return std::set<size_t>();
 
             CGOpCode op = node->getOperationType();

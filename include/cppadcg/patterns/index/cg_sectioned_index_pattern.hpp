@@ -36,11 +36,11 @@ namespace CppAD {
             return sections_;
         }
 
-        inline virtual IndexPatternType getType() const {
+        inline virtual IndexPatternType getType() const override {
             return SECTIONED;
         }
 
-        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
             std::map<size_t, IndexPattern*>::const_iterator it;
             for (it = sections_.begin(); it != sections_.end(); ++it) {
                 indexes.insert(it->second);
@@ -64,7 +64,7 @@ namespace CppAD {
             long dx = 1;
             long xOffset = 0;
 
-            LinearIndexPattern* prevPattern = NULL;
+            LinearIndexPattern* prevPattern = nullptr;
             size_t prevXStart = 0;
 
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
@@ -89,7 +89,7 @@ namespace CppAD {
                 }
 
                 LinearIndexPattern* p = new LinearIndexPattern(xOffset, dy, dx, b);
-                if (dy == 0 && prevPattern != NULL) { // constant
+                if (dy == 0 && prevPattern != nullptr) { // constant
                     // can we take the last element out of the previous section?
                     while (xStart > 0 && prevPattern->evaluate(xStart - 1) == b) {
                         // yes
@@ -121,7 +121,7 @@ namespace CppAD {
                                                                            size_t maxCount = 0) {
             SmartMapValuePointer<size_t, IndexPattern> linearSections;
 
-            LinearIndexPattern* prevPattern = NULL;
+            LinearIndexPattern* prevPattern = nullptr;
             std::map<size_t, size_t>::const_iterator prevStart = x2y.begin();
 
             std::map<size_t, size_t>::const_iterator pStart = x2y.begin();
@@ -167,7 +167,7 @@ namespace CppAD {
 
                 LinearIndexPattern* p = new LinearIndexPattern(xOffset, dy, dx, b);
                 size_t xStart = pStart->first;
-                if (dy == 0 && prevPattern != NULL) { // constant
+                if (dy == 0 && prevPattern != nullptr) { // constant
                     // can we take the last element from the previous section?
                     while (pStart != x2y.begin() && prevPattern->evaluate(xStart - 1) == b) {
                         // yes

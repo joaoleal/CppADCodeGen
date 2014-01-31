@@ -51,7 +51,7 @@ namespace CppAD {
         handler.setJobTimer(_jobTimer);
         handler.setZeroDependents(false);
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         vector<set<size_t> > noLoopEvalSparsity;
         vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
@@ -106,12 +106,12 @@ namespace CppAD {
         vector<CGBase> tmps;
 
         // jacobian for temporaries
-        std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != NULL ? _funNoLoops->getTemporaryDependentCount() : 0);
+        std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != nullptr ? _funNoLoops->getTemporaryDependentCount() : 0);
 
         /*******************************************************************
          * equations NOT in loops
          ******************************************************************/
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             /**

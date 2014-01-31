@@ -123,7 +123,7 @@ TEST_F(CppADCGIndexReductionTest, DummyDerivDistillation) {
     ADFun<CGD>* reducedFun;
     ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
 
-    ASSERT_TRUE(reducedFun != NULL);
+    ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(2), dummyD.getDifferentiationIndex());
     

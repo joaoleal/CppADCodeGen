@@ -30,12 +30,12 @@ namespace CppAD {
     public:
 
         inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, size_t iterationCount) :
-            OperationNode<Base>(CGLoopStartOp, Argument<Base>(indexDcl)) {
+            OperationNode<Base>(CGLoopStartOp, indexDcl) {
             this->getInfo().push_back(iterationCount);
         }
 
         inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, IndexOperationNode<Base>& iterCount) :
-            OperationNode<Base>(CGLoopStartOp, Argument<Base>(indexDcl), Argument<Base>(iterCount)) {
+            OperationNode<Base>(CGLoopStartOp, {indexDcl, iterCount}) {
         }
 
         inline IndexDclrOperationNode<Base>& getIndex() const {
@@ -43,7 +43,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
             OperationNode<Base>* aNode = args[0].getOperation();
-            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+            CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
 
             return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
         }
@@ -53,12 +53,12 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(this->getArguments().size() > 1, "Invalid number of arguments.");
 
                 OperationNode<Base>* aNode = this->getArguments()[1].getOperation();
-                CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexOp, "Invalid argument node type");
+                CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexOp, "Invalid argument node type");
 
                 return static_cast<IndexOperationNode<Base>*> (aNode);
             }
 
-            return NULL;
+            return nullptr;
         }
 
         inline const size_t getIterationCount() const {

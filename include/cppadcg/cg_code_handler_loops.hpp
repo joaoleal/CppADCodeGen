@@ -34,7 +34,7 @@ namespace CppAD {
             return it->second;
         }
 
-        return NULL;
+        return nullptr;
     }
 
     template<class Base>

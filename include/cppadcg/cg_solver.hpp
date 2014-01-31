@@ -24,7 +24,7 @@ namespace CppAD {
 
         // find code in expression
         if (&expression == &code)
-            return CG<Base > (*this, Argument<Base> (code));
+            return CG<Base > (*this, code);
 
         typedef vector<OperationPathNode<Base> > SourceCodePath;
 
@@ -102,16 +102,16 @@ namespace CppAD {
                     if (argIndex == 0) {
                         // base
                         const Argument<Base>& exponent = args[1];
-                        if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(0.0)) {
+                        if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(0.0)) {
                             throw CGException("Invalid zero exponent");
-                        } else if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(1.0)) {
+                        } else if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(1.0)) {
                             continue; // do nothing
                         } else {
                             std::ostringstream ss;
                             ss << "Unable to invert operation '" << op << "'";
                             throw CGException(ss.str());
                             /*
-                            if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(2.0)) {
+                            if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(2.0)) {
                                 rightHs = sqrt(rightHs); // TODO: should -sqrt(rightHs) somehow be considered???
                             } else {
                                 rightHs = pow(rightHs, Base(1.0) / CG<Base > (*this, exponent));
@@ -182,9 +182,9 @@ namespace CppAD {
                     if (argIndex == 0) {
                         // base
                         const Argument<Base>& exponent = args[1];
-                        if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(0.0)) {
+                        if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(0.0)) {
                             return false;
-                        } else if (exponent.getParameter() != NULL && *exponent.getParameter() == Base(1.0)) {
+                        } else if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(1.0)) {
                             break;
                         } else {
                             return false;

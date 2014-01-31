@@ -73,7 +73,7 @@ namespace CppAD {
     public:
 
         inline IterEquationGroup() :
-            model(NULL),
+            model(nullptr),
             hessSparsity_(false) {
         }
 
@@ -82,7 +82,7 @@ namespace CppAD {
                 return; // already evaluated
             }
 
-            CPPADCG_ASSERT_UNKNOWN(model != NULL);
+            CPPADCG_ASSERT_UNKNOWN(model != nullptr);
             size_t iterationCount = model->getIterationCount();
 
             const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = model->getIndexedIndepIndexes();

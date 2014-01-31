@@ -115,7 +115,7 @@ namespace CppAD {
                     throw CGException("Unexpected error!");
             }
 
-            CG<Base> result(*handler, new OperationNode<Base> (op, left.argument(), right.argument(), trueCase.argument(), falseCase.argument()));
+            CG<Base> result(*handler, new OperationNode<Base> (op, {left.argument(), right.argument(), trueCase.argument(), falseCase.argument()}));
 
             if (left.isValueDefined() && right.isValueDefined()) {
                 switch (cop) {

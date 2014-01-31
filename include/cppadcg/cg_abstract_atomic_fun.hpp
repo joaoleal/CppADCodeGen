@@ -145,7 +145,7 @@ namespace CppAD {
             }
 
             CodeHandler<Base>* handler = findHandler(tx);
-            CPPADCG_ASSERT_UNKNOWN(handler != NULL);
+            CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
 
             size_t p1 = p + 1;
 
@@ -158,31 +158,24 @@ namespace CppAD {
                 tyArray[k] = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, m);
             }
 
-            std::vector<size_t> opInfo(3);
-            opInfo[0] = id_;
-            opInfo[1] = q;
-            opInfo[2] = p;
             std::vector<Argument<Base> > args(2 * p1);
             for (size_t k = 0; k < p1; k++) {
-                args[0 * p1 + k] = Argument<Base>(*txArray[k]);
-                args[1 * p1 + k] = Argument<Base>(*tyArray[k]);
+                args[0 * p1 + k] = *txArray[k];
+                args[1 * p1 + k] = *tyArray[k];
             }
 
-            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp,{id_, q, p}, args);
             handler->manageOperationNode(atomicOp);
             handler->registerAtomicFunction(*this);
 
-            opInfo.resize(1);
-            args.resize(2);
             for (size_t k = 0; k < p1; k++) {
                 for (size_t i = 0; i < m; i++) {
                     size_t pos = i * p1 + k;
                     if (vyLocal.size() == 0 || vyLocal[pos]) {
-                        opInfo[0] = i;
-                        args[0] = Argument<Base>(*tyArray[k]);
-                        args[1] = Argument<Base>(*atomicOp);
-
-                        ty[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
+                        ty[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp,{i},
+                        {
+                                      *tyArray[k], *atomicOp
+                        }));
                         if (valuesDefined) {
                             ty[pos].setValue(tyb[pos]);
                         }
@@ -310,13 +303,13 @@ namespace CppAD {
             }
 
             CodeHandler<Base>* handler = findHandler(tx);
-            if (handler == NULL) {
+            if (handler == nullptr) {
                 handler = findHandler(ty);
-                if (handler == NULL) {
+                if (handler == nullptr) {
                     handler = findHandler(py);
                 }
             }
-            CPPADCG_ASSERT_UNKNOWN(handler != NULL);
+            CPPADCG_ASSERT_UNKNOWN(handler != nullptr);
 
             std::vector<OperationNode<Base>*> txArray(p1), tyArray(p1), pxArray(p1), pyArray(p1);
             for (size_t k = 0; k <= p; k++) {
@@ -342,32 +335,23 @@ namespace CppAD {
                     pyArray[k] = BaseAbstractAtomicFun<Base>::makeArray(*handler, py, p, k);
             }
 
-            std::vector<size_t> opInfo(2);
-            opInfo[0] = id_;
-            opInfo[1] = p;
             std::vector<Argument<Base> > args(4 * p1);
             for (size_t k = 0; k <= p; k++) {
-                args[0 * p1 + k] = Argument<Base>(*txArray[k]);
-                args[1 * p1 + k] = Argument<Base>(*tyArray[k]);
-                args[2 * p1 + k] = Argument<Base>(*pxArray[k]);
-                args[3 * p1 + k] = Argument<Base>(*pyArray[k]);
+                args[0 * p1 + k] = *txArray[k];
+                args[1 * p1 + k] = *tyArray[k];
+                args[2 * p1 + k] = *pxArray[k];
+                args[3 * p1 + k] = *pyArray[k];
             }
 
-            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp, opInfo, args);
+            OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp, {id_, p}, args);
             handler->manageOperationNode(atomicOp);
             handler->registerAtomicFunction(*this);
 
-            opInfo.resize(1);
-            args.resize(2);
             for (size_t k = 0; k < p1; k++) {
                 for (size_t j = 0; j < n; j++) {
                     size_t pos = j * p1 + k;
                     if (vxLocal[pos]) {
-                        opInfo[0] = j;
-                        args[0] = Argument<Base>(*pxArray[k]);
-                        args[1] = Argument<Base>(*atomicOp);
-
-                        px[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, opInfo, args));
+                        px[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp, {j}, {*pxArray[k], *atomicOp}));
                         if (valuesDefined) {
                             px[pos].setValue(pxb[pos]);
                         }

@@ -42,11 +42,11 @@ namespace CppAD {
         inline CppADCGDynamicAtomic2Test(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
             x(n),
-            _atomicFun(NULL),
-            _cgAtomicFun(NULL),
-            _fun(NULL),
-            _dynamicLib(NULL),
-            _model(NULL) {
+            _atomicFun(nullptr),
+            _cgAtomicFun(nullptr),
+            _fun(nullptr),
+            _dynamicLib(nullptr),
+            _model(nullptr) {
         }
 
         virtual void SetUp() {
@@ -117,15 +117,15 @@ namespace CppAD {
 
         virtual void TearDown() {
             delete _cgAtomicFun;
-            _cgAtomicFun = NULL;
+            _cgAtomicFun = nullptr;
             delete _atomicFun;
-            _atomicFun = NULL;
+            _atomicFun = nullptr;
             delete _model;
-            _model = NULL;
+            _model = nullptr;
             delete _dynamicLib;
-            _dynamicLib = NULL;
+            _dynamicLib = nullptr;
             delete _fun;
-            _fun = NULL;
+            _fun = nullptr;
         }
 
     };

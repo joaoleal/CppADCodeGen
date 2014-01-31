@@ -50,7 +50,7 @@ namespace CppAD {
             _minLevel2ID(_minLevel1ID + n1),
             _level2Name("py2") {
 
-            CPPADCG_ASSERT_KNOWN(_nameGen != NULL, "The name generator must not be null");
+            CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
 
             initialize();
         }
@@ -66,42 +66,42 @@ namespace CppAD {
             _minLevel2ID(_minLevel1ID + n1),
             _level2Name(level2Name) {
 
-            CPPADCG_ASSERT_KNOWN(_nameGen != NULL, "The name generator must not be null");
+            CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
             CPPADCG_ASSERT_KNOWN(_level1Name.size() > 0, "The name for the first level must not be empty");
             CPPADCG_ASSERT_KNOWN(_level2Name.size() > 0, "The name for the second level must not be empty");
 
             initialize();
         }
 
-        virtual const std::vector<FuncArgument>& getDependent() const {
+        virtual const std::vector<FuncArgument>& getDependent() const override {
             return _nameGen->getDependent();
         }
 
-        virtual const std::vector<FuncArgument>& getTemporary() const {
+        virtual const std::vector<FuncArgument>& getTemporary() const override {
             return _nameGen->getTemporary();
         }
 
-        virtual size_t getMinTemporaryVariableID() const {
+        virtual size_t getMinTemporaryVariableID() const override {
             return _nameGen->getMinTemporaryVariableID();
         }
 
-        virtual size_t getMaxTemporaryVariableID() const {
+        virtual size_t getMaxTemporaryVariableID() const override {
             return _nameGen->getMaxTemporaryVariableID();
         }
 
-        virtual size_t getMaxTemporaryArrayVariableID() const {
+        virtual size_t getMaxTemporaryArrayVariableID() const override {
             return _nameGen->getMaxTemporaryArrayVariableID();
         }
 
-        virtual size_t getMaxTemporarySparseArrayVariableID() const {
+        virtual size_t getMaxTemporarySparseArrayVariableID() const override {
             return _nameGen->getMaxTemporarySparseArrayVariableID();
         }
 
-        virtual std::string generateDependent(size_t index) {
+        virtual std::string generateDependent(size_t index) override {
             return _nameGen->generateDependent(index);
         }
 
-        virtual std::string generateIndependent(const OperationNode<Base>& independent) {
+        virtual std::string generateIndependent(const OperationNode<Base>& independent) override {
             size_t id = independent.getVariableID();
             if (id < _minLevel1ID) {
                 return _nameGen->generateIndependent(independent);
@@ -117,32 +117,32 @@ namespace CppAD {
             }
         }
 
-        virtual std::string generateTemporary(const OperationNode<Base>& variable) {
+        virtual std::string generateTemporary(const OperationNode<Base>& variable) override {
             return _nameGen->generateTemporary(variable);
         }
 
-        virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) {
+        virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) override {
             return _nameGen->generateTemporaryArray(variable);
         }
 
-        virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) {
+        virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) override {
             return _nameGen->generateTemporarySparseArray(variable);
         }
 
         virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                     const IndexPattern& ip) {
+                                                     const IndexPattern& ip) override {
             return _nameGen->generateIndexedDependent(var, ip);
         }
 
         virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
-                                                       const IndexPattern& ip) {
+                                                       const IndexPattern& ip) override {
             size_t varType = independent.getInfo()[0];
             if (varType == 0) {
                 return _nameGen->generateIndexedIndependent(independent, ip);
             } else {
                 CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
                 CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
-                CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != NULL, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != nullptr, "Invalid argument");
                 CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
 
                 _ss.clear();
@@ -160,7 +160,7 @@ namespace CppAD {
 
         }
 
-        virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) {
+        virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) override {
             if (indep.getVariableID() < _minLevel1ID)
                 return _nameGen->getIndependentArrayName(indep);
             else if (indep.getVariableID() < _minLevel2ID)
@@ -169,7 +169,7 @@ namespace CppAD {
                 return _level2Name;
         }
 
-        virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) {
+        virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) override {
             size_t id = indep.getVariableID();
 
             if (id < _minLevel1ID)
@@ -181,7 +181,7 @@ namespace CppAD {
         }
 
         virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
-                                               const OperationNode<Base>& indepSecond) {
+                                               const OperationNode<Base>& indepSecond) override {
             size_t id1 = indepFirst.getVariableID();
             size_t id2 = indepSecond.getVariableID();
 
@@ -198,7 +198,7 @@ namespace CppAD {
         }
 
         virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
-                                              const OperationNode<Base>& indep2) {
+                                              const OperationNode<Base>& indep2) override {
             size_t l1;
             if (indep1.getOperationType() == CGInvOp) {
                 size_t id = indep1.getVariableID();
@@ -221,7 +221,7 @@ namespace CppAD {
         virtual void setTemporaryVariableID(size_t minTempID,
                                             size_t maxTempID,
                                             size_t maxTempArrayID,
-                                            size_t maxTempSparseArrayID) {
+                                            size_t maxTempSparseArrayID) override {
             _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID, maxTempSparseArrayID);
         }
 

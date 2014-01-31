@@ -30,15 +30,15 @@ namespace CppAD {
     public:
 
         inline IndexOperationNode(IndexDclrOperationNode<Base>& indexDcl) :
-            OperationNode<Base>(CGIndexOp, Argument<Base>(indexDcl)) {
+            OperationNode<Base>(CGIndexOp, indexDcl) {
         }
 
         inline IndexOperationNode(LoopStartOperationNode<Base>& loopStart) :
-            OperationNode<Base>(CGIndexOp, Argument<Base>(loopStart.getIndex()), Argument<Base>(loopStart)) {
+            OperationNode<Base>(CGIndexOp,{loopStart.getIndex(), loopStart}) {
         }
 
         inline IndexOperationNode(IndexAssignOperationNode<Base>& indexAssign) :
-            OperationNode<Base>(CGIndexOp, Argument<Base>(indexAssign.getIndex()), Argument<Base>(indexAssign)) {
+            OperationNode<Base>(CGIndexOp,{indexAssign.getIndex(), indexAssign}) {
         }
 
         inline bool isDefinedLocally() const {
@@ -50,7 +50,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
             OperationNode<Base>* aNode = args[0].getOperation();
-            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+            CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
 
             return static_cast<const IndexDclrOperationNode<Base>&> (*aNode);
         }
@@ -59,8 +59,8 @@ namespace CppAD {
             std::vector<Argument<Base> >& args = this->getArguments();
 
             args.resize(2);
-            args[0] = Argument<Base>(indexAssign.getIndex());
-            args[1] = Argument<Base>(indexAssign);
+            args[0] = indexAssign.getIndex();
+            args[1] = indexAssign;
         }
 
         inline virtual ~IndexOperationNode() {

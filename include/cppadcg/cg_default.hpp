@@ -22,8 +22,8 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>::CG() :
-    handler_(NULL),
-    opNode_(NULL),
+    handler_(nullptr),
+    opNode_(nullptr),
     value_(new Base(0.0)) {
     }
 
@@ -31,8 +31,8 @@ namespace CppAD {
     inline CG<Base>::CG(CodeHandler<Base>& handler, OperationNode<Base>* node) :
     handler_(&handler),
     opNode_(node),
-    value_(NULL) {
-        CPPADCG_ASSERT_UNKNOWN(node != NULL);
+    value_(nullptr) {
+        CPPADCG_ASSERT_UNKNOWN(node != nullptr);
         handler.manageOperationNode(node);
     }
 
@@ -40,7 +40,7 @@ namespace CppAD {
     inline CG<Base>::CG(CodeHandler<Base>& handler, const Argument<Base>& arg) :
     handler_(&handler),
     opNode_(arg.getOperation()),
-    value_(arg.getParameter() != NULL ? new Base(*arg.getParameter()) : NULL) {
+    value_(arg.getParameter() != nullptr ? new Base(*arg.getParameter()) : nullptr) {
 
     }
 
@@ -49,8 +49,8 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>::CG(const Base &b) :
-    handler_(NULL),
-    opNode_(NULL),
+    handler_(nullptr),
+    opNode_(nullptr),
     value_(new Base(b)) {
     }
 
@@ -61,7 +61,7 @@ namespace CppAD {
     inline CG<Base>::CG(const CG<Base>& orig) :
     handler_(orig.handler_),
     opNode_(orig.opNode_),
-    value_(orig.value_ != NULL ? new Base(*orig.value_) : NULL) {
+    value_(orig.value_ != nullptr ? new Base(*orig.value_) : nullptr) {
     }
 
     /**
@@ -69,9 +69,9 @@ namespace CppAD {
      */
     template <class Base>
     inline CG<Base>& CG<Base>::operator=(const Base &b) {
-        handler_ = NULL;
-        opNode_ = NULL;
-        if (value_ != NULL) {
+        handler_ = nullptr;
+        opNode_ = nullptr;
+        if (value_ != nullptr) {
             *value_ = b;
         } else {
             value_ = new Base(b);
@@ -86,15 +86,15 @@ namespace CppAD {
         }
         handler_ = rhs.handler_;
         opNode_ = rhs.opNode_;
-        if (rhs.value_ != NULL) {
-            if (value_ != NULL) {
+        if (rhs.value_ != nullptr) {
+            if (value_ != nullptr) {
                 *value_ = *rhs.value_;
             } else {
                 value_ = new Base(*rhs.value_);
             }
         } else {
             delete value_;
-            value_ = NULL;
+            value_ = nullptr;
         }
 
         return *this;

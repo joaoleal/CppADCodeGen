@@ -137,19 +137,19 @@ namespace CppAD {
             _idArrayCount(1),
             _idSparseArrayCount(1),
             _idAtomicCount(1),
-            _dependents(NULL),
+            _dependents(nullptr),
             _scopedVariableOrder(1),
-            _atomicFunctionsOrder(NULL),
+            _atomicFunctionsOrder(nullptr),
             _used(false),
             _reuseIDs(true),
             _loopDepth(-1),
             _scopeColorCount(0),
             _currentScopeColor(0),
-            _lang(NULL),
+            _lang(nullptr),
             _minTemporaryVarID(0),
             _zeroDependents(false),
             _verbose(false),
-            _jobTimer(NULL) {
+            _jobTimer(nullptr) {
             _codeBlocks.reserve(varCount);
             //_variableOrder.reserve(1 + varCount / 3);
             _scopedVariableOrder[0].reserve(1 + varCount / 3);
@@ -249,7 +249,7 @@ namespace CppAD {
          * 
          * @param id the atomic function ID.
          * @return a pointer to the atomic function name if it was registered
-         *         or NULL otherwise
+         *         or nullptr otherwise
          */
         inline const std::string* getAtomicFunctionName(size_t id) const {
             typename std::map<size_t, CGAbstractAtomicFun<Base>*>::const_iterator it;
@@ -257,7 +257,7 @@ namespace CppAD {
             if (it != _atomicFunctions.end())
                 return &(it->second->afun_name());
             else
-                return NULL;
+                return nullptr;
         }
 
         /**
@@ -293,7 +293,7 @@ namespace CppAD {
          * 
          * @param id the atomic function ID.
          * @return a pointer to the atomic loop function name if it was
-         *         registered or NULL otherwise
+         *         registered or nullptr otherwise
          */
         inline const std::string* getLoopName(size_t id) const {
             typename std::map<size_t, LoopModel<Base>*>::const_iterator it;
@@ -301,7 +301,7 @@ namespace CppAD {
             if (it != _loops.end())
                 return &(it->second->afun_name());
             else
-                return NULL;
+                return nullptr;
         }
 
         inline const std::vector<ScopePath>& getScopes() const {
@@ -367,14 +367,15 @@ namespace CppAD {
                                   VariableNameGenerator<Base>& nameGen,
                                   std::vector<std::string>& atomicFunctions,
                                   const std::string& jobName = "source") {
-            double beginTime = 0.0;
+            using namespace std::chrono;
+            steady_clock::time_point beginTime;
 
-            if (_jobTimer != NULL) {
+            if (_jobTimer != nullptr) {
                 _jobTimer->startingJob("source for '" + jobName + "'");
             } else if (_verbose) {
                 std::cout << "generating source for '" << jobName << "' ... ";
                 std::cout.flush();
-                beginTime = system::currentTime();
+                beginTime = steady_clock::now();
             }
 
             _lang = &lang;
@@ -419,7 +420,7 @@ namespace CppAD {
             size_t m = dependent.size();
             for (size_t i = 0; i < m; i++) {
                 OperationNode<Base>* node = dependent[i].getOperationNode();
-                if (node != NULL && node->getVariableID() == 0) {
+                if (node != nullptr && node->getVariableID() == 0) {
                     node->setVariableID(_idCount++);
                 }
             }
@@ -431,7 +432,7 @@ namespace CppAD {
              */
             for (size_t i = 0; i < m; i++) {
                 OperationNode<Base>* node = dependent[i].getOperationNode();
-                if (node != NULL) {
+                if (node != nullptr) {
                     markCodeBlockUsed(*node);
                 }
             }
@@ -443,7 +444,7 @@ namespace CppAD {
 
             for (size_t i = 0; i < m; i++) {
                 CG<Base>& var = dependent[i];
-                if (var.getOperationNode() != NULL) {
+                if (var.getOperationNode() != nullptr) {
                     OperationNode<Base>& code = *var.getOperationNode();
                     if (code.getUsageCount() == 0) {
                         // dependencies not visited yet
@@ -545,12 +546,12 @@ namespace CppAD {
             }
             _alteredNodes.clear();
 
-            if (_jobTimer != NULL) {
+            if (_jobTimer != nullptr) {
                 _jobTimer->finishedJob();
             } else if (_verbose) {
-                double endTime = system::currentTime();
+                duration<float> dt = steady_clock::now() - beginTime;
                 std::cout << "done [" << std::fixed << std::setprecision(3)
-                        << (endTime - beginTime) << "]" << std::endl;
+                        << dt.count() << "]" << std::endl;
             }
         }
 
@@ -609,7 +610,7 @@ namespace CppAD {
          * can be reused again by this handler.
          */
         inline void resetNodes() {
-            if (_dependents != NULL)
+            if (_dependents != nullptr)
                 resetNodes(*_dependents);
         }
 
@@ -630,7 +631,7 @@ namespace CppAD {
          * @param node the node to be reset
          */
         static inline void resetNodes(OperationNode<Base>* node) {
-            if (node == NULL || node->getTotalUsageCount() == 0)
+            if (node == nullptr || node->getTotalUsageCount() == 0)
                 return;
 
             node->resetHandlerCounters();
@@ -672,7 +673,7 @@ namespace CppAD {
          **********************************************************************/
         static inline void findRandomIndexPatterns(IndexPattern* ip,
                                                    std::set<RandomIndexPattern*>& found) {
-            if (ip == NULL)
+            if (ip == nullptr)
                 return;
 
             if (ip->getType() == RANDOM1D || ip->getType() == RANDOM2D) {
@@ -791,7 +792,7 @@ namespace CppAD {
                  */
                 CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
                 OperationNode<Base>* arg = code.getArguments()[0].getOperation();
-                if (arg != NULL) {
+                if (arg != nullptr) {
                     markCodeBlockUsed(*arg);
                 }
 
@@ -806,12 +807,12 @@ namespace CppAD {
                 if (op == CGLoopStartOp || op == CGStartIfOp || op == CGElseIfOp || op == CGElseOp) {
                     // leaving a scope
                     ScopePath& sPath = _scopes[_currentScopeColor];
-                    CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == NULL);
+                    CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
                     if (op == CGLoopStartOp || op == CGStartIfOp) {
                         sPath.back().beginning = &code; // save the initial node
                     } else {
                         CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
-                                               code.getArguments()[0].getOperation() != NULL &&
+                                               code.getArguments()[0].getOperation() != nullptr &&
                                                code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
                         sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
                     }
@@ -842,7 +843,7 @@ namespace CppAD {
 
                 typename std::vector<Argument<Base> >::const_iterator it;
                 for (it = args.begin(); it != args.end(); ++it) {
-                    if (it->getOperation() != NULL) {
+                    if (it->getOperation() != nullptr) {
                         OperationNode<Base>& arg = *it->getOperation();
                         markCodeBlockUsed(arg);
                     }
@@ -874,7 +875,7 @@ namespace CppAD {
 
                     CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
                     OperationNode<Base>* depNode = (*_dependents)[depIndex].getOperationNode();
-                    CPPADCG_ASSERT_UNKNOWN(depNode != NULL && depNode->getOperationType() != CGInvOp);
+                    CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGInvOp);
 
                     code.setVariableID(depNode->getVariableID());
                 }
@@ -972,15 +973,15 @@ namespace CppAD {
                 OperationNode<Base>* bScopeNew = bScopeNewEnd->getArguments()[0].getOperation();
                 OperationNode<Base>* bScopeOld = bScopeOldEnd->getArguments()[0].getOperation();
 
-                IndexOperationNode<Base>* newIterIndexOp = NULL;
+                IndexOperationNode<Base>* newIterIndexOp = nullptr;
                 iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
                 CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
 
-                IndexOperationNode<Base>* oldIterIndexOp = NULL;
+                IndexOperationNode<Base>* oldIterIndexOp = nullptr;
                 std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
                 combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
                 CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
-                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp);
 
                 if (iterationRegions.size() > 2 ||
                         iterationRegions[0] != 0 ||
@@ -1013,31 +1014,26 @@ namespace CppAD {
             manageOperationNode(tmpDclVar);
             Argument<Base> tmpArg(*tmpDclVar);
 
-            std::vector<Argument<Base> > args(1);
-            args[0] = Argument<Base>(iterationIndexOp);
-            OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions, args);
+            OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions, {iterationIndexOp});
             manageOperationNode(cond);
 
             // if
-            OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+            OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
             manageOperationNode(ifStart);
 
-            OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, Argument<Base>(*opClone));
+            OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, *opClone});
             manageOperationNode(tmpAssign);
-            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*tmpAssign));
+            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *tmpAssign});
             manageOperationNode(ifAssign);
 
             // end if
-            OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+            OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp,{*ifStart, *ifAssign});
             manageOperationNode(endIf);
 
             /**
              * Change original variable
              */
-            std::vector<Argument<Base> > arguments(2);
-            arguments[0] = tmpArg;
-            arguments[1] = Argument<Base>(*endIf);
-            tmp.setOperation(CGTmpOp, arguments);
+            tmp.setOperation(CGTmpOp,{tmpArg, *endIf});
             tmp.getInfo().resize(1); // used to mark that this node was altered here
 
             /**
@@ -1124,15 +1120,15 @@ namespace CppAD {
                 OperationNode<Base>* bScopeNew = bScopeNewEnd->getArguments()[0].getOperation();
                 OperationNode<Base>* bScopeOld = bScopeOldEnd->getArguments()[0].getOperation();
 
-                IndexOperationNode<Base>* newIterIndexOp = NULL;
+                IndexOperationNode<Base>* newIterIndexOp = nullptr;
                 iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
                 CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
 
-                IndexOperationNode<Base>* oldIterIndexOp = NULL;
+                IndexOperationNode<Base>* oldIterIndexOp = nullptr;
                 const std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
                 combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
                 CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
-                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != NULL && newIterIndexOp == oldIterIndexOp);
+                CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp);
 
                 if (iterationRegions.size() == 2 &&
                         (iterationRegions[0] == 0 ||
@@ -1207,7 +1203,7 @@ namespace CppAD {
         inline void updateVarScopeUsage(OperationNode<Base>* node,
                                         size_t usageScope,
                                         size_t oldUsageScope) {
-            if (node == NULL || node->getColor() == usageScope)
+            if (node == nullptr || node->getColor() == usageScope)
                 return;
 
 
@@ -1246,7 +1242,7 @@ namespace CppAD {
                     CPPADCG_ASSERT_UNKNOWN(!node->getArguments().empty());
 
                     OperationNode<Base>* beginScopeNode = node->getArguments()[0].getOperation();
-                    CPPADCG_ASSERT_UNKNOWN(beginScopeNode != NULL);
+                    CPPADCG_ASSERT_UNKNOWN(beginScopeNode != nullptr);
 
                     addScopeToVarOrder(beginScopeNode->getColor(), e);
                 }
@@ -1335,7 +1331,7 @@ namespace CppAD {
 
                         // break cycles caused by dependencies on the previous if
                         for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
                             breakCyclicDependency(eArgs[a].getOperation(), ifScope, endIf1);
                             replaceScope(eArgs[a].getOperation(), ifScope, ifScope1); // update scope
                         }
@@ -1346,7 +1342,7 @@ namespace CppAD {
 
                         // update startIf
                         for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != NULL && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                            CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
                             eArgs[a].getOperation()->getArguments()[0] = Argument<Base>(*startIf1);
                         }
 
@@ -1354,9 +1350,7 @@ namespace CppAD {
                         eArgs1.insert(eArgs1.end(), eArgs.begin() + 1, eArgs.end());
 
                         // replace endIf
-                        std::vector<Argument<Base> > endIfArgs(1);
-                        endIfArgs[0] = Argument<Base>(*endIf1);
-                        endIf->setOperation(CGAliasOp, endIfArgs);
+                        endIf->setOperation(CGAliasOp, {*endIf1});
 
                         // remove one of the ifs
                         vorder.erase(vorder.begin() + p);
@@ -1372,7 +1366,7 @@ namespace CppAD {
         }
 
         inline void replaceScope(OperationNode<Base>* node, size_t oldScope, size_t newScope) {
-            if (node == NULL || node->getColor() != oldScope)
+            if (node == nullptr || node->getColor() != oldScope)
                 return;
 
             node->setColor(newScope);
@@ -1396,7 +1390,7 @@ namespace CppAD {
         inline void breakCyclicDependency(OperationNode<Base>* node,
                                           size_t scope,
                                           OperationNode<Base>* endIf) {
-            if (node == NULL)
+            if (node == nullptr)
                 return;
 
             CGOpCode op = node->getOperationType();
@@ -1464,7 +1458,7 @@ namespace CppAD {
 
             size_t aSize = args.size();
             for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
-                if (args[argIndex].getOperation() == NULL) {
+                if (args[argIndex].getOperation() == nullptr) {
                     continue;
                 }
 
@@ -1623,7 +1617,7 @@ namespace CppAD {
 
             for (size_t i = 0; i < dependent.size(); i++) {
                 OperationNode<Base>* node = dependent[i].getOperationNode();
-                if (node != NULL) {
+                if (node != nullptr) {
                     if (node->use_count_ == 0) {
                         // dependencies not visited yet
                         determineLastTempVarUsage(*node);
@@ -1717,7 +1711,7 @@ namespace CppAD {
 
             typename std::vector<Argument<Base> >::const_iterator it;
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != NULL) {
+                if (it->getOperation() != nullptr) {
                     OperationNode<Base>& arg = *it->getOperation();
 
                     if (arg.use_count_ == 0) {
@@ -1729,7 +1723,7 @@ namespace CppAD {
 
                     size_t order = code.getEvaluationOrder();
                     OperationNode<Base>* aa = getOperationFromAlias(arg); // follow alias!
-                    if (aa != NULL) {
+                    if (aa != nullptr) {
                         if (aa->getLastUsageEvaluationOrder() < order) {
                             aa->setLastUsageEvaluationOrder(order);
                         }
@@ -1756,7 +1750,7 @@ namespace CppAD {
                     size_t order = code.getEvaluationOrder();
 
                     OperationNode<Base>* aa = getOperationFromAlias(*outerVar); // follow alias!
-                    if (aa != NULL && aa->getLastUsageEvaluationOrder() < order)
+                    if (aa != nullptr && aa->getLastUsageEvaluationOrder() < order)
                         aa->setLastUsageEvaluationOrder(order);
                 }
 
@@ -1789,7 +1783,7 @@ namespace CppAD {
             typename std::vector<Argument<Base> >::const_iterator it;
 
             for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != NULL) {
+                if (it->getOperation() != nullptr) {
                     OperationNode<Base>& arg = *it->getOperation();
                     if (arg.getEvaluationOrder() == 0) {
                         arg.setEvaluationOrder(code.getEvaluationOrder());
@@ -1840,7 +1834,7 @@ namespace CppAD {
                 do {
                     CPPADCG_ASSERT_UNKNOWN(aa->getArguments().size() == 1);
                     aa = aa->getArguments()[0].getOperation();
-                } while (aa != NULL && aa->getOperationType() == CGAliasOp);
+                } while (aa != nullptr && aa->getOperationType() == CGAliasOp);
                 return aa;
             }
         }

@@ -65,7 +65,7 @@ TEST_F(CppADCGModelTest, llvm) {
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create());
     std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
-    ASSERT_TRUE(model.get() != NULL);
+    ASSERT_TRUE(model.get() != nullptr);
 
     this->testModelResults(*model, *fun.get(), x);
 

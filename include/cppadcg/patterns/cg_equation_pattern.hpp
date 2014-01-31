@@ -152,7 +152,7 @@ namespace CppAD {
         }
 
         static inline void clearUsageCount(OperationNode<Base>* node) {
-            if (node == NULL || node->getUsageCount() == 0)
+            if (node == nullptr || node->getUsageCount() == 0)
                 return;
 
             node->resetUsageCount();
@@ -165,7 +165,7 @@ namespace CppAD {
         }
 
         static inline void uncolor(OperationNode<Base>* node) {
-            if (node == NULL || node->getColor() == 0)
+            if (node == nullptr || node->getColor() == 0)
                 return;
 
             node->setColor(0);
@@ -178,7 +178,7 @@ namespace CppAD {
         }
 
         static inline void clearEvaluationOrder(OperationNode<Base>* node) {
-            if (node == NULL || node->getEvaluationOrder() == 0)
+            if (node == nullptr || node->getEvaluationOrder() == 0)
                 return;
 
             node->setEvaluationOrder(0);
@@ -267,7 +267,7 @@ namespace CppAD {
                          const CG<Base>& dep2,
                          size_t dep2Index) throw (CGException) {
             if (dep1.getCodeHandler() != dep2.getCodeHandler()) {
-                if (dep1.getCodeHandler() != NULL && dep2.getCodeHandler() != NULL)
+                if (dep1.getCodeHandler() != nullptr && dep2.getCodeHandler() != nullptr)
                     throw CGException("Only one code handler allowed");
                 return false;
             }
@@ -297,13 +297,13 @@ namespace CppAD {
             while (scRef->getOperationType() == CGAliasOp) {
                 CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
                 OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
-                if (sc != NULL || sc->getOperationType() == CGInvOp) break;
+                if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
                 scRef = sc;
             }
             while (sc2->getOperationType() == CGAliasOp) {
                 CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
                 OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
-                if (sc != NULL || sc->getOperationType() == CGInvOp) break;
+                if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
                 sc2 = sc;
             }
 
@@ -354,11 +354,11 @@ namespace CppAD {
                 const Argument<Base>& a1 = args1[a];
                 const Argument<Base>& a2 = args2[a];
 
-                if (a1.getParameter() != NULL) {
-                    if (a2.getParameter() == NULL || *a1.getParameter() != *a2.getParameter())
+                if (a1.getParameter() != nullptr) {
+                    if (a2.getParameter() == nullptr || *a1.getParameter() != *a2.getParameter())
                         return false;
                 } else {
-                    if (a2.getOperation() == NULL) {
+                    if (a2.getOperation() == nullptr) {
                         return false;
                     }
                     OperationNode<Base>* argRefOp = a1.getOperation();
@@ -405,7 +405,7 @@ namespace CppAD {
             }
 
             OperationIndexedIndependents<Base>& opIndexedIndep = indexedOpIndep.op2Arguments[parentOp];
-            opIndexedIndep.arg2Independents.resize(parentOp != NULL ? parentOp->getArguments().size() : 1);
+            opIndexedIndep.arg2Independents.resize(parentOp != nullptr ? parentOp->getArguments().size() : 1);
 
             std::map<size_t, const OperationNode<Base>*>& dep2Indeps = opIndexedIndep.arg2Independents[argIndex];
             if (dep2Indeps.empty())
@@ -427,10 +427,10 @@ namespace CppAD {
                 } else {
 
                     typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::iterator itop2a;
-                    itop2a = indexedOpIndep.op2Arguments.find(NULL);
+                    itop2a = indexedOpIndep.op2Arguments.find(nullptr);
                     if (itop2a != indexedOpIndep.op2Arguments.end() && !itop2a->second.arg2Independents[0].empty()) {
                         // depends on an index
-                        indexedOperations.insert(NULL);
+                        indexedOperations.insert(nullptr);
                     }
                 }
             }
@@ -444,13 +444,13 @@ namespace CppAD {
             while (scRef->getOperationType() == CGAliasOp) {
                 CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
                 OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
-                if (sc != NULL || sc->getOperationType() == CGInvOp) break;
+                if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
                 scRef = sc;
             }
             while (sc2->getOperationType() == CGAliasOp) {
                 CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
                 OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
-                if (sc != NULL || sc->getOperationType() == CGInvOp) break;
+                if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
                 sc2 = sc;
             }
 
@@ -466,7 +466,7 @@ namespace CppAD {
             size_t size = argsRef.size();
             for (size_t a = 0; a < size; a++) {
                 OperationNode<Base>* argRefOp = argsRef[a].getOperation();
-                if (argRefOp != NULL) {
+                if (argRefOp != nullptr) {
                     bool indexedArg = false;
                     if (argRefOp->getOperationType() == CGInvOp) {
                         // same independent variable can be used in multiple iterations
@@ -511,7 +511,7 @@ namespace CppAD {
             size_t size = args.size();
             for (size_t a = 0; a < size; a++) {
                 OperationNode<Base>* argOp = args[a].getOperation();
-                if (argOp != NULL) {
+                if (argOp != nullptr) {
                     if (argOp->getOperationType() == CGInvOp) {
                         ops.insert(&node);
                     } else {

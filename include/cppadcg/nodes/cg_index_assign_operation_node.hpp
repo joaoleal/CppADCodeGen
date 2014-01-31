@@ -40,7 +40,7 @@ namespace CppAD {
         inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
                                         IndexPattern& indexPattern,
                                         IndexOperationNode<Base>& index1) :
-            OperationNode<Base>(CGIndexAssignOp, Argument<Base>(index), Argument<Base>(index1)),
+            OperationNode<Base>(CGIndexAssignOp, {index, index1}),
             indexPattern_(indexPattern) {
         }
 
@@ -57,7 +57,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
             OperationNode<Base>* aNode = args[0].getOperation();
-            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+            CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
 
             return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
         }
@@ -75,12 +75,12 @@ namespace CppAD {
 
             const std::vector<Argument<Base> >& args = this->getArguments();
 
-            CPPADCG_ASSERT_KNOWN(args[1].getOperation() != NULL &&
+            CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr &&
                                  args[1].getOperation()->getOperationType() == CGIndexOp, "Invalid argument operation type");
             iargs.push_back(&static_cast<IndexOperationNode<Base>*> (args[1].getOperation())->getIndex());
 
             if (args.size() > 2) {
-                CPPADCG_ASSERT_KNOWN(args[2].getOperation() != NULL &&
+                CPPADCG_ASSERT_KNOWN(args[2].getOperation() != nullptr &&
                                      args[2].getOperation()->getOperationType() == CGIndexOp, "Invalid argument operation type");
                 iargs.push_back(&static_cast<IndexOperationNode<Base>*> (args[2].getOperation())->getIndex());
             }
@@ -96,13 +96,13 @@ namespace CppAD {
         inline static std::vector<Argument<Base> > createArguments(IndexDclrOperationNode<Base>& index,
                                                                    IndexOperationNode<Base>* index1,
                                                                    IndexOperationNode<Base>* index2) {
-            std::vector<Argument<Base> > args(1 + (index1 != NULL)+ (index2 != NULL));
+            std::vector<Argument<Base> > args(1 + (index1 != nullptr)+ (index2 != nullptr));
 
-            args[0] = Argument<Base>(index);
-            if (index1 != NULL)
-                args[1] = Argument<Base>(*index1);
-            if (index2 != NULL) {
-                args.back() = Argument<Base>(*index2);
+            args[0] = index;
+            if (index1 != nullptr)
+                args[1] = *index1;
+            if (index2 != nullptr) {
+                args.back() = *index2;
             }
 
             return args;

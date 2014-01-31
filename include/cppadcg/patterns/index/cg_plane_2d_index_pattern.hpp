@@ -36,7 +36,7 @@ namespace CppAD {
                                    IndexPattern* pattern2) :
             pattern1_(pattern1),
             pattern2_(pattern2) {
-            CPPADCG_ASSERT_UNKNOWN(pattern1_ != NULL || pattern2_ != NULL);
+            CPPADCG_ASSERT_UNKNOWN(pattern1_ != nullptr || pattern2_ != nullptr);
         }
 
         inline const IndexPattern* getPattern1() const {
@@ -47,16 +47,16 @@ namespace CppAD {
             return pattern2_;
         }
 
-        inline virtual IndexPatternType getType() const {
+        inline virtual IndexPatternType getType() const override {
             return PLANE2D;
         }
 
-        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
-            if (pattern1_ != NULL) {
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
+            if (pattern1_ != nullptr) {
                 indexes.insert(pattern1_);
                 pattern1_->getSubIndexes(indexes);
             }
-            if (pattern2_ != NULL) {
+            if (pattern2_ != nullptr) {
                 indexes.insert(pattern2_);
                 pattern2_->getSubIndexes(indexes);
             }
@@ -80,7 +80,7 @@ namespace CppAD {
             if (x2y2z.size() == 1) {
                 // only one x -> fit z to y
                 const std::map<size_t, size_t>& y2z = x2y2z.begin()->second;
-                return new Plane2DIndexPattern(NULL, IndexPattern::detect(y2z));
+                return new Plane2DIndexPattern(nullptr, IndexPattern::detect(y2z));
             }
 
             // perhaps there is always only one y
@@ -102,7 +102,7 @@ namespace CppAD {
             }
 
             if (!x2z.empty()) {
-                return new Plane2DIndexPattern(IndexPattern::detect(x2z), NULL);
+                return new Plane2DIndexPattern(IndexPattern::detect(x2z), nullptr);
             }
 
             /**
@@ -128,7 +128,7 @@ namespace CppAD {
                     if (itY2zOffset == y2zOffset.end()) {
                         y2zOffset[y] = offset;
                     } else if (itY2zOffset->second != offset) {
-                        return NULL; // does not fit the pattern
+                        return nullptr; // does not fit the pattern
                     }
                 }
             }
@@ -140,7 +140,7 @@ namespace CppAD {
 
             std::map<size_t, IndexPattern*> startSections = SectionedIndexPattern::detectLinearSections(x2zStart, 2);
             if (startSections.empty()) {
-                return NULL; // does not fit the pattern
+                return nullptr; // does not fit the pattern
             }
 
             // detected a pattern for the first z based on x
@@ -156,7 +156,7 @@ namespace CppAD {
              */
             std::map<size_t, IndexPattern*> sections = SectionedIndexPattern::detectLinearSections(y2zOffset, 2);
             if (sections.empty()) {
-                return NULL; // does not fit the pattern
+                return nullptr; // does not fit the pattern
             }
 
             // detected a pattern for the z offset based on y

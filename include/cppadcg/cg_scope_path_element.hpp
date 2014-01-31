@@ -28,7 +28,7 @@ namespace CppAD {
         OperationNode<Base>* end;
     public:
 
-        inline ScopePathElement(size_t color_ = 0, OperationNode<Base>* nEnd = NULL, OperationNode<Base>* nBegin = NULL) :
+        inline ScopePathElement(size_t color_ = 0, OperationNode<Base>* nEnd = nullptr, OperationNode<Base>* nBegin = nullptr) :
             color(color_),
             beginning(nBegin),
             end(nEnd) {

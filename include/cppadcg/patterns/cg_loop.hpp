@@ -149,7 +149,7 @@ namespace CppAD {
             iterationCount_(0), // not known yet (only after all equations have been added)
             eqGroups_(1),
             nIndependents_(0),
-            loopModel_(NULL) {
+            loopModel_(nullptr) {
             //indexedOpIndep(eq.indexedOpIndep), // must be determined later for a different reference
             //constOperationIndependents(eq.constOperationIndependents) {
             equations.insert(&eq);
@@ -198,7 +198,7 @@ namespace CppAD {
 
         inline LoopModel<Base>* releaseLoopModel() {
             LoopModel<Base>* loopAtomic = loopModel_;
-            loopModel_ = NULL;
+            loopModel_ = nullptr;
             return loopAtomic;
         }
 
@@ -320,9 +320,9 @@ namespace CppAD {
                         typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator itop2a;
                         for (itop2a = op2Arguments.begin(); itop2a != op2Arguments.end(); ++itop2a) {
                             // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
-                            // since both operations which use indexed independents would be NULL (the dependent)
+                            // since both operations which use indexed independents would be nullptr (the dependent)
                             // an alias is used for these cases
-                            CPPADCG_ASSERT_UNKNOWN(itop2a->first != NULL);
+                            CPPADCG_ASSERT_UNKNOWN(itop2a->first != nullptr);
                             addOperationArguments2Loop(itop2a->first, itop2a->second);
                         }
 
@@ -332,9 +332,9 @@ namespace CppAD {
                         for (it = indexedOperations.begin(); it != indexedOperations.end(); ++it) {
                             const OperationNode<Base>* opLoopRef = *it;
                             // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
-                            // since both operations which use indexed independents would be NULL (the dependent)
+                            // since both operations which use indexed independents would be nullptr (the dependent)
                             // an alias is used for these cases
-                            CPPADCG_ASSERT_UNKNOWN(opLoopRef != NULL);
+                            CPPADCG_ASSERT_UNKNOWN(opLoopRef != nullptr);
 
                             const OperationNode<Base>* opEqRef = eq->operationEO2Reference.at(dep).at(opLoopRef);
                             addOperationArguments2Loop(opLoopRef, eq->indexedOpIndep.op2Arguments.at(opEqRef));
@@ -644,7 +644,7 @@ namespace CppAD {
                      * try to find an existing independent variable order
                      */
                     std::vector<IndependentOrder<Base>*>& availableOrders = firstIndep2orders_[order[0]];
-                    IndependentOrder<Base>* match = NULL;
+                    IndependentOrder<Base>* match = nullptr;
 
                     long a_size = availableOrders.size();
                     for (long o = 0; o < a_size; o++) {
@@ -662,7 +662,7 @@ namespace CppAD {
                         }
                     }
 
-                    if (match != NULL) {
+                    if (match != nullptr) {
                         // found another operation with the same independent variable order
                         arg2orderPos->arg2Order[argumentIndex] = match;
                     } else {
@@ -692,7 +692,7 @@ namespace CppAD {
                 for (depIt = itDeps.begin(); depIt != itDeps.end(); ++depIt) {
                     size_t depIndex = *depIt;
                     OperationNode<Base>* node = dependents[depIndex].getOperationNode();
-                    if (node != NULL) {
+                    if (node != nullptr) {
                         Loop<Base>::resetCounters(*node);
                     }
                 }
@@ -714,7 +714,7 @@ namespace CppAD {
             typedef CG<Base> CGB;
             typedef AD<CGB> ADCGB;
             CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);
-            CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != nullptr);
             CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
 
             /**
@@ -739,14 +739,14 @@ namespace CppAD {
 
                     Argument<Base> aClone;
 
-                    if (node != NULL) {
+                    if (node != nullptr) {
                         if (node->getOperationType() == CGInvOp) {
-                            aClone = Argument<Base>(createIndependentClone(NULL, 0, *node));
+                            aClone = createIndependentClone(nullptr, 0, *node);
                         } else {
                             aClone = makeGraphClones(*eq, *node);
                         }
                     } else {
-                        aClone = Argument<Base>(dependents[depIndex].getValue());
+                        aClone = dependents[depIndex].getValue();
                     }
 
                     size_t i = equationOrder_.at(eq);
@@ -896,7 +896,7 @@ namespace CppAD {
                 for (size_t it = 0; it < iterationCount_; it++) {
                     const OperationNode<Base>* indep = origOrder->order[it];
                     size_t index;
-                    if (indep != NULL) {
+                    if (indep != nullptr) {
                         index = indep->getInfo()[0];
                     } else {
                         index = std::numeric_limits<size_t>::max(); // not used at this iteration by any equation
@@ -971,13 +971,13 @@ namespace CppAD {
 
                 for (size_t a = 0; a < arg_size; a++) {
                     OperationNode<Base>* argOp = args[a].getOperation();
-                    if (argOp == NULL) {
+                    if (argOp == nullptr) {
                         // parameter
-                        cloneArgs[a] = Argument<Base>(*args[a].getParameter());
+                        cloneArgs[a] = *args[a].getParameter();
                     } else {
                         // variable
                         if (argOp->getOperationType() == CGInvOp) {
-                            cloneArgs[a] = Argument<Base>(createIndependentClone(&node, a, *argOp));
+                            cloneArgs[a] = createIndependentClone(&node, a, *argOp);
                         } else {
                             cloneArgs[a] = makeGraphClones(eq, *argOp);
                         }
@@ -998,7 +998,7 @@ namespace CppAD {
                  * temporary variable used in all iterations
                  * (does not depend on indexes)
                  */
-                return Argument<Base>(makeTemporaryVarClone(node));
+                return makeTemporaryVarClone(node);
             }
         }
 
@@ -1023,9 +1023,9 @@ namespace CppAD {
 
         OperationNode<Base>& getIndexedIndependentClone(const OperationNode<Base>* operation,
                                                         size_t argIndex) {
-            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments().size() > argIndex);
-            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments()[argIndex].getOperation() != NULL);
-            CPPADCG_ASSERT_UNKNOWN(operation == NULL || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments().size() > argIndex);
+            CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation() != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGInvOp);
 
             OperationArgumentsIndepOrder<Base>* args2Order = op2Arg2IndepOrder_.at(operation);
             IndependentOrder<Base>* indepOrder = args2Order->arg2Order.at(argIndex);
@@ -1106,7 +1106,7 @@ namespace CppAD {
             const std::vector<Argument<Base> >& args = node.getArguments();
             size_t arg_size = args.size();
             for (size_t i = 0; i < arg_size; i++) {
-                if (args[i].getOperation() != NULL) {
+                if (args[i].getOperation() != nullptr) {
                     resetCounters(*args[i].getOperation());
                 }
             }
@@ -1133,12 +1133,12 @@ namespace CppAD {
                     const OperationNode<Base>* indep1 = indepOrder1->order[j];
                     const OperationNode<Base>* indep2 = indepOrder2->order[j];
                     // some variables are not used in all iterations
-                    if (indep1 == NULL) {
-                        if (indep2 == NULL) {
+                    if (indep1 == nullptr) {
+                        if (indep2 == nullptr) {
                             continue;
                         }
                         return false;
-                    } else if (indep2 == NULL) {
+                    } else if (indep2 == nullptr) {
                         return true;
                     }
 

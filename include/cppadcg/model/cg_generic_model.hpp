@@ -31,7 +31,7 @@ namespace CppAD {
     public:
 
         GenericModel() :
-            _atomic(NULL),
+            _atomic(nullptr),
             _evalAtomicForwardOne4CppAD(true) {
         }
 
@@ -654,7 +654,7 @@ namespace CppAD {
          * @return an atomic function wrapper for this model
          */
         virtual CGAtomicGenericModel<Base>& asAtomic() {
-            if (_atomic == NULL) {
+            if (_atomic == nullptr) {
                 _atomic = new CGAtomicGenericModel<Base>(*this);
             }
             return *_atomic;

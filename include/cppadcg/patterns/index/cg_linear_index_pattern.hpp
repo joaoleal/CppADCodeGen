@@ -61,11 +61,11 @@ namespace CppAD {
             b_ = b;
         }
 
-        inline virtual IndexPatternType getType() const {
+        inline virtual IndexPatternType getType() const override {
             return LINEAR;
         }
 
-        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
             // nothing to add
         }
 

@@ -134,7 +134,7 @@ namespace CppAD {
             iteration2orig2indexedIndepIndexes_(iterationCount),
             jacSparsity_(false),
             hessSparsity_(false) {
-            CPPADCG_ASSERT_KNOWN(fun != NULL, "fun cannot be NULL");
+            CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null");
 
             /**
              * dependents
@@ -329,7 +329,7 @@ namespace CppAD {
             if (it != orig2nonIndexedIndepIndexes_.end()) {
                 return it->second;
             } else {
-                return NULL;
+                return nullptr;
             }
         }
 
@@ -341,7 +341,7 @@ namespace CppAD {
             if (it != orig2tempIndepIndexes_.end()) {
                 return it->second;
             } else {
-                return NULL;
+                return nullptr;
             }
         }
 

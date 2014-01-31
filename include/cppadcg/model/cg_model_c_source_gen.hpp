@@ -261,7 +261,7 @@ namespace CppAD {
          */
         ModelCSourceGen(ADFun<CppAD::CG<Base> >& fun, const std::string& model) :
             _fun(fun),
-            _funNoLoops(NULL),
+            _funNoLoops(nullptr),
             _name(model),
             _baseTypeName(ModelCSourceGen<Base>::baseTypeName()),
             _parameterPrecision(std::numeric_limits<Base>::digits10),
@@ -276,9 +276,9 @@ namespace CppAD {
             _reverseOne(false),
             _reverseTwo(false),
             _jacMode(AUTOMATIC),
-            _atomicsIndeps(NULL),
+            _atomicsIndeps(nullptr),
             _maxAssignPerFunc(20000),
-            _jobTimer(NULL) {
+            _jobTimer(nullptr) {
 
             CPPADCG_ASSERT_KNOWN(!_name.empty(), "Model name cannot be empty");
             CPPADCG_ASSERT_KNOWN((_name[0] >= 'a' && _name[0] <= 'z') ||
@@ -708,7 +708,7 @@ namespace CppAD {
 
         const std::map<std::string, std::string>& getSources(JobTimer* timer) throw (CGException);
 
-        virtual void generateSources(JobTimer* timer = NULL) throw (CGException);
+        virtual void generateSources(JobTimer* timer = nullptr) throw (CGException);
 
         virtual void generateLoops() throw (CGException);
 

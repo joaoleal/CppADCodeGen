@@ -51,7 +51,7 @@ namespace CppAD {
         handler.setJobTimer(_jobTimer);
         handler.setZeroDependents(false);
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         vector<set<size_t> > noLoopEvalSparsity;
         vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
@@ -111,7 +111,7 @@ namespace CppAD {
         /*******************************************************************
          * equations NOT in loops
          ******************************************************************/
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             /**
@@ -234,7 +234,7 @@ namespace CppAD {
                 /**
                  * determine if a loop should be created
                  */
-                LoopStartOperationNode<Base>* loopStart = NULL;
+                LoopStartOperationNode<Base>* loopStart = nullptr;
 
                 map<size_t, set<size_t> > localIterCount2Jcols;
 
@@ -273,7 +273,7 @@ namespace CppAD {
                  */
                 std::unique_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jcol2localIt2ModelIt));
 
-                if (itPattern.get() == NULL) {
+                if (itPattern.get() == nullptr) {
                     // did not match!
                     itPattern.reset(new Random2DIndexPattern(jcol2localIt2ModelIt));
                 }
@@ -324,7 +324,7 @@ namespace CppAD {
 
                 _loopFor1Groups[&lModel][g] = jcol2CompressedLoc;
 
-                LoopEndOperationNode<Base>* loopEnd = NULL;
+                LoopEndOperationNode<Base>* loopEnd = nullptr;
                 vector<CGBase> pxCustom;
                 if (createsLoop) {
                     /**
@@ -344,11 +344,8 @@ namespace CppAD {
                      * 
                      */
                     pxCustom.resize(1);
-                    std::vector<size_t> info(1);
-                    info[0] = 0; // must point to itself since there is only one dependent
-                    std::vector<Argument<Base> > args(1);
-                    args[0] = Argument<Base>(*loopEnd);
-                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                    // {0} : must point to itself since there is only one dependent
+                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, {0}, {*loopEnd}));
 
                 } else {
                     /**
@@ -814,7 +811,7 @@ namespace CppAD {
 
                         // non-indexed variables used directly
                         const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
-                        if (pos != NULL) {
+                        if (pos != nullptr) {
                             size_t tapeJ = pos->tape;
 
                             const map<size_t, CG<Base> >& dyiDxJtapeT = dyiDxtapeT.at(tapeJ);

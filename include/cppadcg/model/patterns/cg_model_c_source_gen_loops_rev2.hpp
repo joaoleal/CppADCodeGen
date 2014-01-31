@@ -108,7 +108,7 @@ namespace CppAD {
             }
         }
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         size_t nnz = 0;
         std::map<size_t, std::vector<size_t> >::const_iterator itJrow2jcols;
@@ -149,7 +149,7 @@ namespace CppAD {
          */
         // temporaries (zero orders)
         vector<CGBase> tmpsAlias;
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
@@ -209,7 +209,7 @@ namespace CppAD {
          * No loops
          */
         map<size_t, map<size_t, CGBase> > dzDx;
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
             vector<CGBase> yNL(fun.Range());
 
@@ -267,7 +267,7 @@ namespace CppAD {
                 /**
                  * determine if a loop should be created
                  */
-                LoopStartOperationNode<Base>* loopStart = NULL;
+                LoopStartOperationNode<Base>* loopStart = nullptr;
 
                 map<size_t, set<size_t> > localIterCount2Jrows;
 
@@ -306,7 +306,7 @@ namespace CppAD {
                  */
                 std::unique_ptr<IndexPattern> itPattern(Plane2DIndexPattern::detectPlane2D(jrow2localIt2ModelIt));
 
-                if (itPattern.get() == NULL) {
+                if (itPattern.get() == nullptr) {
                     // did not match!
                     itPattern.reset(new Random2DIndexPattern(jrow2localIt2ModelIt));
                 }
@@ -357,7 +357,7 @@ namespace CppAD {
 
                 _loopRev2Groups[&lModel][g] = jrow2CompressedLoc;
 
-                LoopEndOperationNode<Base>* loopEnd = NULL;
+                LoopEndOperationNode<Base>* loopEnd = nullptr;
                 vector<CGBase> pxCustom;
                 if (createsLoop) {
                     /**
@@ -377,11 +377,9 @@ namespace CppAD {
                      * 
                      */
                     pxCustom.resize(1);
-                    std::vector<size_t> info(1);
-                    info[0] = 0; // must point to itself since there is only one dependent
-                    std::vector<Argument<Base> > args(1);
-                    args[0] = Argument<Base>(*loopEnd);
-                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+
+                    // {0} : must point to itself since there is only one dependent
+                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, {0}, {*loopEnd}));
 
                 } else {
                     /**
@@ -456,7 +454,7 @@ namespace CppAD {
         /*******************************************************************
          * equations NOT in loops
          ******************************************************************/
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             /**
@@ -879,7 +877,7 @@ namespace CppAD {
                                                                   gHessVal,
                                                                   *info.iterationIndexOp,
                                                                   group.ifElses);
-                        addContribution(indexedLoopResults, hessLE, make_pair(v, (IndexPattern*) NULL));
+                        addContribution(indexedLoopResults, hessLE, make_pair(v, (IndexPattern*) nullptr));
                         jrow2CompressedLoc[j1].insert(e);
                     } else {
                         hessVal += gHessVal;
@@ -1165,7 +1163,7 @@ namespace CppAD {
             using namespace std;
 
             if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
-                return make_pair(ddfdxdx, (IndexPattern*) NULL);
+                return make_pair(ddfdxdx, (IndexPattern*) nullptr);
             }
 
             /**
@@ -1187,7 +1185,7 @@ namespace CppAD {
             }
 
             if (locations.empty()) {
-                return make_pair(CG<Base>(Base(0)), (IndexPattern*) NULL);
+                return make_pair(CG<Base>(Base(0)), (IndexPattern*) nullptr);
             }
 
             map<size_t, CG<Base> > results;
@@ -1236,7 +1234,7 @@ namespace CppAD {
                                                            iterationIndexOp,
                                                            group.ifElses);
 
-                return make_pair(v, (IndexPattern*) NULL);
+                return make_pair(v, (IndexPattern*) nullptr);
             }
 
         }

@@ -111,7 +111,7 @@ namespace CppAD {
             ArrayRef<const char *> args(argv + 1, // skip program name
                                         argc - 1);
             std::unique_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
-            if (invocation.get() == NULL)
+            if (invocation.get() == nullptr)
                 throw CGException("Failed to create compiler invocation");
             CompilerInvocation::setLangDefaults(*invocation->getLangOpts(), IK_C,
                                                 LangStandard::lang_unspecified);
@@ -128,7 +128,7 @@ namespace CppAD {
 
             // Create memory buffer with source text
             llvm::MemoryBuffer * buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "SIMPLE_BUFFER");
-            if (buffer == NULL)
+            if (buffer == nullptr)
                 throw CGException("Failed to create memory buffer");
 
             // Remap auxiliary name "string-input" to memory buffer
@@ -145,10 +145,10 @@ namespace CppAD {
                 throw CGException("Failed to emit LLVM bitcode");
 
             llvm::Module* module = action->takeModule();
-            if (module == NULL)
+            if (module == nullptr)
                 throw CGException("No module");
 
-            if (_linker.get() == NULL) {
+            if (_linker.get() == nullptr) {
                 _linker.reset(new llvm::Linker(std::string("MyLinker"), module));
             } else {
                 std::string errorMsg;
@@ -164,7 +164,7 @@ namespace CppAD {
 
         inline llvm::Module* mergeModules(const std::vector<llvm::Module*>& modules) throw (CGException) {
             if (modules.empty())
-                return NULL;
+                return nullptr;
 
             std::string progName("MyLinker");
             std::unique_ptr<llvm::Linker> ld(new llvm::Linker(progName, modules[0]));

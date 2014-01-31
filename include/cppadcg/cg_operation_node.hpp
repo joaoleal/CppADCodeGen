@@ -60,13 +60,13 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(0),
             color_(0),
-            name_(NULL) {
+            name_(nullptr) {
         }
 
         inline OperationNode(CGOpCode op,
                              const Argument<Base>& arg) :
             operation_(op),
-            arguments_(1),
+            arguments_{arg},
             var_id_(0),
             evaluation_order_(0),
             total_use_count_(0),
@@ -74,66 +74,34 @@ namespace CppAD {
             last_usage_order_(0),
             color_(0),
             name_(NULL) {
-            arguments_[0] = arg;
         }
 
         inline OperationNode(CGOpCode op,
-                             const Argument<Base>& arg1,
-                             const Argument<Base>& arg2) :
+                             std::vector<Argument<Base> >&& args) :
             operation_(op),
-            arguments_(2),
+            arguments_(args),
             var_id_(0),
             evaluation_order_(0),
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
             color_(0),
-            name_(NULL) {
-            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL);
-            arguments_[0] = arg1;
-            arguments_[1] = arg2;
+            name_(nullptr) {
         }
 
         inline OperationNode(CGOpCode op,
-                             const Argument<Base>& arg1,
-                             const Argument<Base>& arg2,
-                             const Argument<Base>& arg3) :
+                             std::vector<size_t>&& info,
+                             std::vector<Argument<Base> >&& args) :
             operation_(op),
-            arguments_(3),
+            info_(info),
+            arguments_(args),
             var_id_(0),
             evaluation_order_(0),
             total_use_count_(0),
             use_count_(0),
             last_usage_order_(0),
             color_(0),
-            name_(NULL) {
-            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
-                                   arg3.getOperation() != NULL);
-            arguments_[0] = arg1;
-            arguments_[1] = arg2;
-            arguments_[2] = arg3;
-        }
-
-        inline OperationNode(CGOpCode op,
-                             const Argument<Base>& arg1,
-                             const Argument<Base>& arg2,
-                             const Argument<Base>& arg3,
-                             const Argument<Base>& arg4) :
-            operation_(op),
-            arguments_(4),
-            var_id_(0),
-            evaluation_order_(0),
-            total_use_count_(0),
-            use_count_(0),
-            last_usage_order_(0),
-            color_(0),
-            name_(NULL) {
-            CPPADCG_ASSERT_UNKNOWN(arg1.getOperation() != NULL || arg2.getOperation() != NULL ||
-                                   arg3.getOperation() != NULL || arg4.getOperation() != NULL);
-            arguments_[0] = arg1;
-            arguments_[1] = arg2;
-            arguments_[2] = arg3;
-            arguments_[3] = arg4;
+            name_(nullptr) {
         }
 
         inline OperationNode(CGOpCode op,
@@ -148,7 +116,7 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(0),
             color_(0),
-            name_(NULL) {
+            name_(nullptr) {
         }
 
         inline void makeAlias(const Argument<Base>& other) {
@@ -159,7 +127,7 @@ namespace CppAD {
             arguments_[0] = other;
             var_id_ = 0;
             delete name_;
-            name_ = NULL;
+            name_ = nullptr;
         }
 
         inline CGOpCode getOperationType() const {
@@ -296,7 +264,7 @@ namespace CppAD {
         }
 
         inline void setName(const std::string& name) {
-            if (name_ != NULL)
+            if (name_ != nullptr)
                 *name_ = name;
             else
                 name_ = new std::string(name);
@@ -304,7 +272,7 @@ namespace CppAD {
 
         inline void clearName() {
             delete name_;
-            name_ = NULL;
+            name_ = nullptr;
         }
 
         inline size_t getColor() const {
@@ -333,7 +301,7 @@ namespace CppAD {
             use_count_(0),
             last_usage_order_(orig.last_usage_order_),
             color_(orig.color_),
-            name_(orig.name_ != NULL ? new std::string(*orig.name_) : NULL) {
+            name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
         }
 
         friend class CodeHandler<Base>;

@@ -32,7 +32,7 @@ namespace CppAD {
          * This object must be released by the user!
          * 
          * @param modelName The model name.
-         * @return The model object (must be released by the user) or NULL if 
+         * @return The model object (must be released by the user) or nullptr if 
          *         no model exists with the provided name 
          */
         virtual FunctorGenericModel<Base>* model(const std::string& modelName) = 0;
@@ -51,10 +51,10 @@ namespace CppAD {
          * @param required Whether or not the function symbol must exist in the
          *                 library. If the function is required and does not
          *                 exist then the CppAD error handler is called, if it 
-         *                 is not required and it does not exist then NULL is
+         *                 is not required and it does not exist then nullptr is
          *                 return.
          * @return A pointer to the function symbol in the dynamic library if it
-         *         exists, NULL otherwise.
+         *         exists, nullptr otherwise.
          * @throws CGException If there is a problem loading the function symbol
          */
         virtual void* loadFunction(const std::string& functionName,

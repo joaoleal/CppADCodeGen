@@ -30,18 +30,18 @@ namespace CppAD {
          */
         bool operator()(const OperationNode<Base>* node1,
                 const OperationNode<Base>* node2) {
-            CPPADCG_ASSERT_UNKNOWN(node1 == NULL || node1->getInfo().size() == 1);
-            CPPADCG_ASSERT_UNKNOWN(node2 == NULL || node2->getInfo().size() == 1);
-            CPPADCG_ASSERT_UNKNOWN(node1 == NULL || node1->getOperationType() == CGInvOp);
-            CPPADCG_ASSERT_UNKNOWN(node2 == NULL || node1->getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(node1 == nullptr || node1->getInfo().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(node2 == nullptr || node2->getInfo().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(node1 == nullptr || node1->getOperationType() == CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(node2 == nullptr || node1->getOperationType() == CGInvOp);
 
             // some variables are not used in all iterations
-            if (node1 == NULL) {
-                if (node2 == NULL) {
+            if (node1 == nullptr) {
+                if (node2 == nullptr) {
                     return false;
                 }
                 return true;
-            } else if (node2 == NULL) {
+            } else if (node2 == nullptr) {
                 return false;
             }
 

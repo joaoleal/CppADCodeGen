@@ -59,7 +59,7 @@ namespace CppAD {
         using namespace CppAD::loops;
         using CppAD::vector;
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         /**
          * determine sparsities
@@ -71,7 +71,7 @@ namespace CppAD {
             l->evalHessianSparsity();
         }
 
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             _funNoLoops->evalJacobianSparsity();
             _funNoLoops->evalHessianSparsity();
         }
@@ -81,8 +81,8 @@ namespace CppAD {
 
         size_t nnz = lowerHessRows.size();
 
-        noLoopEvalJacSparsity.resize(_funNoLoops != NULL ? m : 0);
-        noLoopEvalHessSparsity.resize(_funNoLoops != NULL ? n : 0);
+        noLoopEvalJacSparsity.resize(_funNoLoops != nullptr ? m : 0);
+        noLoopEvalHessSparsity.resize(_funNoLoops != nullptr ? n : 0);
         noLoopEvalHessLocations.resize(noLoopEvalHessSparsity.size());
 
         loopHessInfo.clear();
@@ -92,7 +92,7 @@ namespace CppAD {
             loopHessInfol = HessianWithLoopsInfo<Base>(*loop);
 
             // initialize Hessian information structure
-            loopHessInfol.noLoopEvalHessTempsSparsity.resize(_funNoLoops != NULL ? n : 0);
+            loopHessInfol.noLoopEvalHessTempsSparsity.resize(_funNoLoops != nullptr ? n : 0);
         }
 
         /** 
@@ -105,7 +105,7 @@ namespace CppAD {
             size_t j2 = lowerHessCols[eh];
             size_t e = lowerHessOrder[eh];
 
-            if (_funNoLoops != NULL) {
+            if (_funNoLoops != nullptr) {
                 // considers only the pattern for the original equations and leaves out the temporaries
                 const vector<std::set<size_t> >& dydxx = _funNoLoops->getHessianOrigEqsSparsity();
                 if (dydxx.size() > 0) {
@@ -180,7 +180,7 @@ namespace CppAD {
                      * d      d f_i    ->   d      d f_i
                      * d x_j2 d x_l1        d x_l2 d x_j1
                      */
-                    if (posJ2 != NULL) {
+                    if (posJ2 != nullptr) {
 
                         const std::vector<set<size_t> >& iter2tapeJ1OrigJ2 = group.getHessianIndexedNonIndexedTapeIndexes(j1, j2);
                         for (size_t iteration = 0; iteration < iter2tapeJ1OrigJ2.size(); iteration++) {
@@ -216,7 +216,7 @@ namespace CppAD {
                  * d     d f_i    .   d z_k
                  * d z_k d x_l1       d x_j2
                  */
-                if (_funNoLoops != NULL) {
+                if (_funNoLoops != nullptr) {
                     map<size_t, set<size_t> > iter2tapeJ1 = loop->getIndexedTapeIndexes(j1);
                     map<size_t, set<size_t> >::const_iterator itIter;
                     for (itIter = iter2tapeJ1.begin(); itIter != iter2tapeJ1.end(); ++itIter) {
@@ -285,7 +285,7 @@ namespace CppAD {
                  * d      d f_i
                  * d x_l2 d x_j1
                  */
-                if (posJ1 != NULL) {
+                if (posJ1 != nullptr) {
 
                     for (size_t g = 0; g < nEqGroups; g++) {
                         const IterEquationGroup<Base>& group = eqGroups[g];
@@ -318,7 +318,7 @@ namespace CppAD {
                 bool jInNonIndexed = false;
                 pairss orig(j1, j2);
 
-                if (posJ1 != NULL && posJ2 != NULL) {
+                if (posJ1 != nullptr && posJ2 != nullptr) {
                     for (size_t g = 0; g < nEqGroups; g++) {
                         const IterEquationGroup<Base>& group = eqGroups[g];
 
@@ -341,7 +341,7 @@ namespace CppAD {
                  * d     d f_i   .  d z_k
                  * d z_k d x_j1     d x_j2
                  */
-                if (_funNoLoops != NULL && posJ1 != NULL) {
+                if (_funNoLoops != nullptr && posJ1 != nullptr) {
 
                     for (size_t g = 0; g < nEqGroups; g++) {
                         const IterEquationGroup<Base>& group = eqGroups[g];
@@ -378,7 +378,7 @@ namespace CppAD {
                 /**
                  * temporaries
                  */
-                if (_funNoLoops != NULL) {
+                if (_funNoLoops != nullptr) {
                     const vector<set<size_t> >& gJac = _funNoLoops->getJacobianSparsity();
                     size_t nk = _funNoLoops->getTemporaryDependentCount();
                     size_t nOrigEq = _funNoLoops->getTapeDependentCount() - nk;
@@ -393,7 +393,7 @@ namespace CppAD {
                         }
 
                         const LoopPosition* posK1 = loop->getTempIndepIndexes(k1);
-                        if (posK1 == NULL) {
+                        if (posK1 == nullptr) {
                             continue;
                         }
 
@@ -421,7 +421,7 @@ namespace CppAD {
                                 for (itIt = iterations.begin(); itIt != iterations.end(); ++itIt) {
                                     size_t iteration = *itIt;
 
-                                    std::vector<HessianElement>* positions = NULL;
+                                    std::vector<HessianElement>* positions = nullptr;
 
                                     bool flip = useSymmetry && groupHess[tapeJ2].find(posK1->tape) != groupHess[tapeJ2].end();
                                     if (flip) {
@@ -438,7 +438,7 @@ namespace CppAD {
                                         groupHessInfo.evalHessSparsity[posK1->tape].insert(tapeJ2);
                                     }
 
-                                    if (positions != NULL) {
+                                    if (positions != nullptr) {
                                         positions->resize(nIter);
 
                                         (*positions)[iteration].location = e;
@@ -461,7 +461,7 @@ namespace CppAD {
                              * d      d f_i
                              * d x_j2 d z_k1
                              */
-                            if (posJ2 != NULL) {
+                            if (posJ2 != nullptr) {
                                 const set<size_t>& hessRow = group.getHessianSparsity()[posK1->tape];
 
                                 if (hessRow.find(j2) != hessRow.end()) {
@@ -569,7 +569,7 @@ namespace CppAD {
 
         handler.setZeroDependents(true);
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         size_t maxLoc = _hessSparsity.rows.size();
         vector<CGBase> hess(maxLoc);
@@ -599,7 +599,7 @@ namespace CppAD {
 
         // temporaries (zero order)
         vector<CGBase> tmpsAlias;
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
@@ -664,7 +664,7 @@ namespace CppAD {
         // Jacobian for temporaries
         map<size_t, map<size_t, CGBase> > dzDx;
 
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
             vector<CGBase> yNL(fun.Range());
 
@@ -932,7 +932,7 @@ namespace CppAD {
                         CGBase v = createHessianContribution(handler, *pattern, group.iterations,
                                                              nIterations, gHessVal,
                                                              *info.iterationIndexOp, info.ifElses);
-                        addContribution(indexedLoopResults, hessLE, make_pair(v, (IndexPattern*) NULL));
+                        addContribution(indexedLoopResults, hessLE, make_pair(v, (IndexPattern*) nullptr));
                     } else {
                         hessVal += gHessVal;
                     }
@@ -966,13 +966,13 @@ namespace CppAD {
                 // an additional alias variable is required so that each dependent variable can have its own ID
                 size_t e = *itE;
                 if (hess[e].isParameter() && hess[e].IdenticalZero()) {
-                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, Argument<Base>(*info.loopEnd)));
+                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, *info.loopEnd));
 
-                } else if (hess[e].getOperationNode() != NULL && hess[e].getOperationNode()->getOperationType() == CGDependentMultiAssignOp) {
-                    hess[e].getOperationNode()->getArguments().push_back(Argument<Base>(*info.loopEnd));
+                } else if (hess[e].getOperationNode() != nullptr && hess[e].getOperationNode()->getOperationType() == CGDependentMultiAssignOp) {
+                    hess[e].getOperationNode()->getArguments().push_back(*info.loopEnd);
 
                 } else {
-                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, asArgument(hess[e]), Argument<Base>(*info.loopEnd)));
+                    hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, {asArgument(hess[e]), *info.loopEnd}));
                 }
             }
 
@@ -1014,7 +1014,7 @@ namespace CppAD {
             using namespace std;
 
             if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
-                return make_pair(ddfdxdx, (IndexPattern*) NULL);
+                return make_pair(ddfdxdx, (IndexPattern*) nullptr);
             }
 
             // combine iterations with the same number of additions
@@ -1073,7 +1073,7 @@ namespace CppAD {
                                                            iterationIndexOp,
                                                            ifElses);
 
-                return make_pair(v, (IndexPattern*) NULL);
+                return make_pair(v, (IndexPattern*) nullptr);
             }
 
         }

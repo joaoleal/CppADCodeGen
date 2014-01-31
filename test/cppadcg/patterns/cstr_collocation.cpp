@@ -146,9 +146,9 @@ namespace CppAD {
         }
 
         virtual void TearDown() {
-            atomicDynamicLib_.reset(NULL);
-            atomicModel_.reset(NULL);
-            colModel_.reset(NULL);
+            atomicDynamicLib_.reset(nullptr);
+            atomicModel_.reset(nullptr);
+            colModel_.reset(nullptr);
 
             CppADCGPatternTest::TearDown();
         }

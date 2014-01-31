@@ -25,7 +25,7 @@ namespace CppAD {
         std::string name_;
     public:
 
-        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const {
+        inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
             // nothing to add
         }
 

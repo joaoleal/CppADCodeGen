@@ -48,7 +48,7 @@ namespace CppAD {
                                      const std::string& libraryName = "cppad_cg_model") :
             ModelLibraryProcessor<Base>(modelLibraryHelper),
             _libraryName(libraryName),
-            _customLibExtension(NULL) {
+            _customLibExtension(nullptr) {
         }
 
         inline const std::string& getLibraryName() const {
@@ -85,7 +85,7 @@ namespace CppAD {
          */
         inline void removeCustomLibraryExtension() {
             delete _customLibExtension;
-            _customLibExtension = NULL;
+            _customLibExtension = nullptr;
         }
 
         /**
@@ -94,7 +94,7 @@ namespace CppAD {
          * @param compiler The compiler used to compile the sources and create
          *                 the dynamic library
          * @param loadLib Whether or not to load the dynamic library
-         * @return The dynamic library if loadLib is true, NULL otherwise
+         * @return The dynamic library if loadLib is true, nullptr otherwise
          */
         DynamicLib<Base>* createDynamicLibrary(CCompiler<Base>& compiler,
                                                bool loadLib = true) throw (CGException) {
@@ -118,7 +118,7 @@ namespace CppAD {
                 compiler.compileSources(customSource, true, this->modelLibraryHelper_);
 
                 std::string libname = _libraryName;
-                if (_customLibExtension != NULL)
+                if (_customLibExtension != nullptr)
                     libname += *_customLibExtension;
                 else
                     libname += system::SystemInfo<>::DYNAMIC_LIB_EXTENSION;
@@ -136,7 +136,7 @@ namespace CppAD {
             if (loadLib)
                 return loadDynamicLibrary();
             else
-                return NULL;
+                return nullptr;
         }
 
         /**
@@ -173,7 +173,7 @@ namespace CppAD {
                 compiler.compileSources(customSource, posIndepCode, this->modelLibraryHelper_);
 
                 std::string libname = _libraryName;
-                if (_customLibExtension != NULL)
+                if (_customLibExtension != nullptr)
                     libname += *_customLibExtension;
                 else
                     libname += system::SystemInfo<>::STATIC_LIB_EXTENSION;

@@ -86,10 +86,10 @@ namespace CppAD {
             vector<IfElseInfo<Base> > ifElses;
 
             inline HessianWithLoopsInfo() :
-                model(NULL),
-                loopStart(NULL),
-                loopEnd(NULL),
-                iterationIndexOp(NULL) {
+                model(nullptr),
+                loopStart(nullptr),
+                loopEnd(nullptr),
+                iterationIndexOp(nullptr) {
 
             }
 
@@ -97,9 +97,9 @@ namespace CppAD {
                 model(&loop),
                 evalJacSparsity(loop.getTapeDependentCount()),
                 equationGroups(loop.getEquationsGroups().size(), HessianWithLoopsEquationGroupInfo<Base>(loop)),
-                loopStart(NULL),
-                loopEnd(NULL),
-                iterationIndexOp(NULL) {
+                loopStart(nullptr),
+                loopEnd(nullptr),
+                iterationIndexOp(nullptr) {
 
             }
 

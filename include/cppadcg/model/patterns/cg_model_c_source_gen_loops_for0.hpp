@@ -23,7 +23,7 @@ namespace CppAD {
 
     template<class Base>
     vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
-                                                                              const vector<CGBase>& x) {
+                                                                      const vector<CGBase>& x) {
         using namespace std;
         using namespace loops;
         using CppAD::vector;
@@ -38,7 +38,7 @@ namespace CppAD {
         /**
          * original equations outside the loops 
          */
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             const std::vector<size_t>& origEq = _funNoLoops->getOrigDependentIndexes();
 
             vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
@@ -113,16 +113,14 @@ namespace CppAD {
 
             LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
-            std::vector<size_t> info(1);
-            std::vector<Argument<Base> > args(1);
             for (size_t i = 0; i < dependents.size(); i++) {
                 for (size_t it = 0; it < nIterations; it++) {
                     // an additional alias variable is required so that each dependent variable can have its own ID
                     size_t e = dependents[i][it].original;
                     if (e < m) { // some equations are not present in all iteration
-                        info[0] = e;
-                        args[0] = Argument<Base>(*loopEnd);
-                        y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                        y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{e},
+                        {
+                                                *loopEnd                        }));
                     }
                 }
             }

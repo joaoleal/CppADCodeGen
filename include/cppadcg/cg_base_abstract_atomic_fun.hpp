@@ -85,8 +85,7 @@ namespace CppAD {
                 arrayArgs[i] = asArgument(tx[i * (p + 1) + k]);
             }
 
-            std::vector<size_t> info; // empty
-            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
+            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, {}, arrayArgs);
             handler.manageOperationNode(array);
 
             return array;
@@ -96,8 +95,7 @@ namespace CppAD {
                                                          size_t size) {
             vector<CGB> tx2(size);
             std::vector<Arg> arrayArgs = asArguments(tx2);
-            std::vector<size_t> info; // empty
-            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
+            OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, {}, arrayArgs);
             handler.manageOperationNode(array);
 
             return array;
@@ -105,10 +103,7 @@ namespace CppAD {
 
         static inline OperationNode<Base>* makeEmptySparseArray(CodeHandler<Base>& handler,
                                                                 size_t size) {
-            std::vector<Arg> arrayArgs; //empty
-            std::vector<size_t> info(1);
-            info[0] = size;
-            OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp, info, arrayArgs);
+            OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp, {size}, {}); //empty args
             handler.manageOperationNode(array);
             return array;
         }

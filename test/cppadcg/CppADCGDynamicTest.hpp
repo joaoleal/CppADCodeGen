@@ -106,7 +106,7 @@ namespace CppAD {
              * test the library
              */
             GenericModel<double>* model = dynamicLib->model(_name + "dynamic");
-            ASSERT_TRUE(model != NULL);
+            ASSERT_TRUE(model != nullptr);
 
             testModelResults(*model, fun, x, epsilonR, epsilonA);
 
@@ -156,7 +156,7 @@ namespace CppAD {
              * test the library
              */
             GenericModel<double>* model = dynamicLib->model(_name + "dynamic2");
-            ASSERT_TRUE(model != NULL);
+            ASSERT_TRUE(model != nullptr);
 
             // dimensions
             ASSERT_EQ(model->Domain(), fun.Domain());

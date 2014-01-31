@@ -88,7 +88,7 @@ namespace CppAD {
 
     template<class Base>
     inline void CLanguage<Base>::createIndexDeclaration() {
-        if (_info == NULL || _info->get() == NULL)
+        if (_info == nullptr || _info->get() == nullptr)
             return;
 
         const LanguageGenerationData<Base>& info = *_info->get();
@@ -102,14 +102,13 @@ namespace CppAD {
         printRandomIndexPatternDeclaration(_ss, _spaces, (*_info)->indexRandomPatterns);
 
         _ss << _spaces << U_INDEX_TYPE;
-        typename std::set<const IndexDclrOperationNode<Base>*>::const_iterator iti;
-        for (iti = info.indexes.begin(); iti != info.indexes.end(); ++iti) {
+        for (const IndexDclrOperationNode<Base>* iti : info.indexes) {
 
-            if (funcArgs.find(*iti) == funcArgs.end()) {
+            if (funcArgs.find(iti) == funcArgs.end()) {
                 if (first) first = false;
                 else _ss << ",";
 
-                _ss << " " << (*(*iti)->getName());
+                _ss << " " << (*iti->getName());
             }
 
         }
@@ -187,9 +186,7 @@ namespace CppAD {
     template<class Base>
     inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
                                                             const IndexDclrOperationNode<Base>& index) {
-        std::vector<const IndexDclrOperationNode<Base>*> indexes(1);
-        indexes[0] = &index;
-        return indexPattern2String(ip, indexes);
+        return indexPattern2String(ip, {&index});
     }
 
     template<class Base>
@@ -230,16 +227,16 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
                 std::string indexExpr;
                 const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
-                bool useParens = pip.getPattern1() != NULL && pip.getPattern2() != NULL;
+                bool useParens = pip.getPattern1() != nullptr && pip.getPattern2() != nullptr;
 
                 if (useParens) indexExpr += "(";
 
-                if (pip.getPattern1() != NULL)
+                if (pip.getPattern1() != nullptr)
                     indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
 
                 if (useParens) indexExpr += ") + (";
 
-                if (pip.getPattern2() != NULL)
+                if (pip.getPattern2() != nullptr)
                     indexExpr += indexPattern2String(*pip.getPattern2(), *indexes.back());
 
                 if (useParens) indexExpr += ")";

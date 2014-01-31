@@ -33,21 +33,21 @@ namespace CppAD {
         std::set<LlvmModel<Base>*> _models;
     public:
 
-        virtual std::set<std::string> getModelNames() {
+        virtual std::set<std::string> getModelNames() override {
             return _modelNames;
         }
 
-        virtual LlvmModel<Base>* model(const std::string& modelName) {
+        virtual LlvmModel<Base>* model(const std::string& modelName) override {
             typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
             if (it == _modelNames.end()) {
-                return NULL;
+                return nullptr;
             }
             LlvmModel<Base>* m = new LlvmModel<Base> (this, modelName);
             _models.insert(m);
             return m;
         }
 
-        virtual unsigned long getAPIVersion() {
+        virtual unsigned long getAPIVersion() override {
             return _version;
         }
 

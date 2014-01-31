@@ -24,7 +24,7 @@ namespace CppAD {
 
         inline OperationPathNode() :
             arg_index(0),
-            node(NULL) {
+            node(nullptr) {
         }
 
         inline OperationPathNode(OperationNode<Base>* node_, size_t arg_index_) :
@@ -93,7 +93,7 @@ namespace CppAD {
             size_t size = args.size();
             for (size_t i = 0; i < size; ++i) {
                 OperationNode<Base>* a = args[i].getOperation();
-                if (a != NULL) {
+                if (a != nullptr) {
                     currPath.push_back(OperationPathNode<Base> (a, i));
                     findPaths(currPath, code, found, max);
                     currPath.pop_back();

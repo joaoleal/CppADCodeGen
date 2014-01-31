@@ -130,7 +130,7 @@ namespace CppAD {
         /**
          * Job starting time (seconds)
          */
-        double _beginTime;
+        std::chrono::steady_clock::time_point _beginTime;
         /**
          * Whether or not there are/were other jobs inside
          */
@@ -141,7 +141,7 @@ namespace CppAD {
                    const std::string& name) :
             _type(&type),
             _name(name),
-            _beginTime(system::currentTime()),
+            _beginTime(std::chrono::steady_clock::now()),
             _nestedJobs(false) {
         }
 
@@ -153,7 +153,7 @@ namespace CppAD {
             return _name;
         }
 
-        inline double beginTime() const {
+        inline std::chrono::steady_clock::time_point beginTime() const {
             return _beginTime;
         }
 
@@ -168,10 +168,12 @@ namespace CppAD {
      */
     class JobListener {
     public:
+        typedef std::chrono::steady_clock::duration duration;
+
         virtual void jobStarted(const std::vector<Job>& job) throw (CGException) = 0;
 
         virtual void jobEndended(const std::vector<Job>& job,
-                                 double elapsed) throw (CGException) = 0;
+                                 duration elapsed) throw (CGException) = 0;
     };
 
     /**
@@ -292,11 +294,13 @@ namespace CppAD {
         }
 
         inline void finishedJob() {
+            using namespace std::chrono;
+
             CPPADCG_ASSERT_UNKNOWN(_jobs.size() > 0);
 
             Job& job = _jobs.back();
 
-            double elapsed = system::currentTime() - job.beginTime();
+            std::chrono::steady_clock::duration elapsed = steady_clock::now() - job.beginTime();
 
             if (_verbose) {
                 if (job._nestedJobs) {
@@ -310,7 +314,7 @@ namespace CppAD {
                     std::cout.fill(f); // restore fill character
                 }
 
-                std::cout << " done [" << std::fixed << std::setprecision(3) << elapsed << "]" << std::endl;
+                std::cout << " done [" << std::fixed << std::setprecision(3) << duration<float>(elapsed).count() << "]" << std::endl;
             }
 
             // notify listeners

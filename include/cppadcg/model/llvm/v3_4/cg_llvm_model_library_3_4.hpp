@@ -87,12 +87,12 @@ namespace CppAD {
              */
         }
 
-        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) {
+        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
             llvm::Function* func = _module->getFunction(functionName);
-            if (func == NULL) {
+            if (func == nullptr) {
                 if (required)
                     throw CGException("Unable to find function '" + functionName + "' in LLVM module");
-                return NULL;
+                return nullptr;
             }
 
 #ifndef NDEBUG
@@ -129,7 +129,7 @@ namespace CppAD {
             void (*modelsFunc)(char const *const**, int*);
             *(void **) (&modelsFunc) = loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS);
 
-            char const*const* model_names = NULL;
+            char const*const* model_names = nullptr;
             int model_count;
             (*modelsFunc)(&model_names, &model_count);
 

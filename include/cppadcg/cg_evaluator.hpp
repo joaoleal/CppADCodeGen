@@ -40,7 +40,7 @@ namespace CppAD {
         Evaluator(const CodeHandler<Base>& handler, const std::vector<CG<Base> >& dep) :
             handler_(handler),
             dep_(dep),
-            indep_(NULL) {
+            indep_(nullptr) {
         }
 
         /**
@@ -61,7 +61,7 @@ namespace CppAD {
             typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator it;
             for (it = atomics.begin(); it != atomics.end(); ++it) {
                 atomic_base<BaseOut>* atomic = it->second;
-                if (atomic != NULL) {
+                if (atomic != nullptr) {
                     atomicFunctions_[it->first] = atomic;
                 }
             }
@@ -125,7 +125,7 @@ namespace CppAD {
         }
 
         inline AD<BaseOut> evalArg(const Argument<Base>& arg) throw (CGException) {
-            if (arg.getOperation() != NULL) {
+            if (arg.getOperation() != nullptr) {
                 return evalOperations(*arg.getOperation());
             } else {
                 // parameter
@@ -171,8 +171,8 @@ namespace CppAD {
                 {
                     const std::vector<size_t>& info = node.getInfo();
                     CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
-                    CPPADCG_ASSERT_KNOWN(args[0].getOperation() != NULL, "Invalid argument for array element");
-                    CPPADCG_ASSERT_KNOWN(args[1].getOperation() != NULL, "Invalid argument for array element");
+                    CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
+                    CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
                     CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
                     size_t index = info[0];
                     vector<AD<BaseOut> >& array = evalArrayCreationOperation(*args[0].getOperation()); // array creation
@@ -338,16 +338,16 @@ namespace CppAD {
             // find the atomic function
             size_t id = info[0];
             typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator itaf = atomicFunctions_.find(id);
-            atomic_base<BaseOut>* atomicFunction = NULL;
+            atomic_base<BaseOut>* atomicFunction = nullptr;
             if (itaf != atomicFunctions_.end()) {
                 atomicFunction = itaf->second;
             }
 
-            if (atomicFunction == NULL) {
+            if (atomicFunction == nullptr) {
                 std::stringstream ss;
                 ss << "No atomic function defined in the evaluator for ";
                 const std::string* atomName = handler_.getAtomicFunctionName(id);
-                if (atomName != NULL) {
+                if (atomName != nullptr) {
                     ss << "'" << *atomName << "'";
                 } else
                     ss << "id '" << id << "'";

@@ -34,36 +34,36 @@ namespace CppAD {
     public:
 
         inline Argument() :
-            operation_(NULL),
-            parameter_(NULL) {
+            operation_(nullptr),
+            parameter_(nullptr) {
         }
 
         inline Argument(OperationNode<Base>& operation) :
             operation_(&operation),
-            parameter_(NULL) {
+            parameter_(nullptr) {
         }
 
         inline Argument(const Base& parameter) :
-            operation_(NULL),
+            operation_(nullptr),
             parameter_(new Base(parameter)) {
         }
 
         inline Argument(const Argument& orig) :
             operation_(orig.operation_),
-            parameter_(orig.parameter_ != NULL ? new Base(*orig.parameter_) : NULL) {
+            parameter_(orig.parameter_ != nullptr ? new Base(*orig.parameter_) : nullptr) {
         }
 
         inline Argument& operator=(const Argument& rhs) {
             if (&rhs == this) {
                 return *this;
             }
-            if (rhs.operation_ != NULL) {
+            if (rhs.operation_ != nullptr) {
                 operation_ = rhs.operation_;
                 delete parameter_;
-                parameter_ = NULL;
+                parameter_ = nullptr;
             } else {
-                operation_ = NULL;
-                if (parameter_ != NULL) {
+                operation_ = nullptr;
+                if (parameter_ != nullptr) {
                     *parameter_ = *rhs.parameter_;
                 } else {
                     parameter_ = new Base(*rhs.parameter_);

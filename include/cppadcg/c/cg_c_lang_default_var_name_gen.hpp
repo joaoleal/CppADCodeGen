@@ -205,7 +205,7 @@ namespace CppAD {
             std::vector<const IndexDclrOperationNode<Base>*> indexes(args.size() - offset);
 
             for (size_t a = offset; a < args.size(); a++) {
-                CPPADCG_ASSERT_KNOWN(args[a].getOperation() != NULL, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");
                 CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
 
                 indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();

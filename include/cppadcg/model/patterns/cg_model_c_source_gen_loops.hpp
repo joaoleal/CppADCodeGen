@@ -53,7 +53,7 @@ namespace CppAD {
             OperationNode<Base>* endIf;
 
             inline IfElseInfo() :
-                endIf(NULL) {
+                endIf(nullptr) {
             }
         };
 
@@ -80,7 +80,7 @@ namespace CppAD {
             IndexPattern* pattern;
 
             inline IndexedDependentLoopInfo() :
-                pattern(NULL) {
+                pattern(nullptr) {
             }
         };
 
@@ -94,8 +94,7 @@ namespace CppAD {
 
             vector<CG<Base> > x(nIndexed); // zero order
 
-            std::vector<Argument<Base> > xIndexedArgs(1);
-            xIndexedArgs[0] = Argument<Base>(iterationIndexOp);
+            std::vector<Argument<Base> > xIndexedArgs{iterationIndexOp};
             std::vector<size_t> info(2);
             info[0] = 0; // tx
 
@@ -152,8 +151,7 @@ namespace CppAD {
             size_t dep_size = depIndexes.size();
             size_t x_size = loop.getTapeIndependentCount();
 
-            std::vector<Argument<Base> > xIndexedArgs(1);
-            xIndexedArgs[0] = Argument<Base>(iterationIndexOp);
+            std::vector<Argument<Base> > xIndexedArgs{iterationIndexOp};
             std::vector<size_t> info(2);
             info[0] = 2; // py2
 
@@ -172,29 +170,26 @@ namespace CppAD {
                                                           IndexOperationNode<Base>& iterationIndexOp) {
 
             size_t assignOrAdd = 1; // add
-            std::vector<Argument<Base> > indexedArgs(2);
-            std::vector<size_t> aInfo(2);
 
-            if (ip != NULL) {
-                aInfo[0] = handler.addLoopDependentIndexPattern(*ip); // dependent index pattern location
-                aInfo[1] = assignOrAdd;
-                indexedArgs[0] = asArgument(val); // indexed expression
-                indexedArgs[1] = Argument<Base>(iterationIndexOp); // index  ///jrowIndexOp
-
+            if (ip != nullptr) {
+                // {dependent index pattern location, }
+                std::vector<size_t> aInfo{handler.addLoopDependentIndexPattern(*ip), assignOrAdd};
+                // {indexed expression, index(jrowIndexOp) }
+                std::vector<Argument<Base> > indexedArgs{asArgument(val), iterationIndexOp};
+                
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
 
                 return handler.createCG(Argument<Base>(*yIndexed));
 
-            } else if (val.getOperationNode() != NULL &&
+            } else if (val.getOperationNode() != nullptr &&
                     val.getOperationNode()->getOperationType() == CGEndIfOp) {
 
-                std::vector<size_t> info(1);
-                info[0] = i; // points to itself
-                std::vector<Argument<Base> > args(1);
-                args[0] = Argument<Base>(*val.getOperationNode());
-
-                return handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                // {i} : points to itself
+                return handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{i},
+                {
+                                        *val.getOperationNode()
+                }));
 
             } else {
                 return val;
@@ -220,7 +215,7 @@ namespace CppAD {
 
             for (size_t i = 0; i < dep_size; i++) {
                 const std::pair<CG<Base>, IndexPattern*>& depInfo = indexedLoopResults[i];
-                if (depInfo.second != NULL) {
+                if (depInfo.second != nullptr) {
                     indexedArgs.resize(1);
 
                     indexedArgs[0] = asArgument(depInfo.first); // indexed expression
@@ -234,11 +229,11 @@ namespace CppAD {
 
                     OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
                     handler.manageOperationNodeMemory(yIndexed);
-                    endArgs.push_back(Argument<Base>(*yIndexed));
+                    endArgs.push_back(*yIndexed);
                 } else {
                     OperationNode<Base>* n = depInfo.first.getOperationNode();
-                    CPPADCG_ASSERT_UNKNOWN(n != NULL);
-                    endArgs.push_back(Argument<Base>(*n));
+                    CPPADCG_ASSERT_UNKNOWN(n != nullptr);
+                    endArgs.push_back(*n);
                 }
             }
 
@@ -258,7 +253,7 @@ namespace CppAD {
 
             const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
             for (size_t i = 0; i < endArgs.size(); i++) {
-                CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != NULL);
+                CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != nullptr);
                 LoopNonIndexedLocator<Base>(handler, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
             }
 
@@ -269,7 +264,7 @@ namespace CppAD {
             size_t i = 0;
             typename std::set<OperationNode<Base>*>::const_iterator it;
             for (it = nonIndexed.begin(); it != nonIndexed.end(); ++it, i++) {
-                startArgs[sas + i] = Argument<Base>(**it);
+                startArgs[sas + i] = **it;
             }
         }
 
@@ -307,7 +302,7 @@ namespace CppAD {
                 bool nonIndexedArgs = false; // whether or not there are non indexed arguments
                 for (size_t a = 0; a < size; a++) {
                     OperationNode<Base>* arg = args[a].getOperation();
-                    if (arg != NULL) {
+                    if (arg != nullptr) {
                         bool nonIndexedArg = findNonIndexedNodes(*arg);
                         nonIndexedArgs |= nonIndexedArg;
                         indexedPath |= !nonIndexedArg;
@@ -325,17 +320,17 @@ namespace CppAD {
                 if (indexedPath && nonIndexedArgs) {
                     for (size_t a = 0; a < size; a++) {
                         OperationNode<Base>* arg = args[a].getOperation();
-                        if (arg != NULL && arg->getColor() == 1) {// must be a non indexed expression
+                        if (arg != nullptr && arg->getColor() == 1) {// must be a non indexed expression
                             CGOpCode op = arg->getOperationType();
                             if (op != CGInvOp && op != CGTmpDclOp) {// no point in moving just one variable outside
 
                                 if (op == CGLoopIndexedTmpOp) {
                                     // must not place a CGLoopIndexedTmpOp operation outside the loop
                                     Argument<Base> assignArg = arg->getArguments()[1];
-                                    if (assignArg.getOperation() != NULL) { // no point in moving a constant value outside
+                                    if (assignArg.getOperation() != nullptr) { // no point in moving a constant value outside
                                         OperationNode<Base>* assignNode = new OperationNode<Base>(CGAssignOp, assignArg);
                                         handler_.manageOperationNodeMemory(assignNode);
-                                        arg->getArguments()[1] = Argument<Base>(*assignNode);
+                                        arg->getArguments()[1] = *assignNode;
                                         nonIndexed_.insert(assignNode);
                                     }
                                 } else {
@@ -377,7 +372,7 @@ namespace CppAD {
                 }
             }
 
-            return NULL;
+            return nullptr;
         }
 
         template<class Base>
@@ -386,10 +381,7 @@ namespace CppAD {
                                                               size_t maxIter,
                                                               IndexOperationNode<Base>& iterationIndexOp) {
             std::vector<size_t> info = createIndexConditionExpression(iterations, usedIter, maxIter);
-            std::vector<Argument<Base> > args(1);
-            args[0] = Argument<Base>(iterationIndexOp);
-
-            return new OperationNode<Base>(CGIndexCondExprOp, info, args);
+            return new OperationNode<Base>(CGIndexCondExprOp, info,{iterationIndexOp});
         }
 
         std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
@@ -475,7 +467,7 @@ namespace CppAD {
             }
 
             IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
-            bool reusingIfElse = ifElseBranches != NULL;
+            bool reusingIfElse = ifElseBranches != nullptr;
             if (!reusingIfElse) {
                 size_t s = ifElses.size();
                 ifElses.resize(s + 1);
@@ -485,8 +477,8 @@ namespace CppAD {
             /**
              * create/change each if/else branch
              */
-            OperationNode<Base>* ifStart = NULL;
-            OperationNode<Base>* ifBranch = NULL;
+            OperationNode<Base>* ifStart = nullptr;
+            OperationNode<Base>* ifBranch = nullptr;
             Argument<Base> nextBranchArg;
             set<size_t> usedIter;
 
@@ -504,25 +496,25 @@ namespace CppAD {
                 if (reusingIfElse) {
                     //reuse existing node
                     ifBranch = ifElseBranches->firstIt2Branch.at(pos).node;
-                    if (nextBranchArg.getOperation() != NULL)
+                    if (nextBranchArg.getOperation() != nullptr)
                         ifBranch->getArguments().push_back(nextBranchArg);
 
                 } else if (usedIter.size() + iterCount == nLocalIter) {
                     // all other iterations: ELSE
-                    ifBranch = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifBranch), nextBranchArg);
+                    ifBranch = new OperationNode<Base>(CGElseOp,{Argument<Base>(*ifBranch), nextBranchArg});
                     handler.manageOperationNodeMemory(ifBranch);
                 } else {
                     // depends on the iteration index
                     OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
                     handler.manageOperationNodeMemory(cond);
 
-                    if (ifStart == NULL) {
+                    if (ifStart == nullptr) {
                         // IF
-                        ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                        ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
                         ifBranch = ifStart;
                     } else {
                         // ELSE IF
-                        ifBranch = new OperationNode<Base>(CGElseIfOp, Argument<Base>(*ifBranch), Argument<Base>(*cond), nextBranchArg);
+                        ifBranch = new OperationNode<Base>(CGElseIfOp,{*ifBranch, *cond, nextBranchArg});
                     }
 
                     handler.manageOperationNodeMemory(ifBranch);
@@ -537,21 +529,19 @@ namespace CppAD {
                 if (printResult) {
                     PrintOperationNode<Base>* printNode = new PrintOperationNode<Base>("__________", asArgument(branchData.value), "\n");
                     handler.manageOperationNodeMemory(printNode);
-                    value = Argument<Base>(*printNode);
+                    value = *printNode;
                 } else {
                     value = asArgument(branchData.value);
                 }
 
-                std::vector<size_t> ainfo(2);
-                ainfo[0] = handler.addLoopDependentIndexPattern(*pattern); // dependent index pattern location
-                ainfo[1] = 1; // assignOrAdd
-                std::vector<Argument<Base> > indexedArgs(2);
-                indexedArgs[0] = value; // indexed expression
-                indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+                // {dependent index pattern location, assignOrAdd}
+                std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(*pattern), 1};
+                // {indexed expression, dependency on the index}
+                std::vector<Argument<Base> > indexedArgs{value, iterationIndexOp};
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
 
-                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{Argument<Base>(*ifBranch), Argument<Base>(*yIndexed)});
                 handler.manageOperationNodeMemory(ifAssign);
                 nextBranchArg = Argument<Base>(*ifAssign);
 
@@ -568,7 +558,7 @@ namespace CppAD {
             if (reusingIfElse) {
                 ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
             } else {
-                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
+                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifBranch, nextBranchArg});
                 handler.manageOperationNodeMemory(ifElseBranches->endIf);
             }
 
@@ -596,7 +586,7 @@ namespace CppAD {
             firstIt2Count2Iterations[pos] = make_pair(1, iterations);
 
             IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
-            bool reusingIfElse = ifElseBranches != NULL;
+            bool reusingIfElse = ifElseBranches != nullptr;
             if (!reusingIfElse) {
                 size_t s = ifElses.size();
                 ifElses.resize(s + 1);
@@ -606,7 +596,7 @@ namespace CppAD {
             /**
              * create/change each if/else branch
              */
-            OperationNode<Base>* ifBranch = NULL;
+            OperationNode<Base>* ifBranch = nullptr;
 
             if (reusingIfElse) {
                 //reuse existing node
@@ -618,22 +608,21 @@ namespace CppAD {
                 OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
                 handler.manageOperationNodeMemory(cond);
 
-                ifBranch = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                ifBranch = new OperationNode<Base>(CGStartIfOp, *cond);
                 handler.manageOperationNodeMemory(ifBranch);
             }
 
-            std::vector<size_t> ainfo(2);
-            ainfo[0] = handler.addLoopDependentIndexPattern(pattern); // dependent index pattern location
-            ainfo[1] = 1; // assignOrAdd
-            std::vector<Argument<Base> > indexedArgs(2);
-            indexedArgs[0] = asArgument(ddfdxdx); // indexed expression
-            indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+            // {dependent index pattern location, assignOrAdd}
+            std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(pattern), 1};
+            // {indexed expression, dependency on the index}
+            std::vector<Argument<Base> > indexedArgs{asArgument(ddfdxdx), iterationIndexOp};
+            
             OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
             handler.manageOperationNodeMemory(yIndexed);
 
-            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifBranch), Argument<Base>(*yIndexed));
+            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifBranch, *yIndexed});
             handler.manageOperationNodeMemory(ifAssign);
-            Argument<Base> nextBranchArg = Argument<Base>(*ifAssign);
+            Argument<Base> nextBranchArg = *ifAssign;
 
             if (!reusingIfElse) {
                 IfBranchInfo<Base>& branch = ifElseBranches->firstIt2Branch[pos]; // creates a new if branch
@@ -647,7 +636,7 @@ namespace CppAD {
             if (reusingIfElse) {
                 ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
             } else {
-                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifBranch), nextBranchArg);
+                ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifBranch, nextBranchArg});
                 handler.manageOperationNodeMemory(ifElseBranches->endIf);
             }
 
@@ -698,7 +687,7 @@ namespace CppAD {
                 firstIt2Count2Iterations[pos] = make_pair(*iterations.begin(), iterations);
 
                 IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
-                bool reusingIfElse = ifElseBranches != NULL;
+                bool reusingIfElse = ifElseBranches != nullptr;
                 if (!reusingIfElse) {
                     size_t s = ifElses.size();
                     ifElses.resize(s + 1);
@@ -716,20 +705,19 @@ namespace CppAD {
                     OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, iterCount - 1, iterationIndexOp);
                     handler.manageOperationNodeMemory(cond);
 
-                    ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                    ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
                     handler.manageOperationNodeMemory(ifStart);
                 }
 
-                std::vector<size_t> ainfo(2);
-                ainfo[0] = handler.addLoopDependentIndexPattern(*pattern); // dependent index pattern location
-                ainfo[1] = assignOrAdd;
-                std::vector<Argument<Base> > indexedArgs(2);
-                indexedArgs[0] = asArgument(value); // indexed expression
-                indexedArgs[1] = Argument<Base>(iterationIndexOp); // dependency on the index
+                // {dependent index pattern location, }
+                std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(*pattern), assignOrAdd};
+                // {indexed expression, dependency on the index} 
+                std::vector<Argument<Base> > indexedArgs{asArgument(value), iterationIndexOp};
+
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
 
-                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*yIndexed));
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *yIndexed});
                 handler.manageOperationNodeMemory(ifAssign);
 
                 if (!reusingIfElse) {
@@ -740,13 +728,13 @@ namespace CppAD {
                 }
 
                 if (reusingIfElse) {
-                    ifElseBranches->endIf->getArguments().push_back(Argument<Base>(*ifAssign));
+                    ifElseBranches->endIf->getArguments().push_back(*ifAssign);
                 } else {
-                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+                    ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifStart, *ifAssign});
                     handler.manageOperationNodeMemory(ifElseBranches->endIf);
                 }
 
-                IndexPattern* p = NULL;
+                IndexPattern* p = nullptr;
                 return make_pair(handler.createCG(Argument<Base>(*ifElseBranches->endIf)), p);
             }
 
@@ -759,8 +747,8 @@ namespace CppAD {
         public:
 
             inline ArrayElementCopyPattern() :
-                resultPattern(NULL),
-                compressedPattern(NULL) {
+                resultPattern(nullptr),
+                compressedPattern(nullptr) {
             }
 
             inline ArrayElementCopyPattern(IndexPattern* resultPat,
@@ -993,7 +981,7 @@ namespace CppAD {
 
                         CodeHandler<Base>::findRandomIndexPatterns(group->pattern.get(), indexRandomPatterns);
 
-                        if (group->startLocPattern.get() != NULL) {
+                        if (group->startLocPattern.get() != nullptr) {
                             CodeHandler<Base>::findRandomIndexPatterns(group->startLocPattern.get(), indexRandomPatterns);
 
                         } else {
@@ -1106,7 +1094,7 @@ namespace CppAD {
 
                         string indent = itCount == 1 ? "   " : "      "; //indentation
 
-                        if (group->startLocPattern.get() != NULL) {
+                        if (group->startLocPattern.get() != nullptr) {
                             // determine hessRowStart = f(it)
                             out << indent << "outLocal[0] = &" << resultName << "[" << CLanguage<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
                         } else {
@@ -1128,7 +1116,7 @@ namespace CppAD {
                             out << "(" << key << ", " << loopFArgs << ");\n";
                         }
 
-                        if (group->startLocPattern.get() == NULL) {
+                        if (group->startLocPattern.get() == nullptr) {
                             CPPADCG_ASSERT_UNKNOWN(!group->elCount2elements.m.empty());
 
                             std::set<size_t> usedIter;
@@ -1187,7 +1175,7 @@ namespace CppAD {
 
                         out << "\n";
 
-                        lastCompressed = group->startLocPattern.get() == NULL;
+                        lastCompressed = group->startLocPattern.get() == nullptr;
                     }
                 }
 

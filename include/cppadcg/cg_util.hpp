@@ -409,16 +409,16 @@ namespace CppAD {
      * Finds the first non-null code handler
      * 
      * @param ty The array to search in
-     * @return The first code handler found or NULL if none was found
+     * @return The first code handler found or nullptr if none was found
      */
     template<class Base>
     inline CodeHandler<Base>* findHandler(const vector<CG<Base> >& ty) {
         for (size_t i = 0; i < ty.size(); i++) {
-            if (ty[i].getCodeHandler() != NULL) {
+            if (ty[i].getCodeHandler() != nullptr) {
                 return ty[i].getCodeHandler();
             }
         }
-        return NULL;
+        return nullptr;
     }
 
     template<class Base>
@@ -641,7 +641,7 @@ namespace CppAD {
         for (itj = s.begin(); itj != s.end(); ++itj) {
             if (itj != s.begin()) std::cout << " ";
             Base* v = *itj;
-            if (v == NULL) std::cout << "NULL";
+            if (v == nullptr) std::cout << "NULL";
             else print(*v);
         }
         std::cout << "]";

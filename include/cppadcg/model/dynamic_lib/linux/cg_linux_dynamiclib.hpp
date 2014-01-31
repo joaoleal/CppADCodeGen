@@ -40,7 +40,7 @@ namespace CppAD {
 
         LinuxDynamicLib(const std::string& dynLibName) :
             _dynLibName(dynLibName),
-            _dynLibHandle(NULL) {
+            _dynLibHandle(nullptr) {
 
             std::string path;
             if (dynLibName[0] == '/') {
@@ -54,7 +54,7 @@ namespace CppAD {
 
             // load the dynamic library
             _dynLibHandle = dlopen(path.c_str(), RTLD_NOW);
-            CPPADCG_ASSERT_KNOWN(_dynLibHandle != NULL, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
+            CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
 
             // validate the dynamic library
             validate();
@@ -67,7 +67,7 @@ namespace CppAD {
         virtual LinuxDynamicLibModel<Base>* model(const std::string& modelName) {
             typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
             if (it == _modelNames.end()) {
-                return NULL;
+                return nullptr;
             }
             LinuxDynamicLibModel<Base>* m = new LinuxDynamicLibModel<Base> (this, modelName);
             _models.insert(m);
@@ -83,7 +83,7 @@ namespace CppAD {
 
             if (required) {
                 char *err = dlerror();
-                if (err != NULL)
+                if (err != nullptr)
                     throw CGException("Failed to load function '" + functionName + "': " + err);
             }
 
@@ -97,9 +97,9 @@ namespace CppAD {
                 model->modelLibraryClosed();
             }
 
-            if (_dynLibHandle != NULL) {
+            if (_dynLibHandle != nullptr) {
                 dlclose(_dynLibHandle);
-                _dynLibHandle = NULL;
+                _dynLibHandle = nullptr;
             }
         }
 
@@ -122,7 +122,7 @@ namespace CppAD {
             void (*modelsFunc)(char const *const**, int*);
             *(void **) (&modelsFunc) = loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS);
 
-            char const*const* model_names = NULL;
+            char const*const* model_names = nullptr;
             int model_count;
             (*modelsFunc)(&model_names, &model_count);
 

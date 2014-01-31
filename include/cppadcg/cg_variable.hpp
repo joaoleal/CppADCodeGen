@@ -19,17 +19,17 @@ namespace CppAD {
 
     template<class Base>
     inline bool CG<Base>::isVariable() const {
-        return opNode_ != NULL;
+        return opNode_ != nullptr;
     }
 
     template<class Base>
     inline bool CG<Base>::isParameter() const {
-        return opNode_ == NULL;
+        return opNode_ == nullptr;
     }
 
     template<class Base>
     inline bool CG<Base>::isValueDefined() const {
-        return value_ != NULL;
+        return value_ != nullptr;
     }
 
     template<class Base>
@@ -43,7 +43,7 @@ namespace CppAD {
 
     template<class Base>
     inline void CG<Base>::setValue(const Base& b) {
-        if (value_ != NULL) {
+        if (value_ != nullptr) {
             *value_ = b;
         } else {
             value_ = new Base(b);
@@ -62,18 +62,18 @@ namespace CppAD {
 
     template<class Base>
     inline void CG<Base>::makeParameter(const Base &b) {
-        opNode_ = NULL;
-        handler_ = NULL;
+        opNode_ = nullptr;
+        handler_ = nullptr;
         setValue(b);
     }
 
     template<class Base>
     inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation) {
-        CPPADCG_ASSERT_UNKNOWN(operation != NULL);
+        CPPADCG_ASSERT_UNKNOWN(operation != nullptr);
         opNode_ = operation;
         handler_ = &handler;
         delete value_;
-        value_ = NULL;
+        value_ = nullptr;
 
         handler.manageOperationNode(operation);
     }
@@ -85,7 +85,7 @@ namespace CppAD {
 
     template<class Base>
     inline Argument<Base> CG<Base>::argument() const {
-        if (opNode_ != NULL)
+        if (opNode_ != nullptr)
             return Argument<Base> (*opNode_);
         else
             return Argument<Base> (*value_);

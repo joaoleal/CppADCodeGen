@@ -68,7 +68,6 @@ namespace CppAD {
                                    bool pipe = false,
                                    const std::string& message = "") throw (CGException);
 
-        inline double currentTime();
     }
 }
 

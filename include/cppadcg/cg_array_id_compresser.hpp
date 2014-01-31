@@ -49,7 +49,7 @@ namespace CppAD {
          *                     array
          */
         inline ArrayIdCompresser(size_t maxArraySize) :
-            _tmpArrayValues(maxArraySize, NULL),
+            _tmpArrayValues(maxArraySize, nullptr),
             _idArrayCount(1) {
         }
 
@@ -99,7 +99,7 @@ namespace CppAD {
             const std::vector<Argument<Base> >& args = newArray.getArguments();
             for (size_t i = 0; i < args.size(); i++) {
                 const OperationNode<Base>* argOp = args[i].getOperation();
-                if (argOp != NULL && argOp->getOperationType() == CGArrayElementOp) {
+                if (argOp != nullptr && argOp->getOperationType() == CGArrayElementOp) {
                     const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
                     CPPADCG_ASSERT_UNKNOWN(otherArray.getVariableID() > 0); // make sure it had already been assigned space
                     size_t otherArrayStart = otherArray.getVariableID() - 1;
@@ -212,9 +212,9 @@ namespace CppAD {
 
         inline static bool isSameArrayElement(const Argument<Base>* oldArg,
                                               const Argument<Base>& arg) {
-            if (oldArg != NULL) {
-                if (oldArg->getParameter() != NULL) {
-                    if (arg.getParameter() != NULL) {
+            if (oldArg != nullptr) {
+                if (oldArg->getParameter() != nullptr) {
+                    if (arg.getParameter() != nullptr) {
                         return (*arg.getParameter() == *oldArg->getParameter());
                     }
                 } else {

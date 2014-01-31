@@ -59,7 +59,7 @@ namespace CppAD {
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool posIndepCode,
-                                    JobTimer* timer = NULL) = 0;
+                                    JobTimer* timer = nullptr) = 0;
 
         /**
          * Creates a dynamic library from the previously compiled object files
@@ -67,7 +67,7 @@ namespace CppAD {
          * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library,
-                                  JobTimer* timer = NULL) = 0;
+                                  JobTimer* timer = nullptr) = 0;
 
         /**
          * Deletes the previously compiled object files and clears of files

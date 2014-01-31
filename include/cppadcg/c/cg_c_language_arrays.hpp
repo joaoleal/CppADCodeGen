@@ -131,7 +131,7 @@ namespace CppAD {
         std::ostringstream arrayAssign;
 
         const Argument<Base>& ref = args[starti];
-        if (ref.getOperation() != NULL) {
+        if (ref.getOperation() != nullptr) {
             // 
             const OperationNode<Base>& refOp = *ref.getOperation();
             if (refOp.getOperationType() == CGInvOp) {
@@ -142,7 +142,7 @@ namespace CppAD {
                     if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
                         break; // no assignment needed
 
-                    if (args[i].getOperation() == NULL ||
+                    if (args[i].getOperation() == nullptr ||
                             args[i].getOperation()->getOperationType() != CGInvOp ||
                             !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), *args[i].getOperation())) {
                         break;
@@ -177,7 +177,7 @@ namespace CppAD {
                     if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
                         break; // no assignment needed
 
-                    if (args[i].getOperation() == NULL ||
+                    if (args[i].getOperation() == nullptr ||
                             args[i].getOperation()->getOperationType() != CGLoopIndexedIndepOp) {
                         break; // not an independent index pattern
                     }
@@ -226,12 +226,12 @@ namespace CppAD {
              */
             const Base& value = *args[0].getParameter();
             for (; i < argSize; i++) {
-                if (args[i].getParameter() == NULL || *args[i].getParameter() != value) {
+                if (args[i].getParameter() == nullptr || *args[i].getParameter() != value) {
                     break; // not the same constant value
                 }
 
                 const Argument<Base>* oldArg = tmpArrayValues[startPos + i];
-                if (oldArg != NULL && oldArg->getParameter() != NULL && *oldArg->getParameter() == value) {
+                if (oldArg != nullptr && oldArg->getParameter() != nullptr && *oldArg->getParameter() == value) {
                     break; // values are the same (no need to redefine)
                 }
             }
@@ -269,7 +269,7 @@ namespace CppAD {
     template<class Base>
     void CLanguage<Base>::printArrayElementOp(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-        CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != NULL, "Invalid argument for array element operation");
+        CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
         CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
 
         OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
@@ -330,11 +330,11 @@ namespace CppAD {
 
         if (ty.getOperationType() == CGArrayCreationOp) {
             for (size_t i = 0; i < tySize; i++) {
-                _tmpArrayValues[id - 1 + i] = NULL;
+                _tmpArrayValues[id - 1 + i] = nullptr;
             }
         } else {
             for (size_t i = 0; i < tySize; i++) {
-                _tmpSparseArrayValues[id - 1 + i] = NULL;
+                _tmpSparseArrayValues[id - 1 + i] = nullptr;
             }
         }
     }

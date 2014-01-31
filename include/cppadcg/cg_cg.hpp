@@ -25,9 +25,9 @@ namespace CppAD {
     template<class Base>
     class CG {
     private:
-        // the source code handler (NULL for parameters)
+        // the source code handler (nullptr for parameters)
         CodeHandler<Base>* handler_;
-        // the source code that generated this variable (NULL for parameters)
+        // the source code that generated this variable (nullptr for parameters)
         OperationNode<Base>* opNode_;
         // value (constant parameters only)
         Base* value_;

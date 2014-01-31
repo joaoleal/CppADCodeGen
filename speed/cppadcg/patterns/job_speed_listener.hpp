@@ -21,37 +21,38 @@ namespace CppAD {
 
     class JobSpeedListener : public JobListener {
     public:
+        typedef JobListener::duration duration;
         // pattern detection
-        double patternDection;
+        duration patternDection;
         // pattern detection
-        double graphGen;
+        duration graphGen;
         // total time used for source code generation
-        double srcCodeGen;
+        duration srcCodeGen;
         // source code compilation
-        double srcCodeComp;
+        duration srcCodeComp;
         // compilation of the dynamic library
-        double dynLibComp;
+        duration dynLibComp;
         // JIT preparation time
-        double jit;
+        duration jit;
         // total time used to compile the sources and generate the library
-        double totalLibrary;
+        duration totalLibrary;
     public:
         JobSpeedListener();
 
         inline void reset() {
-            patternDection = 0;
-            graphGen = 0;
-            srcCodeGen = 0;
-            srcCodeComp = 0;
-            dynLibComp = 0;
-            jit = 0;
-            totalLibrary = 0;
+            patternDection = duration(0);
+            graphGen = duration(0);
+            srcCodeGen = duration(0);
+            srcCodeComp = duration(0);
+            dynLibComp = duration(0);
+            jit = duration(0);
+            totalLibrary = duration(0);
         }
 
-        virtual void jobStarted(const std::vector<Job>& job) throw(CGException);
+        virtual void jobStarted(const std::vector<Job>& job) throw (CGException) override;
 
         virtual void jobEndended(const std::vector<Job>& job,
-                                 double elapsed) throw(CGException);
+                                 duration elapsed) throw (CGException) override;
     };
 
 }

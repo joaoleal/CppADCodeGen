@@ -41,7 +41,7 @@ namespace CppAD {
     void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& functionName) throw (CppAD::TestException) {
         void* functor = dlsym(libHandle, functionName.c_str());
         char *error;
-        if ((error = dlerror()) != NULL) {
+        if ((error = dlerror()) != nullptr) {
             throw CppAD::TestException(error);
         }
         return functor;
@@ -80,7 +80,7 @@ namespace CppAD {
              */
             std::string linker = "-Wl,-soname," + library;
             execl("/usr/bin/gcc", "gcc", "-x", "c", "-O0", "-pipe", "-", "-fPIC", "-shared",
-                  linker.c_str(), "-o", library.c_str(), (char *) NULL);
+                  linker.c_str(), "-o", library.c_str(), (char *) nullptr);
 
             exit(0);
         }
@@ -173,7 +173,7 @@ namespace CppAD {
 
         void* libHandle = loadLibrary(library);
 
-        int (*fn)(const double*, double*) = NULL;
+        int (*fn)(const double*, double*) = nullptr;
 
         try {
             *(void **) (&fn) = getFunction(libHandle, function);
@@ -296,7 +296,7 @@ namespace CppAD {
 
         void* libHandle = loadLibrary(library);
 
-        int (*fn)(const double*, double*) = NULL;
+        int (*fn)(const double*, double*) = nullptr;
 
         try {
             *(void **) (&fn) = getFunction(libHandle, functionJac);

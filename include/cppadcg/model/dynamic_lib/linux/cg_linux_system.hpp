@@ -20,7 +20,6 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
-#include <sys/time.h>
 
 namespace CppAD {
 
@@ -102,7 +101,7 @@ namespace CppAD {
                     }
                     args2[i][s - 1] = '\0';
                 }
-                args2[args.size()] = (char *) NULL; // END             
+                args2[args.size()] = (char *) nullptr; // END             
 
                 execv(executable.c_str(), &args2[0]);
 
@@ -150,12 +149,6 @@ namespace CppAD {
             }
         }
 
-        inline double currentTime() {
-            struct timeval time;
-            gettimeofday(&time, NULL);
-
-            return time.tv_sec + ((double) time.tv_usec) / 1000000.0;
-        }
     }
 }
 #endif

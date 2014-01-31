@@ -26,6 +26,7 @@ namespace CppAD {
         typedef double Base;
         typedef CppAD::CG<Base> CGD;
         typedef CppAD::AD<CGD> ADCGD;
+        typedef std::chrono::steady_clock::duration duration;
     private:
 
         template<class T>
@@ -89,13 +90,13 @@ namespace CppAD {
         bool verbose_;
         size_t nTimes_;
     private:
-        std::vector<double> patternDection_; /// pattern detection
-        std::vector<double> graphGen_; //
-        std::vector<double> srcCodeGen_; /// source code generation
-        std::vector<double> srcCodeComp_; /// source code compilation
-        std::vector<double> dynLibComp_; /// compilation of the dynamic library
-        std::vector<double> jit_; /// compilation of the dynamic library
-        std::vector<double> total_; /// total time
+        std::vector<duration> patternDection_; /// pattern detection
+        std::vector<duration> graphGen_; //
+        std::vector<duration> srcCodeGen_; /// source code generation
+        std::vector<duration> srcCodeComp_; /// source code compilation
+        std::vector<duration> dynLibComp_; /// compilation of the dynamic library
+        std::vector<duration> jit_; /// compilation of the dynamic library
+        std::vector<duration> total_; /// total time
     public:
 
         inline PatternSpeedTest(const std::string& libName,
@@ -196,6 +197,7 @@ namespace CppAD {
 
         inline void measureSpeedCppADCG(size_t repeat,
                                         const std::vector<Base>& xb) {
+            using namespace std::chrono;
             using namespace CppAD;
 
             /*******************************************************************
@@ -214,12 +216,12 @@ namespace CppAD {
             /**
              * preparation
              */
-            std::vector<double> dt(cppADCG ? (preparation ? nTimes_ : 1) : 0);
+            std::vector<duration> dt(cppADCG ? (preparation ? nTimes_ : 1) : 0);
             for (size_t i = 0; i < dt.size(); i++) {
                 // tape
-                double t0 = system::currentTime();
+                auto t0 = steady_clock::now();
                 fun.reset(tapeModel(model, xb, repeat));
-                dt[i] = system::currentTime() - t0;
+                dt[i] = steady_clock::now() - t0;
 
                 // create dynamic lib
                 createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
@@ -238,6 +240,7 @@ namespace CppAD {
                                                size_t repeat,
                                                const std::vector<Base>& xb) {
             using namespace CppAD;
+            using namespace std::chrono;
 
             std::string head = "\n"
                     "********************************************************************************\n"
@@ -252,12 +255,12 @@ namespace CppAD {
             /**
              * preparation
              */
-            std::vector<double> dt(cppADCGLoops ? (preparation ? nTimes_ : 1) : 0);
+            std::vector<duration> dt(cppADCGLoops ? (preparation ? nTimes_ : 1) : 0);
             for (size_t i = 0; i < dt.size(); i++) {
                 // tape
-                double t0 = system::currentTime();
+                auto t0 = steady_clock::now();
                 fun.reset(tapeModel(model, xb, repeat));
-                dt[i] = system::currentTime() - t0;
+                dt[i] = steady_clock::now() - t0;
 
                 // create dynamic lib
                 createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
@@ -296,7 +299,7 @@ namespace CppAD {
              * preparation
              */
             //create source code
-            if (modelSourceGen_.get() == NULL) {
+            if (modelSourceGen_.get() == nullptr) {
                 listener_.reset();
                 // tape
                 ModelCppADCG model(*this);
@@ -346,18 +349,22 @@ namespace CppAD {
         }
 
         static void printStat(const std::string& title,
-                              const std::vector<double>& times) {
+                              const std::vector<duration>& times) {
             std::cout << std::setw(30) << title << ": ";
             printStat(times);
             std::cout << std::endl;
 
             std::cerr << std::setw(30) << title << ": ";
             for (size_t i = 0; i < times.size(); i++)
-                std::cerr << std::setw(12) << times[i] << " ";
+                std::cerr << std::setw(12) << std::chrono::duration<double>(times[i]).count() << " ";
             std::cerr << std::endl;
         }
 
-        static void printStat(const std::vector<double>& times) {
+        static void printStat(const std::vector<duration>& dtimes) {
+            std::vector<double> times(dtimes.size());
+            for (size_t i = 0; i < times.size(); i++)
+                times[i] = std::chrono::duration<double>(dtimes[i]).count();
+
             double min, q25, median, q75, max;
             if (times.empty()) {
                 min = q25 = median = q75 = max = std::numeric_limits<double>::quiet_NaN();
@@ -405,6 +412,8 @@ namespace CppAD {
 
         inline void measureSpeedCppAD(size_t repeat,
                                       const std::vector<Base>& xb) {
+            using namespace std::chrono;
+
             std::string head = "\n"
                     "********************************************************************************\n"
                     "CppAD\n"
@@ -420,17 +429,17 @@ namespace CppAD {
              * preparation
              */
             size_t nTimes = cppAD && preparation ? nTimes_ : 1;
-            std::vector<double> dt1(nTimes), dt2(nTimes);
+            std::vector<duration> dt1(nTimes), dt2(nTimes);
             for (size_t i = 0; i < nTimes; i++) {
                 // tape
-                double t0 = system::currentTime();
+                auto t0 = steady_clock::now();
                 fun.reset(tapeModel(model, xb, repeat));
-                dt1[i] = system::currentTime() - t0;
+                dt1[i] = steady_clock::now() - t0;
 
                 // optimize tape
-                t0 = system::currentTime();
+                t0 = steady_clock::now();
                 fun->optimize();
-                dt2[i] = system::currentTime() - t0;
+                dt2[i] = steady_clock::now() - t0;
             }
             printStat("model tape", dt1);
             printStat("optimize tape", dt2);
@@ -559,7 +568,7 @@ namespace CppAD {
             dynamicLib_.reset(p.createDynamicLibrary(compiler, loadLib));
             if (loadLib) {
                 model_.reset(dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")));
-                assert(model_.get() != NULL);
+                assert(model_.get() != nullptr);
                 for (size_t i = 0; i < externalModels_.size(); i++)
                     model_->addExternalModel(*externalModels_[i]);
             }
@@ -597,7 +606,7 @@ namespace CppAD {
              */
             llvmLib_.reset(LlvmModelLibraryProcessor<Base>::create(*libSourceGen_.get()));
             model_.reset(llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"))); //must request model
-            assert(model_.get() != NULL);
+            assert(model_.get() != nullptr);
             for (size_t i = 0; i < externalModels_.size(); i++)
                 model_->addExternalModel(*externalModels_[i]);
 
@@ -610,17 +619,18 @@ namespace CppAD {
                                           bool zero = true,
                                           bool jacobian = true,
                                           bool hessian = true) {
+            using namespace std::chrono;
 
             // model (zero-order)
             if (zero) {
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (eval && zeroOrder) {
                     dt.resize(nTimes_);
                     std::vector<double> y(model_->Range());
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         model_->ForwardZero(x, y);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result
@@ -629,16 +639,16 @@ namespace CppAD {
 
             // Jacobian
             if (jacobian) {
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (eval && sparseJacobian) {
                     dt.resize(nTimes_);
                     std::vector<double> jac;
                     std::vector<size_t> rows, cols;
 
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         model_->SparseJacobian(x, jac, rows, cols);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result
@@ -647,7 +657,7 @@ namespace CppAD {
 
             // Hessian
             if (hessian) {
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (eval && sparseHessian) {
                     dt.resize(nTimes_);
                     std::vector<double> w(model_->Range(), 1.0);
@@ -655,9 +665,9 @@ namespace CppAD {
                     std::vector<size_t> rows, cols;
 
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         model_->SparseHessian(x, w, hess, rows, cols);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result
@@ -671,16 +681,18 @@ namespace CppAD {
                                         bool zero = true,
                                         bool jacobian = true,
                                         bool hessian = true) {
+            using namespace std::chrono;
+
             // model (zero-order)
             if (zero) {
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (cppAD && zeroOrder) {
                     std::vector<double> y(fun.Range());
                     dt.resize(nTimes_);
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         y = fun.Forward(0, x);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result
@@ -690,17 +702,17 @@ namespace CppAD {
             // Jacobian
             if (jacobian) {
                 size_t nTimes = cppAD ? (preparation ? nTimes_ : sparseJacobian ? 1 : 0) : 0;
-                std::vector<double> dtp(nTimes);
+                std::vector<duration> dtp(nTimes);
 
                 std::vector<std::set<size_t> > sparsity;
                 for (size_t i = 0; i < dtp.size(); i++) {
-                    double t0 = system::currentTime();
+                    auto t0 = steady_clock::now();
                     sparsity = CppAD::extra::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                    dtp[i] = system::currentTime() - t0;
+                    dtp[i] = steady_clock::now() - t0;
                 }
                 printStat("jacobian sparsity", dtp);
 
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (cppAD && sparseJacobian) {
                     std::vector<size_t> rows, cols;
                     CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
@@ -709,9 +721,9 @@ namespace CppAD {
                     sparse_jacobian_work work;
                     dt.resize(nTimes_);
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         fun.SparseJacobianReverse(x, sparsity, rows, cols, jac, work);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result
@@ -721,17 +733,17 @@ namespace CppAD {
             // Hessian
             if (hessian) {
                 size_t nTimes = cppAD ? (preparation ? nTimes_ : sparseHessian ? 1 : 0) : 0;
-                std::vector<double> dtp(nTimes);
+                std::vector<duration> dtp(nTimes);
 
                 std::vector<std::set<size_t> > sparsity;
                 for (size_t i = 0; i < dtp.size(); i++) {
-                    double t0 = system::currentTime();
+                    auto t0 = steady_clock::now();
                     sparsity = CppAD::extra::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                    dtp[i] = system::currentTime() - t0;
+                    dtp[i] = steady_clock::now() - t0;
                 }
                 printStat("hessian sparsity", dtp);
 
-                std::vector<double> dt;
+                std::vector<duration> dt;
                 if (cppAD && sparseHessian) {
                     std::vector<size_t> rows, cols;
                     CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
@@ -743,9 +755,9 @@ namespace CppAD {
 
                     dt.resize(nTimes_);
                     for (size_t i = 0; i < nTimes_; i++) {
-                        double t0 = system::currentTime();
+                        auto t0 = steady_clock::now();
                         fun.SparseHessian(x, w, sparsity, rows, cols, hess, work);
-                        dt[i] = system::currentTime() - t0;
+                        dt[i] = steady_clock::now() - t0;
                     }
                 }
                 // save result

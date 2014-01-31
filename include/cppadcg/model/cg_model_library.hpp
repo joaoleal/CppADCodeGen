@@ -38,7 +38,7 @@ namespace CppAD {
          * This object must be released by the user!
          * 
          * @param modelName The model name.
-         * @return The model object (must be released by the user) or NULL if 
+         * @return The model object (must be released by the user) or nullptr if 
          *         no model exists with the provided name 
          */
         virtual GenericModel<Base>* model(const std::string& modelName) = 0;

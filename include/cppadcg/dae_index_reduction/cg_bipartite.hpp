@@ -106,9 +106,9 @@ namespace CppAD {
 
         inline Enode(size_t index) :
             BiPGraphNode<Base>(index),
-            differentiation_(NULL),
-            differentiationOf_(NULL),
-            assign_(NULL) {
+            differentiation_(nullptr),
+            differentiationOf_(nullptr),
+            assign_(nullptr) {
             std::ostringstream s;
             s << *this;
             name_ = s.str();
@@ -116,9 +116,9 @@ namespace CppAD {
 
         inline Enode(size_t index, Enode<Base>* differentiationOf) :
             BiPGraphNode<Base>(index),
-            differentiation_(NULL),
+            differentiation_(nullptr),
             differentiationOf_(differentiationOf),
-            assign_(NULL) {
+            assign_(nullptr) {
             differentiationOf_->setDerivative(this);
             std::ostringstream s;
             s << *this;
@@ -164,7 +164,7 @@ namespace CppAD {
         }
 
         inline Enode<Base>* originalEquation() {
-            if (differentiationOf_ == NULL) {
+            if (differentiationOf_ == nullptr) {
                 return this;
             } else {
                 return differentiationOf_->originalEquation();
@@ -198,7 +198,7 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Enode<Base>& i) {
-        if (i.derivativeOf() != NULL) {
+        if (i.derivativeOf() != nullptr) {
             os << "Diff(" << *i.derivativeOf() << ")";
         } else {
             os << "Equation " << i.index();
@@ -258,9 +258,9 @@ namespace CppAD {
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
-            assign_(NULL),
-            derivative_(NULL),
-            antiDerivative_(NULL),
+            assign_(nullptr),
+            derivative_(nullptr),
+            antiDerivative_(nullptr),
             tapeIndex_(tapeIndex),
             name_(name) {
 
@@ -270,12 +270,12 @@ namespace CppAD {
             BiPGraphNode<Base>(index),
             deleted_(false),
             parameter_(false),
-            assign_(NULL),
-            derivative_(NULL),
+            assign_(nullptr),
+            derivative_(nullptr),
             antiDerivative_(derivativeOf),
             tapeIndex_(tapeIndex),
             name_(name.empty() ? "d" + derivativeOf->name() + "dt" : name) {
-            CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != NULL);
+            CPPADCG_ASSERT_UNKNOWN(antiDerivative_ != nullptr);
 
             antiDerivative_->setDerivative(this);
         }
@@ -311,7 +311,7 @@ namespace CppAD {
         }
 
         inline Vnode<Base>* originalVariable() {
-            if (antiDerivative_ == NULL) {
+            if (antiDerivative_ == nullptr) {
                 return this;
             } else {
                 return antiDerivative_->originalVariable();
@@ -319,7 +319,7 @@ namespace CppAD {
         }
 
         inline Vnode<Base>* originalVariable(size_t origVarSize) {
-            if (antiDerivative_ == NULL || this->index_ < origVarSize) {
+            if (antiDerivative_ == nullptr || this->index_ < origVarSize) {
                 return this;
             } else {
                 return antiDerivative_->originalVariable();
@@ -367,7 +367,7 @@ namespace CppAD {
         }
 
         unsigned int order() const {
-            if (antiDerivative_ == NULL) {
+            if (antiDerivative_ == nullptr) {
                 return 0u;
             } else {
                 return antiDerivative_->order() + 1u;
@@ -395,7 +395,7 @@ namespace CppAD {
 
     template<class Base>
     inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j) {
-        if (j.antiDerivative() != NULL) {
+        if (j.antiDerivative() != nullptr) {
             os << "Diff(" << *j.antiDerivative() << ")";
         } else {
             os << "Variable " << j.name();

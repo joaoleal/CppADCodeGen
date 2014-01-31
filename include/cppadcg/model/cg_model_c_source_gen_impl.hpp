@@ -180,7 +180,7 @@ namespace CppAD {
         matcher.generateTapes(_funNoLoops, _loopTapes);
 
         finishedJob();
-        if (_jobTimer != NULL && _jobTimer->isVerbose()) {
+        if (_jobTimer != nullptr && _jobTimer->isVerbose()) {
             std::cout << " equation patterns: " << matcher.getEquationPatterns().size() <<
                     "  loops: " << matcher.getLoops().size() << std::endl;
         }
@@ -236,7 +236,7 @@ namespace CppAD {
 
     template<class Base>
     const std::map<size_t, std::set<size_t> >& ModelCSourceGen<Base>::getAtomicsIndeps() {
-        if (_atomicsIndeps == NULL) {
+        if (_atomicsIndeps == nullptr) {
             AtomicDependencyLocator<Base> adl(_fun);
             _atomicsIndeps = new std::map<size_t, std::set<size_t> >(adl.findAtomicsUsage());
         }
@@ -560,13 +560,13 @@ namespace CppAD {
     template<class Base>
     void ModelCSourceGen<Base>::startingJob(const std::string& jobName,
                                             const JobType& type) {
-        if (_jobTimer != NULL)
+        if (_jobTimer != nullptr)
             _jobTimer->startingJob(jobName, type);
     }
 
     template<class Base>
     inline void ModelCSourceGen<Base>::finishedJob() {
-        if (_jobTimer != NULL)
+        if (_jobTimer != nullptr)
             _jobTimer->finishedJob();
     }
 

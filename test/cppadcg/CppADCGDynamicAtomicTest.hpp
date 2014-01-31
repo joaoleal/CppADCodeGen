@@ -36,11 +36,11 @@ namespace CppAD {
         inline CppADCGDynamicAtomicTest(const std::string& modelName, bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
             _modelName(modelName),
-            _fun(NULL),
-            _fun2(NULL),
-            _dynamicLib(NULL),
-            _dynamicLib2(NULL),
-            _modelLib(NULL) {
+            _fun(nullptr),
+            _fun2(nullptr),
+            _dynamicLib(nullptr),
+            _dynamicLib2(nullptr),
+            _modelLib(nullptr) {
             //this->verbose_ = true;
         }
 
@@ -59,15 +59,15 @@ namespace CppAD {
 
         virtual void TearDown() {
             delete _dynamicLib;
-            _dynamicLib = NULL;
+            _dynamicLib = nullptr;
             delete _dynamicLib2;
-            _dynamicLib2 = NULL;
+            _dynamicLib2 = nullptr;
             delete _modelLib;
-            _modelLib = NULL;
+            _modelLib = nullptr;
             delete _fun;
-            _fun = NULL;
+            _fun = nullptr;
             delete _fun2;
-            _fun2 = NULL;
+            _fun2 = nullptr;
         }
 
         virtual ~CppADCGDynamicAtomicTest() {
@@ -323,10 +323,10 @@ namespace CppAD {
             using namespace std;
 
             prepareAtomicLibAtomicLib(x, xNorm, eqNorm);
-            ASSERT_TRUE(_modelLib != NULL);
+            ASSERT_TRUE(_modelLib != nullptr);
 
             unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
-            ASSERT_TRUE(modelLibOuter.get() != NULL);
+            ASSERT_TRUE(modelLibOuter.get() != nullptr);
 
             test2LevelAtomicLibModel(_modelLib, modelLibOuter.get(),
                                      x, xNorm, eqNorm, epsilonR, epsilonA);

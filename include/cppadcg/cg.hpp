@@ -40,6 +40,7 @@
 #include <sstream>
 #include <string>
 #include <string.h>
+#include <chrono>
 
 // ---------------------------------------------------------------------------
 // definitions needed by rest of includes

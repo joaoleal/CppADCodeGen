@@ -30,7 +30,7 @@ namespace CppAD {
 
         virtual void create(const std::string& library,
                             const std::set<std::string>& objectFiles,
-                            JobTimer* timer = NULL) = 0;
+                            JobTimer* timer = nullptr) = 0;
 
         inline virtual ~Archiver() {
         };

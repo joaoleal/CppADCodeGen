@@ -31,7 +31,7 @@ namespace CppAD {
     public:
 
         virtual ~LlvmModel() {
-            if (_dynLib != NULL) {
+            if (_dynLib != nullptr) {
                 _dynLib->destroyed(this);
             }
         }
@@ -48,17 +48,17 @@ namespace CppAD {
             FunctorGenericModel<Base>(name),
             _dynLib(dynLib) {
 
-            CPPADCG_ASSERT_UNKNOWN(_dynLib != NULL);
+            CPPADCG_ASSERT_UNKNOWN(_dynLib != nullptr);
 
             this->init();
         }
 
-        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) {
+        virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
             return _dynLib->loadFunction(functionName, required);
         }
 
-        virtual void modelLibraryClosed() {
-            _dynLib = NULL;
+        virtual void modelLibraryClosed() override {
+            _dynLib = nullptr;
             FunctorGenericModel<Base>::modelLibraryClosed();
         }
 

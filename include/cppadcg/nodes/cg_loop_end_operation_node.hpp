@@ -39,7 +39,7 @@ namespace CppAD {
             CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument");
 
             OperationNode<Base>* aNode = args[0].getOperation();
-            CPPADCG_ASSERT_KNOWN(aNode != NULL && aNode->getOperationType() == CGLoopStartOp, "The first argument must be the loop start operation");
+            CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGLoopStartOp, "The first argument must be the loop start operation");
 
             return dynamic_cast<LoopStartOperationNode<Base>&> (*aNode);
         }
@@ -52,7 +52,7 @@ namespace CppAD {
         static inline std::vector<Argument<Base> > createArguments(LoopStartOperationNode<Base>& lstart,
                                                                    const std::vector<Argument<Base> >& endArgs) {
             std::vector<Argument<Base> > args(1 + endArgs.size());
-            args[0] = Argument<Base>(lstart);
+            args[0] = lstart;
             std::copy(endArgs.begin(), endArgs.end(), args.begin() + 1);
             return args;
         }

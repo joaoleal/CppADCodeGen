@@ -44,7 +44,7 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            makeVariable(*handler, new OperationNode<Base>(CGAddOp, argument(), right.argument()));
+            makeVariable(*handler, new OperationNode<Base>(CGAddOp, {argument(), right.argument()}));
             if (isValueDefined() && right.isValueDefined()) {
                 setValue(getValue() + right.getValue());
             }
@@ -75,7 +75,7 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            makeVariable(*handler, new OperationNode<Base>(CGSubOp, argument(), right.argument()));
+            makeVariable(*handler, new OperationNode<Base>(CGSubOp, {argument(), right.argument()}));
             if (isValueDefined() && right.isValueDefined()) {
                 setValue(getValue() - right.getValue());
             }
@@ -116,7 +116,7 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            makeVariable(*handler, new OperationNode<Base>(CGMulOp, argument(), right.argument()));
+            makeVariable(*handler, new OperationNode<Base>(CGMulOp, {argument(), right.argument()}));
             if (isValueDefined() && right.isValueDefined()) {
                 setValue(getValue() * right.getValue());
             }
@@ -151,7 +151,7 @@ namespace CppAD {
                 handler = getCodeHandler();
             }
 
-            makeVariable(*handler, new OperationNode<Base>(CGDivOp, argument(), right.argument()));
+            makeVariable(*handler, new OperationNode<Base>(CGDivOp, {argument(), right.argument()}));
             if (isValueDefined() && right.isValueDefined()) {
                 setValue(getValue() / right.getValue());
             }

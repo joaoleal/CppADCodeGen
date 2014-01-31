@@ -44,7 +44,7 @@ namespace CppAD {
 
         inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
             CppADCGTest(verbose, printValues),
-            model_(NULL),
+            model_(nullptr),
             testZeroOrder_(true),
             testJacobian_(true),
             testHessian_(true),
@@ -56,7 +56,7 @@ namespace CppAD {
         }
 
         virtual void TearDown() {
-            modelMem_.reset(NULL);
+            modelMem_.reset(nullptr);
 
             CppADCGTest::TearDown();
         }
@@ -107,7 +107,7 @@ namespace CppAD {
                                   const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
             using namespace CppAD;
 
-            assert(model_ != NULL);
+            assert(model_ != nullptr);
 
             /**
              * Tape model
@@ -155,7 +155,7 @@ namespace CppAD {
             using namespace CppAD;
 
             assert(!relatedDepCandidates.empty());
-            assert(model_ != NULL);
+            assert(model_ != nullptr);
 
             /**
              * Tape model
@@ -394,7 +394,7 @@ namespace CppAD {
             std::unique_ptr<GenericModel<double> > modelL;
             if (loadModels) {
                 modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
-                ASSERT_TRUE(modelL.get() != NULL);
+                ASSERT_TRUE(modelL.get() != nullptr);
                 for (size_t i = 0; i < atoms_.size(); i++)
                     modelL->addAtomicFunction(*atoms_[i]);
             }

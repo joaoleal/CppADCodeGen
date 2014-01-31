@@ -31,7 +31,7 @@ void JobSpeedListener::jobStarted(const std::vector<Job>& job) throw (CGExceptio
 }
 
 void JobSpeedListener::jobEndended(const std::vector<Job>& job,
-                                   double elapsed) throw (CGException) {
+                                   std::chrono::steady_clock::duration elapsed) throw (CGException) {
     const Job& j = job.back();
 
     if (&j.getType() == &JobTimer::LOOP_DETECTION) {

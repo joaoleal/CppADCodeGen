@@ -56,7 +56,7 @@ namespace CppAD {
 
             _linker.release();
 
-            LlvmModelLibrary3_4<Base>* lib = NULL;
+            LlvmModelLibrary3_4<Base>* lib = nullptr;
 
             this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
 
@@ -96,14 +96,14 @@ namespace CppAD {
 
                     std::string errMsg;
                     error_code ec = MemoryBuffer::getFile(*itbc, buffer);
-                    if (buffer.get() == NULL)
+                    if (buffer.get() == nullptr)
                         throw CGException(ec.message());
 
                     // create the module
                     Module* module = llvm::ParseBitcodeFile(buffer.get(), *_context.get(), &errMsg);
 
                     // link modules together
-                    if (_linker.get() == NULL) {
+                    if (_linker.get() == nullptr) {
                         _linker.reset(new llvm::Linker(module)); // module not destroyed
                     } else {
                         if (_linker->linkInModule(module, &errMsg)) { // module destroyed
@@ -164,7 +164,7 @@ namespace CppAD {
             ArrayRef<const char *> args(argv + 1, // skip program name
                                         argc - 1);
             std::unique_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
-            if (invocation.get() == NULL)
+            if (invocation.get() == nullptr)
                 throw CGException("Failed to create compiler invocation");
             CompilerInvocation::setLangDefaults(*invocation->getLangOpts(), IK_C,
                                                 LangStandard::lang_unspecified);
@@ -181,7 +181,7 @@ namespace CppAD {
 
             // Create memory buffer with source text
             llvm::MemoryBuffer * buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "SIMPLE_BUFFER");
-            if (buffer == NULL)
+            if (buffer == nullptr)
                 throw CGException("Failed to create memory buffer");
 
             // Remap auxiliary name "string-input" to memory buffer
@@ -199,7 +199,7 @@ namespace CppAD {
                 throw CGException("Failed to emit LLVM bitcode");
 
             llvm::Module* module = action->takeModule();
-            if (module == NULL)
+            if (module == nullptr)
                 throw CGException("No module");
 
             /**

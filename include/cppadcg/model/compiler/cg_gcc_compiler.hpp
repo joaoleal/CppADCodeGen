@@ -51,7 +51,7 @@ namespace CppAD {
          * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library,
-                                  JobTimer* timer = NULL) {
+                                  JobTimer* timer = nullptr) override {
 
             std::string linkerFlags = "-Wl,-soname," + system::filenameFromPath(library);
             for (size_t i = 0; i < this->_linkFlags.size(); i++)
@@ -68,7 +68,7 @@ namespace CppAD {
                 args.push_back(*it);
             }
 
-            if (timer != NULL) {
+            if (timer != nullptr) {
                 timer->startingJob("'" + library + "'", JobTimer::COMPILING_DYNAMIC_LIBRARY);
             } else if (this->_verbose) {
                 std::cout << "building library '" << library << "'" << std::endl;
@@ -76,7 +76,7 @@ namespace CppAD {
 
             system::callExecutable(this->_path, args);
 
-            if (timer != NULL) {
+            if (timer != nullptr) {
                 timer->finishedJob();
             }
         }
@@ -92,7 +92,7 @@ namespace CppAD {
          * @param source the content of the source file
          * @param output the compiled output file name (the object file path)
          */
-        virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) {
+        virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) override {
             std::vector<std::string> args;
             args.push_back("gcc");
             args.push_back("-x");

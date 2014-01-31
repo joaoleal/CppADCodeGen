@@ -69,7 +69,7 @@ namespace CppAD {
             dependentIndexes_(dependentOrigIndexes),
             jacSparsity_(false),
             hessSparsity_(false) {
-            CPPADCG_ASSERT_KNOWN(fun != NULL, "fun cannot be NULL");
+            CPPADCG_ASSERT_KNOWN(fun != nullptr, "fun cannot be null");
             CPPADCG_ASSERT_KNOWN(dependentOrigIndexes.size() <= fun->Range(), "invalid size");
 
             for (size_t il = 0; il < dependentIndexes_.size(); il++)
@@ -197,30 +197,30 @@ namespace CppAD {
                 handler.manageOperationNodeMemory(cond);
 
                 // if
-                OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, Argument<Base>(*cond));
+                OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
                 handler.manageOperationNodeMemory(ifStart);
 
 
-                OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, asArgument(value));
+                OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, asArgument(value)});
                 handler.manageOperationNodeMemory(tmpAssign1);
-                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*ifStart), Argument<Base>(*tmpAssign1));
+                OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *tmpAssign1});
                 handler.manageOperationNodeMemory(ifAssign);
 
                 // else
-                OperationNode<Base>* elseStart = new OperationNode<Base>(CGElseOp, Argument<Base>(*ifStart), Argument<Base>(*ifAssign));
+                OperationNode<Base>* elseStart = new OperationNode<Base>(CGElseOp,{*ifStart, *ifAssign});
                 handler.manageOperationNodeMemory(elseStart);
 
-                OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGLoopIndexedTmpOp, tmpArg, Argument<Base>(Base(0)));
+                OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, Base(0)});
                 handler.manageOperationNodeMemory(tmpAssign2);
-                OperationNode<Base>* elseAssign = new OperationNode<Base>(CGCondResultOp, Argument<Base>(*elseStart), Argument<Base>(*tmpAssign2));
+                OperationNode<Base>* elseAssign = new OperationNode<Base>(CGCondResultOp,{*elseStart, *tmpAssign2});
                 handler.manageOperationNodeMemory(elseAssign);
 
                 // end if
-                OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp, Argument<Base>(*elseStart), Argument<Base>(*elseAssign));
+                OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp,{*elseStart, *elseAssign});
                 handler.manageOperationNodeMemory(endIf);
 
                 //
-                OperationNode<Base>* tmpVar = new OperationNode<Base>(CGTmpOp, tmpArg, Argument<Base>(*endIf));
+                OperationNode<Base>* tmpVar = new OperationNode<Base>(CGTmpOp,{tmpArg, *endIf});
                 return handler.createCG(tmpVar);
             }
 
@@ -289,7 +289,7 @@ namespace CppAD {
                     size_t k = inl - mo;
                     const LoopPosition* posK = loop->getTempIndepIndexes(k);
 
-                    if (posK != NULL) {
+                    if (posK != nullptr) {
 
                         for (size_t g = 0; g < nEqGroups; g++) {
                             const IterEquationGroup<Base>& group = eqGroups[g];

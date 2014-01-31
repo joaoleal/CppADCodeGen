@@ -61,7 +61,7 @@ namespace CppAD {
                    const std::vector<Base>& x) :
             DaeIndexReduction<Base>(fun, varInfo),
             x_(x),
-            reducedFun_(NULL),
+            reducedFun_(nullptr),
             origMaxTimeDivOrder_(0),
             origTimeDependentCount_(0),
             timeOrigVarIndex_(-1) {
@@ -196,8 +196,8 @@ namespace CppAD {
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 const Vnode<Base>* jj = vnodes_[j];
                 if (!jj->isParameter() && // exclude constants
-                        (jj->antiDerivative() != NULL || // derivatives
-                        jj->derivative() == NULL) // algebraic variables
+                        (jj->antiDerivative() != nullptr || // derivatives
+                        jj->derivative() == nullptr) // algebraic variables
                         ) {
                     nvar++;
                 }
@@ -222,7 +222,7 @@ namespace CppAD {
          */
         virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
                                                      std::vector<DaeEquationInfo>& equationInfo) throw (CGException) {
-            if (reducedFun_ != NULL)
+            if (reducedFun_ != nullptr)
                 throw CGException("reduceIndex() can only be called once!");
 
             detectSubset2Dif();
@@ -264,9 +264,9 @@ namespace CppAD {
             for (size_t i = origM; i < enodes_.size(); i++) {
                 Enode<Base>* ii = enodes_[i];
                 size_t eqOrder = 0;
-                if (ii->derivative() == NULL) {
+                if (ii->derivative() == nullptr) {
                     Enode<Base>* eq = ii;
-                    while (eq->derivativeOf() != NULL) {
+                    while (eq->derivativeOf() != nullptr) {
                         eq = eq->derivativeOf();
                         eqOrder++;
                     }
@@ -291,7 +291,7 @@ namespace CppAD {
             for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
                 const Vnode<Base>& jj = **j;
                 std::cout << "      " << jj.index() << " - " << jj;
-                if (jj.assigmentEquation() != NULL) {
+                if (jj.assigmentEquation() != nullptr) {
                     std::cout << " assigned to " << *jj.assigmentEquation() << "\n";
                 } else if (jj.isParameter()) {
                     std::cout << " is a parameter (time independent)\n";
@@ -365,7 +365,7 @@ namespace CppAD {
                     typename std::vector<Vnode<Base>*>::const_iterator j;
                     for (j = vnodes_.begin(); j != vnodes_.end(); ++j) {
                         jj = *j;
-                        if (!jj->isDeleted() && jj->derivative() != NULL) {
+                        if (!jj->isDeleted() && jj->derivative() != nullptr) {
                             jj->deleteNode(this->verbosity_);
                         }
                     }
@@ -458,7 +458,7 @@ namespace CppAD {
             // first look for derivative variables
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
-                if (jj->antiDerivative() != NULL && jj->assigmentEquation() == NULL) {
+                if (jj->antiDerivative() != nullptr && jj->assigmentEquation() == nullptr) {
                     jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
                 }
@@ -467,7 +467,7 @@ namespace CppAD {
             // look for algebraic variables
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
-                if (jj->antiDerivative() == NULL && jj->assigmentEquation() == NULL) {
+                if (jj->antiDerivative() == nullptr && jj->assigmentEquation() == nullptr) {
                     jj->setAssigmentEquation(i, this->verbosity_);
                     return true;
                 }
@@ -516,7 +516,7 @@ namespace CppAD {
             for (j = vars.begin(); j != vars.end(); ++j) {
                 Vnode<Base>* jj = *j;
                 newI.addVariable(jj);
-                if (jj->derivative() != NULL) {
+                if (jj->derivative() != nullptr) {
                     newI.addVariable(jj->derivative());
                 }
             }
@@ -535,8 +535,8 @@ namespace CppAD {
             vector<Enode<Base>* > newEqs;
             size_t origM = this->fun_->Range();
             for (size_t i = 0; i < origM; i++) {
-                if (enodes_[i]->derivative() != NULL) {
-                    CPPADCG_ASSERT_UNKNOWN(enodes_[i]->derivativeOf() == NULL);
+                if (enodes_[i]->derivative() != nullptr) {
+                    CPPADCG_ASSERT_UNKNOWN(enodes_[i]->derivativeOf() == nullptr);
                     newEqs.push_back(enodes_[i]->derivative());
                 }
             }
@@ -546,7 +546,7 @@ namespace CppAD {
                 newEqs.clear();
                 vector<Enode<Base>*>& eqs = newEquations.back();
                 for (size_t i = 0; i < eqs.size(); i++) {
-                    if (eqs[i]->derivative() != NULL) {
+                    if (eqs[i]->derivative() != nullptr) {
                         newEqs.push_back(eqs[i]->derivative());
                     }
                 }
@@ -560,7 +560,7 @@ namespace CppAD {
             /**
              * Add the relationship between variables and derivatives
              */
-            CPPADCG_ASSERT_UNKNOWN(reducedFun_ == NULL);
+            CPPADCG_ASSERT_UNKNOWN(reducedFun_ == nullptr);
 
             /**
              * Prepare the output information
@@ -571,7 +571,7 @@ namespace CppAD {
             for (size_t j = origTimeDependentCount_; j < vnodes_.size(); j++) {
                 // new variable derivative added by the Pantelides method
                 Vnode<Base>* jj = vnodes_[j];
-                CPPADCG_ASSERT_UNKNOWN(jj->antiDerivative() != NULL);
+                CPPADCG_ASSERT_UNKNOWN(jj->antiDerivative() != nullptr);
                 size_t antiDeriv = jj->antiDerivative()->tapeIndex();
                 size_t id = newVarInfo.size();
                 newVarInfo.push_back(DaeVarInfo(antiDeriv, jj->name(), id)); // create the new variable
@@ -581,7 +581,7 @@ namespace CppAD {
                 newAntiDeriv.setDerivative(jj->tapeIndex()); // update the antiderivative
                 newVar.setOrder(newAntiDeriv.getOrder() + 1);
                 newVar.setOriginalAntiDerivative(newVar.getOrder() == 1 ? newAntiDeriv.getOriginalIndex() : newAntiDeriv.getOriginalAntiDerivative());
-                if (jj->derivative() != NULL) {
+                if (jj->derivative() != nullptr) {
                     newVar.setDerivative(jj->derivative()->tapeIndex());
                 }
             }
@@ -589,7 +589,7 @@ namespace CppAD {
             std::map<Enode<Base>*, Vnode<Base>*> assigments;
             for (size_t j = 0; j < vnodes_.size(); j++) {
                 Vnode<Base>* jj = vnodes_[j];
-                if (jj->assigmentEquation() != NULL) {
+                if (jj->assigmentEquation() != nullptr) {
                     assigments[jj->assigmentEquation()] = jj;
                 }
             }
@@ -597,8 +597,8 @@ namespace CppAD {
             equationInfo.resize(enodes_.size());
             for (size_t i = 0; i < enodes_.size(); i++) {
                 Enode<Base>* ii = enodes_[i];
-                int derivativeOf = ii->derivativeOf() != NULL ? ii->derivativeOf()->index() : -1;
-                int origIndex = ii->derivativeOf() == NULL ? i : -1;
+                int derivativeOf = ii->derivativeOf() != nullptr ? ii->derivativeOf()->index() : -1;
+                int origIndex = ii->derivativeOf() == nullptr ? i : -1;
                 int assignedVarIndex = assigments.count(ii) > 0 ? assigments[ii]->tapeIndex() : -1;
 
                 equationInfo[i] = DaeEquationInfo(i, origIndex, derivativeOf, assignedVarIndex);
@@ -680,7 +680,7 @@ namespace CppAD {
                 reverseTimeDiff(equations, dep, timeTapeIndex);
 
                 delete reducedFun_; // not needed anymore
-                reducedFun_ = NULL;
+                reducedFun_ = nullptr;
 
                 /**
                  * reconstruct the new system of equations 
@@ -847,7 +847,7 @@ namespace CppAD {
          */
         inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<std::string>& indepNames) {
 
-            CPPADCG_ASSERT_UNKNOWN(fun != NULL);
+            CPPADCG_ASSERT_UNKNOWN(fun != nullptr);
             CPPADCG_ASSERT_UNKNOWN(fun->Domain() == indepNames.size() || fun->Domain() == indepNames.size() + 1); // with or without time
 
             CodeHandler<Base> handler;

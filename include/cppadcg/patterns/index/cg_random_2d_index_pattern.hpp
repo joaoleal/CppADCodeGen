@@ -31,7 +31,7 @@ namespace CppAD {
             CPPADCG_ASSERT_UNKNOWN(!indexes_.empty());
         }
 
-        inline virtual IndexPatternType getType() const {
+        inline virtual IndexPatternType getType() const override {
             return RANDOM2D;
         }
 

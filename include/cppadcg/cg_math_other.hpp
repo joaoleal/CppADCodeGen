@@ -35,7 +35,7 @@ namespace CppAD {
             handler = y.getCodeHandler();
         }
 
-        CG<Base> result(*handler, new OperationNode<Base>(CGPowOp, x.argument(), y.argument()));
+        CG<Base> result(*handler, new OperationNode<Base>(CGPowOp, {x.argument(), y.argument()}));
         if (x.isValueDefined() && y.isValueDefined()) {
             result.setValue(pow(x.getValue(), y.getValue()));
         }

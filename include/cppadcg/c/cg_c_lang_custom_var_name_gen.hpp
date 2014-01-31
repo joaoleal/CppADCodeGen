@@ -42,7 +42,7 @@ namespace CppAD {
             indepNames_(indepNames) {
         }
 
-        virtual std::string generateDependent(size_t index) {
+        virtual std::string generateDependent(size_t index) override {
             if (index < depNames_.size() && !depNames_[index].empty()) {
                 return depNames_[index];
             } else {
@@ -50,7 +50,7 @@ namespace CppAD {
             }
         }
 
-        virtual std::string generateIndependent(const OperationNode<Base>& independent) {
+        virtual std::string generateIndependent(const OperationNode<Base>& independent) override {
             size_t index = independent.getVariableID() - 1;
             if (index < indepNames_.size() && !indepNames_[index].empty()) {
                 return indepNames_[index];
@@ -60,7 +60,7 @@ namespace CppAD {
         }
 
         virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
-                                               const OperationNode<Base>& indepSecond) {
+                                               const OperationNode<Base>& indepSecond) override {
             size_t index1 = indepFirst.getVariableID() - 1;
             size_t index2 = indepSecond.getVariableID() - 1;
 
@@ -73,7 +73,7 @@ namespace CppAD {
         }
 
         virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
-                                              const OperationNode<Base>& indep2) {
+                                              const OperationNode<Base>& indep2) override {
             size_t index1 = indep1.getVariableID() - 1;
             size_t index2 = indep2.getVariableID() - 1;
 

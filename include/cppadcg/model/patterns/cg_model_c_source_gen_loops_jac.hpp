@@ -58,14 +58,14 @@ namespace CppAD {
             l->evalJacobianSparsity();
         }
 
-        if (_funNoLoops != NULL)
+        if (_funNoLoops != nullptr)
             _funNoLoops->evalJacobianSparsity();
 
         /**
          * Generate index patterns for the Jacobian elements resulting from loops
          */
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
-        noLoopEvalSparsity.resize(_funNoLoops != NULL ? _funNoLoops->getTapeDependentCount() : 0);
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        noLoopEvalSparsity.resize(_funNoLoops != nullptr ? _funNoLoops->getTapeDependentCount() : 0);
 
         // tape equation -> original J -> locations
         noLoopEvalLocations.resize(noLoopEvalSparsity.size());
@@ -88,7 +88,7 @@ namespace CppAD {
             size_t e = location[el];
 
             // find LOOP + get loop results
-            LoopModel<Base>* loop = NULL;
+            LoopModel<Base>* loop = nullptr;
 
             size_t tapeI;
             size_t iteration;
@@ -105,11 +105,11 @@ namespace CppAD {
                 }
             }
 
-            if (loop == NULL) {
+            if (loop == nullptr) {
                 /**
                  * Equation present in the model without loops
                  */
-                CPPADCG_ASSERT_UNKNOWN(_funNoLoops != NULL);
+                CPPADCG_ASSERT_UNKNOWN(_funNoLoops != nullptr);
                 size_t il = _funNoLoops->getLocalDependentIndex(i);
 
                 noLoopEvalSparsity[il].insert(j);
@@ -163,7 +163,7 @@ namespace CppAD {
                  */
                 const LoopPosition* pos = loop->getNonIndexedIndepIndexes(j);
                 bool jInNonIndexed = false;
-                if (pos != NULL && loopRow.find(pos->tape) != loopRow.end()) {
+                if (pos != nullptr && loopRow.find(pos->tape) != loopRow.end()) {
                     loopEvalRow.insert(pos->tape);
 
                     //this non-indexed element must be request for all iterations 
@@ -184,7 +184,7 @@ namespace CppAD {
                 /**
                  * find temporary variables used by this equation pattern
                  */
-                if (_funNoLoops != NULL) {
+                if (_funNoLoops != nullptr) {
                     set<size_t>::const_iterator itz = loopRow.lower_bound(nIndexed + nNonIndexed);
 
                     // loop temporary variables
@@ -237,7 +237,7 @@ namespace CppAD {
 
         handler.setZeroDependents(true);
 
-        size_t nonIndexdedEqSize = _funNoLoops != NULL ? _funNoLoops->getOrigDependentIndexes().size() : 0;
+        size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         vector<set<size_t> > noLoopEvalSparsity;
         vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
@@ -266,11 +266,11 @@ namespace CppAD {
         vector<CGBase> tmps;
 
         // Jacobian for temporaries
-        std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != NULL ? _funNoLoops->getTemporaryDependentCount() : 0);
+        std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != nullptr ? _funNoLoops->getTemporaryDependentCount() : 0);
 
         // Jacobian for equations outside loops
         vector<CGBase> jacNoLoop;
-        if (_funNoLoops != NULL) {
+        if (_funNoLoops != nullptr) {
             ADFun<CGBase>& fun = _funNoLoops->getTape();
 
             /**
@@ -403,15 +403,14 @@ namespace CppAD {
             size_t assignOrAdd = 1;
             LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
-            std::vector<size_t> info(1);
-            std::vector<Argument<Base> > args(1);
             std::set<size_t>::const_iterator itE;
             for (itE = allLocations.begin(); itE != allLocations.end(); ++itE) {
                 // an additional alias variable is required so that each dependent variable can have its own ID
                 size_t e = *itE;
-                info[0] = e;
-                args[0] = Argument<Base>(*loopEnd);
-                jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, info, args));
+                jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{e},
+                {
+                                          *loopEnd
+                }));
             }
 
             /**
@@ -468,7 +467,7 @@ namespace CppAD {
 
             // non-indexed variables used directly
             const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
-            if (pos != NULL) {
+            if (pos != nullptr) {
                 size_t tapeJ = pos->tape;
                 typename std::map<size_t, CGBase>::const_iterator itVal = dyiDxtape[tapeI].find(tapeJ);
                 if (itVal != dyiDxtape[tapeI].end()) {

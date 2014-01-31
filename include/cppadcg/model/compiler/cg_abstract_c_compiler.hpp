@@ -50,19 +50,19 @@ namespace CppAD {
             _path = path;
         }
 
-        virtual const std::string& getTemporaryFolder() const {
+        virtual const std::string& getTemporaryFolder() const override {
             return _tmpFolder;
         }
 
-        virtual void setTemporaryFolder(const std::string& tmpFolder) {
+        virtual void setTemporaryFolder(const std::string& tmpFolder) override {
             _tmpFolder = tmpFolder;
         }
 
-        virtual const std::set<std::string>& getObjectFiles() const {
+        virtual const std::set<std::string>& getObjectFiles() const override {
             return _ofiles;
         }
 
-        virtual const std::set<std::string>& getSourceFiles() const {
+        virtual const std::set<std::string>& getSourceFiles() const override {
             return _sfiles;
         }
 
@@ -90,11 +90,11 @@ namespace CppAD {
             _compileLibFlags = compileLibFlags;
         }
 
-        virtual bool isVerbose() const {
+        virtual bool isVerbose() const override {
             return _verbose;
         }
 
-        virtual void setVerbose(bool verbose) {
+        virtual void setVerbose(bool verbose) override {
             _verbose = verbose;
         }
 
@@ -108,7 +108,7 @@ namespace CppAD {
          */
         virtual void compileSources(const std::map<std::string, std::string>& sources,
                                     bool posIndepCode,
-                                    JobTimer* timer = NULL) {
+                                    JobTimer* timer = nullptr) override {
             compileSources(sources, posIndepCode, timer, ".o", _ofiles);
         }
 
@@ -117,6 +117,8 @@ namespace CppAD {
                                     JobTimer* timer,
                                     const std::string& outputExtension,
                                     std::set<std::string>& outputFiles) {
+            using namespace std::chrono;
+            
             if (sources.empty())
                 return; // nothing to do
 
@@ -134,7 +136,7 @@ namespace CppAD {
             size_t countWidth = std::ceil(std::log10(sources.size()));
 
             size_t count = 0;
-            if (timer != NULL) {
+            if (timer != nullptr) {
                 size_t ms = 3 + 2 * countWidth + 1 + JobTypeHolder<>::COMPILING.getActionName().size() + 2 + maxsize + 5;
                 ms += timer->getJobCount() * 2;
                 if (timer->getMaxLineWidth() < ms)
@@ -151,18 +153,18 @@ namespace CppAD {
                 std::string file = system::createPath(this->_tmpFolder, it->first + outputExtension);
                 outputFiles.insert(file);
                 
-                double beginTime = 0.0;
+                steady_clock::time_point beginTime;
 
-                if (timer != NULL || _verbose) {
+                if (timer != nullptr || _verbose) {
                     os << "[" << std::setw(countWidth) << std::setfill(' ') << std::right << count
                             << "/" << sources.size() << "]";
                 }
 
-                if (timer != NULL) {
+                if (timer != nullptr) {
                     timer->startingJob("'" + file + "'", JobTypeHolder<>::COMPILING, os.str());
                     os.str("");
                 } else if (_verbose) {
-                    beginTime = system::currentTime();
+                    beginTime = steady_clock::now();
                     char f = std::cout.fill();
                     std::cout << os.str() << " compiling "
                             << std::setw(maxsize + 9) << std::setfill('.') << std::left
@@ -175,12 +177,13 @@ namespace CppAD {
                 compile(it->second, file, posIndepCode);
 
 
-                if (timer != NULL) {
+                if (timer != nullptr) {
                     timer->finishedJob();
                 } else if (_verbose) {
-                    double endTime = system::currentTime();
+                    steady_clock::time_point endTime = steady_clock::now();
+                    duration<float> dt = endTime - beginTime;
                     std::cout << "done [" << std::fixed << std::setprecision(3)
-                            << (endTime - beginTime) << "]" << std::endl;
+                            << dt.count() << "]" << std::endl;
                 }
 
             }
@@ -193,9 +196,9 @@ namespace CppAD {
          * @param library the path to the dynamic library to be created
          */
         virtual void buildDynamic(const std::string& library,
-                                  JobTimer* timer = NULL) = 0;
+                                  JobTimer* timer = nullptr) = 0;
 
-        virtual void cleanup() {
+        virtual void cleanup() override {
             // clean up
             std::set<std::string>::const_iterator it;
             for (it = _ofiles.begin(); it != _ofiles.end(); ++it) {

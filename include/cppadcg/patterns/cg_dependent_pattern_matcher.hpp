@@ -109,7 +109,7 @@ namespace CppAD {
             idCounter_(0),
             color_(0) {
             CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0);
-            CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != NULL);
+            CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr);
             equations_.reserve(relatedDepCandidates_.size());
         }
 
@@ -126,7 +126,7 @@ namespace CppAD {
          * model using loops.
          * This method should only be called once!
          * 
-         * @param nonLoopTape The new tape without the loops or NULL if there
+         * @param nonLoopTape The new tape without the loops or nullptr if there
          *                    are no non-indexed expressions in the model
          * @param loopTapes The models for each loop (must be deleted by the user)
          */
@@ -174,7 +174,7 @@ namespace CppAD {
                 for (itDep = candidates.begin(); itDep != candidates.end(); ++itDep) {
                     size_t iDep = *itDep;
                     OperationNode<Base>* node = dependents_[iDep].getOperationNode();
-                    if (node != NULL && node->getOperationType() == CGInvOp) {
+                    if (node != nullptr && node->getOperationType() == CGInvOp) {
                         /**
                          * indexed/nonindexed independents are marked at the 
                          * operation that uses them, therefore currently there 
@@ -184,7 +184,7 @@ namespace CppAD {
                          * have no operation, consequently an alias is used
                          */
                         CodeHandler<Base>* handler = dependents_[iDep].getCodeHandler();
-                        dependents_[iDep] = handler->createCG(new OperationNode<Base>(CGAliasOp, Argument<Base>(*node)));
+                        dependents_[iDep] = handler->createCG(new OperationNode<Base>(CGAliasOp, *node));
                     }
                 }
             }
@@ -211,7 +211,7 @@ namespace CppAD {
             loops_.reserve(eq_size);
 
             SmartSetPointer<set<size_t> > dependentRelations;
-            std::vector<set<size_t>*> dep2Relations(dependents_.size(), NULL);
+            std::vector<set<size_t>*> dep2Relations(dependents_.size(), nullptr);
             map<size_t, set<size_t> > dependentBlackListRelations;
 
             /*******************************************************************
@@ -418,7 +418,7 @@ namespace CppAD {
                         // restore dependent relations
                         dependentRelations.s.swap(dependentRelationsBak.s);
                         // map each dependent to the relation set where it is present
-                        std::fill(dep2Relations.begin(), dep2Relations.end(), (set<size_t>*) NULL);
+                        std::fill(dep2Relations.begin(), dep2Relations.end(), (set<size_t>*) nullptr);
                         for (its = dependentRelations.begin(); its != dependentRelations.end(); ++its) {
                             set<size_t>* relation = *its;
                             set<size_t>::const_iterator itd;
@@ -596,7 +596,7 @@ namespace CppAD {
                                     set<size_t>::const_iterator itd;
                                     for (itd = eq->dependents.begin(); itd != eq->dependents.end(); ++itd) { // dependent
                                         size_t dep = *itd;
-                                        if (dep2Relations[dep] != NULL) {
+                                        if (dep2Relations[dep] != nullptr) {
                                             loopRelations.insert(dep2Relations[dep]);
                                             nonIndexedOnly = false;
                                         }
@@ -753,7 +753,7 @@ namespace CppAD {
             std::vector<CGBase> nonLoopDeps(nonLoopEq + origTemp2Index_.size());
 
             if (nonLoopDeps.size() == 0)
-                return NULL; // there are no equations outside the loops
+                return nullptr; // there are no equations outside the loops
 
             /**
              * Place the dependents that do not belong to a loop
@@ -806,7 +806,7 @@ namespace CppAD {
         }
 
         std::vector<EquationPattern<Base>*> findRelatedVariables() throw (CGException) {
-            eqCurr_ = NULL;
+            eqCurr_ = nullptr;
             color_ = 1; // used to mark visited nodes
 
             size_t rSize = relatedDepCandidates_.size();
@@ -814,7 +814,7 @@ namespace CppAD {
                 const std::set<size_t>& candidates = relatedDepCandidates_[r];
                 std::set<size_t> used;
 
-                eqCurr_ = NULL;
+                eqCurr_ = nullptr;
 
                 std::set<size_t>::const_iterator itRef;
                 for (itRef = candidates.begin(); itRef != candidates.end(); ++itRef) {
@@ -825,7 +825,7 @@ namespace CppAD {
                         continue;
                     }
 
-                    if (eqCurr_ == NULL || used.size() > 0) {
+                    if (eqCurr_ == nullptr || used.size() > 0) {
                         eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
                         equations_.push_back(eqCurr_);
                     }
@@ -846,7 +846,7 @@ namespace CppAD {
                     if (eqCurr_->dependents.size() == 1) {
                         // nothing found :(
                         delete eqCurr_;
-                        eqCurr_ = NULL;
+                        eqCurr_ = nullptr;
                         equations_.pop_back();
                     }
                 }
@@ -893,7 +893,7 @@ namespace CppAD {
         inline bool findSharedTemporaries(OperationNode<Base>* node,
                                           size_t depIndex,
                                           size_t& opCount) {
-            if (node == NULL)
+            if (node == nullptr)
                 return false; // nothing to do
 
             if (node->getUsageCount() > 0) {
@@ -910,7 +910,7 @@ namespace CppAD {
             size_t arg_size = args.size();
             for (size_t a = 0; a < arg_size; a++) {
                 OperationNode<Base>*argOp = args[a].getOperation();
-                if (argOp != NULL) {
+                if (argOp != nullptr) {
                     if (argOp->getOperationType() != CGInvOp) {
                         indexedOperation |= findSharedTemporaries(argOp, depIndex, localOpCount);
                     } else {
@@ -977,7 +977,7 @@ namespace CppAD {
          */
         inline void markOperationsWithDependent(const OperationNode<Base>* node,
                                                 size_t dep) {
-            if (node == NULL || node->getOperationType() == CGInvOp)
+            if (node == nullptr || node->getOperationType() == CGInvOp)
                 return; // nothing to do
 
             size_t id = node->getVariableID();
@@ -1015,7 +1015,7 @@ namespace CppAD {
         }
 
         void assignIds(OperationNode<Base>* node) {
-            if (node == NULL || node->getVariableID() > 0)
+            if (node == nullptr || node->getVariableID() > 0)
                 return;
 
             node->setVariableID(idCounter_);
@@ -1042,7 +1042,7 @@ namespace CppAD {
         }
 
         static void resetHandlerCounters(OperationNode<Base>* node) {
-            if (node == NULL || node->getVariableID() == 0 || node->getEvaluationOrder() == 0)
+            if (node == nullptr || node->getVariableID() == 0 || node->getEvaluationOrder() == 0)
                 return;
 
             node->resetHandlerCounters();
@@ -1256,10 +1256,10 @@ namespace CppAD {
             set<size_t>* related2 = dep2Relations[dep2];
 
             // check if relations were established with a different dependent from the same equation pattern
-            if (related1 != NULL) {
+            if (related1 != nullptr) {
                 // dependent 1 already in a relation set
 
-                if (related2 != NULL) {
+                if (related2 != nullptr) {
                     // both dependents belong to previously existing relations sets
 
                     if (related1 == related2)
@@ -1328,7 +1328,7 @@ namespace CppAD {
                     }
                 }
 
-            } else if (related2 != NULL) {
+            } else if (related2 != nullptr) {
                 // dependent 2 already in a relation set
 
                 // make sure no other dependent from the same equation pattern was already in this relation set

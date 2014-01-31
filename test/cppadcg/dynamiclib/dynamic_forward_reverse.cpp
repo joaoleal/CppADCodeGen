@@ -33,9 +33,9 @@ namespace CppAD {
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),
-        _fun(NULL),
-        _dynamicLib(NULL),
-        _model(NULL) {
+        _fun(nullptr),
+        _dynamicLib(nullptr),
+        _model(nullptr) {
         }
 
         virtual void SetUp() {
@@ -95,11 +95,11 @@ namespace CppAD {
 
         virtual void TearDown() {
             delete _dynamicLib;
-            _dynamicLib = NULL;
+            _dynamicLib = nullptr;
             delete _model;
-            _model = NULL;
+            _model = nullptr;
             delete _fun;
-            _fun = NULL;
+            _fun = nullptr;
         }
 
     };

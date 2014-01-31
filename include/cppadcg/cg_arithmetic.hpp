@@ -55,7 +55,7 @@ namespace CppAD {
 
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            CG<Base> result(*handler, new OperationNode<Base > (CGAddOp, left.argument(), right.argument()));
+            CG<Base> result(*handler, new OperationNode<Base > (CGAddOp, {left.argument(), right.argument()}));
             if (left.isValueDefined() && right.isValueDefined()) {
                 result.setValue(left.getValue() + right.getValue());
             }
@@ -77,7 +77,7 @@ namespace CppAD {
 
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            CG<Base> result(*handler, new OperationNode<Base> (CGSubOp, left.argument(), right.argument()));
+            CG<Base> result(*handler, new OperationNode<Base> (CGSubOp, {left.argument(), right.argument()}));
             if (left.isValueDefined() && right.isValueDefined()) {
                 result.setValue(left.getValue() - right.getValue());
             }
@@ -107,7 +107,7 @@ namespace CppAD {
 
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            CG<Base> result(*handler, new OperationNode<Base> (CGMulOp, left.argument(), right.argument()));
+            CG<Base> result(*handler, new OperationNode<Base> (CGMulOp, {left.argument(), right.argument()}));
             if (left.isValueDefined() && right.isValueDefined()) {
                 result.setValue(left.getValue() * right.getValue());
             }
@@ -133,7 +133,7 @@ namespace CppAD {
 
             CodeHandler<Base>* handler = getHandler(left, right);
 
-            CG<Base> result(*handler, new OperationNode<Base> (CGDivOp, left.argument(), right.argument()));
+            CG<Base> result(*handler, new OperationNode<Base> (CGDivOp, {left.argument(), right.argument()}));
             if (left.isValueDefined() && right.isValueDefined()) {
                 result.setValue(left.getValue() / right.getValue());
             }
