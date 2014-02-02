@@ -202,11 +202,9 @@ namespace CppAD {
                 /**
                  * S(x) * f'(x)
                  */
-                std::set<size_t>::const_iterator it;
                 for (size_t i = 0; i < m; i++) {
                     if (s[i]) {
-                        for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                            size_t j = *it;
+                        for (size_t j : jacSparsity[i]) {
                             t[j] = true;
                         }
                     }
@@ -228,10 +226,8 @@ namespace CppAD {
                 fun_.ForSparseJac(q, r);
                 v = fun_.RevSparseHes(q, set_s, true);
 
-                std::set<size_t>::const_iterator itr;
                 for (size_t i = 0; i < n; i++) {
-                    for (itr = a[i].begin(); itr != a[i].end(); itr++) {
-                        size_t j = *itr;
+                    for (size_t j : a[i]) {
                         CPPAD_ASSERT_UNKNOWN(j < q);
                         v[i].insert(j);
                     }

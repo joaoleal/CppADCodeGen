@@ -68,7 +68,7 @@ namespace CppAD {
         }
 
         virtual LinuxDynamicLibModel<Base>* model(const std::string& modelName) override {
-            typename std::set<std::string>::const_iterator it = _modelNames.find(modelName);
+            std::set<std::string>::const_iterator it = _modelNames.find(modelName);
             if (it == _modelNames.end()) {
                 return nullptr;
             }
@@ -94,9 +94,7 @@ namespace CppAD {
         }
 
         virtual ~LinuxDynamicLib() {
-            typename std::set<LinuxDynamicLibModel<Base>*>::const_iterator it;
-            for (it = _models.begin(); it != _models.end(); ++it) {
-                LinuxDynamicLibModel<Base>* model = *it;
+            for (LinuxDynamicLibModel<Base>* model : _models) {
                 model->modelLibraryClosed();
             }
 

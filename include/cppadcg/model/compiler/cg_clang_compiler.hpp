@@ -84,9 +84,9 @@ namespace CppAD {
             args.push_back(linkerFlags); // Pass suitable options to linker
             args.push_back("-o"); // Output file name
             args.push_back(library); // Output file name
-            std::set<std::string>::const_iterator it;
-            for (it = this->_ofiles.begin(); it != this->_ofiles.end(); ++it) {
-                args.push_back(*it);
+
+            for (const std::string& it : this->_ofiles) {
+                args.push_back(it);
             }
 
             if (timer != nullptr) {
@@ -104,10 +104,9 @@ namespace CppAD {
 
         virtual void cleanup() override {
             // clean up
-            std::set<std::string>::const_iterator it;
-            for (it = _bcfiles.begin(); it != _bcfiles.end(); ++it) {
-                if (remove(it->c_str()) != 0)
-                    std::cerr << "Failed to delete temporary file '" << *it << "'" << std::endl;
+            for (const std::string& it : _bcfiles) {
+                if (remove(it.c_str()) != 0)
+                    std::cerr << "Failed to delete temporary file '" << it << "'" << std::endl;
             }
             _bcfiles.clear();
 

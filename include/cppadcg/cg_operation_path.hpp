@@ -36,8 +36,8 @@ namespace CppAD {
 
     template<class Base>
     inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPaths(OperationNode<Base>& root,
-                                                                                             OperationNode<Base>& code,
-                                                                                             size_t max) {
+                                                                                            OperationNode<Base>& code,
+                                                                                            size_t max) {
         resetManagedNodes();
 
         std::vector<std::vector<OperationPathNode<Base> > > found;
@@ -77,9 +77,7 @@ namespace CppAD {
             // already searched inside this node
             // any match would have been saved in found
             std::vector<SourceCodePath> pathsFromNode = findPathsFromNode(found, *currNode);
-            typename std::vector<std::vector<OperationPathNode<Base> > >::const_iterator it;
-            for (it = pathsFromNode.begin(); it != pathsFromNode.end(); ++it) {
-                const SourceCodePath& pathFromNode = *it;
+            for (const SourceCodePath& pathFromNode : pathsFromNode) {
                 SourceCodePath newPath(currPath.size() + pathFromNode.size());
                 std::copy(currPath.begin(), currPath.end(), newPath.begin());
                 std::copy(pathFromNode.begin(), pathFromNode.end(), newPath.begin() + currPath.size());
@@ -107,14 +105,12 @@ namespace CppAD {
 
     template<class Base>
     inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPathsFromNode(const std::vector<std::vector<OperationPathNode<Base> > > nodePaths,
-                                                                                                     OperationNode<Base>& node) {
+                                                                                                    OperationNode<Base>& node) {
 
         std::vector<SourceCodePath> foundPaths;
         std::set<size_t> argsFound;
 
-        typename std::vector<SourceCodePath>::const_iterator it;
-        for (it = nodePaths.begin(); it != nodePaths.end(); ++it) {
-            const SourceCodePath& path = *it;
+        for (const SourceCodePath& path : nodePaths) {
             size_t size = path.size();
             for (size_t i = 0; i < size - 1; i++) {
                 const OperationPathNode<Base>& pnode = path[i];

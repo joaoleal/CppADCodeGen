@@ -111,18 +111,17 @@ namespace CppAD {
         size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
         size_t nnz = 0;
-        std::map<size_t, std::vector<size_t> >::const_iterator itJrow2jcols;
-        for (itJrow2jcols = elements.begin(); itJrow2jcols != elements.end(); ++itJrow2jcols) {
-            nnz += itJrow2jcols->second.size();
+        for (const auto& itJrow2jcols : elements) {
+            nnz += itJrow2jcols.second.size();
         }
 
         std::vector<size_t> hessRows(nnz);
         std::vector<size_t> hessCols(nnz);
         std::vector<size_t> hessOrder(nnz);
         size_t ge = 0;
-        for (itJrow2jcols = elements.begin(); itJrow2jcols != elements.end(); ++itJrow2jcols) {
-            size_t jrow = itJrow2jcols->first;
-            const std::vector<size_t>& jcols = itJrow2jcols->second;
+        for (const auto& itJrow2jcols : elements) {
+            size_t jrow = itJrow2jcols.first;
+            const std::vector<size_t>& jcols = itJrow2jcols.second;
 
             for (size_t e = 0; e < jcols.size(); e++) {
                 hessRows[ge] = jrow;
@@ -271,10 +270,9 @@ namespace CppAD {
 
                 map<size_t, set<size_t> > localIterCount2Jrows;
 
-                map<size_t, set<size_t> >::const_iterator itJrow2It;
-                for (itJrow2It = group.jRow2Iterations.begin(); itJrow2It != group.jRow2Iterations.end(); ++itJrow2It) {
-                    size_t jrow = itJrow2It->first;
-                    size_t itCount = itJrow2It->second.size();
+                for (const auto& itJrow2It : group.jRow2Iterations) {
+                    size_t jrow = itJrow2It.first;
+                    size_t itCount = itJrow2It.second.size();
                     localIterCount2Jrows[itCount].insert(jrow);
                 }
 
@@ -289,13 +287,12 @@ namespace CppAD {
                  */
                 map<size_t, map<size_t, size_t> > jrow2localIt2ModelIt;
 
-                for (itJrow2It = group.jRow2Iterations.begin(); itJrow2It != group.jRow2Iterations.end(); ++itJrow2It) {
-                    size_t jrow = itJrow2It->first;
+                for (const auto& itJrow2It : group.jRow2Iterations) {
+                    size_t jrow = itJrow2It.first;
 
                     map<size_t, size_t>& localIt2ModelIt = jrow2localIt2ModelIt[jrow];
                     size_t localIt = 0;
-                    set<size_t>::const_iterator itIt;
-                    for (itIt = itJrow2It->second.begin(); itIt != itJrow2It->second.end(); ++itIt, localIt++) {
+                    for (auto itIt = itJrow2It.second.begin(); itIt != itJrow2It.second.end(); ++itIt, localIt++) {
                         localIt2ModelIt[localIt] = *itIt;
                     }
                 }
@@ -322,10 +319,9 @@ namespace CppAD {
                 if (createsLoop) {
                     map<size_t, size_t> jrow2litCount;
 
-                    map<size_t, set<size_t> >::const_iterator itJrow2Its;
-                    for (itJrow2Its = group.jRow2Iterations.begin(); itJrow2Its != group.jRow2Iterations.end(); ++itJrow2Its) {
-                        size_t jrow = itJrow2Its->first;
-                        jrow2litCount[jrow] = itJrow2Its->second.size();
+                    for (const auto& itJrow2Its : group.jRow2Iterations) {
+                        size_t jrow = itJrow2Its.first;
+                        jrow2litCount[jrow] = itJrow2Its.second.size();
                     }
 
                     indexLocalItCountPattern.reset(IndexPattern::detect(jrow2litCount));
@@ -379,7 +375,10 @@ namespace CppAD {
                     pxCustom.resize(1);
 
                     // {0} : must point to itself since there is only one dependent
-                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, {0}, {*loopEnd}));
+                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{0},
+                    {
+                                                   *loopEnd
+                    }));
 
                 } else {
                     /**
@@ -509,19 +508,18 @@ namespace CppAD {
                     size_t j1 = row[el];
                     size_t j2 = col[el];
                     const set<size_t>& locations = noLoopEvalHessLocations[j1][j2];
-                    for (set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE) {
-                        hess[j1][*itE] = hessNoLoop[el];
-                        _nonLoopRev2Elements[j1].insert(*itE);
+                    for (size_t itE : locations) {
+                        hess[j1][itE] = hessNoLoop[el];
+                        _nonLoopRev2Elements[j1].insert(itE);
                     }
                 }
 
                 /**
                  * Generate one function for each independent variable / hessian row
                  */
-                typename map<size_t, map<size_t, CGBase> >::const_iterator it;
-                for (it = hess.begin(); it != hess.end(); ++it) {
-                    size_t j = it->first;
-                    const map<size_t, CGBase>& cols = it->second;
+                for (const auto& it : hess) {
+                    size_t j = it.first;
+                    const map<size_t, CGBase>& cols = it.second;
 
                     _cache.str("");
                     _cache << "model (reverse two, no loops, indep " << j << ")";
@@ -529,10 +527,9 @@ namespace CppAD {
 
                     vector<CGBase> pxCustom(elements.at(j).size());
 
-                    typename map<size_t, CGBase>::const_iterator it2;
-                    for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
-                        size_t e = it2->first;
-                        pxCustom[e] = it2->second * tx1;
+                    for (const auto& it2 : cols) {
+                        size_t e = it2.first;
+                        pxCustom[e] = it2.second * tx1;
                     }
 
                     CLanguage<Base> langC(_baseTypeName);
@@ -601,10 +598,9 @@ namespace CppAD {
 
             loopGroups.reserve(contrib2jrows.size() *2); // TODO: improve this
 
-            typename map<HessianTermContrib<Base>, set<size_t> >::const_iterator itC;
-            for (itC = contrib2jrows.begin(); itC != contrib2jrows.end(); ++itC) {
-                const HessianTermContrib<Base>& c = itC->first;
-                const set<size_t>& jrows = itC->second;
+            for (const auto& itC : contrib2jrows) {
+                const HessianTermContrib<Base>& c = itC.first;
+                const set<size_t>& jrows = itC.second;
 
                 /**
                  * create subgroups
@@ -642,8 +638,6 @@ namespace CppAD {
             std::vector<pair<CGBase, IndexPattern*> > indexedLoopResults(hessElSize);
             size_t hessLE = 0;
 
-            set<pairss>::const_iterator it;
-
             map<pairss, std::vector<HessianElement> >::const_iterator itPos;
 
             /**
@@ -656,11 +650,11 @@ namespace CppAD {
                 /***************************************************************
                  * indexed - indexed
                  */
-                for (it = group.indexedIndexed.begin(); it != group.indexedIndexed.end(); ++it) {
-                    size_t tapeJ1 = it->first;
-                    size_t tapeJ2 = it->second;
+                for (const pairss& it : group.indexedIndexed) {
+                    size_t tapeJ1 = it.first;
+                    size_t tapeJ2 = it.second;
 
-                    itPos = infog.indexedIndexedPositions.find(*it);
+                    itPos = infog.indexedIndexedPositions.find(it);
                     if (itPos != infog.indexedIndexedPositions.end()) {
                         const std::vector<HessianElement>& positions = itPos->second;
 
@@ -675,11 +669,11 @@ namespace CppAD {
                 /**
                  * indexed - non-indexed
                  */
-                for (it = group.indexedNonIndexed.begin(); it != group.indexedNonIndexed.end(); ++it) {
-                    size_t tapeJ1 = it->first;
-                    size_t tapeJ2 = it->second;
+                for (const pairss& it : group.indexedNonIndexed) {
+                    size_t tapeJ1 = it.first;
+                    size_t tapeJ2 = it.second;
 
-                    itPos = infog.indexedNonIndexedPositions.find(*it);
+                    itPos = infog.indexedNonIndexedPositions.find(it);
                     if (itPos != infog.indexedNonIndexedPositions.end()) {
                         const std::vector<HessianElement>& positions = itPos->second;
 
@@ -694,19 +688,17 @@ namespace CppAD {
                 /**
                  * indexed - temporary
                  */
-                for (it = group.indexedTemp.begin(); it != group.indexedTemp.end(); ++it) {
-                    size_t tapeJ1 = it->first;
-                    size_t j2 = it->second;
+                for (const pairss& it : group.indexedTemp) {
+                    size_t tapeJ1 = it.first;
+                    size_t j2 = it.second;
 
-                    itPos = infog.indexedTempPositions.find(*it);
+                    itPos = infog.indexedTempPositions.find(it);
                     if (itPos != infog.indexedTempPositions.end()) {
                         const std::vector<HessianElement>& positions = itPos->second;
-                        const set<size_t>& ks = infog.indexedTempEvals.at(*it);
+                        const set<size_t>& ks = infog.indexedTempEvals.at(it);
 
                         CGBase val = Base(0);
-                        set<size_t>::const_iterator itz;
-                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                            size_t k = *itz;
+                        for (size_t k : ks) {
                             size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
                             val += infog.hess.at(tapeJ1).at(tapeK) * dzDx.at(k).at(j2);
                         }
@@ -723,11 +715,11 @@ namespace CppAD {
                 /***************************************************************
                  * non-indexed - indexed
                  */
-                for (it = group.nonIndexedIndexed.begin(); it != group.nonIndexedIndexed.end(); ++it) {
-                    size_t tapeJ1 = it->first;
-                    size_t tapeJ2 = it->second;
+                for (const pairss& it : group.nonIndexedIndexed) {
+                    size_t tapeJ1 = it.first;
+                    size_t tapeJ2 = it.second;
 
-                    itPos = infog.nonIndexedIndexedPositions.find(*it);
+                    itPos = infog.nonIndexedIndexedPositions.find(it);
                     if (itPos != infog.nonIndexedIndexedPositions.end()) {
                         const std::vector<HessianElement>& positions = itPos->second;
 
@@ -745,19 +737,17 @@ namespace CppAD {
                  *      d f_i       .    d x_k1
                  * d x_l2  d z_k1        d x_j1
                  */
-                for (it = group.tempIndexed.begin(); it != group.tempIndexed.end(); ++it) {
-                    size_t j1 = it->first;
-                    size_t tapeJ2 = it->second;
+                for (const pairss& it : group.tempIndexed) {
+                    size_t j1 = it.first;
+                    size_t tapeJ2 = it.second;
 
-                    itPos = infog.tempIndexedPositions.find(*it);
+                    itPos = infog.tempIndexedPositions.find(it);
                     if (itPos != infog.tempIndexedPositions.end()) {
                         const std::vector<HessianElement>& positions = itPos->second;
                         const set<size_t>& ks = infog.indexedTempEvals.at(pairss(tapeJ2, j1));
 
                         CGBase val = Base(0);
-                        set<size_t>::const_iterator itz;
-                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                            size_t k = *itz;
+                        for (size_t k : ks) {
                             size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
                             val += infog.hess.at(tapeK).at(tapeJ2) * dzDx.at(k).at(j1);
                         }
@@ -774,8 +764,7 @@ namespace CppAD {
             /*******************************************************************
              * contributions to a constant location
              */
-            for (it = group.nonIndexedNonIndexed.begin(); it != group.nonIndexedNonIndexed.end(); ++it) {
-                const pairss& orig = *it;
+            for (const pairss& orig : group.nonIndexedNonIndexed) {
                 size_t e = info.nonIndexedNonIndexedPosition.at(orig);
 
                 size_t j1 = orig.first;
@@ -812,13 +801,11 @@ namespace CppAD {
                     /**
                      * non-indexed - temporary
                      */
-                    map<pairss, set<size_t> >::const_iterator itNT = infog.nonIndexedTempEvals.find(orig);
+                    const auto itNT = infog.nonIndexedTempEvals.find(orig);
                     if (itNT != infog.nonIndexedTempEvals.end()) {
                         const set<size_t>& ks = itNT->second;
 
-                        set<size_t>::const_iterator itz;
-                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                            size_t k = *itz;
+                        for (size_t k : ks) {
                             size_t tapeK = lModel.getTempIndepIndexes(k)->tape;
                             gHessVal += infog.hess.at(posJ1->tape).at(tapeK) * dzDx.at(k).at(j2);
                         }
@@ -830,13 +817,11 @@ namespace CppAD {
                      *      d f_i       .    d x_k1
                      * d x_j2  d z_k1        d x_j1
                      */
-                    map<pairss, set<size_t> >::const_iterator itTN = infog.tempNonIndexedEvals.find(orig);
+                    const auto itTN = infog.tempNonIndexedEvals.find(orig);
                     if (itTN != infog.tempNonIndexedEvals.end()) {
                         const set<size_t>& ks = itTN->second;
 
-                        set<size_t>::const_iterator itz;
-                        for (itz = ks.begin(); itz != ks.end(); ++itz) {
-                            size_t k1 = *itz;
+                        for (size_t k1 : ks) {
                             size_t tapeK = lModel.getTempIndepIndexes(k1)->tape;
                             gHessVal += infog.hess.at(tapeK).at(posJ2->tape) * dzDx.at(k1).at(j1);
                         }
@@ -845,21 +830,19 @@ namespace CppAD {
                     /**
                      * temporary - temporary
                      */
-                    map<pairss, map<size_t, set<size_t> > >::const_iterator itTT = infog.tempTempEvals.find(orig);
+                    const auto itTT = infog.tempTempEvals.find(orig);
                     if (itTT != infog.tempTempEvals.end()) {
                         const map<size_t, set<size_t> >& k1k2 = itTT->second;
 
                         CGBase sum = Base(0);
 
-                        map<size_t, set<size_t> >::const_iterator itzz;
-                        for (itzz = k1k2.begin(); itzz != k1k2.end(); ++itzz) {
-                            size_t k1 = itzz->first;
-                            const set<size_t>& k2s = itzz->second;
+                        for (const auto& itzz : k1k2) {
+                            size_t k1 = itzz.first;
+                            const set<size_t>& k2s = itzz.second;
                             size_t tapeK1 = lModel.getTempIndepIndexes(k1)->tape;
 
                             CGBase tmp = Base(0);
-                            for (set<size_t>::const_iterator itk2 = k2s.begin(); itk2 != k2s.end(); ++itk2) {
-                                size_t k2 = *itk2;
+                            for (size_t k2 : k2s) {
                                 size_t tapeK2 = lModel.getTempIndepIndexes(k2)->tape;
 
                                 tmp += infog.hess.at(tapeK1).at(tapeK2) * dzDx.at(k2).at(j2);
@@ -887,7 +870,7 @@ namespace CppAD {
                 /**
                  * temporary - temporary
                  */
-                map<pairss, set<size_t> >::const_iterator itTT2 = info.nonLoopNonIndexedNonIndexed.find(orig);
+                const auto itTT2 = info.nonLoopNonIndexedNonIndexed.find(orig);
                 if (itTT2 != info.nonLoopNonIndexedNonIndexed.end()) {
                     hessVal += info.dzDxx.at(j1).at(j2); // it is already the sum of ddz / dx_j1 dx_j2
                 }
@@ -957,61 +940,60 @@ namespace CppAD {
                 const HessianWithLoopsEquationGroupInfo<Base>& infog = info.equationGroups[g];
 
                 // indexed-indexed
-                map<pairss, std::vector<HessianElement> >::const_iterator it;
-                for (it = infog.indexedIndexedPositions.begin(); it != infog.indexedIndexedPositions.end(); ++it) {
-                    map<size_t, set<size_t> >& jrow2Iter = indexedIndexed2jrow2Iter[it->first];
-                    const std::vector<HessianElement>& positions = it->second;
+                for (const auto& it : infog.indexedIndexedPositions) {
+                    map<size_t, set<size_t> >& jrow2Iter = indexedIndexed2jrow2Iter[it.first];
+                    const std::vector<HessianElement>& positions = it.second;
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         if (positions[iter].count > 0) {
-                            jrows[positions[iter].row].indexedIndexed.insert(it->first);
+                            jrows[positions[iter].row].indexedIndexed.insert(it.first);
                             jrow2Iter[positions[iter].row].insert(iter);
                         }
                     }
                 }
 
                 // indexed - non-indexed
-                for (it = infog.indexedNonIndexedPositions.begin(); it != infog.indexedNonIndexedPositions.end(); ++it) {
-                    map<size_t, set<size_t> >& jrow2Iter = indexedNonIndexed2jrow2Iter[it->first];
-                    const std::vector<HessianElement>& positions = it->second;
+                for (const auto& it : infog.indexedNonIndexedPositions) {
+                    map<size_t, set<size_t> >& jrow2Iter = indexedNonIndexed2jrow2Iter[it.first];
+                    const std::vector<HessianElement>& positions = it.second;
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         if (positions[iter].count > 0) {
-                            jrows[positions[iter].row].indexedNonIndexed.insert(it->first);
+                            jrows[positions[iter].row].indexedNonIndexed.insert(it.first);
                             jrow2Iter[positions[iter].row].insert(iter);
                         }
                     }
                 }
 
                 //  indexed - temporary
-                for (it = infog.indexedTempPositions.begin(); it != infog.indexedTempPositions.end(); ++it) {
-                    map<size_t, set<size_t> >& jrow2Iter = indexedTemp2jrow2Iter[it->first];
-                    const std::vector<HessianElement>& positions = it->second;
+                for (const auto& it : infog.indexedTempPositions) {
+                    map<size_t, set<size_t> >& jrow2Iter = indexedTemp2jrow2Iter[it.first];
+                    const std::vector<HessianElement>& positions = it.second;
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         if (positions[iter].count > 0) {
-                            jrows[positions[iter].row].indexedTemp.insert(it->first);
+                            jrows[positions[iter].row].indexedTemp.insert(it.first);
                             jrow2Iter[positions[iter].row].insert(iter);
                         }
                     }
                 }
 
                 // non-indexed - indexed
-                for (it = infog.nonIndexedIndexedPositions.begin(); it != infog.nonIndexedIndexedPositions.end(); ++it) {
-                    map<size_t, set<size_t> >& jrow2Iter = nonIndexedIndexed2jrow2Iter[it->first];
-                    const std::vector<HessianElement>& positions = it->second;
+                for (const auto& it : infog.nonIndexedIndexedPositions) {
+                    map<size_t, set<size_t> >& jrow2Iter = nonIndexedIndexed2jrow2Iter[it.first];
+                    const std::vector<HessianElement>& positions = it.second;
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         if (positions[iter].count > 0) {
-                            jrows[positions[iter].row].nonIndexedIndexed.insert(it->first);
+                            jrows[positions[iter].row].nonIndexedIndexed.insert(it.first);
                             jrow2Iter[positions[iter].row].insert(iter);
                         }
                     }
                 }
 
                 //  temporary - indexed
-                for (it = infog.tempIndexedPositions.begin(); it != infog.tempIndexedPositions.end(); ++it) {
-                    map<size_t, set<size_t> >& jrow2Iter = tempIndexed2jrow2Iter[it->first];
-                    const std::vector<HessianElement>& positions = it->second;
+                for (const auto& it : infog.tempIndexedPositions) {
+                    map<size_t, set<size_t> >& jrow2Iter = tempIndexed2jrow2Iter[it.first];
+                    const std::vector<HessianElement>& positions = it.second;
                     for (size_t iter = 0; iter < nIterations; iter++) {
                         if (positions[iter].count > 0) {
-                            jrows[positions[iter].row].tempIndexed.insert(it->first);
+                            jrows[positions[iter].row].tempIndexed.insert(it.first);
                             jrow2Iter[positions[iter].row].insert(iter);
                         }
                     }
@@ -1019,10 +1001,9 @@ namespace CppAD {
             }
 
             // non-indexed - non-indexed
-            map<pairss, size_t>::const_iterator orig2PosIt;
-            for (orig2PosIt = info.nonIndexedNonIndexedPosition.begin(); orig2PosIt != info.nonIndexedNonIndexedPosition.end(); ++orig2PosIt) {
-                size_t j1 = orig2PosIt->first.first;
-                jrows[j1].nonIndexedNonIndexed.insert(orig2PosIt->first);
+            for (const auto& orig2PosIt : info.nonIndexedNonIndexedPosition) {
+                size_t j1 = orig2PosIt.first.first;
+                jrows[j1].nonIndexedNonIndexed.insert(orig2PosIt.first);
             }
 
             /**
@@ -1061,9 +1042,7 @@ namespace CppAD {
             map<size_t, set<size_t> >::const_iterator itJrow2Iter;
 
             //  indexed - indexed
-            for (it = c.indexedIndexed.begin(); it != c.indexedIndexed.end(); ++it) {
-                pairss pos = *it;
-
+            for (pairss pos : c.indexedIndexed) {
                 map<size_t, set<size_t> > jrow2Iter = filterBykeys(indexedIndexed2jrow2Iter.at(pos), jrows);
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
@@ -1072,9 +1051,7 @@ namespace CppAD {
             }
 
             // indexed - non-indexed
-            for (it = c.indexedNonIndexed.begin(); it != c.indexedNonIndexed.end(); ++it) {
-                pairss pos = *it;
-
+            for (pairss pos : c.indexedNonIndexed) {
                 map<size_t, set<size_t> > jrow2Iter = filterBykeys(indexedNonIndexed2jrow2Iter.at(pos), jrows);
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
@@ -1083,9 +1060,7 @@ namespace CppAD {
             }
 
             //  indexed - temporary
-            for (it = c.indexedTemp.begin(); it != c.indexedTemp.end(); ++it) {
-                pairss pos = *it;
-
+            for (pairss pos : c.indexedTemp) {
                 map<size_t, set<size_t> > jrow2Iter = filterBykeys(indexedTemp2jrow2Iter.at(pos), jrows);
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
@@ -1094,9 +1069,7 @@ namespace CppAD {
             }
 
             // non-indexed - indexed
-            for (it = c.nonIndexedIndexed.begin(); it != c.nonIndexedIndexed.end(); ++it) {
-                pairss pos = *it;
-
+            for (pairss pos : c.nonIndexedIndexed) {
                 map<size_t, set<size_t> > jrow2Iter = filterBykeys(nonIndexedIndexed2jrow2Iter.at(pos), jrows);
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
@@ -1111,17 +1084,14 @@ namespace CppAD {
                 for (size_t iter = 0; iter < nIterations; iter++)
                     allIters.insert(allIters.end(), iter);
 
-                for (it = c.nonIndexedNonIndexed.begin(); it != c.nonIndexedNonIndexed.end(); ++it) {
-                    pairss pos = *it;
+                for (pairss pos : c.nonIndexedNonIndexed) {
                     Reverse2Jrow2Iter k(pos.first, allIters);
                     contribs[k].nonIndexedNonIndexed.insert(pos);
                 }
             }
 
             //  temporary - indexed
-            for (it = c.tempIndexed.begin(); it != c.tempIndexed.end(); ++it) {
-                pairss pos = *it;
-
+            for (pairss pos : c.tempIndexed) {
                 map<size_t, set<size_t> > jrow2Iter = filterBykeys(tempIndexed2jrow2Iter.at(pos), jrows);
                 for (itJrow2Iter = jrow2Iter.begin(); itJrow2Iter != jrow2Iter.end(); ++itJrow2Iter) {
                     Reverse2Jrow2Iter k(itJrow2Iter->first, itJrow2Iter->second);
@@ -1134,12 +1104,11 @@ namespace CppAD {
              */
             map<HessianTermContrib<Base>, HessianRowGroup<Base>*> c2subgroups; // add pair<jrow, set<iter> > here
 
-            typename map<Reverse2Jrow2Iter, HessianTermContrib<Base> >::const_iterator itK2C;
-            for (itK2C = contribs.begin(); itK2C != contribs.end(); ++itK2C) {
-                const Reverse2Jrow2Iter& jrow2Iters = itK2C->first;
-                const HessianTermContrib<Base>& hc = itK2C->second;
+            for (const auto& itK2C : contribs) {
+                const Reverse2Jrow2Iter& jrow2Iters = itK2C.first;
+                const HessianTermContrib<Base>& hc = itK2C.second;
 
-                typename map<HessianTermContrib<Base>, HessianRowGroup<Base>*>::const_iterator its = c2subgroups.find(hc);
+                const auto its = c2subgroups.find(hc);
                 if (its != c2subgroups.end()) {
                     HessianRowGroup<Base>* sg = its->second;
                     sg->jRow2Iterations[jrow2Iters.jrow] = jrow2Iters.iterations;
@@ -1173,9 +1142,7 @@ namespace CppAD {
 
             // combine iterations with the same number of additions
             map<size_t, map<size_t, size_t> > locations;
-            set<size_t>::const_iterator itIt;
-            for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
-                size_t iter = *itIt;
+            for (size_t iter: group.iterations) {
                 size_t c = positions[iter].count;
                 if (c > 0) {
                     locations[c][iter] = positions[iter].location;
@@ -1191,9 +1158,8 @@ namespace CppAD {
             map<size_t, CG<Base> > results;
 
             // generate the index pattern for the Hessian compressed element
-            map<size_t, map<size_t, size_t> >::const_iterator countIt;
-            for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
-                size_t count = countIt->first;
+            for (const auto& countIt : locations) {
+                size_t count = countIt.first;
 
                 CG<Base> val = ddfdxdx;
                 for (size_t c = 1; c < count; c++)
@@ -1220,10 +1186,9 @@ namespace CppAD {
                 map<size_t, IfBranchData<Base> > branches;
 
                 // try to find an existing if-else where these operations can be added
-                map<size_t, map<size_t, size_t> >::const_iterator countIt;
-                for (countIt = locations.begin(); countIt != locations.end(); ++countIt) {
-                    size_t count = countIt->first;
-                    IfBranchData<Base> branch(results[count], countIt->second);
+                for (const auto& countIt : locations) {
+                    size_t count = countIt.first;
+                    IfBranchData<Base> branch(results[count], countIt.second);
                     branches[count] = branch;
                 }
 

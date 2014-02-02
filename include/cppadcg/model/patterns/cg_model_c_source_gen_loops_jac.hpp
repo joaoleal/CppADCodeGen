@@ -52,9 +52,7 @@ namespace CppAD {
         /**
          * determine sparsities
          */
-        typename std::set<LoopModel<Base>*>::const_iterator itloop;
-        for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
-            LoopModel<Base>* l = *itloop;
+        for (LoopModel<Base>* l : _loopTapes) {
             l->evalJacobianSparsity();
         }
 
@@ -71,8 +69,7 @@ namespace CppAD {
         noLoopEvalLocations.resize(noLoopEvalSparsity.size());
 
         // loop -> equation -> row info
-        for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
-            LoopModel<Base>* loop = *itloop;
+        for (LoopModel<Base>* loop : _loopTapes) {
             loopEqInfo[loop].resize(loop->getTapeDependentCount());
             loopsEvalSparsities[loop].resize(loop->getTapeDependentCount());
         }
@@ -93,10 +90,9 @@ namespace CppAD {
             size_t tapeI;
             size_t iteration;
 
-            for (itloop = _loopTapes.begin(); itloop != _loopTapes.end(); ++itloop) {
-                LoopModel<Base>* l = *itloop;
+            for (LoopModel<Base>* l : _loopTapes) {
                 const std::map<size_t, LoopIndexedPosition>& depIndexes = l->getOriginalDependentIndexes();
-                std::map<size_t, LoopIndexedPosition>::const_iterator iti = depIndexes.find(i);
+                const auto iti = depIndexes.find(i);
                 if (iti != depIndexes.end()) {
                     loop = l;
                     tapeI = iti->second.tape;
@@ -140,9 +136,7 @@ namespace CppAD {
                  * and iteration which use j
                  */
                 const std::set<size_t>& tapeJs = loop->getIndexedTapeIndexes(iteration, j);
-                std::set<size_t>::const_iterator itTJ;
-                for (itTJ = tapeJs.begin(); itTJ != tapeJs.end(); ++itTJ) {
-                    size_t tapeJ = *itTJ;
+                for (size_t tapeJ : tapeJs) {
                     if (loopRow.find(tapeJ) != loopRow.end()) {
                         loopEvalRow.insert(tapeJ);
 
@@ -302,8 +296,8 @@ namespace CppAD {
                 if (il < nonIndexdedEqSize) {
                     // (dy_i/dx_v) elements from equations outside loops
                     const std::set<size_t>& locations = noLoopEvalLocations[il][j];
-                    for (std::set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE)
-                        jac[*itE] = jacNoLoop[el];
+                    for (size_t itE : locations)
+                        jac[itE] = jacNoLoop[el];
                 } else {
                     // dz_k/dx_v (for temporary variable)
                     size_t k = il - nonIndexdedEqSize;
@@ -403,10 +397,8 @@ namespace CppAD {
             size_t assignOrAdd = 1;
             LoopEndOperationNode<Base>* loopEnd = createLoopEnd(handler, *loopStart, indexedLoopResults, indexesOps, assignOrAdd);
 
-            std::set<size_t>::const_iterator itE;
-            for (itE = allLocations.begin(); itE != allLocations.end(); ++itE) {
+            for (size_t e : allLocations) {
                 // an additional alias variable is required so that each dependent variable can have its own ID
-                size_t e = *itE;
                 jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{e},
                 {
                                           *loopEnd
@@ -443,10 +435,9 @@ namespace CppAD {
          * indexed variable contributions
          */
         // tape J index -> {locationIt0, locationIt1, ...}
-        map<size_t, std::vector<size_t> >::const_iterator itJ2Pos;
-        for (itJ2Pos = rowInfo.indexedPositions.begin(); itJ2Pos != rowInfo.indexedPositions.end(); ++itJ2Pos) {
-            size_t tapeJ = itJ2Pos->first;
-            const std::vector<size_t>& positions = itJ2Pos->second;
+        for (const auto& itJ2Pos : rowInfo.indexedPositions) {
+            size_t tapeJ = itJ2Pos.first;
+            const std::vector<size_t>& positions = itJ2Pos.second;
 
             CGBase jacVal = dyiDxtape[tapeI].at(tapeJ) * py;
 
@@ -459,9 +450,9 @@ namespace CppAD {
          * non-indexed variable contributions
          */
         // original J index -> {locationIt0, locationIt1, ...}
-        for (itJ2Pos = rowInfo.nonIndexedPositions.begin(); itJ2Pos != rowInfo.nonIndexedPositions.end(); ++itJ2Pos) {
-            size_t j = itJ2Pos->first;
-            const std::vector<size_t>& positions = itJ2Pos->second;
+        for (const auto& itJ2Pos : rowInfo.nonIndexedPositions) {
+            size_t j = itJ2Pos.first;
+            const std::vector<size_t>& positions = itJ2Pos.second;
 
             CGBase jacVal = Base(0);
 
@@ -469,19 +460,17 @@ namespace CppAD {
             const LoopPosition* pos = lModel.getNonIndexedIndepIndexes(j);
             if (pos != nullptr) {
                 size_t tapeJ = pos->tape;
-                typename std::map<size_t, CGBase>::const_iterator itVal = dyiDxtape[tapeI].find(tapeJ);
+                const auto itVal = dyiDxtape[tapeI].find(tapeJ);
                 if (itVal != dyiDxtape[tapeI].end()) {
                     jacVal += itVal->second;
                 }
             }
 
             // non-indexed variables used through temporary variables
-            std::map<size_t, std::set<size_t> >::const_iterator itks = rowInfo.tmpEvals.find(j);
+            const auto itks = rowInfo.tmpEvals.find(j);
             if (itks != rowInfo.tmpEvals.end()) {
                 const std::set<size_t>& ks = itks->second;
-                std::set<size_t>::const_iterator itk;
-                for (itk = ks.begin(); itk != ks.end(); ++itk) {
-                    size_t k = *itk;
+                for (size_t k : ks) {
                     size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
 
                     jacVal += dyiDxtape[tapeI].at(tapeJ) * dzDx[k].at(j);

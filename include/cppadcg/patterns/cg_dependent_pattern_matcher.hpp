@@ -170,9 +170,7 @@ namespace CppAD {
             size_t rSize = relatedDepCandidates_.size();
             for (size_t r = 0; r < rSize; r++) {
                 const std::set<size_t>& candidates = relatedDepCandidates_[r];
-                std::set<size_t>::const_iterator itDep;
-                for (itDep = candidates.begin(); itDep != candidates.end(); ++itDep) {
-                    size_t iDep = *itDep;
+                for (size_t iDep : candidates) {
                     OperationNode<Base>* node = dependents_[iDep].getOperationNode();
                     if (node != nullptr && node->getOperationType() == CGInvOp) {
                         /**
@@ -198,16 +196,13 @@ namespace CppAD {
              */
             findRelatedVariables();
 
-            const size_t eq_size = equations_.size();
-            for (size_t e = 0; e < eq_size; e++) {
-                EquationPattern<Base>* eq = equations_[e];
-
-                set<size_t>::const_iterator depIt;
-                for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                    dep2Equation_[*depIt] = eq;
+            for (EquationPattern<Base>* eq : equations_) {
+                for (size_t depIt : eq->dependents) {
+                    dep2Equation_[depIt] = eq;
                 }
             }
 
+            const size_t eq_size = equations_.size();
             loops_.reserve(eq_size);
 
             SmartSetPointer<set<size_t> > dependentRelations;
@@ -226,27 +221,26 @@ namespace CppAD {
             for (size_t e = 0; e < eq_size; e++) {
                 EquationPattern<Base>* eq = equations_[e];
                 eqCurr_ = eq;
-                set<size_t>::const_iterator depIt;
 
-                for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                    OperationNode<Base>* node = dependents_[*depIt].getOperationNode();
+                for (size_t depIt : eq->dependents) {
+                    OperationNode<Base>* node = dependents_[depIt].getOperationNode();
                     // will define the dependents associated with each operation
-                    markOperationsWithDependent(node, *depIt);
+                    markOperationsWithDependent(node, depIt);
                 }
 
                 /**
                  * Find shared operations with the previous equation patterns
                  */
                 if (e > 0) {
-                    for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                        findSharedTemporaries(dependents_[*depIt], *depIt); // a color is used to mark indexed paths
+                    for (size_t depIt : eq->dependents) {
+                        findSharedTemporaries(dependents_[depIt], depIt); // a color is used to mark indexed paths
                     }
 
                     /**
                      * clean-up
                      */
-                    for (depIt = eq->dependents.begin(); depIt != eq->dependents.end(); ++depIt) {
-                        OperationNode<Base>* node = dependents_[*depIt].getOperationNode();
+                    for (size_t depIt : eq->dependents) {
+                        OperationNode<Base>* node = dependents_[depIt].getOperationNode();
                         EquationPattern<Base>::uncolor(node); // must uncolor
                         EquationPattern<Base>::clearUsageCount(node); // must reset usage count
                     }
@@ -281,7 +275,7 @@ namespace CppAD {
                     EquationPattern<Base>* eq2 = *loop2->equations.begin();
 
                     UniqueEquationPair<Base> eqRel(eq1, eq2);
-                    typename map<UniqueEquationPair<Base>, Dep1Dep2SharedType>::const_iterator eqSharedit = equationShared_.find(eqRel);
+                    const auto eqSharedit = equationShared_.find(eqRel);
                     if (eqSharedit == equationShared_.end())
                         continue; // nothing is shared between eq1 and eq2
 
@@ -299,21 +293,18 @@ namespace CppAD {
                     /***************************************************
                      * organize relations between dependents
                      **************************************************/
-                    typename Dep1Dep2SharedType::const_iterator itDep1Dep2;
-                    for (itDep1Dep2 = dep1Dep2Shared.begin(); itDep1Dep2 != dep1Dep2Shared.end(); ++itDep1Dep2) {
-                        size_t dep1 = itDep1Dep2->first;
-                        const map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2->second;
+                    for (const auto& itDep1Dep2 : dep1Dep2Shared) {
+                        size_t dep1 = itDep1Dep2.first;
+                        const map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >& dep2Shared = itDep1Dep2.second;
 
                         // multiple deps2 means multiple choices for a relation (only one dep1<->dep2 can be chosen)
-                        typename map<size_t, map<OperationNode<Base>*, Indexed2OpCountType> >::const_iterator itDep2;
-                        for (itDep2 = dep2Shared.begin(); itDep2 != dep2Shared.end(); ++itDep2) {
-                            size_t dep2 = itDep2->first;
-                            const map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2->second;
+                        for (const auto& itDep2 : dep2Shared) {
+                            size_t dep2 = itDep2.first;
+                            const map<OperationNode<Base>*, Indexed2OpCountType>& sharedTmps = itDep2.second;
 
                             size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
-                            typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
-                            for (itShared = sharedTmps.begin(); itShared != sharedTmps.end(); ++itShared) {
-                                if (itShared->second.first == INDEXED_OPERATION_TYPE_BOTH) {
+                            for (const auto& itShared : sharedTmps) {
+                                if (itShared.second.first == INDEXED_OPERATION_TYPE_BOTH) {
                                     /**
                                      * one equation uses this temporary shared 
                                      * variable as an indexed variable while the 
@@ -322,7 +313,7 @@ namespace CppAD {
                                     canCombine = false;
                                     break;
                                 } else {
-                                    totalOps += itShared->second.second;
+                                    totalOps += itShared.second.second;
                                 }
                             }
 
@@ -357,9 +348,8 @@ namespace CppAD {
                 std::cout << "\n\nmaxOps: " << itMaxOps->first << "  count:" << itMaxOps->second.size() << std::endl;
 #endif
 
-                typename map<UniqueEquationPair<Base>, TotalOps2validDepsType*>::const_iterator itEqPair;
-                for (itEqPair = itMaxOps->second.begin(); itEqPair != itMaxOps->second.end(); ++itEqPair) {
-                    const UniqueEquationPair<Base>& eqRel = itEqPair->first;
+                for (const auto& itEqPair : itMaxOps->second) {
+                    const UniqueEquationPair<Base>& eqRel = itEqPair.first;
 #ifdef CPPADCG_PRINT_DEBUG
                     std::cout << "  eq1: " << *eqRel.eq1->dependents.begin() << "  eq2: " << *eqRel.eq2->dependents.begin() << std::endl;
 #endif
@@ -377,9 +367,8 @@ namespace CppAD {
                      * required
                      */
                     SmartSetPointer<set<size_t> > dependentRelationsBak;
-                    set<set<size_t>*>::const_iterator its;
-                    for (its = dependentRelations.begin(); its != dependentRelations.end(); ++its) {
-                        dependentRelationsBak.insert(new set<size_t>(**its));
+                    for (const set<size_t>* its : dependentRelations) {
+                        dependentRelationsBak.insert(new set<size_t>(*its));
                     }
 
                     // relationships between dependents for the resulting merged loop
@@ -400,9 +389,8 @@ namespace CppAD {
                         // merge the two loops
 
                         // update the loop of the equations
-                        typename set<EquationPattern<Base>*>::const_iterator itle;
-                        for (itle = loop2->equations.begin(); itle != loop2->equations.end(); ++itle) {
-                            equation2Loop_[*itle] = loop1;
+                        for (EquationPattern<Base>* itle : loop2->equations) {
+                            equation2Loop_[itle] = loop1;
                         }
                         loop1->merge(*loop2, indexedLoopRelations, nonIndexedLoopRelations);
 
@@ -418,12 +406,10 @@ namespace CppAD {
                         // restore dependent relations
                         dependentRelations.s.swap(dependentRelationsBak.s);
                         // map each dependent to the relation set where it is present
-                        std::fill(dep2Relations.begin(), dep2Relations.end(), (set<size_t>*) nullptr);
-                        for (its = dependentRelations.begin(); its != dependentRelations.end(); ++its) {
-                            set<size_t>* relation = *its;
-                            set<size_t>::const_iterator itd;
-                            for (itd = relation->begin(); itd != relation->end(); ++itd) {
-                                dep2Relations[*itd] = relation;
+                        std::fill(dep2Relations.begin(), dep2Relations.end(), nullptr);
+                        for (set<size_t>* relation : dependentRelations) {
+                            for (size_t itd : *relation) {
+                                dep2Relations[itd] = relation;
                             }
                         }
 
@@ -521,14 +507,9 @@ namespace CppAD {
              */
             map<size_t, map<UniqueEquationPair<Base>, TotalOps2validDepsType*> > totalOp2eq;
 
-            typename set<EquationPattern<Base>*>::const_iterator ite1;
-            typename set<EquationPattern<Base>*>::const_iterator ite2;
+            for (EquationPattern<Base>* eq1 : loop1->equations) {
 
-            for (ite1 = loop1->equations.begin(); ite1 != loop1->equations.end(); ++ite1) {
-                EquationPattern<Base>* eq1 = *ite1;
-
-                for (ite2 = loop2->equations.begin(); ite2 != loop2->equations.end(); ++ite2) {
-                    EquationPattern<Base>* eq2 = *ite2;
+                for (EquationPattern<Base>* eq2 : loop2->equations) {
 
                     UniqueEquationPair<Base> eqRel(eq1, eq2);
 
@@ -546,11 +527,10 @@ namespace CppAD {
             for (itr = totalOp2eq.rbegin(); itr != totalOp2eq.rend(); ++itr) {
                 // loop shared operation count
 
-                typename map<UniqueEquationPair<Base>, TotalOps2validDepsType*>::const_iterator itEq;
-                for (itEq = itr->second.begin(); itEq != itr->second.end(); ++itEq) {
-                    EquationPattern<Base>* eq1 = itEq->first.eq1;
-                    EquationPattern<Base>* eq2 = itEq->first.eq2;
-                    TotalOps2validDepsType& totalOps2validDeps = *itEq->second;
+                for (const auto& itEq : itr->second) {
+                    EquationPattern<Base>* eq1 = itEq.first.eq1;
+                    EquationPattern<Base>* eq2 = itEq.first.eq2;
+                    TotalOps2validDepsType& totalOps2validDeps = *itEq.second;
 
                     /***************************************************
                      * attempt to combine dependents which share the 
@@ -561,13 +541,12 @@ namespace CppAD {
 #ifdef CPPADCG_PRINT_DEBUG
                         std::cout << "    operation count: " << itOp2Dep2Shared->first << "  relations: " << itOp2Dep2Shared->second.size() << std::endl;
 #endif
-                        typename map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* >::const_iterator itDep2Shared;
-                        for (itDep2Shared = itOp2Dep2Shared->second.begin(); itDep2Shared != itOp2Dep2Shared->second.end(); ++itDep2Shared) {
-                            DepPairType depRel = itDep2Shared->first;
+                        for (const auto& itDep2Shared : itOp2Dep2Shared->second) {
+                            DepPairType depRel = itDep2Shared.first;
                             size_t dep1 = depRel.first;
                             size_t dep2 = depRel.second;
 
-                            const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared->second;
+                            const map<OperationNode<Base>*, Indexed2OpCountType>& shared = *itDep2Shared.second;
                             /**
                              * this dep1 <-> dep2 is used as a reference to combine
                              * the two equations in the same loop
@@ -583,19 +562,14 @@ namespace CppAD {
                             /**
                              * there has to be at least one iteration with all equation patterns
                              */
-                            typename set<EquationPattern<Base>*>::const_iterator ite;
                             std::vector<Loop<Base>*> loops(2);
                             loops[0] = loop1;
                             loops[1] = loop2;
                             bool nonIndexedOnly = true;
                             for (size_t l = 0; l < 2; l++) {
                                 Loop<Base>* loop = loops[l];
-                                for (ite = loop->equations.begin(); ite != loop->equations.end(); ++ite) { // equation
-                                    EquationPattern<Base>* eq = *ite;
-
-                                    set<size_t>::const_iterator itd;
-                                    for (itd = eq->dependents.begin(); itd != eq->dependents.end(); ++itd) { // dependent
-                                        size_t dep = *itd;
+                                for (EquationPattern<Base>* eq : loop->equations) { // equation
+                                    for (size_t dep : eq->dependents) { // dependent
                                         if (dep2Relations[dep] != nullptr) {
                                             loopRelations.insert(dep2Relations[dep]);
                                             nonIndexedOnly = false;
@@ -611,13 +585,11 @@ namespace CppAD {
                             } else {
                                 // there are shared indexed temporary variables
                                 compatible = false;
-                                set<set<size_t>*>::const_iterator itit;
                                 size_t nNonIndexedRel1 = loop1->getLinkedEquationsByNonIndexedCount();
                                 size_t nNonIndexedRel2 = loop2->getLinkedEquationsByNonIndexedCount();
                                 size_t requiredSize = loop1->equations.size() + loop2->equations.size() - nNonIndexedRel1 - nNonIndexedRel2;
 
-                                for (itit = loopRelations.begin(); itit != loopRelations.end(); ++itit) {
-                                    set<size_t>* relations = *itit;
+                                for (set<size_t>* relations : loopRelations) {
                                     if (relations->size() == requiredSize) {
                                         compatible = true;
                                         break;
@@ -670,9 +642,8 @@ namespace CppAD {
                               SmartSetPointer<std::set<size_t> >& dependentRelations) {
             using namespace std;
 
-            typename map<OperationNode<Base>*, Indexed2OpCountType>::const_iterator itShared;
-            for (itShared = sharedNodes.begin(); itShared != sharedNodes.end(); ++itShared) {
-                OperationNode<Base>* sharedNode = itShared->first;
+            for (const auto& itShared : sharedNodes) {
+                OperationNode<Base>* sharedNode = itShared.first;
 
                 // checks independents
                 bool compatible = canCombineEquations(*eq1, dep1, *eq2, dep2, *sharedNode,
@@ -690,13 +661,10 @@ namespace CppAD {
                              bool indexed) {
             using namespace std;
 
-            typename set<OperationNode<Base>*>::const_iterator itShared;
-            for (itShared = opShared.begin(); itShared != opShared.end(); ++itShared) {
-                OperationNode<Base>* shared = *itShared;
+            for (OperationNode<Base>* shared : opShared) {
                 const set<size_t>& deps = id2Deps[shared->getVariableID()];
 
-                for (set<size_t>::const_iterator itDeps = deps.begin(); itDeps != deps.end(); ++itDeps) {
-                    size_t dep = *itDeps;
+                for (size_t dep : deps) {
                     EquationPattern<Base>* otherEq = dep2Equation_.at(dep);
                     if (eq != otherEq) {
                         Loop<Base>* loop = equation2Loop_.at(otherEq);
@@ -773,10 +741,9 @@ namespace CppAD {
             /**
              * Place new dependents for the temporary variables used by the loops
              */
-            typename std::map<OperationNode<Base>*, size_t>::const_iterator itTmp;
-            for (itTmp = origTemp2Index_.begin(); itTmp != origTemp2Index_.end(); ++itTmp) {
-                size_t k = itTmp->second;
-                nonLoopDeps[nonLoopEq + k] = origHandler.createCG(Argument<Base>(*itTmp->first));
+            for (const auto& itTmp : origTemp2Index_) {
+                size_t k = itTmp.second;
+                nonLoopDeps[nonLoopEq + k] = origHandler.createCG(Argument<Base>(*itTmp.first));
             }
 
             /**
@@ -934,9 +901,7 @@ namespace CppAD {
                 /**
                  * Temporary variable
                  */
-                std::set<size_t>::const_iterator it;
-                for (it = deps.begin(); it != deps.end(); ++it) {
-                    size_t otherDep = *it;
+                for (size_t otherDep : deps) {
 
                     EquationPattern<Base>* otherEquation = dep2Equation_.at(otherDep);
                     if (otherEquation != eqCurr_) {
@@ -1007,9 +972,8 @@ namespace CppAD {
             for (size_t r = 0; r < rSize; r++) {
                 const std::set<size_t>& candidates = relatedDepCandidates_[r];
 
-                std::set<size_t>::const_iterator it;
-                for (it = candidates.begin(); it != candidates.end(); ++it) {
-                    assignIds(dependents_[*it].getOperationNode());
+                for (size_t it : candidates) {
+                    assignIds(dependents_[it].getOperationNode());
                 }
             }
         }
@@ -1034,9 +998,8 @@ namespace CppAD {
             for (size_t r = 0; r < rSize; r++) {
                 const std::set<size_t>& candidates = relatedDepCandidates_[r];
 
-                std::set<size_t>::const_iterator it;
-                for (it = candidates.begin(); it != candidates.end(); ++it) {
-                    resetHandlerCounters(dependents_[*it].getOperationNode());
+                for (size_t it : candidates) {
+                    resetHandlerCounters(dependents_[it].getOperationNode());
                 }
             }
         }
@@ -1056,16 +1019,13 @@ namespace CppAD {
 
         static bool find(Loop<Base>* loop1, Loop<Base>* loop2,
                          const std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>*> >& blackList) {
-            typename std::set<EquationPattern<Base>*>::const_iterator iteq1;
-            for (iteq1 = loop1->equations.begin(); iteq1 != loop1->equations.end(); ++iteq1) {
+            for (EquationPattern<Base>* iteq1 : loop1->equations) {
 
-                typename std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>* > >::const_iterator itBlack;
-                itBlack = blackList.find(*iteq1);
+                const auto itBlack = blackList.find(iteq1);
                 if (itBlack != blackList.end()) {
 
-                    typename std::set<EquationPattern<Base>*>::const_iterator iteq2;
-                    for (iteq2 = loop2->equations.begin(); iteq2 != loop2->equations.end(); ++iteq2) {
-                        if (itBlack->second.find(*iteq2) != itBlack->second.end()) {
+                    for (EquationPattern<Base>* iteq2 : loop2->equations) {
+                        if (itBlack->second.find(iteq2) != itBlack->second.end()) {
                             return true; // found
                         }
                     }
@@ -1102,10 +1062,7 @@ namespace CppAD {
             EquationPattern<Base>::clearUsageCount(&sharedTemp); // must reset usage count
 
             // must have indexed independents at the same locations in both equations
-            typename set<const OperationNode<Base>*>::const_iterator itOp;
-            for (itOp = opWithIndepArgs.begin(); itOp != opWithIndepArgs.end(); ++itOp) {
-                const OperationNode<Base>* op = *itOp;
-
+            for (const OperationNode<Base>* op : opWithIndepArgs) {
                 // get indexed independent variable information
                 // - equation 1
                 typename map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed1It;
@@ -1159,18 +1116,17 @@ namespace CppAD {
                         typedef map<const OperationNode<Base>*, size_t, IndependentNodeSorter<Base> > MapIndep2Dep;
                         MapIndep2Dep eq1Indep2Dep;
                         typename MapIndep2Dep::iterator hint = eq1Indep2Dep.begin();
-                        typename map<size_t, const OperationNode<Base>*>::const_iterator d2i;
-                        for (d2i = eq1Dep2Indep.begin(); d2i != eq1Dep2Indep.end(); ++d2i) {
-                            hint = eq1Indep2Dep.insert(hint, std::make_pair(d2i->second, d2i->first));
+                        for (const auto& d2i : eq1Dep2Indep) {
+                            hint = eq1Indep2Dep.insert(hint, std::make_pair(d2i.second, d2i.first));
                             hint++; // assume that the relation dep<->indep is always ascending
                         }
 
                         typename map<const OperationNode<Base>*, size_t>::const_iterator itHint = eq1Indep2Dep.begin();
 
                         // check all iterations/dependents
-                        for (d2i = eq2Dep2Indep.begin(); d2i != eq2Dep2Indep.end(); ++d2i) {
-                            size_t dep2 = d2i->first;
-                            const OperationNode<Base>* indep = d2i->second;
+                        for (const auto& d2i : eq2Dep2Indep) {
+                            size_t dep2 = d2i.first;
+                            const OperationNode<Base>* indep = d2i.second;
                             typename map<const OperationNode<Base>*, size_t>::const_iterator it;
                             if (itHint->first == indep) {
                                 /**
@@ -1225,16 +1181,12 @@ namespace CppAD {
             // must have indexed independents at the same locations in all equations
             const set<const OperationNode<Base>*> opWithIndepArgs = EquationPattern<Base>::findOperationsUsingIndependents(sharedTemp);
 
-            typename set<const OperationNode<Base>*>::const_iterator itOp;
-            for (itOp = opWithIndepArgs.begin(); itOp != opWithIndepArgs.end(); ++itOp) {
-                const OperationNode<Base>* op = *itOp;
-
+            for (const OperationNode<Base>* op : opWithIndepArgs) {
                 // get indexed independent variable information
                 // - equation 2
-                typename map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator indexed2It;
                 OperationNode<Base>* op2 = eq2.operationEO2Reference.at(dep2).at(op); // convert to the reference of equation 2
-                indexed2It = eq2.indexedOpIndep.op2Arguments.find(op2);
 
+                const auto indexed2It = eq2.indexedOpIndep.op2Arguments.find(op2);
                 if (indexed2It != eq2.indexedOpIndep.op2Arguments.end()) {
                     return false; // indexed in one equation but non-indexed in the other
                 }
@@ -1251,7 +1203,6 @@ namespace CppAD {
                                    SmartSetPointer<std::set<size_t> >& dependentRelations) {
             using namespace std;
 
-            std::set<size_t>::const_iterator it;
             set<size_t>* related1 = dep2Relations[dep1];
             set<size_t>* related2 = dep2Relations[dep2];
 
@@ -1268,13 +1219,13 @@ namespace CppAD {
                     // relations must be merged (if possible)!
                     // merge related2 into related1
                     bool canMerge = true;
-                    set<size_t>::const_iterator itr2;
-                    for (itr2 = related2->begin(); itr2 != related2->end(); ++itr2) {
-                        size_t dep3 = *itr2;
+
+                    for (size_t dep3 : *related2) {
+
                         const EquationPattern<Base>& eq3 = *dep2Equation_.at(dep3);
                         // make sure no other dependent from the same equation pattern was already in this relation set
-                        for (it = eq3.dependents.begin(); it != eq3.dependents.end(); ++it) {
-                            if (*it != dep3 && related1->find(*it) != related1->end()) {
+                        for (size_t it : eq3.dependents) {
+                            if (it != dep3 && related1->find(it) != related1->end()) {
                                 canMerge = false; // relation with a dependent from a different iteration!
                                 break;
                                 //return false; 
@@ -1286,8 +1237,7 @@ namespace CppAD {
                     }
 
                     if (canMerge) {
-                        for (itr2 = related2->begin(); itr2 != related2->end(); ++itr2) {
-                            size_t dep3 = *itr2;
+                        for (size_t dep3 : *related2) {
                             related1->insert(dep3);
                             dep2Relations[dep3] = related1;
                         }
@@ -1307,8 +1257,8 @@ namespace CppAD {
                     if (related1->find(dep2) == related1->end()) {
                         // make sure no other dependent from the same equation pattern was already in this relation set
                         bool canMerge = true;
-                        for (it = eq2.dependents.begin(); it != eq2.dependents.end(); ++it) {
-                            if (*it != dep2 && related1->find(*it) != related1->end()) {
+                        for (size_t it : eq2.dependents) {
+                            if (it != dep2 && related1->find(it) != related1->end()) {
                                 canMerge = false; // relation with a dependent from a different iteration!
                                 break;
                             }
@@ -1333,8 +1283,8 @@ namespace CppAD {
 
                 // make sure no other dependent from the same equation pattern was already in this relation set
                 bool canMerge = true;
-                for (it = eq1.dependents.begin(); it != eq1.dependents.end(); ++it) {
-                    if (*it != dep1 && related2->find(*it) != related2->end()) {
+                for (size_t it : eq1.dependents) {
+                    if (it != dep1 && related2->find(it) != related2->end()) {
                         canMerge = false; // relation with a dependent from a different iteration!
                         break;
                         //return false;

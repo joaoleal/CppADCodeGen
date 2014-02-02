@@ -287,9 +287,8 @@ namespace CppAD {
             }
 
             // notify listeners
-            std::set<JobListener*>::const_iterator itl;
-            for (itl = _listeners.begin(); itl != _listeners.end(); ++itl) {
-                (*itl)->jobStarted(_jobs);
+            for (JobListener* l : _listeners) {
+                l->jobStarted(_jobs);
             }
         }
 
@@ -318,9 +317,8 @@ namespace CppAD {
             }
 
             // notify listeners
-            std::set<JobListener*>::const_iterator itl;
-            for (itl = _listeners.begin(); itl != _listeners.end(); ++itl) {
-                (*itl)->jobEndended(_jobs, elapsed);
+            for (JobListener* l : _listeners) {
+                l->jobEndended(_jobs, elapsed);
             }
 
             _jobs.pop_back();

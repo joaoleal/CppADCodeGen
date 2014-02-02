@@ -248,8 +248,6 @@ namespace CppAD {
                                                                                     const SparsitySetType& sparsity) {
         CppAD::vector<Color> colors(sparsity.size()); // reserve the maximum size to avoid reallocating more space later
 
-        std::set<size_t>::const_iterator it;
-
         /**
          * try not match the columns of each row to a color which did not have
          * those columns yet 
@@ -264,8 +262,7 @@ namespace CppAD {
             // consider only the columns present in the sparsity pattern
             std::set<size_t> rowReduced;
             if (_custom_hess.defined) {
-                for (it = row.begin(); it != row.end(); ++it) {
-                    size_t j = *it;
+                for (size_t j : row) {
                     if (columns.find(j) != columns.end())
                         rowReduced.insert(j);
                 }
@@ -294,8 +291,7 @@ namespace CppAD {
 
             colors[colori].rows.insert(i);
 
-            for (it = rowReduced.begin(); it != rowReduced.end(); ++it) {
-                size_t j = *it;
+            for (size_t j : rowReduced) {
                 colors[colori].column2Row[j] = i;
                 colors[colori].row2Columns[i].insert(j);
             }
@@ -328,11 +324,10 @@ namespace CppAD {
         _cache << "int " << model_function << "("
                 "unsigned long pos, " << argsDcl << ") {\n"
                 "   switch(pos) {\n";
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
+        for (const auto& it : elements) {
             // the size of each sparsity row
-            _cache << "      case " << it->first << ":\n"
-                    "         " << model_function << "_" << suffix << it->first << "(" << args << ");\n"
+            _cache << "      case " << it.first << ":\n"
+                    "         " << model_function << "_" << suffix << it.first << "(" << args << ");\n"
                     "         return 0; // done\n";
         }
         _cache << "      default:\n"
@@ -358,9 +353,8 @@ namespace CppAD {
                                                                   const std::string& suffix,
                                                                   const std::map<size_t, T>& elements,
                                                                   const std::string& argsDcl) {
-        typename std::map<size_t, T>::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t pos = it->first;
+        for (const auto& it : elements) {
+            size_t pos = it.first;
             cache << "void " << model_function << "_" << suffix << pos << "(" << argsDcl << ");\n";
         }
     }
@@ -465,22 +459,21 @@ namespace CppAD {
                 " unsigned long const** elements,"
                 " unsigned long* nnz) {\n";
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
+        for (const auto& it : elements) {
             // the size of each sparsity row
-            const std::vector<size_t>& els = it->second;
+            const std::vector<size_t>& els = it.second;
             _cache << "   ";
             std::ostringstream os;
-            os << "elements" << it->first;
+            os << "elements" << it.first;
             CLanguage<Base>::printStaticIndexArray(_cache, os.str(), els);
         }
 
         _cache << "   switch(pos) {\n";
-        for (it = elements.begin(); it != elements.end(); ++it) {
+        for (const auto& it : elements) {
             // the size of each sparsity row
-            _cache << "   case " << it->first << ":\n"
-                    "      *elements = elements" << it->first << ";\n"
-                    "      *nnz = " << it->second.size() << ";\n"
+            _cache << "   case " << it.first << ":\n"
+                    "      *elements = elements" << it.first << ";\n"
+                    "      *nnz = " << it.second.size() << ";\n"
                     "      break;\n";
         }
         _cache << "   default:\n"
@@ -503,10 +496,9 @@ namespace CppAD {
                                                                                                         const std::vector<size_t>& userCols) {
         std::map<size_t, std::vector<std::set<size_t> > > userLocation;
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t col = it->first;
-            const std::vector<size_t>& els = it->second;
+        for (const auto& it : elements) {
+            size_t col = it.first;
+            const std::vector<size_t>& els = it.second;
             std::vector<std::set<size_t> >& userLocationCol = userLocation[col];
             userLocationCol.resize(els.size());
 
@@ -536,10 +528,9 @@ namespace CppAD {
                                                                                                         const std::vector<size_t>& userCols) {
         std::map<size_t, std::vector<std::set<size_t> > > userLocation;
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t row = it->first;
-            const std::vector<size_t>& els = it->second;
+        for (const auto& it : elements) {
+            size_t row = it.first;
+            const std::vector<size_t>& els = it.second;
             std::vector<std::set<size_t> >& userLocationRow = userLocation[row];
             userLocationRow.resize(els.size());
 

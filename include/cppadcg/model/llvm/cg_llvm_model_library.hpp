@@ -52,9 +52,7 @@ namespace CppAD {
         }
 
         inline virtual ~LlvmModelLibrary() {
-            typename std::set<LlvmModel<Base>*>::const_iterator it;
-            for (it = _models.begin(); it != _models.end(); ++it) {
-                LlvmModel<Base>* model = *it;
+            for (LlvmModel<Base>* model : _models) {
                 model->modelLibraryClosed();
             }
         }

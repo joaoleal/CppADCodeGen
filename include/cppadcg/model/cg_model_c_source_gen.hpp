@@ -82,11 +82,10 @@ namespace CppAD {
                 col.resize(nnz);
 
                 nnz = 0;
-                std::set<size_t>::const_iterator it;
                 for (size_t i = 0; i < elements.size(); i++) {
-                    for (it = elements[i].begin(); it != elements[i].end(); ++it) {
+                    for (size_t it : elements[i]) {
                         row[nnz] = i;
-                        col[nnz] = *it;
+                        col[nnz] = it;
                         nnz++;
                     }
                 }
@@ -686,9 +685,8 @@ namespace CppAD {
             delete _funNoLoops;
             delete _atomicsIndeps;
 
-            typename std::set<LoopModel<Base>* >::const_iterator it;
-            for (it = _loopTapes.begin(); it != _loopTapes.end(); ++it) {
-                delete *it;
+            for (LoopModel<Base>* it : _loopTapes) {
+                delete it;
             }
         }
 

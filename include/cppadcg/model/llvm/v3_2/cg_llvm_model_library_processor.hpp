@@ -57,9 +57,8 @@ namespace CppAD {
             _context.reset(new llvm::LLVMContext());
 
             const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
-            typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-            for (it = models.begin(); it != models.end(); ++it) {
-                const std::map<std::string, std::string>& modelSources = this->getSources(*it->second);
+            for (const auto& p : models) {
+                const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
                 createLlvmModules(modelSources);
             }
 
@@ -89,9 +88,8 @@ namespace CppAD {
     protected:
 
         virtual void createLlvmModules(const std::map<std::string, std::string>& sources) throw (CGException) {
-            std::map<std::string, std::string>::const_iterator its;
-            for (its = sources.begin(); its != sources.end(); ++its) {
-                createLlvmModule(its->first, its->second);
+            for (const auto& p : sources) {
+                createLlvmModule(p.first, p.second);
             }
         }
 

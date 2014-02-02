@@ -98,13 +98,12 @@ namespace CppAD {
          */
         DynamicLib<Base>* createDynamicLibrary(CCompiler<Base>& compiler,
                                                bool loadLib = true) throw (CGException) {
-           this->modelLibraryHelper_->startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
+            this->modelLibraryHelper_->startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
 
             const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
             try {
-                typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-                for (it = models.begin(); it != models.end(); ++it) {
-                    const std::map<std::string, std::string>& modelSources = this->getSources(*it->second);
+                for (const auto& p : models) {
+                    const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
 
                     this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                     compiler.compileSources(modelSources, true, this->modelLibraryHelper_);
@@ -157,9 +156,8 @@ namespace CppAD {
 
             const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
             try {
-                typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-                for (it = models.begin(); it != models.end(); ++it) {
-                    const std::map<std::string, std::string>& modelSources = this->getSources(*it->second);
+                for (const auto& p : models) {
+                    const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
 
                     this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                     compiler.compileSources(modelSources, posIndepCode, this->modelLibraryHelper_);

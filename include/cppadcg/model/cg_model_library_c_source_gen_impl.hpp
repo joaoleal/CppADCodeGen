@@ -38,9 +38,8 @@ namespace CppAD {
         system::createFolder(sourcesFolder);
 
         // save/generate model sources
-        typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-        for (it = _models.begin(); it != _models.end(); ++it) {
-            saveSources(sourcesFolder, it->second->getSources());
+        for (const auto& it : _models) {
+            saveSources(sourcesFolder, it.second->getSources());
         }
 
         // save/generate library sources
@@ -52,14 +51,13 @@ namespace CppAD {
 
     template<class Base>
     void ModelLibraryCSourceGen<Base>::saveSources(const std::string& sourcesFolder,
-                                                      const std::map<std::string, std::string>& sources) {
-        std::map<std::string, std::string>::const_iterator it;
-        for (it = sources.begin(); it != sources.end(); ++it) {
+                                                   const std::map<std::string, std::string>& sources) {
+        for (const auto& it : sources) {
             // for debugging purposes only
             std::ofstream sourceFile;
-            std::string file = system::createPath(sourcesFolder, it->first);
+            std::string file = system::createPath(sourcesFolder, it.first);
             sourceFile.open(file.c_str());
-            sourceFile << it->second;
+            sourceFile << it.second;
             sourceFile.close();
         }
     }
@@ -90,8 +88,7 @@ namespace CppAD {
         _cache << "void " << FUNCTION_MODELS << "(char const *const** names, int* count) {\n"
                 "   static const char* const models[] = {\n";
 
-        typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-        for (it = _models.begin(); it != _models.end(); ++it) {
+        for (auto it = _models.begin(); it != _models.end(); ++it) {
             if (it != _models.begin()) {
                 _cache << ",\n";
             }

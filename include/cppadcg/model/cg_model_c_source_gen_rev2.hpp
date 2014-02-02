@@ -74,10 +74,9 @@ namespace CppAD {
 
         vector<CGBase> tx1v(n);
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t j = it->first;
-            const std::vector<size_t>& cols = it->second;
+        for (const auto& it : elements) {
+            size_t j = it.first;
+            const std::vector<size_t>& cols = it.second;
 
             _cache.str("");
             _cache << "model (reverse two, indep " << j << ")";
@@ -119,9 +118,7 @@ namespace CppAD {
             CPPADCG_ASSERT_UNKNOWN(px.size() == 2 * n);
 
             vector<CGBase> pxCustom;
-            std::vector<size_t>::const_iterator it2;
-            for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
-                size_t jj = *it2;
+            for (size_t jj : cols) {
                 pxCustom.push_back(px[jj * p + 1]); // not interested in all values
             }
 
@@ -151,10 +148,9 @@ namespace CppAD {
 
         // save compressed positions
         std::map<size_t, std::map<size_t, size_t> > positions;
-        std::map<size_t, std::vector<size_t> >::const_iterator itJ1;
-        for (itJ1 = elements.begin(); itJ1 != elements.end(); ++itJ1) {
-            size_t j1 = itJ1->first;
-            const std::vector<size_t>& row = itJ1->second;
+        for (const auto& itJ1 : elements) {
+            size_t j1 = itJ1.first;
+            const std::vector<size_t>& row = itJ1.second;
             std::map<size_t, size_t>& pos = positions[j1];
 
             for (size_t e = 0; e < row.size(); e++) {
@@ -195,9 +191,9 @@ namespace CppAD {
         _fun.SparseHessian(tx0, py, _hessSparsity.sparsity, evalRows, evalCols, hessFlat, work);
 
         std::map<size_t, vector<CGBase> > hess;
-        for (itJ1 = elements.begin(); itJ1 != elements.end(); ++itJ1) {
-            size_t j1 = itJ1->first;
-            hess[j1].resize(itJ1->second.size());
+        for (const auto& itJ1 : elements) {
+            size_t j1 = itJ1.first;
+            hess[j1].resize(itJ1.second.size());
         }
 
         // organize hessian elements
@@ -212,10 +208,9 @@ namespace CppAD {
         /**
          * Generate one function for each independent variable
          */
-        typename std::map<size_t, vector<CGBase> >::const_iterator it;
-        for (it = hess.begin(); it != hess.end(); ++it) {
-            size_t j = it->first;
-            const vector<CGBase>& row = it->second;
+        for (const auto& it : hess) {
+            size_t j = it.first;
+            const vector<CGBase>& row = it.second;
 
             _cache.str("");
             _cache << "model (reverse two, indep " << j << ")";

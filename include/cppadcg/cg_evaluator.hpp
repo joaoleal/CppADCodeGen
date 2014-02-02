@@ -58,11 +58,10 @@ namespace CppAD {
         }
 
         virtual void addAtomicFunctions(const std::map<size_t, atomic_base<BaseOut>* >& atomics) {
-            typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator it;
-            for (it = atomics.begin(); it != atomics.end(); ++it) {
-                atomic_base<BaseOut>* atomic = it->second;
+            for (const auto& it : atomics) {
+                atomic_base<BaseOut>* atomic = it.second;
                 if (atomic != nullptr) {
-                    atomicFunctions_[it->first] = atomic;
+                    atomicFunctions_[it.first] = atomic;
                 }
             }
         }
@@ -108,9 +107,8 @@ namespace CppAD {
         inline void clear() {
             evals_.clear();
 
-            typename std::map<OperationNode<Base>*, CppAD::vector<AD<BaseOut> >* >::const_iterator it;
-            for (it = evalsArrays_.begin(); it != evalsArrays_.end(); ++it) {
-                delete it->second;
+            for (const auto& it : evalsArrays_) {
+                delete it.second;
             }
             evalsArrays_.clear();
         }

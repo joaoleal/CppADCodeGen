@@ -100,9 +100,7 @@ namespace CppAD {
             size_t nNonIndexed = nonIndexedIndepIndexes.size();
             size_t nTemp = temporaryIndependents.size();
 
-            std::set<size_t>::const_iterator itIter;
-            for (itIter = iterations.begin(); itIter != iterations.end(); ++itIter) {
-                size_t iter = *itIter;
+            for (size_t iter : iterations) {
                 /**
                  * indexed tapeJ1
                  */

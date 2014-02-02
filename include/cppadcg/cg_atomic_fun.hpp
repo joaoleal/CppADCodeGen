@@ -112,10 +112,8 @@ namespace CppAD {
 
             rev_sparse_jac(m, rt, st);
 
-            std::set<size_t>::const_iterator it;
             for (size_t j = 0; j < n; j++) {
-                for (it = st[j].begin(); it != st[j].end(); ++it) {
-                    size_t i = *it;
+                for (size_t i : st[j]) {
                     if (vx[j]) {
                         vy[i] = true;
                     }

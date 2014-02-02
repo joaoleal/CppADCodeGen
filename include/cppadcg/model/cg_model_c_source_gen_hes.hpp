@@ -188,9 +188,8 @@ namespace CppAD {
             }
 
             // make use of the symmetry of the Hessian in order to reduce operations
-            std::map<size_t, size_t>::const_iterator it2;
-            for (it2 = duplicates.begin(); it2 != duplicates.end(); ++it2) {
-                hess[it2->first] = hess[it2->second];
+            for (const auto& it2 : duplicates) {
+                hess[it2.first] = hess[it2.second];
             }
         } else {
             /**
@@ -332,9 +331,8 @@ namespace CppAD {
             if (!itOrd->second) {
                 for (size_t e = 0; e < els.size(); e++) {
                     _cache << "   ";
-                    set<size_t>::const_iterator itl;
-                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                        _cache << "hess[" << (*itl) << "] = ";
+                    for (size_t itl : location[e]) {
+                        _cache << "hess[" << itl << "] = ";
                     }
                     _cache << "compressed[" << e << "];\n";
                 }
@@ -404,16 +402,13 @@ namespace CppAD {
              * sparsity for the hessian of each equations
              */
 
-            std::set<size_t>::const_iterator it;
-
             std::set<size_t> customVarsInHess;
             if (_custom_hess.defined) {
                 customVarsInHess.insert(_custom_hess.row.begin(), _custom_hess.row.end());
                 customVarsInHess.insert(_custom_hess.col.begin(), _custom_hess.col.end());
 
                 r = SparsitySetType(n); //clear r
-                for (it = customVarsInHess.begin(); it != customVarsInHess.end(); ++it) {
-                    size_t j = *it;
+                for (size_t j : customVarsInHess) {
                     r[j].insert(j);
                 }
                 jac = _fun.ForSparseJac(n, r);
@@ -437,8 +432,7 @@ namespace CppAD {
 
                 // first-order
                 r = SparsitySetType(n); //clear r
-                for (it = color.forbiddenRows.begin(); it != color.forbiddenRows.end(); ++it) {
-                    size_t j = *it;
+                for (size_t j : color.forbiddenRows) {
                     r[j].insert(j);
                 }
                 _fun.ForSparseJac(n, r);
@@ -446,9 +440,7 @@ namespace CppAD {
                 // second-order
                 s[0].clear();
                 const std::set<size_t>& equations = color.rows;
-                std::set<size_t>::const_iterator itEq;
-                for (itEq = equations.begin(); itEq != equations.end(); ++itEq) {
-                    size_t i = *itEq;
+                for (size_t i : equations) {
                     s[0].insert(i);
                 }
 
@@ -458,10 +450,7 @@ namespace CppAD {
                  * Retrieve the individual hessians for each equation
                  */
                 const std::map<size_t, size_t>& var2Eq = color.column2Row;
-                const std::set<size_t>& forbidden_c = color.forbiddenRows; //used variables
-                std::set<size_t>::const_iterator itvar;
-                for (itvar = forbidden_c.begin(); itvar != forbidden_c.end(); ++itvar) {
-                    size_t j = *itvar;
+                for (size_t j : color.forbiddenRows) { //used variables
                     if (sparsityc[j].size() > 0) {
                         size_t i = var2Eq.at(j);
                         _hessSparsities[i].sparsity[j].insert(sparsityc[j].begin(),

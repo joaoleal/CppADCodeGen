@@ -182,9 +182,8 @@ namespace CppAD {
                 group.model = this;
 
                 // map iterations to the equation groups
-                std::set<size_t>::const_iterator itIt;
-                for (itIt = iterations.begin(); itIt != iterations.end(); ++itIt) {
-                    iteration2eqGroups_[*itIt].insert(&group);
+                for (size_t itIt : iterations) {
+                    iteration2eqGroups_[itIt].insert(&group);
                 }
             }
 

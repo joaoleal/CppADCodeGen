@@ -44,8 +44,7 @@ namespace CppAD {
         }
 
         bool isIndexedOperationArgument(const OperationNode<Base>* node, size_t argIndex) const {
-            typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator itIndexes;
-            itIndexes = op2Arguments.find(node);
+            const auto itIndexes = op2Arguments.find(node);
             if (itIndexes == op2Arguments.end()) {
                 return false;
             }
@@ -138,9 +137,8 @@ namespace CppAD {
         }
 
         void uncolor(const std::vector<CG<Base> >& depVals) {
-            std::set<size_t>::const_iterator it;
-            for (it = dependents.begin(); it != dependents.end(); ++it) {
-                uncolor(depVals[*it].getOperationNode());
+            for (size_t d : dependents) {
+                uncolor(depVals[d].getOperationNode());
             }
         }
 
@@ -194,8 +192,7 @@ namespace CppAD {
         }
 
         inline bool containsConstantIndependent(const OperationNode<Base>* operation, size_t argumentIndex) const {
-            typename std::map<const OperationNode<Base>*, std::set<size_t> >::const_iterator it;
-            it = constOperationIndependents.find(operation);
+            const auto it = constOperationIndependents.find(operation);
             if (it != constOperationIndependents.end()) {
                 if (it->second.find(argumentIndex) != it->second.end()) {
                     return true;
@@ -399,8 +396,7 @@ namespace CppAD {
              * Must consider that the independent might change from iteration to
              * iteration (even if now it won't)
              */
-            typename std::map<const OperationNode<Base>*, std::set<size_t> >::const_iterator it;
-            it = constOperationIndependents.find(parentOp);
+            const auto it = constOperationIndependents.find(parentOp);
             if (it != constOperationIndependents.end()) {
                 if (it->second.find(argIndex) != it->second.end()) {
                     return false;

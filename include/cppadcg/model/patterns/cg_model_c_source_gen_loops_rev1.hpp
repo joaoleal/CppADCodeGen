@@ -64,10 +64,9 @@ namespace CppAD {
         std::vector<size_t> locations(nnz);
 
         size_t p = 0;
-        std::map<size_t, std::vector<size_t> >::const_iterator itI;
-        for (itI = elements.begin(); itI != elements.end(); ++itI) {//loop dependents/equations
-            size_t i = itI->first;
-            const std::vector<size_t>& r = itI->second;
+        for (const auto& itI : elements) {//loop dependents/equations
+            size_t i = itI.first;
+            const std::vector<size_t>& r = itI.second;
 
             for (size_t e = 0; e < r.size(); e++) { // loop variables
                 rows[p] = i;
@@ -139,16 +138,15 @@ namespace CppAD {
                 vector<CGBase>& row = jacNl[i];
                 row.resize(dydx[inl].size());
 
-                typename map<size_t, CGBase>::const_iterator itjv;
-                for (itjv = dydx[inl].begin(); itjv != dydx[inl].end(); ++itjv) {
-                    size_t j = itjv->first;
+                for (const auto& itjv : dydx[inl]) {
+                    size_t j = itjv.first;
                     // (dy_i/dx_v) elements from equations outside loops
                     const set<size_t>& locations = noLoopEvalLocations[inl][j];
 
                     CPPADCG_ASSERT_UNKNOWN(locations.size() == 1); // one jacobian element should not be placed in several locations
                     size_t e = *locations.begin();
 
-                    row[e] = itjv->second * py;
+                    row[e] = itjv.second * py;
 
                     _nonLoopRev1Elements[i].insert(e);
                 }
@@ -158,10 +156,9 @@ namespace CppAD {
             for (size_t inl = nonIndexdedEqSize; inl < dydx.size(); inl++) {
                 size_t k = inl - nonIndexdedEqSize;
 
-                typename map<size_t, CGBase>::const_iterator itjv;
-                for (itjv = dydx[inl].begin(); itjv != dydx[inl].end(); ++itjv) {
-                    size_t j = itjv->first;
-                    dzDx[k][j] = itjv->second;
+                for (const auto& itjv : dydx[inl]) {
+                    size_t j = itjv.first;
+                    dzDx[k][j] = itjv.second;
                 }
             }
 
@@ -271,14 +268,13 @@ namespace CppAD {
                     if (i < _fun.Range()) { // some equations are not present in all iteration
                         std::set<size_t> positions;
 
-                        map<size_t, std::vector<size_t> >::const_iterator itc;
-                        for (itc = rowInfo.indexedPositions.begin(); itc != rowInfo.indexedPositions.end(); ++itc) {
-                            const std::vector<size_t>& positionsC = itc->second;
+                        for (const auto& itc : rowInfo.indexedPositions) {
+                            const std::vector<size_t>& positionsC = itc.second;
                             if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
                                 positions.insert(positionsC[it]);
                         }
-                        for (itc = rowInfo.nonIndexedPositions.begin(); itc != rowInfo.nonIndexedPositions.end(); ++itc) {
-                            const std::vector<size_t>& positionsC = itc->second;
+                        for (const auto& itc : rowInfo.nonIndexedPositions) {
+                            const std::vector<size_t>& positionsC = itc.second;
                             if (positionsC[it] != std::numeric_limits<size_t>::max()) // not all elements are requested for all iterations
                                 positions.insert(positionsC[it]);
                         }
@@ -443,9 +439,7 @@ namespace CppAD {
 
                 map<size_t, CGBase>& dyIDx = dyDx[i];
 
-                set<size_t>::const_iterator it2;
-                for (it2 = row.begin(); it2 != row.end(); ++it2) {
-                    size_t j = *it2;
+                for (size_t j: row) {
                     dyIDx[j] = dw[j];
                 }
             }

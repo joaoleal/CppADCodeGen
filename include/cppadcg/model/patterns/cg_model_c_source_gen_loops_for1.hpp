@@ -64,10 +64,9 @@ namespace CppAD {
         std::vector<size_t> locations(nnz);
 
         size_t p = 0;
-        map<size_t, std::vector<size_t> >::const_iterator itJ;
-        for (itJ = elements.begin(); itJ != elements.end(); ++itJ) {//loop variables
-            size_t j = itJ->first;
-            const std::vector<size_t>& r = itJ->second;
+        for (const pair<size_t, std::vector<size_t> >& itJ : elements) {//loop variables
+            size_t j = itJ.first;
+            const std::vector<size_t>& r = itJ.second;
 
             for (size_t e = 0; e < r.size(); e++) { // loop equations
                 rows[p] = r[e];
@@ -133,18 +132,16 @@ namespace CppAD {
                                                                           x, hasAtomics);
 
             map<size_t, vector<CGBase> > jacNl; // by column
-            typename map<size_t, map<size_t, CGBase> >::const_iterator itDydxT;
-            for (itDydxT = dydxT.begin(); itDydxT != dydxT.end(); ++itDydxT) {
-                size_t j = itDydxT->first;
-                const map<size_t, CGBase>& dydxjT = itDydxT->second;
+            for (const pair<size_t, map<size_t, CGBase> >& itDydxT : dydxT) {
+                size_t j = itDydxT.first;
+                const map<size_t, CGBase>& dydxjT = itDydxT.second;
 
                 // prepare space for the Jacobian of the original equations
                 vector<CGBase>& col = jacNl[j];
                 col.resize(elements.at(j).size());
 
-                typename map<size_t, CGBase>::const_iterator itiv;
-                for (itiv = dydxjT.begin(); itiv != dydxjT.end(); ++itiv) {
-                    size_t inl = itiv->first;
+                for (const pair<size_t, CGBase>& itiv : dydxjT) {
+                    size_t inl = itiv.first;
 
                     if (inl < nonIndexdedEqSize) {
                         // (dy_i/dx_v) elements from equations outside loops
@@ -153,13 +150,13 @@ namespace CppAD {
                         CPPADCG_ASSERT_UNKNOWN(locations.size() == 1); // one Jacobian element should not be placed in several locations
                         size_t e = *locations.begin();
 
-                        col[e] = itiv->second * dx;
+                        col[e] = itiv.second * dx;
 
                         _nonLoopFor1Elements[j].insert(e);
                     } else {
                         // dz_k/dx_v (for temporary variable)
                         size_t k = inl - nonIndexdedEqSize;
-                        dzDx[k][j] = itiv->second;
+                        dzDx[k][j] = itiv.second;
                     }
 
                 }
@@ -238,10 +235,9 @@ namespace CppAD {
 
                 map<size_t, set<size_t> > localIterCount2Jcols;
 
-                map<size_t, set<size_t> >::const_iterator itJcol2It;
-                for (itJcol2It = group.jCol2Iterations.begin(); itJcol2It != group.jCol2Iterations.end(); ++itJcol2It) {
-                    size_t jcol = itJcol2It->first;
-                    size_t itCount = itJcol2It->second.size();
+                for (const pair<size_t, set<size_t> >& itJcol2It : group.jCol2Iterations) {
+                    size_t jcol = itJcol2It.first;
+                    size_t itCount = itJcol2It.second.size();
                     localIterCount2Jcols[itCount].insert(jcol);
                 }
 
@@ -256,13 +252,13 @@ namespace CppAD {
                  */
                 map<size_t, map<size_t, size_t> > jcol2localIt2ModelIt;
 
-                for (itJcol2It = group.jCol2Iterations.begin(); itJcol2It != group.jCol2Iterations.end(); ++itJcol2It) {
-                    size_t jcol = itJcol2It->first;
+                for (const pair<size_t, set<size_t> >& itJcol2It : group.jCol2Iterations) {
+                    size_t jcol = itJcol2It.first;
 
                     map<size_t, size_t>& localIt2ModelIt = jcol2localIt2ModelIt[jcol];
                     size_t localIt = 0;
                     set<size_t>::const_iterator itIt;
-                    for (itIt = itJcol2It->second.begin(); itIt != itJcol2It->second.end(); ++itIt, localIt++) {
+                    for (itIt = itJcol2It.second.begin(); itIt != itJcol2It.second.end(); ++itIt, localIt++) {
                         localIt2ModelIt[localIt] = *itIt;
                     }
                 }
@@ -289,10 +285,9 @@ namespace CppAD {
                 if (createsLoop) {
                     map<size_t, size_t> jcol2litCount;
 
-                    map<size_t, set<size_t> >::const_iterator itJcol2Its;
-                    for (itJcol2Its = group.jCol2Iterations.begin(); itJcol2Its != group.jCol2Iterations.end(); ++itJcol2Its) {
-                        size_t jcol = itJcol2Its->first;
-                        jcol2litCount[jcol] = itJcol2Its->second.size();
+                    for (const pair<size_t, set<size_t> >& itJcol2Its : group.jCol2Iterations) {
+                        size_t jcol = itJcol2Its.first;
+                        jcol2litCount[jcol] = itJcol2Its.second.size();
                     }
 
                     indexLocalItCountPattern.reset(IndexPattern::detect(jcol2litCount));
@@ -345,7 +340,10 @@ namespace CppAD {
                      */
                     pxCustom.resize(1);
                     // {0} : must point to itself since there is only one dependent
-                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp, {0}, {*loopEnd}));
+                    pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{0},
+                    {
+                                                   *loopEnd
+                    }));
 
                 } else {
                     /**
@@ -565,10 +563,9 @@ namespace CppAD {
             loopGroups.reserve(contrib2jcols.size() * 2); // TODO: improve this
             std::map<JacobianTermContrib<Base>, JacobianColGroup<Base>*> c2subgroups;
 
-            typename map<JacobianTermContrib<Base>, set<size_t> >::const_iterator itC;
-            for (itC = contrib2jcols.begin(); itC != contrib2jcols.end(); ++itC) {
-                const JacobianTermContrib<Base>& c = itC->first;
-                const set<size_t>& jcols = itC->second;
+            for (const auto& itC : contrib2jcols) {
+                const JacobianTermContrib<Base>& c = itC.first;
+                const set<size_t>& jcols = itC.second;
 
                 /**
                  * create subgroups
@@ -607,11 +604,10 @@ namespace CppAD {
             for (size_t i = 0; i < loopEqInfo.size(); i++) {
                 const JacobianWithLoopsRowInfo& row = loopEqInfo[i];
 
-                map<size_t, std::vector<size_t> >::const_iterator it;
                 // indexed
-                for (it = row.indexedPositions.begin(); it != row.indexedPositions.end(); ++it) {
-                    size_t tapeJ = it->first;
-                    const std::vector<size_t>& positions = it->second;
+                for (const pair<size_t, std::vector<size_t> >& it : row.indexedPositions) {
+                    size_t tapeJ = it.first;
+                    const std::vector<size_t>& positions = it.second;
                     map<size_t, set<size_t> >& jcol2Iter = indexed2jcol2Iter[tapeJ];
 
                     for (size_t iter = 0; iter < nIterations; iter++) {
@@ -626,9 +622,9 @@ namespace CppAD {
                 }
 
                 // non-indexed
-                for (it = row.nonIndexedPositions.begin(); it != row.nonIndexedPositions.end(); ++it) {
-                    size_t j = it->first;
-                    const std::vector<size_t>& positions = it->second;
+                for (const pair<size_t, std::vector<size_t> >& it : row.nonIndexedPositions) {
+                    size_t j = it.first;
+                    const std::vector<size_t>& positions = it.second;
                     set<size_t>& jcol2Iter = nonIndexed2Iter[j];
                     bool used = false;
 
@@ -677,13 +673,10 @@ namespace CppAD {
 
             map<Forward1Jcol2Iter, JacobianTermContrib<Base> > contribs;
 
-            set<size_t>::const_iterator it;
             map<size_t, set<size_t> >::const_iterator itJcol2Iter;
 
             //  indexed
-            for (it = c.indexed.begin(); it != c.indexed.end(); ++it) {
-                size_t tapeJ = *it;
-
+            for (size_t tapeJ : c.indexed) {
                 map<size_t, set<size_t> > jcol2Iters = filterBykeys(indexed2jcol2Iter.at(tapeJ), jcols);
                 for (itJcol2Iter = jcol2Iters.begin(); itJcol2Iter != jcol2Iters.end(); ++itJcol2Iter) {
                     Forward1Jcol2Iter k(itJcol2Iter->first, itJcol2Iter->second);
@@ -692,9 +685,7 @@ namespace CppAD {
             }
 
             // non-indexed
-            for (it = c.nonIndexed.begin(); it != c.nonIndexed.end(); ++it) {
-                size_t j = *it;
-
+            for (size_t j : c.nonIndexed) {
                 // probably present in all iterations but the user might request fewer elements in the Jacobian
                 // (it may be because the equation might not exist for this iteration)
                 const set<size_t>& iters = nonIndexed2Iter.at(j);
@@ -705,10 +696,9 @@ namespace CppAD {
             /**
              * 
              */
-            typename map<Forward1Jcol2Iter, JacobianTermContrib<Base> >::const_iterator itK2C;
-            for (itK2C = contribs.begin(); itK2C != contribs.end(); ++itK2C) {
-                const Forward1Jcol2Iter& jcol2Iters = itK2C->first;
-                const JacobianTermContrib<Base>& hc = itK2C->second;
+            for (const pair<Forward1Jcol2Iter, JacobianTermContrib<Base> >& itK2C : contribs) {
+                const Forward1Jcol2Iter& jcol2Iters = itK2C.first;
+                const JacobianTermContrib<Base>& hc = itK2C.second;
 
                 typename map<JacobianTermContrib<Base>, JacobianColGroup<Base>*>::const_iterator its = c2subgroups.find(hc);
                 if (its != c2subgroups.end()) {
@@ -748,8 +738,6 @@ namespace CppAD {
 
             map<size_t, size_t> iter2jcols;
 
-            set<size_t>::const_iterator itIt;
-
             for (size_t tapeI = 0; tapeI < info.size(); tapeI++) {
                 const JacobianWithLoopsRowInfo& jlrw = info[tapeI];
 
@@ -757,9 +745,7 @@ namespace CppAD {
                  * indexed variable contributions
                  */
                 // tape J index -> {locationIt0, locationIt1, ...}
-                set<size_t>::iterator itJ;
-                for (itJ = group.indexed.begin(); itJ != group.indexed.end(); ++itJ) {
-                    size_t tapeJ = *itJ;
+                for (size_t tapeJ : group.indexed) {
 
                     map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.indexedPositions.find(tapeJ);
                     if (itPos != jlrw.indexedPositions.end()) {
@@ -767,8 +753,7 @@ namespace CppAD {
 
                         const std::vector<LoopPosition>& tapeJPos = indexedIndepIndexes[tapeJ];
                         iter2jcols.clear();
-                        for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
-                            size_t iter = *itIt;
+                        for (size_t iter : group.iterations) {
                             if (positions[iter] != std::numeric_limits<size_t>::max()) { // the element must have been requested
                                 CPPADCG_ASSERT_UNKNOWN(tapeJPos[iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
                                 iter2jcols[iter] = tapeJPos[iter].original;
@@ -788,8 +773,7 @@ namespace CppAD {
                  * non-indexed variable contributions
                  */
                 // original J index -> {locationIt0, locationIt1, ...}
-                for (itJ = group.nonIndexed.begin(); itJ != group.nonIndexed.end(); ++itJ) {
-                    size_t j = *itJ;
+                for (size_t j : group.nonIndexed) {
 
                     map<size_t, std::vector<size_t> >::const_iterator itPos = jlrw.nonIndexedPositions.find(j);
                     if (itPos == jlrw.nonIndexedPositions.end()) {
@@ -798,8 +782,7 @@ namespace CppAD {
                     const std::vector<size_t>& positions = itPos->second;
 
                     iter2jcols.clear();
-                    for (itIt = group.iterations.begin(); itIt != group.iterations.end(); ++itIt) {
-                        size_t iter = *itIt;
+                    for (size_t iter : group.iterations) {
                         if (positions[iter] != std::numeric_limits<size_t>::max()) {// the element must have been requested
                             CPPADCG_ASSERT_UNKNOWN(lModel.getDependentIndexes()[tapeI][iter].original != std::numeric_limits<size_t>::max()); // the equation must exist for this iteration
                             iter2jcols[iter] = j;
@@ -825,9 +808,7 @@ namespace CppAD {
                         map<size_t, set<size_t> >::const_iterator itks = jlrw.tmpEvals.find(j);
                         if (itks != jlrw.tmpEvals.end()) {
                             const set<size_t>& ks = itks->second;
-                            set<size_t>::const_iterator itk;
-                            for (itk = ks.begin(); itk != ks.end(); ++itk) {
-                                size_t k = *itk;
+                            for (size_t k : ks) {
                                 size_t tapeJ = lModel.getTempIndepIndexes(k)->tape;
 
                                 jacVal += dyiDxtapeT.at(tapeJ).at(tapeI) * dzDx.at(k).at(j);
@@ -861,10 +842,9 @@ namespace CppAD {
              */
             map<size_t, size_t> locationsIter2Pos;
 
-            std::map<size_t, size_t>::const_iterator itIt;
-            for (itIt = iter2jcols.begin(); itIt != iter2jcols.end(); ++itIt) {
-                size_t iter = itIt->first;
-                size_t jcol = itIt->second;
+            for (const std::pair<size_t, size_t>& itIt : iter2jcols) {
+                size_t iter = itIt.first;
+                size_t jcol = itIt.second;
                 CPPADCG_ASSERT_UNKNOWN(positions[iter] != std::numeric_limits<size_t>::max());
                 locationsIter2Pos[iter] = positions[iter];
                 jcol2CompressedLoc[jcol].insert(positions[iter]);
@@ -937,9 +917,7 @@ namespace CppAD {
 
                 map<size_t, CGBase>& dyDxJT = dyDxT[j];
 
-                set<size_t>::const_iterator it2;
-                for (it2 = column.begin(); it2 != column.end(); ++it2) {
-                    size_t i = *it2;
+                for (size_t i : column) {
                     dyDxJT[i] = dy[i];
                 }
             }

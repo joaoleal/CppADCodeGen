@@ -65,9 +65,8 @@ namespace CppAD {
                 /**
                  * generate bit code
                  */
-                typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator it;
-                for (it = models.begin(); it != models.end(); ++it) {
-                    const std::map<std::string, std::string>& modelSources = this->getSources(*it->second);
+                for (const auto& p : models) {
+                    const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
 
                     this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
                     clang.generateLLVMBitCode(modelSources, this->modelLibraryHelper_);
@@ -89,13 +88,12 @@ namespace CppAD {
                 _context.reset(new llvm::LLVMContext());
 
                 const std::set<std::string>& bcFiles = clang.getBitCodeFiles();
-                typename std::set<std::string>::const_iterator itbc;
-                for (itbc = bcFiles.begin(); itbc != bcFiles.end(); ++itbc) {
+                for (const std::string& itbc : bcFiles) {
                     // load bitcode file
                     OwningPtr<MemoryBuffer> buffer;
 
                     std::string errMsg;
-                    error_code ec = MemoryBuffer::getFile(*itbc, buffer);
+                    error_code ec = MemoryBuffer::getFile(itbc, buffer);
                     if (buffer.get() == nullptr)
                         throw CGException(ec.message());
 

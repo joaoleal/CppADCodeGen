@@ -299,8 +299,7 @@ namespace CppAD {
 
                             CGB v = Base(0);
 
-                            for (set<size_t>::const_iterator itTapeI = group.tapeI.begin(); itTapeI != group.tapeI.end(); ++itTapeI) {
-                                size_t tapeI = *itTapeI;
+                            for (size_t tapeI : group.tapeI) {
                                 const map<size_t, CGB>& row = info.dyiDzk[tapeI];
                                 typename map<size_t, CGB>::const_iterator itCol = row.find(posK->tape);
                                 if (itCol != row.end()) {
@@ -388,8 +387,8 @@ namespace CppAD {
                     size_t j1 = row[el];
                     size_t j2 = col[el];
                     const set<size_t>& locations = noLoopEvalHessLocations[j1].at(j2);
-                    for (set<size_t>::const_iterator itE = locations.begin(); itE != locations.end(); ++itE)
-                        hess[*itE] = hessNoLoop[el];
+                    for (size_t itE : locations)
+                        hess[itE] = hessNoLoop[el];
                 }
             }
         }

@@ -69,10 +69,9 @@ namespace CppAD {
         const std::string jobName = "model (forward one)";
         startingJob("'" + jobName + "'", JobTimer::SOURCE_GENERATION);
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t j = it->first;
-            const std::vector<size_t>& rows = it->second;
+        for (const auto& it : elements) {
+            size_t j = it.first;
+            const std::vector<size_t>& rows = it.second;
 
             _cache.str("");
             _cache << "model (forward one, indep " << j << ")";
@@ -105,9 +104,8 @@ namespace CppAD {
             CPPADCG_ASSERT_UNKNOWN(dy.size() == _fun.Range());
 
             vector<CGBase> dyCustom;
-            std::vector<size_t>::const_iterator it2;
-            for (it2 = rows.begin(); it2 != rows.end(); ++it2) {
-                dyCustom.push_back(dy[*it2]);
+            for (size_t it2 : rows) {
+                dyCustom.push_back(dy[it2]);
             }
 
             finishedJob();
@@ -162,10 +160,9 @@ namespace CppAD {
         std::map<size_t, vector<CGBase> > jac; // by column
         std::map<size_t, std::map<size_t, size_t> > positions; // by column
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t j = it->first;
-            const std::vector<size_t>& column = it->second;
+        for (const auto& it : elements) {
+            size_t j = it.first;
+            const std::vector<size_t>& column = it.second;
 
             jac[j].resize(column.size());
             std::map<size_t, size_t>& pos = positions[j];

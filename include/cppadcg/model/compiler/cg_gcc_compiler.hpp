@@ -66,9 +66,8 @@ namespace CppAD {
             args.push_back(linkerFlags); // Pass suitable options to linker
             args.push_back("-o"); // Output file name
             args.push_back(library); // Output file name
-            std::set<std::string>::const_iterator it;
-            for (it = this->_ofiles.begin(); it != this->_ofiles.end(); ++it) {
-                args.push_back(*it);
+            for (const std::string& it : this->_ofiles) {
+                args.push_back(it);
             }
 
             if (timer != nullptr) {

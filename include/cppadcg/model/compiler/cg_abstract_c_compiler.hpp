@@ -202,11 +202,10 @@ namespace CppAD {
                                   JobTimer* timer = nullptr) = 0;
 
         virtual void cleanup() override {
-            // clean up
-            std::set<std::string>::const_iterator it;
-            for (it = _ofiles.begin(); it != _ofiles.end(); ++it) {
-                if (remove(it->c_str()) != 0)
-                    std::cerr << "Failed to delete temporary file '" << *it << "'" << std::endl;
+            // clean up;
+            for (const std::string& it : _ofiles) {
+                if (remove(it.c_str()) != 0)
+                    std::cerr << "Failed to delete temporary file '" << it << "'" << std::endl;
             }
             _ofiles.clear();
             _sfiles.clear();

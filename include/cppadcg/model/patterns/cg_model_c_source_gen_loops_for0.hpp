@@ -59,10 +59,8 @@ namespace CppAD {
         IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
         handler.manageOperationNodeMemory(iterationIndexDcl);
 
-        typename std::set<LoopModel<Base>* >::const_iterator itl;
-        size_t l = 0;
-        for (itl = _loopTapes.begin(); itl != _loopTapes.end(); ++itl, l++) {
-            LoopModel<Base>& lModel = **itl;
+        for (LoopModel<Base>* itl : _loopTapes) {
+            LoopModel<Base>& lModel = *itl;
             size_t nIterations = lModel.getIterationCount();
             const std::vector<std::vector<LoopPosition> >& dependents = lModel.getDependentIndexes();
 

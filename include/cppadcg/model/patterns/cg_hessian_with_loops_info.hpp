@@ -134,9 +134,8 @@ namespace CppAD {
                         vw[0][i] = Base(0);
                     }
 
-                    std::set<size_t>::const_iterator itI;
-                    for (itI = group.tapeI.begin(); itI != group.tapeI.end(); ++itI) {
-                        vw[0][*itI] = w[*itI];
+                    for (size_t itI : group.tapeI) {
+                        vw[0][itI] = w[itI];
                     }
 
                     generateLoopForJacHes(fun, x, vw, y,

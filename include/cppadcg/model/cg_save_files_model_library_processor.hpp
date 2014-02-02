@@ -41,17 +41,14 @@ namespace CppAD {
 
             const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
 
-            typename std::map<std::string, ModelCSourceGen<Base>*>::const_iterator itm;
+            for (const auto& itm : models) {
+                const std::map<std::string, std::string>& sources = this->getSources(*itm.second);
 
-            for (itm = models.begin(); itm != models.end(); ++itm) {
-                const std::map<std::string, std::string>& sources = this->getSources(*itm->second);
-
-                std::map<std::string, std::string>::const_iterator it;
-                for (it = sources.begin(); it != sources.end(); ++it) {
+                for (const auto& it : sources) {
                     std::ofstream sourceFile;
-                    std::string file = system::createPath(sourcesFolder, it->first);
+                    std::string file = system::createPath(sourcesFolder, it.first);
                     sourceFile.open(file.c_str());
-                    sourceFile << it->second;
+                    sourceFile << it.second;
                     sourceFile.close();
                 }
             }

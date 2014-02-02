@@ -538,10 +538,9 @@ namespace CppAD {
             _atomicFunctionName2Index.clear();
 
             // restore altered nodes
-            typename std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > >::const_iterator itAlt;
-            for (itAlt = _alteredNodes.begin(); itAlt != _alteredNodes.end(); ++itAlt) {
-                OperationNode<Base>* tmp = itAlt->first;
-                OperationNode<Base>* opClone = itAlt->second;
+            for (const auto& itAlt : _alteredNodes) {
+                OperationNode<Base>* tmp = itAlt.first;
+                OperationNode<Base>* opClone = itAlt.second;
                 if (tmp->getOperationType() == CGTmpOp && !tmp->getInfo().empty()) { // some might have already been restored
                     tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
                     tmp->getInfo() = opClone->getInfo();
@@ -599,9 +598,8 @@ namespace CppAD {
             _loopDependentIndexPatterns.clear();
             _loopIndependentIndexPatterns.clear();
 
-            std::vector<const IndexPattern*>::const_iterator itip;
-            for (itip = _loopDependentIndexPatternManaged.begin(); itip != _loopDependentIndexPatternManaged.end(); ++itip) {
-                delete *itip;
+            for (const IndexPattern* itip : _loopDependentIndexPatternManaged) {
+                delete itip;
             }
             _loopDependentIndexPatternManaged.clear();
 
@@ -684,8 +682,7 @@ namespace CppAD {
             } else {
                 std::set<IndexPattern*> indexes;
                 ip->getSubIndexes(indexes);
-                for (std::set<IndexPattern*>::const_iterator itIp = indexes.begin(); itIp != indexes.end(); ++itIp) {
-                    IndexPattern* sip = *itIp;
+                for (IndexPattern* sip : indexes) {
                     if (sip->getType() == RANDOM1D || sip->getType() == RANDOM2D)
                         found.insert(static_cast<RandomIndexPattern*> (sip));
                 }
@@ -842,13 +839,9 @@ namespace CppAD {
                 /**
                  * loop arguments
                  */
-                const std::vector<Argument<Base> >& args = code.arguments_;
-
-                typename std::vector<Argument<Base> >::const_iterator it;
-                for (it = args.begin(); it != args.end(); ++it) {
-                    if (it->getOperation() != nullptr) {
-                        OperationNode<Base>& arg = *it->getOperation();
-                        markCodeBlockUsed(arg);
+                for (const Argument<Base>& it : code.arguments_) {
+                    if (it.getOperation() != nullptr) {
+                        markCodeBlockUsed(*it.getOperation());
                     }
                 }
 
@@ -1712,10 +1705,9 @@ namespace CppAD {
              */
             const std::vector<Argument<Base> >& args = code.arguments_;
 
-            typename std::vector<Argument<Base> >::const_iterator it;
-            for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != nullptr) {
-                    OperationNode<Base>& arg = *it->getOperation();
+            for (const Argument<Base>& it : args) {
+                if (it.getOperation() != nullptr) {
+                    OperationNode<Base>& arg = *it.getOperation();
 
                     if (arg.use_count_ == 0) {
                         // dependencies not visited yet
@@ -1746,12 +1738,10 @@ namespace CppAD {
                  * temporary variables from outside the loop which are used
                  * within the loop cannot be overwritten inside that loop
                  */
-                const std::set<OperationNode<Base>*>& outerLoopUsages = _loopOuterVars.back();
-                typename std::set<OperationNode<Base>*>::const_iterator it;
-                for (it = outerLoopUsages.begin(); it != outerLoopUsages.end(); ++it) {
-                    OperationNode<Base>* outerVar = *it;
-                    size_t order = code.getEvaluationOrder();
+                size_t order = code.getEvaluationOrder();
 
+                const std::set<OperationNode<Base>*>& outerLoopUsages = _loopOuterVars.back();
+                for (OperationNode<Base>* outerVar : outerLoopUsages) {
                     OperationNode<Base>* aa = getOperationFromAlias(*outerVar); // follow alias!
                     if (aa != nullptr && aa->getLastUsageEvaluationOrder() < order)
                         aa->setLastUsageEvaluationOrder(order);
@@ -1768,9 +1758,7 @@ namespace CppAD {
         }
 
         inline void resetUsageCount() {
-            typename std::vector<OperationNode<Base> *>::const_iterator it;
-            for (it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
-                OperationNode<Base>* block = *it;
+            for (OperationNode<Base>* block : _codeBlocks) {
                 block->use_count_ = 0;
             }
         }
@@ -1781,16 +1769,12 @@ namespace CppAD {
          * @param code The operation just added to the evaluation order
          */
         inline void dependentAdded2EvaluationQueue(OperationNode<Base>& code) {
-            const std::vector<Argument<Base> >& args = code.arguments_;
-
-            typename std::vector<Argument<Base> >::const_iterator it;
-
-            for (it = args.begin(); it != args.end(); ++it) {
-                if (it->getOperation() != nullptr) {
-                    OperationNode<Base>& arg = *it->getOperation();
-                    if (arg.getEvaluationOrder() == 0) {
-                        arg.setEvaluationOrder(code.getEvaluationOrder());
-                        dependentAdded2EvaluationQueue(arg);
+            for (const Argument<Base>& a : code.arguments_) {
+                if (a.getOperation() != nullptr) {
+                    OperationNode<Base>& node = *a.getOperation();
+                    if (node.getEvaluationOrder() == 0) {
+                        node.setEvaluationOrder(code.getEvaluationOrder());
+                        dependentAdded2EvaluationQueue(node);
                     }
                 }
             }
@@ -1847,8 +1831,7 @@ namespace CppAD {
             _scopedVariableOrder.resize(1);
             _scopedVariableOrder[0].clear();
 
-            for (typename std::vector<OperationNode<Base> *>::const_iterator it = _codeBlocks.begin(); it != _codeBlocks.end(); ++it) {
-                OperationNode<Base>* block = *it;
+            for (OperationNode<Base>* block : _codeBlocks) {
                 block->resetHandlerCounters();
                 block->setColor(0);
             }

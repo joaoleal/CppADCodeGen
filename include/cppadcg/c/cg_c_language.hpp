@@ -267,8 +267,6 @@ namespace CppAD {
                     _ss << _spaces << _baseTypeName << " " << tmpArg[0].name << "[" << size << "];\n";
                 }
             } else if (_temporary.size() > 0) {
-                typename std::map<size_t, OperationNode<Base>*>::const_iterator it;
-
                 for (const std::pair<size_t, OperationNode<Base>*>& p : _temporary) {
                     OperationNode<Base>* var = p.second;
                     if (var->getName() == nullptr) {
@@ -280,7 +278,7 @@ namespace CppAD {
                 const std::string& varName1 = *var1->getName();
                 _ss << _spaces << _baseTypeName << " " << varName1;
 
-                it = _temporary.begin();
+                typename std::map<size_t, OperationNode<Base>*>::const_iterator it = _temporary.begin();
                 for (it++; it != _temporary.end(); ++it) {
                     _ss << ", " << *it->second->getName();
                 }
@@ -545,7 +543,6 @@ namespace CppAD {
              * generate variable names
              */
             //generate names for the independent variables
-            typename std::vector<OperationNode<Base> *>::const_iterator it;
             for (size_t j = 0; j < _independentSize; j++) {
                 OperationNode<Base>& op = *info->independent[j];
                 if (op.getName() == nullptr) {
@@ -665,14 +662,14 @@ namespace CppAD {
                 }
 
                 size_t assignCount = 0;
-                for (it = variableOrder.begin(); it != variableOrder.end(); ++it) {
+                for (OperationNode<Base>* it : variableOrder) {
                     // check if a new function should start
                     if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoops.empty()) {
                         assignCount = 0;
                         saveLocalFunction(localFuncNames, localFuncNames.empty() && info->zeroDependents);
                     }
 
-                    OperationNode<Base>& node = **it;
+                    OperationNode<Base>& node = *it;
 
                     // a dependent variable assigned by a loop does require any source code (its done inside the loop)
                     if (node.getOperationType() == CGDependentRefRhsOp) {

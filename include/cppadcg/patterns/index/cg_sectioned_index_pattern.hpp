@@ -41,10 +41,9 @@ namespace CppAD {
         }
 
         inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
-            std::map<size_t, IndexPattern*>::const_iterator it;
-            for (it = sections_.begin(); it != sections_.end(); ++it) {
-                indexes.insert(it->second);
-                it->second->getSubIndexes(indexes);
+            for (const auto& it : sections_) {
+                indexes.insert(it.second);
+                it.second->getSubIndexes(indexes);
             }
         }
 
@@ -201,9 +200,8 @@ namespace CppAD {
     private:
 
         static inline void deleteIndexPatterns(std::map<size_t, IndexPattern*>& sections) {
-            std::map<size_t, IndexPattern*>::const_iterator it;
-            for (it = sections.begin(); it != sections.end(); ++it) {
-                delete it->second;
+            for (const auto& it : sections) {
+                delete it.second;
             }
             sections.clear();
         }

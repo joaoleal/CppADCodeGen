@@ -158,11 +158,9 @@ namespace CppAD {
             /**
              * S(x) * f'(x)
              */
-            std::set<size_t>::const_iterator it;
             for (size_t i = 0; i < m; i++) {
                 if (s[i]) {
-                    for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                        size_t j = *it;
+                    for (size_t j : jacSparsity[i]) {
                         t[j] = true;
                     }
                 }

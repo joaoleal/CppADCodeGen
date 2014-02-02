@@ -271,9 +271,8 @@ namespace CppAD {
             if (!itOrd->second) {
                 for (size_t e = 0; e < els.size(); e++) {
                     _cache << "   ";
-                    set<size_t>::const_iterator itl;
-                    for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                        _cache << "jac[" << (*itl) << "] = ";
+                    for (size_t itl : location[e]) {
+                        _cache << "jac[" << (itl) << "] = ";
                     }
                     _cache << "compressed[" << e << "];\n";
                 }

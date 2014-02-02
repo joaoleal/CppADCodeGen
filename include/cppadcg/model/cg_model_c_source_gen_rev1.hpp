@@ -74,10 +74,9 @@ namespace CppAD {
         const std::string jobName = "model (reverse one)";
         startingJob("'" + jobName + "'", JobTimer::SOURCE_GENERATION);
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t i = it->first;
-            const std::vector<size_t>& cols = it->second;
+        for (const auto& it : elements) {
+            size_t i = it.first;
+            const std::vector<size_t>& cols = it.second;
 
             _cache.str("");
             _cache << "model (reverse one, dep " << i << ")";
@@ -111,9 +110,8 @@ namespace CppAD {
             w[i] = Base(0);
 
             vector<CGBase> dwCustom;
-            std::vector<size_t>::const_iterator it2;
-            for (it2 = cols.begin(); it2 != cols.end(); ++it2) {
-                dwCustom.push_back(dw[*it2]);
+            for (size_t it2 : cols) {
+                dwCustom.push_back(dw[it2]);
             }
 
             finishedJob();
@@ -169,10 +167,9 @@ namespace CppAD {
         std::map<size_t, vector<CGBase> > jac; // by row
         std::vector<std::map<size_t, size_t> > positions(m); // by row
 
-        std::map<size_t, std::vector<size_t> >::const_iterator it;
-        for (it = elements.begin(); it != elements.end(); ++it) {
-            size_t i = it->first;
-            const std::vector<size_t>& row = it->second;
+        for (const auto& it : elements) {
+            size_t i = it.first;
+            const std::vector<size_t>& row = it.second;
 
             jac[i].resize(row.size());
             std::map<size_t, size_t>& pos = positions[i];

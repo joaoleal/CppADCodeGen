@@ -311,9 +311,7 @@ namespace CppAD {
                 CPPADCG_ASSERT_KNOWN(vy.size() >= _m, "Invalid vy size");
                 const std::vector<std::set<size_t> > jacSparsity = JacobianSparsitySet();
                 for (size_t i = 0; i < _m; i++) {
-                    std::set<size_t>::const_iterator it;
-                    for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                        size_t j = *it;
+                    for (size_t j : jacSparsity[i]) {
                         if (vx[j]) {
                             vy[i] = true;
                             break;

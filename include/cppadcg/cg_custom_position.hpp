@@ -55,10 +55,9 @@ namespace CppAD {
             fullDefined_(false) {
             CPPADCG_ASSERT_KNOWN(elements.size() <= m, "Invalid number of rows.");
 
-            std::set<size_t>::const_iterator it;
             for (size_t i = 0; i < elements.size(); i++) {
-                for (it = elements[i].begin(); it != elements[i].end(); ++it) {
-                    elFilter_[i][*it] = true;
+                for (size_t it : elements[i]) {
+                    elFilter_[i][it] = true;
                 }
             }
         }

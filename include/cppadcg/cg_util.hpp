@@ -29,10 +29,8 @@ namespace CppAD {
 
         const VectorSet jacSparsity = extra::jacobianSparsitySet<VectorSet, Base>(fun);
 
-        std::set<size_t>::const_iterator it;
         for (size_t i = 0; i < m; i++) {
-            for (it = jacSparsity[i].begin(); it != jacSparsity[i].end(); ++it) {
-                size_t j = *it;
+            for (size_t j : jacSparsity[i]) {
                 if (vx[j]) {
                     vy[i] = true;
                     break;
@@ -59,9 +57,8 @@ namespace CppAD {
 
         VectorSet transpose(nCols);
         for (size_t i = 0; i < mRows; i++) {
-            std::set<size_t>::const_iterator it;
-            for (it = pattern[i].begin(); it != pattern[i].end(); ++it) {
-                transpose[*it].insert(i);
+            for (size_t it : pattern[i]) {
+                transpose[it].insert(i);
             }
         }
         return transpose;
@@ -77,9 +74,8 @@ namespace CppAD {
         CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
         for (size_t i = 0; i < mRows; i++) {
-            std::set<size_t>::const_iterator it;
-            for (it = pattern[i].begin(); it != pattern[i].end(); ++it) {
-                transpose[*it].insert(i);
+            for (size_t it : pattern[i]) {
+                transpose[it].insert(i);
             }
         }
     }
@@ -153,15 +149,14 @@ namespace CppAD {
         }
 
         VectorSet2 bt = transposePattern(b, n, q);
-        std::set<size_t>::const_iterator itRowb;
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
             const std::set<size_t>& colB = bt[jj];
             if (colB.size() > 0) {
                 for (size_t i = 0; i < m; i++) {
                     const std::set<size_t>& rowA = a[i];
-                    for (itRowb = colB.begin(); itRowb != colB.end(); ++itRowb) {
-                        if (rowA.find(*itRowb) != rowA.end()) {
+                    for (size_t rowb : colB) {
+                        if (rowA.find(rowb) != rowA.end()) {
                             result[i].insert(jj);
                             break;
                         }
@@ -223,7 +218,6 @@ namespace CppAD {
 
         VectorSet at = transposePattern(a, m, n);
         VectorSet2 bt = transposePattern(b, m, q);
-        std::set<size_t>::const_iterator itRowb;
 
         for (size_t jj = 0; jj < q; jj++) { //loop columns of b
             const std::set<size_t>& colB = bt[jj];
@@ -231,8 +225,8 @@ namespace CppAD {
                 for (size_t i = 0; i < n; i++) {
                     const std::set<size_t>& rowAt = at[i];
                     if (rowAt.size() > 0) {
-                        for (itRowb = colB.begin(); itRowb != colB.end(); ++itRowb) {
-                            if (rowAt.find(*itRowb) != rowAt.end()) {
+                        for (size_t rowb : colB) {
+                            if (rowAt.find(rowb) != rowAt.end()) {
                                 result[i].insert(jj);
                                 break;
                             }
@@ -289,9 +283,8 @@ namespace CppAD {
 
         for (size_t jj = 0; jj < n; jj++) { //loop columns of b
             for (size_t i = 0; i < q; i++) {
-                std::set<size_t>::const_iterator it;
-                for (it = a[i].begin(); it != a[i].end(); ++it) {
-                    if (bT[jj].find(*it) != bT[jj].end()) {
+                for (size_t it : a[i]) {
+                    if (bT[jj].find(it) != bT[jj].end()) {
                         rT[jj].insert(i);
                         break;
                     }
@@ -347,12 +340,10 @@ namespace CppAD {
         }
 
         size_t e = 0;
-        std::set<size_t>::const_iterator it;
         for (size_t i = 0; i < sparsity.size(); i++) {
             std::cout << " " << std::setw(width) << i << ": ";
             long last = -1;
-            for (it = sparsity[i].begin(); it != sparsity[i].end(); ++it) {
-                size_t j = *it;
+            for (size_t j : sparsity[i]) {
                 if (j != 0 && long(j) != last + 1) {
                     std::cout << std::setw((j - last - 1) * (width3 + 1)) << " ";
                 }
@@ -387,16 +378,14 @@ namespace CppAD {
         }
 
         if (a.size() < b.size()) {
-            std::set<size_t>::const_iterator ita;
-            for (ita = a.begin(); ita != a.end(); ++ita) {
-                if (b.find(*ita) != b.end()) {
+            for (size_t ita : a) {
+                if (b.find(ita) != b.end()) {
                     return true;
                 }
             }
         } else {
-            std::set<size_t>::const_iterator itb;
-            for (itb = b.begin(); itb != b.end(); ++itb) {
-                if (a.find(*itb) != a.end()) {
+            for (size_t itb : b) {
+                if (a.find(itb) != a.end()) {
                     return true;
                 }
             }
@@ -451,9 +440,8 @@ namespace CppAD {
      */
     template<class Key, class Value>
     void mapKeys(const std::map<Key, Value>& map, std::set<Key>& keys) {
-        typename std::map<Key, Value>::const_iterator it;
-        for (it = map.begin(); it != map.end(); ++it) {
-            keys.insert(keys.end(), it->first);
+        for (const auto& p : map) {
+            keys.insert(keys.end(), p.first);
         }
     }
 
@@ -510,9 +498,8 @@ namespace CppAD {
 
         typename std::map<Key, Value>::const_iterator itM;
 
-        typename std::set<Key>::const_iterator itK;
-        for (itK = keys.begin(); itK != keys.end(); ++itK) {
-            itM = m.find(*itK);
+        for (const Key& k : keys) {
+            itM = m.find(k);
             if (itM != m.end()) {
                 filtered[itM->first] = itM->second;
             }
@@ -612,10 +599,9 @@ namespace CppAD {
 
     template<class Key, class Value>
     inline void print(const std::map<Key, Value>& m) {
-        typename std::map<Key, Value>::const_iterator iti;
-        for (iti = m.begin(); iti != m.end(); ++iti) {
-            std::cout << iti->first << " : ";
-            print(iti->second);
+        for (const std::pair<Key, Value>& p : m) {
+            std::cout << p.first << " : ";
+            print(p.second);
             std::cout << std::endl;
         }
     }
@@ -624,8 +610,7 @@ namespace CppAD {
     inline void print(const std::set<Base>& s) {
         std::cout << "[";
 
-        typename std::set<Base>::const_iterator itj;
-        for (itj = s.begin(); itj != s.end(); ++itj) {
+        for (const auto itj = s.begin(); itj != s.end(); ++itj) {
             if (itj != s.begin()) std::cout << " ";
             print(*itj);
         }
@@ -637,8 +622,7 @@ namespace CppAD {
     inline void print(const std::set<Base*>& s) {
         std::cout << "[";
 
-        typename std::set<Base*>::const_iterator itj;
-        for (itj = s.begin(); itj != s.end(); ++itj) {
+        for (const auto itj = s.begin(); itj != s.end(); ++itj) {
             if (itj != s.begin()) std::cout << " ";
             Base* v = *itj;
             if (v == nullptr) std::cout << "NULL";

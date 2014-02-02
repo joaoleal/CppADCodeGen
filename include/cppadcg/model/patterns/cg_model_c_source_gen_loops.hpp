@@ -176,7 +176,7 @@ namespace CppAD {
                 std::vector<size_t> aInfo{handler.addLoopDependentIndexPattern(*ip), assignOrAdd};
                 // {indexed expression, index(jrowIndexOp) }
                 std::vector<Argument<Base> > indexedArgs{asArgument(val), iterationIndexOp};
-                
+
                 OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
                 handler.manageOperationNodeMemory(yIndexed);
 
@@ -219,9 +219,8 @@ namespace CppAD {
                     indexedArgs.resize(1);
 
                     indexedArgs[0] = asArgument(depInfo.first); // indexed expression
-                    typename std::set<IndexOperationNode<Base>*>::const_iterator itIndexOp;
-                    for (itIndexOp = indexesOps.begin(); itIndexOp != indexesOps.end(); ++itIndexOp) {
-                        indexedArgs.push_back(Argument<Base>(**itIndexOp)); // dependency on the index
+                    for (IndexOperationNode<Base>* itIndexOp : indexesOps) {
+                        indexedArgs.push_back(*itIndexOp); // dependency on the index
                     }
 
                     info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
@@ -262,8 +261,7 @@ namespace CppAD {
             size_t sas = startArgs.size();
             startArgs.resize(sas + nonIndexed.size());
             size_t i = 0;
-            typename std::set<OperationNode<Base>*>::const_iterator it;
-            for (it = nonIndexed.begin(); it != nonIndexed.end(); ++it, i++) {
+            for (auto it = nonIndexed.begin(); it != nonIndexed.end(); ++it, i++) {
                 startArgs[sas + i] = **it;
             }
         }
@@ -358,8 +356,8 @@ namespace CppAD {
                     continue;
 
                 bool matches = true;
-                map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator itLoc = first2Iterations.begin();
-                typename map<SizeN1stIt, IfBranchInfo<Base> >::const_iterator itBranches = ifElse.firstIt2Branch.begin();
+                auto itLoc = first2Iterations.begin();
+                auto itBranches = ifElse.firstIt2Branch.begin();
                 for (; itLoc != first2Iterations.end(); ++itLoc, ++itBranches) {
                     if (itLoc->second.second != itBranches->second.iterations) {
                         matches = false;
@@ -390,22 +388,22 @@ namespace CppAD {
             CPPADCG_ASSERT_UNKNOWN(!iterations.empty());
 
             std::map<size_t, bool> allIters;
-            for (std::set<size_t>::const_iterator it = usedIter.begin(); it != usedIter.end(); ++it) {
-                allIters[*it] = false;
+            for (size_t it : usedIter) {
+                allIters[it] = false;
             }
-            for (std::set<size_t>::const_iterator it = iterations.begin(); it != iterations.end(); ++it) {
-                allIters[*it] = true;
+            for (size_t it : iterations) {
+                allIters[it] = true;
             }
 
             std::vector<size_t> info;
             info.reserve(iterations.size() / 2 + 2);
 
-            std::map<size_t, bool>::const_iterator it = allIters.begin();
+            auto it = allIters.begin();
             while (it != allIters.end()) {
-                std::map<size_t, bool> ::const_iterator min = it;
-                std::map<size_t, bool>::const_iterator max = it;
-                std::map<size_t, bool>::const_iterator minNew = allIters.end();
-                std::map<size_t, bool>::const_iterator maxNew = allIters.end();
+                auto min = it;
+                auto max = it;
+                auto minNew = allIters.end();
+                auto maxNew = allIters.end();
                 if (it->second) {
                     minNew = it;
                     maxNew = it;
@@ -459,11 +457,10 @@ namespace CppAD {
             using namespace std;
 
             map<SizeN1stIt, pair<size_t, set<size_t> > > firstIt2Count2Iterations;
-            typename map<size_t, IfBranchData<Base> >::const_iterator itb;
-            for (itb = branches.begin(); itb != branches.end(); ++itb) {
+            for (const auto& itb : branches) {
                 set<size_t> iterations;
-                mapKeys(itb->second.locations, iterations);
-                firstIt2Count2Iterations[SizeN1stIt(iterations.size(), *iterations.begin())] = make_pair(itb->first, iterations);
+                mapKeys(itb.second.locations, iterations);
+                firstIt2Count2Iterations[SizeN1stIt(iterations.size(), *iterations.begin())] = make_pair(itb.first, iterations);
             }
 
             IfElseInfo<Base>* ifElseBranches = findExistingIfElse(ifElses, firstIt2Count2Iterations);
@@ -482,11 +479,10 @@ namespace CppAD {
             Argument<Base> nextBranchArg;
             set<size_t> usedIter;
 
-            map<SizeN1stIt, pair<size_t, set<size_t> > >::const_iterator it1st2Count2Iters;
-            for (it1st2Count2Iters = firstIt2Count2Iterations.begin(); it1st2Count2Iters != firstIt2Count2Iterations.end(); ++it1st2Count2Iters) {
-                size_t firstIt = it1st2Count2Iters->first.second;
-                size_t count = it1st2Count2Iters->second.first;
-                const set<size_t>& iterations = it1st2Count2Iters->second.second;
+            for (const auto& it1st2Count2Iters : firstIt2Count2Iterations) {
+                size_t firstIt = it1st2Count2Iters.first.second;
+                size_t count = it1st2Count2Iters.second.first;
+                const set<size_t>& iterations = it1st2Count2Iters.second.second;
                 const IfBranchData<Base>& branchData = branches.at(count);
 
                 size_t iterCount = iterations.size();
@@ -616,7 +612,7 @@ namespace CppAD {
             std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(pattern), 1};
             // {indexed expression, dependency on the index}
             std::vector<Argument<Base> > indexedArgs{asArgument(ddfdxdx), iterationIndexOp};
-            
+
             OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
             handler.manageOperationNodeMemory(yIndexed);
 
@@ -807,16 +803,14 @@ namespace CppAD {
              * array start patterns
              */
             std::vector<size_t> localit2jcols;
-            typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlge;
-            for (itlge = loopGroups.begin(); itlge != loopGroups.end(); ++itlge) {
-                LoopModel<Base>* loop = itlge->first;
+            for (const auto& itlge : loopGroups) {
+                LoopModel<Base>* loop = itlge.first;
 
-                garbage.reserve(garbage.size() + itlge->second.size());
+                garbage.reserve(garbage.size() + itlge.second.size());
 
-                map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
-                for (itg = itlge->second.begin(); itg != itlge->second.end(); ++itg) {
-                    size_t group = itg->first;
-                    const map<size_t, set<size_t> >& jcols2e = itg->second;
+                for (const auto& itg : itlge.second) {
+                    size_t group = itg.first;
+                    const map<size_t, set<size_t> >& jcols2e = itg.second;
 
                     // group by number of iterations
                     std::unique_ptr<ArrayGroup> data(new ArrayGroup());
@@ -854,17 +848,15 @@ namespace CppAD {
                          */
                         map<size_t, map<size_t, size_t> > elCount2localIt2jcols;
 
-                        map<size_t, set<size_t> >::const_iterator itJcols2e;
                         size_t localIt = 0;
-                        for (itJcols2e = jcols2e.begin(); itJcols2e != jcols2e.end(); ++itJcols2e, localIt++) {
+                        for (auto itJcols2e = jcols2e.begin(); itJcols2e != jcols2e.end(); ++itJcols2e, localIt++) {
                             size_t elCount = itJcols2e->second.size();
                             elCount2localIt2jcols[elCount][localIt] = itJcols2e->first;
                         }
 
-                        map<size_t, map<size_t, size_t> > ::const_iterator elC2jcolIt;
-                        for (elC2jcolIt = elCount2localIt2jcols.begin(); elC2jcolIt != elCount2localIt2jcols.end(); ++elC2jcolIt) {
-                            size_t commonElSize = elC2jcolIt->first;
-                            const map<size_t, size_t>& localIt2keys = elC2jcolIt->second;
+                        for (const auto& elC2jcolIt : elCount2localIt2jcols) {
+                            size_t commonElSize = elC2jcolIt.first;
+                            const map<size_t, size_t>& localIt2keys = elC2jcolIt.second;
 
                             // the same number of elements is always provided in each call
                             std::vector<std::map<size_t, size_t> > compressPos(commonElSize);
@@ -872,19 +864,17 @@ namespace CppAD {
 
                             set<size_t> keys;
 
-                            map<size_t, size_t>::const_iterator lIt2jcolIt;
-                            for (lIt2jcolIt = localIt2keys.begin(); lIt2jcolIt != localIt2keys.end(); ++lIt2jcolIt) {
-                                size_t localIt = lIt2jcolIt->first;
-                                size_t key = lIt2jcolIt->second;
+                            for (const auto& lIt2jcolIt : localIt2keys) {
+                                size_t localIt = lIt2jcolIt.first;
+                                size_t key = lIt2jcolIt.second;
 
                                 keys.insert(key);
 
                                 const std::vector<std::set<size_t> >& origPos = userElLocation.at(key);
                                 const set<size_t>& compressed = jcols2e.at(key);
 
-                                set<size_t>::const_iterator itE;
                                 size_t e = 0;
-                                for (itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
+                                for (auto itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
                                     CPPADCG_ASSERT_UNKNOWN(origPos[*itE].size() == 1);
                                     resultPos[e][localIt] = *origPos[*itE].begin();
 
@@ -968,16 +958,12 @@ namespace CppAD {
              */
             set<RandomIndexPattern*> indexRandomPatterns;
 
-            typename map<size_t, map<LoopModel<Base>*, map<size_t, ArrayGroup*> > >::const_iterator itItlg;
-            typename map<LoopModel<Base>*, map<size_t, ArrayGroup*> >::const_iterator itlg;
-            typename map<size_t, ArrayGroup*>::const_iterator itg;
+            for (const auto& itItlg : loopCalls) {
 
-            for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
+                for (const auto& itlg : itItlg.second) {
 
-                for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
-
-                    for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
-                        ArrayGroup* group = itg->second;
+                    for (const auto& itg : itlg.second) {
+                        ArrayGroup* group = itg.second;
 
                         CodeHandler<Base>::findRandomIndexPatterns(group->pattern.get(), indexRandomPatterns);
 
@@ -985,13 +971,10 @@ namespace CppAD {
                             CodeHandler<Base>::findRandomIndexPatterns(group->startLocPattern.get(), indexRandomPatterns);
 
                         } else {
-                            map<size_t, ArrayElementGroup*>::const_iterator itc;
-                            for (itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
-                                const ArrayElementGroup* eg = itc->second;
+                            for (const auto& itc : group->elCount2elements) {
+                                const ArrayElementGroup* eg = itc.second;
 
-                                for (size_t e = 0; e < eg->elements.size(); e++) {
-                                    const ArrayElementCopyPattern& ePos = eg->elements[e];
-
+                                for (const ArrayElementCopyPattern& ePos : eg->elements) {
                                     CodeHandler<Base>::findRandomIndexPatterns(ePos.resultPattern, indexRandomPatterns);
                                     CodeHandler<Base>::findRandomIndexPatterns(ePos.compressedPattern, indexRandomPatterns);
                                 }
@@ -1044,10 +1027,9 @@ namespace CppAD {
             string argsLocal = langC.generateDefaultFunctionArguments();
 
             bool lastCompressed = false;
-            map<size_t, set<size_t> >::const_iterator it;
-            for (it = nonLoopElements.begin(); it != nonLoopElements.end(); ++it) {
-                size_t index = it->first;
-                const set<size_t>& elPos = it->second;
+            for (const auto& it : nonLoopElements) {
+                size_t index = it.first;
+                const set<size_t>& elPos = it.second;
                 const std::vector<set<size_t> >& location = userElLocation.at(index);
                 CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
                 CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0);
@@ -1061,12 +1043,10 @@ namespace CppAD {
                 }
                 out << "   " << localFunction << "_" << nlRev2Suffix << index << "(" << argsLocal << ");\n";
                 if (!rowOrdered) {
-                    for (set<size_t>::const_iterator itEl = elPos.begin(); itEl != elPos.end(); ++itEl) {
-                        size_t e = *itEl;
+                    for (size_t e : elPos) {
                         out << "   ";
-                        set<size_t>::const_iterator itl;
-                        for (itl = location[e].begin(); itl != location[e].end(); ++itl) {
-                            out << resultName << "[" << (*itl) << "] += compressed[" << e << "];\n";
+                        for (size_t itl : location[e]) {
+                            out << resultName << "[" << itl << "] += compressed[" << e << "];\n";
                         }
                     }
                 }
@@ -1076,19 +1056,19 @@ namespace CppAD {
             /**
              * loop related values
              */
-            for (itItlg = loopCalls.begin(); itItlg != loopCalls.end(); ++itItlg) {
-                size_t itCount = itItlg->first;
+            for (const auto& itItlg : loopCalls) {
+                size_t itCount = itItlg.first;
                 if (itCount > 1) {
                     lastCompressed = false;
                     out << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {\n";
                 }
 
-                for (itlg = itItlg->second.begin(); itlg != itItlg->second.end(); ++itlg) {
-                    LoopModel<Base>& loop = *itlg->first;
+                for (const auto& itlg : itItlg.second) {
+                    LoopModel<Base>& loop = *itlg.first;
 
-                    for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
-                        size_t g = itg->first;
-                        ArrayGroup* group = itg->second;
+                    for (const auto& itg : itlg.second) {
+                        size_t g = itg.first;
+                        ArrayGroup* group = itg.second;
 
                         const map<size_t, set<size_t> >& key2Compressed = loopGroups.at(&loop).at(g);
 
@@ -1123,9 +1103,8 @@ namespace CppAD {
 
                             // add keys which are never used to usedIter to improve the if/else condition
                             size_t eKey = 0;
-                            map<size_t, set<size_t> >::const_iterator itKey = key2Compressed.begin();
-                            for (; itKey != key2Compressed.end(); ++itKey) {
-                                size_t key = itKey->first;
+                            for (const auto& itKey : key2Compressed) {
+                                size_t key = itKey.first;
                                 for (size_t k = eKey; k < key; k++) {
                                     usedIter.insert(k);
                                 }
@@ -1133,8 +1112,7 @@ namespace CppAD {
                             }
 
                             bool withIfs = group->elCount2elements.size() > 1;
-                            map<size_t, ArrayElementGroup*>::const_iterator itc;
-                            for (itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
+                            for (auto itc = group->elCount2elements.begin(); itc != group->elCount2elements.end(); ++itc) {
                                 const ArrayElementGroup* eg = itc->second;
                                 CPPADCG_ASSERT_UNKNOWN(!eg->elements.empty());
 
@@ -1217,17 +1195,15 @@ namespace CppAD {
             // functions for each row
             map<size_t, map<LoopModel<Base>*, set<size_t> > > functions;
 
-            typename map<LoopModel<Base>*, map<size_t, map<size_t, set<size_t> > > >::const_iterator itlj1g;
-            for (itlj1g = loopGroups.begin(); itlj1g != loopGroups.end(); ++itlj1g) {
-                LoopModel<Base>* loop = itlj1g->first;
+            for (const auto& itlj1g : loopGroups) {
+                LoopModel<Base>* loop = itlj1g.first;
 
-                map<size_t, map<size_t, set<size_t> > >::const_iterator itg;
-                for (itg = itlj1g->second.begin(); itg != itlj1g->second.end(); ++itg) {
-                    size_t group = itg->first;
-                    const map<size_t, set<size_t> >& jrows = itg->second;
+                for (const auto& itg : itlj1g.second) {
+                    size_t group = itg.first;
+                    const map<size_t, set<size_t> >& jrows = itg.second;
 
-                    for (map<size_t, set<size_t> >::const_iterator itJrow = jrows.begin(); itJrow != jrows.end(); ++itJrow) {
-                        functions[itJrow->first][loop].insert(group);
+                    for (const auto& itJrow : jrows) {
+                        functions[itJrow.first][loop].insert(group);
                     }
                 }
             }
@@ -1250,9 +1226,9 @@ namespace CppAD {
                     "(unsigned long pos, " << argsDcl << ") {\n"
                     "   \n"
                     "   switch(pos) {\n";
-            map<size_t, std::vector<size_t> >::const_iterator it;
-            for (it = elements.begin(); it != elements.end(); ++it) {
-                size_t jrow = it->first;
+
+            for (const auto& it : elements) {
+                size_t jrow = it.first;
                 // the size of each sparsity row
                 out << "      case " << jrow << ":\n";
 
@@ -1260,7 +1236,7 @@ namespace CppAD {
                  * contributions from equations not in loops 
                  * (must come before contributions from loops because of the assignments)
                  */
-                map<size_t, set<size_t> >::const_iterator itnl = nonLoopElements.find(jrow);
+                const auto itnl = nonLoopElements.find(jrow);
                 if (itnl != nonLoopElements.end()) {
                     out << "         " << noLoopFunc << jrow << "(" << args << ");\n";
                 }
@@ -1270,13 +1246,12 @@ namespace CppAD {
                  */
                 const map<LoopModel<Base>*, set<size_t> >& rowFunctions = functions[jrow];
 
-                typename map<LoopModel<Base>*, set<size_t> >::const_iterator itlg;
-                for (itlg = rowFunctions.begin(); itlg != rowFunctions.end(); ++itlg) {
-                    LoopModel<Base>* loop = itlg->first;
+                for (const auto& itlg : rowFunctions) {
+                    LoopModel<Base>* loop = itlg.first;
 
-                    for (set<size_t>::const_iterator itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
+                    for (size_t itg : itlg.second) {
                         out << "         ";
-                        generateLocalFunctionName(out, modelName, *loop, *itg);
+                        generateLocalFunctionName(out, modelName, *loop, itg);
                         out << "(" << jrow << ", " << args << ");\n";
                     }
                 }
@@ -1305,13 +1280,11 @@ namespace CppAD {
             std::string argsDcl = langC.generateFunctionArgumentsDcl();
             std::string argsDclLoop = "unsigned long " + keyName + ", " + argsDcl;
 
-            typename std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >::const_iterator itlg;
-            for (itlg = loopGroups.begin(); itlg != loopGroups.end(); ++itlg) {
-                const LoopModel<Base>& loop = *itlg->first;
+            for (const auto& itlg : loopGroups) {
+                const LoopModel<Base>& loop = *itlg.first;
 
-                typename std::map<size_t, std::map<size_t, std::set<size_t> > >::const_iterator itg;
-                for (itg = itlg->second.begin(); itg != itlg->second.end(); ++itg) {
-                    size_t group = itg->first;
+                for (const auto& itg : itlg.second) {
+                    size_t group = itg.first;
 
                     out << "void ";
                     (*generateLocalFunctionName)(out, modelName, loop, group);
