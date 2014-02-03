@@ -14,7 +14,7 @@
  */
 #include "job_speed_listener.hpp"
 
-using namespace CppAD;
+using namespace CppAD::cg;
 
 JobSpeedListener::JobSpeedListener() :
     patternDection(0),

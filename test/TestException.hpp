@@ -19,29 +19,30 @@
 #include <stdexcept>
 
 namespace CppAD {
+namespace cg {
 
-    class TestException : public std::exception {
-    protected:
-        std::string _message;
+class TestException : public std::exception {
+protected:
+    std::string _message;
 
-    public:
+public:
 
-        inline TestException(const std::string& message) throw () :
-            _message(message) {
-        }
+    inline TestException(const std::string& message) throw () :
+        _message(message) {
+    }
 
-        TestException() throw () = delete;
+    TestException() throw () = delete;
 
-        inline const char* what() const throw () {
-            return _message.c_str();
-        }
+    inline const char* what() const throw () {
+        return _message.c_str();
+    }
 
-        inline virtual ~TestException() throw () {
-        }
+    inline virtual ~TestException() throw () {
+    }
 
-    };
+};
 
-}
+} // END cg namespace
+} // END CppAD namespace
 
 #endif
-

@@ -14,13 +14,14 @@
  */
 
 #include "pattern_speed_test.hpp"
-#include "../../../test/cppadcg/models/plug_flow.hpp"
+#include "../../../test/cppad/cg/models/plug_flow.hpp"
 
 using namespace CppAD;
+using namespace CppAD::cg;
 using namespace std;
 
 typedef double Base;
-typedef CppAD::CG<Base> CGD;
+typedef CppAD::cg::CG<Base> CGD;
 
 class PlugFlowPatternSpeedTest : public PatternSpeedTest {
 public:

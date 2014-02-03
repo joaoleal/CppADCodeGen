@@ -16,11 +16,12 @@
 #include <vector>
 #include <valarray>
 
-#include <cppadcg/cg.hpp>
+#include <cppad/cg/cppadcg.hpp>
 #include <gtest/gtest.h>
 #include "CppADCGTest.hpp"
 
 using namespace CppAD;
+using namespace CppAD::cg;
 using namespace CppAD::extra;
 using namespace std;
 

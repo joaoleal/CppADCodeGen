@@ -15,46 +15,48 @@
  * Author: Joao Leal
  */
 
-#include <cppadcg/cg.hpp>
+#include <cppad/cg/cppadcg.hpp>
 
 namespace CppAD {
+namespace cg {
 
-    class JobSpeedListener : public JobListener {
-    public:
-        typedef JobListener::duration duration;
-        // pattern detection
-        duration patternDection;
-        // pattern detection
-        duration graphGen;
-        // total time used for source code generation
-        duration srcCodeGen;
-        // source code compilation
-        duration srcCodeComp;
-        // compilation of the dynamic library
-        duration dynLibComp;
-        // JIT preparation time
-        duration jit;
-        // total time used to compile the sources and generate the library
-        duration totalLibrary;
-    public:
-        JobSpeedListener();
+class JobSpeedListener : public JobListener {
+public:
+    typedef JobListener::duration duration;
+    // pattern detection
+    duration patternDection;
+    // pattern detection
+    duration graphGen;
+    // total time used for source code generation
+    duration srcCodeGen;
+    // source code compilation
+    duration srcCodeComp;
+    // compilation of the dynamic library
+    duration dynLibComp;
+    // JIT preparation time
+    duration jit;
+    // total time used to compile the sources and generate the library
+    duration totalLibrary;
+public:
+    JobSpeedListener();
 
-        inline void reset() {
-            patternDection = duration(0);
-            graphGen = duration(0);
-            srcCodeGen = duration(0);
-            srcCodeComp = duration(0);
-            dynLibComp = duration(0);
-            jit = duration(0);
-            totalLibrary = duration(0);
-        }
+    inline void reset() {
+        patternDection = duration(0);
+        graphGen = duration(0);
+        srcCodeGen = duration(0);
+        srcCodeComp = duration(0);
+        dynLibComp = duration(0);
+        jit = duration(0);
+        totalLibrary = duration(0);
+    }
 
-        virtual void jobStarted(const std::vector<Job>& job) throw (CGException) override;
+    virtual void jobStarted(const std::vector<Job>& job) throw (CGException) override;
 
-        virtual void jobEndended(const std::vector<Job>& job,
-                                 duration elapsed) throw (CGException) override;
-    };
+    virtual void jobEndended(const std::vector<Job>& job,
+                             duration elapsed) throw (CGException) override;
+};
 
-}
+} // END cg namespace
+} // END CppAD namespace
 
 #endif

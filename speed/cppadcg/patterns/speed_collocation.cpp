@@ -14,14 +14,16 @@
  */
 
 #include "pattern_speed_test.hpp"
-#include "../../../test/cppadcg/models/collocation.hpp"
-#include "../../../test/cppadcg/models/plug_flow.hpp"
+#include "../../../test/cppad/cg/models/collocation.hpp"
+#include "../../../test/cppad/cg/models/plug_flow.hpp"
 
-using namespace CppAD;
-using namespace std;
+namespace CppAD {
+namespace cg {
 
 typedef double Base;
-typedef CppAD::CG<Base> CGD;
+typedef CppAD::cg::CG<Base> CGD;
+
+using namespace std;
 
 /**
  * Collocation model using the Plugflow model
@@ -96,6 +98,11 @@ public:
         return modelCppAD_.evaluateModel(x, repeat);
     }
 };
+
+} // END cg namespace
+} // END CppAD namespace
+
+using namespace CppAD::cg;
 
 int main(int argc, char **argv) {
     size_t repeat = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10); // time intervals

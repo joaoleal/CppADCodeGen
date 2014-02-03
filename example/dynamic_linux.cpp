@@ -15,9 +15,10 @@
 
 #include <iosfwd>
 #include <vector>
-#include <cppadcg/cg.hpp>
+#include <cppad/cg/cppadcg.hpp>
 
 using namespace CppAD;
+using namespace CppAD::cg;
 
 int main(void) {
     // use a special object for source code generation
