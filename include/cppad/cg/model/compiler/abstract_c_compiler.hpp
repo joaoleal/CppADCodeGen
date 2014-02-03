@@ -26,7 +26,6 @@ namespace cg {
  */
 template<class Base>
 class AbstractCCompiler : public CCompiler<Base> {
-
 protected:
     std::string _path; // the path to the gcc executable
     std::string _tmpFolder;

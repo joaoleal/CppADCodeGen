@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class GenericModelExternalFunctionWrapper : public ExternalFunctionWrapper<Base> {
-
 private:
     GenericModel<Base>* model_;
 public:

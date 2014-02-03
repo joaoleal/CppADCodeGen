@@ -26,7 +26,6 @@ namespace cg {
  */
 template<class Base>
 class CodeHandler {
-
 public:
     typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     typedef std::vector<ScopePathElement<Base> > ScopePath;

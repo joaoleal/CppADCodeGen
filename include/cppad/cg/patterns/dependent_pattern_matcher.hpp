@@ -22,7 +22,6 @@ namespace cg {
 
 template<class Base>
 class UniqueEquationPair {
-
 public:
     EquationPattern<Base>* eq1;
     EquationPattern<Base>* eq2;
@@ -49,13 +48,11 @@ inline bool operator<(const UniqueEquationPair<Base>& p1, const UniqueEquationPa
  */
 template<class Base>
 class DependentPatternMatcher {
-
 public:
     typedef CG<Base> CGBase;
 private:
 
     enum INDEXED_OPERATION_TYPE {
-
         INDEXED_OPERATION_TYPE_INDEXED,
         INDEXED_OPERATION_TYPE_NONINDEXED,
         INDEXED_OPERATION_TYPE_BOTH

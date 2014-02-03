@@ -482,7 +482,7 @@ TEST_F(CppADCGPatternTest, Atomic2) {
     PatternTestModelWithAtom<CGD> model(modelAtomic2, cgatomicfun);
     setModel(model);
     this->atoms_.push_back(&atomicfun);
-    
+
     testPatternDetection(m, n, 6);
     testLibCreation("modelAtomic2", m, n, 6);
 }

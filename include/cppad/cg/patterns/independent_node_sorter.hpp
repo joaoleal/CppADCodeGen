@@ -24,7 +24,6 @@ namespace cg {
  */
 template<class Base>
 class IndependentNodeSorter {
-
 public:
 
     /**

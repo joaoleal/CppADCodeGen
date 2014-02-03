@@ -42,7 +42,6 @@ bool sortVnodesByOrder(Vnode<Base>* i, Vnode<Base>* j) {
  * Utility class used to sort varibles in the DAE
  */
 class DaeVarOrderInfo {
-
 public:
     size_t originalIndex;
     size_t originalIndex0;
@@ -68,7 +67,6 @@ public:
  * Utility class used to sort equations in the DAE system
  */
 class DaeEqOrderInfo {
-
 public:
     size_t originalIndex;
     size_t originalIndex0;
@@ -142,7 +140,6 @@ inline bool sortEquationByAssignedOrder2(const DaeEqOrderInfo& i, const DaeEqOrd
  */
 template<class Base>
 class DummyDerivatives : public Pantelides<Base> {
-
     typedef CG<Base> CGBase;
     typedef AD<CGBase> ADCG;
     typedef Eigen::Matrix<Base, Eigen::Dynamic, 1 > VectorB;
@@ -1472,7 +1469,7 @@ protected:
                                   const std::set<size_t>& erasedVariables,
                                   const std::set<size_t>& erasedEquations) {
         using CppAD::vector;
-        
+
         std::vector<std::string> indepNames;
         for (size_t p = 0; p < varInfo.size(); p++) {
             if (erasedVariables.find(p) == erasedVariables.end()) {

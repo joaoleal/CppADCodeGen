@@ -27,7 +27,6 @@ namespace cg {
  */
 template<class Base>
 class DaeIndexReduction {
-
 protected:
     /**
      * The original model

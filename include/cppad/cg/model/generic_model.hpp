@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class GenericModel {
-
 protected:
     CGAtomicGenericModel<Base>* _atomic;
     // whether or not to evaluate forward mode of atomics during a reverse sweep

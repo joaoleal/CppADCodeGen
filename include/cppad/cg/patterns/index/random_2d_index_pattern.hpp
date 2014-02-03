@@ -22,7 +22,6 @@ namespace cg {
  * Random pattern using two indexes
  */
 class Random2DIndexPattern : public RandomIndexPattern {
-
 protected:
     std::map<size_t, std::map<size_t, size_t> > indexes_;
     std::string name_;

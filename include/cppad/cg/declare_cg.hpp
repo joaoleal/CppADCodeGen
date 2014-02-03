@@ -257,7 +257,6 @@ inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j);
  * Verbosity level for print-outs
  */
 enum Verbosity {
-
     VERBOSITY_NONE, VERBOSITY_LOW, VERBOSITY_HIGH
 };
 
@@ -265,7 +264,6 @@ enum Verbosity {
  * Automatic Differentiation modes used to determine the Jacobian
  */
 enum JacobianADMode {
-
     FORWARD, REVERSE, AUTOMATIC
 };
 
@@ -273,7 +271,6 @@ enum JacobianADMode {
  * Index pattern types
  */
 enum IndexPatternType {
-
     LINEAR, // y = (x / dx) * dy + b
     SECTIONED, // several index patterns
     RANDOM1D,

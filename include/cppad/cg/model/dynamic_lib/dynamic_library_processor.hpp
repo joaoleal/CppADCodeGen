@@ -26,7 +26,6 @@ namespace cg {
  */
 template<class Base>
 class DynamicModelLibraryProcessor : public ModelLibraryProcessor<Base> {
-
 protected:
     /**
      * the path of the dynamic library to be created

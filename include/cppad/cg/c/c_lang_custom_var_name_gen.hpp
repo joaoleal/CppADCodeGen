@@ -26,7 +26,6 @@ namespace cg {
  */
 template<class Base>
 class CLangCustomVariableNameGenerator : public CLangDefaultVariableNameGenerator<Base> {
-
 protected:
     //
     const std::vector<std::string> depNames_;

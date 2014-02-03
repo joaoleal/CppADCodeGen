@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 struct OperationPathNode {
-
     size_t arg_index;
     OperationNode<Base>* node;
 

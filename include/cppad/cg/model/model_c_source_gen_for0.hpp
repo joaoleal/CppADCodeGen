@@ -21,7 +21,7 @@ namespace cg {
 template<class Base>
 void ModelCSourceGen<Base>::generateZeroSource() {
     using CppAD::vector;
-    
+
     const std::string jobName = "model (zero-order forward)";
 
     startingJob("'" + jobName + "'", JobTimer::GRAPH);

@@ -31,7 +31,6 @@ namespace cg {
  */
 template<class Base>
 class CLanguage : public Language<Base> {
-
 public:
     static const std::string U_INDEX_TYPE;
     static const std::string ATOMICFUN_STRUCT_DEFINITION;
@@ -509,7 +508,7 @@ protected:
 
     virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
         using CppAD::vector;
-        
+
         const bool createFunction = !_functionName.empty();
         const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != nullptr;
 

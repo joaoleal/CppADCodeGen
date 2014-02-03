@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class ModelLibraryProcessor {
-
 protected:
     ModelLibraryCSourceGen<Base>* modelLibraryHelper_;
 public:

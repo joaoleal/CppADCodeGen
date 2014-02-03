@@ -25,7 +25,6 @@ namespace cg {
  */
 template <class Base>
 class LoopModel {
-
 public:
     typedef CppAD::cg::CG<Base> CGB;
     typedef Argument<Base> Arg;
@@ -450,7 +449,7 @@ public:
 
     inline void evalHessianSparsity() {
         using CppAD::vector;
-        
+
         if (!hessSparsity_) {
             size_t n = fun_->Domain();
             hessTapeSparsity_.resize(n);

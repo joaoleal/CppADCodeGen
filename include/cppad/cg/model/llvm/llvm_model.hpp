@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class LlvmModel : public FunctorGenericModel<Base> {
-
 protected:
     /// the dynamic library
     LlvmModelLibrary<Base>* _dynLib;

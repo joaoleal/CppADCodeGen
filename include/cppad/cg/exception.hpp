@@ -24,7 +24,6 @@ namespace cg {
  * @author Joao Leal
  */
 class CGException : public std::exception {
-
 protected:
     std::string _message;
 

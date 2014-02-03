@@ -25,7 +25,6 @@ namespace cg {
  * z = f1(x) + f2(y) 
  */
 class Plane2DIndexPattern : public IndexPattern {
-
 protected:
     /**
      * maps the start of the linear section (first x) to the linear pattern

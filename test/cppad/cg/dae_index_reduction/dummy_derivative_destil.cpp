@@ -127,6 +127,6 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(2), dummyD.getDifferentiationIndex());
-    
+
     delete reducedFun;
 }

@@ -21,7 +21,7 @@ namespace cg {
 template<class Base>
 void ModelCSourceGen<Base>::generateHessianSource() {
     using CppAD::vector;
-    
+
     const std::string jobName = "Hessian";
 
     startingJob("'" + jobName + "'", JobTimer::GRAPH);
@@ -91,7 +91,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSource() throw (CGException) {
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGException) {
     using CppAD::vector;
-    
+
     const std::string jobName = "sparse Hessian";
     size_t m = _fun.Range();
     size_t n = _fun.Domain();

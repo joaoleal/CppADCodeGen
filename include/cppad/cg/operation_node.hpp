@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class OperationNode {
-
 public:
     static const std::set<CGOpCode> CUSTOM_NODE_CLASS;
 private:

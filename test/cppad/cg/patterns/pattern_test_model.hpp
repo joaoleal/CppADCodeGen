@@ -17,48 +17,48 @@
 
 namespace CppAD {
 
-    template<class Base>
-    class PatternTestModel {
-    public:
-        virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) = 0;
+template<class Base>
+class PatternTestModel {
+public:
+    virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) = 0;
 
-        inline virtual ~PatternTestModel() {
-        }
-    };
+    inline virtual ~PatternTestModel() {
+    }
+};
 
-    template<class Base>
-    class DefaultPatternTestModel : public PatternTestModel<Base> {
-    private:
-        std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, size_t repeat);
-    public:
+template<class Base>
+class DefaultPatternTestModel : public PatternTestModel<Base> {
+private:
+    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, size_t repeat);
+public:
 
-        inline DefaultPatternTestModel(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, size_t repeat)) :
-            model_(model) {
-        }
+    inline DefaultPatternTestModel(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, size_t repeat)) :
+        model_(model) {
+    }
 
-        virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) {
-            return (*model_)(x, repeat);
-        }
-    };
+    virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) {
+        return (*model_)(x, repeat);
+    }
+};
 
-    template<class Base>
-    class PatternTestModelWithAtom : public PatternTestModel<Base> {
-    private:
-        std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, size_t repeat, atomic_base<Base>& atom);
-        atomic_base<Base>& atom_;
-    public:
+template<class Base>
+class PatternTestModelWithAtom : public PatternTestModel<Base> {
+private:
+    std::vector<AD<Base> > (*model_)(const std::vector<AD<Base> >& x, size_t repeat, atomic_base<Base>& atom);
+    atomic_base<Base>& atom_;
+public:
 
-        inline PatternTestModelWithAtom(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, size_t repeat, atomic_base<Base>& atom),
-                                        atomic_base<Base>& atom) :
-            model_(model),
-            atom_(atom) {
-        }
+    inline PatternTestModelWithAtom(std::vector<AD<Base> > (*model)(const std::vector<AD<Base> >& x, size_t repeat, atomic_base<Base>& atom),
+                                    atomic_base<Base>& atom) :
+        model_(model),
+        atom_(atom) {
+    }
 
-        virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) {
-            return (*model_)(x, repeat, atom_);
-        }
+    virtual std::vector<AD<Base> > evaluateModel(const std::vector<AD<Base> >& x, size_t repeat) {
+        return (*model_)(x, repeat, atom_);
+    }
 
-    };
+};
 }
 
 #endif

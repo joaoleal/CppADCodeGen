@@ -24,7 +24,6 @@ namespace cg {
  */
 template<class Base>
 class OperationIndexedIndependents {
-
 public:
     typedef std::map<size_t, const OperationNode<Base>*> MapDep2Indep_type;
     /**
@@ -37,7 +36,6 @@ public:
 
 template<class Base>
 class IndexedIndependent {
-
 public:
     std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> > op2Arguments;
 public:
@@ -63,7 +61,6 @@ public:
  */
 template<class Base>
 class EquationPattern {
-
 public:
     const CG<Base>& depRef; // dependent reference
     const size_t depRefIndex;

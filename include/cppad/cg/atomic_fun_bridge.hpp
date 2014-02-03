@@ -28,7 +28,6 @@ namespace cg {
  */
 template <class Base>
 class CGAtomicFunBridge : public CGAbstractAtomicFun<Base> {
-
 public:
     typedef CppAD::cg::CG<Base> CGB;
     typedef CppAD::AD<CGB> ADCGD;
@@ -260,7 +259,7 @@ protected:
                                const CppAD::vector<Base>& tx,
                                CppAD::vector<Base>& ty) {
         using CppAD::vector;
-        
+
         vector<CGB> txcg(tx.size());
         toCG(tx, txcg);
 
@@ -278,7 +277,7 @@ protected:
                                CppAD::vector<Base>& px,
                                const CppAD::vector<Base>& py) {
         using CppAD::vector;
-        
+
         vector<CGB> txcg(tx.size());
         vector<CGB> pycg(py.size());
 

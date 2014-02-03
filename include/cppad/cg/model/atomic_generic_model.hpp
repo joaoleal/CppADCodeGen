@@ -25,7 +25,6 @@ namespace cg {
  */
 template <class Base>
 class CGAtomicGenericModel : public atomic_base<Base> {
-
 protected:
     GenericModel<Base>& model_;
 public:

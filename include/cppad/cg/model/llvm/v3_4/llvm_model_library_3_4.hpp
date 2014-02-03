@@ -27,7 +27,6 @@ template<class Base> class LlvmModel;
  */
 template<class Base>
 class LlvmModelLibrary3_4 : public LlvmModelLibrary<Base> {
-
 protected:
     llvm::Module* _module;
     std::unique_ptr<llvm::LLVMContext> _context;

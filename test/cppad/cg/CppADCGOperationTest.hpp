@@ -26,7 +26,6 @@ namespace CppAD {
 namespace cg {
 
 class CppADCGOperationTest : public CppADCGTest {
-
 public:
 
     inline CppADCGOperationTest(bool verbose = false, bool printValues = false) :

@@ -29,7 +29,6 @@ namespace cg {
  */
 template<class Base>
 class BiPGraphNode {
-
 protected:
     size_t index_; // location of node
     bool colored_; // node visited
@@ -75,7 +74,6 @@ class Vnode; // forward declaration
  */
 template<class Base>
 class Enode : public BiPGraphNode<Base> {
-
 protected:
     static const std::string TYPE;
     /**
@@ -218,7 +216,6 @@ const std::string Enode<Base>::TYPE = "Equation";
  */
 template<class Base>
 class Vnode : public BiPGraphNode<Base> {
-
 protected:
     static const std::string TYPE;
     /**

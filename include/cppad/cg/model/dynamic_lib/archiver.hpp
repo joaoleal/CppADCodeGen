@@ -24,7 +24,6 @@ namespace cg {
  * A tool used to create static libraries from object files
  */
 class Archiver {
-
 public:
     virtual bool isVerbose() const = 0;
 

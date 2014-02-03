@@ -706,7 +706,7 @@ private:
                                            const CppAD::vector<Base>& xNorm,
                                            const CppAD::vector<Base>& eqNorm) {
         using CppAD::vector;
-        
+
         const size_t n = x.size();
 
         // independent variables

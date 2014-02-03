@@ -142,7 +142,7 @@ CppAD::ADFun<T>* CompareChangeFunc4(const std::vector<CppAD::AD<T> >& X) {
     else Y[5] = X[1];
 
     // f : X -> Y
-    return new ADFun<T > (X, Y);   
+    return new ADFun<T > (X, Y);
 }
 
 // ------------------------------- == ----------------------------

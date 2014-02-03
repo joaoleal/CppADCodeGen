@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class ScopePathElement {
-
 public:
     // the color/index associated with the scope
     size_t color;

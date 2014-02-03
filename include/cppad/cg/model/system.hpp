@@ -25,7 +25,6 @@ namespace system {
 
 template<class T = int >
 class SystemInfo {
-
 public:
     static const std::string DYNAMIC_LIB_EXTENSION;
     static const std::string STATIC_LIB_EXTENSION;

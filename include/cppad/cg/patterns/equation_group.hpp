@@ -23,7 +23,6 @@ namespace cg {
  */
 template<class Base>
 class EquationGroup {
-
 public:
     /**
      * The equations in this group

@@ -25,7 +25,6 @@ namespace cg {
  */
 template <class Base>
 class CGAtomicFun : public CGAbstractAtomicFun<Base> {
-
 protected:
     atomic_base<Base>& atomicFun_;
 public:
@@ -104,7 +103,7 @@ protected:
     virtual void zeroOrderDependency(const CppAD::vector<bool>& vx,
                                      CppAD::vector<bool>& vy) override {
         using CppAD::vector;
-        
+
         size_t m = vy.size();
         size_t n = vx.size();
 

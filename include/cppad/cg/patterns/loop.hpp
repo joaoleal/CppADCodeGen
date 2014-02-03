@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class IndependentOrder {
-
 public:
     // provides an independent variable for each loop iteration
     const std::vector<const OperationNode<Base>*> order;
@@ -32,7 +31,6 @@ public:
 
 template<class Base>
 class OperationArgumentsIndepOrder {
-
 public:
     std::map<size_t, IndependentOrder<Base>*> arg2Order;
 };
@@ -42,7 +40,6 @@ public:
  */
 template<class Base>
 class LoopCodeHandler : public CodeHandler<Base> {
-
 public:
     using CodeHandler<Base>::manageOperationNode;
 
@@ -53,7 +50,6 @@ public:
  */
 template<class Base>
 class Loop {
-
 private:
     typedef std::pair<size_t, CG<Base> > IndexValue;
 public:
@@ -1082,7 +1078,6 @@ private:
      * structure used to sort the loop's indexed independent variables
      */
     struct IndexedIndepSorter {
-
         const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep;
 
         IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep_) :

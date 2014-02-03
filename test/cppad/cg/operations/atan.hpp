@@ -23,7 +23,7 @@ CppAD::ADFun<T>* AtanTestOneFunc(const std::vector<CppAD::AD<T> >& u) {
     using namespace CppAD;
 
     assert(u.size() == 1);
-    
+
     size_t s = 0;
 
     // some temporary values
@@ -50,7 +50,7 @@ CppAD::ADFun<T>* AtanTestTwoFunc(const std::vector<CppAD::AD<T> >& u) {
     using namespace CppAD;
 
     assert(u.size() == 1);
-    
+
     // a temporary values
     AD<T> x = sin(u[0]) / cos(u[0]);
 

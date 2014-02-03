@@ -30,7 +30,6 @@ namespace cg {
  */
 template<class Base>
 class LinuxDynamicLib : public DynamicLib<Base> {
-
 protected:
     const std::string _dynLibName;
     /// the dynamic library handler

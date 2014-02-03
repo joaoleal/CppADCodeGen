@@ -22,7 +22,6 @@ namespace loops {
 
 template<class Base>
 class HessianWithLoopsEquationGroupInfo {
-
 public:
     CppAD::vector<std::set<size_t> > evalHessSparsity;
     // (tapeJ1, tapeJ2) -> [positions]
@@ -61,7 +60,6 @@ public:
 
 template<class Base>
 class HessianWithLoopsInfo {
-
 public:
     LoopModel<Base>* model;
     //

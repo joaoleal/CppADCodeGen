@@ -26,7 +26,6 @@ namespace cg {
  */
 template<class Base>
 class SaveFilesModelLibraryProcessor : public ModelLibraryProcessor<Base> {
-
 public:
 
     inline SaveFilesModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :

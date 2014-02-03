@@ -25,7 +25,7 @@ namespace CppAD {
 template<>
 inline cg::CG<double> abs(const cg::CG<double>& var) {
     using namespace CppAD::cg;
-    
+
     if (var.isParameter()) {
         return CG<double> (fabs(var.getValue()));
     } else {
@@ -42,7 +42,6 @@ inline cg::CG<double> abs(const cg::CG<double>& var) {
  */
 template <>
 class numeric_limits<cg::CG<double> > {
-
 public:
 
     static cg::CG<double> epsilon() {

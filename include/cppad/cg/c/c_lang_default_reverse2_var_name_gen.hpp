@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class CLangDefaultReverse2VarNameGenerator : public VariableNameGenerator<Base> {
-
 protected:
     VariableNameGenerator<Base>* _nameGen;
     // the lowest variable ID used for the first independent variable level

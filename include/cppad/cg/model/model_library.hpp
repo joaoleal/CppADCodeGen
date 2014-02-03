@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class ModelLibrary {
-
 public:
     /**
      * Provides the model names in the dynamic library.

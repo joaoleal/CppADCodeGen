@@ -26,7 +26,6 @@ namespace extra {
  * Jacobian so it does not need to be recomputed.
  */
 class SparseForjacHessianWorkJac {
-
 public:
     /// version of user row array with the extra value m at end
     CppAD::vector<size_t> user_row;
@@ -107,7 +106,6 @@ public:
  * Hessian so it does not need to be recomputed.
  */
 class SparseForjacHessianWorkHes {
-
 public:
     /// version of user r array sorted by row or column
     CppAD::vector<size_t> r_sort;
@@ -178,7 +176,6 @@ public:
  * to be recomputed.
  */
 class SparseForjacHessianWork {
-
 public:
     SparseForjacHessianWorkJac jac;
     SparseForjacHessianWorkHes hes;

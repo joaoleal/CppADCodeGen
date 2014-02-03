@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class ExternalFunctionWrapper {
-
 public:
     virtual bool forward(FunctorGenericModel<Base>& libModel,
                          int q,

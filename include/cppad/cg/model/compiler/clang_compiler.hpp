@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class ClangCompiler : public AbstractCCompiler<Base> {
-
 protected:
     std::set<std::string> _bcfiles; // bitcode files
 public:

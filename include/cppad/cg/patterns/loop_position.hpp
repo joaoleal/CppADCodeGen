@@ -22,7 +22,6 @@ namespace cg {
  * Variable positions
  */
 class LoopPosition {
-
 public:
     size_t tape;
     size_t original;
@@ -42,7 +41,6 @@ public:
  * Variable position which changes from iteration to iteration
  */
 class LoopIndexedPosition : public LoopPosition {
-
 public:
     size_t iteration;
 

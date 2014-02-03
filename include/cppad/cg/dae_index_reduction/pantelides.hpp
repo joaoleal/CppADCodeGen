@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class Pantelides : public DaeIndexReduction<Base> {
-
 protected:
     typedef CppAD::cg::CG<Base> CGBase;
     typedef CppAD::AD<CGBase> ADCG;
@@ -835,10 +834,10 @@ protected:
      * @param fun  The taped model
      * @param vnodes  The independent variables
      */
-    inline static void printModel(ADFun<CG<Base> >* fun, 
+    inline static void printModel(ADFun<CG<Base> >* fun,
                                   const std::vector<std::string>& indepNames) {
         using CppAD::vector;
-        
+
         CPPADCG_ASSERT_UNKNOWN(fun != nullptr);
         CPPADCG_ASSERT_UNKNOWN(fun->Domain() == indepNames.size() || fun->Domain() == indepNames.size() + 1); // with or without time
 

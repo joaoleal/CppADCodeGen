@@ -21,7 +21,6 @@ namespace CppAD {
 namespace cg {
 
 class IndexReductionTest : public CppADCGTest {
-
 public:
 
     inline IndexReductionTest(bool verbose = false, bool printValues = false) :

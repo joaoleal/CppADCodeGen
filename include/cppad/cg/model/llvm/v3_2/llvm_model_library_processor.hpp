@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class LlvmModelLibraryProcessor : public ModelLibraryProcessor<Base> {
-
 protected:
     std::vector<std::string> _includePaths;
     std::unique_ptr<llvm::Linker> _linker;

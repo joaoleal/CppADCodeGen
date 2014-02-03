@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class PrintOperationNode : public OperationNode<Base> {
-
 protected:
     std::string before_;
     std::string after_;

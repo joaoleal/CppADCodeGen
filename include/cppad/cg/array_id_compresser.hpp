@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class ArrayIdCompresser {
-
 private:
     /**
      * [start] = end

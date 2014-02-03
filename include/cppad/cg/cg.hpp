@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class CG {
-
 private:
     // the source code handler (nullptr for parameters)
     CodeHandler<Base>* handler_;

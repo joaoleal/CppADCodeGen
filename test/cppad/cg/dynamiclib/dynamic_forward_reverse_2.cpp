@@ -19,111 +19,111 @@ namespace cg {
 
 #define _MODEL1
 
-    class CppADCGDynamicForRevTest : public CppADCGTest {
-    protected:
-        const std::string _modelName;
-        const static size_t n;
-        const static size_t m;
-        std::vector<double> x;
-        ADFun<CGD>* _fun;
-        DynamicLib<double>* _dynamicLib;
-        GenericModel<double>* _model;
-    public:
+class CppADCGDynamicForRevTest : public CppADCGTest {
+protected:
+    const std::string _modelName;
+    const static size_t n;
+    const static size_t m;
+    std::vector<double> x;
+    ADFun<CGD>* _fun;
+    DynamicLib<double>* _dynamicLib;
+    GenericModel<double>* _model;
+public:
 
-        inline CppADCGDynamicForRevTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGDynamicForRevTest(bool verbose = false, bool printValues = false) :
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),
         _fun(nullptr),
         _dynamicLib(nullptr),
         _model(nullptr) {
-        }
+    }
 
-        virtual void SetUp() {
-            // use a special object for source code generation
-            typedef double Base;
-            typedef CG<Base> CGD;
-            typedef AD<CGD> ADCG;
+    virtual void SetUp() {
+        // use a special object for source code generation
+        typedef double Base;
+        typedef CG<Base> CGD;
+        typedef AD<CGD> ADCG;
 
 #ifdef _MODEL1
-            for (size_t j = 0; j < n; j++)
-                x[j] = j + 2;
+        for (size_t j = 0; j < n; j++)
+            x[j] = j + 2;
 #else
-            x[0] = 0.5;
+        x[0] = 0.5;
 #endif
-            // independent variables
-            std::vector<ADCG> u(n);
-            for (size_t j = 0; j < n; j++)
-                u[j] = x[j];
+        // independent variables
+        std::vector<ADCG> u(n);
+        for (size_t j = 0; j < n; j++)
+            u[j] = x[j];
 
-            CppAD::Independent(u);
+        CppAD::Independent(u);
 
-            // dependent variable vector 
-            std::vector<ADCG> Z(m);
+        // dependent variable vector 
+        std::vector<ADCG> Z(m);
 
-            /**
-             * create the CppAD tape as usual
-             */
+        /**
+         * create the CppAD tape as usual
+         */
 #ifdef _MODEL1
-            Z[0] = cos(u[0]);
-            Z[1] = u[1] * u[2] + sin(u[0]);
-            Z[2] = u[2] * u[2] + sin(u[1]);
-            Z[3] = u[0] / u[2] + u[1] * u[2] + 5.0;
+        Z[0] = cos(u[0]);
+        Z[1] = u[1] * u[2] + sin(u[0]);
+        Z[2] = u[2] * u[2] + sin(u[1]);
+        Z[3] = u[0] / u[2] + u[1] * u[2] + 5.0;
 #else
-            Z[0] = 1.0 / u[0];
+        Z[0] = 1.0 / u[0];
 #endif
-            // create f: U -> Z and vectors used for derivative calculations
-            _fun = new ADFun<CGD>(u, Z);
+        // create f: U -> Z and vectors used for derivative calculations
+        _fun = new ADFun<CGD>(u, Z);
 
-            /**
-             * Create the dynamic library
-             * (generate and compile source code)
-             */
-            ModelCSourceGen<double> compHelp(*_fun, _modelName);
+        /**
+         * Create the dynamic library
+         * (generate and compile source code)
+         */
+        ModelCSourceGen<double> compHelp(*_fun, _modelName);
 
-            compHelp.setCreateForwardZero(true);
-            compHelp.setCreateForwardOne(true);
-            compHelp.setCreateReverseOne(true);
-            compHelp.setCreateReverseTwo(true);
-            compHelp.setCreateSparseJacobian(true);
-            compHelp.setCreateSparseHessian(true);
+        compHelp.setCreateForwardZero(true);
+        compHelp.setCreateForwardOne(true);
+        compHelp.setCreateReverseOne(true);
+        compHelp.setCreateReverseTwo(true);
+        compHelp.setCreateSparseJacobian(true);
+        compHelp.setCreateSparseHessian(true);
 
-            GccCompiler<double> compiler;
+        GccCompiler<double> compiler;
 
-            ModelLibraryCSourceGen<double> compDynHelp(compHelp);
-            
-            DynamicModelLibraryProcessor<double> p(compDynHelp);
-            
-            _dynamicLib = p.createDynamicLibrary(compiler);
-            _model = _dynamicLib->model(_modelName);
+        ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 
-            // dimensions
-            ASSERT_EQ(_model->Domain(), _fun->Domain());
-            ASSERT_EQ(_model->Range(), _fun->Range());
-        }
+        DynamicModelLibraryProcessor<double> p(compDynHelp);
 
-        virtual void TearDown() {
-            delete _dynamicLib;
-            _dynamicLib = nullptr;
-            delete _model;
-            _model = nullptr;
-            delete _fun;
-            _fun = nullptr;
-        }
+        _dynamicLib = p.createDynamicLibrary(compiler);
+        _model = _dynamicLib->model(_modelName);
 
-    };
+        // dimensions
+        ASSERT_EQ(_model->Domain(), _fun->Domain());
+        ASSERT_EQ(_model->Range(), _fun->Range());
+    }
 
-    /**
-     * static data
-     */
+    virtual void TearDown() {
+        delete _dynamicLib;
+        _dynamicLib = nullptr;
+        delete _model;
+        _model = nullptr;
+        delete _fun;
+        _fun = nullptr;
+    }
+
+};
+
+/**
+ * static data
+ */
 #ifdef _MODEL1
-    const size_t CppADCGDynamicForRevTest::n = 3;
-    const size_t CppADCGDynamicForRevTest::m = 4;
+const size_t CppADCGDynamicForRevTest::n = 3;
+const size_t CppADCGDynamicForRevTest::m = 4;
 #else
-    const size_t CppADCGDynamicForRevTest::n = 1;
-    const size_t CppADCGDynamicForRevTest::m = 1;
+const size_t CppADCGDynamicForRevTest::n = 1;
+const size_t CppADCGDynamicForRevTest::m = 1;
 #endif
-    
+
 } // END cg namespace
 } // END CppAD namespace
 

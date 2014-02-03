@@ -22,7 +22,6 @@ namespace cg {
  * Generic index pattern
  */
 class IndexPattern {
-
 public:
 
     virtual IndexPatternType getType() const = 0;

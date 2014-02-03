@@ -120,7 +120,8 @@ TEST_F(CppADCGTest, multMatrixTransMatrixSparsity) {
     std::vector<std::set<size_t> > b{
         {0},
         {1},
-        {0}}; // size n
+        {0}
+    }; // size n
 
     CppAD::vector<std::set<size_t> > r(m);
 

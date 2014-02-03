@@ -22,7 +22,6 @@ namespace cg {
  * A type of executing task
  */
 class JobType {
-
 private:
     /**
      * action name for the beginning of the task
@@ -65,7 +64,6 @@ public:
  */
 template<int T = 0 >
 class JobTypeHolder {
-
 public:
     static const JobType DEFAULT;
     static const JobType LOOP_DETECTION;
@@ -121,7 +119,6 @@ const JobType JobTypeHolder<T>::JIT_MODEL_LIBRARY("preparing JIT library", "prep
  * Represents a task for which the execution time will be determined
  */
 class Job {
-
 private:
     /**
      * type
@@ -171,7 +168,6 @@ public:
  * A listener for job start/end events
  */
 class JobListener {
-
 public:
     typedef std::chrono::steady_clock::duration duration;
 
@@ -185,7 +181,6 @@ public:
  * Utility class used to print elapsed times of jobs
  */
 class JobTimer : public JobTypeHolder<> {
-
 protected:
     /**
      * Whether or not to print progress information to the standard 

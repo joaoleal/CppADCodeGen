@@ -22,7 +22,6 @@ namespace cg {
  * Function arguments
  */
 typedef struct FuncArgument {
-
     std::string name;
     bool array;
 
@@ -43,7 +42,6 @@ typedef struct FuncArgument {
  */
 template<class Base>
 class VariableNameGenerator {
-
 protected:
     std::vector<FuncArgument> _dependent;
     std::vector<FuncArgument> _independent;

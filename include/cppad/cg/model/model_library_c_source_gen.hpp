@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class ModelLibraryCSourceGen : public JobTimer {
-
 public:
     static const std::string FUNCTION_VERSION;
     static const std::string FUNCTION_MODELS;

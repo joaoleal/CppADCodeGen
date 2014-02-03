@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class GccCompiler : public AbstractCCompiler<Base> {
-
 public:
 
     GccCompiler() :

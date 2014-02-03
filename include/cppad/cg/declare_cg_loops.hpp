@@ -60,20 +60,20 @@ class ArrayGroup;
 
 template<class Base>
 inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
-                                                   LoopModel<Base>& loop,
-                                                   IndexOperationNode<Base>& iterationIndexOp);
+                                                          LoopModel<Base>& loop,
+                                                          IndexOperationNode<Base>& iterationIndexOp);
 
 template<class Base>
 inline CppAD::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& handler,
-                                                     LoopModel<Base>& loop,
-                                                     const CppAD::vector<CG<Base> >& indexedIndeps,
-                                                     const CppAD::vector<CG<Base> >& nonIndexedIndeps,
-                                                     const CppAD::vector<CG<Base> >& nonIndexedTmps);
+                                                            LoopModel<Base>& loop,
+                                                            const CppAD::vector<CG<Base> >& indexedIndeps,
+                                                            const CppAD::vector<CG<Base> >& nonIndexedIndeps,
+                                                            const CppAD::vector<CG<Base> >& nonIndexedTmps);
 
 template<class Base>
 inline CppAD::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
-                                                   LoopModel<Base>& loop,
-                                                   IndexOperationNode<Base>& iterationIndexOp);
+                                                          LoopModel<Base>& loop,
+                                                          IndexOperationNode<Base>& iterationIndexOp);
 
 template<class Base>
 inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,

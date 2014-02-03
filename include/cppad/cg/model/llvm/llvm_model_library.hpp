@@ -28,7 +28,6 @@ class LlvmModel;
  */
 template<class Base>
 class LlvmModelLibrary : public FunctorModelLibrary<Base> {
-
 protected:
     unsigned long _version; // API version
     std::set<std::string> _modelNames;

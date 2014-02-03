@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class DynamicLib : public FunctorModelLibrary<Base> {
-
 public:
 
     inline virtual ~DynamicLib() {

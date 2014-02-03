@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class LoopEndOperationNode : public OperationNode<Base> {
-
 public:
 
     inline LoopEndOperationNode(LoopStartOperationNode<Base>& loopStart,

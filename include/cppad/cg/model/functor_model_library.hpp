@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class FunctorModelLibrary : public ModelLibrary<Base> {
-
 public:
 
     /**

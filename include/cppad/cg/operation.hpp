@@ -24,7 +24,6 @@ namespace cg {
  * @author Joao Leal
  */
 enum CGOpCode {
-
     CGAssignOp, // a = b
     CGAbsOp, //  abs(variable)
     CGAcosOp, // asin(variable)

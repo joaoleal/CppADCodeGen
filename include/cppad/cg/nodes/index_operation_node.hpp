@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class IndexOperationNode : public OperationNode<Base> {
-
 public:
 
     inline IndexOperationNode(IndexDclrOperationNode<Base>& indexDcl) :

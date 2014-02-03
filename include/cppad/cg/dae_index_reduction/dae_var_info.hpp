@@ -22,7 +22,6 @@ namespace cg {
  * DAE variable information
  */
 class DaeVarInfo {
-
 private:
     /**
      * A unique identifier for this variable (used internally)

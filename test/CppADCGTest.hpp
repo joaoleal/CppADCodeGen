@@ -28,7 +28,6 @@ namespace CppAD {
 namespace cg {
 
 class CppADCGTest : public ::testing::Test {
-
 protected:
     typedef double Base;
     typedef CppAD::cg::CG<Base> CGD;

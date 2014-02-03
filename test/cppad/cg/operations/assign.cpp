@@ -22,6 +22,6 @@ TEST_F(CppADCGOperationTest, assign) {
     std::vector<double> u(2);
     u[0] = 0;
     u[1] = 1;
-    
+
     test0nJac("assign", &AssignFunc<double >, &AssignFunc<CG<double> >, u);
 }

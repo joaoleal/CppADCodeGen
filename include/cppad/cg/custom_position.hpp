@@ -22,7 +22,6 @@ namespace cg {
  * Useful class for storing matrix indexes
  */
 class CustomPosition {
-
 private:
     bool filterDefined_;
     /// allowed elements

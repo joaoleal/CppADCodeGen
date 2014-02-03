@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class CLangDefaultHessianVarNameGenerator : public VariableNameGenerator<Base> {
-
 protected:
     VariableNameGenerator<Base>* _nameGen;
     // the lowest variable ID used for the equation multipliers

@@ -61,7 +61,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSources() {
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
     using CppAD::vector;
-    
+
     /**
      * Generate one function for each dependent variable
      */
@@ -131,7 +131,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseForwardOneSourcesNoAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
     using CppAD::vector;
-    
+
     /**
      * Jacobian
      */

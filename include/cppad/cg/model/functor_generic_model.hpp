@@ -27,7 +27,6 @@ namespace cg {
  */
 template<class Base>
 class FunctorGenericModel : public GenericModel<Base> {
-
 protected:
     bool _isLibraryReady;
     /// the model name

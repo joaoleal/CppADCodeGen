@@ -23,7 +23,6 @@ namespace cg {
  */
 template <class Base>
 class IterEquationGroup {
-
 public:
     typedef CppAD::cg::CG<Base> CGB;
     typedef Argument<Base> Arg;
@@ -81,7 +80,7 @@ public:
 
     inline void evalHessianSparsity() {
         using CppAD::vector;
-        
+
         if (hessSparsity_) {
             return; // already evaluated
         }

@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class CLangDefaultVariableNameGenerator : public VariableNameGenerator<Base> {
-
 protected:
     // auxiliary string stream
     std::stringstream _ss;

@@ -22,7 +22,6 @@ namespace cg {
  * Random pattern
  */
 class RandomIndexPattern : public IndexPattern {
-
 protected:
     std::string name_;
 public:

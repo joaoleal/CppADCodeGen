@@ -19,7 +19,6 @@ namespace CppAD {
 namespace cg {
 
 class ArArchiver : public Archiver {
-
 protected:
     std::string _arPath; // the path to the ar executable
     std::vector<std::string> _flags;

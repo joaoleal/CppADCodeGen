@@ -23,7 +23,6 @@ extern "C" {
  * the generated C source-code.
  */
 typedef struct Array {
-
     /**
      * Array values. For dense arrays its size is defined by
      * ::size otherwise by ::nnz.
@@ -51,7 +50,6 @@ typedef struct Array {
  * Holds function pointers that the compiled code uses to call atomic functions.
  */
 struct CLangAtomicFun {
-
     /**
      * A pointer to the compiled model object (e.g. LinuxDynamicLibModel)
      */

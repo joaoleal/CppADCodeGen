@@ -29,7 +29,6 @@ class OperationNode;
  */
 template<class Base>
 class Argument {
-
 private:
     OperationNode<Base>* operation_;
     Base* parameter_;

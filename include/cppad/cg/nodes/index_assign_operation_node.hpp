@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class IndexAssignOperationNode : public OperationNode<Base> {
-
 private:
     IndexPattern& indexPattern_;
 public:

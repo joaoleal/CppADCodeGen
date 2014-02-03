@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class IndexDclrOperationNode : public OperationNode<Base> {
-
 public:
 
     inline IndexDclrOperationNode(const std::string& name) :

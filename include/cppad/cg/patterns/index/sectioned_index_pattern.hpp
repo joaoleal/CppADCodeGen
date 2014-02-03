@@ -22,7 +22,6 @@ namespace cg {
  * Several linear patterns
  */
 class SectionedIndexPattern : public IndexPattern {
-
 protected:
     /**
      * maps the start of the linear section (first x) to the linear pattern

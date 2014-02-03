@@ -467,7 +467,6 @@ namespace loops {
  * Auxiliary structure
  */
 struct Forward1Jcol2Iter {
-
     size_t jcol;
     std::set<size_t> iterations;
 
@@ -495,7 +494,6 @@ inline bool operator<(const Forward1Jcol2Iter& l, const Forward1Jcol2Iter& r) {
  */
 template<class Base>
 class JacobianTermContrib {
-
 public:
     std::set<size_t> indexed;
     std::set<size_t> nonIndexed; // maximum one element
@@ -525,7 +523,6 @@ bool operator<(const JacobianTermContrib<Base>& l, const JacobianTermContrib<Bas
  */
 template<class Base>
 class JacobianColGroup : public JacobianTermContrib<Base> {
-
 public:
     // all the required iterations for each jcol
     std::map<size_t, std::set<size_t> > jCol2Iterations;

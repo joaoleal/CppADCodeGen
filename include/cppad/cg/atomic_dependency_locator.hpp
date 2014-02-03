@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class AtomicDependencyLocator {
-
 private:
     ADFun<CG<Base> >& fun_;
     std::map<size_t, std::set<size_t> > atomicIndeps_;
@@ -33,7 +32,7 @@ public:
 
     inline std::map<size_t, std::set<size_t> > findAtomicsUsage() {
         using CppAD::vector;
-                
+
         if (!atomicIndeps_.empty()) {
             return atomicIndeps_;
         }

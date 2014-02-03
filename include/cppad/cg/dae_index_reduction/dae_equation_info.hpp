@@ -23,7 +23,6 @@ namespace cg {
  * DAE equation information
  */
 class DaeEquationInfo {
-
 private:
     /**
      * A unique identifier for this equation (used internally)

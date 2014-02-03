@@ -28,7 +28,6 @@ namespace cg {
  */
 template<class Base>
 class LoopStartOperationNode : public OperationNode<Base> {
-
 public:
 
     inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, size_t iterationCount) :

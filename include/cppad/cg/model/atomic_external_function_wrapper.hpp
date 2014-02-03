@@ -20,7 +20,6 @@ namespace cg {
 
 template<class Base>
 class AtomicExternalFunctionWrapper : public ExternalFunctionWrapper<Base> {
-
 private:
     atomic_base<Base>* atomic_;
 public:

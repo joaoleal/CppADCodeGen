@@ -24,7 +24,6 @@ namespace cg {
  */
 template<class Base>
 class SmartVectorPointer {
-
 public:
     typedef typename std::vector<Base*>::iterator iterator;
     typedef typename std::vector<Base*>::const_iterator const_iterator;
@@ -118,7 +117,6 @@ public:
  */
 template<class Base>
 class SmartSetPointer {
-
 public:
     typedef typename std::set<Base*>::iterator iterator;
     std::set<Base*> s;
@@ -178,7 +176,6 @@ public:
  */
 template<class Base>
 class SmartListPointer {
-
 public:
     typedef typename std::list<Base*>::iterator iterator;
     typedef typename std::list<Base*>::const_iterator const_iterator;
@@ -247,7 +244,6 @@ public:
 
 template<class Key, class Value>
 class SmartMapValuePointer {
-
 public:
     typedef typename std::map<Key, Value*>::iterator iterator;
     typedef typename std::map<Key, Value*>::const_iterator const_iterator;

@@ -23,7 +23,6 @@ namespace cg {
  */
 template<class Base, class BaseOut>
 class Evaluator {
-
 protected:
     const CodeHandler<Base>& handler_;
     const std::vector<CG<Base> > dep_;
@@ -135,7 +134,7 @@ private:
 
     inline CppAD::AD<BaseOut> evalOperations(OperationNode<Base>& node) throw (CGException) {
         using CppAD::vector;
-        
+
         // check if this node was previously determined
         const auto it = evals_.find(&node);
         if (it != evals_.end()) {
@@ -304,7 +303,7 @@ private:
 
     inline CppAD::vector<CppAD::AD<BaseOut> >& evalArrayCreationOperation(OperationNode<Base>& node) throw (CGException) {
         using CppAD::vector;
-        
+
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGArrayCreationOp, "Invalid array creation operation");
 
         const auto it = evalsArrays_.find(&node);
@@ -325,7 +324,7 @@ private:
 
     inline void evalAtomicOperation(OperationNode<Base>& node) throw (CGException) {
         using CppAD::vector;
-        
+
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
             return;
         }

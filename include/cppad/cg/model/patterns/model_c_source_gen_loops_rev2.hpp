@@ -895,7 +895,6 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
  * Auxiliary structure
  */
 struct Reverse2Jrow2Iter {
-
     size_t jrow;
     std::set<size_t> iterations;
 

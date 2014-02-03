@@ -25,7 +25,6 @@ namespace cg {
  */
 template<class Base>
 class LanguageGenerationData {
-
 public:
     /**
      * The independent variables
@@ -124,7 +123,6 @@ public:
  */
 template<class Base>
 class Language {
-
 protected:
     virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
 

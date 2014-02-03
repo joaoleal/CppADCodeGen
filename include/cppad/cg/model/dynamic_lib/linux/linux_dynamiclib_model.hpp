@@ -30,7 +30,6 @@ namespace cg {
  */
 template<class Base>
 class LinuxDynamicLibModel : public FunctorGenericModel<Base> {
-
 protected:
     /// the dynamic library
     LinuxDynamicLib<Base>* _dynLib;
