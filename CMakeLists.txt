@@ -49,7 +49,7 @@ INCLUDE_DIRECTORIES( ${CPPAD_INCLUDE_DIR} "${CMAKE_SOURCE_DIR}/include" ${EIGEN3
 #         General installation information
 ################################################################################
 SET(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install path prefix")
-SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppadcg")
+SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_cppad_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_library_pkg_location "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 
