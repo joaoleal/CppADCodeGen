@@ -148,12 +148,14 @@ inline VectorBool hessianSparsity(ADFun<Base>& fun,
     }
     fun.ForSparseJac(n, r);
 
-    VectorBool s(m, true);
+    VectorBool s(m);
+    for (size_t i = 0; i < m; i++)
+        s[i] = true;
     return fun.RevSparseHes(n, s, transpose);
 }
 
 template<class VectorSet, class Base>
-inline VectorSet hessianSparsitySet(ADFun<Base>& fun, 
+inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
                                     const std::set<size_t>& w,
                                     bool transpose = false) {
     size_t n = fun.Domain();
@@ -209,14 +211,16 @@ inline VectorBool hessianSparsity(ADFun<Base>& fun,
     }
     fun.ForSparseJac(n, r);
 
-    VectorBool s(m, false);
+    VectorBool s(m);
+    for (size_t ii = 0; ii < m; ii++)
+        s[ii] = false;
     s[i] = true;
     return fun.RevSparseHes(n, s, transpose);
 }
 
 template<class VectorSet, class Base>
 inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
-                                    size_t i, 
+                                    size_t i,
                                     bool transpose = false) {
     size_t n = fun.Domain();
 
