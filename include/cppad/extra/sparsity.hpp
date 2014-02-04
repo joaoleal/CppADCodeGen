@@ -16,7 +16,6 @@
  */
 
 namespace CppAD {
-
 namespace extra {
 
 template<class VectorBool, class Base>
@@ -133,14 +132,15 @@ inline bool estimateBestJacobianADMode(const std::vector<size_t>& jacRows,
  * @return The sum of the hessian sparsities
  */
 template<class VectorBool, class Base>
-inline VectorBool hessianSparsity(ADFun<Base>& fun, bool transpose = false) {
+inline VectorBool hessianSparsity(ADFun<Base>& fun,
+                                  bool transpose = false) {
     size_t m = fun.Range();
     size_t n = fun.Domain();
 
     /**
      * Determine the sparsity pattern p for Hessian of w^T F
      */
-    std::vector<bool> r(n * n); // identity matrix
+    VectorBool r(n * n); // identity matrix
     for (size_t j = 0; j < n; j++) {
         for (size_t k = 0; k < n; k++)
             r[j * n + k] = false;
@@ -148,12 +148,14 @@ inline VectorBool hessianSparsity(ADFun<Base>& fun, bool transpose = false) {
     }
     fun.ForSparseJac(n, r);
 
-    std::vector<bool> s(m, true);
+    VectorBool s(m, true);
     return fun.RevSparseHes(n, s, transpose);
 }
 
 template<class VectorSet, class Base>
-inline VectorSet hessianSparsitySet(ADFun<Base>& fun, const std::set<size_t>& w, bool transpose = false) {
+inline VectorSet hessianSparsitySet(ADFun<Base>& fun, 
+                                    const std::set<size_t>& w,
+                                    bool transpose = false) {
     size_t n = fun.Domain();
 
     /**
@@ -190,14 +192,16 @@ inline VectorSet hessianSparsitySet(ADFun<Base>& fun, bool transpose = false) {
  * @return The hessian sparsity
  */
 template<class VectorBool, class Base>
-inline VectorBool hessianSparsity(ADFun<Base>& fun, size_t i, bool transpose = false) {
+inline VectorBool hessianSparsity(ADFun<Base>& fun,
+                                  size_t i,
+                                  bool transpose = false) {
     size_t m = fun.Range();
     size_t n = fun.Domain();
 
     /**
      * Determine the sparsity pattern p for Hessian of w^T F
      */
-    std::vector<bool> r(n * n); // identity matrix
+    VectorBool r(n * n); // identity matrix
     for (size_t j = 0; j < n; j++) {
         for (size_t k = 0; k < n; k++)
             r[j * n + k] = false;
@@ -205,13 +209,15 @@ inline VectorBool hessianSparsity(ADFun<Base>& fun, size_t i, bool transpose = f
     }
     fun.ForSparseJac(n, r);
 
-    std::vector<bool> s(m, false);
+    VectorBool s(m, false);
     s[i] = true;
     return fun.RevSparseHes(n, s, transpose);
 }
 
 template<class VectorSet, class Base>
-inline VectorSet hessianSparsitySet(ADFun<Base>& fun, size_t i, bool transpose = false) {
+inline VectorSet hessianSparsitySet(ADFun<Base>& fun,
+                                    size_t i, 
+                                    bool transpose = false) {
     size_t n = fun.Domain();
 
     VectorSet r(n); // identity matrix
@@ -298,9 +304,8 @@ inline void generateSparsitySet(const VectorSize& row,
     }
 }
 
-}
-
-}
+} // END extra namespace
+} // END CppAD namespace
 
 #endif
 
