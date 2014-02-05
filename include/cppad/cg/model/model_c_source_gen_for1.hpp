@@ -113,7 +113,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
 
         finishedJob();
 
-        CLanguage<Base> langC(_baseTypeName);
+        LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
@@ -122,7 +122,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
 
         std::ostringstream code;
         std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
-        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
+        LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
         handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, subJobName);
     }
@@ -199,7 +199,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesNoAtomics(const std::
         _cache << "model (forward one, indep " << j << ")";
         const std::string subJobName = _cache.str();
 
-        CLanguage<Base> langC(_baseTypeName);
+        LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
@@ -208,7 +208,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesNoAtomics(const std::
 
         std::ostringstream code;
         std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
-        CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
+        LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
         handler.generateCode(code, langC, dyCustom, nameGenHess, _atomicFunctions, subJobName);
     }
@@ -224,13 +224,13 @@ void ModelCSourceGen<Base>::generateForwardOneSources() {
     _cache << _name << "_" << FUNCTION_FORWARD_ONE;
     std::string model_function(_cache.str());
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
     std::string args = langC.generateDefaultFunctionArguments();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
             "\n"
             "void " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long pos, " << argsDcl << ");\n"
             "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"

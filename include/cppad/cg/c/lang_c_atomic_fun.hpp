@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_ATOMIC_FUN_INCLUDED
-#define CPPAD_CG_C_LANG_ATOMIC_FUN_INCLUDED
+#ifndef CPPAD_CG_LANG_C_ATOMIC_FUN_INCLUDED
+#define CPPAD_CG_LANG_C_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -49,7 +49,7 @@ typedef struct Array {
 /**
  * Holds function pointers that the compiled code uses to call atomic functions.
  */
-struct CLangAtomicFun {
+struct LangCAtomicFun {
     /**
      * A pointer to the compiled model object (e.g. LinuxDynamicLibModel)
      */

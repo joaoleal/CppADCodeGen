@@ -577,12 +577,12 @@ inline void printModel(ADFun<CG<Base> >& fun,
 
     CppAD::vector<CG<Base> > dep0 = fun.Forward(0, indep0);
 
-    CLanguage<Base> langC("double");
+    LanguageC<Base> langC("double");
 
     /**
      * generate the source code
      */
-    CLangCustomVariableNameGenerator<Base> nameGen(depNames, indepNames,
+    LangCCustomVariableNameGenerator<Base> nameGen(depNames, indepNames,
                                                    "y", "x", "z", "array");
 
     std::ostringstream code;

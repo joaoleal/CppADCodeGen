@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_DEFAULT_REVERSE2_VAR_NAME_GEN_INCLUDED
-#define CPPAD_CG_C_LANG_DEFAULT_REVERSE2_VAR_NAME_GEN_INCLUDED
+#ifndef CPPAD_CG_LANG_C_DEFAULT_HESSIAN_VAR_NAME_GEN_INCLUDED
+#define CPPAD_CG_LANG_C_DEFAULT_HESSIAN_VAR_NAME_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -19,57 +19,45 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Creates variables names for the source code generated for second-order
- * reverse mode calculations.
- * The independent variables are considered to have been registered first,
- * followed by a first level of additional variables and then a second.
+ * Creates variables names for the source code generated for Hessian
+ * calculations.
+ * The independent variables are considered to have been registered first as
+ * variable in the code generation handler and then the multipliers.
  * 
  * @author Joao Leal
  */
 template<class Base>
-class CLangDefaultReverse2VarNameGenerator : public VariableNameGenerator<Base> {
+class LangCDefaultHessianVarNameGenerator : public VariableNameGenerator<Base> {
 protected:
     VariableNameGenerator<Base>* _nameGen;
-    // the lowest variable ID used for the first independent variable level
-    const size_t _minLevel1ID;
-    // array name of the independent variables (1st level)
-    const std::string _level1Name;
-    // the lowest variable ID used for the second independent variable level
-    const size_t _minLevel2ID;
-    // array name of the independent variables (2nd level)
-    const std::string _level2Name;
+    // the lowest variable ID used for the equation multipliers
+    const size_t _minMultiplierID;
+    // array name of the independent variables
+    const std::string _multName;
     // auxiliary string stream
     std::stringstream _ss;
 public:
 
-    CLangDefaultReverse2VarNameGenerator(VariableNameGenerator<Base>* nameGen,
-                                         size_t n,
-                                         size_t n1) :
+    LangCDefaultHessianVarNameGenerator(VariableNameGenerator<Base>* nameGen,
+                                        size_t n) :
         _nameGen(nameGen),
-        _minLevel1ID(n + 1),
-        _level1Name("tx1"),
-        _minLevel2ID(_minLevel1ID + n1),
-        _level2Name("py2") {
+        _minMultiplierID(n + 1),
+        _multName("mult") {
 
-        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
+        CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be NULL");
 
         initialize();
     }
 
-    CLangDefaultReverse2VarNameGenerator(VariableNameGenerator<Base>* nameGen,
-                                         size_t n,
-                                         const std::string& level1Name,
-                                         size_t n1,
-                                         const std::string& level2Name) :
+    LangCDefaultHessianVarNameGenerator(VariableNameGenerator<Base>* nameGen,
+                                        const std::string& multName,
+                                        size_t n) :
         _nameGen(nameGen),
-        _minLevel1ID(n + 1),
-        _level1Name(level1Name),
-        _minLevel2ID(_minLevel1ID + n1),
-        _level2Name(level2Name) {
+        _minMultiplierID(n + 1),
+        _multName(multName) {
 
         CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
-        CPPADCG_ASSERT_KNOWN(_level1Name.size() > 0, "The name for the first level must not be empty");
-        CPPADCG_ASSERT_KNOWN(_level2Name.size() > 0, "The name for the second level must not be empty");
+        CPPADCG_ASSERT_KNOWN(_multName.size() > 0, "The name for the multipliers must not be empty");
 
         initialize();
     }
@@ -104,18 +92,14 @@ public:
 
     virtual std::string generateIndependent(const OperationNode<Base>& independent) override {
         size_t id = independent.getVariableID();
-        if (id < _minLevel1ID) {
+        if (id < _minMultiplierID) {
             return _nameGen->generateIndependent(independent);
-        } else {
-            _ss.clear();
-            _ss.str("");
-            if (id < _minLevel2ID) {
-                _ss << _level1Name << "[" << (id - _minLevel1ID) << "]";
-            } else {
-                _ss << _level2Name << "[" << (id - _minLevel2ID) << "]";
-            }
-            return _ss.str();
         }
+
+        _ss.clear();
+        _ss.str("");
+        _ss << _multName << "[" << (id - _minMultiplierID) << "]";
+        return _ss.str();
     }
 
     virtual std::string generateTemporary(const OperationNode<Base>& variable) override {
@@ -135,50 +119,38 @@ public:
         return _nameGen->generateIndexedDependent(var, ip);
     }
 
-    virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
+    virtual std::string generateIndexedIndependent(const OperationNode<Base>& indexedIndep,
                                                    const IndexPattern& ip) override {
-        size_t varType = independent.getInfo()[0];
-        if (varType == 0) {
-            return _nameGen->generateIndexedIndependent(independent, ip);
-        } else {
-            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
-
-            _ss.clear();
-            _ss.str("");
-
-            const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[0].getOperation());
-
-            if (varType == 1) {
-                _ss << _level1Name << "[" << CLanguage<Base>::indexPattern2String(ip, index.getIndex()) << "]";
-            } else {
-                _ss << _level2Name << "[" << CLanguage<Base>::indexPattern2String(ip, index.getIndex()) << "]";
-            }
-            return _ss.str();
+        bool isX = indexedIndep.getInfo()[0] == 0;
+        if (isX) {
+            return _nameGen->generateIndexedIndependent(indexedIndep, ip);
         }
 
+        CPPADCG_ASSERT_KNOWN(indexedIndep.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments().size() > 0, "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[0].getOperation() != nullptr, "Invalid argument");
+        CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
+        const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*indexedIndep.getArguments()[0].getOperation());
+
+        _ss.clear();
+        _ss.str("");
+
+        _ss << _multName << "[" << LanguageC<Base>::indexPattern2String(ip, index.getIndex()) << "]";
+        return _ss.str();
     }
 
     virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) override {
-        if (indep.getVariableID() < _minLevel1ID)
+        if (indep.getVariableID() < _minMultiplierID)
             return _nameGen->getIndependentArrayName(indep);
-        else if (indep.getVariableID() < _minLevel2ID)
-            return _level1Name;
         else
-            return _level2Name;
+            return _multName;
     }
 
     virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) override {
-        size_t id = indep.getVariableID();
-
-        if (id < _minLevel1ID)
+        if (indep.getVariableID() < _minMultiplierID)
             return _nameGen->getIndependentArrayIndex(indep);
-        else if (id < _minLevel2ID)
-            return id - _minLevel1ID;
         else
-            return id - _minLevel2ID;
+            return indep.getVariableID() - _minMultiplierID;
     }
 
     virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
@@ -186,32 +158,27 @@ public:
         size_t id1 = indepFirst.getVariableID();
         size_t id2 = indepSecond.getVariableID();
 
-        if ((id1 < _minLevel1ID) != (id2 < _minLevel1ID))
+        if ((id1 < _minMultiplierID) != (id2 < _minMultiplierID))
             return false;
 
-        if (id1 < _minLevel1ID && id2 < _minLevel1ID)
+        if (id1 < _minMultiplierID && id2 < _minMultiplierID)
             return _nameGen->isConsecutiveInIndepArray(indepFirst, indepSecond);
-
-        if ((id1 < _minLevel2ID) != (id2 < _minLevel2ID))
-            return false;
-
-        return id1 + 1 == id2;
+        else
+            return id1 + 1 == id2;
     }
 
     virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
                                           const OperationNode<Base>& indep2) override {
         size_t l1;
         if (indep1.getOperationType() == CGInvOp) {
-            size_t id = indep1.getVariableID();
-            l1 = id < _minLevel1ID ? 0 : (id < _minLevel2ID ? 1 : 2);
+            l1 = indep1.getVariableID() < _minMultiplierID ? 0 : 1;
         } else {
             l1 = indep1.getInfo()[0]; //CGLoopIndexedIndepOp
         }
 
         size_t l2;
         if (indep2.getOperationType() == CGInvOp) {
-            size_t id = indep2.getVariableID();
-            l2 = id < _minLevel1ID ? 0 : (id < _minLevel2ID ? 1 : 2);
+            l2 = indep2.getVariableID() < _minMultiplierID ? 0 : 1;
         } else {
             l2 = indep2.getInfo()[0]; //CGLoopIndexedIndepOp
         }
@@ -226,15 +193,15 @@ public:
         _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID, maxTempSparseArrayID);
     }
 
-    inline virtual ~CLangDefaultReverse2VarNameGenerator() {
+    inline virtual ~LangCDefaultHessianVarNameGenerator() {
     }
 
 private:
 
     inline void initialize() {
         this->_independent = _nameGen->getIndependent(); // copy
-        this->_independent.push_back(FuncArgument(_level1Name));
-        this->_independent.push_back(FuncArgument(_level2Name));
+
+        this->_independent.push_back(FuncArgument(_multName));
     }
 
 };

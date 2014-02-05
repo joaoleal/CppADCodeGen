@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANGUAGE_INCLUDED
-#define CPPAD_CG_C_LANGUAGE_INCLUDED
+#ifndef CPPAD_CG_LANGUAGE_C_INCLUDED
+#define CPPAD_CG_LANGUAGE_C_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -30,7 +30,7 @@ namespace cg {
  * @author Joao Leal
  */
 template<class Base>
-class CLanguage : public Language<Base> {
+class LanguageC : public Language<Base> {
 public:
     static const std::string U_INDEX_TYPE;
     static const std::string ATOMICFUN_STRUCT_DEFINITION;
@@ -115,7 +115,7 @@ public:
      * @param varTypeName variable data type (e.g. double)
      * @param spaces number of spaces for indentations
      */
-    CLanguage(const std::string& varTypeName, size_t spaces = 3) :
+    LanguageC(const std::string& varTypeName, size_t spaces = 3) :
         _baseTypeName(varTypeName),
         _spaces(spaces, ' '),
         _info(nullptr),
@@ -386,7 +386,7 @@ public:
     }
 
     inline std::string generateArgumentAtomicDcl() const {
-        return "struct CLangAtomicFun " + _atomicArgName;
+        return "struct LangCAtomicFun " + _atomicArgName;
     }
 
     virtual std::string generateFunctionArgumentsDcl() const {
@@ -443,7 +443,7 @@ public:
     CPPAD_CG_C_LANG_FUNCNAME(tan)
     CPPAD_CG_C_LANG_FUNCNAME(pow)
 
-    inline virtual ~CLanguage() {
+    inline virtual ~LanguageC() {
     }
 
     static inline void printIndexCondExpr(std::ostringstream& out,
@@ -1899,41 +1899,41 @@ protected:
     }
 };
 template<class Base>
-const std::string CLanguage<Base>::U_INDEX_TYPE = "unsigned long";
+const std::string LanguageC<Base>::U_INDEX_TYPE = "unsigned long";
 
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_LT = "<";
+const std::string LanguageC<Base>::_C_COMP_OP_LT = "<";
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_LE = "<=";
+const std::string LanguageC<Base>::_C_COMP_OP_LE = "<=";
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_EQ = "==";
+const std::string LanguageC<Base>::_C_COMP_OP_EQ = "==";
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_GE = ">=";
+const std::string LanguageC<Base>::_C_COMP_OP_GE = ">=";
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_GT = ">";
+const std::string LanguageC<Base>::_C_COMP_OP_GT = ">";
 template<class Base>
-const std::string CLanguage<Base>::_C_COMP_OP_NE = "!=";
+const std::string LanguageC<Base>::_C_COMP_OP_NE = "!=";
 
 template<class Base>
-const std::string CLanguage<Base>::_C_STATIC_INDEX_ARRAY = "index";
+const std::string LanguageC<Base>::_C_STATIC_INDEX_ARRAY = "index";
 
 template<class Base>
-const std::string CLanguage<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
+const std::string LanguageC<Base>::_C_SPARSE_INDEX_ARRAY = "idx";
 
 template<class Base>
-const std::string CLanguage<Base>::_ATOMIC_TX = "atx";
+const std::string LanguageC<Base>::_ATOMIC_TX = "atx";
 
 template<class Base>
-const std::string CLanguage<Base>::_ATOMIC_TY = "aty";
+const std::string LanguageC<Base>::_ATOMIC_TY = "aty";
 
 template<class Base>
-const std::string CLanguage<Base>::_ATOMIC_PX = "apx";
+const std::string LanguageC<Base>::_ATOMIC_PX = "apx";
 
 template<class Base>
-const std::string CLanguage<Base>::_ATOMIC_PY = "apy";
+const std::string LanguageC<Base>::_ATOMIC_PY = "apy";
 
 template<class Base>
-const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct Array {\n"
+const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct Array {\n"
 "    void* data;\n"
 "    " + U_INDEX_TYPE + " size;\n"
 "    int sparse;\n"
@@ -1941,7 +1941,7 @@ const std::string CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct
 "    " + U_INDEX_TYPE + " nnz;\n"
 "} Array;\n"
 "\n"
-"struct CLangAtomicFun {\n"
+"struct LangCAtomicFun {\n"
 "    void* libModel;\n"
 "    int (*forward)(void* libModel, int atomicIndex, int q, int p, const Array tx[], Array* ty);\n"
 "    int (*reverse)(void* libModel, int atomicIndex, int p, const Array tx[], Array* px, const Array py[]);\n"

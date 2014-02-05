@@ -55,8 +55,8 @@ int main(void) {
 
     CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
 
-    CLanguage<double> langC("double");
-    CLangDefaultVariableNameGenerator<double> nameGen;
+    LanguageC<double> langC("double");
+    LangCDefaultVariableNameGenerator<double> nameGen;
 
     std::ostringstream code;
     handler.generateCode(code, langC, jac, nameGen);

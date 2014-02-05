@@ -30,7 +30,7 @@ void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const s
     /**
      * Generate the source code
      */
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
     string model_function = _name + "_" + FUNCTION_SPARSE_HESSIAN;
@@ -41,7 +41,7 @@ void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const s
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, functionRev2, nlRev2Suffix, _nonLoopRev2Elements, argsDcl);
     generateFunctionDeclarationSourceLoopForRev(_cache, langC, _name, "jrow", _loopRev2Groups, generateFunctionNameLoopRev2);
 

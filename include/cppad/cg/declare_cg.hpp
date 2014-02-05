@@ -110,16 +110,16 @@ class SectionedIndexPattern;
  **************************************************************************/
 
 template<class Base>
-class CLanguage;
+class LanguageC;
 
 template<class Base>
 class VariableNameGenerator;
 
 template<class Base>
-class CLangDefaultVariableNameGenerator;
+class LangCDefaultVariableNameGenerator;
 
 template<class Base>
-class CLangCustomVariableNameGenerator;
+class LangCCustomVariableNameGenerator;
 
 /***************************************************************************
  * Models

@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_CUSTOM_VAR_NAME_GEN_INCLUDED
-#define CPPAD_CG_C_LANG_CUSTOM_VAR_NAME_GEN_INCLUDED
+#ifndef CPPAD_CG_LANG_C_CUSTOM_VAR_NAME_GEN_INCLUDED
+#define CPPAD_CG_LANG_C_CUSTOM_VAR_NAME_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -25,20 +25,20 @@ namespace cg {
  * @author Joao Leal
  */
 template<class Base>
-class CLangCustomVariableNameGenerator : public CLangDefaultVariableNameGenerator<Base> {
+class LangCCustomVariableNameGenerator : public LangCDefaultVariableNameGenerator<Base> {
 protected:
     //
     const std::vector<std::string> depNames_;
     const std::vector<std::string> indepNames_;
 public:
 
-    CLangCustomVariableNameGenerator(const std::vector<std::string>& depNames,
+    LangCCustomVariableNameGenerator(const std::vector<std::string>& depNames,
                                      const std::vector<std::string>& indepNames,
                                      const std::string& depName = "y",
                                      const std::string& indepName = "x",
                                      const std::string& tmpName = "v",
                                      const std::string& tmpArrayName = "array") :
-        CLangDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
+        LangCDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
         depNames_(depNames),
         indepNames_(indepNames) {
     }
@@ -47,7 +47,7 @@ public:
         if (index < depNames_.size() && !depNames_[index].empty()) {
             return depNames_[index];
         } else {
-            return CLangDefaultVariableNameGenerator<Base>::generateDependent(index);
+            return LangCDefaultVariableNameGenerator<Base>::generateDependent(index);
         }
     }
 
@@ -56,7 +56,7 @@ public:
         if (index < indepNames_.size() && !indepNames_[index].empty()) {
             return indepNames_[index];
         } else {
-            return CLangDefaultVariableNameGenerator<Base>::generateIndependent(independent);
+            return LangCDefaultVariableNameGenerator<Base>::generateIndependent(independent);
         }
     }
 
@@ -82,7 +82,7 @@ public:
                 (index2 > indepNames_.size() || indepNames_[index2].empty());
     }
 
-    inline virtual ~CLangCustomVariableNameGenerator() {
+    inline virtual ~LangCCustomVariableNameGenerator() {
     }
 
 };

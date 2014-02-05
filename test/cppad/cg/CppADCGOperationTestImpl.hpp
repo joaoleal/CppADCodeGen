@@ -151,8 +151,8 @@ std::vector<std::vector<double> > CppADCGOperationTest::run0(ADFun<CG<double> >&
 
     vector<CG<double> > dep = f.Forward(0, indVars);
 
-    CLanguage<double> langC("double");
-    CLangDefaultVariableNameGenerator<double> nameGen;
+    LanguageC<double> langC("double");
+    LangCDefaultVariableNameGenerator<double> nameGen;
 
     std::ostringstream code;
     handler.generateCode(code, langC, dep, nameGen);
@@ -273,8 +273,8 @@ std::vector<std::vector<double> > CppADCGOperationTest::runSparseJac(ADFun<CG<do
 
     vector<CG<double> > jacCG = f.SparseJacobian(indVars);
 
-    CLanguage<double> langC("double");
-    CLangDefaultVariableNameGenerator<double> nameGen;
+    LanguageC<double> langC("double");
+    LangCDefaultVariableNameGenerator<double> nameGen;
 
     std::ostringstream code;
     handler.generateCode(code, langC, jacCG, nameGen);

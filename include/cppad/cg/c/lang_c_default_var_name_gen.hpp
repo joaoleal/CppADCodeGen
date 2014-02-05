@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANG_DEFAULT_VAR_NAME_GEN_INCLUDED
-#define CPPAD_CG_C_LANG_DEFAULT_VAR_NAME_GEN_INCLUDED
+#ifndef CPPAD_CG_LANG_C_DEFAULT_VAR_NAME_GEN_INCLUDED
+#define CPPAD_CG_LANG_C_DEFAULT_VAR_NAME_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -24,7 +24,7 @@ namespace cg {
  * @author Joao Leal
  */
 template<class Base>
-class CLangDefaultVariableNameGenerator : public VariableNameGenerator<Base> {
+class LangCDefaultVariableNameGenerator : public VariableNameGenerator<Base> {
 protected:
     // auxiliary string stream
     std::stringstream _ss;
@@ -48,7 +48,7 @@ protected:
     size_t _maxTemporarySparseArrayID;
 public:
 
-    inline CLangDefaultVariableNameGenerator(const std::string& depName = "y",
+    inline LangCDefaultVariableNameGenerator(const std::string& depName = "y",
                                              const std::string& indepName = "x",
                                              const std::string& tmpName = "v",
                                              const std::string& tmpArrayName = "array",
@@ -146,7 +146,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        _ss << _depName << "[" << CLanguage<Base>::indexPattern2String(ip, getIndexes(var, 1)) << "]";
+        _ss << _depName << "[" << LanguageC<Base>::indexPattern2String(ip, getIndexes(var, 1)) << "]";
 
         return _ss.str();
     }
@@ -159,7 +159,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        _ss << _indepName << "[" << CLanguage<Base>::indexPattern2String(ip, getIndexes(independent, 0)) << "]";
+        _ss << _indepName << "[" << LanguageC<Base>::indexPattern2String(ip, getIndexes(independent, 0)) << "]";
 
         return _ss.str();
     }
@@ -197,7 +197,7 @@ public:
         return true;
     }
 
-    inline virtual ~CLangDefaultVariableNameGenerator() {
+    inline virtual ~LangCDefaultVariableNameGenerator() {
     }
 protected:
 

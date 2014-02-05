@@ -43,8 +43,8 @@ public:
 
         vector<CGD> dep = f.Forward(0, indVars);
 
-        CLanguage<double> langC("double");
-        CLangDefaultVariableNameGenerator<double> nameGen;
+        LanguageC<double> langC("double");
+        LangCDefaultVariableNameGenerator<double> nameGen;
 
         handler.generateCode(std::cout, langC, dep, nameGen);
 

@@ -159,15 +159,15 @@
 
 // ---------------------------------------------------------------------------
 // C source code generation
-#include <cppad/cg/c/c_lang_atomic_fun.hpp>
-#include <cppad/cg/c/c_language.hpp>
-#include <cppad/cg/c/c_language_arrays.hpp>
-#include <cppad/cg/c/c_language_index_patterns.hpp>
-#include <cppad/cg/c/c_language_double.hpp>
-#include <cppad/cg/c/c_lang_default_var_name_gen.hpp>
-#include <cppad/cg/c/c_lang_default_hessian_var_name_gen.hpp>
-#include <cppad/cg/c/c_lang_default_reverse2_var_name_gen.hpp>
-#include <cppad/cg/c/c_lang_custom_var_name_gen.hpp>
+#include <cppad/cg/c/lang_c_atomic_fun.hpp>
+#include <cppad/cg/c/language_c.hpp>
+#include <cppad/cg/c/language_c_arrays.hpp>
+#include <cppad/cg/c/language_c_index_patterns.hpp>
+#include <cppad/cg/c/language_c_double.hpp>
+#include <cppad/cg/c/lang_c_default_var_name_gen.hpp>
+#include <cppad/cg/c/lang_c_default_hessian_var_name_gen.hpp>
+#include <cppad/cg/c/lang_c_default_reverse2_var_name_gen.hpp>
+#include <cppad/cg/c/lang_c_custom_var_name_gen.hpp>
 
 //
 #include <cppad/cg/model/external_function_wrapper.hpp>

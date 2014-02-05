@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANGUAGE_INDEX_PATTERNS_INCLUDED
-#define CPPAD_CG_C_LANGUAGE_INDEX_PATTERNS_INCLUDED
+#ifndef CPPAD_CG_LANGUAGE_C_INDEX_PATTERNS_INCLUDED
+#define CPPAD_CG_LANGUAGE_C_INDEX_PATTERNS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-inline void CLanguage<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
+inline void LanguageC<Base>::generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns) {
     std::ostringstream os;
 
     std::set<std::string> usedNames;
@@ -52,7 +52,7 @@ inline void CLanguage<Base>::generateNames4RandomIndexPatterns(const std::set<Ra
 }
 
 template<class Base>
-inline void CLanguage<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
+inline void LanguageC<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
                                                                 const std::string& indentation,
                                                                 const std::set<RandomIndexPattern*>& randomPatterns) {
     for (RandomIndexPattern* ip : randomPatterns) {
@@ -82,7 +82,7 @@ inline void CLanguage<Base>::printRandomIndexPatternDeclaration(std::ostringstre
 }
 
 template<class Base>
-inline void CLanguage<Base>::createIndexDeclaration() {
+inline void LanguageC<Base>::createIndexDeclaration() {
     if (_info == nullptr || _info->get() == nullptr)
         return;
 
@@ -111,7 +111,7 @@ inline void CLanguage<Base>::createIndexDeclaration() {
 }
 
 template<class Base>
-void CLanguage<Base>::printStaticIndexArray(std::ostringstream& os,
+void LanguageC<Base>::printStaticIndexArray(std::ostringstream& os,
                                             const std::string& name,
                                             const std::vector<size_t>& values) {
     os << "static " << U_INDEX_TYPE << " const " << name << "[" << values.size() << "] = {";
@@ -125,7 +125,7 @@ void CLanguage<Base>::printStaticIndexArray(std::ostringstream& os,
 }
 
 template<class Base>
-void CLanguage<Base>::printStaticIndexMatrix(std::ostringstream& os,
+void LanguageC<Base>::printStaticIndexMatrix(std::ostringstream& os,
                                              const std::string& name,
                                              const std::map<size_t, std::map<size_t, size_t> >& values) {
     size_t m = 0;
@@ -179,13 +179,13 @@ void CLanguage<Base>::printStaticIndexMatrix(std::ostringstream& os,
 }
 
 template<class Base>
-inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
+inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
                                                         const IndexDclrOperationNode<Base>& index) {
     return indexPattern2String(ip,{&index});
 }
 
 template<class Base>
-inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
+inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
                                                         const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
     std::stringstream ss;
     switch (ip.getType()) {
@@ -259,7 +259,7 @@ inline std::string CLanguage<Base>::indexPattern2String(const IndexPattern& ip,
 }
 
 template<class Base>
-inline std::string CLanguage<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
+inline std::string LanguageC<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
                                                               const IndexDclrOperationNode<Base>& index) {
     long dy = lip.getLinearSlopeDy();
     long dx = lip.getLinearSlopeDx();

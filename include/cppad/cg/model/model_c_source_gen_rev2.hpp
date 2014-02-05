@@ -126,7 +126,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
 
         finishedJob();
 
-        CLanguage<Base> langC(_baseTypeName);
+        LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
@@ -135,7 +135,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
 
         std::ostringstream code;
         std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
-        CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
+        LangCDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
         handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
     }
@@ -225,7 +225,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
             pxCustom[e] = row[e] * tx1;
         }
 
-        CLanguage<Base> langC(_baseTypeName);
+        LanguageC<Base> langC(_baseTypeName);
         langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
@@ -234,7 +234,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
 
         std::ostringstream code;
         std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
-        CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
+        LangCDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
         handler.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
     }
@@ -250,12 +250,12 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
     std::string model_function(_cache.str());
     _cache.str("");
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
     std::string args = langC.generateDefaultFunctionArguments();
 
     _cache << "#include <stdlib.h>\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
             "\n"
             "void " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long pos, " << argsDcl << ");\n"
             "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"

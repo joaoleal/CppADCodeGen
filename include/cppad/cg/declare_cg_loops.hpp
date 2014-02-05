@@ -119,7 +119,7 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
 
 template<class Base>
 void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& cache,
-                                                 CLanguage<Base>& langC,
+                                                 LanguageC<Base>& langC,
                                                  const std::string& modelName,
                                                  const std::string& keyName,
                                                  const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& _loopRev2Groups,

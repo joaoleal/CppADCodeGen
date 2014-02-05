@@ -848,7 +848,7 @@ protected:
 
         vector<CGBase> dep0 = fun->Forward(0, indep0);
 
-        CLanguage<double> langC("double");
+        LanguageC<double> langC("double");
 
         /**
          * create variable names
@@ -858,7 +858,7 @@ protected:
         /**
          * generate the source code
          */
-        CLangCustomVariableNameGenerator<double> nameGen(depNames, indepNames, "res");
+        LangCCustomVariableNameGenerator<double> nameGen(depNames, indepNames, "res");
 
         std::ostringstream code;
         handler.generateCode(code, langC, dep0, nameGen);

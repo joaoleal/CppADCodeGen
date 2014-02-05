@@ -395,13 +395,13 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
 
             }
 
-            CLanguage<Base> langC(_baseTypeName);
+            LanguageC<Base> langC(_baseTypeName);
             langC.setFunctionIndexArgument(indexJrowDcl);
             langC.setParameterPrecision(_parameterPrecision);
 
             std::ostringstream code;
             std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
-            CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
+            LangCDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
             /**
              * Generate the source code inside the loop
@@ -421,7 +421,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
             _cache << "#include <stdlib.h>\n"
                     "#include <math.h>\n"
                     "\n"
-                    << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+                    << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                     "\n"
                     "void " << functionName << "(" << argsDcl << ") {\n";
             nameGenRev2.customFunctionVariableDeclarations(_cache);
@@ -533,7 +533,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                     pxCustom[e] = it2.second * tx1;
                 }
 
-                CLanguage<Base> langC(_baseTypeName);
+                LanguageC<Base> langC(_baseTypeName);
                 langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
                 langC.setParameterPrecision(_parameterPrecision);
                 _cache.str("");
@@ -543,7 +543,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
 
                 std::ostringstream code;
                 std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("px"));
-                CLangDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
+                LangCDefaultReverse2VarNameGenerator<Base> nameGenRev2(nameGen.get(), n, 1);
 
                 handlerNL.generateCode(code, langC, pxCustom, nameGenRev2, _atomicFunctions, subJobName);
             }

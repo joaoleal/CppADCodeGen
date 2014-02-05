@@ -36,7 +36,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
     /**
      * Generate the source code
      */
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
     string model_function = _name + "_" + FUNCTION_SPARSE_JACOBIAN;
@@ -46,7 +46,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
 
     generateFunctionDeclarationSource(_cache, localFunction, nlSuffix, nonLoopElements, argsDcl);
     generateFunctionDeclarationSourceLoopForRev(_cache, langC, _name, keyName, loopGroups, generateLocalFunctionName);

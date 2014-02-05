@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANGUAGE_DOUBLE_INCLUDED
-#define CPPAD_CG_C_LANGUAGE_DOUBLE_INCLUDED
+#ifndef CPPAD_CG_LANGUAGE_C_DOUBLE_INCLUDED
+#define CPPAD_CG_LANGUAGE_C_DOUBLE_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
@@ -24,13 +24,13 @@ namespace cg {
  * @author Joao Leal
  */
 template<>
-inline const std::string& CLanguage<double>::absFuncName() {
+inline const std::string& LanguageC<double>::absFuncName() {
     static const std::string name("fabs");
     return name;
 }
 
 template<>
-inline const std::string& CLanguage<double>::getPrintfBaseFormat() {
+inline const std::string& LanguageC<double>::getPrintfBaseFormat() {
     static const std::string format("%f");
     return format;
 }

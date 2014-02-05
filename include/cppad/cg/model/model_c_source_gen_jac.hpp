@@ -51,7 +51,7 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
 
     finishedJob();
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_JACOBIAN);
@@ -134,7 +134,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) throw (CG
 
     finishedJob();
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_JACOBIAN);
@@ -235,13 +235,13 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
     _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
     string model_function(_cache.str());
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
             "\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, elements, argsDcl);
     _cache << "\n"
             "void " << model_function << "(" << argsDcl << ") {\n"

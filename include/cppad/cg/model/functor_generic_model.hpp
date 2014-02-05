@@ -36,32 +36,32 @@ protected:
     std::vector<const Base*> _in;
     std::vector<const Base*> _inHess;
     std::vector<Base*> _out;
-    CLangAtomicFun _atomicFuncArg;
+    LangCAtomicFun _atomicFuncArg;
     std::vector<ExternalFunctionWrapper<Base>* > _atomic;
     size_t _missingAtomicFunctions;
     CppAD::vector<Base> _tx, _ty, _px, _py;
     // original model function
-    void (*_zero)(Base const*const*, Base * const*, CLangAtomicFun);
+    void (*_zero)(Base const*const*, Base * const*, LangCAtomicFun);
     // first order forward mode
-    int (*_forwardOne)(Base const tx[], Base ty[], CLangAtomicFun);
+    int (*_forwardOne)(Base const tx[], Base ty[], LangCAtomicFun);
     // first order reverse mode
-    int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[], CLangAtomicFun);
+    int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
     // second order reverse mode
-    int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[], CLangAtomicFun);
+    int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
     // jacobian function in the dynamic library
-    void (*_jacobian)(Base const*const*, Base * const*, CLangAtomicFun);
+    void (*_jacobian)(Base const*const*, Base * const*, LangCAtomicFun);
     // hessian function in the dynamic library
-    void (*_hessian)(Base const*const*, Base * const*, CLangAtomicFun);
+    void (*_hessian)(Base const*const*, Base * const*, LangCAtomicFun);
     //
-    int (*_sparseForwardOne)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
+    int (*_sparseForwardOne)(unsigned long, Base const *const *, Base * const *, LangCAtomicFun);
     //
-    int (*_sparseReverseOne)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
+    int (*_sparseReverseOne)(unsigned long, Base const *const *, Base * const *, LangCAtomicFun);
     //
-    int (*_sparseReverseTwo)(unsigned long, Base const *const *, Base * const *, CLangAtomicFun);
+    int (*_sparseReverseTwo)(unsigned long, Base const *const *, Base * const *, LangCAtomicFun);
     // sparse jacobian function in the dynamic library
-    void (*_sparseJacobian)(Base const*const*, Base * const*, CLangAtomicFun);
+    void (*_sparseJacobian)(Base const*const*, Base * const*, LangCAtomicFun);
     // sparse hessian function in the dynamic library
-    void (*_sparseHessian)(Base const*const*, Base * const*, CLangAtomicFun);
+    void (*_sparseHessian)(Base const*const*, Base * const*, LangCAtomicFun);
     //
     void (*_forwardOneSparsity)(unsigned long, unsigned long const**, unsigned long*);
     //

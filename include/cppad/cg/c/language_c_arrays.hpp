@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_C_LANGUAGE_ARRAYS_INCLUDED
-#define CPPAD_CG_C_LANGUAGE_ARRAYS_INCLUDED
+#ifndef CPPAD_CG_LANGUAGE_C_ARRAYS_INCLUDED
+#define CPPAD_CG_LANGUAGE_C_ARRAYS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void CLanguage<Base>::printArrayCreationOp(OperationNode<Base>& array) {
+void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
     CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
     const size_t id = array.getVariableID();
     const std::vector<Argument<Base> >& args = array.getArguments();
@@ -56,7 +56,7 @@ void CLanguage<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 }
 
 template<class Base>
-void CLanguage<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
+void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
     CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
 
@@ -121,7 +121,7 @@ void CLanguage<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 }
 
 template<class Base>
-inline size_t CLanguage<Base>::printArrayCreationUsingLoop(size_t startPos,
+inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                                                            OperationNode<Base>& array,
                                                            size_t starti,
                                                            std::vector<const Argument<Base>*>& tmpArrayValues) {
@@ -260,7 +260,7 @@ inline size_t CLanguage<Base>::printArrayCreationUsingLoop(size_t startPos,
 }
 
 template<class Base>
-inline std::string CLanguage<Base>::getTempArrayName(const OperationNode<Base>& op) {
+inline std::string LanguageC<Base>::getTempArrayName(const OperationNode<Base>& op) {
     if (op.getOperationType() == CGArrayCreationOp)
         return _nameGen->generateTemporaryArray(op);
     else
@@ -268,7 +268,7 @@ inline std::string CLanguage<Base>::getTempArrayName(const OperationNode<Base>& 
 }
 
 template<class Base>
-void CLanguage<Base>::printArrayElementOp(OperationNode<Base>& op) {
+void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
     CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
     CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
     CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
@@ -284,7 +284,7 @@ void CLanguage<Base>::printArrayElementOp(OperationNode<Base>& op) {
 }
 
 template<class Base>
-inline void CLanguage<Base>::printArrayStructInit(const std::string& dataArrayName,
+inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayName,
                                                   size_t pos,
                                                   const std::vector<OperationNode<Base>*>& arrays,
                                                   size_t k) {
@@ -294,7 +294,7 @@ inline void CLanguage<Base>::printArrayStructInit(const std::string& dataArrayNa
 }
 
 template<class Base>
-inline void CLanguage<Base>::printArrayStructInit(const std::string& dataArrayName,
+inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayName,
                                                   OperationNode<Base>& array) {
     const std::string& aName = createVariableName(array);
 
@@ -325,7 +325,7 @@ inline void CLanguage<Base>::printArrayStructInit(const std::string& dataArrayNa
 }
 
 template<class Base>
-inline void CLanguage<Base>::markArrayChanged(OperationNode<Base>& ty) {
+inline void LanguageC<Base>::markArrayChanged(OperationNode<Base>& ty) {
     size_t id = ty.getVariableID();
     size_t tySize = ty.getArguments().size();
 

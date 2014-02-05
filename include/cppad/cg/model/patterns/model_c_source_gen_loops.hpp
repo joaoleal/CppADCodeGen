@@ -951,7 +951,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
     string nlRev2Suffix = "noloop_" + suffix;
 
-    CLanguage<Base> langC(baseTypeName);
+    LanguageC<Base> langC(baseTypeName);
     string loopFArgs = "inLocal, outLocal, " + langC.getArgumentAtomic();
     string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
@@ -991,8 +991,8 @@ void printForRevUsageFunction(std::ostringstream& out,
     /**
      * static variables
      */
-    CLanguage<Base>::generateNames4RandomIndexPatterns(indexRandomPatterns);
-    CLanguage<Base>::printRandomIndexPatternDeclaration(out, "   ", indexRandomPatterns);
+    LanguageC<Base>::generateNames4RandomIndexPatterns(indexRandomPatterns);
+    LanguageC<Base>::printRandomIndexPatternDeclaration(out, "   ", indexRandomPatterns);
 
     /**
      * local variables
@@ -1080,7 +1080,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
                 if (group->startLocPattern.get() != nullptr) {
                     // determine hessRowStart = f(it)
-                    out << indent << "outLocal[0] = &" << resultName << "[" << CLanguage<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
+                    out << indent << "outLocal[0] = &" << resultName << "[" << LanguageC<Base>::indexPattern2String(*group->startLocPattern, indexIt) << "];\n";
                 } else {
                     if (!lastCompressed) {
                         out << indent << "outLocal[0] = compressed;\n";
@@ -1089,7 +1089,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                 }
 
                 if (itCount > 1) {
-                    out << indent << keyIndexName << " = " << CLanguage<Base>::indexPattern2String(*group->pattern, indexIt) << ";\n";
+                    out << indent << keyIndexName << " = " << LanguageC<Base>::indexPattern2String(*group->pattern, indexIt) << ";\n";
                     out << indent;
                     (*generateLocalFunctionName)(out, modelName, loop, g);
                     out << "(" << keyIndexName << ", " << loopFArgs << ");\n";
@@ -1130,7 +1130,7 @@ void printForRevUsageFunction(std::ostringstream& out,
 
                                 size_t maxKey = key2Compressed.rbegin()->first;
                                 std::vector<size_t> info = createIndexConditionExpression(eg->keys, usedIter, maxKey);
-                                CLanguage<Base>::printIndexCondExpr(out, info, keyIndexName);
+                                LanguageC<Base>::printIndexCondExpr(out, info, keyIndexName);
                                 out << ") ";
 
                                 usedIter.insert(eg->keys.begin(), eg->keys.end());
@@ -1143,9 +1143,9 @@ void printForRevUsageFunction(std::ostringstream& out,
                             const ArrayElementCopyPattern& ePos = eg->elements[e];
 
                             out << indent2 << resultName << "["
-                                    << CLanguage<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
+                                    << LanguageC<Base>::indexPattern2String(*ePos.resultPattern, indexIt)
                                     << "] += compressed["
-                                    << CLanguage<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
+                                    << LanguageC<Base>::indexPattern2String(*ePos.compressedPattern, indexIt)
                                     << "];\n";
                         }
                     }
@@ -1215,13 +1215,13 @@ std::string generateGlobalForRevWithLoopsFunctionSource(const std::map<size_t, s
     /**
      * The function that matches each equation to a directional derivative function
      */
-    CLanguage<Base> langC(baseTypeName);
+    LanguageC<Base> langC(baseTypeName);
     string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
     string args = langC.generateDefaultFunctionArguments();
     string noLoopFunc = functionName + "_noloop_" + suffix;
 
     std::ostringstream out;
-    out << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+    out << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
             "\n";
     ModelCSourceGen<Base>::generateFunctionDeclarationSource(out, functionName, "noloop_" + suffix, nonLoopElements, argsDcl);
     generateFunctionDeclarationSourceLoopForRev(out, langC, modelName, "j", loopGroups, generateLocalFunctionName);
@@ -1275,7 +1275,7 @@ std::string generateGlobalForRevWithLoopsFunctionSource(const std::map<size_t, s
 
 template<class Base>
 void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& out,
-                                                 CLanguage<Base>& langC,
+                                                 LanguageC<Base>& langC,
                                                  const std::string& modelName,
                                                  const std::string& keyName,
                                                  const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,

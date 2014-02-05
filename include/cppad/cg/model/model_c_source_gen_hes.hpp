@@ -62,14 +62,14 @@ void ModelCSourceGen<Base>::generateHessianSource() {
 
     finishedJob();
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_HESSIAN);
 
     std::ostringstream code;
     std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
-    CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+    LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
     handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
 }
@@ -207,14 +207,14 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGExcep
 
     finishedJob();
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     langC.setGenerateFunction(_name + "_" + FUNCTION_SPARSE_HESSIAN);
 
     std::ostringstream code;
     std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("hess"));
-    CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
+    LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), n);
 
     handler.generateCode(code, langC, hess, nameGenHess, _atomicFunctions, jobName);
 }
@@ -291,12 +291,12 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() throw (CGExcep
     string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
     string rev2Suffix = "indep";
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
-            << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements, argsDcl);
     _cache << "\n"
             "void " << model_function << "(" << argsDcl << ") {\n"

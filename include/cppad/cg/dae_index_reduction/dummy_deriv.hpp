@@ -1479,7 +1479,7 @@ protected:
         }
         CPPADCG_ASSERT_UNKNOWN(handler.getIndependentVariableSize() == indepNames.size());
 
-        CLanguage<Base> lang("double");
+        LanguageC<Base> lang("double");
         vector<CGBase> resAux;
         for (size_t p = 0; p < res.size(); ++p) {
             if (erasedEquations.find(p) == erasedEquations.end()) {
@@ -1487,7 +1487,7 @@ protected:
             }
         }
         std::vector<std::string> depNames;
-        CLangCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
+        LangCCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
         handler.generateCode(std::cout, lang, resAux, nameGen);
     }
 

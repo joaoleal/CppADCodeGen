@@ -133,8 +133,8 @@ protected:
     }
 
     inline void printModel(CodeHandler<double>& handler, CGD& dep) {
-        CLanguage<double> langC("double");
-        CLangDefaultVariableNameGenerator<double> nameGen;
+        LanguageC<double> langC("double");
+        LangCDefaultVariableNameGenerator<double> nameGen;
 
         CppAD::vector<CGD> depv(1);
         depv[0] = dep;

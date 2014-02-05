@@ -86,7 +86,7 @@ VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(
                                                                                 const std::string& indepName,
                                                                                 const std::string& tmpName,
                                                                                 const std::string& tmpArrayName) {
-    return new CLangDefaultVariableNameGenerator<Base > (depName, indepName, tmpName, tmpArrayName);
+    return new LangCDefaultVariableNameGenerator<Base > (depName, indepName, tmpName, tmpArrayName);
 }
 
 template<class Base>
@@ -310,7 +310,7 @@ void ModelCSourceGen<Base>::generateGlobalDirectionalFunctionSource(const std::s
     /**
      * The function that matches each equation to a directional derivative function
      */
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
     std::string args = langC.generateDefaultFunctionArguments();
 
@@ -319,7 +319,7 @@ void ModelCSourceGen<Base>::generateGlobalDirectionalFunctionSource(const std::s
     std::string model_function = _cache.str();
     _cache.str("");
 
-    _cache << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+    _cache << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, model_function, suffix, elements, argsDcl);
     _cache << "\n";
     _cache << "int " << model_function << "("
@@ -369,7 +369,7 @@ void ModelCSourceGen<Base>::generateSparsity1DSource(const std::string& function
 
     // the size of each sparsity row
     _cache << "   ";
-    CLanguage<Base>::printStaticIndexArray(_cache, "nonzeros", sparsity);
+    LanguageC<Base>::printStaticIndexArray(_cache, "nonzeros", sparsity);
 
     _cache << "   *sparsity = nonzeros;\n"
             "   *nnz = " << sparsity.size() << ";\n"
@@ -391,10 +391,10 @@ void ModelCSourceGen<Base>::generateSparsity2DSource(const std::string& function
 
     // the size of each sparsity row
     _cache << "   ";
-    CLanguage<Base>::printStaticIndexArray(_cache, "rows", rows);
+    LanguageC<Base>::printStaticIndexArray(_cache, "rows", rows);
 
     _cache << "   ";
-    CLanguage<Base>::printStaticIndexArray(_cache, "cols", cols);
+    LanguageC<Base>::printStaticIndexArray(_cache, "cols", cols);
 
     _cache << "   *row = rows;\n"
             "   *col = cols;\n"
@@ -421,12 +421,12 @@ void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& functio
             os.str("");
             os << "rows" << i;
             _cache << "   ";
-            CLanguage<Base>::printStaticIndexArray(_cache, os.str(), rows);
+            LanguageC<Base>::printStaticIndexArray(_cache, os.str(), rows);
 
             os.str("");
             os << "cols" << i;
             _cache << "   ";
-            CLanguage<Base>::printStaticIndexArray(_cache, os.str(), cols);
+            LanguageC<Base>::printStaticIndexArray(_cache, os.str(), cols);
         }
     }
 
@@ -466,7 +466,7 @@ void ModelCSourceGen<Base>::generateSparsity1DSource2(const std::string& functio
         _cache << "   ";
         std::ostringstream os;
         os << "elements" << it.first;
-        CLanguage<Base>::printStaticIndexArray(_cache, os.str(), els);
+        LanguageC<Base>::printStaticIndexArray(_cache, os.str(), els);
     }
 
     _cache << "   switch(pos) {\n";

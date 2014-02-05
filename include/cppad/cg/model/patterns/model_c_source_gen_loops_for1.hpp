@@ -360,14 +360,14 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
             }
 
-            CLanguage<Base> langC(_baseTypeName);
+            LanguageC<Base> langC(_baseTypeName);
             langC.setFunctionIndexArgument(indexJcolDcl);
             langC.setParameterPrecision(_parameterPrecision);
 
             _cache.str("");
             std::ostringstream code;
             std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
-            CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
+            LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
             /**
              * Generate the source code inside the loop
@@ -387,7 +387,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             _cache << "#include <stdlib.h>\n"
                     "#include <math.h>\n"
                     "\n"
-                    << CLanguage<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
+                    << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n"
                     "\n"
                     "void " << functionName << "(" << argsDcl << ") {\n";
             nameGenHess.customFunctionVariableDeclarations(_cache);
@@ -444,7 +444,7 @@ void ModelCSourceGen<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handl
     _cache << "model (forward one, indep " << j << ") no loop";
     const std::string jobName = _cache.str();
 
-    CLanguage<Base> langC(_baseTypeName);
+    LanguageC<Base> langC(_baseTypeName);
     langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     _cache.str("");
@@ -453,7 +453,7 @@ void ModelCSourceGen<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handl
 
     std::ostringstream code;
     std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator("dy"));
-    CLangDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
+    LangCDefaultHessianVarNameGenerator<Base> nameGenHess(nameGen.get(), "dx", n);
 
     handler.generateCode(code, langC, jacCol, nameGenHess, _atomicFunctions, jobName);
 
