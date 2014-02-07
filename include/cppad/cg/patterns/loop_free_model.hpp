@@ -269,9 +269,8 @@ public:
          */
         vector<std::set<size_t> > noLoopEvalHessTempsSparsity(n);
 
-        typename map<LoopModel<Base>*, HessianWithLoopsInfo<Base> >::iterator itLoop2Info;
-        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info) {
-            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+        for (const auto& itLoop2Info : loopHessInfo) {
+            const HessianWithLoopsInfo<Base>& info = itLoop2Info.second;
 
             addMatrixSparsity(info.noLoopEvalHessTempsSparsity, noLoopEvalHessTempsSparsity);
         }
@@ -279,9 +278,10 @@ public:
         generateSparsityIndexes(noLoopEvalHessTempsSparsity, hesRow, hesCol);
 
         size_t l = 0;
-        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info, l++) {
-            LoopModel<Base>* loop = itLoop2Info->first;
-            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+        for (const auto& itLoop2Info : loopHessInfo) {
+            LoopModel<Base>* loop = itLoop2Info.first;
+            const HessianWithLoopsInfo<Base>& info = itLoop2Info.second;
+            
             const std::vector<IterEquationGroup<Base> >& eqGroups = loop->getEquationsGroups();
             size_t nIterations = loop->getIterationCount();
             size_t nEqGroups = eqGroups.size();
@@ -326,6 +326,8 @@ public:
 
                 }
             }
+            
+            l++;
         }
 
         vector<map<size_t, CGB> > dyDx;
@@ -348,9 +350,10 @@ public:
 
         // save Hessian
         l = 0;
-        for (itLoop2Info = loopHessInfo.begin(); itLoop2Info != loopHessInfo.end(); ++itLoop2Info, l++) {
-            HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
+        for (auto& itLoop2Info : loopHessInfo) {
+            HessianWithLoopsInfo<Base>& info = itLoop2Info.second;
             info.dzDxx = vhessNoLoop[l];
+            l++;
         }
 
         return dzDx;
