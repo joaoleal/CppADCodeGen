@@ -683,15 +683,20 @@ WARN_LOGFILE           =  doxygen.err
 # directories like "/usr/src/myproject". Separate the files or directories 
 # with spaces.
 
-INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/c
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/dae_index_reduction
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/dynamic_lib
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/dynamic_lib/linux
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/dynamic_lib/patterns
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/dynamic_lib/source_template
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/nodes
-INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppadcg/patterns
+INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/c
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/dae_index_reduction
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/compiler
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/dynamic_lib
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/dynamic_lib/linux
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/llvm
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/llvm/v3_2
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/llvm/v3_4
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/model/patterns
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/nodes
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/patterns
+INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/cg/patterns/index
 INPUT                 += @CMAKE_CURRENT_SOURCE_DIR@/include/cppad/extra
 
 # This tag can be used to specify the character encoding of the source files 
