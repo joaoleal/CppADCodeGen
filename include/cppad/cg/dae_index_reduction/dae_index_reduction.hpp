@@ -49,7 +49,7 @@ public:
                       const std::vector<DaeVarInfo>& varInfo) :
         fun_(fun),
         varInfo_(varInfo),
-        verbosity_(VERBOSITY_LOW) {
+        verbosity_(Verbosity::Low) {
         CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
         CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == fun->Domain());
         for (size_t j = 0; j < varInfo_.size(); ++j) {

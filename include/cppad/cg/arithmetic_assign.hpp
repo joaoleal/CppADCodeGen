@@ -45,7 +45,7 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGAddOp,{argument(), right.argument()}));
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Add,{argument(), right.argument()}));
         if (isValueDefined() && right.isValueDefined()) {
             setValue(getValue() + right.getValue());
         }
@@ -76,7 +76,7 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGSubOp,{argument(), right.argument()}));
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Sub,{argument(), right.argument()}));
         if (isValueDefined() && right.isValueDefined()) {
             setValue(getValue() - right.getValue());
         }
@@ -117,7 +117,7 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGMulOp,{argument(), right.argument()}));
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Mul,{argument(), right.argument()}));
         if (isValueDefined() && right.isValueDefined()) {
             setValue(getValue() * right.getValue());
         }
@@ -152,7 +152,7 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGDivOp,{argument(), right.argument()}));
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Div,{argument(), right.argument()}));
         if (isValueDefined() && right.isValueDefined()) {
             setValue(getValue() / right.getValue());
         }

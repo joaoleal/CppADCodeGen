@@ -56,7 +56,7 @@ inline CG<Base> operator+(const CG<Base> &left, const CG<Base> &right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base > (CGAddOp,{left.argument(), right.argument()}));
+        CG<Base> result(*handler, new OperationNode<Base > (CGOpCode::Add,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() + right.getValue());
         }
@@ -78,7 +78,7 @@ inline CG<Base> operator-(const CG<Base> &left, const CG<Base> &right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGSubOp,{left.argument(), right.argument()}));
+        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Sub,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() - right.getValue());
         }
@@ -108,7 +108,7 @@ inline CG<Base> operator*(const CG<Base> &left, const CG<Base> &right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGMulOp,{left.argument(), right.argument()}));
+        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Mul,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() * right.getValue());
         }
@@ -134,7 +134,7 @@ inline CG<Base> operator/(const CG<Base> &left, const CG<Base> &right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGDivOp,{left.argument(), right.argument()}));
+        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Div,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() / right.getValue());
         }

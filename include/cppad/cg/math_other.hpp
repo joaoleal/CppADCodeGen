@@ -37,7 +37,7 @@ inline cg::CG<Base> pow(const cg::CG<Base> &x, const cg::CG<Base> &y) {
         handler = y.getCodeHandler();
     }
 
-    CG<Base> result(*handler, new OperationNode<Base>(CGPowOp,{x.argument(), y.argument()}));
+    CG<Base> result(*handler, new OperationNode<Base>(CGOpCode::Pow,{x.argument(), y.argument()}));
     if (x.isValueDefined() && y.isValueDefined()) {
         result.setValue(pow(x.getValue(), y.getValue()));
     }
@@ -68,7 +68,7 @@ inline cg::CG<Base> sign(const cg::CG<Base> &x) {
         }
     }
 
-    CG<Base> result(*x.getCodeHandler(), new OperationNode<Base>(CGSignOp, x.argument()));
+    CG<Base> result(*x.getCodeHandler(), new OperationNode<Base>(CGOpCode::Sign, x.argument()));
     if (x.isValueDefined()) {
         if (x.getValue() > Base(0.0)) {
             result.setValue(Base(1.0));

@@ -231,7 +231,7 @@ public:
 
         detectSubset2Dif();
 
-        if (this->verbosity_ >= VERBOSITY_HIGH)
+        if (this->verbosity_ >= Verbosity::High)
             printResultInfo();
 
         generateNewModel(newVarInfo, equationInfo);
@@ -352,7 +352,7 @@ protected:
         for (size_t k = 0; k < Ndash; k++) {
             Enode<Base>* i = enodes_[k];
 
-            if (this->verbosity_ >= VERBOSITY_HIGH)
+            if (this->verbosity_ >= Verbosity::High)
                 std::cout << "Outer loop: equation k = " << *i << "\n";
 
             bool pathfound = false;
@@ -384,7 +384,7 @@ protected:
                             Vnode<Base>* jDiff = new Vnode<Base > (vnodes_.size(), tapeIndex, jj);
                             vnodes_.push_back(jDiff);
 
-                            if (this->verbosity_ >= VERBOSITY_HIGH)
+                            if (this->verbosity_ >= Verbosity::High)
                                 std::cout << "Created " << *jDiff << "\n";
 
                         }
@@ -401,7 +401,7 @@ protected:
                             // differentiate newI and create edges!!!
                             dirtyDifferentiateEq(*ll, *lDiff);
 
-                            if (this->verbosity_ >= VERBOSITY_HIGH)
+                            if (this->verbosity_ >= Verbosity::High)
                                 std::cout << "Created " << *lDiff << "\n";
 
                         }
@@ -431,7 +431,7 @@ protected:
 
                     i = i->derivative();
 
-                    if (this->verbosity_ >= VERBOSITY_HIGH)
+                    if (this->verbosity_ >= Verbosity::High)
                         std::cout << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
 
                 }
@@ -635,7 +635,7 @@ protected:
                 throw CGException(std::string("Failed to create ADFun: ") + ex.what());
             }
 
-            if (this->verbosity_ >= VERBOSITY_HIGH) {
+            if (this->verbosity_ >= Verbosity::High) {
                 std::cout << "Original model:\n";
                 printModel(reducedFun_, newVarInfo);
             }
@@ -709,7 +709,7 @@ protected:
                 throw CGException(std::string("Failed to create ADFun: ") + ex.what());
             }
 
-            if (this->verbosity_ >= VERBOSITY_HIGH) {
+            if (this->verbosity_ >= Verbosity::High) {
                 std::cout << equations.size() << " new equations:\n";
                 printModel(reducedFun_, newVarInfo);
             }

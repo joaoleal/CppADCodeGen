@@ -100,7 +100,7 @@ public:
         const std::vector<Argument<Base> >& args = newArray.getArguments();
         for (size_t i = 0; i < args.size(); i++) {
             const OperationNode<Base>* argOp = args[i].getOperation();
-            if (argOp != nullptr && argOp->getOperationType() == CGArrayElementOp) {
+            if (argOp != nullptr && argOp->getOperationType() == CGOpCode::ArrayElement) {
                 const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
                 CPPADCG_ASSERT_UNKNOWN(otherArray.getVariableID() > 0); // make sure it had already been assigned space
                 size_t otherArrayStart = otherArray.getVariableID() - 1;

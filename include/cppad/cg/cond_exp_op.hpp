@@ -93,22 +93,22 @@ inline cg::CG<Base> CondExpOp(enum CompareOp cop,
         CGOpCode op;
         switch (cop) {
             case CompareLt:
-                op = CGComOpLt;
+                op = CGOpCode::ComLt;
                 break;
             case CompareLe:
-                op = CGComOpLe;
+                op = CGOpCode::ComLe;
                 break;
             case CompareEq:
-                op = CGComOpEq;
+                op = CGOpCode::ComEq;
                 break;
             case CompareGe:
-                op = CGComOpGe;
+                op = CGOpCode::ComGe;
                 break;
             case CompareGt:
-                op = CGComOpGt;
+                op = CGOpCode::ComGt;
                 break;
             case CompareNe:
-                op = CGComOpNe;
+                op = CGOpCode::ComNe;
                 break;
 
             default:

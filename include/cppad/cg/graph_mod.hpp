@@ -70,12 +70,12 @@ inline void CodeHandler<Base>::undoSubstituteIndependent(OperationNode<Base>& in
         throw CGException("Variable not found in the independent variable vector");
     }
 
-    indep.setOperation(CGInvOp);
+    indep.setOperation(CGOpCode::Inv);
 }
 
 template<class Base>
 inline void CodeHandler<Base>::removeIndependent(OperationNode<Base>& indep) throw (CGException) {
-    if (indep.getOperationType() != CGAliasOp) {
+    if (indep.getOperationType() != CGOpCode::Alias) {
         throw CGException("Cannot remove independent variable: not an alias");
     }
 

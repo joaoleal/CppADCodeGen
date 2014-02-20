@@ -194,7 +194,7 @@ public:
              * must create a conditional element so that this 
              * contribution is only evaluated at the relevant iterations
              */
-            OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGTmpDclOp);
+            OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGOpCode::TmpDcl);
             handler.manageOperationNodeMemory(tmpDclVar);
             Argument<Base> tmpArg(*tmpDclVar);
 
@@ -203,30 +203,30 @@ public:
             handler.manageOperationNodeMemory(cond);
 
             // if
-            OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
+            OperationNode<Base>* ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
             handler.manageOperationNodeMemory(ifStart);
 
 
-            OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, asArgument(value)});
+            OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, asArgument(value)});
             handler.manageOperationNodeMemory(tmpAssign1);
-            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *tmpAssign1});
+            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *tmpAssign1});
             handler.manageOperationNodeMemory(ifAssign);
 
             // else
-            OperationNode<Base>* elseStart = new OperationNode<Base>(CGElseOp,{*ifStart, *ifAssign});
+            OperationNode<Base>* elseStart = new OperationNode<Base>(CGOpCode::Else,{*ifStart, *ifAssign});
             handler.manageOperationNodeMemory(elseStart);
 
-            OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, Base(0)});
+            OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, Base(0)});
             handler.manageOperationNodeMemory(tmpAssign2);
-            OperationNode<Base>* elseAssign = new OperationNode<Base>(CGCondResultOp,{*elseStart, *tmpAssign2});
+            OperationNode<Base>* elseAssign = new OperationNode<Base>(CGOpCode::CondResult,{*elseStart, *tmpAssign2});
             handler.manageOperationNodeMemory(elseAssign);
 
             // end if
-            OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp,{*elseStart, *elseAssign});
+            OperationNode<Base>* endIf = new OperationNode<Base>(CGOpCode::EndIf,{*elseStart, *elseAssign});
             handler.manageOperationNodeMemory(endIf);
 
             //
-            OperationNode<Base>* tmpVar = new OperationNode<Base>(CGTmpOp,{tmpArg, *endIf});
+            OperationNode<Base>* tmpVar = new OperationNode<Base>(CGOpCode::Tmp,{tmpArg, *endIf});
             return handler.createCG(tmpVar);
         }
 

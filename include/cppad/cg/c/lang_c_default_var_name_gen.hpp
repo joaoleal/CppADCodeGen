@@ -118,7 +118,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGArrayCreationOp);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
 
         size_t id = variable.getVariableID();
         _ss << "&" << _tmpArrayName << "[" << (id - 1) << "]";
@@ -130,7 +130,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGSparseArrayCreationOp);
+        CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
 
         size_t id = variable.getVariableID();
         _ss << "&" << _tmpSparseArrayName << "[" << (id - 1) << "]";
@@ -140,7 +140,7 @@ public:
 
     virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
                                                  const IndexPattern& ip) {
-        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGLoopIndexedDepOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
 
         _ss.clear();
@@ -153,7 +153,7 @@ public:
 
     virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
                                                    const IndexPattern& ip) {
-        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
 
         _ss.clear();
@@ -207,7 +207,7 @@ protected:
 
         for (size_t a = offset; a < args.size(); a++) {
             CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(args[a].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
 
             indexes[a - offset] = &static_cast<const IndexOperationNode<Base>*> (args[a].getOperation())->getIndex();
         }

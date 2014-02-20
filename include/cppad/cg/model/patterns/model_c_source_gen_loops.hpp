@@ -102,7 +102,7 @@ inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& han
 
     for (size_t j = 0; j < nIndexed; j++) {
         info[1] = handler.addLoopIndependentIndexPattern(*loop.getIndependentIndexPatterns()[j], j);
-        x[j] = handler.createCG(new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs));
+        x[j] = handler.createCG(new OperationNode<Base>(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
     }
 
     return x;
@@ -162,7 +162,7 @@ inline CppAD::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& han
     for (size_t i = 0; i < dep_size; i++) {
         IndexPattern* ip = depIndexes[i];
         info[1] = handler.addLoopIndependentIndexPattern(*ip, x_size + i); // dependent index pattern location
-        deps[i] = handler.createCG(new OperationNode<Base>(CGLoopIndexedIndepOp, info, xIndexedArgs));
+        deps[i] = handler.createCG(new OperationNode<Base>(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
     }
 
     return deps;
@@ -181,16 +181,16 @@ inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
         // {indexed expression, index(jrowIndexOp) }
         std::vector<Argument<Base> > indexedArgs{asArgument(val), iterationIndexOp};
 
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, aInfo, indexedArgs);
+        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, aInfo, indexedArgs);
         handler.manageOperationNodeMemory(yIndexed);
 
         return handler.createCG(Argument<Base>(*yIndexed));
 
     } else if (val.getOperationNode() != nullptr &&
-            val.getOperationNode()->getOperationType() == CGEndIfOp) {
+            val.getOperationNode()->getOperationType() == CGOpCode::EndIf) {
 
         // {i} : points to itself
-        return handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{i},
+        return handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{i},
         {
                                 *val.getOperationNode()
         }));
@@ -230,7 +230,7 @@ LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
             info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
             info[1] = assignOrAdd;
 
-            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, info, indexedArgs);
+            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, info, indexedArgs);
             handler.manageOperationNodeMemory(yIndexed);
             endArgs.push_back(*yIndexed);
         } else {
@@ -290,7 +290,7 @@ public:
         if (node.getColor() > 0)
             return node.getColor() == 1;
 
-        if (node.getOperationType() == CGIndexDeclarationOp) {
+        if (node.getOperationType() == CGOpCode::IndexDeclaration) {
             if (&node == &loopIndex_) {
                 node.setColor(2);
                 return false; // depends on the loop index
@@ -313,9 +313,9 @@ public:
 
         node.setColor(indexedPath ? 2 : 1);
 
-        if (node.getOperationType() == CGArrayElementOp ||
-                node.getOperationType() == CGAtomicForwardOp ||
-                node.getOperationType() == CGAtomicReverseOp) {
+        if (node.getOperationType() == CGOpCode::ArrayElement ||
+                node.getOperationType() == CGOpCode::AtomicForward ||
+                node.getOperationType() == CGOpCode::AtomicReverse) {
             return !indexedPath; // should not move array creation elements outside the loop
         }
 
@@ -324,13 +324,13 @@ public:
                 OperationNode<Base>* arg = args[a].getOperation();
                 if (arg != nullptr && arg->getColor() == 1) {// must be a non indexed expression
                     CGOpCode op = arg->getOperationType();
-                    if (op != CGInvOp && op != CGTmpDclOp) {// no point in moving just one variable outside
+                    if (op != CGOpCode::Inv && op != CGOpCode::TmpDcl) {// no point in moving just one variable outside
 
-                        if (op == CGLoopIndexedTmpOp) {
-                            // must not place a CGLoopIndexedTmpOp operation outside the loop
+                        if (op == CGOpCode::LoopIndexedTmp) {
+                            // must not place a LoopIndexedTmp operation outside the loop
                             Argument<Base> assignArg = arg->getArguments()[1];
                             if (assignArg.getOperation() != nullptr) { // no point in moving a constant value outside
-                                OperationNode<Base>* assignNode = new OperationNode<Base>(CGAssignOp, assignArg);
+                                OperationNode<Base>* assignNode = new OperationNode<Base>(CGOpCode::Assign, assignArg);
                                 handler_.manageOperationNodeMemory(assignNode);
                                 arg->getArguments()[1] = *assignNode;
                                 nonIndexed_.insert(assignNode);
@@ -383,7 +383,7 @@ OperationNode<Base>* createIndexConditionExpressionOp(const std::set<size_t>& it
                                                       size_t maxIter,
                                                       IndexOperationNode<Base>& iterationIndexOp) {
     std::vector<size_t> info = createIndexConditionExpression(iterations, usedIter, maxIter);
-    return new OperationNode<Base>(CGIndexCondExprOp, info,{iterationIndexOp});
+    return new OperationNode<Base>(CGOpCode::IndexCondExpr, info,{iterationIndexOp});
 }
 
 std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
@@ -501,7 +501,7 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
 
         } else if (usedIter.size() + iterCount == nLocalIter) {
             // all other iterations: ELSE
-            ifBranch = new OperationNode<Base>(CGElseOp,{Argument<Base>(*ifBranch), nextBranchArg});
+            ifBranch = new OperationNode<Base>(CGOpCode::Else,{Argument<Base>(*ifBranch), nextBranchArg});
             handler.manageOperationNodeMemory(ifBranch);
         } else {
             // depends on the iteration index
@@ -510,11 +510,11 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
 
             if (ifStart == nullptr) {
                 // IF
-                ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
+                ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
                 ifBranch = ifStart;
             } else {
                 // ELSE IF
-                ifBranch = new OperationNode<Base>(CGElseIfOp,{*ifBranch, *cond, nextBranchArg});
+                ifBranch = new OperationNode<Base>(CGOpCode::ElseIf,{*ifBranch, *cond, nextBranchArg});
             }
 
             handler.manageOperationNodeMemory(ifBranch);
@@ -538,10 +538,10 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
         std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(*pattern), 1};
         // {indexed expression, dependency on the index}
         std::vector<Argument<Base> > indexedArgs{value, iterationIndexOp};
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
         handler.manageOperationNodeMemory(yIndexed);
 
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{Argument<Base>(*ifBranch), Argument<Base>(*yIndexed)});
+        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{Argument<Base>(*ifBranch), Argument<Base>(*yIndexed)});
         handler.manageOperationNodeMemory(ifAssign);
         nextBranchArg = Argument<Base>(*ifAssign);
 
@@ -558,7 +558,7 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     if (reusingIfElse) {
         ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
     } else {
-        ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifBranch, nextBranchArg});
+        ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
         handler.manageOperationNodeMemory(ifElseBranches->endIf);
     }
 
@@ -608,7 +608,7 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
         OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
         handler.manageOperationNodeMemory(cond);
 
-        ifBranch = new OperationNode<Base>(CGStartIfOp, *cond);
+        ifBranch = new OperationNode<Base>(CGOpCode::StartIf, *cond);
         handler.manageOperationNodeMemory(ifBranch);
     }
 
@@ -617,10 +617,10 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     // {indexed expression, dependency on the index}
     std::vector<Argument<Base> > indexedArgs{asArgument(ddfdxdx), iterationIndexOp};
 
-    OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+    OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
     handler.manageOperationNodeMemory(yIndexed);
 
-    OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifBranch, *yIndexed});
+    OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifBranch, *yIndexed});
     handler.manageOperationNodeMemory(ifAssign);
     Argument<Base> nextBranchArg = *ifAssign;
 
@@ -636,7 +636,7 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     if (reusingIfElse) {
         ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
     } else {
-        ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifBranch, nextBranchArg});
+        ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
         handler.manageOperationNodeMemory(ifElseBranches->endIf);
     }
 
@@ -705,7 +705,7 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
             OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, iterCount - 1, iterationIndexOp);
             handler.manageOperationNodeMemory(cond);
 
-            ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
+            ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
             handler.manageOperationNodeMemory(ifStart);
         }
 
@@ -714,10 +714,10 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
         // {indexed expression, dependency on the index} 
         std::vector<Argument<Base> > indexedArgs{asArgument(value), iterationIndexOp};
 
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGLoopIndexedDepOp, ainfo, indexedArgs);
+        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
         handler.manageOperationNodeMemory(yIndexed);
 
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *yIndexed});
+        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *yIndexed});
         handler.manageOperationNodeMemory(ifAssign);
 
         if (!reusingIfElse) {
@@ -730,7 +730,7 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
         if (reusingIfElse) {
             ifElseBranches->endIf->getArguments().push_back(*ifAssign);
         } else {
-            ifElseBranches->endIf = new OperationNode<Base>(CGEndIfOp,{*ifStart, *ifAssign});
+            ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifStart, *ifAssign});
             handler.manageOperationNodeMemory(ifElseBranches->endIf);
         }
 

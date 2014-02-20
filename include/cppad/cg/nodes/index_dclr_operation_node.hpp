@@ -31,7 +31,7 @@ class IndexDclrOperationNode : public OperationNode<Base> {
 public:
 
     inline IndexDclrOperationNode(const std::string& name) :
-        OperationNode<Base>(CGIndexDeclarationOp) {
+        OperationNode<Base>(CGOpCode::IndexDeclaration) {
         CPPADCG_ASSERT_KNOWN(!name.empty(), "index name cannot be empty");
         this->setName(name);
     }

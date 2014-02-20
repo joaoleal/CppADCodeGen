@@ -275,7 +275,7 @@ public:
         _forwardOne(false),
         _reverseOne(false),
         _reverseTwo(false),
-        _jacMode(AUTOMATIC),
+        _jacMode(JacobianADMode::Automatic),
         _atomicsIndeps(nullptr),
         _maxAssignPerFunc(20000),
         _jobTimer(nullptr) {

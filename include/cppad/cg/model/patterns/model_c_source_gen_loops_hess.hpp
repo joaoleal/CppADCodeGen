@@ -587,7 +587,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
         tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
         for (size_t k = 0; k < tmpsAlias.size(); k++) {
             // to be defined later
-            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGAliasOp));
+            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGOpCode::Alias));
         }
     }
 
@@ -933,13 +933,13 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
         for (size_t e : lowerHessOrder) {
             // an additional alias variable is required so that each dependent variable can have its own ID
             if (hess[e].isParameter() && hess[e].IdenticalZero()) {
-                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp, *info.loopEnd));
+                hess[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentMultiAssign, *info.loopEnd));
 
-            } else if (hess[e].getOperationNode() != nullptr && hess[e].getOperationNode()->getOperationType() == CGDependentMultiAssignOp) {
+            } else if (hess[e].getOperationNode() != nullptr && hess[e].getOperationNode()->getOperationType() == CGOpCode::DependentMultiAssign) {
                 hess[e].getOperationNode()->getArguments().push_back(*info.loopEnd);
 
             } else {
-                hess[e] = handler.createCG(new OperationNode<Base> (CGDependentMultiAssignOp,{asArgument(hess[e]), *info.loopEnd}));
+                hess[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentMultiAssign,{asArgument(hess[e]), *info.loopEnd}));
             }
         }
 
@@ -961,7 +961,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
     // make use of the symmetry of the Hessian in order to reduce operations
     for (const auto& it2 : duplicates) {
         if (hess[it2.second].isVariable())
-            hess[it2.first] = handler.createCG(new OperationNode<Base> (CGAliasOp, asArgument(hess[it2.second])));
+            hess[it2.first] = handler.createCG(new OperationNode<Base> (CGOpCode::Alias, asArgument(hess[it2.second])));
         else
             hess[it2.first] = hess[it2.second].getValue();
     }

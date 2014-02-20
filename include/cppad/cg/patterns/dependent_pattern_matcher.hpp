@@ -52,10 +52,10 @@ public:
     typedef CG<Base> CGBase;
 private:
 
-    enum INDEXED_OPERATION_TYPE {
-        INDEXED_OPERATION_TYPE_INDEXED,
-        INDEXED_OPERATION_TYPE_NONINDEXED,
-        INDEXED_OPERATION_TYPE_BOTH
+    enum class INDEXED_OPERATION_TYPE {
+        INDEXED,
+        NONINDEXED,
+        BOTH
     };
     typedef std::pair<INDEXED_OPERATION_TYPE, size_t> Indexed2OpCountType;
     typedef std::map<size_t, std::map<size_t, std::map<OperationNode<Base>*, Indexed2OpCountType> > > Dep1Dep2SharedType;
@@ -173,7 +173,7 @@ private:
             const std::set<size_t>& candidates = relatedDepCandidates_[r];
             for (size_t iDep : candidates) {
                 OperationNode<Base>* node = dependents_[iDep].getOperationNode();
-                if (node != nullptr && node->getOperationType() == CGInvOp) {
+                if (node != nullptr && node->getOperationType() == CGOpCode::Inv) {
                     /**
                      * indexed/nonindexed independents are marked at the 
                      * operation that uses them, therefore currently there 
@@ -183,7 +183,7 @@ private:
                      * have no operation, consequently an alias is used
                      */
                     CodeHandler<Base>* handler = dependents_[iDep].getCodeHandler();
-                    dependents_[iDep] = handler->createCG(new OperationNode<Base>(CGAliasOp, *node));
+                    dependents_[iDep] = handler->createCG(new OperationNode<Base>(CGOpCode::Alias, *node));
                 }
             }
         }
@@ -305,7 +305,7 @@ private:
 
                         size_t totalOps = 0; // the total number of operations performed by shared variables with dep2
                         for (const auto& itShared : sharedTmps) {
-                            if (itShared.second.first == INDEXED_OPERATION_TYPE_BOTH) {
+                            if (itShared.second.first == INDEXED_OPERATION_TYPE::BOTH) {
                                 /**
                                  * one equation uses this temporary shared 
                                  * variable as an indexed variable while the 
@@ -879,7 +879,7 @@ private:
         for (size_t a = 0; a < arg_size; a++) {
             OperationNode<Base>*argOp = args[a].getOperation();
             if (argOp != nullptr) {
-                if (argOp->getOperationType() != CGInvOp) {
+                if (argOp->getOperationType() != CGOpCode::Inv) {
                     indexedOperation |= findSharedTemporaries(argOp, depIndex, localOpCount);
                 } else {
                     indexedOperation |= !eqCurr_->containsConstantIndependent(node, a);
@@ -898,7 +898,7 @@ private:
         size_t id = node->getVariableID();
         std::set<size_t>& deps = id2Deps[id];
 
-        if (deps.size() > 1 && node->getOperationType() != CGInvOp) {
+        if (deps.size() > 1 && node->getOperationType() != CGOpCode::Inv) {
             /**
              * Temporary variable
              */
@@ -918,12 +918,12 @@ private:
                     else
                         reldepdep = &relation[otherDep][depIndex];
 
-                    INDEXED_OPERATION_TYPE expected = indexedOperation ? INDEXED_OPERATION_TYPE_INDEXED : INDEXED_OPERATION_TYPE_NONINDEXED;
+                    INDEXED_OPERATION_TYPE expected = indexedOperation ? INDEXED_OPERATION_TYPE::INDEXED : INDEXED_OPERATION_TYPE::NONINDEXED;
                     typename std::map<OperationNode<Base>*, Indexed2OpCountType>::iterator itIndexedType = reldepdep->find(node);
                     if (itIndexedType == reldepdep->end()) {
                         (*reldepdep)[node] = Indexed2OpCountType(expected, localOpCount);
                     } else if (itIndexedType->second.first != expected) {
-                        itIndexedType->second.first = INDEXED_OPERATION_TYPE_BOTH;
+                        itIndexedType->second.first = INDEXED_OPERATION_TYPE::BOTH;
                     }
 
                     break;
@@ -943,7 +943,7 @@ private:
      */
     inline void markOperationsWithDependent(const OperationNode<Base>* node,
                                             size_t dep) {
-        if (node == nullptr || node->getOperationType() == CGInvOp)
+        if (node == nullptr || node->getOperationType() == CGOpCode::Inv)
             return; // nothing to do
 
         size_t id = node->getVariableID();

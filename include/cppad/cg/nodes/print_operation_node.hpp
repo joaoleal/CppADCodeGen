@@ -36,7 +36,7 @@ public:
     inline PrintOperationNode(const std::string& before,
                               const Argument<Base>& arg,
                               const std::string& after) :
-        OperationNode<Base>(CGPriOp, arg),
+        OperationNode<Base>(CGOpCode::Pri, arg),
         before_(before),
         after_(after) {
     }

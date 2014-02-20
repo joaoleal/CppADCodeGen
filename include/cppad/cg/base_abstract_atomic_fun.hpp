@@ -69,7 +69,7 @@ protected:
                                                  const CppAD::vector<CGB>& tx) {
         std::vector<Arg> arrayArgs = asArguments(tx);
         std::vector<size_t> info; // empty
-        OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp, info, arrayArgs);
+        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation, info, arrayArgs);
         handler.manageOperationNode(array);
 
         return array;
@@ -86,7 +86,7 @@ protected:
             arrayArgs[i] = asArgument(tx[i * (p + 1) + k]);
         }
 
-        OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp,{}, arrayArgs);
+        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation,{}, arrayArgs);
         handler.manageOperationNode(array);
 
         return array;
@@ -96,7 +96,7 @@ protected:
                                                      size_t size) {
         CppAD::vector<CGB> tx2(size);
         std::vector<Arg> arrayArgs = asArguments(tx2);
-        OperationNode<Base>* array = new OperationNode<Base>(CGArrayCreationOp,{}, arrayArgs);
+        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation,{}, arrayArgs);
         handler.manageOperationNode(array);
 
         return array;
@@ -104,7 +104,7 @@ protected:
 
     static inline OperationNode<Base>* makeEmptySparseArray(CodeHandler<Base>& handler,
                                                             size_t size) {
-        OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp,{size},
+        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::SparseArrayCreation,{size},
         {
         }); //empty args
         handler.manageOperationNode(array);
@@ -133,7 +133,7 @@ protected:
             }
         }
 
-        OperationNode<Base>* array = new OperationNode<Base>(CGSparseArrayCreationOp, arrayIdx, arrayArgs);
+        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::SparseArrayCreation, arrayIdx, arrayArgs);
         handler.manageOperationNode(array);
         return array;
     }

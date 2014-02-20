@@ -23,221 +23,221 @@ namespace cg {
  * 
  * @author Joao Leal
  */
-enum CGOpCode {
-    CGAssignOp, // a = b
-    CGAbsOp, //  abs(variable)
-    CGAcosOp, // asin(variable)
-    CGAddOp, //  a + b
-    CGAliasOp, //  alias (reference to another operation)
-    CGArrayCreationOp, // dense array {a, b, c ...}
-    CGSparseArrayCreationOp, // {a, b, c ...}; {index1, index2, index3, ...};
-    CGArrayElementOp, // x[i]
-    CGAsinOp, // asin(variable)
-    CGAtanOp, // atan(variable)
-    CGAtomicForwardOp, // atomicFunction.forward(q, p, vx, vy, tx, ty)
-    CGAtomicReverseOp, // atomicFunction.reverse(p, tx, ty, px, py)
-    CGComOpLt, // result = left < right? trueCase: falseCase
-    CGComOpLe, // result = left <= right? trueCase: falseCase
-    CGComOpEq, // result = left == right? trueCase: falseCase
-    CGComOpGe, // result = left >= right? trueCase: falseCase
-    CGComOpGt, // result = left > right? trueCase: falseCase
-    CGComOpNe, // result = left != right? trueCase: falseCase
-    CGCoshOp, // cosh(variable)
-    CGCosOp, //  cos(variable)
-    CGDivOp, // a / b
-    CGExpOp, //  exp(variable)
-    CGInvOp, //                             independent variable
-    CGLogOp, //  log(variable)
-    CGMulOp, // a * b
-    CGPowOp, //  pow(a,   b)
-    CGPriOp, //  PrintFor(text, parameter or variable, parameter or variable)
-    CGSignOp, // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
-    CGSinhOp, // sinh(variable)
-    CGSinOp, //  sin(variable)
-    CGSqrtOp, // sqrt(variable)
-    CGSubOp, //  a - b
-    CGTanhOp, //  tanh(variable)
-    CGTanOp, //  tan(variable)
-    CGUnMinusOp, // -(a)
-    CGDependentMultiAssignOp, // operation which associates a dependent variables with loops and regular operations
-    CGDependentRefRhsOp, // operation referencing a dependent variable (right hand side only)
-    CGIndexDeclarationOp, // an integer index declaration
-    CGIndexOp, // an integer index
-    CGIndexAssignOp, // assignment of an integer index to an index pattern expression
-    CGLoopStartOp, // for() {}
-    CGLoopIndexedIndepOp, // indexed independent used by a loop
-    CGLoopIndexedDepOp, // indexed output for a dependent variable from a loop
-    CGLoopIndexedTmpOp, // indexed output for a temporary variable from a loop
-    CGLoopEndOp, // endfor
-    CGTmpDclOp, // marks the beginning of the use of a temporary variable across several scopes (used by CGLoopIndexedTmpOp)
-    CGTmpOp, // reference to a temporary variable defined by CGTmpDclOp
-    CGIndexCondExprOp, // a condition expression which returns a boolean
-    CGStartIfOp, // the start of an if statement
-    CGElseIfOp, // else if()
-    CGElseOp, // else
-    CGEndIfOp, // end of if
-    CGCondResultOp // assignment inside an if branch
+enum class CGOpCode {
+    Assign, // a = b
+    Abs, //  abs(variable)
+    Acos, // asin(variable)
+    Add, //  a + b
+    Alias, //  alias (reference to another operation)
+    ArrayCreation, // dense array {a, b, c ...}
+    SparseArrayCreation, // {a, b, c ...}; {index1, index2, index3, ...};
+    ArrayElement, // x[i]
+    Asin, // asin(variable)
+    Atan, // atan(variable)
+    AtomicForward, // atomicFunction.forward(q, p, vx, vy, tx, ty)
+    AtomicReverse, // atomicFunction.reverse(p, tx, ty, px, py)
+    ComLt, // result = left < right? trueCase: falseCase
+    ComLe, // result = left <= right? trueCase: falseCase
+    ComEq, // result = left == right? trueCase: falseCase
+    ComGe, // result = left >= right? trueCase: falseCase
+    ComGt, // result = left > right? trueCase: falseCase
+    ComNe, // result = left != right? trueCase: falseCase
+    Cosh, // cosh(variable)
+    Cos, //  cos(variable)
+    Div, // a / b
+    Exp, //  exp(variable)
+    Inv, //                             independent variable
+    Log, //  log(variable)
+    Mul, // a * b
+    Pow, //  pow(a,   b)
+    Pri, //  PrintFor(text, parameter or variable, parameter or variable)
+    Sign, // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
+    Sinh, // sinh(variable)
+    Sin, //  sin(variable)
+    Sqrt, // sqrt(variable)
+    Sub, //  a - b
+    Tanh, //  tanh(variable)
+    Tan, //  tan(variable)
+    UnMinus, // -(a)
+    DependentMultiAssign, // operation which associates a dependent variables with loops and regular operations
+    DependentRefRhs, // operation referencing a dependent variable (right hand side only)
+    IndexDeclaration, // an integer index declaration
+    Index, // an integer index
+    IndexAssign, // assignment of an integer index to an index pattern expression
+    LoopStart, // for() {}
+    LoopIndexedIndep, // indexed independent used by a loop
+    LoopIndexedDep, // indexed output for a dependent variable from a loop
+    LoopIndexedTmp, // indexed output for a temporary variable from a loop
+    LoopEnd, // endfor
+    TmpDcl, // marks the beginning of the use of a temporary variable across several scopes (used by LoopIndexedTmp)
+    Tmp, // reference to a temporary variable defined by CGTmpDclOp
+    IndexCondExpr, // a condition expression which returns a boolean
+    StartIf, // the start of an if statement
+    ElseIf, // else if()
+    Else, // else
+    EndIf, // end of if
+    CondResult // assignment inside an if branch
 };
 
 inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
     switch (op) {
-        case CGAssignOp:
+        case CGOpCode::Assign:
             os << "$1 = $2";
             break;
-        case CGAbsOp:
+        case CGOpCode::Abs:
             os << "abs($1)";
             break;
-        case CGAcosOp:
+        case CGOpCode::Acos:
             os << "acos($1)";
             break;
-        case CGAddOp:
+        case CGOpCode::Add:
             os << "$1 + $2";
             break;
-        case CGAliasOp:
+        case CGOpCode::Alias:
             os << "alias($1)";
             break;
-        case CGArrayCreationOp:
+        case CGOpCode::ArrayCreation:
             os << "new array[size]";
             break;
-        case CGSparseArrayCreationOp:
+        case CGOpCode::SparseArrayCreation:
             os << "new sparseArray[size]";
             break;
-        case CGArrayElementOp:
+        case CGOpCode::ArrayElement:
             os << "array[i]";
             break;
-        case CGAsinOp:
+        case CGOpCode::Asin:
             os << "asin($1)";
             break;
-        case CGAtanOp:
+        case CGOpCode::Atan:
             os << "atan($1)";
             break;
-        case CGAtomicForwardOp:
+        case CGOpCode::AtomicForward:
             os << "atomicFunction.forward(q, p, vx, vy, tx, ty)";
             break;
-        case CGAtomicReverseOp:
+        case CGOpCode::AtomicReverse:
             os << "atomicFunction.reverse(p, tx, ty, px, py)";
             break;
-        case CGComOpLt:
+        case CGOpCode::ComLt:
             os << "result = ($1 < $2)? $3 : $4";
             break;
-        case CGComOpLe:
+        case CGOpCode::ComLe:
             os << "result = ($1 <= $2)? $3 : $4";
             break;
-        case CGComOpEq:
+        case CGOpCode::ComEq:
             os << "result = ($1 == $2)? $3 : $4";
             break;
-        case CGComOpGe:
+        case CGOpCode::ComGe:
             os << "result = ($1 >= $2)? $3 : $4";
             break;
-        case CGComOpGt:
+        case CGOpCode::ComGt:
             os << "result = ($1 > $2)? $3 : $4";
             break;
-        case CGComOpNe:
+        case CGOpCode::ComNe:
             os << "result = ($1 != $2)? $3 : $4";
             break;
-        case CGCoshOp:
+        case CGOpCode::Cosh:
             os << "cosh($1)";
             break;
-        case CGCosOp:
+        case CGOpCode::Cos:
             os << "cos($1)";
             break;
-        case CGDivOp:
+        case CGOpCode::Div:
             os << "$1 / $2";
             break;
-        case CGExpOp:
+        case CGOpCode::Exp:
             os << "exp($1)";
             break;
-        case CGInvOp:
+        case CGOpCode::Inv:
             os << "independent()";
             break;
-        case CGLogOp:
+        case CGOpCode::Log:
             os << "log($1)";
             break;
-        case CGMulOp:
+        case CGOpCode::Mul:
             os << "$1 * $2";
             break;
-        case CGPowOp:
+        case CGOpCode::Pow:
             os << "pow($1, $2)";
             break;
-        case CGPriOp:
+        case CGOpCode::Pri:
             os << "print($1)";
             break;
-        case CGSignOp:
+        case CGOpCode::Sign:
             os << "sign($1)";
             break;
-        case CGSinhOp:
+        case CGOpCode::Sinh:
             os << "sinh($1)";
             break;
-        case CGSinOp:
+        case CGOpCode::Sin:
             os << "sin($1)";
             break;
-        case CGSqrtOp:
+        case CGOpCode::Sqrt:
             os << "sqrt($1)";
             break;
-        case CGSubOp:
+        case CGOpCode::Sub:
             os << "$1 - $2";
             break;
-        case CGTanhOp:
+        case CGOpCode::Tanh:
             os << "tanh($1)";
             break;
-        case CGTanOp:
+        case CGOpCode::Tan:
             os << "tan($1)";
             break;
-        case CGUnMinusOp:
+        case CGOpCode::UnMinus:
             os << "-($1)";
             break;
-        case CGDependentMultiAssignOp:
+        case CGOpCode::DependentMultiAssign:
             os << "dep($1) = ($2) + ...";
             break;
-        case CGDependentRefRhsOp:
+        case CGOpCode::DependentRefRhs:
             os << "depref($1)";
             break;
-        case CGIndexDeclarationOp:
+        case CGOpCode::IndexDeclaration:
             os << "index declaration";
             break;
-        case CGIndexOp:
+        case CGOpCode::Index:
             os << "index";
             break;
-        case CGIndexAssignOp:
+        case CGOpCode::IndexAssign:
             os << "index = expression()";
             break;
-        case CGLoopStartOp:
+        case CGOpCode::LoopStart:
             os << "for";
             break;
-        case CGLoopIndexedIndepOp:
+        case CGOpCode::LoopIndexedIndep:
             os << "loopIndexedIndep";
             break;
-        case CGLoopIndexedDepOp:
+        case CGOpCode::LoopIndexedDep:
             os << "loopIndexedDep";
             break;
-        case CGLoopIndexedTmpOp:
+        case CGOpCode::LoopIndexedTmp:
             os << "loopIndexedTmp";
             break;
-        case CGLoopEndOp:
+        case CGOpCode::LoopEnd:
             os << "endfor";
             break;
-        case CGTmpDclOp:
+        case CGOpCode::TmpDcl:
             os << "declare tempVar";
             break;
-        case CGTmpOp:
+        case CGOpCode::Tmp:
             os << "tempVar";
             break;
-        case CGIndexCondExprOp:
+        case CGOpCode::IndexCondExpr:
             os << "bool(index expression)";
             break;
-        case CGStartIfOp:
+        case CGOpCode::StartIf:
             os << "if()";
             break;
-        case CGElseIfOp:
+        case CGOpCode::ElseIf:
             os << "else if()";
             break;
-        case CGElseOp:
+        case CGOpCode::Else:
             os << "else";
             break;
-        case CGEndIfOp:
+        case CGOpCode::EndIf:
             os << "endif";
             break;
-        case CGCondResultOp:
+        case CGOpCode::CondResult:
             os << "ifResult =";
             break;
         default:

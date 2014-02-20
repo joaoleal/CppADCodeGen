@@ -709,7 +709,7 @@ private:
                 Argument<Base> aClone;
 
                 if (node != nullptr) {
-                    if (node->getOperationType() == CGInvOp) {
+                    if (node->getOperationType() == CGOpCode::Inv) {
                         aClone = createIndependentClone(nullptr, 0, *node);
                     } else {
                         aClone = makeGraphClones(*eq, *node);
@@ -911,7 +911,7 @@ private:
     inline Argument<Base> makeGraphClones(const EquationPattern<Base>& eq,
                                           OperationNode<Base>& node) {
 
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGInvOp);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv);
 
         size_t id = node.getVariableID();
 
@@ -925,7 +925,7 @@ private:
         id = idCounter_++;
         node.setVariableID(id);
 
-        if (node.getColor() > 0 || node.getOperationType() == CGArrayCreationOp) {
+        if (node.getColor() > 0 || node.getOperationType() == CGOpCode::ArrayCreation) {
             /**
              * part of the operation path that depends on the loop indexes
              * or its an array with constant elements
@@ -941,7 +941,7 @@ private:
                     cloneArgs[a] = *args[a].getParameter();
                 } else {
                     // variable
-                    if (argOp->getOperationType() == CGInvOp) {
+                    if (argOp->getOperationType() == CGOpCode::Inv) {
                         cloneArgs[a] = createIndependentClone(&node, a, *argOp);
                     } else {
                         cloneArgs[a] = makeGraphClones(eq, *argOp);
@@ -990,7 +990,7 @@ private:
                                                     size_t argIndex) {
         CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments().size() > argIndex);
         CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation() != nullptr);
-        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGInvOp);
+        CPPADCG_ASSERT_UNKNOWN(operation == nullptr || operation->getArguments()[argIndex].getOperation()->getOperationType() == CGOpCode::Inv);
 
         OperationArgumentsIndepOrder<Base>* args2Order = op2Arg2IndepOrder_.at(operation);
         IndependentOrder<Base>* indepOrder = args2Order->arg2Order.at(argIndex);
@@ -1012,7 +1012,7 @@ private:
     }
 
     OperationNode<Base>& getNonIndexedIndependentClone(const OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGInvOp);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::Inv);
 
         typename std::map<const OperationNode<Base>*, OperationNode<Base>*>::iterator it;
         it = orig2ConstIndepClone_.find(&node);
@@ -1037,9 +1037,9 @@ private:
      * @return the clone
      */
     OperationNode<Base>& makeTemporaryVarClone(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGInvOp);
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGArrayCreationOp);
-        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGSparseArrayCreationOp);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::SparseArrayCreation);
 
         CG<Base> newIndep;
         handler_.makeVariable(newIndep);

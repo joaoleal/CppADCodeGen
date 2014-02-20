@@ -63,7 +63,7 @@ private:
             return std::set<size_t>();
 
         CGOpCode op = node->getOperationType();
-        if (op == CGInvOp) {
+        if (op == CGOpCode::Inv) {
             std::set<size_t> indeps;
             indeps.insert(node->getColor());
             return indeps;
@@ -84,7 +84,7 @@ private:
         }
         indeps_[node] = indeps;
 
-        if (op == CGAtomicForwardOp) {
+        if (op == CGOpCode::AtomicForward) {
             CPPADCG_ASSERT_UNKNOWN(node->getInfo().size() > 1);
             size_t id = node->getInfo()[0];
             atomicIndeps_[id].insert(indeps.begin(), indeps.end());

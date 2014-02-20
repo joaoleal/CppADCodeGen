@@ -41,7 +41,7 @@ public:
     inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
                                     IndexPattern& indexPattern,
                                     IndexOperationNode<Base>& index1) :
-        OperationNode<Base>(CGIndexAssignOp,{index, index1}),
+        OperationNode<Base>(CGOpCode::IndexAssign,{index, index1}),
     indexPattern_(indexPattern) {
     }
 
@@ -49,7 +49,7 @@ public:
                                     IndexPattern& indexPattern,
                                     IndexOperationNode<Base>* index1,
                                     IndexOperationNode<Base>* index2) :
-        OperationNode<Base>(CGIndexAssignOp, std::vector<size_t> (0), createArguments(index, index1, index2)),
+        OperationNode<Base>(CGOpCode::IndexAssign, std::vector<size_t> (0), createArguments(index, index1, index2)),
         indexPattern_(indexPattern) {
     }
 
@@ -58,7 +58,7 @@ public:
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
         OperationNode<Base>* aNode = args[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
 
         return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
     }
@@ -77,12 +77,12 @@ public:
         const std::vector<Argument<Base> >& args = this->getArguments();
 
         CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr &&
-                             args[1].getOperation()->getOperationType() == CGIndexOp, "Invalid argument operation type");
+                             args[1].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument operation type");
         iargs.push_back(&static_cast<IndexOperationNode<Base>*> (args[1].getOperation())->getIndex());
 
         if (args.size() > 2) {
             CPPADCG_ASSERT_KNOWN(args[2].getOperation() != nullptr &&
-                                 args[2].getOperation()->getOperationType() == CGIndexOp, "Invalid argument operation type");
+                                 args[2].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument operation type");
             iargs.push_back(&static_cast<IndexOperationNode<Base>*> (args[2].getOperation())->getIndex());
         }
 

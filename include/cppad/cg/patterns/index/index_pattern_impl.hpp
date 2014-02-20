@@ -51,7 +51,7 @@ IndexPattern* IndexPattern::detect(const std::map<size_t, size_t>& x2y) {
 }
 
 inline bool IndexPattern::isConstant(const IndexPattern& ip) {
-    if (ip.getType() == LINEAR) {
+    if (ip.getType() == IndexPatternType::Linear) {
         const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
         return lip.getLinearSlopeDy() == 0;
     }

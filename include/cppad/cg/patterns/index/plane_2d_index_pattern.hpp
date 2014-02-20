@@ -49,7 +49,7 @@ public:
     }
 
     inline virtual IndexPatternType getType() const override {
-        return PLANE2D;
+        return IndexPatternType::Plane2D;
     }
 
     inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {
@@ -169,7 +169,7 @@ public:
         }
 
         // simplify when both patterns are constant
-        if (fx->getType() == LINEAR && fy->getType() == LINEAR) {
+        if (fx->getType() == IndexPatternType::Linear && fy->getType() == IndexPatternType::Linear) {
             LinearIndexPattern* ipx = static_cast<LinearIndexPattern*> (fx.get());
             LinearIndexPattern* ipy = static_cast<LinearIndexPattern*> (fy.get());
 

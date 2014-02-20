@@ -183,15 +183,15 @@ public:
 
         defineCustomSparsity(fun);
 
-        testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, testJacobian_, testHessian_);
+        testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, testJacobian_, testHessian_);
         if (testJacobian_) {
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, true, false, true);
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, REVERSE, true, false);
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, REVERSE, true, false, true);
+            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, true, false, true);
+            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false);
+            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false, true);
         }
 
         if (testHessian_) {
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, FORWARD, false, true, false, true);
+            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, false, true, false, true);
         }
 
     }
@@ -344,8 +344,8 @@ public:
         std::string libBaseName = name;
         if (jacobian) {
             if (!forReverseOne) libBaseName += "d";
-            if (jacMode == FORWARD) libBaseName += "F";
-            else if (jacMode == REVERSE) libBaseName += "R";
+            if (jacMode == JacobianADMode::Forward) libBaseName += "F";
+            else if (jacMode == JacobianADMode::Reverse) libBaseName += "R";
         }
         if (hessian && reverseTwo)
             libBaseName += "rev2";
@@ -363,8 +363,8 @@ public:
         compHelpL.setCreateHessian(false);
         compHelpL.setCreateSparseJacobian(jacobian);
         compHelpL.setCreateSparseHessian(hessian);
-        compHelpL.setCreateForwardOne(forReverseOne && jacMode == FORWARD);
-        compHelpL.setCreateReverseOne(forReverseOne && jacMode == REVERSE);
+        compHelpL.setCreateForwardOne(forReverseOne && jacMode == JacobianADMode::Forward);
+        compHelpL.setCreateReverseOne(forReverseOne && jacMode == JacobianADMode::Reverse);
         compHelpL.setCreateReverseTwo(reverseTwo);
         //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
         compHelpL.setRelatedDependents(relatedDepCandidates);

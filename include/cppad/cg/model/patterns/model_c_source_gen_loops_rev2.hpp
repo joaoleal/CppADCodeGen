@@ -155,7 +155,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
         for (size_t k = 0; k < tmpsAlias.size(); k++) {
             // to be defined later
-            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGAliasOp));
+            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGOpCode::Alias));
         }
     }
 
@@ -376,7 +376,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                 pxCustom.resize(1);
 
                 // {0} : must point to itself since there is only one dependent
-                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{0},
+                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{0},
                 {
                                                *loopEnd
                 }));

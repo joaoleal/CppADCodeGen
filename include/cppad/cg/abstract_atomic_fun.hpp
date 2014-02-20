@@ -166,7 +166,7 @@ public:
             args[1 * p1 + k] = *tyArray[k];
         }
 
-        OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicForwardOp,{id_, q, p}, args);
+        OperationNode<Base>* atomicOp = new OperationNode<Base>(CGOpCode::AtomicForward,{id_, q, p}, args);
         handler->manageOperationNode(atomicOp);
         handler->registerAtomicFunction(*this);
 
@@ -174,7 +174,7 @@ public:
             for (size_t i = 0; i < m; i++) {
                 size_t pos = i * p1 + k;
                 if (vyLocal.size() == 0 || vyLocal[pos]) {
-                    ty[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp,{i},
+                    ty[pos] = CGB(*handler, new OperationNode<Base>(CGOpCode::ArrayElement,{i},
                     {
                                   *tyArray[k], *atomicOp
                     }));
@@ -346,7 +346,7 @@ public:
             args[3 * p1 + k] = *pyArray[k];
         }
 
-        OperationNode<Base>* atomicOp = new OperationNode<Base>(CGAtomicReverseOp,{id_, p}, args);
+        OperationNode<Base>* atomicOp = new OperationNode<Base>(CGOpCode::AtomicReverse,{id_, p}, args);
         handler->manageOperationNode(atomicOp);
         handler->registerAtomicFunction(*this);
 
@@ -354,7 +354,7 @@ public:
             for (size_t j = 0; j < n; j++) {
                 size_t pos = j * p1 + k;
                 if (vxLocal[pos]) {
-                    px[pos] = CGB(*handler, new OperationNode<Base>(CGArrayElementOp,{j},
+                    px[pos] = CGB(*handler, new OperationNode<Base>(CGOpCode::ArrayElement,{j},
                     {
                                   *pxArray[k], *atomicOp
                     }));

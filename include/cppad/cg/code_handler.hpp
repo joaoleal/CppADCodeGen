@@ -185,7 +185,7 @@ public:
     }
 
     inline void makeVariable(CG<Base>& variable) {
-        _independentVariables.push_back(new OperationNode<Base> (CGInvOp));
+        _independentVariables.push_back(new OperationNode<Base> (CGOpCode::Inv));
         variable.makeVariable(*this, _independentVariables.back());
     }
 
@@ -194,7 +194,7 @@ public:
     }
 
     size_t getIndependentVariableIndex(const OperationNode<Base>& var) const throw (CGException) {
-        CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGInvOp);
+        CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
 
         typename std::vector<OperationNode<Base> *>::const_iterator it =
                 std::find(_independentVariables.begin(), _independentVariables.end(), &var);
@@ -539,7 +539,7 @@ public:
         for (const auto& itAlt : _alteredNodes) {
             OperationNode<Base>* tmp = itAlt.first;
             OperationNode<Base>* opClone = itAlt.second;
-            if (tmp->getOperationType() == CGTmpOp && !tmp->getInfo().empty()) { // some might have already been restored
+            if (tmp->getOperationType() == CGOpCode::Tmp && !tmp->getInfo().empty()) { // some might have already been restored
                 tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
                 tmp->getInfo() = opClone->getInfo();
             }
@@ -675,13 +675,13 @@ public:
         if (ip == nullptr)
             return;
 
-        if (ip->getType() == RANDOM1D || ip->getType() == RANDOM2D) {
+        if (ip->getType() == IndexPatternType::Random1D || ip->getType() == IndexPatternType::Random2D) {
             found.insert(static_cast<RandomIndexPattern*> (ip));
         } else {
             std::set<IndexPattern*> indexes;
             ip->getSubIndexes(indexes);
             for (IndexPattern* sip : indexes) {
-                if (sip->getType() == RANDOM1D || sip->getType() == RANDOM2D)
+                if (sip->getType() == IndexPatternType::Random1D || sip->getType() == IndexPatternType::Random2D)
                     found.insert(static_cast<RandomIndexPattern*> (sip));
             }
         }
@@ -783,7 +783,7 @@ protected:
         CGOpCode op = code.getOperationType();
         if (isIndependent(code)) {
             return; // nothing to do
-        } else if (op == CGAliasOp) {
+        } else if (op == CGOpCode::Alias) {
             /**
              * Alias operations are always followed so that there is a 
              * correct usage count at the operation that it points to
@@ -802,22 +802,22 @@ protected:
             code.setColor(_currentScopeColor);
 
             // check if there is a scope change
-            if (op == CGLoopStartOp || op == CGStartIfOp || op == CGElseIfOp || op == CGElseOp) {
+            if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
                 // leaving a scope
                 ScopePath& sPath = _scopes[_currentScopeColor];
                 CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
-                if (op == CGLoopStartOp || op == CGStartIfOp) {
+                if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf) {
                     sPath.back().beginning = &code; // save the initial node
                 } else {
                     CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
                                            code.getArguments()[0].getOperation() != nullptr &&
-                                           code.getArguments()[0].getOperation()->getOperationType() == CGStartIfOp);
+                                           code.getArguments()[0].getOperation()->getOperationType() == CGOpCode::StartIf);
                     sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
                 }
                 _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
             }
 
-            if (op == CGLoopEndOp || op == CGEndIfOp || op == CGElseIfOp || op == CGElseOp) {
+            if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
                 // entering a new scope
                 _currentScopeColor = ++_scopeColorCount;
 
@@ -825,7 +825,7 @@ protected:
                 _scopes[_currentScopeColor] = _scopes[previousScope];
 
                 // change current scope
-                if (op == CGLoopEndOp || op == CGEndIfOp) {
+                if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf) {
                     // one more scope level
                     _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor, &code));
                 } else {
@@ -843,18 +843,18 @@ protected:
                 }
             }
 
-            if (op == CGIndexOp) {
+            if (op == CGOpCode::Index) {
                 const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
                 // indexes that don't depend on a loop start or an index assignment are declared elsewhere
                 if (inode.isDefinedLocally()) {
                     _indexes.insert(&inode.getIndex());
                 }
-            } else if (op == CGLoopIndexedIndepOp || op == CGLoopIndexedDepOp || op == CGIndexAssignOp) {
+            } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep || op == CGOpCode::IndexAssign) {
                 IndexPattern* ip;
-                if (op == CGLoopIndexedDepOp) {
+                if (op == CGOpCode::LoopIndexedDep) {
                     size_t pos = code.getInfo()[0];
                     ip = _loopDependentIndexPatterns[pos];
-                } else if (op == CGLoopIndexedIndepOp) {
+                } else if (op == CGOpCode::LoopIndexedIndep) {
                     size_t pos = code.getInfo()[1];
                     ip = _loopIndependentIndexPatterns[pos];
                 } else {
@@ -863,13 +863,13 @@ protected:
 
                 findRandomIndexPatterns(ip, _indexRandomPatterns);
 
-            } else if (op == CGDependentRefRhsOp) {
+            } else if (op == CGOpCode::DependentRefRhs) {
                 CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
                 size_t depIndex = code.getInfo()[0];
 
                 CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
                 OperationNode<Base>* depNode = (*_dependents)[depIndex].getOperationNode();
-                CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGInvOp);
+                CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
 
                 code.setVariableID(depNode->getVariableID());
             }
@@ -884,7 +884,7 @@ protected:
         } else {
             // been to this node before
 
-            if (op == CGTmpOp && !code.getInfo().empty()) {
+            if (op == CGOpCode::Tmp && !code.getInfo().empty()) {
                 /**
                  * this node was previously altered to ensure that the 
                  * evaluation of the expression is only performed for the 
@@ -897,7 +897,7 @@ protected:
                     updateTemporaryVarInDiffScopes(code);
                 }
 
-            } else if (code.getColor() != _currentScopeColor && op != CGLoopIndexedIndepOp) {
+            } else if (code.getColor() != _currentScopeColor && op != CGOpCode::LoopIndexedIndep) {
                 size_t oldScope = code.getColor();
                 /**
                  * node previously used in a different scope
@@ -944,8 +944,8 @@ protected:
         /**
          * @TODO allow Array elements to use a CGTmp instead of a CGArrayCreationOp
          */
-        CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGArrayCreationOp, "Not supported yet");
-        CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGSparseArrayCreationOp, "Not supported yet");
+        CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::ArrayCreation, "Not supported yet");
+        CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::SparseArrayCreation, "Not supported yet");
 
         /**
          * does this variable require a condition based on indexes?
@@ -957,8 +957,8 @@ protected:
         CGOpCode bNewOp = bScopeNewEnd->getOperationType();
         CGOpCode bOldOp = bScopeOldEnd->getOperationType();
 
-        if ((bNewOp == CGEndIfOp || bNewOp == CGElseOp || bNewOp == CGElseIfOp) &&
-                (bOldOp == CGEndIfOp || bOldOp == CGElseOp || bOldOp == CGElseIfOp)) {
+        if ((bNewOp == CGOpCode::EndIf || bNewOp == CGOpCode::Else || bNewOp == CGOpCode::ElseIf) &&
+                (bOldOp == CGOpCode::EndIf || bOldOp == CGOpCode::Else || bOldOp == CGOpCode::ElseIf)) {
             // used in 2 different if/else branches
 
             /**
@@ -1004,30 +1004,30 @@ protected:
         /**
          * Create condition
          */
-        OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGTmpDclOp);
+        OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGOpCode::TmpDcl);
         manageOperationNode(tmpDclVar);
         Argument<Base> tmpArg(*tmpDclVar);
 
-        OperationNode<Base>* cond = new OperationNode<Base>(CGIndexCondExprOp, iterationRegions,{iterationIndexOp});
+        OperationNode<Base>* cond = new OperationNode<Base>(CGOpCode::IndexCondExpr, iterationRegions,{iterationIndexOp});
         manageOperationNode(cond);
 
         // if
-        OperationNode<Base>* ifStart = new OperationNode<Base>(CGStartIfOp, *cond);
+        OperationNode<Base>* ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
         manageOperationNode(ifStart);
 
-        OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGLoopIndexedTmpOp,{tmpArg, *opClone});
+        OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, *opClone});
         manageOperationNode(tmpAssign);
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGCondResultOp,{*ifStart, *tmpAssign});
+        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *tmpAssign});
         manageOperationNode(ifAssign);
 
         // end if
-        OperationNode<Base>* endIf = new OperationNode<Base>(CGEndIfOp,{*ifStart, *ifAssign});
+        OperationNode<Base>* endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifStart, *ifAssign});
         manageOperationNode(endIf);
 
         /**
          * Change original variable
          */
-        tmp.setOperation(CGTmpOp,{tmpArg, *endIf});
+        tmp.setOperation(CGOpCode::Tmp,{tmpArg, *endIf});
         tmp.getInfo().resize(1); // used to mark that this node was altered here
 
         /**
@@ -1100,12 +1100,12 @@ protected:
         std::vector<size_t> iterationRegions;
         OperationNode<Base>* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
         OperationNode<Base>* endif = code.getArguments()[0].getOperation();
-        CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGEndIfOp);
+        CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGOpCode::EndIf);
         OperationNode<Base>* bScopeOldEnd = _scopes[endif->getColor()].back().end;
 
         CGOpCode bNewOp = bScopeNewEnd->getOperationType();
 
-        if (bNewOp == CGEndIfOp || bNewOp == CGElseOp || bNewOp == CGElseIfOp) {
+        if (bNewOp == CGOpCode::EndIf || bNewOp == CGOpCode::Else || bNewOp == CGOpCode::ElseIf) {
             // used in 2 different if/else branches
 
             /**
@@ -1133,7 +1133,7 @@ protected:
 
             } else if (oldIterRegions != iterationRegions) {
                 OperationNode<Base>* cond = bScopeOld->getArguments()[0].getOperation();
-                CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp);
+                CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr);
                 cond->getInfo() = iterationRegions;
             }
 
@@ -1154,7 +1154,7 @@ protected:
     }
 
     inline void restoreTemporaryVar(OperationNode<Base>& tmp) {
-        CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGTmpOp && !tmp.getInfo().empty());
+        CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGOpCode::Tmp && !tmp.getInfo().empty());
 
         OperationNode<Base>* endIf = tmp.getArguments()[1].getOperation();
         OperationNode<Base>* ifAssign = endIf->getArguments()[1].getOperation();
@@ -1177,7 +1177,7 @@ protected:
 
     inline void restoreTemporaryVar(OperationNode<Base>* tmp,
                                     OperationNode<Base>* opClone) {
-        CPPADCG_ASSERT_UNKNOWN(tmp->getOperationType() == CGTmpOp && !tmp->getInfo().empty());
+        CPPADCG_ASSERT_UNKNOWN(tmp->getOperationType() == CGOpCode::Tmp && !tmp->getInfo().empty());
 
         tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
         tmp->getInfo() = opClone->getInfo();
@@ -1232,7 +1232,7 @@ protected:
             OperationNode<Base>* node = vorder[p];
             CGOpCode op = node->getOperationType();
 
-            if (op == CGLoopEndOp || op == CGEndIfOp || op == CGElseIfOp || op == CGElseOp) {
+            if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
                 CPPADCG_ASSERT_UNKNOWN(!node->getArguments().empty());
 
                 OperationNode<Base>* beginScopeNode = node->getArguments()[0].getOperation();
@@ -1286,31 +1286,31 @@ protected:
 
             for (long p = vorder.size() - 1; p > 0; p--) {
                 OperationNode<Base>* endIf = vorder[p];
-                if (endIf->getOperationType() != CGEndIfOp)
+                if (endIf->getOperationType() != CGOpCode::EndIf)
                     continue;
 
                 long p1 = p - 1;
                 while (p1 >= 0) {
-                    if (vorder[p1]->getOperationType() == CGTmpDclOp) {
+                    if (vorder[p1]->getOperationType() == CGOpCode::TmpDcl) {
                         p1--;
                     } else {
                         break;
                     }
                 }
                 OperationNode<Base>* endIf1 = vorder[p1];
-                if (endIf1->getOperationType() != CGEndIfOp)
+                if (endIf1->getOperationType() != CGOpCode::EndIf)
                     continue;
 
                 // 2 consecutive ifs
                 OperationNode<Base>* startIf = endIf->getArguments()[0].getOperation();
                 OperationNode<Base>* startIf1 = endIf1->getArguments()[0].getOperation();
-                if (startIf->getOperationType() != CGStartIfOp || startIf1->getOperationType() != CGStartIfOp)
+                if (startIf->getOperationType() != CGOpCode::StartIf || startIf1->getOperationType() != CGOpCode::StartIf)
                     continue;
 
                 OperationNode<Base>* cond = startIf->getArguments()[0].getOperation();
                 OperationNode<Base>* cond1 = startIf1->getArguments()[0].getOperation();
 
-                CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGIndexCondExprOp || cond1->getOperationType() == CGIndexCondExprOp);
+                CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr || cond1->getOperationType() == CGOpCode::IndexCondExpr);
                 if (cond->getInfo() == cond1->getInfo()) {
                     /**
                      * same condition -> combine the contents into a single if
@@ -1325,7 +1325,7 @@ protected:
 
                     // break cycles caused by dependencies on the previous if
                     for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                        CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                        CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult);
                         breakCyclicDependency(eArgs[a].getOperation(), ifScope, endIf1);
                         replaceScope(eArgs[a].getOperation(), ifScope, ifScope1); // update scope
                     }
@@ -1336,7 +1336,7 @@ protected:
 
                     // update startIf
                     for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                        CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGCondResultOp);
+                        CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult);
                         eArgs[a].getOperation()->getArguments()[0] = Argument<Base>(*startIf1);
                     }
 
@@ -1344,7 +1344,7 @@ protected:
                     eArgs1.insert(eArgs1.end(), eArgs.begin() + 1, eArgs.end());
 
                     // replace endIf
-                    endIf->setOperation(CGAliasOp,{*endIf1});
+                    endIf->setOperation(CGOpCode::Alias,{*endIf1});
 
                     // remove one of the ifs
                     vorder.erase(vorder.begin() + p);
@@ -1390,10 +1390,10 @@ protected:
         CGOpCode op = node->getOperationType();
         std::vector<Argument<Base> >& args = node->getArguments();
 
-        if (op == CGTmpOp && args.size() > 1) {
+        if (op == CGOpCode::Tmp && args.size() > 1) {
             OperationNode<Base>* arg = args[1].getOperation();
             if (arg == endIf) {
-                // a dependency on CGLoopIndexedTmpOp could be added but
+                // a dependency on LoopIndexedTmp could be added but
                 // it is not required since variable order was already decided
                 args.erase(args.begin() + 1);
             }
@@ -1406,7 +1406,7 @@ protected:
         for (size_t a = 0; a < args.size(); a++) {
             OperationNode<Base>* arg = args[a].getOperation();
             if (arg == endIf) {
-                if (op == CGStartIfOp || op == CGLoopStartOp) {
+                if (op == CGOpCode::StartIf || op == CGOpCode::LoopStart) {
                     args.erase(args.begin() + a);
                     a--;
                 }
@@ -1463,12 +1463,12 @@ protected:
                 // dependencies not visited yet
                 checkVariableCreation(arg);
 
-                if (aType == CGLoopEndOp || aType == CGElseIfOp || aType == CGElseOp || aType == CGEndIfOp) {
+                if (aType == CGOpCode::LoopEnd || aType == CGOpCode::ElseIf || aType == CGOpCode::Else || aType == CGOpCode::EndIf) {
                     if (arg.getVariableID() == 0) {
                         // ID value is not really used but must be non-zero
                         arg.setVariableID(std::numeric_limits<size_t>::max());
                     }
-                } else if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
+                } else if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
                     /**
                      * Save atomic function related information
                      */
@@ -1491,7 +1491,7 @@ protected:
                         pos = itName2Idx->second;
                     }
 
-                    if (aType == CGAtomicForwardOp) {
+                    if (aType == CGOpCode::AtomicForward) {
                         int p = arg.getInfo()[2];
                         _atomicFunctionsMaxForward[pos] = std::max(_atomicFunctionsMaxForward[pos], p);
                     } else {
@@ -1506,19 +1506,19 @@ protected:
                  * not use it first
                  */
                 if (arg.getVariableID() == 0 || !isIndependent(arg)) {
-                    if (aType == CGLoopIndexedIndepOp) {
+                    if (aType == CGOpCode::LoopIndexedIndep) {
                         // ID value not really used but must be non-zero
                         arg.setVariableID(std::numeric_limits<size_t>::max());
-                    } else if (aType == CGAliasOp) {
+                    } else if (aType == CGOpCode::Alias) {
                         continue; // should never be added to the evaluation queue
-                    } else if (aType == CGTmpOp) {
+                    } else if (aType == CGOpCode::Tmp) {
                         arg.setVariableID(std::numeric_limits<size_t>::max());
-                    } else if (aType == CGLoopStartOp ||
-                            aType == CGLoopEndOp ||
-                            aType == CGStartIfOp ||
-                            aType == CGElseIfOp ||
-                            aType == CGElseOp ||
-                            aType == CGEndIfOp) {
+                    } else if (aType == CGOpCode::LoopStart ||
+                            aType == CGOpCode::LoopEnd ||
+                            aType == CGOpCode::StartIf ||
+                            aType == CGOpCode::ElseIf ||
+                            aType == CGOpCode::Else ||
+                            aType == CGOpCode::EndIf) {
                         /**
                          * Operation that mark a change in variable scope
                          * are always added
@@ -1528,13 +1528,13 @@ protected:
                             // ID value is not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
                         }
-                    } else if (aType == CGPriOp) {
+                    } else if (aType == CGOpCode::Pri) {
                         addToEvaluationQueue(arg);
                         if (arg.getVariableID() == 0) {
                             // ID value is not really used but must be non-zero
                             arg.setVariableID(std::numeric_limits<size_t>::max());
                         }
-                    } else if (aType == CGTmpDclOp) {
+                    } else if (aType == CGOpCode::TmpDcl) {
                         addToEvaluationQueue(arg);
 
                         arg.setVariableID(_idCount);
@@ -1546,18 +1546,18 @@ protected:
                         addToEvaluationQueue(arg);
 
                         if (arg.getVariableID() == 0) {
-                            if (aType == CGAtomicForwardOp || aType == CGAtomicReverseOp) {
+                            if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
                                 arg.setVariableID(_idAtomicCount);
                                 _idAtomicCount++;
-                            } else if (aType == CGLoopIndexedDepOp || aType == CGLoopIndexedTmpOp) {
+                            } else if (aType == CGOpCode::LoopIndexedDep || aType == CGOpCode::LoopIndexedTmp) {
                                 // ID value not really used but must be non-zero
                                 arg.setVariableID(std::numeric_limits<size_t>::max());
-                            } else if (aType == CGArrayCreationOp) {
+                            } else if (aType == CGOpCode::ArrayCreation) {
                                 // a temporary array
                                 size_t arraySize = arg.getArguments().size();
                                 arg.setVariableID(_idArrayCount);
                                 _idArrayCount += arraySize;
-                            } else if (aType == CGSparseArrayCreationOp) {
+                            } else if (aType == CGOpCode::SparseArrayCreation) {
                                 // a temporary array
                                 size_t nnz = arg.getArguments().size();
                                 arg.setVariableID(_idSparseArrayCount);
@@ -1689,13 +1689,13 @@ protected:
     inline void determineLastTempVarUsage(OperationNode<Base>& code) {
         CGOpCode op = code.getOperationType();
 
-        if (op == CGLoopEndOp) {
+        if (op == CGOpCode::LoopEnd) {
             LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (code);
             _loopDepth++;
             _loopOuterVars.resize(_loopDepth + 1);
             _loopStartEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
 
-        } else if (op == CGLoopStartOp) {
+        } else if (op == CGOpCode::LoopStart) {
             _loopDepth--; // leaving the current loop
         }
 
@@ -1732,7 +1732,7 @@ protected:
             }
         }
 
-        if (op == CGLoopEndOp) {
+        if (op == CGOpCode::LoopEnd) {
             /**
              * temporary variables from outside the loop which are used
              * within the loop cannot be overwritten inside that loop
@@ -1750,7 +1750,7 @@ protected:
             _loopOuterVars.pop_back();
             _loopStartEvalOrder.pop_back();
 
-        } else if (op == CGLoopStartOp) {
+        } else if (op == CGOpCode::LoopStart) {
             _loopDepth++; // coming back to the loop
         }
 
@@ -1780,47 +1780,47 @@ protected:
     }
 
     inline bool isIndependent(const OperationNode<Base>& arg) const {
-        return arg.getOperationType() == CGInvOp;
+        return arg.getOperationType() == CGOpCode::Inv;
     }
 
     inline bool isTemporary(const OperationNode<Base>& arg) const {
         CGOpCode op = arg.getOperationType();
-        return op != CGArrayCreationOp && // classified as TemporaryArray
-                op != CGSparseArrayCreationOp && // classified as TemporarySparseArray
-                op != CGAtomicForwardOp &&
-                op != CGAtomicReverseOp &&
-                op != CGLoopStartOp &&
-                op != CGLoopEndOp &&
-                op != CGStartIfOp &&
-                op != CGElseIfOp &&
-                op != CGElseOp &&
-                op != CGEndIfOp &&
-                op != CGLoopIndexedDepOp &&
-                op != CGLoopIndexedIndepOp &&
-                op != CGLoopIndexedTmpOp && // not considered as a temporary (the temporary is CGTmpDclOp)
-                op != CGIndexOp &&
-                op != CGIndexAssignOp &&
-                op != CGTmpOp && // not considered as a temporary (the temporary is CGTmpDclOp)
+        return op != CGOpCode::ArrayCreation && // classified as TemporaryArray
+                op != CGOpCode::SparseArrayCreation && // classified as TemporarySparseArray
+                op != CGOpCode::AtomicForward &&
+                op != CGOpCode::AtomicReverse &&
+                op != CGOpCode::LoopStart &&
+                op != CGOpCode::LoopEnd &&
+                op != CGOpCode::StartIf &&
+                op != CGOpCode::ElseIf &&
+                op != CGOpCode::Else &&
+                op != CGOpCode::EndIf &&
+                op != CGOpCode::LoopIndexedDep &&
+                op != CGOpCode::LoopIndexedIndep &&
+                op != CGOpCode::LoopIndexedTmp && // not considered as a temporary (the temporary is CGTmpDclOp)
+                op != CGOpCode::Index &&
+                op != CGOpCode::IndexAssign &&
+                op != CGOpCode::Tmp && // not considered as a temporary (the temporary is CGTmpDclOp)
                 arg.getVariableID() >= _minTemporaryVarID;
     }
 
     inline static bool isTemporaryArray(const OperationNode<Base>& arg) {
-        return arg.getOperationType() == CGArrayCreationOp;
+        return arg.getOperationType() == CGOpCode::ArrayCreation;
     }
 
     inline static bool isTemporarySparseArray(const OperationNode<Base>& arg) {
-        return arg.getOperationType() == CGSparseArrayCreationOp;
+        return arg.getOperationType() == CGOpCode::SparseArrayCreation;
     }
 
     inline static OperationNode<Base>* getOperationFromAlias(OperationNode<Base>& alias) {
-        if (alias.getOperationType() != CGAliasOp) {
+        if (alias.getOperationType() != CGOpCode::Alias) {
             return &alias;
         } else {
             OperationNode<Base>* aa = &alias;
             do {
                 CPPADCG_ASSERT_UNKNOWN(aa->getArguments().size() == 1);
                 aa = aa->getArguments()[0].getOperation();
-            } while (aa != nullptr && aa->getOperationType() == CGAliasOp);
+            } while (aa != nullptr && aa->getOperationType() == CGOpCode::Alias);
             return aa;
         }
     }

@@ -32,7 +32,7 @@ public:
 
     inline LoopEndOperationNode(LoopStartOperationNode<Base>& loopStart,
                                 const std::vector<Argument<Base> >& endArgs) :
-        OperationNode<Base>(CGLoopEndOp, std::vector<size_t>(0), createArguments(loopStart, endArgs)) {
+        OperationNode<Base>(CGOpCode::LoopEnd, std::vector<size_t>(0), createArguments(loopStart, endArgs)) {
     }
 
     inline const LoopStartOperationNode<Base>& getLoopStart() const {
@@ -40,7 +40,7 @@ public:
         CPPADCG_ASSERT_KNOWN(args.size() > 0, "There must be at least one argument");
 
         OperationNode<Base>* aNode = args[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGLoopStartOp, "The first argument must be the loop start operation");
+        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::LoopStart, "The first argument must be the loop start operation");
 
         return dynamic_cast<LoopStartOperationNode<Base>&> (*aNode);
     }

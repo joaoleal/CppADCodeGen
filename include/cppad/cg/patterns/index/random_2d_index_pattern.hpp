@@ -33,7 +33,7 @@ public:
     }
 
     inline virtual IndexPatternType getType() const override {
-        return RANDOM2D;
+        return IndexPatternType::Random2D;
     }
 
     inline const std::map<size_t, std::map<size_t, size_t> >& getValues() const {

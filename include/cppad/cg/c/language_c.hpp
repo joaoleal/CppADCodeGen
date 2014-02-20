@@ -556,8 +556,8 @@ protected:
         // generate names for the dependent variables (must be after naming independents)
         for (size_t i = 0; i < dependent.size(); i++) {
             OperationNode<Base>* node = dependent[i].getOperationNode();
-            if (node != nullptr && node->getOperationType() != CGLoopEndOp && node->getName() == nullptr) {
-                if (node->getOperationType() == CGLoopIndexedDepOp) {
+            if (node != nullptr && node->getOperationType() != CGOpCode::LoopEnd && node->getName() == nullptr) {
+                if (node->getOperationType() == CGOpCode::LoopIndexedDep) {
                     size_t pos = node->getInfo()[0];
                     const IndexPattern* ip = info->loopDependentIndexPatterns[pos];
                     node->setName(_nameGen->generateIndexedDependent(*node, *ip));
@@ -605,7 +605,7 @@ protected:
             OperationNode<Base>* node = dependent[i].getOperationNode();
             if (node != nullptr) {
                 CGOpCode type = node->getOperationType();
-                if (type != CGInvOp && type != CGLoopEndOp) {
+                if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
                     size_t varID = node->getVariableID();
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
@@ -633,13 +633,13 @@ protected:
             // generate names for temporary variables
             for (OperationNode<Base>* node : variableOrder) {
                 CGOpCode op = node->getOperationType();
-                if (!isDependent(*node) && op != CGIndexDeclarationOp) {
+                if (!isDependent(*node) && op != CGOpCode::IndexDeclaration) {
                     // variable names for temporaries must always be created since they might have been used before with a different name/id
-                    if (requiresVariableName(*node) && op != CGArrayCreationOp && op != CGSparseArrayCreationOp) {
+                    if (requiresVariableName(*node) && op != CGOpCode::ArrayCreation && op != CGOpCode::SparseArrayCreation) {
                         node->setName(_nameGen->generateTemporary(*node));
-                    } else if (op == CGArrayCreationOp) {
+                    } else if (op == CGOpCode::ArrayCreation) {
                         node->setName(_nameGen->generateTemporaryArray(*node));
-                    } else if (op == CGSparseArrayCreationOp) {
+                    } else if (op == CGOpCode::SparseArrayCreation) {
                         node->setName(_nameGen->generateTemporarySparseArray(*node));
                     }
                 }
@@ -675,9 +675,9 @@ protected:
                 OperationNode<Base>& node = *it;
 
                 // a dependent variable assigned by a loop does require any source code (its done inside the loop)
-                if (node.getOperationType() == CGDependentRefRhsOp) {
+                if (node.getOperationType() == CGOpCode::DependentRefRhs) {
                     continue; // nothing to do (this operation is right hand side only)
-                } else if (node.getOperationType() == CGTmpDclOp) { // temporary variable declaration does not need any source code here
+                } else if (node.getOperationType() == CGOpCode::TmpDcl) { // temporary variable declaration does not need any source code here
                     continue; // nothing to do (bogus operation)
                 }
 
@@ -742,7 +742,7 @@ protected:
                     printParameter(dependent[i].getValue());
                     _code << ";\n";
                 }
-            } else if (dependent[i].getOperationNode()->getOperationType() == CGInvOp) {
+            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv) {
                 if (!commentWritten) {
                     _code << _spaces << "// dependent variables without operations\n";
                     commentWritten = true;
@@ -816,11 +816,11 @@ protected:
             printAssigmentEnd(nodeRhs);
         }
 
-        if (nodeRhs.getOperationType() == CGArrayElementOp) {
+        if (nodeRhs.getOperationType() == CGOpCode::ArrayElement) {
             OperationNode<Base>* array = nodeRhs.getArguments()[0].getOperation();
             size_t arrayId = array->getVariableID();
             size_t pos = nodeRhs.getInfo()[0];
-            if (array->getOperationType() == CGArrayCreationOp)
+            if (array->getOperationType() == CGOpCode::ArrayCreation)
                 _tmpArrayValues[arrayId - 1 + pos] = nullptr; // this could probably be removed!
             else
                 _tmpSparseArrayValues[arrayId - 1 + pos] = nullptr; // this could probably be removed!
@@ -841,7 +841,7 @@ protected:
         _code << _indentation << varName << " ";
         if (isDep) {
             CGOpCode op = node.getOperationType();
-            if (op == CGDependentMultiAssignOp || (op == CGLoopIndexedDepOp && node.getInfo()[1] == 1)) {
+            if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
                 _code << "+=";
             } else {
                 _code << _depAssignOperation;
@@ -909,43 +909,43 @@ protected:
     virtual bool createsNewVariable(const OperationNode<Base>& var) const override {
         CGOpCode op = var.getOperationType();
         if (var.getTotalUsageCount() > 1) {
-            return op != CGArrayElementOp && op != CGIndexOp && op != CGIndexDeclarationOp && op != CGTmpOp;
+            return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
         } else {
-            return ( op == CGArrayCreationOp ||
-                    op == CGSparseArrayCreationOp ||
-                    op == CGAtomicForwardOp ||
-                    op == CGAtomicReverseOp ||
-                    op == CGComOpLt ||
-                    op == CGComOpLe ||
-                    op == CGComOpEq ||
-                    op == CGComOpGe ||
-                    op == CGComOpGt ||
-                    op == CGComOpNe ||
-                    op == CGLoopIndexedDepOp ||
-                    op == CGLoopIndexedTmpOp ||
-                    op == CGIndexAssignOp ||
-                    op == CGAssignOp) &&
-                    op != CGCondResultOp;
+            return ( op == CGOpCode::ArrayCreation ||
+                    op == CGOpCode::SparseArrayCreation ||
+                    op == CGOpCode::AtomicForward ||
+                    op == CGOpCode::AtomicReverse ||
+                    op == CGOpCode::ComLt ||
+                    op == CGOpCode::ComLe ||
+                    op == CGOpCode::ComEq ||
+                    op == CGOpCode::ComGe ||
+                    op == CGOpCode::ComGt ||
+                    op == CGOpCode::ComNe ||
+                    op == CGOpCode::LoopIndexedDep ||
+                    op == CGOpCode::LoopIndexedTmp ||
+                    op == CGOpCode::IndexAssign ||
+                    op == CGOpCode::Assign) &&
+                    op != CGOpCode::CondResult;
         }
     }
 
     virtual bool requiresVariableName(const OperationNode<Base>& var) const {
         CGOpCode op = var.getOperationType();
         return (var.getTotalUsageCount() > 1 &&
-                op != CGPriOp &&
-                op != CGAtomicForwardOp &&
-                op != CGAtomicReverseOp &&
-                op != CGLoopStartOp &&
-                op != CGLoopEndOp &&
-                op != CGIndexOp &&
-                op != CGIndexAssignOp &&
-                op != CGStartIfOp &&
-                op != CGElseIfOp &&
-                op != CGElseOp &&
-                op != CGEndIfOp &&
-                op != CGCondResultOp &&
-                op != CGLoopIndexedTmpOp &&
-                op != CGTmpOp);
+                op != CGOpCode::Pri &&
+                op != CGOpCode::AtomicForward &&
+                op != CGOpCode::AtomicReverse &&
+                op != CGOpCode::LoopStart &&
+                op != CGOpCode::LoopEnd &&
+                op != CGOpCode::Index &&
+                op != CGOpCode::IndexAssign &&
+                op != CGOpCode::StartIf &&
+                op != CGOpCode::ElseIf &&
+                op != CGOpCode::Else &&
+                op != CGOpCode::EndIf &&
+                op != CGOpCode::CondResult &&
+                op != CGOpCode::LoopIndexedTmp &&
+                op != CGOpCode::Tmp);
     }
 
     /**
@@ -958,51 +958,51 @@ protected:
     virtual bool directlyAssignsVariable(const OperationNode<Base>& var) const {
         CGOpCode op = var.getOperationType();
         return isCondAssign(op) ||
-                op == CGPriOp ||
-                op == CGArrayCreationOp ||
-                op == CGSparseArrayCreationOp ||
-                op == CGAtomicForwardOp ||
-                op == CGAtomicReverseOp ||
-                op == CGDependentMultiAssignOp ||
-                op == CGLoopStartOp ||
-                op == CGLoopEndOp ||
-                op == CGIndexAssignOp ||
-                op == CGStartIfOp ||
-                op == CGElseIfOp ||
-                op == CGElseOp ||
-                op == CGEndIfOp ||
-                op == CGCondResultOp ||
-                op == CGIndexDeclarationOp;
+                op == CGOpCode::Pri ||
+                op == CGOpCode::ArrayCreation ||
+                op == CGOpCode::SparseArrayCreation ||
+                op == CGOpCode::AtomicForward ||
+                op == CGOpCode::AtomicReverse ||
+                op == CGOpCode::DependentMultiAssign ||
+                op == CGOpCode::LoopStart ||
+                op == CGOpCode::LoopEnd ||
+                op == CGOpCode::IndexAssign ||
+                op == CGOpCode::StartIf ||
+                op == CGOpCode::ElseIf ||
+                op == CGOpCode::Else ||
+                op == CGOpCode::EndIf ||
+                op == CGOpCode::CondResult ||
+                op == CGOpCode::IndexDeclaration;
     }
 
     virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
-        return op == CGSignOp || op == CGCondResultOp || op == CGPriOp;
+        return op == CGOpCode::Sign || op == CGOpCode::CondResult || op == CGOpCode::Pri;
     }
 
     inline const std::string& createVariableName(OperationNode<Base>& var) {
         CGOpCode op = var.getOperationType();
         CPPADCG_ASSERT_UNKNOWN(var.getVariableID() > 0);
-        CPPADCG_ASSERT_UNKNOWN(op != CGAtomicForwardOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGAtomicReverseOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGLoopStartOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGLoopEndOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGIndexOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGIndexAssignOp);
-        CPPADCG_ASSERT_UNKNOWN(op != CGIndexDeclarationOp);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign);
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration);
 
         if (var.getName() == nullptr) {
-            if (op == CGArrayCreationOp) {
+            if (op == CGOpCode::ArrayCreation) {
                 var.setName(_nameGen->generateTemporaryArray(var));
 
-            } else if (op == CGSparseArrayCreationOp) {
+            } else if (op == CGOpCode::SparseArrayCreation) {
                 var.setName(_nameGen->generateTemporarySparseArray(var));
 
-            } else if (op == CGLoopIndexedDepOp) {
+            } else if (op == CGOpCode::LoopIndexedDep) {
                 size_t pos = var.getInfo()[0];
                 const IndexPattern* ip = (*_info)->loopDependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedDependent(var, *ip));
 
-            } else if (op == CGLoopIndexedIndepOp) {
+            } else if (op == CGOpCode::LoopIndexedIndep) {
                 size_t pos = var.getInfo()[1];
                 const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedIndependent(var, *ip));
@@ -1018,16 +1018,16 @@ protected:
 
                 size_t index = it->second;
                 var.setName(_nameGen->generateDependent(index));
-            } else if (op == CGPriOp) {
+            } else if (op == CGOpCode::Pri) {
                 CPPADCG_ASSERT_KNOWN(var.getArguments().size() == 1, "Invalid number of arguments for print operation");
                 OperationNode<Base>* tmpVar = var.getArguments()[0].getOperation();
                 CPPADCG_ASSERT_KNOWN(tmpVar != nullptr, "Invalid argument for print operation");
                 return createVariableName(*tmpVar);
 
-            } else if (op == CGLoopIndexedTmpOp || op == CGTmpOp) {
+            } else if (op == CGOpCode::LoopIndexedTmp || op == CGOpCode::Tmp) {
                 CPPADCG_ASSERT_KNOWN(var.getArguments().size() >= 1, "Invalid number of arguments for loop indexed temporary operation");
                 OperationNode<Base>* tmpVar = var.getArguments()[0].getOperation();
-                CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGTmpDclOp, "Invalid arguments for loop indexed temporary operation");
+                CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
                 return createVariableName(*tmpVar);
 
             } else {
@@ -1071,127 +1071,127 @@ protected:
     virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
         CGOpCode op = node.getOperationType();
         switch (op) {
-            case CGArrayCreationOp:
+            case CGOpCode::ArrayCreation:
                 printArrayCreationOp(node);
                 break;
-            case CGSparseArrayCreationOp:
+            case CGOpCode::SparseArrayCreation:
                 printSparseArrayCreationOp(node);
                 break;
-            case CGArrayElementOp:
+            case CGOpCode::ArrayElement:
                 printArrayElementOp(node);
                 break;
-            case CGAssignOp:
+            case CGOpCode::Assign:
                 return printAssignOp(node);
 
-            case CGAbsOp:
-            case CGAcosOp:
-            case CGAsinOp:
-            case CGAtanOp:
-            case CGCoshOp:
-            case CGCosOp:
-            case CGExpOp:
-            case CGLogOp:
-            case CGSinhOp:
-            case CGSinOp:
-            case CGSqrtOp:
-            case CGTanhOp:
-            case CGTanOp:
+            case CGOpCode::Abs:
+            case CGOpCode::Acos:
+            case CGOpCode::Asin:
+            case CGOpCode::Atan:
+            case CGOpCode::Cosh:
+            case CGOpCode::Cos:
+            case CGOpCode::Exp:
+            case CGOpCode::Log:
+            case CGOpCode::Sinh:
+            case CGOpCode::Sin:
+            case CGOpCode::Sqrt:
+            case CGOpCode::Tanh:
+            case CGOpCode::Tan:
                 printUnaryFunction(node);
                 break;
-            case CGAtomicForwardOp: // atomicFunction.forward(q, p, vx, vy, tx, ty)
+            case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
                 printAtomicForwardOp(node);
                 break;
-            case CGAtomicReverseOp: // atomicFunction.reverse(p, tx, ty, px, py)
+            case CGOpCode::AtomicReverse: // atomicFunction.reverse(p, tx, ty, px, py)
                 printAtomicReverseOp(node);
                 break;
-            case CGAddOp:
+            case CGOpCode::Add:
                 printOperationAdd(node);
                 break;
-            case CGAliasOp:
+            case CGOpCode::Alias:
                 return printOperationAlias(node);
 
-            case CGComOpLt:
-            case CGComOpLe:
-            case CGComOpEq:
-            case CGComOpGe:
-            case CGComOpGt:
-            case CGComOpNe:
+            case CGOpCode::ComLt:
+            case CGOpCode::ComLe:
+            case CGOpCode::ComEq:
+            case CGOpCode::ComGe:
+            case CGOpCode::ComGt:
+            case CGOpCode::ComNe:
                 printConditionalAssignment(node);
                 break;
-            case CGDivOp:
+            case CGOpCode::Div:
                 printOperationDiv(node);
                 break;
-            case CGInvOp:
+            case CGOpCode::Inv:
                 printIndependentVariableName(node);
                 break;
-            case CGMulOp:
+            case CGOpCode::Mul:
                 printOperationMul(node);
                 break;
-            case CGPowOp:
+            case CGOpCode::Pow:
                 printPowFunction(node);
                 break;
-            case CGPriOp:
+            case CGOpCode::Pri:
                 printPrintOperation(node);
                 break;
-            case CGSignOp:
+            case CGOpCode::Sign:
                 printSignFunction(node);
                 break;
-            case CGSubOp:
+            case CGOpCode::Sub:
                 printOperationMinus(node);
                 break;
 
-            case CGUnMinusOp:
+            case CGOpCode::UnMinus:
                 printOperationUnaryMinus(node);
                 break;
 
-            case CGDependentMultiAssignOp:
+            case CGOpCode::DependentMultiAssign:
                 return printDependentMultiAssign(node);
 
-            case CGIndexOp:
+            case CGOpCode::Index:
                 return 0; // nothing to do
-            case CGIndexAssignOp:
+            case CGOpCode::IndexAssign:
                 printIndexAssign(node);
                 break;
-            case CGIndexDeclarationOp:
+            case CGOpCode::IndexDeclaration:
                 return 0; // already done
 
-            case CGLoopStartOp:
+            case CGOpCode::LoopStart:
                 printLoopStart(node);
                 break;
-            case CGLoopIndexedIndepOp:
+            case CGOpCode::LoopIndexedIndep:
                 printLoopIndexedIndep(node);
                 break;
-            case CGLoopIndexedDepOp:
+            case CGOpCode::LoopIndexedDep:
                 printLoopIndexedDep(node);
                 break;
-            case CGLoopIndexedTmpOp:
+            case CGOpCode::LoopIndexedTmp:
                 printLoopIndexedTmp(node);
                 break;
-            case CGTmpDclOp:
+            case CGOpCode::TmpDcl:
                 // nothing to do
                 return 0;
-            case CGTmpOp:
+            case CGOpCode::Tmp:
                 printTmpVar(node);
                 break;
-            case CGLoopEndOp:
+            case CGOpCode::LoopEnd:
                 printLoopEnd(node);
                 break;
-            case CGIndexCondExprOp:
+            case CGOpCode::IndexCondExpr:
                 printIndexCondExprOp(node);
                 break;
-            case CGStartIfOp:
+            case CGOpCode::StartIf:
                 printStartIf(node);
                 break;
-            case CGElseIfOp:
+            case CGOpCode::ElseIf:
                 printElseIf(node);
                 break;
-            case CGElseOp:
+            case CGOpCode::Else:
                 printElse(node);
                 break;
-            case CGEndIfOp:
+            case CGOpCode::EndIf:
                 printEndIf(node);
                 break;
-            case CGCondResultOp:
+            case CGOpCode::CondResult:
                 printCondResult(node);
                 break;
             default:
@@ -1212,43 +1212,43 @@ protected:
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function");
 
         switch (op.getOperationType()) {
-            case CGAbsOp:
+            case CGOpCode::Abs:
                 _code << absFuncName();
                 break;
-            case CGAcosOp:
+            case CGOpCode::Acos:
                 _code << acosFuncName();
                 break;
-            case CGAsinOp:
+            case CGOpCode::Asin:
                 _code << asinFuncName();
                 break;
-            case CGAtanOp:
+            case CGOpCode::Atan:
                 _code << atanFuncName();
                 break;
-            case CGCoshOp:
+            case CGOpCode::Cosh:
                 _code << coshFuncName();
                 break;
-            case CGCosOp:
+            case CGOpCode::Cos:
                 _code << cosFuncName();
                 break;
-            case CGExpOp:
+            case CGOpCode::Exp:
                 _code << expFuncName();
                 break;
-            case CGLogOp:
+            case CGOpCode::Log:
                 _code << logFuncName();
                 break;
-            case CGSinhOp:
+            case CGOpCode::Sinh:
                 _code << sinhFuncName();
                 break;
-            case CGSinOp:
+            case CGOpCode::Sin:
                 _code << sinFuncName();
                 break;
-            case CGSqrtOp:
+            case CGOpCode::Sqrt:
                 _code << sqrtFuncName();
                 break;
-            case CGTanhOp:
+            case CGOpCode::Tanh:
                 _code << tanhFuncName();
                 break;
-            case CGTanOp:
+            case CGOpCode::Tan:
                 _code << tanFuncName();
                 break;
             default:
@@ -1330,7 +1330,7 @@ protected:
         while (node != nullptr) {
             if (node->getVariableID() != 0)
                 return false;
-            if (node->getOperationType() == CGAliasOp)
+            if (node->getOperationType() == CGOpCode::Alias)
                 node = node->getArguments()[0].getOperation();
             else
                 break;
@@ -1370,15 +1370,15 @@ protected:
         while (node != nullptr) {
             if (node->getVariableID() != 0)
                 return false;
-            else if (node->getOperationType() == CGAliasOp)
+            else if (node->getOperationType() == CGOpCode::Alias)
                 node = node->getArguments()[0].getOperation();
             else
                 break;
         }
         return node != nullptr &&
                 node->getVariableID() == 0 &&
-                node->getOperationType() != CGDivOp &&
-                node->getOperationType() != CGMulOp &&
+                node->getOperationType() != CGOpCode::Div &&
+                node->getOperationType() != CGOpCode::Mul &&
                 !isFunction(node->getOperationType());
     }
 
@@ -1428,7 +1428,7 @@ protected:
     }
 
     virtual void printPrintOperation(const OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGPriOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Pri, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for print operation");
 
         const PrintOperationNode<Base>& pnode = static_cast<const PrintOperationNode<Base>&> (node);
@@ -1539,10 +1539,10 @@ protected:
             ty[k] = opArgs[1 * p1 + k].getOperation();
         }
 
-        CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
-        CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
 
-        CPPADCG_ASSERT_KNOWN(ty[p]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(ty[p]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
         // tx
         for (size_t k = 0; k < p1; k++) {
@@ -1582,13 +1582,13 @@ protected:
             py[k] = opArgs[3 * p1 + k].getOperation();
         }
 
-        CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
-        CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
 
-        CPPADCG_ASSERT_KNOWN(px[0]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(px[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
-        CPPADCG_ASSERT_KNOWN(py[0]->getOperationType() == CGSparseArrayCreationOp, "Invalid array type");
-        CPPADCG_ASSERT_KNOWN(p == 0 || py[1]->getOperationType() == CGArrayCreationOp, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(py[0]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
+        CPPADCG_ASSERT_KNOWN(p == 0 || py[1]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
         // tx
         for (size_t k = 0; k < p1; k++) {
@@ -1618,7 +1618,7 @@ protected:
     }
 
     virtual unsigned printDependentMultiAssign(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGDependentMultiAssignOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::DependentMultiAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments");
 
         const std::vector<Argument<Base> >& args = node.getArguments();
@@ -1629,7 +1629,7 @@ protected:
                 useArg = true;
             } else {
                 CGOpCode op = arg.getOperation()->getOperationType();
-                useArg = op != CGDependentRefRhsOp && op != CGLoopEndOp && op != CGEndIfOp;
+                useArg = op != CGOpCode::DependentRefRhs && op != CGOpCode::LoopEnd && op != CGOpCode::EndIf;
             }
 
             if (useArg) {
@@ -1641,7 +1641,7 @@ protected:
     }
 
     virtual void printLoopStart(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopStartOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type");
 
         LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
         _currentLoops.push_back(&lnode);
@@ -1664,7 +1664,7 @@ protected:
     }
 
     virtual void printLoopEnd(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopEndOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopEnd, "Invalid node type");
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
@@ -1676,12 +1676,12 @@ protected:
     virtual void printLoopIndexedDep(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation");
 
-        // CGLoopIndexedDepOp
+        // LoopIndexedDep
         print(node.getArguments()[0]);
     }
 
     virtual void printLoopIndexedIndep(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 1, "Invalid number of information elements for loop indexed independent operation");
 
         // CGLoopIndexedIndepOp
@@ -1691,25 +1691,25 @@ protected:
     }
 
     virtual void printLoopIndexedTmp(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGLoopIndexedTmpOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedTmp, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for loop indexed temporary operation");
         OperationNode<Base>* tmpVar = node.getArguments()[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGTmpDclOp, "Invalid arguments for loop indexed temporary operation");
+        CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
         print(node.getArguments()[1]);
     }
 
     virtual void printTmpVar(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGTmpOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Tmp, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for temporary variable usage operation");
         OperationNode<Base>* tmpVar = node.getArguments()[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGTmpDclOp, "Invalid arguments for loop indexed temporary operation");
+        CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
         _code << *tmpVar->getName();
     }
 
     virtual void printIndexAssign(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGIndexAssignOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation");
 
         IndexAssignOperationNode<Base>& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
@@ -1720,10 +1720,10 @@ protected:
     }
 
     virtual void printIndexCondExprOp(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGIndexCondExprOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexCondExpr, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for an index condition expression operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an index condition expression operation");
-        CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument for an index condition expression operation");
+        CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument for an index condition expression operation");
 
         const std::vector<size_t>& info = node.getInfo();
 
@@ -1738,7 +1738,7 @@ protected:
          * the first argument is the condition, following arguments are
          * just extra dependencies that must be defined outside the if
          */
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGStartIfOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::StartIf, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for an 'if start' operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'if start' operation");
 
@@ -1755,7 +1755,7 @@ protected:
          * if start node, the following arguments are assignments in the
          * previous if branch
          */
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseIfOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ElseIf, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 2, "Invalid number of arguments for an 'else if' operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'else if' operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != nullptr, "Invalid argument for an 'else if' operation");
@@ -1774,7 +1774,7 @@ protected:
          * the first argument is the  if start node, the following arguments
          * are assignments in the previous if branch
          */
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGElseOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Else, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for an 'else' operation");
 
         _indentation.resize(_indentation.size() - _spaces.size());
@@ -1785,7 +1785,7 @@ protected:
     }
 
     virtual void printEndIf(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGEndIfOp, "Invalid node type for an 'end if' operation");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::EndIf, "Invalid node type for an 'end if' operation");
 
         _indentation.resize(_indentation.size() - _spaces.size());
 
@@ -1793,7 +1793,7 @@ protected:
     }
 
     virtual void printCondResult(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGCondResultOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::CondResult, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for an assignment inside an if/else operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an an assignment inside an if/else operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != nullptr, "Invalid argument for an an assignment inside an if/else operation");
@@ -1804,7 +1804,7 @@ protected:
     }
 
     inline bool isDependent(const OperationNode<Base>& arg) const {
-        if (arg.getOperationType() == CGLoopIndexedDepOp) {
+        if (arg.getOperationType() == CGOpCode::LoopIndexedDep) {
             return true;
         }
         size_t id = arg.getVariableID();
@@ -1830,22 +1830,22 @@ protected:
 
     virtual const std::string& getComparison(enum CGOpCode op) const {
         switch (op) {
-            case CGComOpLt:
+            case CGOpCode::ComLt:
                 return _C_COMP_OP_LT;
 
-            case CGComOpLe:
+            case CGOpCode::ComLe:
                 return _C_COMP_OP_LE;
 
-            case CGComOpEq:
+            case CGOpCode::ComEq:
                 return _C_COMP_OP_EQ;
 
-            case CGComOpGe:
+            case CGOpCode::ComGe:
                 return _C_COMP_OP_GE;
 
-            case CGComOpGt:
+            case CGOpCode::ComGt:
                 return _C_COMP_OP_GT;
 
-            case CGComOpNe:
+            case CGOpCode::ComNe:
                 return _C_COMP_OP_NE;
 
             default:
@@ -1860,24 +1860,24 @@ protected:
     }
 
     static bool isFunction(enum CGOpCode op) {
-        return isUnaryFunction(op) || op == CGPowOp;
+        return isUnaryFunction(op) || op == CGOpCode::Pow;
     }
 
     static bool isUnaryFunction(enum CGOpCode op) {
         switch (op) {
-            case CGAbsOp:
-            case CGAcosOp:
-            case CGAsinOp:
-            case CGAtanOp:
-            case CGCoshOp:
-            case CGCosOp:
-            case CGExpOp:
-            case CGLogOp:
-            case CGSinhOp:
-            case CGSinOp:
-            case CGSqrtOp:
-            case CGTanhOp:
-            case CGTanOp:
+            case CGOpCode::Abs:
+            case CGOpCode::Acos:
+            case CGOpCode::Asin:
+            case CGOpCode::Atan:
+            case CGOpCode::Cosh:
+            case CGOpCode::Cos:
+            case CGOpCode::Exp:
+            case CGOpCode::Log:
+            case CGOpCode::Sinh:
+            case CGOpCode::Sin:
+            case CGOpCode::Sqrt:
+            case CGOpCode::Tanh:
+            case CGOpCode::Tan:
                 return true;
             default:
                 return false;
@@ -1886,12 +1886,12 @@ protected:
 
     static bool isCondAssign(enum CGOpCode op) {
         switch (op) {
-            case CGComOpLt:
-            case CGComOpLe:
-            case CGComOpEq:
-            case CGComOpGe:
-            case CGComOpGt:
-            case CGComOpNe:
+            case CGOpCode::ComLt:
+            case CGOpCode::ComLe:
+            case CGOpCode::ComEq:
+            case CGOpCode::ComGe:
+            case CGOpCode::ComGt:
+            case CGOpCode::ComNe:
                 return true;
             default:
                 return false;

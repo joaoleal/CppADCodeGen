@@ -31,15 +31,15 @@ class IndexOperationNode : public OperationNode<Base> {
 public:
 
     inline IndexOperationNode(IndexDclrOperationNode<Base>& indexDcl) :
-        OperationNode<Base>(CGIndexOp, indexDcl) {
+        OperationNode<Base>(CGOpCode::Index, indexDcl) {
     }
 
     inline IndexOperationNode(LoopStartOperationNode<Base>& loopStart) :
-        OperationNode<Base>(CGIndexOp,{loopStart.getIndex(), loopStart}) {
+        OperationNode<Base>(CGOpCode::Index,{loopStart.getIndex(), loopStart}) {
     }
 
     inline IndexOperationNode(IndexAssignOperationNode<Base>& indexAssign) :
-        OperationNode<Base>(CGIndexOp,{indexAssign.getIndex(), indexAssign}) {
+        OperationNode<Base>(CGOpCode::Index,{indexAssign.getIndex(), indexAssign}) {
     }
 
     inline bool isDefinedLocally() const {
@@ -51,7 +51,7 @@ public:
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
         OperationNode<Base>* aNode = args[0].getOperation();
-        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGIndexDeclarationOp, "Invalid argument operation type");
+        CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
 
         return static_cast<const IndexDclrOperationNode<Base>&> (*aNode);
     }

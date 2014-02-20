@@ -38,7 +38,7 @@ public:
     }
 
     inline virtual IndexPatternType getType() const override {
-        return SECTIONED;
+        return IndexPatternType::Sectioned;
     }
 
     inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {

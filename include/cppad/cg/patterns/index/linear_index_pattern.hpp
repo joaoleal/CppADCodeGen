@@ -63,7 +63,7 @@ public:
     }
 
     inline virtual IndexPatternType getType() const override {
-        return LINEAR;
+        return IndexPatternType::Linear;
     }
 
     inline virtual void getSubIndexes(std::set<IndexPattern*>& indexes) const override {

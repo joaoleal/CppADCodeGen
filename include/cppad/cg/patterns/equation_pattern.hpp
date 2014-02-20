@@ -279,7 +279,7 @@ private:
         } else if (dep1.isVariable() && dep2.isVariable()) {
             OperationNode<Base>* depRefOp = dep1.getOperationNode();
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGInvOp);
+            CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv);
 
             return comparePath(depRefOp, dep2Op, dep2Index);
         }
@@ -295,16 +295,16 @@ private:
             saveOperationReference(depRefIndex, scRef, scRef);
         }
 
-        while (scRef->getOperationType() == CGAliasOp) {
+        while (scRef->getOperationType() == CGOpCode::Alias) {
             CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
-            if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
+            if (sc != nullptr || sc->getOperationType() == CGOpCode::Inv) break;
             scRef = sc;
         }
-        while (sc2->getOperationType() == CGAliasOp) {
+        while (sc2->getOperationType() == CGOpCode::Alias) {
             CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
-            if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
+            if (sc != nullptr || sc->getOperationType() == CGOpCode::Inv) break;
             sc2 = sc;
         }
 
@@ -331,7 +331,7 @@ private:
             return false;
         }
 
-        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGInvOp);
+        CPPADCG_ASSERT_UNKNOWN(scRef->getOperationType() != CGOpCode::Inv);
 
         const std::vector<size_t>& info1 = scRef->getInfo();
         const std::vector<size_t>& info2 = sc2->getInfo();
@@ -365,7 +365,7 @@ private:
                 OperationNode<Base>* argRefOp = a1.getOperation();
                 OperationNode<Base>* arg2Op = a2.getOperation();
                 bool related;
-                if (argRefOp->getOperationType() == CGInvOp) {
+                if (argRefOp->getOperationType() == CGOpCode::Inv) {
                     related = saveIndependent(scRef, a, argRefOp, arg2Op);
                 } else {
                     related = comparePath(argRefOp, arg2Op, dep2);
@@ -389,7 +389,7 @@ private:
                          size_t argIndex,
                          const OperationNode<Base>* argRefOp,
                          const OperationNode<Base>* arg2Op) {
-        if (argRefOp->getOperationType() != CGInvOp || arg2Op->getOperationType() != CGInvOp) {
+        if (argRefOp->getOperationType() != CGOpCode::Inv || arg2Op->getOperationType() != CGOpCode::Inv) {
             return false;
         }
 
@@ -422,7 +422,7 @@ private:
         if (depRef.isVariable() && dep2.isVariable()) {
             OperationNode<Base>* depRefOp = depRef.getOperationNode();
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
-            if (depRefOp->getOperationType() != CGInvOp) {
+            if (depRefOp->getOperationType() != CGOpCode::Inv) {
                 colorIndexedPath(depRefOp, dep2Op, color, indexedOperations);
             } else {
 
@@ -441,16 +441,16 @@ private:
                                  size_t color,
                                  std::set<const OperationNode<Base>*>& indexedOperations) {
 
-        while (scRef->getOperationType() == CGAliasOp) {
+        while (scRef->getOperationType() == CGOpCode::Alias) {
             CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
             OperationNode<Base>* sc = scRef->getArguments()[0].getOperation();
-            if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
+            if (sc != nullptr || sc->getOperationType() == CGOpCode::Inv) break;
             scRef = sc;
         }
-        while (sc2->getOperationType() == CGAliasOp) {
+        while (sc2->getOperationType() == CGOpCode::Alias) {
             CPPADCG_ASSERT_KNOWN(sc2->getArguments().size() == 1, "Invalid number of arguments for alias");
             OperationNode<Base>* sc = sc2->getArguments()[0].getOperation();
-            if (sc != nullptr || sc->getOperationType() == CGInvOp) break;
+            if (sc != nullptr || sc->getOperationType() == CGOpCode::Inv) break;
             sc2 = sc;
         }
 
@@ -468,7 +468,7 @@ private:
             OperationNode<Base>* argRefOp = argsRef[a].getOperation();
             if (argRefOp != nullptr) {
                 bool indexedArg = false;
-                if (argRefOp->getOperationType() == CGInvOp) {
+                if (argRefOp->getOperationType() == CGOpCode::Inv) {
                     // same independent variable can be used in multiple iterations
                     if (!searched) {
                         itop2a = indexedOpIndep.op2Arguments.find(scRef);
@@ -512,7 +512,7 @@ private:
         for (size_t a = 0; a < size; a++) {
             OperationNode<Base>* argOp = args[a].getOperation();
             if (argOp != nullptr) {
-                if (argOp->getOperationType() == CGInvOp) {
+                if (argOp->getOperationType() == CGOpCode::Inv) {
                     ops.insert(&node);
                 } else {
                     findOperationsWithIndeps(*argOp, ops);

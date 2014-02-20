@@ -39,10 +39,10 @@ public:
         colored_(false) {
     }
 
-    inline void color(Verbosity verbosity = VERBOSITY_NONE) {
+    inline void color(Verbosity verbosity = Verbosity::None) {
         colored_ = true;
 
-        if (verbosity >= VERBOSITY_HIGH)
+        if (verbosity >= Verbosity::High)
             std::cout << "      Colored " << nodeType() << " " << name() << "\n";
     }
 
@@ -331,7 +331,7 @@ public:
         return deleted_;
     }
 
-    inline void makeParameter(Verbosity verbosity = VERBOSITY_NONE) {
+    inline void makeParameter(Verbosity verbosity = Verbosity::None) {
         parameter_ = true;
         deleteNode(verbosity);
     }
@@ -340,8 +340,8 @@ public:
         return parameter_;
     }
 
-    inline void deleteNode(Verbosity verbosity = VERBOSITY_NONE) {
-        if (verbosity >= VERBOSITY_HIGH)
+    inline void deleteNode(Verbosity verbosity = Verbosity::None) {
+        if (verbosity >= Verbosity::High)
             std::cout << "Deleting " << *this << "\n";
 
         deleted_ = true;
@@ -355,8 +355,8 @@ public:
         return assign_;
     }
 
-    inline void setAssigmentEquation(Enode<Base>& i, Verbosity verbosity = VERBOSITY_NONE) {
-        if (verbosity >= VERBOSITY_HIGH)
+    inline void setAssigmentEquation(Enode<Base>& i, Verbosity verbosity = Verbosity::None) {
+        if (verbosity >= Verbosity::High)
             std::cout << "      Assigning " << *this << " to " << i << "\n";
 
         assign_ = &i;

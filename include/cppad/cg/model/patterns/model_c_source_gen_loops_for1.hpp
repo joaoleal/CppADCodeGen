@@ -341,7 +341,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                  */
                 pxCustom.resize(1);
                 // {0} : must point to itself since there is only one dependent
-                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{0},
+                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{0},
                 {
                                                *loopEnd
                 }));

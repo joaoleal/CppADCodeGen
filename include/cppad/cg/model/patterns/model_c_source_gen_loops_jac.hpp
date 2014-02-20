@@ -400,7 +400,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(C
 
         for (size_t e : allLocations) {
             // an additional alias variable is required so that each dependent variable can have its own ID
-            jac[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{e},
+            jac[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{e},
             {
                                       *loopEnd
             }));

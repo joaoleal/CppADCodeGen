@@ -21,7 +21,6 @@
 #include <Eigen/QR>
 
 #include <cppad/cg/dae_index_reduction/pantelides.hpp>
-//#include <unsupported/Eigen/NonLinearOptimization>
 
 namespace CppAD {
 namespace cg {
@@ -332,7 +331,7 @@ protected:
 
         while (true) {
 
-            if (this->verbosity_ >= VERBOSITY_HIGH) {
+            if (this->verbosity_ >= Verbosity::High) {
                 std::cout << "# equation selection: ";
                 for (size_t i = 0; i < eqs.size(); i++)
                     std::cout << *eqs[i] << "; ";
@@ -399,7 +398,7 @@ protected:
             newVarInfo[j->antiDerivative()->tapeIndex()].setDerivative(-1);
         }
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             std::cout << "## dummy derivatives:\n";
 
             for (Vnode<Base>* j : dummyD_)
@@ -482,7 +481,7 @@ protected:
              */
             map<int, int>::const_iterator ita = assignedVar2Eq.find(dummy->tapeIndex());
             if (ita == assignedVar2Eq.end()) {
-                if (this->verbosity_ >= VERBOSITY_HIGH)
+                if (this->verbosity_ >= Verbosity::High)
                     std::cout << "unable to solve for variable " << dummy->name() << "." << std::endl;
 
                 continue; // unable to solve for a dummy variable: keep the equation and variable
@@ -495,7 +494,7 @@ protected:
                 tapeIndexReduced2Short[dummy->tapeIndex()] = -1;
                 eqIndexReduced2Short[bestEquation] = -1;
 
-                if (this->verbosity_ >= VERBOSITY_HIGH) {
+                if (this->verbosity_ >= Verbosity::High) {
                     std::cout << "######### use equation " << bestEquation << " to solve for variable " << dummy->name() << std::endl;
                     erasedVariables.insert(dummy->tapeIndex());
                     erasedEquations.insert(bestEquation);
@@ -504,7 +503,7 @@ protected:
 
             } catch (const CGException& ex) {
                 // unable to solve for a dummy variable: keep the equation and variable
-                if (this->verbosity_ >= VERBOSITY_HIGH)
+                if (this->verbosity_ >= Verbosity::High)
                     std::cout << "unable to use equation " << bestEquation << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
             }
         }
@@ -578,7 +577,7 @@ protected:
                                                                          reducedVarInfo, newVarInfo,
                                                                          reducedEqInfo, newEqInfo));
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             std::cout << "DAE with less equations and variables:\n";
             Pantelides<Base>::printModel(shortFun.get(), newVarInfo);
         }
@@ -647,7 +646,7 @@ protected:
                 handler.substituteIndependent(indep, dep); // removes indep from the list of variables
 
                 OperationNode<Base>* alias = indep.getOperationNode();
-                CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGAliasOp);
+                CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias);
                 dep.getOperationNode()->makeAlias(alias->getArguments()[0]); // not a residual anymore but equal to alias (explicit equation)
 
                 // it is now an explicit differential equation
@@ -700,7 +699,7 @@ protected:
          */
         std::unique_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             std::cout << "Semi-Eplicit DAE:\n";
             Pantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
         }
@@ -929,7 +928,7 @@ protected:
             throw;
         }
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             for (Vnode<Base>* j : variables) {
                 if (j->assigmentEquation() != nullptr)
                     std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
@@ -972,7 +971,7 @@ protected:
             handler.substituteIndependent(indep, dep, false); // indep not removed from the list of variables yet
 
             OperationNode<Base>* alias = indep.getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGAliasOp);
+            CPPADCG_ASSERT_UNKNOWN(alias != nullptr && alias->getOperationType() == CGOpCode::Alias);
 
             // it is now an explicit differential equation
             //newEqInfo[bestEquation].setExplicit(true);
@@ -1215,7 +1214,7 @@ protected:
          */
         std::unique_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             std::cout << "reordered DAE equations and variables:\n";
             Pantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
         }
@@ -1353,7 +1352,7 @@ protected:
 
         jacobian_.makeCompressed();
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             cout << "partial jacobian:\n" << jacobian_ << "\n\n";
             //cout << jacobian_.triangularView<Eigen::Lower > () << "\n\n";
         }
@@ -1365,7 +1364,7 @@ protected:
 
         if (eqs.size() == vars.size()) {
             dummyD_.insert(dummyD_.end(), vars.begin(), vars.end());
-            if (this->verbosity_ >= VERBOSITY_HIGH) {
+            if (this->verbosity_ >= Verbosity::High) {
                 std::cout << "# new dummy derivatives: ";
                 for (size_t j = 0; j < vars.size(); j++)
                     std::cout << *vars[j] << "; ";
@@ -1423,7 +1422,7 @@ protected:
             }
         }
 
-        if (this->verbosity_ >= VERBOSITY_HIGH)
+        if (this->verbosity_ >= Verbosity::High)
             std::cout << "subset Jac:\n" << work << "\n";
 
         Eigen::ColPivHouseholderQR<MatrixB> qr(work);
@@ -1448,7 +1447,7 @@ protected:
             newDummies.push_back(varsLocal[indices(i)]);
         }
 
-        if (this->verbosity_ >= VERBOSITY_HIGH) {
+        if (this->verbosity_ >= Verbosity::High) {
             std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
             for (Vnode<Base>* it : newDummies)
                 std::cout << *it << "; ";

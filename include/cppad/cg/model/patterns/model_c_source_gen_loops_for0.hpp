@@ -117,7 +117,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
                 // an additional alias variable is required so that each dependent variable can have its own ID
                 size_t e = dependents[i][it].original;
                 if (e < m) { // some equations are not present in all iteration
-                    y[e] = handler.createCG(new OperationNode<Base> (CGDependentRefRhsOp,{e},
+                    y[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{e},
                     {
                                             *loopEnd                    }));
                 }

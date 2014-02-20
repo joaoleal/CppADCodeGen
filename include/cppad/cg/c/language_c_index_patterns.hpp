@@ -56,7 +56,7 @@ inline void LanguageC<Base>::printRandomIndexPatternDeclaration(std::ostringstre
                                                                 const std::string& indentation,
                                                                 const std::set<RandomIndexPattern*>& randomPatterns) {
     for (RandomIndexPattern* ip : randomPatterns) {
-        if (ip->getType() == RANDOM1D) {
+        if (ip->getType() == IndexPatternType::Random1D) {
             /**
              * 1D
              */
@@ -70,7 +70,7 @@ inline void LanguageC<Base>::printRandomIndexPatternDeclaration(std::ostringstre
             os << indentation;
             printStaticIndexArray(os, ip->getName(), y);
         } else {
-            CPPADCG_ASSERT_UNKNOWN(ip->getType() == RANDOM2D);
+            CPPADCG_ASSERT_UNKNOWN(ip->getType() == IndexPatternType::Random2D);
             /**
              * 2D
              */
@@ -189,13 +189,13 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
                                                         const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
     std::stringstream ss;
     switch (ip.getType()) {
-        case LINEAR: // y = x * a + b
+        case IndexPatternType::Linear: // y = x * a + b
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
             const LinearIndexPattern& lip = static_cast<const LinearIndexPattern&> (ip);
             return linearIndexPattern2String(lip, *indexes[0]);
         }
-        case SECTIONED:
+        case IndexPatternType::Sectioned:
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
             const SectionedIndexPattern* lip = static_cast<const SectionedIndexPattern*> (&ip);
@@ -217,7 +217,7 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
             return ss.str();
         }
 
-        case PLANE2D: // y = f(x) + f(z)
+        case IndexPatternType::Plane2D: // y = f(x) + f(z)
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() >= 1, "Invalid number of indexes");
             std::string indexExpr;
@@ -238,14 +238,14 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
 
             return indexExpr;
         }
-        case RANDOM1D:
+        case IndexPatternType::Random1D:
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
             const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
             CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
             return rip.getName() + "[" + (*indexes[0]->getName()) + "]";
         }
-        case RANDOM2D:
+        case IndexPatternType::Random2D:
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
             const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);

@@ -41,9 +41,9 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
     size_t n = _fun.Domain();
 
     vector<CGBase> jac(n * m);
-    if (_jacMode == AUTOMATIC) {
+    if (_jacMode == JacobianADMode::Automatic) {
         jac = _fun.Jacobian(indVars);
-    } else if (_jacMode == FORWARD) {
+    } else if (_jacMode == JacobianADMode::Forward) {
         JacobianFor(_fun, indVars, jac);
     } else {
         JacobianRev(_fun, indVars, jac);
@@ -74,14 +74,14 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource() throw (CGException) {
 
     bool forwardMode;
 
-    if (_jacMode == AUTOMATIC) {
+    if (_jacMode == JacobianADMode::Automatic) {
         if (_custom_jac.defined) {
             forwardMode = extra::estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
         } else {
             forwardMode = n <= m;
         }
     } else {
-        forwardMode = _jacMode == FORWARD;
+        forwardMode = _jacMode == JacobianADMode::Forward;
     }
 
     /**

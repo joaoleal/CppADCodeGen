@@ -135,7 +135,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
     if (ref.getOperation() != nullptr) {
         // 
         const OperationNode<Base>& refOp = *ref.getOperation();
-        if (refOp.getOperationType() == CGInvOp) {
+        if (refOp.getOperationType() == CGOpCode::Inv) {
             /**
              * from independents array
              */
@@ -144,7 +144,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGInvOp ||
+                        args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
                         !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), *args[i].getOperation())) {
                     break;
                 }
@@ -162,13 +162,13 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             else
                 arrayAssign << indep << "[" << offset << " + i]";
 
-        } else if (refOp.getOperationType() == CGLoopIndexedIndepOp) {
+        } else if (refOp.getOperationType() == CGOpCode::LoopIndexedIndep) {
             /**
              * from independents array in a loop
              */
             size_t pos = refOp.getInfo()[1];
             IndexPattern* refIp = (*_info)->loopIndependentIndexPatterns[pos];
-            if (refIp->getType() != LINEAR) {
+            if (refIp->getType() != IndexPatternType::Linear) {
                 return starti; // cannot determine consecutive elements
             }
 
@@ -179,7 +179,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGLoopIndexedIndepOp) {
+                        args[i].getOperation()->getOperationType() != CGOpCode::LoopIndexedIndep) {
                     break; // not an independent index pattern
                 }
 
@@ -188,7 +188,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
 
                 pos = args[i].getOperation()->getInfo()[1];
                 const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
-                if (ip->getType() != LINEAR) {
+                if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
                 const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
@@ -261,7 +261,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
 
 template<class Base>
 inline std::string LanguageC<Base>::getTempArrayName(const OperationNode<Base>& op) {
-    if (op.getOperationType() == CGArrayCreationOp)
+    if (op.getOperationType() == CGOpCode::ArrayCreation)
         return _nameGen->generateTemporaryArray(op);
     else
         return _nameGen->generateTemporarySparseArray(op);
@@ -275,7 +275,7 @@ void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
 
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
-    if (arrayOp.getOperationType() == CGArrayCreationOp)
+    if (arrayOp.getOperationType() == CGOpCode::ArrayCreation)
         arrayName = _nameGen->generateTemporaryArray(arrayOp);
     else
         arrayName = _nameGen->generateTemporarySparseArray(arrayOp);
@@ -298,7 +298,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
                                                   OperationNode<Base>& array) {
     const std::string& aName = createVariableName(array);
 
-    if (array.getOperationType() == CGArrayCreationOp) {
+    if (array.getOperationType() == CGOpCode::ArrayCreation) {
         size_t size = array.getArguments().size();
         if (size > 0)
             _code << dataArrayName << ".data = " << aName << "; ";
@@ -307,7 +307,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
         _code << dataArrayName << ".size = " << size << "; "
                 << dataArrayName << ".sparse = " << false << ";";
     } else {
-        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGSparseArrayCreationOp, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
         size_t nnz = array.getArguments().size();
         if (nnz > 0)
             _code << dataArrayName << ".data = " << aName << "; ";
@@ -329,7 +329,7 @@ inline void LanguageC<Base>::markArrayChanged(OperationNode<Base>& ty) {
     size_t id = ty.getVariableID();
     size_t tySize = ty.getArguments().size();
 
-    if (ty.getOperationType() == CGArrayCreationOp) {
+    if (ty.getOperationType() == CGOpCode::ArrayCreation) {
         for (size_t i = 0; i < tySize; i++) {
             _tmpArrayValues[id - 1 + i] = nullptr;
         }

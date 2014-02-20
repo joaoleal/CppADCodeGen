@@ -127,7 +127,7 @@ public:
     inline void makeAlias(const Argument<Base>& other) {
         CPPADCG_ASSERT_UNKNOWN(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
 
-        operation_ = CGAliasOp;
+        operation_ = CGOpCode::Alias;
         arguments_.resize(1);
         arguments_[0] = other;
         var_id_ = 0;
@@ -241,15 +241,15 @@ public:
 
     inline void setLastUsageEvaluationOrder(size_t last) {
         last_usage_order_ = last;
-        if (operation_ == CGArrayElementOp) {
+        if (operation_ == CGOpCode::ArrayElement) {
             OperationNode<Base>* array = arguments_[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGArrayCreationOp);
+            CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGOpCode::ArrayCreation);
             if (array->getLastUsageEvaluationOrder() < last) {
                 array->setLastUsageEvaluationOrder(last);
             }
-        } else if (operation_ == CGTmpOp) {
+        } else if (operation_ == CGOpCode::Tmp) {
             OperationNode<Base>* declr = arguments_[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGTmpDclOp);
+            CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGOpCode::TmpDcl);
             if (declr->getLastUsageEvaluationOrder() < last) {
                 declr->setLastUsageEvaluationOrder(last);
             }
@@ -316,11 +316,11 @@ private:
 template<class Base>
 inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() {
     std::set<CGOpCode> s;
-    s.insert(CGIndexAssignOp);
-    s.insert(CGIndexOp);
-    s.insert(CGLoopStartOp);
-    s.insert(CGLoopEndOp);
-    s.insert(CGPriOp);
+    s.insert(CGOpCode::IndexAssign);
+    s.insert(CGOpCode::Index);
+    s.insert(CGOpCode::LoopStart);
+    s.insert(CGOpCode::LoopEnd);
+    s.insert(CGOpCode::Pri);
     return s;
 }
 
@@ -333,22 +333,22 @@ inline std::ostream& operator <<(
         const OperationNode<Base>& c) {
     CGOpCode op = c.getOperationType();
     switch (op) {
-        case CGArrayCreationOp:
+        case CGOpCode::ArrayCreation:
             os << "new $1[" << c.getArguments().size() << "]";
             break;
-        case CGSparseArrayCreationOp:
+        case CGOpCode::SparseArrayCreation:
             os << "new $1[" << c.getInfo()[0] << "]";
             break;
-        case CGArrayElementOp:
+        case CGOpCode::ArrayElement:
             os << "$1[" << c.getInfo()[0] << "]";
             break;
-        case CGAtomicForwardOp:
+        case CGOpCode::AtomicForward:
             os << "atomicFunction.forward(" << c.getInfo()[0] << ", " << c.getInfo()[1] << ", vx, vy, $1, $2)";
             break;
-        case CGAtomicReverseOp:
+        case CGOpCode::AtomicReverse:
             os << "atomicFunction.reverse(" << c.getInfo()[0] << ", $1, $2, $3, $4)";
             break;
-        case CGSignOp:
+        case CGOpCode::Sign:
             os << "if($1 > 0) { 1 } else if($1 == 0) { 0 } else { -1 }";
             break;
 

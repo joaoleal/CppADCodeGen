@@ -141,10 +141,10 @@ public:
         if (varType == 0) {
             return _nameGen->generateIndexedIndependent(independent, ip);
         } else {
-            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGLoopIndexedIndepOp, "Invalid node type");
+            CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
             CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
             CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGIndexOp, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
 
             _ss.clear();
             _ss.str("");
@@ -201,7 +201,7 @@ public:
     virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
                                           const OperationNode<Base>& indep2) override {
         size_t l1;
-        if (indep1.getOperationType() == CGInvOp) {
+        if (indep1.getOperationType() == CGOpCode::Inv) {
             size_t id = indep1.getVariableID();
             l1 = id < _minLevel1ID ? 0 : (id < _minLevel2ID ? 1 : 2);
         } else {
@@ -209,7 +209,7 @@ public:
         }
 
         size_t l2;
-        if (indep2.getOperationType() == CGInvOp) {
+        if (indep2.getOperationType() == CGOpCode::Inv) {
             size_t id = indep2.getVariableID();
             l2 = id < _minLevel1ID ? 0 : (id < _minLevel2ID ? 1 : 2);
         } else {

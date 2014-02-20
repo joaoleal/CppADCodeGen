@@ -55,13 +55,13 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
 
         CGOpCode op = pnodeOp.node->getOperationType();
         switch (op) {
-            case CGMulOp:
+            case CGOpCode::Mul:
             {
                 const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
                 rightHs /= CG<Base > (*this, other);
                 break;
             }
-            case CGDivOp:
+            case CGOpCode::Div:
                 if (argIndex == 0) {
                     const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
                     rightHs *= CG<Base > (*this, other);
@@ -71,19 +71,19 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                 }
                 break;
 
-            case CGUnMinusOp:
+            case CGOpCode::UnMinus:
                 rightHs *= Base(-1.0);
                 break;
-            case CGAddOp:
+            case CGOpCode::Add:
             {
                 const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
                 rightHs -= CG<Base > (*this, other);
                 break;
             }
-            case CGAliasOp:
+            case CGOpCode::Alias:
                 // do nothing 
                 break;
-            case CGSubOp:
+            case CGOpCode::Sub:
             {
                 if (argIndex == 0) {
                     rightHs += CG<Base > (*this, args[1]);
@@ -92,13 +92,13 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                 }
                 break;
             }
-            case CGExpOp:
+            case CGOpCode::Exp:
                 rightHs = log(rightHs);
                 break;
-            case CGLogOp:
+            case CGOpCode::Log:
                 rightHs = exp(rightHs);
                 break;
-            case CGPowOp:
+            case CGOpCode::Pow:
             {
                 if (argIndex == 0) {
                     // base
@@ -126,23 +126,23 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                 }
                 break;
             }
-            case CGSqrtOp:
+            case CGOpCode::Sqrt:
                 rightHs *= rightHs;
                 break;
                 //case CGAcosOp: // asin(variable)
                 //case CGAsinOp: // asin(variable)
-                //case CGAtanOp: // atan(variable)
-            case CGCoshOp: // cosh(variable)
+                //case Atan: // atan(variable)
+            case CGOpCode::Cosh: // cosh(variable)
             {
                 rightHs = log(rightHs + sqrt(rightHs * rightHs - Base(1.0))); // asinh
                 break;
-                //case CGCosOp: //  cos(variable)
+                //case Cos: //  cos(variable)
             }
-            case CGSinhOp: // sinh(variable)
+            case CGOpCode::Sinh: // sinh(variable)
                 rightHs = log(rightHs + sqrt(rightHs * rightHs + Base(1.0))); // asinh
                 break;
                 //case CGSinOp: //  sin(variable)
-            case CGTanhOp: //  tanh(variable)
+            case CGOpCode::Tanh: //  tanh(variable)
                 rightHs = Base(0.5) * (log(Base(1.0) + rightHs) - log(Base(1.0) - rightHs)); // atanh
                 break;
                 //case CGTanOp: //  tan(variable)
@@ -165,20 +165,20 @@ inline bool isSolvable(const std::vector<OperationPathNode<Base> >& path) throw 
 
         CGOpCode op = pnodeOp.node->getOperationType();
         switch (op) {
-            case CGMulOp:
-            case CGDivOp:
-            case CGUnMinusOp:
-            case CGAddOp:
-            case CGAliasOp:
-            case CGSubOp:
-            case CGExpOp:
-            case CGLogOp:
-            case CGSqrtOp:
-            case CGCoshOp: // cosh(variable)
-            case CGSinhOp: // sinh(variable)
-            case CGTanhOp: //  tanh(variable)
+            case CGOpCode::Mul:
+            case CGOpCode::Div:
+            case CGOpCode::UnMinus:
+            case CGOpCode::Add:
+            case CGOpCode::Alias:
+            case CGOpCode::Sub:
+            case CGOpCode::Exp:
+            case CGOpCode::Log:
+            case CGOpCode::Sqrt:
+            case CGOpCode::Cosh: // cosh(variable)
+            case CGOpCode::Sinh: // sinh(variable)
+            case CGOpCode::Tanh: //  tanh(variable)
                 break;
-            case CGPowOp:
+            case CGOpCode::Pow:
             {
                 if (argIndex == 0) {
                     // base

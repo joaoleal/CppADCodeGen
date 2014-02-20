@@ -256,26 +256,26 @@ inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j);
 /**
  * Verbosity level for print-outs
  */
-enum Verbosity {
-    VERBOSITY_NONE, VERBOSITY_LOW, VERBOSITY_HIGH
+enum class Verbosity {
+    None, Low, High
 };
 
 /**
  * Automatic Differentiation modes used to determine the Jacobian
  */
-enum JacobianADMode {
-    FORWARD, REVERSE, AUTOMATIC
+enum class JacobianADMode {
+    Forward, Reverse, Automatic
 };
 
 /**
  * Index pattern types
  */
-enum IndexPatternType {
-    LINEAR, // y = (x / dx) * dy + b
-    SECTIONED, // several index patterns
-    RANDOM1D,
-    RANDOM2D,
-    PLANE2D // y = f(x) + f(z)
+enum class IndexPatternType {
+    Linear, // y = (x / dx) * dy + b
+    Sectioned, // several index patterns
+    Random1D,
+    Random2D,
+    Plane2D // y = f(x) + f(z)
 };
 
 } // END cg namespace

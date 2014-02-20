@@ -29,7 +29,7 @@ inline CG<Base> CG<Base>::operator-() const {
         return CG<Base> (-getValue());
 
     } else {
-        CG<Base> result(*getCodeHandler(), new OperationNode<Base>(CGUnMinusOp, this->argument()));
+        CG<Base> result(*getCodeHandler(), new OperationNode<Base>(CGOpCode::UnMinus, this->argument()));
         if (isValueDefined()) {
             result.setValue(-getValue());
         }
