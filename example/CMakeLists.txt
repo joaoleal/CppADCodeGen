@@ -27,6 +27,14 @@ IF( UNIX )
 	TARGET_LINK_LIBRARIES(dynamic_linux ${DL_LIBRARIES})
 	ADD_CUSTOM_TARGET(example_dynamic_linux
 		 COMMAND dynamic_linux)
+
+        # 
+	ADD_EXECUTABLE(patterns patterns.cpp)
+	SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND patterns")
+
+	TARGET_LINK_LIBRARIES(patterns ${DL_LIBRARIES})
+	ADD_CUSTOM_TARGET(example_patterns
+		 COMMAND patterns)
 ENDIF( UNIX )
 
 
