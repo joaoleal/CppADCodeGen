@@ -106,6 +106,15 @@ public:
                               const std::vector<Base>& xb,
                               size_t repeat,
                               const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
+        std::vector<std::set<size_t> > depCandidates = createRelatedDepCandidates(m, repeat);
+
+        testPatternDetection(xb, repeat, depCandidates, loops);
+    }
+
+    void testPatternDetection(const std::vector<Base>& xb,
+                              size_t repeat,
+                              const std::vector<std::set<size_t> >& relatedDepCandidates,
+                              const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
         using namespace CppAD;
 
         assert(model_ != nullptr);
@@ -123,7 +132,7 @@ public:
         ADFun<CGD> fun;
         fun.Dependent(y);
 
-        testPatternDetectionResults(fun, m, repeat, loops);
+        testPatternDetectionResults(fun, repeat, relatedDepCandidates, loops);
     }
 
     void testLibCreation(const std::string& libName,
@@ -211,6 +220,15 @@ public:
                                      size_t m,
                                      size_t repeat,
                                      const std::vector<std::vector<std::set<size_t> > >& loops) {
+        std::vector<std::set<size_t> > depCandidates = createRelatedDepCandidates(m, repeat);
+
+        testPatternDetectionResults(fun, repeat, depCandidates, loops);
+    }
+
+    void testPatternDetectionResults(ADFun<CGD>& fun,
+                                     size_t repeat,
+                                     const std::vector<std::set<size_t> >& depCandidates,
+                                     const std::vector<std::vector<std::set<size_t> > >& loops) {
         using namespace std;
 
         /**
@@ -227,9 +245,7 @@ public:
 
         std::vector<CGD> yy = fun.Forward(0, xx);
 
-        std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
-
-        DependentPatternMatcher<double> matcher(relatedDepCandidates, yy, xx);
+        DependentPatternMatcher<double> matcher(depCandidates, yy, xx);
 
         LoopFreeModel<Base>* nonLoopTape;
         SmartSetPointer<LoopModel<Base> > loopTapes;
@@ -289,14 +305,14 @@ public:
         }
 
         if (defined) {
-            map<size_t, map<size_t, set<size_t> > >::const_iterator itLexp = orderedExpectedLoops.begin();
-            map<size_t, map<size_t, set<size_t> > >::const_iterator itLcalc = orderedCalcLoops.begin();
+            auto itLexp = orderedExpectedLoops.begin();
+            auto itLcalc = orderedCalcLoops.begin();
             for (; itLexp != orderedExpectedLoops.end(); ++itLexp, ++itLcalc) {
                 ASSERT_EQ(itLexp->first, itLcalc->first);
                 ASSERT_EQ(itLexp->second.size(), itLcalc->second.size());
 
-                map<size_t, set<size_t> >::const_iterator itEexp = itLexp->second.begin();
-                map<size_t, set<size_t> >::const_iterator itEcalc = itLcalc->second.begin();
+                auto itEexp = itLexp->second.begin();
+                auto itEcalc = itLcalc->second.begin();
                 for (; itEexp != itLexp->second.end(); ++itEexp, ++itEcalc) {
                     ASSERT_EQ(itEexp->first, itEcalc->first);
                     ASSERT_TRUE(itEexp->second == itEcalc->second);
@@ -304,7 +320,7 @@ public:
             }
 
         } else {
-            ASSERT_EQ(matcher.getEquationPatterns().size(), m);
+            ASSERT_EQ(matcher.getEquationPatterns().size(), depCandidates.size());
             for (size_t eq = 0; eq < matcher.getEquationPatterns().size(); eq++) {
                 EquationPattern<Base>* eqp = matcher.getEquationPatterns()[eq];
                 ASSERT_EQ(eqp->dependents.size(), repeat);

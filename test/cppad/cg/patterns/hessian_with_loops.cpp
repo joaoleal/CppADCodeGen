@@ -383,3 +383,54 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed5) {
     setModel(modelTemporaryIndexed5);
     testLibCreation("modelTemporaryIndexed5", m, n, 6);
 }
+
+/**
+ * @test example model
+ */
+std::vector<ADCGD> modelExample(const std::vector<ADCGD>& x, size_t repeat) {
+    assert(repeat == 3);
+
+    // dependent variable vector 
+    std::vector<ADCGD> y(8);
+
+    // temporary variables
+    ADCGD a, b;
+
+    // the model    
+    a = exp(3 * x[1]);
+
+    b = 5 * x[0] * x[4];
+    y[0] = a / 2 + b;
+    // one equation not defined!
+    y[1] = x[2] - b;
+
+    b = 5 * x[1] * x[3];
+    y[2] = a / 2 + b;
+    y[3] = x[4] * x[1] + b;
+    y[4] = x[3] - b;
+
+    b = 5 * x[2] * x[2];
+    y[5] = a / 2 + b;
+    y[6] = x[4] * x[2] + b;
+    y[7] = x[4] - b;
+
+    return y;
+}
+
+TEST_F(CppADCGHessLoopTest, modelExample) {
+    size_t repeat = 3;
+
+    std::vector<std::set<size_t> > relatedDeps{
+        {0, 2, 5}, // equation pattern 1
+        {3, 6}, // equation pattern 2
+        {1, 4, 7} // equation pattern 3
+    };
+    std::vector<std::vector<std::set<size_t> > > loops{relatedDeps}; // one loop
+
+    setModel(modelExample);
+
+    std::vector<Base> xb(5, 0.5);
+    testPatternDetection(xb, repeat, relatedDeps, loops);
+
+    testLibCreation("modelExample", relatedDeps, repeat, xb);
+}

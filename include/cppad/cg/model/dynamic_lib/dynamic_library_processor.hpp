@@ -45,8 +45,8 @@ public:
      * @param libraryName The path of the dynamic library to be created 
      *                    (without the extension)
      */
-    DynamicModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper,
-                                 const std::string& libraryName = "cppad_cg_model") :
+    inline DynamicModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper,
+                                        const std::string& libraryName = "cppad_cg_model") :
         ModelLibraryProcessor<Base>(modelLibraryHelper),
         _libraryName(libraryName),
         _customLibExtension(nullptr) {
