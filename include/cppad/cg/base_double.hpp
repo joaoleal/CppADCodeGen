@@ -18,26 +18,6 @@
 namespace CppAD {
 
 /**
- * Specialization of the abs operation for doubles
- * 
- * @author Joao Leal
- */
-template<>
-inline cg::CG<double> abs(const cg::CG<double>& var) {
-    using namespace CppAD::cg;
-
-    if (var.isParameter()) {
-        return CG<double> (fabs(var.getValue()));
-    } else {
-        CG<double> result(*var.getCodeHandler(), new OperationNode<double>(CGOpCode::Abs, var.argument()));
-        if (var.isValueDefined()) {
-            result.setValue(fabs(var.getValue()));
-        }
-        return result;
-    }
-}
-
-/**
  * Specialization of the numeric_limits for doubles
  */
 template <>
