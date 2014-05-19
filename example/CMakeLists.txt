@@ -20,27 +20,27 @@ SET(EXAMPLES_COMMAND "COMMAND source_generation")
 ADD_CUSTOM_TARGET(example_source_generation
                   COMMAND source_generation)
 
-IF( UNIX )
-	ADD_EXECUTABLE(dynamic_linux dynamic_linux.cpp)
-	SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
+IF(UNIX)
+    ADD_EXECUTABLE(dynamic_linux dynamic_linux.cpp)
+    SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
 
-	TARGET_LINK_LIBRARIES(dynamic_linux ${DL_LIBRARIES})
-	ADD_CUSTOM_TARGET(example_dynamic_linux
-		 COMMAND dynamic_linux)
+    TARGET_LINK_LIBRARIES(dynamic_linux ${DL_LIBRARIES})
+    ADD_CUSTOM_TARGET(example_dynamic_linux
+                      COMMAND dynamic_linux)
 
         # 
-	ADD_EXECUTABLE(patterns patterns.cpp)
-	SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND patterns")
+    ADD_EXECUTABLE(patterns patterns.cpp)
+    SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND patterns")
 
-	TARGET_LINK_LIBRARIES(patterns ${DL_LIBRARIES})
-	ADD_CUSTOM_TARGET(example_patterns
-		 COMMAND patterns)
-ENDIF( UNIX )
+    TARGET_LINK_LIBRARIES(patterns ${DL_LIBRARIES})
+    ADD_CUSTOM_TARGET(example_patterns
+                      COMMAND patterns)
+ENDIF(UNIX)
 
 
 ADD_CUSTOM_TARGET(examples)
                   
 ADD_DEPENDENCIES(examples example_source_generation)
-IF( UNIX )
-	ADD_DEPENDENCIES(examples example_dynamic_linux)
+IF(UNIX)
+    ADD_DEPENDENCIES(examples example_dynamic_linux)
 ENDIF()

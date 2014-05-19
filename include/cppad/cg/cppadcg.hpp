@@ -223,9 +223,5 @@
 #include <cppad/cg/model/dynamic_lib/linux/linux_dynamiclib.hpp>
 #include <cppad/cg/model/dynamic_lib/linux/linux_dynamic_model_library_processor.hpp>
 
-// ---------------------------------------------------------------------------
-// automated DAE differential index reduction
-//#define CPPAD_CG_DAE_VERBOSE
-
 #endif
 
