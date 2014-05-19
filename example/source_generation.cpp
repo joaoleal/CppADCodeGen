@@ -39,11 +39,6 @@ int main(void) {
 
     ADFun<CGD> fun(U, Z); // the model tape
 
-    // independent variable vector values
-    CppAD::vector<double> u(2);
-    u[0] = 2.;
-    u[1] = 3.;
-
     /**
      * start the special steps for source code generation
      * for a Jacobian
