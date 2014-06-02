@@ -10,7 +10,7 @@ Build-Depends: debhelper (>= 5),
                doxygen,
                cppad-dev (>= 20130819),
                libclang-dev (>= 3.2),
-               llvm-3.2-dev,
+               llvm-3.2-dev|llvm-3.4-dev,
                libeigen3-dev
 Standards-Version: 3.7.2
 

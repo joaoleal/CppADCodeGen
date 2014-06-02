@@ -48,6 +48,9 @@ junk.sh
 # IDE files
 /nbproject/
 
+# file browser
+.directory
+
 # debian temporary files
 /debian/*/
 /debian/files
