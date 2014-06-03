@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Variable positions
+ * Variable position which does not change from iteration to iteration
  */
 class LoopPosition {
 public:
@@ -31,6 +31,10 @@ public:
         original(std::numeric_limits<size_t>::max()) {
     }
 
+    /**
+     * @param t Index in the loop tape
+     * @param o Index in the original tape
+     */
     inline LoopPosition(size_t t, size_t o) :
         tape(t),
         original(o) {
@@ -49,6 +53,11 @@ public:
         iteration(-1) {
     }
 
+    /**
+     * @param t Index in the loop tape
+     * @param o Index in the original tape
+     * @param it Iteration index
+     */
     inline LoopIndexedPosition(size_t t, size_t o, size_t it) :
         LoopPosition(t, o),
         iteration(it) {

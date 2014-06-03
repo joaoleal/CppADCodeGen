@@ -718,6 +718,7 @@ private:
         /**
          * create a new smaller tape 
          */
+        assert(m >= eqInLoopCount);
         size_t nonLoopEq = m - eqInLoopCount;
         std::vector<CGBase> nonLoopDeps(nonLoopEq + origTemp2Index_.size());
 

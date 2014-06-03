@@ -381,9 +381,9 @@ public:
 
         for (size_t g = 0; g < eqGroups_.size(); g++) {
             EquationGroup<Base>& group = eqGroups_[g];
-            const std::set<EquationPattern<Base>*>& eqs = group.equations;
-            const std::vector<std::set<size_t> >& linkedDependents = group.linkedDependents;
-            std::vector<std::set<size_t> >& relatedEqIterationDeps = group.iterationDependents;
+            const set<EquationPattern<Base>*>& eqs = group.equations;
+            const std::vector<set<size_t> >& linkedDependents = group.linkedDependents;
+            std::vector<set<size_t> >& relatedEqIterationDeps = group.iterationDependents;
 
             relatedEqIterationDeps.reserve(iterationDependents_.size());
 
@@ -394,12 +394,20 @@ public:
             }
 
             // sort dependents
-            std::set<size_t> dependents;
+            set<size_t> dependents;
             for (EquationPattern<Base>* eq : eqs) {
                 dependents.insert(eq->dependents.begin(), eq->dependents.end());
             }
 
             map<size_t, map<EquationPattern<Base>*, set<size_t> > > nIndexedGroupPos2Eq2deps;
+
+
+            map<EquationPattern<Base>*, std::vector<size_t> > freeDependents; // ordered dependents not assign to any iteration
+            for (EquationPattern<Base>* eq : equations) {
+                freeDependents[eq].assign(eq->dependents.begin(), eq->dependents.end());
+            }
+
+            DependentIndexSorter depSorter(group, freeDependents, dep2Equation);
 
             set<size_t>::const_iterator itDep = dependents.begin();
             size_t i = 0; // iteration counter
@@ -409,11 +417,18 @@ public:
 
                 if (iterationDependents_.size() <= i)
                     iterationDependents_.resize(i + 1);
-                std::set<size_t>& itDepi = iterationDependents_[i];
+                set<size_t>& itDepi = iterationDependents_[i];
 
                 if (relatedEqIterationDeps.size() <= i)
                     relatedEqIterationDeps.resize(i + 1);
-                std::set<size_t>& ritDepi = relatedEqIterationDeps[i];
+                set<size_t>& ritDepi = relatedEqIterationDeps[i];
+
+                // this dependent might not be the best dependent if this equation is not present in all iterations
+
+                EquationPattern<Base>* eq = dep2Equation.at(dep);
+                auto bestDep = depSorter.findBestDependentForIteration(dep, eq);
+                dep = bestDep.first;
+                eq = bestDep.second;
 
                 long pos = group.findIndexedLinkedDependent(dep);
                 if (pos >= 0) {
@@ -423,21 +438,26 @@ public:
                         itDepi.insert(dep2);
                         ritDepi.insert(dep2);
                         dependents.erase(dep2);
+
+                        EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
+                        std::vector<size_t>& eq2FreeDep = freeDependents[eq2];
+                        eq2FreeDep.erase(find(eq2FreeDep.begin(), eq2FreeDep.end(), dep2)); // consider using lower_bound instead
                     }
 
                     i++;
                 } else {
                     // maybe this dependent shares a non-indexed temporary variable
-                    EquationPattern<Base>* eq = dep2Equation.at(dep);
-
                     long posN = group.findNonIndexedLinkedRel(eq);
                     if (posN >= 0) {
                         // there are only non-indexed shared relations with other equations (delay processing...)
-                        dependents.erase(dep);
+                        dependents.erase(dep); // safe because of itDep++
                         nIndexedGroupPos2Eq2deps[posN][eq].insert(dep);
                     } else {
                         itDepi.insert(dep);
                         ritDepi.insert(dep);
+
+                        std::vector<size_t>& eqFreeDep = freeDependents[eq];
+                        eqFreeDep.erase(find(eqFreeDep.begin(), eqFreeDep.end(), dep)); // consider using lower_bound instead
 
                         i++;
                     }
@@ -452,7 +472,7 @@ public:
 
                 map<EquationPattern<Base>*, set<size_t> > eqIterations;
                 for (size_t i = 0; i < relatedEqIterationDeps.size(); i++) {
-                    const std::set<size_t>& deps = relatedEqIterationDeps[i];
+                    const set<size_t>& deps = relatedEqIterationDeps[i];
                     for (size_t dep : deps) {
                         eqIterations[dep2Equation.at(dep)].insert(i);
                     }
@@ -464,11 +484,11 @@ public:
                     std::vector<size_t> deps;
                     deps.reserve(itPos2Eq2Dep.second.size());
 
-                    std::set<size_t> usedIterations; // iterations used by these equations 
+                    set<size_t> usedIterations; // iterations used by these equations 
                     // determine used iteration indexes
-                    const std::set<EquationPattern<Base>*>& relations = group.linkedEquationsByNonIndexedRel[posN];
+                    const set<EquationPattern<Base>*>& relations = group.linkedEquationsByNonIndexedRel[posN];
                     for (EquationPattern<Base>* itRel : relations) {
-                        const std::set<size_t>& iters = eqIterations[itRel];
+                        const set<size_t>& iters = eqIterations[itRel];
                         usedIterations.insert(iters.begin(), iters.end());
                     }
 
@@ -490,7 +510,7 @@ public:
 
                         // find a free iteration index
                         size_t i = 0;
-                        std::set<size_t>::const_iterator itIter;
+                        set<size_t>::const_iterator itIter;
                         for (itIter = usedIterations.begin(); itIter != usedIterations.end();) {
                             size_t i1 = *itIter;
                             ++itIter;
@@ -510,11 +530,11 @@ public:
 
                         if (iterationDependents_.size() <= i)
                             iterationDependents_.resize(i + 1);
-                        std::set<size_t>& itDepi = iterationDependents_[i];
+                        set<size_t>& itDepi = iterationDependents_[i];
 
                         if (relatedEqIterationDeps.size() <= i)
                             relatedEqIterationDeps.resize(i + 1);
-                        std::set<size_t>& ritDepi = relatedEqIterationDeps[i];
+                        set<size_t>& ritDepi = relatedEqIterationDeps[i];
                         itDepi.insert(deps.begin(), deps.end());
                         ritDepi.insert(deps.begin(), deps.end());
                     }
@@ -1073,6 +1093,96 @@ private:
             }
         }
     }
+
+    /**
+     * Class used to help assign dependent variables to iterations
+     */
+    class DependentIndexSorter {
+    private:
+        const EquationGroup<Base>& group;
+        const std::map<EquationPattern<Base>*, std::vector<size_t> >& freeDependents;
+        const std::map<size_t, EquationPattern<Base>*>& dep2Equation;
+        std::set<EquationPattern<Base>*> visitedEq;
+    public:
+
+        inline DependentIndexSorter(const EquationGroup<Base>& g,
+                                    const std::map<EquationPattern<Base>*, std::vector<size_t> >& f,
+                                    const std::map<size_t, EquationPattern<Base>*>& d2e) :
+            group(g),
+            freeDependents(f),
+            dep2Equation(d2e) {
+        }
+
+        /**
+         * Tries to find the best dependent to use for the next iteration.
+         * For performance reasons it might not be the optimum.
+         * 
+         * @param dep The dependent index
+         * @param eq The equation
+         * @return the best dependent index and its equation
+         */
+        inline std::pair<size_t, EquationPattern<Base>*> findBestDependentForIteration(size_t dep, EquationPattern<Base>* eq) {
+            visitedEq.clear();
+            return findBestDependent(dep, eq);
+        }
+
+    private:
+
+        inline size_t findRelativeFreeDependentInEq(EquationPattern<Base>* eq, size_t dep) {
+            // find relative order of the dependent in the equation
+            const std::vector<size_t>& eqFreeDep = freeDependents.at(eq);
+            for (size_t depRelPos = 0; depRelPos < eqFreeDep.size(); depRelPos++) {// consider using lower_bound
+                if (eqFreeDep[depRelPos] == dep)
+                    return depRelPos; // found it
+            }
+
+            assert(false);
+            return eqFreeDep.size(); // should not happen
+        }
+
+        /**
+         * Tries to find the best dependent to use for the next iteration
+         * 
+         * @param dep The dependent index
+         * @param eq The equation
+         * @return the best dependent index and its equation
+         */
+        inline std::pair<size_t, EquationPattern<Base>*> findBestDependent(size_t dep, EquationPattern<Base>* eq) {
+            visitedEq.insert(eq);
+
+            auto best = std::make_pair(dep, eq);
+
+            // find the group of dependents in the same iteration (associated by indexed independents)
+            long pos = group.findIndexedLinkedDependent(dep);
+            if (pos >= 0) {
+                size_t depRelPos = findRelativeFreeDependentInEq(eq, dep);
+
+                // this dependent might not be the best dependent if this 
+                // equation is not present in all iterations
+                for (size_t dep2 : group.linkedDependents[pos]) {
+                    EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
+                    if (visitedEq.find(eq2) != visitedEq.end()) continue;
+
+                    size_t dep2RelPos = findRelativeFreeDependentInEq(eq2, dep2);
+                    if (dep2RelPos > depRelPos) { 
+                        // this equation has more dependents before
+                        // one these other dependents would be better
+                        best = std::make_pair(dep2, eq2);
+                        depRelPos = dep2RelPos;
+                    }
+                }
+
+                if (best.first != dep) {
+                    size_t bestDep = *freeDependents.at(best.second).begin();
+                    return findBestDependent(bestDep, best.second);
+                }
+
+            }
+
+            return best;
+        }
+
+    };
 
     /**
      * structure used to sort the loop's indexed independent variables
