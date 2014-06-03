@@ -611,7 +611,7 @@ template<class Base>
 inline void print(const std::set<Base>& s) {
     std::cout << "[";
 
-    for (const auto itj = s.begin(); itj != s.end(); ++itj) {
+    for (auto itj = s.begin(); itj != s.end(); ++itj) {
         if (itj != s.begin()) std::cout << " ";
         print(*itj);
     }
