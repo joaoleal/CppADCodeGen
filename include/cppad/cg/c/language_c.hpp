@@ -467,7 +467,12 @@ public:
             } else {
                 if (infoSize != 2)
                     out << "(";
-                out << min << " <= " << index << " && " << index << " <= " << max;
+                
+                if (max - min == 1)
+                    out << min << " == " << index << " || " << index << " == " << max;
+                else
+                    out << min << " <= " << index << " && " << index << " <= " << max;
+
                 if (infoSize != 2)
                     out << ")";
             }
