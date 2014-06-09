@@ -173,10 +173,10 @@ public:
 
             if (tapeIndex0 < 0) {
                 // generate the variable name
-                vnodes_[j] = new Vnode<Base > (j, tapeIndex, name);
+                vnodes_[j] = new Vnode<Base> (j, tapeIndex, name);
             } else {
                 Vnode<Base>* derivativeOf = vnodes_[tape2New[tapeIndex0]];
-                vnodes_[j] = new Vnode<Base > (j, tapeIndex, derivativeOf, name);
+                vnodes_[j] = new Vnode<Base> (j, tapeIndex, derivativeOf, name);
             }
         }
 
@@ -381,7 +381,7 @@ protected:
                             size_t newVarCount = vnodes_.size() - origTimeDependentCount_;
                             size_t tapeIndex = this->varInfo_.size() + newVarCount;
 
-                            Vnode<Base>* jDiff = new Vnode<Base > (vnodes_.size(), tapeIndex, jj);
+                            Vnode<Base>* jDiff = new Vnode<Base> (vnodes_.size(), tapeIndex, jj);
                             vnodes_.push_back(jDiff);
 
                             if (this->verbosity_ >= Verbosity::High)

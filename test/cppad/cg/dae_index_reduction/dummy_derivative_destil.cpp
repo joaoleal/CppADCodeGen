@@ -116,8 +116,11 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     std::vector<double> normEq(fun->Range(), 1.0);
 
     DummyDerivatives<double> dummyD(fun.get(), daeVar, x, normVar, normEq);
+    dummyD.setAvoidConvertAlg2DifVars(false);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(true);
+    dummyD.setReorder(true);
+    dummyD.setVerbosity(Verbosity::Low);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;

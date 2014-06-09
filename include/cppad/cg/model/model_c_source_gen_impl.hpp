@@ -86,7 +86,7 @@ VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(
                                                                                 const std::string& indepName,
                                                                                 const std::string& tmpName,
                                                                                 const std::string& tmpArrayName) {
-    return new LangCDefaultVariableNameGenerator<Base > (depName, indepName, tmpName, tmpArrayName);
+    return new LangCDefaultVariableNameGenerator<Base> (depName, indepName, tmpName, tmpArrayName);
 }
 
 template<class Base>
@@ -193,7 +193,7 @@ void ModelCSourceGen<Base>::generateInfoSource() {
 
     std::string funcName = _name + "_" + FUNCTION_INFO;
 
-    std::unique_ptr<VariableNameGenerator< Base > > nameGen(createVariableNameGenerator());
+    std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator());
 
     _cache.str("");
     _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"

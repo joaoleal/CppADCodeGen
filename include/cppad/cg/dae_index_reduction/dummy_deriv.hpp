@@ -168,9 +168,23 @@ protected:
      * Dummy derivatives
      */
     std::vector<Vnode<Base>* > dummyD_;
+    /**
+     * Attempt to reduce the total number of equations by performing variable
+     * substitutions
+     */
     bool reduceEquations_;
+    /**
+     * Attempt to generate a semi-explicit DAE by algebraic manipulations
+     */
     bool generateSemiExplicitDae_;
+    /**
+     * Reduce the total number of equations through variable substitutions
+     */
     bool reorder_;
+    /**
+     * 
+     */
+    bool avoidConvertAlg2DifVars_;
 public:
 
     /**
@@ -195,7 +209,8 @@ public:
         diffEqStart_(fun->Range()),
         reduceEquations_(true),
         generateSemiExplicitDae_(false),
-        reorder_(true) {
+        reorder_(true),
+        avoidConvertAlg2DifVars_(true) {
 
         for (Vnode<Base>* jj : this->vnodes_) {
             if (jj->antiDerivative() != nullptr) {
@@ -205,26 +220,62 @@ public:
         }
     }
 
+    inline bool isAvoidConvertAlg2DifVars() const {
+        return avoidConvertAlg2DifVars_;
+    }
+
+    inline void setAvoidConvertAlg2DifVars(bool avoid) {
+        avoidConvertAlg2DifVars_ = avoid;
+    }
+
+    /**
+     * Whether or not to attempt to generate a semi-explicit DAE by performing 
+     * algebraic manipulations.
+     */
     inline bool isGenerateSemiExplicitDae() const {
         return generateSemiExplicitDae_;
     }
 
+    /**
+     * Whether or not to attempt to generate a semi-explicit DAE by performing 
+     * algebraic manipulations.
+     * Warning: The algebraic manipulations may fail to solve equations relative
+     * to the time derivatives.
+     */
     inline void setGenerateSemiExplicitDae(bool generateSemiExplicitDae) {
         generateSemiExplicitDae_ = generateSemiExplicitDae;
     }
 
+    /**
+     * Whether or not the total number of equations is to be reduced  by 
+     * performing variable substitutions.
+     */
     inline bool isReduceEquations() const {
         return reduceEquations_;
     }
 
+    /**
+     * Whether or not to attempt to reduce the total number of equations by 
+     * performing variable substitutions.
+     */
     inline void setReduceEquations(bool reduceEquations) {
         reduceEquations_ = reduceEquations;
     }
 
+    /**
+     * Whether or not variables and equations are to be reordered.
+     */
     inline bool isReorder() const {
         return reorder_;
     }
 
+    /**
+     * Whether or not to reorder variables and equations.
+     * If reordering is  enabled, variables will sorted as:
+     *   {differential vars, algebraic vars, derivative var, itegrated var}.
+     * Equations are sorted as:
+     *   {differential equations, algebraic equations}.
+     */
     inline void setReorder(bool reorder) {
         reorder_ = reorder;
     }
@@ -398,13 +449,15 @@ protected:
             newVarInfo[j->antiDerivative()->tapeIndex()].setDerivative(-1);
         }
 
-        if (this->verbosity_ >= Verbosity::High) {
+        if (this->verbosity_ >= Verbosity::Low) {
             std::cout << "## dummy derivatives:\n";
 
             for (Vnode<Base>* j : dummyD_)
                 std::cout << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
             std::cout << "# \n";
-            Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
+            if (this->verbosity_ >= Verbosity::High) {
+                Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
+            }
         }
 
     }
@@ -1443,8 +1496,35 @@ protected:
         }
 
         std::vector<Vnode<Base>* > newDummies;
-        for (int i = 0; i < work.rows(); i++) {
-            newDummies.push_back(varsLocal[indices(i)]);
+        if (avoidConvertAlg2DifVars_) {
+            // add algebraic first
+            for (int i = 0; newDummies.size() < work.rows() && i < qr.rank(); i++) {
+                Vnode<Base>* v = varsLocal[indices(i)];
+                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
+                size_t tape = v->originalVariable()->tapeIndex();
+                CPPADCG_ASSERT_UNKNOWN(tape < this->varInfo_.size());
+                if (this->varInfo_[tape].getDerivative() < 0) {
+                    // derivative of a variable which was originally algebraic only
+                    newDummies.push_back(v);
+                }
+            }
+            // add remaining
+            for (int i = 0; newDummies.size() < work.rows(); i++) {
+                Vnode<Base>* v = varsLocal[indices(i)];
+                CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
+                size_t tape = v->originalVariable()->tapeIndex();
+                CPPADCG_ASSERT_UNKNOWN(tape < this->varInfo_.size());
+                if (this->varInfo_[tape].getDerivative() >= 0) {
+                    // derivative of a variable which was already differential
+                    newDummies.push_back(v);
+                }
+            }
+
+        } else {
+            // use order provided by the householder column pivoting
+            for (int i = 0; i < work.rows(); i++) {
+                newDummies.push_back(varsLocal[indices(i)]);
+            }
         }
 
         if (this->verbosity_ >= Verbosity::High) {
