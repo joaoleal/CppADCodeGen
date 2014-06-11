@@ -441,7 +441,10 @@ public:
 
                         EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
                         std::vector<size_t>& eq2FreeDep = freeDependents[eq2];
-                        eq2FreeDep.erase(find(eq2FreeDep.begin(), eq2FreeDep.end(), dep2)); // consider using lower_bound instead
+                        auto itFreeDep2 = find(eq2FreeDep.begin(), eq2FreeDep.end(), dep2); // consider using lower_bound instead
+                        CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.end());
+
+                        eq2FreeDep.erase(itFreeDep2);
                     }
 
                     i++;
@@ -457,7 +460,10 @@ public:
                         ritDepi.insert(dep);
 
                         std::vector<size_t>& eqFreeDep = freeDependents[eq];
-                        eqFreeDep.erase(find(eqFreeDep.begin(), eqFreeDep.end(), dep)); // consider using lower_bound instead
+                        auto itFreeDep = find(eqFreeDep.begin(), eqFreeDep.end(), dep); // consider using lower_bound instead
+                        CPPADCG_ASSERT_UNKNOWN(itFreeDep != eqFreeDep.end());
+
+                        eqFreeDep.erase(itFreeDep);
 
                         i++;
                     }
@@ -940,7 +946,7 @@ private:
             return Argument<Base>(*clonesTemporary_.at(id));
         }
 
-        node.increaseUsageCount();
+        handler_.markVisited(node);
 
         id = idCounter_++;
         node.setVariableID(id);
@@ -1082,7 +1088,7 @@ private:
         }
 
         node.setVariableID(0);
-        node.resetUsageCount();
+        node.resetVisitId();
         node.setLastUsageEvaluationOrder(0);
 
         const std::vector<Argument<Base> >& args = node.getArguments();
@@ -1164,7 +1170,7 @@ private:
                     if (visitedEq.find(eq2) != visitedEq.end()) continue;
 
                     size_t dep2RelPos = findRelativeFreeDependentInEq(eq2, dep2);
-                    if (dep2RelPos > depRelPos) { 
+                    if (dep2RelPos > depRelPos) {
                         // this equation has more dependents before
                         // one these other dependents would be better
                         best = std::make_pair(dep2, eq2);

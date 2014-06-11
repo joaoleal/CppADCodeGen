@@ -84,6 +84,7 @@ public:
     std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependents;
 
 private:
+    CodeHandler<Base>* const handler_;
     size_t currDep_;
     size_t minColor_;
     size_t cmpColor_;
@@ -96,8 +97,13 @@ public:
     explicit EquationPattern(const CG<Base>& ref,
                              size_t iDepRef) :
         depRef(ref),
-        depRefIndex(iDepRef) {
-        dependents.insert(iDepRef);
+        depRefIndex(iDepRef),
+        dependents {
+        iDepRef
+    }
+
+    ,
+    handler_(ref.getCodeHandler()) {
     }
 
     EquationPattern(const EquationPattern<Base>& other) = delete;
@@ -143,27 +149,14 @@ public:
         }
     }
 
-    static std::set<const OperationNode<Base>*> findOperationsUsingIndependents(OperationNode<Base>& node) {
+    std::set<const OperationNode<Base>*> findOperationsUsingIndependents(OperationNode<Base>& node) const {
         std::set<const OperationNode<Base>*> ops;
 
-        clearUsageCount(&node); // reset clear usage count
+        handler_->startNewOperationTreeVisit();
 
         findOperationsWithIndeps(node, ops);
 
         return ops;
-    }
-
-    static inline void clearUsageCount(OperationNode<Base>* node) {
-        if (node == nullptr || node->getUsageCount() == 0)
-            return;
-
-        node->resetUsageCount();
-
-        const std::vector<Argument<Base> >& args = node->getArguments();
-        size_t size = args.size();
-        for (size_t a = 0; a < size; a++) {
-            clearUsageCount(args[a].getOperation());
-        }
     }
 
     static inline void uncolor(OperationNode<Base>* node) {
@@ -501,11 +494,11 @@ private:
         return indexedDependentPath;
     }
 
-    static void findOperationsWithIndeps(OperationNode<Base>& node, std::set<const OperationNode<Base>*>& ops) {
-        if (node.getUsageCount() > 0)
+    void findOperationsWithIndeps(OperationNode<Base>& node, std::set<const OperationNode<Base>*>& ops) const {
+        if (handler_->isVisited(node))
             return; // been here before
 
-        node.increaseUsageCount();
+        handler_->markVisited(node);
 
         const std::vector<Argument<Base> >& args = node.getArguments();
         size_t size = args.size();

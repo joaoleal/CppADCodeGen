@@ -36,14 +36,14 @@ private:
     // variables and possibly for the 1st assignment of a dependent variable)
     std::vector<Argument<Base> > arguments_;
     // variable ID that was altered/assigned in this source code
-    // (zero means that no variable is assigned)
+    // (zero means that no left-hand variable is assigned)
     size_t var_id_;
     //
     size_t evaluation_order_;
     // the total number of times the result of this operation is used
     size_t total_use_count_;
-    // the number of times the result of this operation has been used
-    size_t use_count_;
+    // the ID of the last visit to this node
+    size_t last_visit_;
     // the last source code order in the call graph that uses the result of
     // this operation as an argument
     size_t last_usage_order_;
@@ -53,12 +53,25 @@ private:
     std::string* name_;
 public:
 
+    inline OperationNode(const OperationNode& orig) :
+        operation_(orig.operation_),
+        info_(orig.info_),
+        arguments_(orig.arguments_),
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        last_visit_(0),
+        last_usage_order_(orig.last_usage_order_),
+        color_(orig.color_),
+        name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
+    }
+
     inline OperationNode(CGOpCode op) :
         operation_(op),
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
-        use_count_(0),
+        last_visit_(0),
         last_usage_order_(0),
         color_(0),
         name_(nullptr) {
@@ -75,7 +88,7 @@ public:
     var_id_(0),
     evaluation_order_(0),
     total_use_count_(0),
-    use_count_(0),
+    last_visit_(0),
     last_usage_order_(0),
     color_(0),
     name_(NULL) {
@@ -88,7 +101,7 @@ public:
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
-        use_count_(0),
+        last_visit_(0),
         last_usage_order_(0),
         color_(0),
         name_(nullptr) {
@@ -103,7 +116,7 @@ public:
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
-        use_count_(0),
+        last_visit_(0),
         last_usage_order_(0),
         color_(0),
         name_(nullptr) {
@@ -118,7 +131,7 @@ public:
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
-        use_count_(0),
+        last_visit_(0),
         last_usage_order_(0),
         color_(0),
         name_(nullptr) {
@@ -218,21 +231,20 @@ public:
     }
 
     /**
-     * Provides the number of times the result of this operation has been 
-     * used as an argument for another operation.
+     * Provides the ID of the last visitation to this node.
      * 
-     * @return the current usage count
+     * @return the last visitation ID
      */
-    inline size_t getUsageCount() const {
-        return use_count_;
+    inline size_t getLastVisitId() const {
+        return last_visit_;
     }
 
-    inline void increaseUsageCount() {
-        use_count_++;
+    inline void setVisitId(size_t visit) {
+        last_visit_ = visit;
     }
 
-    inline void resetUsageCount() {
-        use_count_ = 0;
+    inline void resetVisitId() {
+        last_visit_ = 0;
     }
 
     inline size_t getLastUsageEvaluationOrder() const {
@@ -258,7 +270,7 @@ public:
 
     inline void resetHandlerCounters() {
         total_use_count_ = 0;
-        use_count_ = 0;
+        last_visit_ = 0;
         var_id_ = 0;
         evaluation_order_ = 0;
         last_usage_order_ = 0;
@@ -295,21 +307,6 @@ public:
 private:
 
     static inline std::set<CGOpCode> makeCustomNodeClassesSet();
-
-    OperationNode(const OperationNode& orig) :
-        operation_(orig.operation_),
-        info_(orig.info_),
-        arguments_(orig.arguments_),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        use_count_(0),
-        last_usage_order_(orig.last_usage_order_),
-        color_(orig.color_),
-        name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
-    }
-
-    friend class CodeHandler<Base>;
 
 };
 

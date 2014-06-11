@@ -74,7 +74,7 @@ inline void CodeHandler<Base>::findPaths(std::vector<OperationPathNode<Base> >& 
     if (args.empty())
         return; // nothing to look in
 
-    if (currNode->getUsageCount() > 0) {
+    if (isVisited(*currNode)) {
         // already searched inside this node
         // any match would have been saved in found
         std::vector<SourceCodePath> pathsFromNode = findPathsFromNode(found, *currNode);
@@ -87,7 +87,7 @@ inline void CodeHandler<Base>::findPaths(std::vector<OperationPathNode<Base> >& 
 
     } else {
         // not visited yet
-        currNode->increaseUsageCount(); // mark node as visited
+        markVisited(*currNode); // mark node as visited
 
         size_t size = args.size();
         for (size_t i = 0; i < size; ++i) {

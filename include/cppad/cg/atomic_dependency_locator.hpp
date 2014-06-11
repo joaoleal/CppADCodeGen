@@ -24,6 +24,7 @@ private:
     ADFun<CG<Base> >& fun_;
     std::map<size_t, std::set<size_t> > atomicIndeps_;
     std::map<OperationNode<Base>*, std::set<size_t> > indeps_;
+    CodeHandler<Base> handler_;
 public:
 
     inline AtomicDependencyLocator(ADFun<CG<Base> >& fun) :
@@ -40,10 +41,8 @@ public:
         size_t m = fun_.Range();
         size_t n = fun_.Domain();
 
-        CodeHandler<Base> handler;
-
         vector<CG<Base> > x(n);
-        handler.makeVariables(x);
+        handler_.makeVariables(x);
         for (size_t j = 0; j < n; j++)
             x[j].getOperationNode()->setColor(j);
 
@@ -69,12 +68,12 @@ private:
             return indeps;
         }
 
-        if (node->getUsageCount() > 0) {
+        if (handler_.isVisited(*node)) {
             // been here before
             return indeps_.at(node);
         }
 
-        node->increaseUsageCount();
+        handler_.markVisited(*node);
 
         std::set<size_t> indeps;
         const std::vector<Argument<Base> >& args = node->getArguments();

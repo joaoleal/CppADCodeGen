@@ -30,6 +30,8 @@ public:
     typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     typedef std::vector<ScopePathElement<Base> > ScopePath;
 protected:
+    // counter used to determine visitation IDs for the operation tree
+    size_t _idVisit;
     // counter used to generate variable IDs
     size_t _idCount;
     // counter used to generate array variable IDs
@@ -131,6 +133,7 @@ protected:
 public:
 
     CodeHandler(size_t varCount = 50) :
+        _idVisit(1),
         _idCount(1),
         _idArrayCount(1),
         _idSparseArrayCount(1),
@@ -245,6 +248,22 @@ public:
         _zeroDependents = zeroDependents;
     }
 
+    inline size_t getOperationTreeVisitId() const {
+        return _idVisit;
+    }
+
+    inline void startNewOperationTreeVisit() {
+        _idVisit++;
+    }
+
+    inline bool isVisited(const OperationNode<Base>& node) const {
+        return node.getLastVisitId() == _idVisit;
+    }
+
+    inline void markVisited(OperationNode<Base>& node) const {
+        node.setVisitId(_idVisit);
+    }
+    
     /**
      * Provides the name used by an atomic function with a given ID.
      * 
@@ -443,22 +462,24 @@ public:
          */
         _scopedVariableOrder.reserve(std::max(size_t(1), _scopes.size()) + 10); // some additional scopes might still be added
 
+        startNewOperationTreeVisit();
+
         for (size_t i = 0; i < m; i++) {
             CG<Base>& var = dependent[i];
             if (var.getOperationNode() != nullptr) {
                 OperationNode<Base>& code = *var.getOperationNode();
-                if (code.getUsageCount() == 0) {
+                if (!isVisited(code)) {
                     // dependencies not visited yet
                     checkVariableCreation(code);
 
                     // make sure new temporary variables are NOT created for
                     // the independent variables and that a dependency did
                     // not use it first
-                    if ((code.getVariableID() == 0 || !isIndependent(code)) && code.getUsageCount() == 0) {
+                    if ((code.getVariableID() == 0 || !isIndependent(code)) && !isVisited(code)) {
                         addToEvaluationQueue(code);
                     }
                 }
-                code.increaseUsageCount();
+                markVisited(code);
             }
         }
 
@@ -837,7 +858,7 @@ protected:
             /**
              * loop arguments
              */
-            for (const Argument<Base>& it : code.arguments_) {
+            for (const Argument<Base>& it : code.getArguments()) {
                 if (it.getOperation() != nullptr) {
                     markCodeBlockUsed(*it.getOperation());
                 }
@@ -1274,7 +1295,7 @@ protected:
     }
 
     /**
-     * Attempt to reduce the number of ifs when there consecutive ifs with
+     * Attempt to reduce the number of ifs when there are consecutive ifs with
      * the same condition
      */
     inline void optimizeIfs() {
@@ -1322,6 +1343,8 @@ protected:
                     size_t ifScope1 = startIf1->getColor();
                     std::vector<OperationNode<Base> *>& vorderIf = _scopedVariableOrder[ifScope];
                     std::vector<OperationNode<Base> *>& vorderIf1 = _scopedVariableOrder[ifScope1];
+
+                    startNewOperationTreeVisit();
 
                     // break cycles caused by dependencies on the previous if
                     for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
@@ -1375,8 +1398,6 @@ protected:
      * Removes cyclic dependencies when 'ifs' are merged together.
      * Relative variable order must have already been defined.
      * 
-     * @todo: avoid visiting the same node!
-     * 
      * @param node the node being visited
      * @param scope the scope where the cyclic dependency could appear (or scopes inside it)
      * @param endIf the dependency to remove
@@ -1384,8 +1405,10 @@ protected:
     inline void breakCyclicDependency(OperationNode<Base>* node,
                                       size_t scope,
                                       OperationNode<Base>* endIf) {
-        if (node == nullptr)
+        if (node == nullptr || isVisited(*node))
             return;
+        
+        markVisited(*node);
 
         CGOpCode op = node->getOperationType();
         std::vector<Argument<Base> >& args = node->getArguments();
@@ -1448,7 +1471,7 @@ protected:
      * 
      **********************************************************************/
     virtual void checkVariableCreation(OperationNode<Base>& code) {
-        const std::vector<Argument<Base> >& args = code.arguments_;
+        const std::vector<Argument<Base> >& args = code.getArguments();
 
         size_t aSize = args.size();
         for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
@@ -1459,7 +1482,7 @@ protected:
             OperationNode<Base>& arg = *args[argIndex].getOperation();
             CGOpCode aType = arg.getOperationType();
 
-            if (arg.getUsageCount() == 0) {
+            if (!isVisited(arg)) {
                 // dependencies not visited yet
                 checkVariableCreation(arg);
 
@@ -1573,7 +1596,7 @@ protected:
                 }
             }
 
-            arg.increaseUsageCount();
+            markVisited(arg);
 
         }
 
@@ -1608,16 +1631,16 @@ protected:
         /**
          * determine the last line where each temporary variable is used
          */
-        resetUsageCount();
+        startNewOperationTreeVisit();
 
         for (size_t i = 0; i < dependent.size(); i++) {
             OperationNode<Base>* node = dependent[i].getOperationNode();
             if (node != nullptr) {
-                if (node->use_count_ == 0) {
+                if (!isVisited(*node)) {
                     // dependencies not visited yet
                     determineLastTempVarUsage(*node);
                 }
-                node->increaseUsageCount();
+                markVisited(*node);
             }
         }
 
@@ -1702,18 +1725,16 @@ protected:
         /**
          * count variable usage
          */
-        const std::vector<Argument<Base> >& args = code.arguments_;
-
-        for (const Argument<Base>& it : args) {
+        for (const Argument<Base>& it : code.getArguments()) {
             if (it.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *it.getOperation();
 
-                if (arg.use_count_ == 0) {
+                if (!isVisited(arg)) {
                     // dependencies not visited yet
                     determineLastTempVarUsage(arg);
                 }
 
-                arg.increaseUsageCount();
+                markVisited(arg);
 
                 size_t order = code.getEvaluationOrder();
                 OperationNode<Base>* aa = getOperationFromAlias(arg); // follow alias!
@@ -1756,19 +1777,13 @@ protected:
 
     }
 
-    inline void resetUsageCount() {
-        for (OperationNode<Base>* block : _codeBlocks) {
-            block->use_count_ = 0;
-        }
-    }
-
     /**
      * Defines the evaluation order for the code fragments that do not
      * create variables
      * @param code The operation just added to the evaluation order
      */
     inline void dependentAdded2EvaluationQueue(OperationNode<Base>& code) {
-        for (const Argument<Base>& a : code.arguments_) {
+        for (const Argument<Base>& a : code.getArguments()) {
             if (a.getOperation() != nullptr) {
                 OperationNode<Base>& node = *a.getOperation();
                 if (node.getEvaluationOrder() == 0) {

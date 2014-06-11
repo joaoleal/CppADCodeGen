@@ -65,6 +65,7 @@ private:
     typedef std::map<size_t, Eq2totalOps2validDepsType> MaxOps2eq2totalOps2validDepsType;
 
 private:
+    CodeHandler<Base>* handler_;
     const std::vector<std::set<size_t> >& relatedDepCandidates_;
     std::vector<CGBase> dependents_; // a copy
     std::vector<CGBase>& independents_;
@@ -104,6 +105,7 @@ public:
     DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
                             const std::vector<CGBase>& dependents,
                             std::vector<CGBase>& independents) :
+        handler_(nullptr),
         relatedDepCandidates_(relatedDepCandidates),
         dependents_(dependents),
         independents_(independents),
@@ -111,6 +113,7 @@ public:
         color_(0) {
         CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0);
         CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr);
+        handler_ = independents_[0].getCodeHandler();
         equations_.reserve(relatedDepCandidates_.size());
     }
 
@@ -182,8 +185,8 @@ private:
                      * since both operations which use indexed independents
                      * have no operation, consequently an alias is used
                      */
-                    CodeHandler<Base>* handler = dependents_[iDep].getCodeHandler();
-                    dependents_[iDep] = handler->createCG(new OperationNode<Base>(CGOpCode::Alias, *node));
+                    CPPADCG_ASSERT_UNKNOWN(handler_ == dependents_[iDep].getCodeHandler());
+                    dependents_[iDep] = handler_->createCG(new OperationNode<Base>(CGOpCode::Alias, *node));
                 }
             }
         }
@@ -233,6 +236,8 @@ private:
              * Find shared operations with the previous equation patterns
              */
             if (e > 0) {
+                handler_->startNewOperationTreeVisit();
+                
                 for (size_t depIt : eq->dependents) {
                     findSharedTemporaries(dependents_[depIt], depIt); // a color is used to mark indexed paths
                 }
@@ -243,7 +248,6 @@ private:
                 for (size_t depIt : eq->dependents) {
                     OperationNode<Base>* node = dependents_[depIt].getOperationNode();
                     EquationPattern<Base>::uncolor(node); // must uncolor
-                    EquationPattern<Base>::clearUsageCount(node); // must reset usage count
                 }
             }
 
@@ -685,7 +689,7 @@ private:
      * @return The new tape without loop equations
      */
     virtual LoopFreeModel<Base>* createNewTape() {
-        CodeHandler<Base>& origHandler = *independents_[0].getCodeHandler();
+        CPPADCG_ASSERT_UNKNOWN(handler_ == independents_[0].getCodeHandler());
 
         size_t m = dependents_.size();
         std::vector<bool> inLoop(m, false);
@@ -745,16 +749,16 @@ private:
          */
         for (const auto& itTmp : origTemp2Index_) {
             size_t k = itTmp.second;
-            nonLoopDeps[nonLoopEq + k] = origHandler.createCG(Argument<Base>(*itTmp.first));
+            nonLoopDeps[nonLoopEq + k] = handler_->createCG(Argument<Base>(*itTmp.first));
         }
 
         /**
          * Generate the new tape by going again through the operations 
          */
-        Evaluator<Base, CGBase> evaluator(origHandler, nonLoopDeps);
+        Evaluator<Base, CGBase> evaluator(*handler_, nonLoopDeps);
 
         // set atomic functions
-        const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
+        const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = handler_->getAtomicFunctions();
         std::map<size_t, atomic_base<CGBase>* > atomics;
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator.addAtomicFunctions(atomics);
@@ -865,12 +869,12 @@ private:
         if (node == nullptr)
             return false; // nothing to do
 
-        if (node->getUsageCount() > 0) {
+        if (handler_->isVisited(*node)) {
             opCount++; // this operation
             return node->getColor() == color_;
         }
 
-        node->increaseUsageCount();
+        handler_->markVisited(*node);
 
         bool indexedOperation = false;
 
@@ -1060,8 +1064,7 @@ private:
         using namespace std;
 
         // must have indexed independents at the same locations in all equations
-        const set<const OperationNode<Base>*> opWithIndepArgs = EquationPattern<Base>::findOperationsUsingIndependents(sharedTemp);
-        EquationPattern<Base>::clearUsageCount(&sharedTemp); // must reset usage count
+        const set<const OperationNode<Base>*> opWithIndepArgs = eq1.findOperationsUsingIndependents(sharedTemp);
 
         // must have indexed independents at the same locations in both equations
         for (const OperationNode<Base>* op : opWithIndepArgs) {

@@ -70,7 +70,7 @@ enum class CGOpCode {
     LoopIndexedTmp, // indexed output for a temporary variable from a loop
     LoopEnd, // endfor
     TmpDcl, // marks the beginning of the use of a temporary variable across several scopes (used by LoopIndexedTmp)
-    Tmp, // reference to a temporary variable defined by CGTmpDclOp
+    Tmp, // reference to a temporary variable defined by TmpDcl
     IndexCondExpr, // a condition expression which returns a boolean
     StartIf, // the start of an if statement
     ElseIf, // else if()
