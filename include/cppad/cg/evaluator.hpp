@@ -21,8 +21,8 @@ namespace cg {
 /**
  * Utility class used for some code transformation
  */
-template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut> >
-class Evaluator {
+template<class ScalarIn, class ScalarOut, class ActiveOut>
+class EvaluatorBase {
 protected:
     const CodeHandler<ScalarIn>& handler_;
     const std::vector<CG<ScalarIn> >& dep_;
@@ -38,8 +38,8 @@ public:
      * @param dep Dependent variable vector (all variables must belong to
      *             the same code handler)
      */
-    Evaluator(const CodeHandler<ScalarIn>& handler,
-              const std::vector<CG<ScalarIn> >& dep) :
+    EvaluatorBase(const CodeHandler<ScalarIn>& handler,
+                  const std::vector<CG<ScalarIn> >& dep) :
         handler_(handler),
         dep_(dep),
         indep_(nullptr) {
@@ -97,11 +97,11 @@ public:
         return newDep;
     }
 
-    inline virtual ~Evaluator() {
+    inline virtual ~EvaluatorBase() {
         clear();
     }
 
-private:
+protected:
 
     /**
      * clean-up
@@ -317,7 +317,54 @@ private:
         return *resultArray;
     }
 
-    inline void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) {
+    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) {
+        throw CGException("Evaluator is unable to handle atomic functions for these variable types");
+    }
+
+};
+
+/**
+ * 
+ */
+template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut> >
+class Evaluator : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> {
+public:
+
+    inline Evaluator(const CodeHandler<ScalarIn>& handler,
+                     const std::vector<CG<ScalarIn> >& dep) :
+        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
+    }
+
+    inline virtual ~Evaluator() {
+    }
+};
+
+/**
+ * 
+ */
+template<class ScalarIn, class ScalarOut>
+class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > {
+public:
+    typedef CppAD::AD<ScalarOut> ActiveOut;
+protected:
+    typedef EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > BaseClass;
+    using BaseClass::evalsAtomic_;
+    using BaseClass::atomicFunctions_;
+    using BaseClass::handler_;
+    using BaseClass::evalArrayCreationOperation;
+public:
+
+    inline Evaluator(const CodeHandler<ScalarIn>& handler,
+                     const std::vector<CG<ScalarIn> >& dep) :
+        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
+    }
+
+    inline virtual ~Evaluator() {
+    }
+
+protected:
+
+    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) override {
         using CppAD::vector;
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
@@ -363,7 +410,6 @@ private:
 
         evalsAtomic_.insert(&node);
     }
-
 };
 
 } // END cg namespace

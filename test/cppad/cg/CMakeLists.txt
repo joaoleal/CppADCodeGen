@@ -27,6 +27,7 @@ ADD_SUBDIRECTORY(operations)
 ADD_SUBDIRECTORY(models)
 ADD_SUBDIRECTORY(dynamiclib)
 ADD_SUBDIRECTORY(patterns)
+ADD_SUBDIRECTORY(evaluator)
 ADD_SUBDIRECTORY(solve)
 ADD_SUBDIRECTORY(dae_index_reduction)
 
