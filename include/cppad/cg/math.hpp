@@ -45,6 +45,11 @@ CPPAD_CG_CREATE_OPERATION(sqrt, Sqrt)
 CPPAD_CG_CREATE_OPERATION(tan, Tan)
 CPPAD_CG_CREATE_OPERATION(tanh, Tanh)
 
+template <class Base>
+inline cg::CG<Base> log10(const cg::CG<Base> &x) {
+    return CppAD::log(x) / CppAD::log(Base(10));
+}
+
 } // END CppAD namespace
 
 #endif
