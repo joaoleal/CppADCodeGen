@@ -169,7 +169,7 @@ class Enode;
 template<class Base>
 class Vnode;
 
-template<class Base, class Base2>
+template<class ScalarIn, class ScalarOut, class ActiveOut>
 class Evaluator;
 
 /***************************************************************************

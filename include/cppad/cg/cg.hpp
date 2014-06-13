@@ -124,9 +124,6 @@ protected:
     friend class Loop<Base>;
     friend class LoopModel<Base>;
 
-    template<class Base1, class Base2>
-    friend class Evaluator;
-
     /**
      * arithmetic binary operators
      */

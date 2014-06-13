@@ -21,16 +21,16 @@ namespace cg {
 /**
  * Utility class used for some code transformation
  */
-template<class Base, class BaseOut>
+template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut> >
 class Evaluator {
 protected:
-    const CodeHandler<Base>& handler_;
-    const std::vector<CG<Base> > dep_;
-    const std::vector<CppAD::AD<BaseOut > >* indep_;
-    std::map<OperationNode<Base>*, CppAD::AD<BaseOut> > evals_;
-    std::map<OperationNode<Base>*, CppAD::vector<CppAD::AD<BaseOut> >* > evalsArrays_;
-    std::set<OperationNode<Base>*> evalsAtomic_;
-    std::map<size_t, atomic_base<BaseOut>* > atomicFunctions_;
+    const CodeHandler<ScalarIn>& handler_;
+    const std::vector<CG<ScalarIn> >& dep_;
+    const std::vector<ActiveOut>* indep_;
+    std::map<OperationNode<ScalarIn>*, ActiveOut> evals_;
+    std::map<OperationNode<ScalarIn>*, CppAD::vector<ActiveOut>* > evalsArrays_;
+    std::set<OperationNode<ScalarIn>*> evalsAtomic_;
+    std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
 public:
 
     /**
@@ -38,7 +38,8 @@ public:
      * @param dep Dependent variable vector (all variables must belong to
      *             the same code handler)
      */
-    Evaluator(const CodeHandler<Base>& handler, const std::vector<CG<Base> >& dep) :
+    Evaluator(const CodeHandler<ScalarIn>& handler,
+              const std::vector<CG<ScalarIn> >& dep) :
         handler_(handler),
         dep_(dep),
         indep_(nullptr) {
@@ -52,15 +53,15 @@ public:
      * @return True if an atomic function with the same ID was already
      *         defined, false otherwise.
      */
-    virtual bool addAtomicFunction(size_t id, atomic_base<BaseOut>& atomic) {
+    virtual bool addAtomicFunction(size_t id, atomic_base<ScalarOut>& atomic) {
         bool exists = atomicFunctions_.find(id) != atomicFunctions_.end();
         atomicFunctions_[id] = &atomic;
         return exists;
     }
 
-    virtual void addAtomicFunctions(const std::map<size_t, atomic_base<BaseOut>* >& atomics) {
+    virtual void addAtomicFunctions(const std::map<size_t, atomic_base<ScalarOut>* >& atomics) {
         for (const auto& it : atomics) {
-            atomic_base<BaseOut>* atomic = it.second;
+            atomic_base<ScalarOut>* atomic = it.second;
             if (atomic != nullptr) {
                 atomicFunctions_[it.first] = atomic;
             }
@@ -74,7 +75,7 @@ public:
      * @param indep The new independent variables.
      * @return The dependent variable values
      */
-    inline std::vector<CppAD::AD<BaseOut> > evaluate(const std::vector<CppAD::AD<BaseOut> >& indep) throw (CGException) {
+    inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indep) throw (CGException) {
         if (handler_.getIndependentVariableSize() != indep.size()) {
             std::stringstream ss;
             ss << "Invalid independent variable size. Expected " << handler_.getIndependentVariableSize() << " but got " << indep.size() << ".";
@@ -85,7 +86,7 @@ public:
 
         clear(); // clean-up
 
-        std::vector<CppAD::AD<BaseOut> > newDep(dep_.size());
+        std::vector<ActiveOut> newDep(dep_.size());
 
         for (size_t i = 0; i < dep_.size(); i++) {
             newDep[i] = evalCG(dep_[i]);
@@ -114,25 +115,25 @@ private:
         evalsArrays_.clear();
     }
 
-    inline CppAD::AD<BaseOut> evalCG(const CG<Base>& dep) throw (CGException) {
+    inline ActiveOut evalCG(const CG<ScalarIn>& dep) throw (CGException) {
         if (dep.isParameter()) {
             // parameter
-            return CppAD::AD<BaseOut> (dep.getValue());
+            return ActiveOut(dep.getValue());
         } else {
             return evalOperations(*dep.getOperationNode());
         }
     }
 
-    inline CppAD::AD<BaseOut> evalArg(const Argument<Base>& arg) throw (CGException) {
+    inline ActiveOut evalArg(const Argument<ScalarIn>& arg) throw (CGException) {
         if (arg.getOperation() != nullptr) {
             return evalOperations(*arg.getOperation());
         } else {
             // parameter
-            return AD<BaseOut> (*arg.getParameter());
+            return ActiveOut(*arg.getParameter());
         }
     }
 
-    inline CppAD::AD<BaseOut> evalOperations(OperationNode<Base>& node) throw (CGException) {
+    inline ActiveOut evalOperations(OperationNode<ScalarIn>& node) throw (CGException) {
         using CppAD::vector;
 
         // check if this node was previously determined
@@ -142,9 +143,9 @@ private:
         }
 
         // first evaluation of this node
-        const std::vector<Argument<Base> >& args = node.getArguments();
+        const std::vector<Argument<ScalarIn> >& args = node.getArguments();
         const CGOpCode code = node.getOperationType();
-        AD<BaseOut> result;
+        ActiveOut result;
         switch (code) {
             case CGOpCode::Assign:
                 CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()");
@@ -175,7 +176,7 @@ private:
                 CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
                 CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
                 size_t index = info[0];
-                vector<AD<BaseOut> >& array = evalArrayCreationOperation(*args[0].getOperation()); // array creation
+                vector<ActiveOut>& array = evalArrayCreationOperation(*args[0].getOperation()); // array creation
                 evalAtomicOperation(*args[1].getOperation()); // atomic operation
 
                 result = array[index];
@@ -197,13 +198,7 @@ private:
                 break;
             case CGOpCode::ComLe: // result = left <= right? trueCase: falseCase
                 CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )");
-            {
-                AD<BaseOut> a0 = evalArg(args[0]);
-                AD<BaseOut> a1 = evalArg(args[1]);
-                AD<BaseOut> a2 = evalArg(args[2]);
-                AD<BaseOut> a3 = evalArg(args[3]);
-                result = CondExpOp(CompareLe, a0, a1, a2, a3);
-            }
+                result = CondExpOp(CompareLe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
                 break;
             case CGOpCode::ComEq: // result = left == right? trueCase: falseCase
                 CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )");
@@ -301,7 +296,7 @@ private:
         return result;
     }
 
-    inline CppAD::vector<CppAD::AD<BaseOut> >& evalArrayCreationOperation(OperationNode<Base>& node) throw (CGException) {
+    inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) throw (CGException) {
         using CppAD::vector;
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
@@ -311,8 +306,8 @@ private:
             return *it->second;
         }
 
-        const std::vector<Argument<Base> >& args = node.getArguments();
-        vector<AD<BaseOut> >* resultArray = new vector<AD<BaseOut> >(args.size());
+        const std::vector<Argument<ScalarIn> >& args = node.getArguments();
+        vector<ActiveOut>* resultArray = new vector<ActiveOut>(args.size());
         evalsArrays_[&node] = resultArray;
 
         for (size_t a = 0; a < args.size(); a++) {
@@ -322,7 +317,7 @@ private:
         return *resultArray;
     }
 
-    inline void evalAtomicOperation(OperationNode<Base>& node) throw (CGException) {
+    inline void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) {
         using CppAD::vector;
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
@@ -334,14 +329,14 @@ private:
         }
 
         const std::vector<size_t>& info = node.getInfo();
-        const std::vector<Argument<Base> >& args = node.getArguments();
+        const std::vector<Argument<ScalarIn> >& args = node.getArguments();
         CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for atomic forward mode");
         CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic forward mode");
 
         // find the atomic function
         size_t id = info[0];
-        typename std::map<size_t, atomic_base<BaseOut>* >::const_iterator itaf = atomicFunctions_.find(id);
-        atomic_base<BaseOut>* atomicFunction = nullptr;
+        typename std::map<size_t, atomic_base<ScalarOut>* >::const_iterator itaf = atomicFunctions_.find(id);
+        atomic_base<ScalarOut>* atomicFunction = nullptr;
         if (itaf != atomicFunctions_.end()) {
             atomicFunction = itaf->second;
         }
@@ -361,8 +356,8 @@ private:
         if (p != 0) {
             throw CGException("Evaluator can only handle zero forward mode for atomic functions");
         }
-        const vector<AD<BaseOut> >& ax = evalArrayCreationOperation(*args[0].getOperation());
-        vector<AD<BaseOut> >& ay = evalArrayCreationOperation(*args[1].getOperation());
+        const vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
+        vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
 
         (*atomicFunction)(ax, ay);
 
