@@ -29,3 +29,7 @@ add_cppadcg_test(evaluator_sqrt.cpp)
 add_cppadcg_test(evaluator_sub.cpp)
 add_cppadcg_test(evaluator_tanh.cpp)
 add_cppadcg_test(evaluator_unary.cpp)
+
+IF(ADOLC_FOUND)
+    ADD_SUBDIRECTORY(adolc)
+ENDIF()

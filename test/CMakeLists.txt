@@ -166,10 +166,10 @@ ENDFUNCTION()
 ################################################################################
 OPTION(USE_VALGRIND "Use valgrind in tests" ON)
 
-IF(USE_VALGRIND)
+IF(${USE_VALGRIND})
     FIND_PACKAGE(Valgrind)
 
-    IF(VALGRIND_FOUND)
+    IF(${VALGRIND_FOUND})
         SET(GTEST_MEMORYCHECK_COMMAND "${VALGRIND_EXECUTABLE}")
         MESSAGE(STATUS "Valgrind found")
     ELSE()
