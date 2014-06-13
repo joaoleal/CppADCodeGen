@@ -73,7 +73,7 @@ protected:
 
         ASSERT_EQ(yNew.size(), yOrig.size());
         for (size_t i = 0; i < yOrig.size(); i++) {
-            ASSERT_DOUBLE_EQ(rhsOut[i], yOrig[i].getValue());
+            ASSERT_NEAR(rhsOut[i], yOrig[i].getValue(), std::numeric_limits<Base>::epsilon()*100);
         }
 
         // evaluate the tape
@@ -85,7 +85,7 @@ protected:
 
         ASSERT_EQ(yBase.size(), yOrig.size());
         for (size_t i = 0; i < yOrig.size(); i++) {
-            ASSERT_DOUBLE_EQ(yBase[i], yOrig[i].getValue());
+            ASSERT_NEAR(yBase[i], yOrig[i].getValue(), std::numeric_limits<Base>::epsilon()*100);
         }
     }
 
