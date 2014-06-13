@@ -18,7 +18,7 @@
 namespace CppAD {
 
 template <class Base>
-inline cg::CG<Base> pow(const cg::CG<Base> &x, const cg::CG<Base> &y) {
+inline cg::CG<Base> pow(const cg::CG<Base>& x, const cg::CG<Base>& y) {
     using namespace CppAD::cg;
 
     if (x.isParameter() && y.isParameter()) {
@@ -45,17 +45,17 @@ inline cg::CG<Base> pow(const cg::CG<Base> &x, const cg::CG<Base> &y) {
 }
 
 template <class Base>
-inline cg::CG<Base> pow(const Base &x, const cg::CG<Base> &y) {
+inline cg::CG<Base> pow(const Base& x, const cg::CG<Base>& y) {
     return pow(cg::CG<Base>(x), y);
 }
 
 template <class Base>
-inline cg::CG<Base> pow(const cg::CG<Base> &x, const Base &y) {
-    return pow(cg::CG<Base>(x), y);
+inline cg::CG<Base> pow(const cg::CG<Base>& x, const Base& y) {
+    return pow(x, cg::CG<Base>(y));
 }
 
 template <class Base>
-inline cg::CG<Base> sign(const cg::CG<Base> &x) {
+inline cg::CG<Base> sign(const cg::CG<Base>& x) {
     using namespace CppAD::cg;
 
     if (x.isParameter()) {
