@@ -19,16 +19,18 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Utility class used for some code transformation
+ * Utility class used for some code transformation.
+ * 
+ * The color field of Operation nodes is used.
  */
 template<class ScalarIn, class ScalarOut, class ActiveOut>
 class EvaluatorBase {
 protected:
-    const CodeHandler<ScalarIn>& handler_;
+    CodeHandler<ScalarIn>& handler_;
     const std::vector<CG<ScalarIn> >& dep_;
     const std::vector<ActiveOut>* indep_;
-    std::map<OperationNode<ScalarIn>*, ActiveOut> evals_;
-    std::map<OperationNode<ScalarIn>*, CppAD::vector<ActiveOut>* > evalsArrays_;
+    std::deque<ActiveOut*> evals_;
+    std::deque<CppAD::vector<ActiveOut>* > evalsArrays_;
     std::set<OperationNode<ScalarIn>*> evalsAtomic_;
     std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
 public:
@@ -38,7 +40,7 @@ public:
      * @param dep Dependent variable vector (all variables must belong to
      *             the same code handler)
      */
-    EvaluatorBase(const CodeHandler<ScalarIn>& handler,
+    EvaluatorBase(CodeHandler<ScalarIn>& handler,
                   const std::vector<CG<ScalarIn> >& dep) :
         handler_(handler),
         dep_(dep),
@@ -86,6 +88,8 @@ public:
 
         clear(); // clean-up
 
+        handler_.startNewOperationTreeVisit();
+
         std::vector<ActiveOut> newDep(dep_.size());
 
         for (size_t i = 0; i < dep_.size(); i++) {
@@ -107,10 +111,13 @@ protected:
      * clean-up
      */
     inline void clear() {
+        for (const ActiveOut* it : evals_) {
+            delete it;
+        }
         evals_.clear();
 
-        for (const auto& it : evalsArrays_) {
-            delete it.second;
+        for (const CppAD::vector<ActiveOut>* it : evalsArrays_) {
+            delete it;
         }
         evalsArrays_.clear();
     }
@@ -133,13 +140,12 @@ protected:
         }
     }
 
-    inline ActiveOut evalOperations(OperationNode<ScalarIn>& node) throw (CGException) {
+    inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) throw (CGException) {
         using CppAD::vector;
 
         // check if this node was previously determined
-        const auto it = evals_.find(&node);
-        if (it != evals_.end()) {
-            return it->second;
+        if (handler_.isVisited(node)) {
+            return *evals_[node.getColor()];
         }
 
         // first evaluation of this node
@@ -291,9 +297,13 @@ protected:
             }
         }
 
-        evals_[&node] = result;
+        // save it for reuse
+        node.setColor(evals_.size());
+        handler_.markVisited(node);
+        ActiveOut* resultPtr = new ActiveOut(result);
+        evals_.push_back(resultPtr);
 
-        return result;
+        return *resultPtr;
     }
 
     inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) throw (CGException) {
@@ -301,15 +311,20 @@ protected:
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
 
-        const auto it = evalsArrays_.find(&node);
-        if (it != evalsArrays_.end()) {
-            return *it->second;
+        // check if this array node was previously determined
+        if (handler_.isVisited(node)) {
+            return *evalsArrays_[node.getColor()];
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
         vector<ActiveOut>* resultArray = new vector<ActiveOut>(args.size());
-        evalsArrays_[&node] = resultArray;
 
+        // save it for reuse
+        node.setColor(evalsArrays_.size());
+        handler_.markVisited(node);
+        evalsArrays_.push_back(resultArray);
+
+        // define its elements
         for (size_t a = 0; a < args.size(); a++) {
             (*resultArray)[a] = evalArg(args[a]);
         }
@@ -330,7 +345,7 @@ template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut>
 class Evaluator : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> {
 public:
 
-    inline Evaluator(const CodeHandler<ScalarIn>& handler,
+    inline Evaluator(CodeHandler<ScalarIn>& handler,
                      const std::vector<CG<ScalarIn> >& dep) :
         EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
     }
@@ -354,7 +369,7 @@ protected:
     using BaseClass::evalArrayCreationOperation;
 public:
 
-    inline Evaluator(const CodeHandler<ScalarIn>& handler,
+    inline Evaluator(CodeHandler<ScalarIn>& handler,
                      const std::vector<CG<ScalarIn> >& dep) :
         EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
     }

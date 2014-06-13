@@ -32,6 +32,7 @@
 #include <list>
 #include <map>
 #include <vector>
+#include <deque>
 #include <forward_list>
 #include <set>
 #include <stddef.h>
