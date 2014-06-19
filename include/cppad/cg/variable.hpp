@@ -52,12 +52,12 @@ inline void CG<Base>::setValue(const Base& b) {
 }
 
 template<class Base>
-inline bool CG<Base>::IdenticalZero() const throw (CGException) {
+inline bool CG<Base>::isIdenticalZero() const throw (CGException) {
     return CppAD::IdenticalZero(getValue());
 }
 
 template<class Base>
-inline bool CG<Base>::IdenticalOne() const throw (CGException) {
+inline bool CG<Base>::isIdenticalOne() const throw (CGException) {
     return CppAD::IdenticalOne(getValue());
 }
 

@@ -18,7 +18,8 @@
 namespace CppAD {
 
 template <class Base>
-inline cg::CG<Base> pow(const cg::CG<Base>& x, const cg::CG<Base>& y) {
+inline CppAD::cg::CG<Base> pow(const CppAD::cg::CG<Base>& x,
+                               const CppAD::cg::CG<Base>& y) {
     using namespace CppAD::cg;
 
     if (x.isParameter() && y.isParameter()) {
@@ -27,9 +28,9 @@ inline cg::CG<Base> pow(const cg::CG<Base>& x, const cg::CG<Base>& y) {
 
     CodeHandler<Base>* handler;
     if (y.isParameter()) {
-        if (y.IdenticalZero()) {
+        if (y.isIdenticalZero()) {
             return CG<Base> (Base(1.0)); // does not consider that x could be infinity
-        } else if (y.IdenticalOne()) {
+        } else if (y.isIdenticalOne()) {
             return CG<Base> (x);
         }
         handler = x.getCodeHandler();
@@ -44,18 +45,27 @@ inline cg::CG<Base> pow(const cg::CG<Base>& x, const cg::CG<Base>& y) {
     return result;
 }
 
+/*******************************************************************************
+ *                          pow() with other types
+ ******************************************************************************/
+
 template <class Base>
-inline cg::CG<Base> pow(const Base& x, const cg::CG<Base>& y) {
-    return pow(cg::CG<Base>(x), y);
+inline CppAD::cg::CG<Base> pow(const Base& x,
+                               const CppAD::cg::CG<Base>& y) {
+    return CppAD::pow<Base>(CppAD::cg::CG<Base>(x), y);
 }
 
 template <class Base>
-inline cg::CG<Base> pow(const cg::CG<Base>& x, const Base& y) {
-    return pow(x, cg::CG<Base>(y));
+inline CppAD::cg::CG<Base> pow(const CppAD::cg::CG<Base>& x,
+                               const Base& y) {
+    return CppAD::pow<Base>(x, CppAD::cg::CG<Base>(y));
 }
 
+/*******************************************************************************
+ * 
+ ******************************************************************************/
 template <class Base>
-inline cg::CG<Base> sign(const cg::CG<Base>& x) {
+inline CppAD::cg::CG<Base> sign(const CppAD::cg::CG<Base>& x) {
     using namespace CppAD::cg;
 
     if (x.isParameter()) {

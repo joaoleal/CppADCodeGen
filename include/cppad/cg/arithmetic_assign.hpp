@@ -26,7 +26,7 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
     } else {
         CodeHandler<Base>* handler;
         if (isParameter()) {
-            if (IdenticalZero()) {
+            if (isIdenticalZero()) {
                 *this = right;
                 return *this;
             }
@@ -34,7 +34,7 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
             handler = right.getCodeHandler();
 
         } else if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 return *this; // nothing to do
             }
 
@@ -65,7 +65,7 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
             handler = right.getCodeHandler();
 
         } else if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 return *this; // nothing to do
             }
 
@@ -93,9 +93,9 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
     } else {
         CodeHandler<Base>* handler;
         if (isParameter()) {
-            if (IdenticalZero()) {
+            if (isIdenticalZero()) {
                 return *this; // nothing to do (does not consider that right might be infinity)
-            } else if (IdenticalOne()) {
+            } else if (isIdenticalOne()) {
                 *this = right;
                 return *this;
             }
@@ -103,10 +103,10 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
             handler = right.getCodeHandler();
 
         } else if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 makeParameter(Base(0.0)); // does not consider that left might be infinity
                 return *this;
-            } else if (right.IdenticalOne()) {
+            } else if (right.isIdenticalOne()) {
                 return *this; // nothing to do
             }
 
@@ -134,14 +134,14 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
     } else {
         CodeHandler<Base>* handler;
         if (isParameter()) {
-            if (IdenticalZero()) {
+            if (isIdenticalZero()) {
                 return *this; // nothing to do (does not consider that right might be infinity or zero)
             }
 
             handler = right.getCodeHandler();
 
         } else if (right.isParameter()) {
-            if (right.IdenticalOne()) {
+            if (right.isIdenticalOne()) {
                 return *this; // nothing to do
             }
 

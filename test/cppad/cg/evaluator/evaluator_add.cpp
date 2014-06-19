@@ -23,9 +23,9 @@ TEST_F(CppADCGEvaluatorTest, SolveAdd) {
         std::vector<CGD> y(3);
 
         // model
-        y[0] = x[0] + x[1]; // AD<double> + AD<double>
-        y[1] = y[0] + 1.; // AD<double> + double
-        y[2] = 1. + y[1]; // double + AD<double> 
+        y[0] = x[0] + x[1]; // CGD + CGD
+        y[1] = y[0] + 1.; // CGD + double
+        y[2] = 1. + y[1]; // double + CGD
         return y;
     };
 

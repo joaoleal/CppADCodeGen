@@ -45,11 +45,11 @@ inline CG<Base> operator+(const CG<Base>& left, const CG<Base>& right) {
 
     } else {
         if (left.isParameter()) {
-            if (left.IdenticalZero()) {
+            if (left.isIdenticalZero()) {
                 return right;
             }
         } else if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 return left;
             }
         }
@@ -71,7 +71,7 @@ inline CG<Base> operator-(const CG<Base>& left, const CG<Base>& right) {
 
     } else {
         if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 return left;
             }
         }
@@ -93,15 +93,15 @@ inline CG<Base> operator*(const CG<Base>& left, const CG<Base>& right) {
 
     } else {
         if (left.isParameter()) {
-            if (left.IdenticalZero()) {
+            if (left.isIdenticalZero()) {
                 return CG<Base> (Base(0.0)); // does not consider the possibility of right being infinity
-            } else if (left.IdenticalOne()) {
+            } else if (left.isIdenticalOne()) {
                 return right;
             }
         } else if (right.isParameter()) {
-            if (right.IdenticalZero()) {
+            if (right.isIdenticalZero()) {
                 return CG<Base> (Base(0.0)); // does not consider the possibility of left being infinity
-            } else if (right.IdenticalOne()) {
+            } else if (right.isIdenticalOne()) {
                 return left;
             }
         }
@@ -123,11 +123,11 @@ inline CG<Base> operator/(const CG<Base>& left, const CG<Base>& right) {
 
     } else {
         if (left.isParameter()) {
-            if (left.IdenticalZero()) {
+            if (left.isIdenticalZero()) {
                 return CG<Base> (Base(0.0)); // does not consider the possibility of right being infinity or zero
             }
         } else if (right.isParameter()) {
-            if (right.IdenticalOne()) {
+            if (right.isIdenticalOne()) {
                 return left;
             }
         }
@@ -183,47 +183,91 @@ inline CG<Base> operator*(const CG<Base>& left, const Base& right) {
 }
 
 /*******************************************************************************
- *                        Operations with integers
+ *                        Operations with other types
  ******************************************************************************/
-template<class Base>
-inline CG<Base> operator+(int left, const CG<Base>& right) {
+template<class Base, class T>
+inline CG<Base> operator+(const T& left, const CG<Base>& right) {
     return CG<Base>(Base(left)) + right;
 }
 
-template<class Base>
-inline CG<Base> operator+(const CG<Base>& left, int right) {
+template<class Base, class T>
+inline CG<Base> operator+(const CG<Base>& left, const T& right) {
     return left + CG<Base>(Base(right));
 }
 
-template<class Base>
-inline CG<Base> operator-(int left, const CG<Base>& right) {
+template<class Base, class T>
+inline CG<Base> operator-(const T& left, const CG<Base>& right) {
     return CG<Base>(Base(left)) - right;
 }
 
-template<class Base>
-inline CG<Base> operator-(const CG<Base>& left, int right) {
+template<class Base, class T>
+inline CG<Base> operator-(const CG<Base>& left, const T& right) {
     return left - CG<Base>(Base(right));
 }
 
-template<class Base>
-inline CG<Base> operator/(int left, const CG<Base>& right) {
+template<class Base, class T>
+inline CG<Base> operator/(const T& left, const CG<Base>& right) {
     return CG<Base>(Base(left)) / right;
 }
 
-template<class Base>
-inline CG<Base> operator/(const CG<Base>& left, int right) {
+template<class Base, class T>
+inline CG<Base> operator/(const CG<Base>& left, const T& right) {
     return left / CG<Base>(Base(right));
 }
 
-template<class Base>
-inline CG<Base> operator*(int left, const CG<Base>& right) {
+template<class Base, class T>
+inline CG<Base> operator*(const T& left, const CG<Base>& right) {
     return CG<Base>(Base(left)) * right;
 }
 
-template<class Base>
-inline CG<Base> operator*(const CG<Base>& left, int right) {
+template<class Base, class T>
+inline CG<Base> operator*(const CG<Base>& left, const T& right) {
     return left * CG<Base>(Base(right));
 }
+
+/*******************************************************************************
+ *                 Operations with AD (resolves ambiguity)
+ ******************************************************************************/
+template<class Base>
+inline AD<CG<Base> > operator+(const CG<Base>& left, const AD<CG<Base> >& right) {
+    return CppAD::operator+(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator+(const AD<CG<Base> >& left, const CG<Base>& right) {
+    return CppAD::operator+(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator-(const CG<Base>& left, const AD<CG<Base> >& right) {
+    return CppAD::operator-(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator-(const AD<CG<Base> >& left, const CG<Base>& right) {
+    return CppAD::operator-(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator/(const CG<Base>& left, const AD<CG<Base> >& right) {
+    return CppAD::operator/(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator/(const AD<CG<Base> >& left, const CG<Base>& right) {
+    return CppAD::operator/(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator*(const CG<Base>& left, const AD<CG<Base> >& right) {
+    return CppAD::operator*(left, right);
+}
+
+template<class Base>
+inline AD<CG<Base> > operator*(const AD<CG<Base> >& left, const CG<Base>& right) {
+    return CppAD::operator*(left, right);
+}
+
 
 } // END cg namespace
 } // END CppAD namespace

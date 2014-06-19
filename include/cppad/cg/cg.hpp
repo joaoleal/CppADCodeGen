@@ -40,11 +40,11 @@ public:
     // copy constructor
     inline CG(const CG<Base>& orig);
     //assignment operator
-    inline CG& operator =(const CG<Base> &rhs);
+    inline CG& operator=(const CG<Base>& rhs);
 
     // construction and assignment from base type
     inline CG(const Base& orig);
-    inline CG& operator=(const Base &b);
+    inline CG& operator=(const Base& b);
 
     //
 
@@ -60,20 +60,20 @@ public:
     inline const Base& getValue() const throw (CGException);
     inline void setValue(const Base& val);
 
-    inline bool IdenticalZero() const throw (CGException);
-    inline bool IdenticalOne() const throw (CGException);
+    inline bool isIdenticalZero() const throw (CGException);
+    inline bool isIdenticalOne() const throw (CGException);
 
     inline OperationNode<Base>* getOperationNode() const;
 
     // computed assignment operators
-    inline CG<Base>& operator+=(const CG<Base> &right);
-    inline CG<Base>& operator-=(const CG<Base> &right);
-    inline CG<Base>& operator*=(const CG<Base> &right);
-    inline CG<Base>& operator/=(const CG<Base> &right);
-    inline CG<Base>& operator+=(const Base &right);
-    inline CG<Base>& operator-=(const Base &right);
-    inline CG<Base>& operator*=(const Base &right);
-    inline CG<Base>& operator/=(const Base &right);
+    inline CG<Base>& operator+=(const CG<Base>& right);
+    inline CG<Base>& operator-=(const CG<Base>& right);
+    inline CG<Base>& operator*=(const CG<Base>& right);
+    inline CG<Base>& operator/=(const CG<Base>& right);
+    inline CG<Base>& operator+=(const Base& right);
+    inline CG<Base>& operator-=(const Base& right);
+    inline CG<Base>& operator*=(const Base& right);
+    inline CG<Base>& operator/=(const Base& right);
 
     template< class T>
     inline CG<Base>& operator+=(const T &right);
@@ -110,7 +110,7 @@ protected:
     inline CG(CodeHandler<Base>& handler, const Argument<Base>& arg);
 
     //
-    inline void makeParameter(const Base &b);
+    inline void makeParameter(const Base& b);
     inline void makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation);
 
     inline Argument<Base> argument() const;
@@ -127,49 +127,49 @@ protected:
     /**
      * arithmetic binary operators
      */
-    friend CG<Base> CppAD::cg::operator+ <Base>(const CG<Base> &left, const CG<Base> &right);
-    friend CG<Base> CppAD::cg::operator- <Base>(const CG<Base> &left, const CG<Base> &right);
-    friend CG<Base> CppAD::cg::operator* <Base>(const CG<Base> &left, const CG<Base> &right);
-    friend CG<Base> CppAD::cg::operator/ <Base>(const CG<Base> &left, const CG<Base> &right);
+    friend CG<Base> CppAD::cg::operator+ <Base>(const CG<Base>& left, const CG<Base>& right);
+    friend CG<Base> CppAD::cg::operator- <Base>(const CG<Base>& left, const CG<Base>& right);
+    friend CG<Base> CppAD::cg::operator* <Base>(const CG<Base>& left, const CG<Base>& right);
+    friend CG<Base> CppAD::cg::operator/ <Base>(const CG<Base>& left, const CG<Base>& right);
 
     /**
      * comparison operators are not used to create code
      */
-    friend bool operator< <Base> (const CG<Base> &left, const CG<Base> &right);
-    friend bool operator <= <Base> (const CG<Base> &left, const CG<Base> &right);
-    friend bool operator> <Base> (const CG<Base> &left, const CG<Base> &right);
-    friend bool operator >= <Base> (const CG<Base> &left, const CG<Base> &right);
-    friend bool operator == <Base> (const CG<Base> &left, const CG<Base> &right);
-    friend bool operator != <Base> (const CG<Base> &left, const CG<Base> &right);
+    friend bool operator< <Base> (const CG<Base>& left, const CG<Base>& right);
+    friend bool operator<= <Base> (const CG<Base>& left, const CG<Base>& right);
+    friend bool operator> <Base> (const CG<Base>& left, const CG<Base>& right);
+    friend bool operator>= <Base> (const CG<Base>& left, const CG<Base>& right);
+    friend bool operator== <Base> (const CG<Base>& left, const CG<Base>& right);
+    friend bool operator!= <Base> (const CG<Base>& left, const CG<Base>& right);
 
     // comparison with double (required by CppAD SparseHessian)
-    friend bool operator != <Base>(const CG<Base> &left, double right);
+    friend bool operator!= <Base>(const CG<Base>& left, double right);
 
     /**
      * order determining functions
      */
-    friend bool GreaterThanZero <Base> (const CG<Base> &x);
-    friend bool GreaterThanOrZero <Base> (const CG<Base> &x);
-    friend bool LessThanZero <Base> (const CG<Base> &x);
-    friend bool LessThanOrZero <Base> (const CG<Base> &x);
+    friend bool GreaterThanZero <Base> (const CG<Base>& x);
+    friend bool GreaterThanOrZero <Base> (const CG<Base>& x);
+    friend bool LessThanZero <Base> (const CG<Base>& x);
+    friend bool LessThanOrZero <Base> (const CG<Base>& x);
     friend bool abs_geq <Base> (const CG<Base>& x, const CG<Base>& y);
 
     // EqualOpSeq function
-    friend bool EqualOpSeq <Base> (const CG<Base> &u, const CG<Base> &v);
+    friend bool EqualOpSeq <Base> (const CG<Base>& u, const CG<Base>& v);
 
     // NearEqual function
-    friend bool NearEqual <Base> (const CG<Base> &x, const CG<Base> &y, const Base &r, const Base &a);
-    friend bool NearEqual <Base> (const Base &x, const CG<Base> &y, const Base &r, const Base &a);
-    friend bool NearEqual <Base> (const CG<Base> &x, const Base &y, const Base &r, const Base &a);
+    friend bool NearEqual <Base> (const CG<Base>& x, const CG<Base>& y, const Base& r, const Base& a);
+    friend bool NearEqual <Base> (const Base& x, const CG<Base>& y, const Base& r, const Base& a);
+    friend bool NearEqual <Base> (const CG<Base>& x, const Base& y, const Base& r, const Base& a);
 
     // CondExp function
     friend CG<Base> CondExpOp <Base> (enum CompareOp cop,
-            const CG<Base> &left,
-            const CG<Base> &right,
-            const CG<Base> &trueCase,
-            const CG<Base> &falseCase);
+            const CG<Base>& left,
+            const CG<Base>& right,
+            const CG<Base>& trueCase,
+            const CG<Base>& falseCase);
 
-    friend CG<Base> sign<Base>(const CG<Base> &x);
+    friend CG<Base> sign<Base>(const CG<Base>& x);
 
     /**
      * math functions
@@ -191,7 +191,7 @@ protected:
 };
 
 template<class Base>
-inline std::ostream& operator <<(
+inline std::ostream& operator<<(
         std::ostream& os, //< stream to write to
         const CG<Base>& v//< vector that is output
         ) {
@@ -204,7 +204,7 @@ inline std::ostream& operator <<(
 }
 
 template<class Base>
-inline std::ostringstream& operator <<(
+inline std::ostringstream& operator<<(
         std::ostringstream& os, //< steam to write the vector to
         const CG<Base>& v//< vector that is output
         ) {
@@ -217,7 +217,7 @@ inline std::ostringstream& operator <<(
 }
 
 template<class Base>
-inline std::istream& operator >>(
+inline std::istream& operator>>(
         std::istream& is, //< stream to load a parameter value
         CG<Base>& v//< the variable that will be assign the value
         ) {
@@ -230,7 +230,7 @@ inline std::istream& operator >>(
 } // END cg namespace
 
 template <class Base>
-int Integer(const CppAD::cg::CG<Base> &x) {
+int Integer(const CppAD::cg::CG<Base>& x) {
     if (x.isValueDefined()) {
         return Integer(x.getValue());
     } else {

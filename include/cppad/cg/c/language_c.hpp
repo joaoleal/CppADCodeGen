@@ -737,7 +737,7 @@ protected:
         bool commentWritten = false;
         for (size_t i = 0; i < dependent.size(); i++) {
             if (dependent[i].isParameter()) {
-                if (!_ignoreZeroDepAssign || !dependent[i].IdenticalZero()) {
+                if (!_ignoreZeroDepAssign || !dependent[i].isIdenticalZero()) {
                     if (!commentWritten) {
                         _code << _spaces << "// dependent variables without operations\n";
                         commentWritten = true;

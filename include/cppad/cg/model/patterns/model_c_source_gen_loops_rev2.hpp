@@ -879,7 +879,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
         hessVal *= tx1;
 
         // place the result
-        if (!hessVal.isParameter() || !hessVal.IdenticalZero()) {
+        if (!hessVal.isParameter() || !hessVal.isIdenticalZero()) {
             addContribution(indexedLoopResults, hessLE, make_pair(hessVal, (IndexPattern*) pattern));
 
             jrow2CompressedLoc[j1].insert(e);
@@ -1132,7 +1132,7 @@ std::pair<CG<Base>, IndexPattern*> createReverseMode2Contribution(CodeHandler<Ba
                                                                   std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
     using namespace std;
 
-    if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
+    if (ddfdxdx.isParameter() && ddfdxdx.isIdenticalZero()) {
         return make_pair(ddfdxdx, (IndexPattern*) nullptr);
     }
 
@@ -1218,7 +1218,7 @@ CG<Base> createReverseMode2Contribution(CodeHandler<Base>& handler,
                                         CppAD::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
-    if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
+    if (ddfdxdx.isParameter() && ddfdxdx.isIdenticalZero()) {
         return ddfdxdx;
     }
 

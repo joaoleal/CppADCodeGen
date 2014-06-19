@@ -23,25 +23,25 @@ namespace cg {
  */
 template <class Base>
 inline CG<Base>::CG() :
-handler_(nullptr),
-opNode_(nullptr),
-value_(new Base(0.0)) {
+    handler_(nullptr),
+    opNode_(nullptr),
+    value_(new Base(0.0)) {
 }
 
 template <class Base>
 inline CG<Base>::CG(CodeHandler<Base>& handler, OperationNode<Base>* node) :
-handler_(&handler),
-opNode_(node),
-value_(nullptr) {
+    handler_(&handler),
+    opNode_(node),
+    value_(nullptr) {
     CPPADCG_ASSERT_UNKNOWN(node != nullptr);
     handler.manageOperationNode(node);
 }
 
 template <class Base>
 inline CG<Base>::CG(CodeHandler<Base>& handler, const Argument<Base>& arg) :
-handler_(&handler),
-opNode_(arg.getOperation()),
-value_(arg.getParameter() != nullptr ? new Base(*arg.getParameter()) : nullptr) {
+    handler_(&handler),
+    opNode_(arg.getOperation()),
+    value_(arg.getParameter() != nullptr ? new Base(*arg.getParameter()) : nullptr) {
 
 }
 
@@ -50,9 +50,9 @@ value_(arg.getParameter() != nullptr ? new Base(*arg.getParameter()) : nullptr) 
  */
 template <class Base>
 inline CG<Base>::CG(const Base &b) :
-handler_(nullptr),
-opNode_(nullptr),
-value_(new Base(b)) {
+    handler_(nullptr),
+    opNode_(nullptr),
+    value_(new Base(b)) {
 }
 
 /**
@@ -60,9 +60,9 @@ value_(new Base(b)) {
  */
 template <class Base>
 inline CG<Base>::CG(const CG<Base>& orig) :
-handler_(orig.handler_),
-opNode_(orig.opNode_),
-value_(orig.value_ != nullptr ? new Base(*orig.value_) : nullptr) {
+    handler_(orig.handler_),
+    opNode_(orig.opNode_),
+    value_(orig.value_ != nullptr ? new Base(*orig.value_) : nullptr) {
 }
 
 /**

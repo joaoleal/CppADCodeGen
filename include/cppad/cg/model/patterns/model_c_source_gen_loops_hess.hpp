@@ -529,7 +529,7 @@ template<class Base>
 inline void addContribution(std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                             size_t& hessLE,
                             const std::pair<CG<Base>, IndexPattern*>& val) {
-    if (!val.first.isParameter() || !val.first.IdenticalZero()) {
+    if (!val.first.isParameter() || !val.first.isIdenticalZero()) {
         if (indexedLoopResults.size() == hessLE) {
             indexedLoopResults.resize(3 * hessLE / 2 + 1);
         }
@@ -932,7 +932,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
 
         for (size_t e : lowerHessOrder) {
             // an additional alias variable is required so that each dependent variable can have its own ID
-            if (hess[e].isParameter() && hess[e].IdenticalZero()) {
+            if (hess[e].isParameter() && hess[e].isIdenticalZero()) {
                 hess[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentMultiAssign, *info.loopEnd));
 
             } else if (hess[e].getOperationNode() != nullptr && hess[e].getOperationNode()->getOperationType() == CGOpCode::DependentMultiAssign) {
@@ -979,7 +979,7 @@ std::pair<CG<Base>, IndexPattern*> createHessianContribution(CodeHandler<Base>& 
                                                              CppAD::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
-    if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
+    if (ddfdxdx.isParameter() && ddfdxdx.isIdenticalZero()) {
         return make_pair(ddfdxdx, (IndexPattern*) nullptr);
     }
 
@@ -1055,7 +1055,7 @@ CG<Base> createHessianContribution(CodeHandler<Base>& handler,
                                    CppAD::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
-    if (ddfdxdx.isParameter() && ddfdxdx.IdenticalZero()) {
+    if (ddfdxdx.isParameter() && ddfdxdx.isIdenticalZero()) {
         return ddfdxdx;
     }
 

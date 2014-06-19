@@ -144,9 +144,6 @@ template<class Base>
 class DynamicLib;
 
 template<class Base>
-class CGAtomicLibModel;
-
-template<class Base>
 class ModelCSourceGen;
 
 template<class Base>
@@ -204,40 +201,40 @@ inline void print(const std::vector<Base>& v);
  * arithmetic
  */
 template<class Base>
-CG<Base> operator+(const CG<Base> &left, const CG<Base> &right);
+CG<Base> operator+(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-CG<Base> operator-(const CG<Base> &left, const CG<Base> &right);
+CG<Base> operator-(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-CG<Base> operator*(const CG<Base> &left, const CG<Base> &right);
+CG<Base> operator*(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-CG<Base> operator/(const CG<Base> &left, const CG<Base> &right);
+CG<Base> operator/(const CG<Base>& left, const CG<Base>& right);
 
 /**
  * comparisons
  */
 template<class Base>
-bool operator ==(const CG<Base> &left, const CG<Base> &right);
+bool operator ==(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator !=(const CG<Base> &left, const CG<Base> &right);
+bool operator !=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator<(const CG<Base> &left, const CG<Base> &right);
+bool operator<(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator <=(const CG<Base> &left, const CG<Base> &right);
+bool operator <=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator>(const CG<Base> &left, const CG<Base> &right);
+bool operator>(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator >=(const CG<Base> &left, const CG<Base> &right);
+bool operator >=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator !=(const CG<Base> &left, double right);
+bool operator !=(const CG<Base>& left, double right);
 
 /***************************************************************************
  * Index reduction functions
@@ -285,16 +282,16 @@ enum class IndexPatternType {
  **************************************************************************/
 // order determining functions, see ordered.hpp
 template<class Base>
-bool GreaterThanZero(const cg::CG<Base> &x);
+bool GreaterThanZero(const cg::CG<Base>& x);
 
 template<class Base>
-bool GreaterThanOrZero(const cg::CG<Base> &x);
+bool GreaterThanOrZero(const cg::CG<Base>& x);
 
 template<class Base>
-bool LessThanZero(const cg::CG<Base> &x);
+bool LessThanZero(const cg::CG<Base>& x);
 
 template<class Base>
-bool LessThanOrZero(const cg::CG<Base> &x);
+bool LessThanOrZero(const cg::CG<Base>& x);
 
 template<class Base>
 bool abs_geq(const cg::CG<Base>& x, const cg::CG<Base>& y);
@@ -304,50 +301,56 @@ template<class Base>
 inline bool IdenticalPar(const cg::CG<Base>& x) throw (cg::CGException);
 
 template<class Base>
-bool IdenticalZero(const cg::CG<Base> &x) throw (cg::CGException);
+bool IdenticalZero(const cg::CG<Base>& x) throw (cg::CGException);
 
 template<class Base>
-bool IdenticalOne(const cg::CG<Base> &x) throw (cg::CGException);
+bool IdenticalOne(const cg::CG<Base>& x) throw (cg::CGException);
 
 template<class Base>
-bool IdenticalEqualPar(const cg::CG<Base> &x, const cg::CG<Base> &y);
+bool IdenticalEqualPar(const cg::CG<Base>& x, const cg::CG<Base>& y);
 
 // EqualOpSeq function
 template<class Base>
-bool EqualOpSeq(const cg::CG<Base> &u, const cg::CG<Base> &v);
+bool EqualOpSeq(const cg::CG<Base>& u, const cg::CG<Base>& v);
 
 // NearEqual function
 template<class Base>
-bool NearEqual(const cg::CG<Base> &x, const cg::CG<Base> &y, const Base &r, const Base &a);
+bool NearEqual(const cg::CG<Base>& x, const cg::CG<Base>& y, const Base& r, const Base&  a);
 
 template<class Base>
-bool NearEqual(const Base &x, const cg::CG<Base> &y, const Base &r, const Base &a);
+bool NearEqual(const Base& x, const cg::CG<Base>& y, const Base& r, const Base& a);
 
 template<class Base>
-bool NearEqual(const cg::CG<Base> &x, const Base &y, const Base &r, const Base &a);
+bool NearEqual(const cg::CG<Base>& x, const Base& y, const Base& r, const Base& a);
 
 template <class Base>
-inline bool isnan(const cg::CG<Base> &s);
+inline bool isnan(const cg::CG<Base>& s);
 
 template <class Base>
-int Integer(const cg::CG<Base> &x);
+int Integer(const cg::CG<Base>& x);
 
 // CondExp function
 //    template<class Base>
 //    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);
 
 template<class Base>
-cg::CG<Base> CondExpOp(enum CompareOp cop, const cg::CG<Base> &left, const cg::CG<Base> &right, const cg::CG<Base> &trueCase, const cg::CG<Base> &falseCase);
+cg::CG<Base> CondExpOp(enum CompareOp cop, 
+                       const cg::CG<Base>& left, const cg::CG<Base>& right,
+                       const cg::CG<Base>& trueCase, const cg::CG<Base>& falseCase);
 
 /**
  * Math functions
  */
 template<class Base>
-inline cg::CG<Base> sign(const cg::CG<Base> &x);
+inline cg::CG<Base> sign(const cg::CG<Base>& x);
 
 // power function
 template<class Base>
-inline cg::CG<Base> pow(const cg::CG<Base> &x, const cg::CG<Base> &y);
+inline cg::CG<Base> pow(const cg::CG<Base>& x, const cg::CG<Base>& y);
+template <class Base>
+inline cg::CG<Base> pow(const Base& x, const cg::CG<Base>& y);
+template <class Base>
+inline cg::CG<Base> pow(const cg::CG<Base>& x, const Base& y);
 
 template<class Base>
 inline cg::CG<Base> abs(const cg::CG<Base>& var);

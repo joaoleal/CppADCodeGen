@@ -24,7 +24,7 @@ namespace CppAD {
         if (var.isParameter()) {                                               \
             return CG<Base> (OpName(var.getValue()));                          \
         } else {                                                               \
-            CG<Base> result(*var.getCodeHandler(), new OperationNode<Base>(CppAD::cg::CGOpCode::OpCode, var.argument()));\
+            CG<Base> result(*var.getCodeHandler(), new OperationNode<Base>(CGOpCode::OpCode, var.argument()));\
             if(var.isValueDefined())                                           \
                 result.setValue(OpName(var.getValue()));                       \
             return result;                                                     \
