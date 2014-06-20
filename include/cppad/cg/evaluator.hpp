@@ -28,7 +28,7 @@ class EvaluatorBase {
 protected:
     CodeHandler<ScalarIn>& handler_;
     const std::vector<CG<ScalarIn> >& dep_;
-    const std::vector<ActiveOut>* indep_;
+    const ActiveOut* indep_;
     std::deque<ActiveOut*> evals_;
     std::deque<CppAD::vector<ActiveOut>* > evalsArrays_;
     std::set<OperationNode<ScalarIn>*> evalsAtomic_;
@@ -78,27 +78,37 @@ public:
      * @return The dependent variable values
      */
     inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indep) throw (CGException) {
-        if (handler_.getIndependentVariableSize() != indep.size()) {
+        std::vector<ActiveOut> newDep(dep_.size());
+
+        evaluate(indep.data(), indep.size(), newDep.data(), newDep.size());
+
+        return newDep;
+    }
+
+    inline void evaluate(const ActiveOut* indep, size_t indepSize,
+                         ActiveOut* newDep, size_t depSize) throw (CGException) {
+        if (handler_.getIndependentVariableSize() != indepSize) {
             std::stringstream ss;
-            ss << "Invalid independent variable size. Expected " << handler_.getIndependentVariableSize() << " but got " << indep.size() << ".";
+            ss << "Invalid independent variable size. Expected " << handler_.getIndependentVariableSize() << " but got " << indepSize << ".";
+            throw CGException(ss.str());
+        }
+        if (dep_.size() != depSize) {
+            std::stringstream ss;
+            ss << "Invalid dependent variable size. Expected " << dep_.size() << " but got " << depSize << ".";
             throw CGException(ss.str());
         }
 
-        indep_ = &indep;
+        indep_ = indep;
 
         clear(); // clean-up
 
         handler_.startNewOperationTreeVisit();
-
-        std::vector<ActiveOut> newDep(dep_.size());
 
         for (size_t i = 0; i < dep_.size(); i++) {
             newDep[i] = evalCG(dep_[i]);
         }
 
         clear(); // clean-up
-
-        return newDep;
     }
 
     inline virtual ~EvaluatorBase() {
@@ -241,7 +251,7 @@ protected:
             case CGOpCode::Inv: //                             independent variable
             {
                 size_t index = handler_.getIndependentVariableIndex(node);
-                result = (*indep_)[index];
+                result = indep_[index];
             }
                 break;
             case CGOpCode::Log: //  log(variable)
