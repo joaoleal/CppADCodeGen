@@ -61,6 +61,12 @@ inline CppAD::cg::CG<Base> pow(const CppAD::cg::CG<Base>& x,
     return CppAD::pow<Base>(x, CppAD::cg::CG<Base>(y));
 }
 
+template <class Base>
+CppAD::cg::CG<Base> pow(const int& x,
+                        const CppAD::cg::CG<Base>& y) {
+    return pow(CppAD::cg::CG<Base>(x), y);
+}
+
 /*******************************************************************************
  * 
  ******************************************************************************/

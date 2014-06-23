@@ -21,12 +21,13 @@ using namespace CppAD::cg;
 
 TEST_F(CppADCGEvaluatorTest, SolvePow) {
     ModelType model = [](const std::vector<CGD>& x) {
-        std::vector<CGD> y(3);
+        std::vector<CGD> y(4);
 
         // dependent variables
         y[0] = pow(x[0], x[1]) - 16.0;
         y[1] = y[0] - x[2] * pow(4, 2);
         y[2] = pow(y[0], 2.0) - pow(pow(x[3], 2), 2);
+        y[3] = pow(2, x[1]) + pow(x[1], 2);
         return y;
     };
 

@@ -25,13 +25,15 @@ CppAD::ADFun<T>* PowTestOneFunc(const std::vector<CppAD::AD<T> >& XY) {
 
     double x = 0.5;
     double y = 2.;
+    int z = 2;
 
-    // range space vector 
-    size_t m = 3;
-    std::vector< AD<T> > Z(m);
+    // range space vector
+    std::vector< AD<T> > Z(5);
     Z[0] = CppAD::pow(XY[0], XY[1]); // pow(variable, variable)
     Z[1] = CppAD::pow(XY[0], y); // pow(variable, parameter)
     Z[2] = CppAD::pow(x, XY[1]); // pow(parameter, variable)
+    Z[3] = CppAD::pow(z, XY[1]); // pow(int, variable)
+    Z[4] = CppAD::pow(XY[1], z); // pow(variable, int)
 
     // create f: XY -> Z and stop tape recording
     return new CppAD::ADFun<T > (XY, Z);
