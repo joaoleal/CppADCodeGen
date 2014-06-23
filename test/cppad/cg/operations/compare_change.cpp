@@ -26,14 +26,9 @@ public:
 
     inline CppADCGCompareTest(bool verbose = false, bool printValues = false) :
         CppADCGOperationTest(verbose, printValues) {
-        std::vector<double> X(2);
         // create independent variables
-        X[0] = 3.;
-        X[1] = 4.;
-        xV.push_back(X);
-        X[0] = 4.;
-        X[1] = 3.;
-        xV.push_back(X);
+        xV.push_back({3., 4.});
+        xV.push_back({4., 3.});
     }
 };
 

@@ -19,19 +19,15 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, ExpTestOne) {
-    // independent variable vector, indices, values, and declaration
-    std::vector<double> u(1);
-    size_t s = 0;
-    u[s] = 1.;
+    // independent variable vector
+    std::vector<double> u{1};
 
     test0nJac("ExpTestOne", &ExpTestOneFunc<double >, &ExpTestOneFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, ExpTestTwo) {
     // independent variable vector
-    std::vector<double> u(1);
-    size_t s = 0;
-    u[s] = 1.;
+    std::vector<double> u{1};
 
     test0nJac("ExpTestTwo", &ExpTestTwoFunc<double >, &ExpTestTwoFunc<CG<double> >, u);
 }

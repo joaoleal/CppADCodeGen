@@ -19,32 +19,25 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, subOne) {
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    std::vector<double> u{3, 2}; // independent variable vector
 
     test0nJac("SubOne", &OneFunc<double >, &OneFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, subTwo) {
-    std::vector<double> u(1);
-    u[0] = .5;
+    std::vector<double> u{.5}; // independent variable vector
 
     test0nJac("SubTwo", &TwoFunc<double >, &TwoFunc<CG<double> >, u, 1e-10, 1e-10);
 }
 
 TEST_F(CppADCGOperationTest, subThree) {
-    std::vector<double> u(1);
-    u[0] = 1.;
+    std::vector<double> u{1}; // independent variable vector
 
     test0nJac("SubThree", &ThreeFunc<double >, &ThreeFunc<CG<double> >, u, 1e-10, 1e-10);
 }
 
 TEST_F(CppADCGOperationTest, subFour) {
-    std::vector<double> u(1);
-    u[0] = 1.;
+    std::vector<double> u{1}; // independent variable vector
 
     test0nJac("SubFour", &FourFunc<double >, &FourFunc<CG<double> >, u, 1e-10, 1e-10);
 }

@@ -19,9 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, atan_2) {
-    // independent variable vector
-    std::vector<double> u(1);
-    u[0] = 1.;
+    std::vector<double> u{1}; // independent variable vector
 
     test0nJac("Atan2", &Atan2Func<double >, &Atan2Func<CG<double> >, u);
 }

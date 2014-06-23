@@ -19,9 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, sin) {
-    // independent variable vector
-    std::vector<double> u(1);
-    u[0] = 1.;
+    std::vector<double> u{1}; // independent variable vector
 
     test0nJac("sin", &SinFunc<double >, &SinFunc<CG<double> >, u);
 }

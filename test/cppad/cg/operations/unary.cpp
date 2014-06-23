@@ -19,17 +19,13 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, unaryPlus) {
-    std::vector<double> u(2);
-    u[0] = -3.;
-    u[1] = 2.;
+    std::vector<double> u{-3, 2}; // independent variable vector
 
     test0nJac("UnaryPlus", &UnaryPlusFunc<double >, &UnaryPlusFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, unaryMinus) {
-    std::vector<double> u(2);
-    u[0] = -3.;
-    u[1] = 2.;
+    std::vector<double> u{-3, 2}; // independent variable vector
 
     test0nJac("UnaryMinus", &UnaryMinusFunc<double >, &UnaryMinusFunc<CG<double> >, u);
 }

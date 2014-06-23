@@ -20,8 +20,7 @@ using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, cosh) {
     // independent variable vector
-    std::vector<double> u(1);
-    u[0] = 1.;
+    std::vector<double> u{1};
 
     test0nJac("cosh", &CoshFunc<double >, &CoshFunc<CG<double> >, u, 1e-10, 1e-10);
 }

@@ -19,14 +19,11 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, abs) {
-    std::vector<std::vector<double> > uV;
-    std::vector<double> u(1);
-    u[0] = 0;
-    uV.push_back(u);
-    u[0] = 1;
-    uV.push_back(u);
-    u[0] = -1;
-    uV.push_back(u);
+    std::vector<std::vector<double> > uV{
+        {0},
+        {1},
+        {-1}
+    }; // independent variable vector
 
     test0nJac("abs", &AbsFunc<double >, &AbsFunc<CG<double> >, uV);
 }

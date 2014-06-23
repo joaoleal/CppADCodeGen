@@ -21,48 +21,31 @@ using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, CondExp_pvvv) {
     // independent variable vector
-    std::vector<double> u0(3);
-    u0[0] = 0.;
-    u0[1] = 1.;
-    u0[2] = 2.;
-    std::vector<double> u1(3);
-    u1[0] = 1.5;
-    u1[1] = 0.;
-    u1[2] = 2.;
-
-    std::vector<std::vector<double> > u(2);
-    u[0] = u0;
-    u[1] = u1;
+    std::vector<std::vector<double> > u{
+        {0, 1, 2},
+        {1.5, 0, 2}
+    };
 
     test0nJac("CondExp_pvvv", &CondExp_pvvvFunc<double >, &CondExp_pvvvFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, CondExp_vpvv) {
     // independent variable vector
-    std::vector<double> u(3);
-    u[0] = 0.;
-    u[1] = 1.;
-    u[2] = 2.;
+    std::vector<double> u{0, 1, 2};
 
     test0nJac("CondExp_vpvv", &CondExp_vpvvFunc<double >, &CondExp_vpvvFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, CondExp_vvpv) {
     // independent variable vector
-    std::vector<double> u(3);
-    u[0] = 0.;
-    u[1] = 1.;
-    u[2] = 2.;
+    std::vector<double> u{0, 1, 2};
 
     test0nJac("CondExp_vvpv", &CondExp_vvpvFunc<double >, &CondExp_vvpvFunc<CG<double> >, u);
 }
 
 TEST_F(CppADCGOperationTest, CondExp_vvvp) {
     // independent variable vector
-    std::vector<double> u(3);
-    u[0] = 0.;
-    u[1] = 1.;
-    u[2] = 2.;
+    std::vector<double> u{0, 1, 2};
 
     test0nJac("CondExp_vvvp", &CondExp_vvvpFunc<double >, &CondExp_vvvpFunc<CG<double> >, u);
 }

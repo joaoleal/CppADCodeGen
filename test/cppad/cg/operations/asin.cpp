@@ -19,10 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, asin) {
-    // independent variable vector
-    std::vector<double> u(1);
-    u[0] = 0.5;
+    std::vector<double> u{0.5}; // independent variable vector
 
-    // create f: U -> Z and vectors used for derivative calculations   
     test0nJac("asin", &AsinFunc<double >, &AsinFunc<CG<double> >, u);
 }

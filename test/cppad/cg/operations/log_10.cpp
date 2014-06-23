@@ -19,10 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, log_10) {
-    // independent variable vector, indices, values, and declaration
-    std::vector<double> u(1);
-    size_t s = 0;
-    u[s] = 10.;
+    std::vector<double> u{10.}; // independent variable vector
 
     test0nJac("log10", &Log10Func<double >, &Log10Func<CG<double> >, u, 1e-10, 1e-10);
 }

@@ -19,12 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, add) {
-    std::vector<double> u(2);
-    size_t s = 0;
-    size_t t = 1;
-    u[s] = 3.;
-    u[t] = 2.;
+    std::vector<double> u{3., 2.}; // independent variable vector
 
-    // create f: U -> Z and vectors used for derivative calculations   
     test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
 }

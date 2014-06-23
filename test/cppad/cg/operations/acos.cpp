@@ -20,8 +20,7 @@ using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, acos) {
     // independent variable vector
-    std::vector<double> u(1);
-    u[0] = 0.5;
+    std::vector<double> u{0.5};
 
     test0nJac("acos", &AcosFunc<double >, &AcosFunc<CG<double> >, u);
 }

@@ -21,9 +21,7 @@ using namespace CppAD::cg;
 TEST_F(CppADCGOperationTest, tan) {
     double eps = 100. * std::numeric_limits<double>::epsilon();
 
-    // independent variable vector, indices, values, and declaration
-    std::vector<double> u(1);
-    u[0] = .7;
+    std::vector<double> u{.7}; // independent variable vector
 
     test0nJac("tan_first", &tanFirstFunc<double >, &tanFirstFunc<CG<double> >, u, eps, eps);
 
@@ -33,9 +31,7 @@ TEST_F(CppADCGOperationTest, tan) {
 TEST_F(CppADCGOperationTest, tanh) {
     double eps = 100. * std::numeric_limits<double>::epsilon();
 
-    // independent variable vector, indices, values, and declaration
-    std::vector<double> u(1);
-    u[0] = .5;
+    std::vector<double> u{.5}; // independent variable vector
 
     test0nJac("tanh_first", &tanhFirstFunc<double >, &tanhFirstFunc<CG<double> >, u, eps, eps);
 

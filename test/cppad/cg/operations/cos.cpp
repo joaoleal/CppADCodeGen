@@ -20,12 +20,10 @@ using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, cos) {
     // independent variable vector
-    std::vector<double> u(1);
-    std::vector<std::vector<double> > uV;
-    u[0] = 1.0;
-    uV.push_back(u);
-    u[0] = 0.0;
-    uV.push_back(u);
+    std::vector<std::vector<double> > uV{
+        {1},
+        {0}
+    };
 
     test0nJac("cos", &CosFunc<double >, &CosFunc<CG<double> >, uV);
 }

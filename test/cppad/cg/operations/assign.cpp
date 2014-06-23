@@ -19,9 +19,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGOperationTest, assign) {
-    std::vector<double> u(2);
-    u[0] = 0;
-    u[1] = 1;
+    std::vector<double> u{0, 1}; // independent variable vector
 
     test0nJac("assign", &AssignFunc<double >, &AssignFunc<CG<double> >, u);
 }
