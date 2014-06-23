@@ -216,35 +216,35 @@ CG<Base> operator/(const CG<Base>& left, const CG<Base>& right);
  * comparisons
  */
 template<class Base>
-bool operator ==(const CG<Base>& left, const CG<Base>& right);
+bool operator==(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator !=(const CG<Base>& left, const CG<Base>& right);
+bool operator!=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
 bool operator<(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator <=(const CG<Base>& left, const CG<Base>& right);
+bool operator<=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
 bool operator>(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator >=(const CG<Base>& left, const CG<Base>& right);
+bool operator>=(const CG<Base>& left, const CG<Base>& right);
 
 template<class Base>
-bool operator !=(const CG<Base>& left, double right);
+bool operator!=(const CG<Base>& left, double right);
 
 /***************************************************************************
  * Index reduction functions
  **************************************************************************/
 
 template<class Base>
-inline std::ostream& operator <<(std::ostream& os, const Enode<Base>& i);
+inline std::ostream& operator<<(std::ostream& os, const Enode<Base>& i);
 
 template<class Base>
-inline std::ostream& operator <<(std::ostream& os, const Vnode<Base>& j);
+inline std::ostream& operator<<(std::ostream& os, const Vnode<Base>& j);
 
 /***************************************************************************
  * Enums
@@ -315,7 +315,7 @@ bool EqualOpSeq(const cg::CG<Base>& u, const cg::CG<Base>& v);
 
 // NearEqual function
 template<class Base>
-bool NearEqual(const cg::CG<Base>& x, const cg::CG<Base>& y, const Base& r, const Base&  a);
+bool NearEqual(const cg::CG<Base>& x, const cg::CG<Base>& y, const Base& r, const Base& a);
 
 template<class Base>
 bool NearEqual(const Base& x, const cg::CG<Base>& y, const Base& r, const Base& a);
@@ -329,14 +329,11 @@ inline bool isnan(const cg::CG<Base>& s);
 template <class Base>
 int Integer(const cg::CG<Base>& x);
 
-// CondExp function
-//    template<class Base>
-//    AD<CG<Base> > CondExpOp(enum CompareOp cop, const AD<CG<Base> > &left, const AD<CG<Base> > &right, const AD<CG<Base> > &trueCase, const AD<CG<Base> > &falseCase);
-
 template<class Base>
-cg::CG<Base> CondExpOp(enum CompareOp cop, 
-                       const cg::CG<Base>& left, const cg::CG<Base>& right,
-                       const cg::CG<Base>& trueCase, const cg::CG<Base>& falseCase);
+cg::CG<Base> CondExp(cg::CGOpCode op,
+                     const cg::CG<Base>& left, const cg::CG<Base>& right,
+                     const cg::CG<Base>& trueCase, const cg::CG<Base>& falseCase,
+                     bool (*compare)(const Base&, const Base&));
 
 /**
  * Math functions

@@ -113,6 +113,7 @@ protected:
     inline void makeParameter(const Base& b);
     inline void makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation);
 
+    // creating an argument out of this node
     inline Argument<Base> argument() const;
 
     /***************************************************************************
@@ -163,11 +164,12 @@ protected:
     friend bool NearEqual <Base> (const CG<Base>& x, const Base& y, const Base& r, const Base& a);
 
     // CondExp function
-    friend CG<Base> CondExpOp <Base> (enum CompareOp cop,
+    friend CG<Base> CondExp<Base>(CGOpCode op,
             const CG<Base>& left,
             const CG<Base>& right,
             const CG<Base>& trueCase,
-            const CG<Base>& falseCase);
+            const CG<Base>& falseCase,
+            bool (*compare)(const Base&, const Base&));
 
     friend CG<Base> sign<Base>(const CG<Base>& x);
 

@@ -65,6 +65,7 @@
 // ---------------------------------------------------------------------------
 #include <cppad/cg/cppadcg_assert.hpp>
 #include <cppad/cg/exception.hpp>
+#include <cppad/cg/operation.hpp>
 #include <cppad/cg/declare_cg.hpp>
 
 // ---------------------------------------------------------------------------
@@ -96,7 +97,6 @@
 // ---------------------------------------------------------------------------
 // core files
 #include <cppad/cg/debug.hpp>
-#include <cppad/cg/operation.hpp>
 #include <cppad/cg/argument.hpp>
 #include <cppad/cg/operation_node.hpp>
 #include <cppad/cg/nodes/index_operation_node.hpp>
