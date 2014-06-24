@@ -266,7 +266,7 @@ protected:
         vector<CGB> tycg = fun_.Forward(p, txcg);
         fromCG(tycg, ty);
 
-        fun_.capacity_taylor(0);
+        fun_.capacity_order(0);
 
         return true;
     }
@@ -289,7 +289,7 @@ protected:
         vector<CGB> pxcg = fun_.Reverse(p + 1, pycg);
         fromCG(pxcg, px);
 
-        fun_.capacity_taylor(0);
+        fun_.capacity_order(0);
         return true;
     }
 
