@@ -115,6 +115,28 @@ FUNCTION(create_temp_folder_target)
 ENDFUNCTION()
 
 ################################################################################
+# Create links/copies
+################################################################################
+IF(NOT DEFINED COPY_OR_LINK)
+  IF(UNIX) 
+    SET(COPY_OR_LINK create_symlink)
+  ELSE()
+    SET(COPY_OR_LINK copy)
+  ENDIF()
+ENDIF()
+
+MACRO(link_file from_path to_path)
+    GET_FILENAME_COMPONENT(from_path_abs "${from_path}" ABSOLUTE)
+    GET_FILENAME_COMPONENT(to_path_abs "${to_path}" ABSOLUTE)
+
+    IF(NOT "${from_path_abs}" STREQUAL "${to_path_abs}")
+        ADD_CUSTOM_COMMAND(OUTPUT "${to_path}"
+                           COMMAND ${CMAKE_COMMAND} ARGS -E ${COPY_OR_LINK} "${from_path}" "${to_path}"
+                           DEPENDS "${from_path}"
+                           COMMENT Creating symbolic link)
+    ENDIF()
+ENDMACRO()
+################################################################################
 # add test function
 ################################################################################
 FUNCTION(add_cppadcg_test source_file)

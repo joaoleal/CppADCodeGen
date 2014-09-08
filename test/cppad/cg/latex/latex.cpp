@@ -13,6 +13,9 @@
  * Author: Joao Leal
  */
 
+#include <iostream>
+#include <fstream>
+
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/latex/latex.hpp>
 #include <gtest/gtest.h>
@@ -55,7 +58,15 @@ TEST(CppADCGLatexTest, latex) {
     LanguageLatex<double> langLatex;
     LangLatexDefaultVariableNameGenerator<double> nameGen;
 
-    std::ostringstream code;
-    handler.generateCode(code, langLatex, jac, nameGen);
-    std::cout << code.str();
+    std::ofstream texfile;
+    texfile.open("algorithm.tex");
+
+    handler.generateCode(texfile, langLatex, jac, nameGen);
+
+    texfile.close();
+
+    std::string dir = system::getWorkingDirectory();
+
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+
 }

@@ -45,6 +45,9 @@ IF(LLVM_FOUND)
                     -DLLVM_VERSION_MINOR=${LLVM_VERSION_MINOR})
 ENDIF()
 
+# Latex used for test
+FIND_PACKAGE(LATEX)
+
 ###
 # cppcheck tests
 ###

@@ -16,4 +16,27 @@
 # ----------------------------------------------------------------------------
 SET(CMAKE_BUILD_TYPE DEBUG)
 
-add_cppadcg_test(latex.cpp)
+################################################################################
+ADD_DEFINITIONS(-DPDFLATEX_COMPILER="${PDFLATEX_COMPILER}")
+
+################################################################################
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/latexTemplate.tex" "${CMAKE_CURRENT_BINARY_DIR}/latexTemplate.tex")
+
+################################################################################
+# add latex test function
+################################################################################
+FUNCTION(add_cppadcg_latex_test source_file)
+    add_cppadcg_test("${source_file}")
+
+    GET_FILENAME_COMPONENT(test_target_name "${source_file}" NAME_WE)
+
+    ADD_CUSTOM_TARGET(link_or_copy_latexTemplate
+                      DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latexTemplate.tex")
+
+    ADD_DEPENDENCIES("${test_target_name}" link_or_copy_latexTemplate)
+ENDFUNCTION()
+
+################################################################################
+# tests
+################################################################################
+add_cppadcg_latex_test(latex.cpp)
