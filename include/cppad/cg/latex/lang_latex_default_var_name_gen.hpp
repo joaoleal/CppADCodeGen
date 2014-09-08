@@ -85,7 +85,8 @@ public:
         _ss.clear();
         _ss.str("");
 
-        _ss << _depName << "_" << index;
+        _ss << _depName;
+        latexIndex(_ss, index);
 
         return _ss.str();
     }
@@ -95,7 +96,8 @@ public:
         _ss.str("");
 
         size_t id = independent.getVariableID();
-        _ss << _indepName << "_" << (id - 1);
+        _ss << _indepName;
+        latexIndex(_ss, id - 1);
 
         return _ss.str();
     }
@@ -106,9 +108,11 @@ public:
 
         size_t id = variable.getVariableID();
         if (this->_temporary[0].array) {
-            _ss << _tmpName << "_" << (id - this->_minTemporaryID);
+            _ss << _tmpName;
+            latexIndex(_ss, id - this->_minTemporaryID);
         } else {
             _ss << _tmpName << id;
+            latexIndex(_ss, id);
         }
 
         return _ss.str();
@@ -121,7 +125,8 @@ public:
         CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
 
         size_t id = variable.getVariableID();
-        _ss << "\\&" << _tmpArrayName << "_" << (id - 1); /////////////////////////////////////////
+        _ss << "\\&" << _tmpArrayName; /////////////////////////////////////////
+        latexIndex(_ss, id - 1);
 
         return _ss.str();
     }
@@ -133,7 +138,8 @@ public:
         CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
 
         size_t id = variable.getVariableID();
-        _ss << "\\&" << _tmpSparseArrayName << "_" << (id - 1); /////////////////////////////////////////
+        _ss << "\\&" << _tmpSparseArrayName; /////////////////////////////////////////
+        latexIndex(_ss, id - 1);
 
         return _ss.str();
     }
@@ -146,7 +152,12 @@ public:
         _ss.clear();
         _ss.str("");
 
-        _ss << _depName << "_" << LanguageC<Base>::indexPattern2String(ip, getIndexes(var, 1));
+        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(var, 1));
+        _ss << _depName << "_";
+        if (index.size() > 1)
+            _ss << "{" << index << "}";
+        else
+            _ss << index;
 
         return _ss.str();
     }
@@ -159,7 +170,12 @@ public:
         _ss.clear();
         _ss.str("");
 
-        _ss << _indepName << "_" << LanguageC<Base>::indexPattern2String(ip, getIndexes(independent, 0));
+        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(independent, 0));
+        _ss << _indepName << "_";
+        if (index.size() > 1)
+            _ss << "{" << index << "}";
+        else
+            _ss << index;
 
         return _ss.str();
     }
@@ -200,6 +216,16 @@ public:
     inline virtual ~LangLatexDefaultVariableNameGenerator() {
     }
 protected:
+
+    static inline std::stringstream& latexIndex(std::stringstream& ss, size_t index) {
+        ss << "_";
+        if (index < 10)
+            ss << index;
+        else
+            ss << "{" << index << "}";
+
+        return ss;
+    }
 
     static inline std::vector<const IndexDclrOperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset) {
         const std::vector<Argument<Base> >& args = var.getArguments();
