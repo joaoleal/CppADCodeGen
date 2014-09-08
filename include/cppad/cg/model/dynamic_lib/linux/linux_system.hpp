@@ -35,17 +35,30 @@ const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".so";
 template<class T>
 const std::string SystemInfo<T>::STATIC_LIB_EXTENSION = ".a";
 
-inline void createFolder(const std::string& folder) {
+inline std::string getWorkingDirectory() throw (CGException) {
+    char buffer[1024];
+
+    char* ret = getcwd(buffer, 1024);
+    if (ret == nullptr) {
+        const char* error = strerror(errno);
+        throw CGException("Failed to get current working directory: " + std::string(error));
+    }
+
+    return buffer;
+}
+
+inline void createFolder(const std::string& folder) throw (CGException) {
     int ret = mkdir(folder.c_str(), 0755);
     if (ret == -1) {
         if (errno != EEXIST) {
             const char* error = strerror(errno);
-            CPPADCG_ASSERT_KNOWN(false, error);
+            throw CGException("Failed to create directory '" + folder + "': " + error);
         }
     }
 }
 
-inline std::string createPath(const std::string& baseFolder, const std::string& file) {
+inline std::string createPath(const std::string& baseFolder,
+                              const std::string& file) {
     return baseFolder + "/" + file;
 }
 
@@ -71,6 +84,8 @@ inline void callExecutable(const std::string& executable,
                            bool createPipe,
                            const std::string& pipeMessage) throw (CGException) {
 
+    std::string execName = filenameFromPath(executable);
+
     int fd[2];
 
     if (createPipe) {
@@ -93,16 +108,22 @@ inline void callExecutable(const std::string& executable,
             dup2(fd[0], STDIN_FILENO);
         }
 
-        std::vector<char*> args2(args.size() + 1);
-        for (size_t i = 0; i < args.size(); i++) {
-            const size_t s = args[i].size() + 1;
-            args2[i] = new char[s];
+        auto toCharArray = [](const std::string & args) {
+            const size_t s = args.size() + 1;
+            char* args2 = new char[s];
             for (size_t c = 0; c < s - 1; c++) {
-                args2[i][c] = args[i].at(c);
+                args2[c] = args.at(c);
             }
-            args2[i][s - 1] = '\0';
+            args2[s - 1] = '\0';
+            return args2;
+        };
+
+        std::vector<char*> args2(args.size() + 2);
+        args2[0] = toCharArray(execName);
+        for (size_t i = 0; i < args.size(); i++) {
+            args2[i + 1] = toCharArray(args[i]);
         }
-        args2[args.size()] = (char *) nullptr; // END             
+        args2.back() = (char *) nullptr; // END             
 
         execv(executable.c_str(), &args2[0]);
 

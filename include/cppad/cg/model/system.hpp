@@ -30,12 +30,14 @@ public:
     static const std::string STATIC_LIB_EXTENSION;
 };
 
+inline std::string getWorkingDirectory() throw (CGException);
+
 /**
  * creates a new folder (system dependent)
  * 
  * @param folder the path to the folder
  */
-inline void createFolder(const std::string& folder);
+inline void createFolder(const std::string& folder) throw (CGException);
 
 /**
  * Creates a new path (system dependent)
@@ -44,7 +46,8 @@ inline void createFolder(const std::string& folder);
  * @param file the file or folder name inside the base folder
  * @return the new path
  */
-inline std::string createPath(const std::string& baseFolder, const std::string& file);
+inline std::string createPath(const std::string& baseFolder,
+                              const std::string& file);
 
 /**
  * Escapes a file or folder path (system dependent)
@@ -57,7 +60,8 @@ inline std::string escapePath(const std::string& path);
 inline std::string filenameFromPath(const std::string& path);
 
 /**
- * Calls an external executable (system dependent)
+ * Calls an external executable (system dependent).
+ * In the case of an error during execution an exception will be thrown.
  * 
  * @param executable the executable path
  * @param args the command line arguments to the executable

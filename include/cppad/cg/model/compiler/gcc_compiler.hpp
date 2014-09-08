@@ -62,7 +62,6 @@ public:
             linkerFlags += "," + this->_linkFlags[i];
 
         std::vector<std::string> args;
-        args.push_back("gcc");
         args.insert(args.end(), this->_compileLibFlags.begin(), this->_compileLibFlags.end());
         args.push_back(linkerFlags); // Pass suitable options to linker
         args.push_back("-o"); // Output file name
@@ -97,7 +96,6 @@ protected:
      */
     virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("gcc");
         args.push_back("-x");
         args.push_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());

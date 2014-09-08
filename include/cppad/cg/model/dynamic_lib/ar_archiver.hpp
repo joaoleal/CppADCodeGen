@@ -55,7 +55,6 @@ public:
                                const std::set<std::string>& objectFiles,
                                JobTimer* timer = nullptr) {
         std::vector<std::string> args;
-        args.push_back("ar");
         args.push_back("rcs");
         args.insert(args.end(), _flags.begin(), _flags.end());
         args.push_back(library); // Output file name
