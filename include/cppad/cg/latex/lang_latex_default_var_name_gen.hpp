@@ -121,7 +121,7 @@ public:
         CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::ArrayCreation);
 
         size_t id = variable.getVariableID();
-        _ss << "\\&" << _tmpArrayName << "_" << (id - 1);/////////////////////////////////////////
+        _ss << "\\&" << _tmpArrayName << "_" << (id - 1); /////////////////////////////////////////
 
         return _ss.str();
     }
@@ -133,7 +133,7 @@ public:
         CPPADCG_ASSERT_UNKNOWN(variable.getOperationType() == CGOpCode::SparseArrayCreation);
 
         size_t id = variable.getVariableID();
-        _ss << "\\&" << _tmpSparseArrayName << "_" << (id - 1);/////////////////////////////////////////
+        _ss << "\\&" << _tmpSparseArrayName << "_" << (id - 1); /////////////////////////////////////////
 
         return _ss.str();
     }

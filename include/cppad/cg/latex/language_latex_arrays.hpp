@@ -122,9 +122,9 @@ void LanguageLatex<Base>::printSparseArrayCreationOp(OperationNode<Base>& array)
 
 template<class Base>
 inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
-                                                           OperationNode<Base>& array,
-                                                           size_t starti,
-                                                           std::vector<const Argument<Base>*>& tmpArrayValues) {
+                                                               OperationNode<Base>& array,
+                                                               size_t starti,
+                                                               std::vector<const Argument<Base>*>& tmpArrayValues) {
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
     size_t i = starti + 1;
@@ -285,9 +285,9 @@ void LanguageLatex<Base>::printArrayElementOp(OperationNode<Base>& op) {
 
 template<class Base>
 inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArrayName,
-                                                  size_t pos,
-                                                  const std::vector<OperationNode<Base>*>& arrays,
-                                                  size_t k) {
+                                                      size_t pos,
+                                                      const std::vector<OperationNode<Base>*>& arrays,
+                                                      size_t k) {
     _ss.str("");
     _ss << dataArrayName << "[" << pos << "]";
     printArrayStructInit(_ss.str(), *arrays[k]);
@@ -295,7 +295,7 @@ inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArr
 
 template<class Base>
 inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArrayName,
-                                                  OperationNode<Base>& array) {
+                                                      OperationNode<Base>& array) {
     const std::string& aName = createVariableName(array);
 
     if (array.getOperationType() == CGOpCode::ArrayCreation) {

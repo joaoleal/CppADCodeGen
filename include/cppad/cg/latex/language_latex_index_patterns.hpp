@@ -53,8 +53,8 @@ inline void LanguageLatex<Base>::generateNames4RandomIndexPatterns(const std::se
 
 template<class Base>
 inline void LanguageLatex<Base>::printRandomIndexPatternDeclaration(std::ostringstream& os,
-                                                                const std::string& indentation,
-                                                                const std::set<RandomIndexPattern*>& randomPatterns) {
+                                                                    const std::string& indentation,
+                                                                    const std::set<RandomIndexPattern*>& randomPatterns) {
     for (RandomIndexPattern* ip : randomPatterns) {
         if (ip->getType() == IndexPatternType::Random1D) {
             /**
@@ -83,22 +83,22 @@ inline void LanguageLatex<Base>::printRandomIndexPatternDeclaration(std::ostring
 
 template<class Base>
 void LanguageLatex<Base>::printStaticIndexArray(std::ostringstream& os,
-                                            const std::string& name,
-                                            const std::vector<size_t>& values) {
-    os  << name << " = {[";
+                                                const std::string& name,
+                                                const std::vector<size_t>& values) {
+    os << name << " = {[";
     if (!values.empty()) {
         os << values[0];
         for (size_t i = 1; i < values.size(); i++) {
             os << " " << values[i];
         }
     }
-    os << "]}" << _endeq <<" % size: " << values.size() << _endline;
+    os << "]}" << _endeq << " % size: " << values.size() << _endline;
 }
 
 template<class Base>
 void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
-                                             const std::string& name,
-                                             const std::map<size_t, std::map<size_t, size_t> >& values) {
+                                                 const std::string& name,
+                                                 const std::map<size_t, std::map<size_t, size_t> >& values) {
     size_t m = 0;
     size_t n = 0;
 
@@ -146,18 +146,18 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
         x++;
     }
-    os << "}"<< _endeq <<" size: "<< m << " x " << n << _endline;
+    os << "}" << _endeq << " size: " << m << " x " << n << _endline;
 }
 
 template<class Base>
 inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& ip,
-                                                        const IndexDclrOperationNode<Base>& index) {
+                                                            const IndexDclrOperationNode<Base>& index) {
     return indexPattern2String(ip,{&index});
 }
 
 template<class Base>
 inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& ip,
-                                                        const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
+                                                            const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
     std::stringstream ss;
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
@@ -231,7 +231,7 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
 
 template<class Base>
 inline std::string LanguageLatex<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
-                                                              const IndexDclrOperationNode<Base>& index) {
+                                                                  const IndexDclrOperationNode<Base>& index) {
     long dy = lip.getLinearSlopeDy();
     long dx = lip.getLinearSlopeDx();
     long b = lip.getLinearConstantTerm();

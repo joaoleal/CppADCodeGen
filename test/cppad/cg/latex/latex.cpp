@@ -29,20 +29,20 @@ TEST(CppADCGLatexTest, latex) {
     typedef AD<CGD> ADCG;
 
     // independent variable vector
-    CppAD::vector<ADCG> U(2);
-    U[0] = 2.;
-    U[1] = 3.;
-    Independent(U);
+    CppAD::vector<ADCG> x(2);
+    x[0] = 2.;
+    x[1] = 3.;
+    Independent(x);
 
     // dependent variable vector 
-    CppAD::vector<ADCG> Z(1);
+    CppAD::vector<ADCG> y(1);
 
     // the model
-    ADCG a = U[0] / 1. + U[1] * U[1];
+    ADCG a = x[0] / 1. + x[1] * x[1];
     ADCG b = a / 2e-6;
-    Z[0] = b + 1 / (sign(b)*5 * a);
+    y[0] = b + 1 / (sign(b)*5 * a);
 
-    ADFun<CGD> fun(U, Z); // the model tape
+    ADFun<CGD> fun(x, y); // the model tape
 
     /**
      * start the special steps for source code generation
@@ -53,15 +53,17 @@ TEST(CppADCGLatexTest, latex) {
     CppAD::vector<CGD> indVars(2);
     handler.makeVariables(indVars);
 
-    CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
+    //CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
+    CppAD::vector<CGD> vals = fun.Forward(0, indVars);
 
     LanguageLatex<double> langLatex;
+    langLatex.setCaption("My CppADCG algorithm");
     LangLatexDefaultVariableNameGenerator<double> nameGen;
 
     std::ofstream texfile;
     texfile.open("algorithm.tex");
 
-    handler.generateCode(texfile, langLatex, jac, nameGen);
+    handler.generateCode(texfile, langLatex, vals, nameGen);
 
     texfile.close();
 
