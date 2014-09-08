@@ -1031,9 +1031,9 @@ protected:
                 throw CGException(ss.str());
         }
 
-        _code << "\\left\\(";
+        _code << "\\left(";
         print(op.getArguments()[0]);
-        _code << "\\right\\)";
+        _code << "\\right)";
     }
 
     virtual void printPowFunction(OperationNode<Base>& op) throw (CGException) {
@@ -1070,11 +1070,11 @@ protected:
         print(left);
         _code << " - ";
         if (encloseRight) {
-            _code << "\\left\\(";
+            _code << "\\left(";
         }
         print(right);
         if (encloseRight) {
-            _code << "\\right\\)";
+            _code << "\\right)";
         }
     }
 
@@ -1119,19 +1119,19 @@ protected:
         bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
         if (encloseLeft) {
-            _code << "\\left\\(";
+            _code << "\\left(";
         }
         print(left);
         if (encloseLeft) {
-            _code << "\\right\\)";
+            _code << "\\right)";
         }
         _code << " ";
         if (encloseRight) {
-            _code << "\\left\\(";
+            _code << "\\left(";
         }
         print(right);
         if (encloseRight) {
-            _code << "\\right\\)";
+            _code << "\\right)";
         }
     }
 
@@ -1144,11 +1144,11 @@ protected:
 
         _code << "-";
         if (enclose) {
-            _code << "\\left\\(";
+            _code << "\\left(";
         }
         print(arg);
         if (enclose) {
-            _code << "\\right\\)";
+            _code << "\\right)";
         }
     }
 
