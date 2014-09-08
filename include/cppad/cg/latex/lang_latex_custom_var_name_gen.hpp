@@ -40,7 +40,7 @@ public:
                                          const std::string& tmpName = "v",
                                          const std::string& tmpArrayName = "\\mathbf{a}",
                                          const std::string& tmpSparseArrayName = "\\mathbf{s}") :
-        LangCDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName, tmpSparseArrayName),
+        LangLatexDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName, tmpSparseArrayName),
         depNames_(depNames),
         indepNames_(indepNames) {
     }
@@ -49,7 +49,7 @@ public:
         if (index < depNames_.size() && !depNames_[index].empty()) {
             return depNames_[index];
         } else {
-            return LangCDefaultVariableNameGenerator<Base>::generateDependent(index);
+            return LangLatexDefaultVariableNameGenerator<Base>::generateDependent(index);
         }
     }
 
@@ -58,7 +58,7 @@ public:
         if (index < indepNames_.size() && !indepNames_[index].empty()) {
             return indepNames_[index];
         } else {
-            return LangCDefaultVariableNameGenerator<Base>::generateIndependent(independent);
+            return LangLatexDefaultVariableNameGenerator<Base>::generateIndependent(independent);
         }
     }
 
