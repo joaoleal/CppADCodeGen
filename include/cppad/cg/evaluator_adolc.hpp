@@ -18,6 +18,9 @@
 #include <adolc/adolc.h>
 #include <adolc/drivers/drivers.h>
 
+/**
+ * defined required functions for adoubles
+ */
 inline adouble abs(const adouble& val) {
     return fabs(val);
 }

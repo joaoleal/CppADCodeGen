@@ -1009,7 +1009,7 @@ protected:
         const size_t n = varInfo.size();
 
         /**
-         * Implement the assigment in the model
+         * Implement the assignment in the model
          */
         CGBase& dep = res0[i.index()];
         CGBase& indep = indep0[j.tapeIndex()];
