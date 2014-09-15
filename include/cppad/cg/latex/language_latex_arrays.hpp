@@ -33,18 +33,23 @@ void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(array) << "; // size: " << args.size() << "\n";
+                _code << _startAlgLine << _startEq
+                        << auxArrayName_ << _assignStr << _nameGen->generateTemporaryArray(array)
+                        << _endEq << _endAlgLine
+                        << " % size: " << args.size() << _endline;
                 firstElement = false;
             }
 
             // try to use a loop for element assignment
             size_t newI = printArrayCreationUsingLoop(startPos, array, i, _tmpArrayValues);
 
+            // print elements not assign in a loop
             if (newI == i) {
                 // individual element assignment
-                _code << _indentation << auxArrayName_ << "[" << i << "] = ";
+                _code << _startAlgLine << _startEq
+                        << auxArrayName_ << "[" << i << "]" << _assignStr;
                 print(args[i]);
-                _code << ";\n";
+                _code << _endEq << _endAlgLine << _endline;
 
                 _tmpArrayValues[startPos + i] = &args[i];
 
@@ -77,32 +82,41 @@ void LanguageLatex<Base>::printSparseArrayCreationOp(OperationNode<Base>& array)
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporarySparseArray(array)
-                        << "; // nnz: " << args.size() << "  size:" << info[0] << "\n";
+                _code << _startAlgLine << _startEq
+                        << auxArrayName_ << _assignStr << _nameGen->generateTemporarySparseArray(array)
+                        << _endEq << _endAlgLine
+                        << " % nnz: " << args.size() << "  size:" << info[0] << _endline;
                 firstElement = false;
             }
 
             // try to use a loop for element assignment
             size_t newI = printArrayCreationUsingLoop(startPos, array, i, _tmpSparseArrayValues);
 
+            // print element values not assign in a loop
             if (newI == i) {
                 // individual element assignment
-                _code << _indentation << auxArrayName_ << "[" << i << "] = ";
+                _code << _startAlgLine << _startEq
+                        << auxArrayName_ << "[" << i << "]" << _assignStr;
                 print(args[i]);
-                _code << "; ";
+                _code << _endEq;
+                _code << ", ";
                 // print indexes (location of values)
-                _code << _C_SPARSE_INDEX_ARRAY << "[";
+                _code << _startEq
+                        << _C_SPARSE_INDEX_ARRAY << "[";
                 if (startPos != 0) _code << startPos << "+";
-                _code << i << "] = " << info[i + 1] << ";\n";
+                _code << i << "]" << _assignStr << info[i + 1]
+                        << _endEq << _endAlgLine << _endline;
 
                 _tmpSparseArrayValues[startPos + i] = &args[i];
 
             } else {
                 // print indexes (location of values)
                 for (size_t j = i; j < newI; j++) {
-                    _code << _indentation << _C_SPARSE_INDEX_ARRAY << "[";
+                    _code << _startAlgLine << _startEq
+                            << _C_SPARSE_INDEX_ARRAY << "[";
                     if (startPos != 0) _code << startPos << "+";
-                    _code << j << "] = " << info[j + 1] << ";\n";
+                    _code << j << "]" << _assignStr << info[j + 1]
+                            << _endEq << _endAlgLine << _endline;
                 }
 
                 i = newI - 1;
@@ -111,10 +125,11 @@ void LanguageLatex<Base>::printSparseArrayCreationOp(OperationNode<Base>& array)
 
         } else {
             // print indexes (location of values)
-            _code << _indentation
+            _code << _startAlgLine << _startEq
                     << _C_SPARSE_INDEX_ARRAY << "[";
             if (startPos != 0) _code << startPos << "+";
-            _code << i << "] = " << info[i + 1] << ";\n";
+            _code << i << "]" << _assignStr << info[i + 1]
+                    << _endEq << _endAlgLine << _endline;
         }
 
     }
@@ -246,8 +261,13 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
     /**
      * print the loop
      */
-    _code << _indentation << "for(i = " << starti << "; i < " << i << "; i++) "
-            << auxArrayName_ << "[i] = " << arrayAssign.str() << ";\n";
+    _code << _forStart << "{$i " << _assignStr << starti << "$ to $" << (i - 1) << "$}" << _endline;
+    _indentationLevel++;
+    _code << _startAlgLine << _startEq
+            << auxArrayName_ << "[i]" << _assignStr << arrayAssign.str()
+            << _endEq << _endAlgLine << _endline;
+    _indentationLevel--;
+    _code << _forEnd << _endline;
 
     /**
      * update values in the global temporary array
@@ -296,9 +316,13 @@ inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArr
 template<class Base>
 inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArrayName,
                                                       OperationNode<Base>& array) {
+    /**
+     * TODO: finish this
+     */
     const std::string& aName = createVariableName(array);
 
     if (array.getOperationType() == CGOpCode::ArrayCreation) {
+        // dense array
         size_t size = array.getArguments().size();
         if (size > 0)
             _code << dataArrayName << ".data = " << aName << "; ";
@@ -307,6 +331,7 @@ inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArr
         _code << dataArrayName << ".size = " << size << "; "
                 << dataArrayName << ".sparse = " << false << ";";
     } else {
+        // sparse array
         CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
         size_t nnz = array.getArguments().size();
         if (nnz > 0)
@@ -321,7 +346,7 @@ inline void LanguageLatex<Base>::printArrayStructInit(const std::string& dataArr
             _code << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
         }
     }
-    _code << "\n";
+    _code << _endline;
 }
 
 template<class Base>

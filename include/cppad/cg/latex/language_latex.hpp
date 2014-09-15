@@ -20,7 +20,8 @@ namespace cg {
 
 /**
  * Generates code for the Latex language.
- * Requires the amsmath and algorithm2e latex package.
+ * It creates a generic implementation using custom latex environments which 
+ * must be implemented by the user.
  * 
  * @author Joao Leal
  */
@@ -42,24 +43,33 @@ protected:
 protected:
     //
     const std::unique_ptr<LanguageGenerationData<Base> >* _info;
-    // Latex algorithm options
-    std::string _algorithmEnvOptions;
     // current indentation
-    std::string _indentation;
-    // text before an individual equation line
-    std::string _starteq;
-    // text after an individual equation line
-    std::string _endeq;
+    size_t _indentationLevel;
+    // text before an individual equation
+    std::string _startEq;
+    // text after an individual equation
+    std::string _endEq;
+    // text before a line in the algorithm
+    std::string _startAlgLine;
+    // text after a line in the algorithm
+    std::string _endAlgLine;
+    // text before an equation block with multiple lines with the same indentation
+    std::string _startEqBlock;
+    // text after an equation block with multiple lines with the same indentation
+    std::string _endEqBlock;
+    std::string _algFileStart;
+    std::string _algFileEnd;
+    std::string _forStart;
+    std::string _forEnd;
+    std::string _ifStart;
+    std::string _ifEnd;
+    std::string _elseIfStart;
+    std::string _elseIfEnd;
+    std::string _elseStart;
+    std::string _elseEnd;
+    std::string _assignStr;
     // new line characters
     std::string _endline;
-    // the algorithm caption
-    std::string _caption;
-    // the label for the algorithm
-    std::string _label;
-    // whether or not to add the option \DontPrintSemicolon
-    bool _dontPrintSemicolon;
-    // user define algorithm options to be placed at the start
-    std::string _customAlgorithmOptions;
     // output stream for the generated source code
     std::ostringstream _code;
     // creates the variable names
@@ -77,8 +87,6 @@ protected:
     const CppAD::vector<CG<Base> >* _dependent;
     // the temporary variables that may require a declaration
     std::map<size_t, OperationNode<Base>*> _temporary;
-    // the operator used for assignment of dependent variables
-    std::string _depAssignOperation;
     // whether or not to ignore assignment of constant zero values to dependent variables
     bool _ignoreZeroDepAssign;
     // the name of the file to be created without the extension
@@ -96,8 +104,6 @@ protected:
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
-    //
-    bool _useLatexAlign;
     // whether or not we are in an equation/align block
     bool _inEquationEnv;
 private:
@@ -112,33 +118,46 @@ public:
      */
     LanguageLatex() :
         _info(nullptr),
-        _starteq("\\begin{flalign*}&"), // other options are: "$", "\\begin{algomathdisplay}", "\\["
-        _endeq("&\\end{flalign*}"), // other options are: "$\\;", "\\end{algomathdisplay}\\;", "\\]\\;"
+        _indentationLevel(0),
+        _startEq("\\begin{CGEq}"),
+        _endEq("\\end{CGEq}"),
+        _startAlgLine("\\begin{CGLine}"),
+        _endAlgLine("\\end{CGLine}"),
+        _startEqBlock("\\begin{CGEqBlock}"),
+        _endEqBlock("\\end{CGEqBlock}"),
+        _algFileStart("\\begin{CGAlgFile}"),
+        _algFileEnd("\\end{CGAlgFile}"),
+        _forStart("\\begin{CGFor}"),
+        _forEnd("\\end{CGFor}"),
+        _ifStart("\\begin{CGIf}"),
+        _ifEnd("\\end{CGIf}"),
+        _elseIfStart("\\begin{CGElseIf}"),
+        _elseIfEnd("\\end{CGElseIf}"),
+        _elseStart("\\begin{CGElse}"),
+        _elseEnd("\\end{CGElse}"),
+        _assignStr(" = "),
         _endline("\n"),
-        _dontPrintSemicolon(true),
         _nameGen(nullptr),
         _independentSize(0),
         _dependent(nullptr),
-        _depAssignOperation("="),
         _ignoreZeroDepAssign(false),
         _filename("algorithm"),
         _maxAssigmentsPerFile(0),
         _sources(nullptr),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
-        _useLatexAlign(false),
         _inEquationEnv(false) {
     }
 
-    inline const std::string& getDependentAssignOperation() const {
-        return _depAssignOperation;
+    inline const std::string& getAssignString() const {
+        return _assignStr;
     }
 
-    inline void setDependentAssignOperation(const std::string& depAssignOperation) {
-        _depAssignOperation = depAssignOperation;
+    inline void setAssignString(const std::string& assign) {
+        _assignStr = assign;
     }
 
     inline bool isIgnoreZeroDepAssign() const {
-        return _depAssignOperation;
+        return _ignoreZeroDepAssign;
     }
 
     inline void setIgnoreZeroDepAssign(bool ignore) {
@@ -149,22 +168,6 @@ public:
         _filename = name;
     }
 
-    virtual void setLabel(const std::string& label) {
-        _label = label;
-    }
-
-    virtual const std::string& getLabel() const {
-        return _label;
-    }
-
-    virtual void setCustomAlgorithmOptions(const std::string& options) {
-        _customAlgorithmOptions = options;
-    }
-
-    virtual const std::string& getCustomAlgorithmOptions() const {
-        return _customAlgorithmOptions;
-    }
-
     /**
      * Defines the Latex environment for each equation.
      * 
@@ -173,30 +176,207 @@ public:
      */
     virtual void setEquationEnvironment(const std::string& begin,
                                         const std::string& end) {
-        _starteq = begin;
-        _endeq = end;
+        _startEq = begin;
+        _endEq = end;
     }
 
     /**
      * Provides the string used to create the environment for each equation.
      */
     virtual const std::string& getEquationEnvironmentStart() const {
-        return _starteq;
+        return _startEq;
     }
 
     /**
      * Provides the string used to terminate the environment for each equation.
      */
     virtual const std::string& getEquationEnvironmentEnd() const {
-        return _endeq;
+        return _endEq;
     }
 
-    virtual void setCaption(const std::string& caption) {
-        _caption = caption;
+    /**
+     * Defines the Latex environment for each algorithm line.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setAlgorithmLineEnvironment(const std::string& begin,
+                                             const std::string& end) {
+        _startAlgLine = begin;
+        _endAlgLine = end;
     }
 
-    virtual const std::string& getCaption() const {
-        return _caption;
+    /**
+     * Provides the string used to create the environment for each line.
+     */
+    virtual const std::string& getAlgorithmLineEnvironmentStart() const {
+        return _startAlgLine;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each line.
+     */
+    virtual const std::string& getAlgorithmLineEnvironmentEnd() const {
+        return _endAlgLine;
+    }
+
+    /**
+     * Defines the Latex environment for each equation block which can contain
+     * multiple equation lines with the same indentation.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setEquationBlockEnvironment(const std::string& begin,
+                                             const std::string& end) {
+        _startEqBlock = begin;
+        _endEqBlock = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each equation
+     * block which can contain multiple equation lines with the same indentation.
+     */
+    virtual const std::string& getEquationBlockEnvironmentStart() const {
+        return _startEqBlock;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each equation
+     * block which can contain multiple equation lines with the same indentation.
+     */
+    virtual const std::string& getEquationBlockEnvironmentEnd() const {
+        return _endEqBlock;
+    }
+
+    /**
+     * Defines the Latex environment for each algorithm file.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setAgorithmFileEnvironment(const std::string& begin,
+                                            const std::string& end) {
+        _algFileStart = begin;
+        _algFileEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each algorithm file.
+     */
+    virtual const std::string& getAgorithmFileEnvironmentStart() const {
+        return _algFileStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each algorithm file.
+     */
+    virtual const std::string& getAgorithmFileEnvironmentEnd() const {
+        return _algFileEnd;
+    }
+
+    /**
+     * Defines the Latex environment for each for loop.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setForEnvironment(const std::string& begin,
+                                   const std::string& end) {
+        _forStart = begin;
+        _forEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each for loop.
+     */
+    virtual const std::string& getForEnvironmentStart() const {
+        return _forStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each for loop.
+     */
+    virtual const std::string& getForEnvironmentEnd() const {
+        return _forEnd;
+    }
+
+    /**
+     * Defines the Latex environment for each If.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setIfEnvironment(const std::string& begin,
+                                  const std::string& end) {
+        _ifStart = begin;
+        _ifEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each If.
+     */
+    virtual const std::string& getIfEnvironmentStart() const {
+        return _ifStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each If.
+     */
+    virtual const std::string& getIfEnvironmentEnd() const {
+        return _ifEnd;
+    }
+
+    /**
+     * Defines the Latex environment for each else if.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setElseIfEnvironment(const std::string& begin,
+                                      const std::string& end) {
+        _elseIfStart = begin;
+        _elseIfEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each else if.
+     */
+    virtual const std::string& getElseIfEnvironmentStart() const {
+        return _elseIfStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each else if.
+     */
+    virtual const std::string& getElseIfEnvironmentEnd() const {
+        return _elseIfEnd;
+    }
+
+    /**
+     * Defines the Latex environment for each else.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setElseEnvironment(const std::string& begin,
+                                    const std::string& end) {
+        _elseStart = begin;
+        _elseEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each else.
+     */
+    virtual const std::string& getElseEnvironmentStart() const {
+        return _elseStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each else.
+     */
+    virtual const std::string& getElseEnvironmentEnd() const {
+        return _elseEnd;
     }
 
     virtual void setFunctionIndexArgument(const IndexDclrOperationNode<Base>& funcArgIndex) {
@@ -321,10 +501,12 @@ protected:
         // clean up
         _code.str("");
         _ss.str("");
+        _indentationLevel = 0;
         _temporary.clear();
         _inEquationEnv = false;
         auxArrayName_ = "";
         _currentLoops.clear();
+
 
         // save some info
         _info = &info;
@@ -443,16 +625,16 @@ protected:
                 if (!depArg.empty())
                     checkEquationEnvStart();
                 for (size_t i = 0; i < depArg.size(); i++) {
-                    _code << _starteq;
+                    _code << _startAlgLine << _startEq;
                     const FuncArgument& a = depArg[i];
                     if (a.array) {
                         _code << a.name;
                     } else {
                         _code << _nameGen->generateDependent(i);
                     }
-                    _code << " = ";
+                    _code << _assignStr;
                     printParameter(Base(0.0));
-                    _code << _endeq << _endline;
+                    _code << _endEq << _endAlgLine << _endline;
                 }
             }
 
@@ -503,7 +685,7 @@ protected:
                 std::string varName = _nameGen->generateDependent(index);
                 const std::string& origVarName = *dep.getOperationNode()->getName();
 
-                _code << varName << " " << _depAssignOperation << " " << origVarName;
+                _code << varName << _assignStr << origVarName;
                 printAssigmentEnd();
             }
         }
@@ -518,7 +700,7 @@ protected:
                         commentWritten = true;
                     }
                     std::string varName = _nameGen->generateDependent(i);
-                    _code << varName << " " << _depAssignOperation << " ";
+                    _code << varName << _assignStr;
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -529,7 +711,7 @@ protected:
                 }
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
-                _code << varName << " " << _depAssignOperation << " " << indepName;
+                _code << varName << _assignStr << indepName;
                 printAssigmentEnd(*dependent[i].getOperationNode());
             }
         }
@@ -559,59 +741,23 @@ protected:
 
     inline virtual void printAlgorithmFileStart(std::ostream& out) {
         out << "% Latex source file for '" << _filename << "' (automatically generated by CppADCodeGen)" << _endline;
-        printAlgorithmStart(out);
-        printLabel(out);
-        if (_dontPrintSemicolon)
-            out << "\\DontPrintSemicolon" << _endline;
-        out << _customAlgorithmOptions;
+        out << _algFileStart << _endline;
     }
 
     inline virtual void printAlgorithmFileEnd(std::ostream& out) {
-        printCaption(out);
-        printAlgorithmEnd(out);
-    }
-
-    inline virtual void printAlgorithmStart(std::ostream& out) {
-        out << "\\begin{algorithm}";
-        if (!_algorithmEnvOptions.empty())
-            out << "[" << _algorithmEnvOptions << "]";
-        out << _endline;
-    }
-
-    inline virtual void printLabel(std::ostream& out) {
-        if (!_label.empty())
-            out << "\\label{" << _label << "}" << _endline;
-    }
-
-    inline virtual void printCaption(std::ostream& out) {
-        if (!_caption.empty())
-            out << "\\caption{" << _caption << "}" << _endline;
-    }
-
-    inline virtual void printAlgorithmEnd(std::ostream& out) {
-        out << "\\end{algorithm}" << _endline;
-    }
-
-    inline virtual void printEquationEnvStart() {
-        if (_useLatexAlign)
-            _code << "\\begin{align*}" << _endline;
-    }
-
-    inline virtual void printEquationEnvEnd() {
-        if (_useLatexAlign)
-            _code << "\\end{align*}" << _endline;
+        out << _algFileEnd;
     }
 
     inline virtual void checkEquationEnvStart() {
         if (!_inEquationEnv) {
-            printEquationEnvStart();
+            _code << _startEqBlock << _endline;
             _inEquationEnv = true;
         }
     }
 
     inline virtual void checkEquationEnvEnd() {
         if (_inEquationEnv) {
-            printEquationEnvEnd();
+            _code << _endEqBlock << _endline;
             _inEquationEnv = false;
         }
     }
@@ -667,23 +813,18 @@ protected:
 
         checkEquationEnvStart();
 
-        _code << _starteq;
-        _code << varName << " ";
-        if (isDep) {
-            CGOpCode op = node.getOperationType();
-            if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
-                _code << "+=";
-            } else {
-                _code << _depAssignOperation;
-            }
+        _code << _startAlgLine << _startEq;
+        _code << varName;
+        CGOpCode op = node.getOperationType();
+        if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
+            _code << " += ";
         } else {
-            _code << "=";
+            _code << _assignStr;
         }
-        _code << " ";
     }
 
     inline virtual void printAssigmentEnd() {
-        _code << _endeq << _endline;
+        _code << _endEq << _endAlgLine << _endline;
     }
 
     inline virtual void printAssigmentEnd(OperationNode<Base>& op) {
@@ -1091,7 +1232,7 @@ protected:
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        bool encloseRight = encloseInParenthesesMul(right.getOperation());
+        bool encloseRight = encloseInParenthesesMul(right);
 
         print(left);
         _code << " - ";
@@ -1119,14 +1260,23 @@ protected:
 
     }
 
+    static inline bool encloseInParenthesesMul(const Argument<Base>& arg) {
+        if (arg.getParameter() != nullptr) {
+            return ((*arg.getParameter()) < 0);
+        } else {
+            return encloseInParenthesesMul(arg.getOperation());
+        }
+    }
+
     static inline bool encloseInParenthesesMul(const OperationNode<Base>* node) {
         while (node != nullptr) {
-            if (node->getVariableID() != 0)
+            if (node->getVariableID() != 0) {
                 return false;
-            else if (node->getOperationType() == CGOpCode::Alias)
+            } else if (node->getOperationType() == CGOpCode::Alias) {
                 node = node->getArguments()[0].getOperation();
-            else
+            } else {
                 break;
+            }
         }
         return node != nullptr &&
                 node->getVariableID() == 0 &&
@@ -1141,8 +1291,8 @@ protected:
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        bool encloseLeft = encloseInParenthesesMul(left.getOperation());
-        bool encloseRight = encloseInParenthesesMul(right.getOperation());
+        bool encloseLeft = encloseInParenthesesMul(left);
+        bool encloseRight = encloseInParenthesesMul(right);
 
         if (encloseLeft) {
             _code << "\\left(";
@@ -1166,7 +1316,7 @@ protected:
 
         const Argument<Base>& arg = op.getArguments()[0];
 
-        bool enclose = encloseInParenthesesMul(arg.getOperation());
+        bool enclose = encloseInParenthesesMul(arg);
 
         _code << "-";
         if (enclose) {
@@ -1199,25 +1349,26 @@ protected:
         } else {
             checkEquationEnvEnd();
 
-            _code << "\\eIf{";
-            printEquationEnvStart();
+            _code << _ifStart;
+            _code << _startEq;
             print(left);
             _code << " " << getComparison(node.getOperationType()) << " ";
             print(right);
-            printEquationEnvEnd();
-            _code << "}{" << _endline;
+            _code << _endEq;
+            _code << "}" << _endline;
             //checkEquationEnvStart(); // no need
             printAssigmentStart(node, varName, isDep);
             print(trueCase);
             printAssigmentEnd(node);
             checkEquationEnvEnd();
-            _code << "} {" << _endline; // else
+            _code << _ifEnd << _endline;
+            _code << _elseStart << _endline; // else
             //checkEquationEnvStart(); // no need
             printAssigmentStart(node, varName, isDep);
             print(falseCase);
             printAssigmentEnd(node);
             checkEquationEnvEnd();
-            _code << "}" << _endline; // end if
+            _code << _elseEnd << _endline; // end if
         }
     }
 
@@ -1285,11 +1436,11 @@ protected:
         printArrayStructInit(_ATOMIC_TY, *ty[p]);
         _ss.str("");
 
-        _code << _starteq
+        _code << _startAlgLine << _startEq
                 << (*_info)->atomicFunctionId2Name.at(id) << ".forward("
                 << q << ", " << p << ", "
                 << _ATOMIC_TX << ", &" << _ATOMIC_TY << ")"
-                << _endeq << _endline;
+                << _endEq << _endAlgLine << _endline;
 
         /**
          * the values of ty are now changed
@@ -1332,11 +1483,11 @@ protected:
         printArrayStructInit(_ATOMIC_PX, *px[0]);
         _ss.str("");
 
-        _code << _starteq
+        _code << _startAlgLine << _startEq
                 << (*_info)->atomicFunctionId2Name.at(id) << ".reverse("
                 << p << ", "
                 << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << ")"
-                << _endeq << _endline;
+                << _endEq << _endAlgLine << _endline;
 
         /**
          * the values of px are now changed
@@ -1378,14 +1529,13 @@ protected:
         if (lnode.getIterationCountNode() != nullptr) {
             lastIt = *lnode.getIterationCountNode()->getIndex().getName() + " - 1";
         } else {
-            std::ostringstream oss;
-            oss << (lnode.getIterationCount() - 1);
-            lastIt = oss.str();
+            lastIt = std::to_string(lnode.getIterationCount() - 1);
         }
 
         checkEquationEnvEnd();
 
-        _code << "\\For{$" << jj << " = 0$ " << jj << " \\KwTo " << lastIt << "} {" << _endline;
+        _code << _forStart << "{$" << jj << _assignStr << "0$ to $" << lastIt << "$}" << _endline;
+        _indentationLevel++;
     }
 
     virtual void printLoopEnd(OperationNode<Base>& node) {
@@ -1393,7 +1543,9 @@ protected:
 
         checkEquationEnvEnd();
 
-        _code << "}" << _endline;
+        _indentationLevel--;
+
+        _code << _forEnd << _endline;
 
         _currentLoops.pop_back();
     }
@@ -1442,9 +1594,10 @@ protected:
         checkEquationEnvStart();
 
         const IndexPattern& ip = inode.getIndexPattern();
-        _code << _starteq
+        _code << _startAlgLine << _startEq
                 << (*inode.getIndex().getName())
-                << " = " << indexPattern2String(ip, inode.getIndexPatternIndexes()) << _endeq << _endline;
+                << _assignStr << indexPattern2String(ip, inode.getIndexPatternIndexes())
+                << _endEq << _endAlgLine << _endline;
     }
 
     virtual void printIndexCondExprOp(OperationNode<Base>& node) {
@@ -1474,11 +1627,13 @@ protected:
 
         checkEquationEnvEnd();
 
-        _code << "\\uIf{";
+        _code << _ifStart << "{";
         //checkEquationEnvStart(); // no need
         printIndexCondExprOp(*node.getArguments()[0].getOperation());
         checkEquationEnvEnd();
-        _code << "} {" << _endline;
+        _code << "}" << _endline;
+
+        _indentationLevel++;
     }
 
     virtual void printElseIf(OperationNode<Base>& node) {
@@ -1493,12 +1648,24 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != nullptr, "Invalid argument for an 'else if' operation");
 
         checkEquationEnvEnd();
+        _indentationLevel--;
 
-        _code << "} \\uElseIf {";
+        // close previous environment
+        CGOpCode nType = node.getArguments()[0].getOperation()->getOperationType();
+        if (nType == CGOpCode::StartIf) {
+            _code << _ifEnd << _endline;
+        } else if (nType == CGOpCode::ElseIf) {
+            _code << _elseIfEnd << _endline;
+        }
+
+        // start new else if
+        _code << _elseIfStart << "{";
         //checkEquationEnvStart(); // no need
         printIndexCondExprOp(*node.getArguments()[1].getOperation());
         checkEquationEnvEnd();
-        _code << "} {" << _endline;
+        _code << "}" << _endline;
+
+        _indentationLevel++;
     }
 
     virtual void printElse(OperationNode<Base>& node) {
@@ -1510,14 +1677,37 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for an 'else' operation");
 
         checkEquationEnvEnd();
+        _indentationLevel--;
 
-        _code << "} \\Else {" << _endline;
+        // close previous environment
+        CGOpCode nType = node.getArguments()[0].getOperation()->getOperationType();
+        if (nType == CGOpCode::StartIf) {
+            _code << _ifEnd << _endline;
+        } else if (nType == CGOpCode::ElseIf) {
+            _code << _elseIfEnd << _endline;
+        }
+
+        // start else
+        _code << _elseStart << _endline;
+
+        _indentationLevel++;
     }
 
     virtual void printEndIf(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::EndIf, "Invalid node type for an 'end if' operation");
 
-        _code << "}" << _endline;
+        _indentationLevel--;
+
+        // close previous environment
+        CGOpCode nType = node.getArguments()[0].getOperation()->getOperationType();
+        if (nType == CGOpCode::StartIf) {
+            _code << _ifEnd << _endline;
+        } else if (nType == CGOpCode::ElseIf) {
+            _code << _elseIfEnd << _endline;
+        } else {
+            assert(nType == CGOpCode::Else);
+            _code << _elseEnd << _endline;
+        }
     }
 
     virtual void printCondResult(OperationNode<Base>& node) {

@@ -85,20 +85,26 @@ template<class Base>
 void LanguageLatex<Base>::printStaticIndexArray(std::ostringstream& os,
                                                 const std::string& name,
                                                 const std::vector<size_t>& values) {
-    os << name << " = {[";
+    /**
+     * TODO
+     */
+    os << name << " = \\{[";
     if (!values.empty()) {
         os << values[0];
         for (size_t i = 1; i < values.size(); i++) {
             os << " " << values[i];
         }
     }
-    os << "]}" << _endeq << " % size: " << values.size() << _endline;
+    os << "]\\}" << _endEq << " % size: " << values.size() << _endline;
 }
 
 template<class Base>
 void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
                                                  const std::string& name,
                                                  const std::map<size_t, std::map<size_t, size_t> >& values) {
+    /**
+     * TODO
+     */
     size_t m = 0;
     size_t n = 0;
 
@@ -114,7 +120,7 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
         }
     }
 
-    os << name << " = {";
+    os << name << " = \\{";
     size_t x = 0;
     for (it = values.begin(); it != values.end(); ++it) {
         if (it->first != x) {
@@ -146,7 +152,7 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
         x++;
     }
-    os << "}" << _endeq << " size: " << m << " x " << n << _endline;
+    os << "\\}" << _endEq << "% size: " << m << " x " << n << _endline;
 }
 
 template<class Base>

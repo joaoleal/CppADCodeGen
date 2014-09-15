@@ -1,12 +1,32 @@
 \documentclass{article}
 
 \usepackage{amsmath,amssymb,amsfonts,dsfont}
-\usepackage{algorithm2e}
+%\usepackage{environ} % this package can make it easier to define new environments
+\usepackage{breqn}
 
+%*******************************************************************************
+% Define new environments
+%\newenvironment{name}[num]{before}{after}
+%*******************************************************************************
+\newenvironment{CGAlgFile}{}{}
+\newenvironment{CGEqBlock}{}{}
+\newenvironment{CGLine}{}{}
+\newenvironment{CGEq}{\begin{dmath*}[nocenter]}
+                     {\hspace{\linewidth minus\linewidth}\end{dmath*}}
+
+% Using the environ package it would be:
+%\NewEnviron{CGEq}{\begin{dmath*}[nocenter]%
+%  \BODY
+%  \hspace{\linewidth minus\linewidth}
+% \end{dmath*}
+%}
+
+%\newenvironment{myenv}{\begin{adjustwidth}{2cm}{}}{\end{adjustwidth}}
+
+%*******************************************************************************
+% Document
+%*******************************************************************************
 \begin{document}
-
-\pagestyle{empty}
-
-\input{algorithm.tex}
-
+    \pagestyle{empty}
+    \input{algorithm.tex}
 \end{document} 

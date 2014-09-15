@@ -57,7 +57,6 @@ TEST(CppADCGLatexTest, latex) {
     CppAD::vector<CGD> vals = fun.Forward(0, indVars);
 
     LanguageLatex<double> langLatex;
-    langLatex.setCaption("My CppADCG algorithm");
     LangLatexDefaultVariableNameGenerator<double> nameGen;
 
     std::ofstream texfile;
