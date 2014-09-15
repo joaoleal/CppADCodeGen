@@ -35,12 +35,13 @@ TEST(CppADCGLatexTest, latex) {
     Independent(x);
 
     // dependent variable vector 
-    CppAD::vector<ADCG> y(1);
+    CppAD::vector<ADCG> y(2);
 
     // the model
     ADCG a = x[0] / 1. + x[1] * x[1];
     ADCG b = a / 2e-6;
     y[0] = b + 1 / (sign(b)*5 * a);
+    y[1] = x[1];
 
     ADFun<CGD> fun(x, y); // the model tape
 
@@ -68,6 +69,6 @@ TEST(CppADCGLatexTest, latex) {
 
     std::string dir = system::getWorkingDirectory();
 
-    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
 
 }

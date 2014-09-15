@@ -680,12 +680,15 @@ protected:
         // dependent duplicates
         if (dependentDuplicates.size() > 0) {
             _code << "% variable duplicates: " << dependentDuplicates.size() << _endline;
+            
+            checkEquationEnvStart();
             for (size_t index : dependentDuplicates) {
                 const CG<Base>& dep = (*_dependent)[index];
                 std::string varName = _nameGen->generateDependent(index);
                 const std::string& origVarName = *dep.getOperationNode()->getName();
 
-                _code << varName << _assignStr << origVarName;
+                _code << _startAlgLine << _startEq
+                        << varName << _assignStr << origVarName;
                 printAssigmentEnd();
             }
         }
@@ -699,8 +702,11 @@ protected:
                         _code << "% dependent variables without operations" << _endline;
                         commentWritten = true;
                     }
+                    checkEquationEnvStart();
+                    
                     std::string varName = _nameGen->generateDependent(i);
-                    _code << varName << _assignStr;
+                    _code << _startAlgLine << _startEq
+                            << varName << _assignStr;
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -709,9 +715,12 @@ protected:
                     _code << "% dependent variables without operations" << _endline;
                     commentWritten = true;
                 }
+                checkEquationEnvStart();
+                
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
-                _code << varName << _assignStr << indepName;
+                _code << _startAlgLine << _startEq
+                        << varName << _assignStr << indepName;
                 printAssigmentEnd(*dependent[i].getOperationNode());
             }
         }
