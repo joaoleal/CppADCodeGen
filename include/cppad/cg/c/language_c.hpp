@@ -165,7 +165,7 @@ public:
     }
 
     inline bool isIgnoreZeroDepAssign() const {
-        return _depAssignOperation;
+        return _ignoreZeroDepAssign;
     }
 
     inline void setIgnoreZeroDepAssign(bool ignore) {
