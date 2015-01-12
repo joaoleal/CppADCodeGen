@@ -185,6 +185,10 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGExcep
     vector<CGBase> hess(_hessSparsity.rows.size());
     if (_loopTapes.empty()) {
         CppAD::sparse_hessian_work work;
+        // "cppad.symmetric" may have missing values for functions using atomic 
+        // functions which only provide half of the elements 
+        // (some values could be zeroed)
+        work.color_method = "cppad.general"; 
         vector<CGBase> lowerHess(lowerHessRows.size());
         _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 

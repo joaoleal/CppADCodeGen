@@ -501,6 +501,10 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
             vector<CGBase> hessNoLoop(row.size());
 
             CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+            // "cppad.symmetric" may have missing values for functions using
+            // atomic functions which only provide half of the elements 
+            // (some values could be zeroed)
+            work.color_method = "cppad.general";
             fun.SparseHessian(tx0, pyNoLoop, _funNoLoops->getHessianOrigEqsSparsity(), row, col, hessNoLoop, work);
 
             map<size_t, map<size_t, CGBase> > hess;

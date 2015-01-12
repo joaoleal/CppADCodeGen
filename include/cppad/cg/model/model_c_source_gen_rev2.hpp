@@ -192,6 +192,9 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
     vector<CGBase> hessFlat(evalRows.size());
 
     CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+    // "cppad.symmetric" may have missing values for functions using atomic 
+    // functions which only provide half of the elements, but there is none here
+    work.color_method = "cppad.symmetric";
     _fun.SparseHessian(tx0, py, _hessSparsity.sparsity, evalRows, evalCols, hessFlat, work);
 
     std::map<size_t, vector<CGBase> > hess;

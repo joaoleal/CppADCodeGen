@@ -21,7 +21,7 @@ namespace cg {
 /**
  * An atomic function wrapper for atomic functions using the ::CppAD::cg::CG
  * type.
- * This is class can be useful when a CppAD::ADFun<CppAD::cg::CG> is going to
+ * This class can be useful when a CppAD::ADFun<CppAD::cg::CG> is going to
  * be used to create a compiled model library but has not been compiled yet.
  * 
  * @author Joao Leal

@@ -281,7 +281,7 @@ public:
         for (const auto& itLoop2Info : loopHessInfo) {
             LoopModel<Base>* loop = itLoop2Info.first;
             const HessianWithLoopsInfo<Base>& info = itLoop2Info.second;
-            
+
             const std::vector<IterEquationGroup<Base> >& eqGroups = loop->getEquationsGroups();
             size_t nIterations = loop->getIterationCount();
             size_t nEqGroups = eqGroups.size();
@@ -326,7 +326,7 @@ public:
 
                 }
             }
-            
+
             l++;
         }
 
@@ -388,6 +388,10 @@ public:
             }
 
             CppAD::sparse_hessian_work work; // temporary structure for CPPAD
+            // "cppad.symmetric" may have missing values for functions using
+            // atomic functions which only provide half of the elements 
+            // (some values could be zeroed)
+            work.color_method = "cppad.general";
             fun_->SparseHessian(x, wNoLoop, hessTapeOrigEqSparsity_, row, col, hessNoLoop, work);
 
             // save non-indexed hessian elements
