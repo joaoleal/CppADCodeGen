@@ -8,7 +8,7 @@ Build-Depends: debhelper (>= 5),
                libattr1 (>= 1 ),
                cmake (>= 2.8),
                doxygen,
-               cppad-dev (>= 20140624),
+               cppad-dev (>= 20150111),
                libclang-dev (>= 3.2),
                llvm-3.2-dev|llvm-3.4-dev,
                libeigen3-dev
@@ -17,7 +17,7 @@ Standards-Version: 3.7.2
 Package: cppadcodegen-dev
 Architecture: any
 Depends: ${misc:Depends},
-         cppad-dev (>= 20140624)
+         cppad-dev (>= 20150111)
 Suggests: libclang-dev (>= 3.2),
           llvm-3.2-dev,
           libeigen3-dev
