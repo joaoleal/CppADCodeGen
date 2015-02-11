@@ -126,16 +126,20 @@ public:
             return _nameGen->generateIndexedIndependent(indexedIndep, ip);
         }
 
+        size_t nIndex = indexedIndep.getArguments().size();
+
         CPPADCG_ASSERT_KNOWN(indexedIndep.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-        CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments().size() > 0, "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(nIndex > 0, "Invalid number of arguments");
         CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[0].getOperation() != nullptr, "Invalid argument");
         CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
-        const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*indexedIndep.getArguments()[0].getOperation());
+        std::vector<const IndexDclrOperationNode<Base>*> indices(nIndex);
+        for (size_t i = 0; i < nIndex; ++i) // typically there is only one index but there may be more
+            indices[i] = &static_cast<const IndexOperationNode<Base>&> (*indexedIndep.getArguments()[i].getOperation()).getIndex();
 
         _ss.clear();
         _ss.str("");
 
-        _ss << _multName << "[" << LanguageC<Base>::indexPattern2String(ip, index.getIndex()) << "]";
+        _ss << _multName << "[" << LanguageC<Base>::indexPattern2String(ip, indices) << "]";
         return _ss.str();
     }
 
