@@ -48,6 +48,9 @@ public:
     }
 
     LlvmModelLibrary<Base>* create() throw (CGException) {
+        // backup output format so that it can be restored
+        OStreamConfigRestore coutb(std::cout);
+
         _linker.release();
 
         this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);

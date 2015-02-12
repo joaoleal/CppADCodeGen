@@ -55,6 +55,9 @@ public:
     LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) throw (CGException) {
         using namespace llvm;
 
+        // backup output format so that it can be restored
+        OStreamConfigRestore coutb(std::cout);
+
         _linker.release();
 
         LlvmModelLibrary3_4<Base>* lib = nullptr;

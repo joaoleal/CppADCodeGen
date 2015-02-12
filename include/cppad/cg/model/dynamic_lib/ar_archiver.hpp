@@ -54,6 +54,9 @@ public:
     inline virtual void create(const std::string& library,
                                const std::set<std::string>& objectFiles,
                                JobTimer* timer = nullptr) {
+        // backup output format so that it can be restored
+        OStreamConfigRestore coutb(std::cout);
+
         std::vector<std::string> args;
         args.push_back("rcs");
         args.insert(args.end(), _flags.begin(), _flags.end());
