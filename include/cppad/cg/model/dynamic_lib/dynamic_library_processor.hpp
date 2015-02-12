@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+#include <iostream>
+
 namespace CppAD {
 namespace cg {
 
@@ -99,6 +101,10 @@ public:
      */
     DynamicLib<Base>* createDynamicLibrary(CCompiler<Base>& compiler,
                                            bool loadLib = true) throw (CGException) {
+        // backup output format 
+        std::ios::fmtflags f(std::cout.flags());
+        std::streamsize nf = std::cout.precision();
+
         this->modelLibraryHelper_->startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
@@ -133,6 +139,10 @@ public:
 
         this->modelLibraryHelper_->finishedJob();
 
+        // restore output format
+        std::cout.flags(f);
+        std::cout.precision(nf);
+
         if (loadLib)
             return loadDynamicLibrary();
         else
@@ -153,6 +163,10 @@ public:
     void createStaticLibrary(CCompiler<Base>& compiler,
                              Archiver& ar,
                              bool posIndepCode) {
+        // backup output format 
+        std::ios::fmtflags f(std::cout.flags());
+        std::streamsize nf = std::cout.precision();
+
         this->modelLibraryHelper_->startingJob("", JobTimer::STATIC_MODEL_LIBRARY);
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
@@ -185,6 +199,10 @@ public:
         compiler.cleanup();
 
         this->modelLibraryHelper_->finishedJob();
+
+        // restore output format
+        std::cout.flags(f);
+        std::cout.precision(nf);
     }
 
     virtual ~DynamicModelLibraryProcessor() {
