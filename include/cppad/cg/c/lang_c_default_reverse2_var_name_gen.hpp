@@ -141,20 +141,25 @@ public:
         if (varType == 0) {
             return _nameGen->generateIndexedIndependent(independent, ip);
         } else {
+            size_t nIndex = independent.getArguments().size();
+
             CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation() != nullptr, "Invalid argument");
-            CPPADCG_ASSERT_KNOWN(independent.getArguments()[0].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+            CPPADCG_ASSERT_KNOWN(nIndex > 0, "Invalid number of arguments");
 
             _ss.clear();
             _ss.str("");
 
-            const IndexOperationNode<Base>& index = static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[0].getOperation());
-
+            std::vector<const IndexDclrOperationNode<Base>*> indices(nIndex);
+            for (size_t i = 0; i < nIndex; ++i) {// typically there is only one index but there may be more
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation() != nullptr, "Invalid argument");
+                CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
+                indices[i] = &static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[i].getOperation()).getIndex();
+            }
+            
             if (varType == 1) {
-                _ss << _level1Name << "[" << LanguageC<Base>::indexPattern2String(ip, index.getIndex()) << "]";
+                _ss << _level1Name << "[" << LanguageC<Base>::indexPattern2String(ip, indices) << "]";
             } else {
-                _ss << _level2Name << "[" << LanguageC<Base>::indexPattern2String(ip, index.getIndex()) << "]";
+                _ss << _level2Name << "[" << LanguageC<Base>::indexPattern2String(ip, indices) << "]";
             }
             return _ss.str();
         }

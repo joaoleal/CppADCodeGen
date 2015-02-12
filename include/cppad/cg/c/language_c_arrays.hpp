@@ -203,15 +203,15 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             if (i - starti < 3)
                 return starti;
 
-            LinearIndexPattern* lip2 = new LinearIndexPattern(*refLIp);
+            std::unique_ptr<LinearIndexPattern> lip2(new LinearIndexPattern(*refLIp));
             lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
-            Plane2DIndexPattern p2dip(lip2,
+            Plane2DIndexPattern p2dip(lip2.release(),
                                       new LinearIndexPattern(0, 1, 1, 0));
 
             IndexDclrOperationNode<Base> indexI("i");
             IndexOperationNode<Base> iterationIndexOp(indexI);
 
-            OperationNode<Base> op2(refOp.getOperationType(), refOp.getInfo(), refOp.getArguments()); //clone
+            OperationNode<Base> op2(CGOpCode::LoopIndexedIndep, refOp.getInfo(), refOp.getArguments()); //clone
             op2.getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
             op2.getArguments().push_back(iterationIndexOp);
 
