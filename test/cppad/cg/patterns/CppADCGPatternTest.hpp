@@ -122,17 +122,9 @@ public:
         /**
          * Tape model
          */
-        std::vector<ADCGD> x(xb.size());
-        for (size_t j = 0; j < xb.size(); j++)
-            x[j] = xb[j];
-        CppAD::Independent(x);
+        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb));
 
-        std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
-
-        ADFun<CGD> fun;
-        fun.Dependent(y);
-
-        testPatternDetectionResults(fun, repeat, relatedDepCandidates, loops);
+        testPatternDetectionResults(*fun, repeat, relatedDepCandidates, loops);
     }
 
     void testLibCreation(const std::string& libName,
@@ -170,39 +162,48 @@ public:
         /**
          * Tape model
          */
+        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb));
+
+        defineCustomSparsity(*fun);
+
+        testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, testJacobian_, testHessian_);
+        if (testJacobian_) {
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, true, false, true);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false, true);
+        }
+
+        if (testHessian_) {
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, false, true, false, true);
+        }
+
+    }
+
+    ADFun<CGD>* tapeModel(size_t repeat,
+                          const std::vector<Base>& xb) {
+        /**
+         * Tape model
+         */
         std::vector<ADCGD> x(xb.size());
         for (size_t j = 0; j < xb.size(); j++)
             x[j] = xb[j];
         CppAD::Independent(x);
         if (xNorm_.size() > 0) {
-            ASSERT_EQ(x.size(), xNorm_.size());
+            assert(x.size() == xNorm_.size());
             for (size_t j = 0; j < x.size(); j++)
                 x[j] *= xNorm_[j];
         }
 
         std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
         if (eqNorm_.size() > 0) {
-            ASSERT_EQ(y.size(), eqNorm_.size());
+            assert(y.size() == eqNorm_.size());
             for (size_t i = 0; i < y.size(); i++)
                 y[i] /= eqNorm_[i];
         }
 
-        ADFun<CGD> fun;
-        fun.Dependent(y);
-
-        defineCustomSparsity(fun);
-
-        testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, testJacobian_, testHessian_);
-        if (testJacobian_) {
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, true, false, true);
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false);
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false, true);
-        }
-
-        if (testHessian_) {
-            testSourceCodeGen(fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, false, true, false, true);
-        }
-
+        std::unique_ptr<ADFun<CGD> > fun(new ADFun<CGD>());
+        fun->Dependent(y);
+        return fun.release();
     }
 
     std::vector<std::set<size_t> > createRelatedDepCandidates(size_t m,
@@ -280,6 +281,8 @@ public:
 
             orderedCalcLoops[minDep] = dependents;
         }
+
+        //print(orderedCalcLoops);
 
         //  - expected
         bool defined = false;

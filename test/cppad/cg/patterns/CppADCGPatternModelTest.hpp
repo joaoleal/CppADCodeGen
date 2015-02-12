@@ -64,6 +64,12 @@ public:
         testLibCreation("model" + modelName, relatedDepCandidates, repeat, xb);
     }
 
+    void testPatterns(size_t repeat, const std::vector<std::vector<std::set<size_t> > >& loops) {
+        std::vector<std::set<size_t> > relatedDepCandidates = getRelatedCandidates(repeat);
+
+        this->testPatternDetection(xb, repeat, relatedDepCandidates, loops);
+    }
+
 
 protected:
 

@@ -17,6 +17,7 @@
 
 
 namespace CppAD {
+namespace cg {
 
 const size_t nStage = 8; // number of stages
 
@@ -101,11 +102,14 @@ public:
 #endif
     }
 
-    virtual std::vector<ADCGD> modelFunc(const std::vector<ADCGD>& x) {
+    virtual std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x, size_t repeat) override {
+        assert(repeat == nStage);
         return distillationFunc(x);
     }
 
-    virtual std::vector<std::set<size_t> > getRelatedCandidates() {
+    virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t repeat) override {
+        assert(repeat == nStage);
+        
         std::vector<std::set<size_t> > relatedDepCandidates(6);
         size_t j = 0;
         for (size_t i = 0; i < nStage; i++, j++) relatedDepCandidates[0].insert(j); // mWater
@@ -120,45 +124,23 @@ public:
 };
 
 }
+}
 
 using namespace CppAD;
+using namespace CppAD::cg;
 
 /**
  * @test test the usage of loops for the generation of distillation model
  */
 TEST_F(CppADCGPatternDistillationTest, distillationAllVars) {
     modelName += "AllVars";
+    useCustomSparsity_ = false;
 
-    /**
-     * Tape model
-     */
-    std::unique_ptr<ADFun<CGD> > fun;
-    this->tape(fun);
-
-    /**
-     * test
-     */
-    this->test(*fun.get());
-
+    this->test(nStage);
 }
 
 TEST_F(CppADCGPatternDistillationTest, distillation) {
-    using namespace CppAD::extra;
+    useCustomSparsity_ = true;
 
-    /**
-     * Tape model
-     */
-    std::unique_ptr<ADFun<CGD> > fun;
-    this->tape(fun);
-
-    /**
-     * Determine the relevant elements
-     */
-    this->defineCustomSparsity(*fun.get());
-
-    /**
-     * test
-     */
-    this->test(*fun.get());
-
+    this->test(nStage);
 }
