@@ -201,6 +201,9 @@ inline std::ostream& operator<<(
         os << v.getValue();
     } else {
         os << *v.getOperationNode();
+        if (v.isValueDefined()) {
+            os << " (" << v.getValue() << ")";
+        }
     }
     return os;
 }
@@ -214,6 +217,9 @@ inline std::ostringstream& operator<<(
         os << v.getValue();
     } else {
         os << *v.getOperationNode();
+        if (v.isValueDefined()) {
+            os << " (" << v.getValue() << ")";
+        }
     }
     return os;
 }
