@@ -26,17 +26,17 @@ int main(void) {
     typedef AD<CGD> ADCG;
 
     // independent variable vector
-    std::vector<ADCG> U(2);
-    Independent(U);
+    std::vector<ADCG> X(2);
+    Independent(X);
 
     // dependent variable vector 
-    std::vector<ADCG> Z(1);
+    std::vector<ADCG> Y(1);
 
     // the model
-    ADCG a = U[0] / 1. + U[1] * U[1];
-    Z[0] = a / 2;
+    ADCG a = X[0] / 1. + X[1] * X[1];
+    Y[0] = a / 2;
 
-    ADFun<CGD> fun(U, Z);
+    ADFun<CGD> fun(X, Y);
 
     /**
      * Create the dynamic library
@@ -44,21 +44,28 @@ int main(void) {
      */
 
     // generates source code
-    ModelCSourceGen<double> compModelH(fun, "model");
-    compModelH.setCreateJacobian(true);
-    ModelLibraryCSourceGen<double> compDynH(compModelH);
+    ModelCSourceGen<double> cgen(fun, "model");
+    cgen.setCreateJacobian(true);
+    cgen.setCreateForwardOne(true);
+    cgen.setCreateReverseOne(true);
+    cgen.setCreateReverseTwo(true);
+    ModelLibraryCSourceGen<double> libcgen(cgen);
 
     // compile source code
-    DynamicModelLibraryProcessor<double> p(compDynH);
+    DynamicModelLibraryProcessor<double> p(libcgen);
 
     GccCompiler<double> compiler;
     DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+
+    // save to files (not really required)
+    SaveFilesModelLibraryProcessor<double> p2(libcgen);
+    p2.saveSources();
 
     /**
      * Use the dynamic library
      */
     GenericModel<double>* model = dynamicLib->model("model");
-    std::vector<double> x(U.size());
+    std::vector<double> x(X.size());
     x[0] = 2.5;
     x[1] = 3.5;
     std::vector<double> jac = model->Jacobian(x);
