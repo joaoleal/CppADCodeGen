@@ -66,6 +66,34 @@ CppAD::ADFun<T>* CondExp_vpvvFunc(const std::vector<CppAD::AD<T> >& X) {
 }
 
 template<class T>
+CppAD::ADFun<T>* CondExp_vpvpFunc(const std::vector<CppAD::AD<T> >& X) {
+    using namespace CppAD;
+    using namespace std;
+
+    assert(X.size() == 3);
+
+    // parameter value
+    AD<T> one = T(1.);
+    AD<T> zero = T(0.);
+
+    // dependent variable vector 
+    std::vector< AD<T> > Y(5);
+
+    // CondExp(variable, parameter, variable, variable)
+    Y[0] = CondExpLt(X[0], one, X[1] * X[2], zero);
+    Y[1] = CondExpLe(X[0], one, X[1] * X[2], zero);
+    Y[2] = CondExpEq(X[0], one, X[1] * X[2], zero);
+    Y[3] = CondExpGe(X[0], one, X[1] * X[2], zero);
+    Y[4] = CondExpGt(X[0], one, X[1] * X[2], zero);
+
+    // create f: X -> Y 
+    ADFun<T>* fun = new ADFun<T> (X, Y);
+    fun->optimize();
+
+    return fun;
+}
+
+template<class T>
 CppAD::ADFun<T>* CondExp_vvpvFunc(const std::vector<CppAD::AD<T> >& X) {
     using namespace CppAD;
     using namespace std;

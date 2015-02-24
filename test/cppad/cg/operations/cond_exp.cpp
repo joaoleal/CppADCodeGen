@@ -36,6 +36,16 @@ TEST_F(CppADCGOperationTest, CondExp_vpvv) {
     test0nJac("CondExp_vpvv", &CondExp_vpvvFunc<double >, &CondExp_vpvvFunc<CG<double> >, u);
 }
 
+TEST_F(CppADCGOperationTest, CondExp_vpvp) {
+    // independent variable vector
+    std::vector<std::vector<double> > u{
+        {0, 1, 2},
+        {1, 0.5, 2}
+    };
+
+    test0nJac("CondExp_vpvp", &CondExp_vpvpFunc<double >, &CondExp_vpvpFunc<CG<double> >, u);
+}
+
 TEST_F(CppADCGOperationTest, CondExp_vvpv) {
     // independent variable vector
     std::vector<double> u{0, 1, 2};
