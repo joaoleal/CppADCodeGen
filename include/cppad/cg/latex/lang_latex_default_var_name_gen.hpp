@@ -170,7 +170,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(independent, 0));
+        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(independent));
         _ss << _indepName << "_";
         if (index.size() > 1)
             _ss << "{" << index << "}";
@@ -227,7 +227,7 @@ protected:
         return ss;
     }
 
-    static inline std::vector<const IndexDclrOperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset) {
+    static inline std::vector<const IndexDclrOperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset = 0) {
         const std::vector<Argument<Base> >& args = var.getArguments();
         std::vector<const IndexDclrOperationNode<Base>*> indexes(args.size() - offset);
 
