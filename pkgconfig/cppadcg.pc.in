@@ -16,4 +16,4 @@ Description:  @cppadcg_description@
 Version:      @cppadcg_version@
 URL:          @cppadcg_url@
 Cflags:       -I@install_cppadcg_include_location@ -I@install_cppad_include_location@
-Requires:     cppad >= 20131007
+Requires:     cppad >= 20150302
