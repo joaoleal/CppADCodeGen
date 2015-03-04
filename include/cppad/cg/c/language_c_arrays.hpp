@@ -135,7 +135,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
     if (ref.getOperation() != nullptr) {
         // 
         const OperationNode<Base>& refOp = *ref.getOperation();
-        if (refOp.getOperationType() == CGOpCode::Inv) {
+        CGOpCode op = refOp.getOperationType();
+        if (op == CGOpCode::Inv) {
             /**
              * from independents array
              */
@@ -162,7 +163,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             else
                 arrayAssign << indep << "[" << offset << " + i]";
 
-        } else if (refOp.getOperationType() == CGOpCode::LoopIndexedIndep) {
+        } else if (op == CGOpCode::LoopIndexedIndep) {
             /**
              * from independents array in a loop
              */
@@ -216,6 +217,39 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             op2.getArguments().push_back(iterationIndexOp);
 
             arrayAssign << _nameGen->generateIndexedIndependent(op2, p2dip);
+        } else if (refOp.getVariableID() >= this->_minTemporaryVarID && op != CGOpCode::LoopIndexedDep && op != CGOpCode::LoopIndexedTmp && op != CGOpCode::Tmp) {
+            /**
+             * from temporary variable array
+             */
+            for (; i < argSize; i++) {
+                if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
+                    break; // no assignment needed
+                else if (args[i].getOperation() == nullptr)
+                    break;
+
+                const OperationNode<Base>& opNode2 = *args[i].getOperation();
+                if (opNode2.getVariableID() < this->_minTemporaryVarID)
+                    break;
+
+                CGOpCode op2 = opNode2.getOperationType();
+                if (op2 == CGOpCode::LoopIndexedIndep || op2 == CGOpCode::LoopIndexedDep || op2 == CGOpCode::LoopIndexedTmp || op2 == CGOpCode::Tmp)
+                    break;
+
+                if (!_nameGen->isConsecutiveInTemporaryVarArray(*args[i - 1].getOperation(), *args[i].getOperation()))
+                    break;
+            }
+
+            if (i - starti < 3)
+                return starti;
+
+            // use loop
+            const std::string& tmpName = _nameGen->getTemporaryVarArrayName(refOp);
+            size_t start = _nameGen->getTemporaryVarArrayIndex(refOp);
+            long offset = long(start) - starti;
+            if (offset == 0)
+                arrayAssign << tmpName << "[i]";
+            else
+                arrayAssign << tmpName << "[" << offset << " + i]";
 
         } else {
             // no loop used

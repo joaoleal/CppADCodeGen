@@ -199,6 +199,24 @@ public:
         _nameGen->setTemporaryVariableID(minTempID, maxTempID, maxTempArrayID, maxTempSparseArrayID);
     }
 
+    virtual const std::string& getTemporaryVarArrayName(const OperationNode<Base>& var) override {
+        return _nameGen->getTemporaryVarArrayName(var);
+    }
+
+    virtual size_t getTemporaryVarArrayIndex(const OperationNode<Base>& var) override {
+        return _nameGen->getTemporaryVarArrayIndex(var);
+    }
+
+    virtual bool isConsecutiveInTemporaryVarArray(const OperationNode<Base>& varFirst,
+                                                  const OperationNode<Base>& varSecond) override {
+        return _nameGen->isConsecutiveInTemporaryVarArray(varFirst, varSecond);
+    }
+
+    virtual bool isInSameTemporaryVarArray(const OperationNode<Base>& var1,
+                                           const OperationNode<Base>& var2) override {
+        return _nameGen->isInSameTemporaryVarArray(var1, var2);
+    }
+
     inline virtual ~LangCDefaultHessianVarNameGenerator() {
     }
 

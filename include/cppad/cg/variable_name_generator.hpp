@@ -177,7 +177,8 @@ public:
                                         size_t maxTempSparseArrayID) = 0;
 
     /**
-     * Provides the name of the array where the provided independent.
+     * Provides the array name where independent variables are provided to the 
+     * function.
      * It should only be called if independents are saved in an array.
      * 
      * @param indep the independent variable node (CGInvOp)
@@ -216,6 +217,47 @@ public:
      */
     virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
                                           const OperationNode<Base>& indep2) = 0;
+
+    /**
+     * Provides the array name for the temporary variables.
+     * It should only be called if temporary variables are saved in an array.
+     * 
+     * @param indep the temporary variable node
+     * @return the array name
+     */
+    virtual const std::string& getTemporaryVarArrayName(const OperationNode<Base>& var) = 0;
+
+    /**
+     * Provides the index in the associated temporary array of a temporary 
+     * variable.
+     * It should only be called if temporary variables are saved in an array.
+     * 
+     * @param indep the temporary variable node
+     * @return the index
+     */
+    virtual size_t getTemporaryVarArrayIndex(const OperationNode<Base>& var) = 0;
+
+    /**
+     * Whether or not two temporary variables are considered to be part of
+     * the same temporary variable array at consecutive locations.
+     * 
+     * @param varFirst the temporary variable node with the lower index
+     * @param varSecond the temporary variable node with the higher index
+     * @return true if they are consecutive
+     */
+    virtual bool isConsecutiveInTemporaryVarArray(const OperationNode<Base>& varFirst,
+                                                  const OperationNode<Base>& varSecond) = 0;
+
+    /**
+     * Determines whether or not two temporary variables are part of the same
+     * temporary variable array.
+     * 
+     * @param var1 the temporary variable node
+     * @param var2 the temporary variable node
+     * @return true if the temporary variables are part of the same array
+     */
+    virtual bool isInSameTemporaryVarArray(const OperationNode<Base>& var1,
+                                           const OperationNode<Base>& var2) = 0;
 
     virtual void customFunctionVariableDeclarations(std::ostream& out) {
     }

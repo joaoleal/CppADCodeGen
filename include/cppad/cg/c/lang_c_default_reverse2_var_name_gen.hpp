@@ -155,7 +155,7 @@ public:
                 CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");
                 indices[i] = &static_cast<const IndexOperationNode<Base>&> (*independent.getArguments()[i].getOperation()).getIndex();
             }
-            
+
             if (varType == 1) {
                 _ss << _level1Name << "[" << LanguageC<Base>::indexPattern2String(ip, indices) << "]";
             } else {
@@ -222,6 +222,24 @@ public:
         }
 
         return l1 == l2;
+    }
+
+    virtual const std::string& getTemporaryVarArrayName(const OperationNode<Base>& var) override {
+        return _nameGen->getTemporaryVarArrayName(var);
+    }
+
+    virtual size_t getTemporaryVarArrayIndex(const OperationNode<Base>& var) override {
+        return _nameGen->getTemporaryVarArrayIndex(var);
+    }
+
+    virtual bool isConsecutiveInTemporaryVarArray(const OperationNode<Base>& varFirst,
+                                                  const OperationNode<Base>& varSecond) override {
+        return _nameGen->isConsecutiveInTemporaryVarArray(varFirst, varSecond);
+    }
+
+    virtual bool isInSameTemporaryVarArray(const OperationNode<Base>& var1,
+                                           const OperationNode<Base>& var2) override {
+        return _nameGen->isInSameTemporaryVarArray(var1, var2);
     }
 
     virtual void setTemporaryVariableID(size_t minTempID,
