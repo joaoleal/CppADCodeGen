@@ -169,11 +169,17 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
              */
             size_t pos = refOp.getInfo()[1];
             IndexPattern* refIp = (*_info)->loopIndependentIndexPatterns[pos];
-            if (refIp->getType() != IndexPatternType::Linear) {
+
+            LinearIndexPattern* refLIp = nullptr;
+            SectionedIndexPattern* refSecp = nullptr;
+
+            if (refIp->getType() == IndexPatternType::Linear) {
+                refLIp = static_cast<LinearIndexPattern*> (refIp);
+            } else if (refIp->getType() == IndexPatternType::Sectioned) {
+                refSecp = static_cast<SectionedIndexPattern*> (refIp);
+            } else {
                 return starti; // cannot determine consecutive elements
             }
-
-            LinearIndexPattern* refLIp = static_cast<LinearIndexPattern*> (refIp);
 
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
@@ -189,24 +195,75 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
 
                 pos = args[i].getOperation()->getInfo()[1];
                 const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
-                if (ip->getType() != IndexPatternType::Linear) {
+                if (ip->getType() == IndexPatternType::Linear) {
+                    if (refLIp == nullptr)
+                        break; // different pattern type
+                    const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
+                    if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
+                            refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
+                            refLIp->getXOffset() != lIp->getXOffset() ||
+                            refLIp->getLinearConstantTerm() - long(starti) != lIp->getLinearConstantTerm() - long(i)) {
+                        break; // different pattern type
+                    }
+                } else if (ip->getType() == IndexPatternType::Sectioned) {
+                    if (refSecp == nullptr)
+                        break; // different pattern type
+                    const SectionedIndexPattern* lIp = static_cast<const SectionedIndexPattern*> (ip);
+
+                    if (refSecp->getLinearSections().size() != lIp->getLinearSections().size())
+                        break; // different pattern type
+
+                    auto itRef = refSecp->getLinearSections().begin();
+                    bool samePatterns = true;
+                    for (const auto& section : lIp->getLinearSections()) {
+                        if (itRef->first != section.first) {
+                            samePatterns = false;
+                            break; // different pattern type
+                        } else if (itRef->second->getType() != IndexPatternType::Linear || section.second->getType() != IndexPatternType::Linear) {
+                            samePatterns = false;
+                            break; // unable to handle this now, consider different patterns
+                        }
+
+                        LinearIndexPattern* refSecLIp = static_cast<LinearIndexPattern*> (itRef->second);
+                        LinearIndexPattern* secLIp = static_cast<LinearIndexPattern*> (section.second);
+
+                        if (refSecLIp->getLinearSlopeDx() != secLIp->getLinearSlopeDx() ||
+                                refSecLIp->getLinearSlopeDy() != secLIp->getLinearSlopeDy() ||
+                                refSecLIp->getXOffset() != secLIp->getXOffset() ||
+                                refSecLIp->getLinearConstantTerm() - long(starti) != secLIp->getLinearConstantTerm() - long(i)) {
+                            samePatterns = false;
+                            break; // different pattern type
+                        }
+
+                        ++itRef;
+                    }
+                    if (!samePatterns)
+                        break;
+
+                } else {
                     break; // different pattern type
-                }
-                const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
-                if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
-                        refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
-                        refLIp->getXOffset() != lIp->getXOffset() ||
-                        refLIp->getLinearConstantTerm() - long(starti) != lIp->getLinearConstantTerm() - long(i)) {
-                    break;
                 }
             }
 
             if (i - starti < 3)
                 return starti;
 
-            std::unique_ptr<LinearIndexPattern> lip2(new LinearIndexPattern(*refLIp));
-            lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
-            Plane2DIndexPattern p2dip(lip2.release(),
+            std::unique_ptr<IndexPattern> ip2;
+            if (refLIp != nullptr) {
+                LinearIndexPattern* lip2 = new LinearIndexPattern(*refLIp);
+                ip2.reset(lip2);
+                lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
+            } else {
+                assert(refSecp != nullptr);
+                std::map<size_t, IndexPattern*> sections;
+                for (const auto& section : refSecp->getLinearSections()) {
+                    LinearIndexPattern* lip2 = new LinearIndexPattern(*static_cast<LinearIndexPattern*> (section.second));
+                    lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
+                    sections[section.first] = lip2;
+                }
+                ip2.reset(new SectionedIndexPattern(sections));
+            }
+            Plane2DIndexPattern p2dip(ip2.release(),
                                       new LinearIndexPattern(0, 1, 1, 0));
 
             IndexDclrOperationNode<Base> indexI("i");
