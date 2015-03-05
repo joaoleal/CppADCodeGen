@@ -65,23 +65,23 @@ public:
         this->_temporary.push_back(FuncArgument(_tmpSparseArrayName));
     }
 
-    inline virtual size_t getMinTemporaryVariableID() const {
+    inline virtual size_t getMinTemporaryVariableID() const override {
         return _minTemporaryID;
     }
 
-    inline virtual size_t getMaxTemporaryVariableID() const {
+    inline virtual size_t getMaxTemporaryVariableID() const override {
         return _maxTemporaryID;
     }
 
-    inline virtual size_t getMaxTemporaryArrayVariableID() const {
+    inline virtual size_t getMaxTemporaryArrayVariableID() const override {
         return _maxTemporaryArrayID;
     }
 
-    virtual size_t getMaxTemporarySparseArrayVariableID() const {
+    virtual size_t getMaxTemporarySparseArrayVariableID() const override {
         return _maxTemporarySparseArrayID;
     }
 
-    inline virtual std::string generateDependent(size_t index) {
+    inline virtual std::string generateDependent(size_t index) override {
         _ss.clear();
         _ss.str("");
 
@@ -102,7 +102,7 @@ public:
         return _ss.str();
     }
 
-    inline virtual std::string generateTemporary(const OperationNode<Base>& variable) {
+    inline virtual std::string generateTemporary(const OperationNode<Base>& variable) override {
         _ss.clear();
         _ss.str("");
 
@@ -118,7 +118,7 @@ public:
         return _ss.str();
     }
 
-    virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) {
+    virtual std::string generateTemporaryArray(const OperationNode<Base>& variable) override {
         _ss.clear();
         _ss.str("");
 
@@ -131,7 +131,7 @@ public:
         return _ss.str();
     }
 
-    virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) {
+    virtual std::string generateTemporarySparseArray(const OperationNode<Base>& variable) override {
         _ss.clear();
         _ss.str("");
 
@@ -145,7 +145,7 @@ public:
     }
 
     virtual std::string generateIndexedDependent(const OperationNode<Base>& var,
-                                                 const IndexPattern& ip) {
+                                                 const IndexPattern& ip) override {
         CPPADCG_ASSERT_KNOWN(var.getOperationType() == CGOpCode::LoopIndexedDep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(!var.getArguments().empty(), "Invalid number of arguments");
 
@@ -163,7 +163,7 @@ public:
     }
 
     virtual std::string generateIndexedIndependent(const OperationNode<Base>& independent,
-                                                   const IndexPattern& ip) {
+                                                   const IndexPattern& ip) override {
         CPPADCG_ASSERT_KNOWN(independent.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(independent.getArguments().size() > 0, "Invalid number of arguments");
 
@@ -183,7 +183,7 @@ public:
     inline virtual void setTemporaryVariableID(size_t minTempID,
                                                size_t maxTempID,
                                                size_t maxTempArrayID,
-                                               size_t maxTempSparseArrayID) {
+                                               size_t maxTempSparseArrayID) override {
         _minTemporaryID = minTempID;
         _maxTemporaryID = maxTempID;
         _maxTemporaryArrayID = maxTempArrayID;
@@ -195,21 +195,40 @@ public:
         CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
     }
 
-    virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) {
+    virtual const std::string& getIndependentArrayName(const OperationNode<Base>& indep) override {
         return _indepName;
     }
 
-    virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) {
+    virtual size_t getIndependentArrayIndex(const OperationNode<Base>& indep) override {
         return indep.getVariableID() - 1;
     }
 
     virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
-                                           const OperationNode<Base>& indepSecond) {
+                                           const OperationNode<Base>& indepSecond) override {
         return indepFirst.getVariableID() + 1 == indepSecond.getVariableID();
     }
 
     virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
-                                          const OperationNode<Base>& indep2) {
+                                          const OperationNode<Base>& indep2) override {
+        return true;
+    }
+
+    virtual const std::string& getTemporaryVarArrayName(const OperationNode<Base>& var) override {
+        return _tmpName;
+    }
+
+    virtual size_t getTemporaryVarArrayIndex(const OperationNode<Base>& var) override {
+        size_t id = var.getVariableID();
+        return id - this->_minTemporaryID;
+    }
+
+    virtual bool isConsecutiveInTemporaryVarArray(const OperationNode<Base>& varFirst,
+                                                  const OperationNode<Base>& varSecond) override {
+        return varFirst.getVariableID() + 1 == varSecond.getVariableID();
+    }
+
+    virtual bool isInSameTemporaryVarArray(const OperationNode<Base>& var1,
+                                           const OperationNode<Base>& var2) override {
         return true;
     }
 
