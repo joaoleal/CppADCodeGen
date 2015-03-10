@@ -231,7 +231,8 @@ public:
     }
 
     /**
-     * Provides the ID of the last visitation to this node.
+     * Provides the ID of the last visitation to this node. 
+     * This is used to navigate through the operation tree.
      * 
      * @return the last visitation ID
      */
@@ -239,6 +240,12 @@ public:
         return last_visit_;
     }
 
+    /**
+     * Defines the ID of the last visitation to this node. 
+     * This is used to navigate through the operation tree.
+     * 
+     * @param visit the last visitation ID
+     */
     inline void setVisitId(size_t visit) {
         last_visit_ = visit;
     }
@@ -325,7 +332,7 @@ template<class Base>
 const std::set<CGOpCode> OperationNode<Base>::CUSTOM_NODE_CLASS = makeCustomNodeClassesSet();
 
 template<class Base>
-inline std::ostream& operator <<(
+inline std::ostream& operator<<(
         std::ostream& os, //< stream to write to
         const OperationNode<Base>& c) {
     CGOpCode op = c.getOperationType();
