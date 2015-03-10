@@ -46,6 +46,13 @@ public:
         return this->getArguments().size() > 1;
     }
 
+    inline OperationNode<Base>& getIndexCreationNode() const {
+        const std::vector<Argument<Base> >& args = this->getArguments();
+        CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
+        CPPADCG_ASSERT_KNOWN(args.back().getOperation() != nullptr, "Invalid argument type");
+        return *args.back().getOperation();
+    }
+
     inline const IndexDclrOperationNode<Base>& getIndex() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");

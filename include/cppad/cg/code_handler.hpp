@@ -1694,96 +1694,116 @@ protected:
         // determine the location of the last temporary variable used for each dependent
         startNewOperationTreeVisit();
 
-        for (size_t i = 0; i < dependent.size(); i++) {
+        // normal dependent nodes
+        for (size_t i = 0; i < dependent.size(); ++i) {
             OperationNode<Base>* node = dependent[i].getOperationNode();
             if (node != nullptr) {
-                /**
-                 * determine the location of the last temporary variable
-                 */
-                size_t depPos = node->getEvaluationOrder();
-                size_t lastTmpPos = depPos;
-                if (!isVisited(*node)) {
-                    // dependencies not visited yet
-                    lastTmpPos = findLastTemporaryLocation(*node);
-                }
-                markVisited(*node);
+                reorderOperation(*node);
+            }
+        }
 
-                /**
-                 * move dependent if beneficial
-                 */
-                if (lastTmpPos == depPos || lastTmpPos + 1 == depPos) {
-                    continue; // should not change location of the evaluation of this dependent
-                }
-
-                // should only move if there are temporaries which could use other temporaries released by the dependent
-                bool foundTemporaries = false;
-                size_t newPos;
-                for (size_t l = lastTmpPos + 1; l < depPos; ++l) {
-                    const auto* node = _variableOrder[l - 1];
-                    if (isTemporary(*node) || isTemporaryArray(*node) || isTemporarySparseArray(*node)) {
-                        foundTemporaries = true;
-                        newPos = l;
-                        break;
-                    } else {
-                        /**
-                         * Must be in same scope
-                         */
-                        CGOpCode op = node->getOperationType();
-                        if (op == CGOpCode::StartIf) {
-                            // must not change scope (find the end of this conditional statement)
-                            ++l;
-                            while (l < depPos) {
-                                const auto* node2 = _variableOrder[l - 1];
-                                if (node2->getOperationType() == CGOpCode::EndIf &&
-                                        node2->getArguments()[0].getOperation() == node) {
-                                    break; // found the end (returned to the same scope)
-                                }
-                                ++l;
-                            }
-
-                        } else if (op == CGOpCode::LoopStart) {
-                            // must not change scope (find the end of this loop statement)
-                            ++l;
-                            while (l < depPos) {
-                                const auto* node2 = _variableOrder[l - 1];
-                                if (node2->getOperationType() == CGOpCode::LoopEnd &&
-                                        &static_cast<const LoopEndOperationNode<Base>*> (node2)->getLoopStart() == node) {
-                                    break; // found the end (returned to the same scope)
-                                }
-                                ++l;
-                            }
-                        }
-                    }
-                }
-
-                if (foundTemporaries) {
-                    // move variables
-                    repositionEvaluationQueue(depPos, newPos);
+        // dependent nodes defined inside loops
+        for (const LoopEndOperationNode<Base>* endNode : _loops.endNodes) {
+            const std::vector<Argument<Base> >& args = endNode->getArguments();
+            for (size_t i = 1; i < args.size(); ++i) {
+                CPPADCG_ASSERT_UNKNOWN(args[i].getOperation() != nullptr);
+                // TODO: also consider CGOpCode::LoopIndexedDep inside a CGOpCode::endIf
+                if (args[i].getOperation()->getOperationType() == CGOpCode::LoopIndexedDep) { 
+                    reorderOperation(*args[i].getOperation());
                 }
             }
         }
     }
 
+    inline void reorderOperation(OperationNode<Base>& node) {
+        /**
+         * determine the location of the last temporary variable
+         */
+        size_t depPos = node.getEvaluationOrder();
+        size_t lastTmpPos = depPos;
+        if (!isVisited(node)) {
+            // dependencies not visited yet
+            lastTmpPos = findLastTemporaryLocation(node);
+        }
+        markVisited(node);
+
+        /**
+         * move dependent if beneficial
+         */
+        if (lastTmpPos == depPos || lastTmpPos + 1 == depPos) {
+            return; // should not change location of the evaluation of this dependent
+        }
+
+        // should only move if there are temporaries which could use other temporaries released by the dependent
+        bool foundTemporaries = false;
+        size_t newPos;
+        for (size_t l = lastTmpPos + 1; l < depPos; ++l) {
+            const auto* n = _variableOrder[l - 1];
+            if (isTemporary(*n) || isTemporaryArray(*n) || isTemporarySparseArray(*n)) {
+                foundTemporaries = true;
+                newPos = l;
+                break;
+            } else {
+                /**
+                 * Must be in same scope
+                 */
+                CGOpCode op = n->getOperationType();
+                if (op == CGOpCode::StartIf) {
+                    // must not change scope (find the end of this conditional statement)
+                    ++l;
+                    while (l < depPos) {
+                        const auto* node2 = _variableOrder[l - 1];
+                        if (node2->getOperationType() == CGOpCode::EndIf &&
+                                node2->getArguments()[0].getOperation() == n) {
+                            break; // found the end (returned to the same scope)
+                        }
+                        ++l;
+                    }
+
+                } else if (op == CGOpCode::LoopStart) {
+                    // must not change scope (find the end of this loop statement)
+                    ++l;
+                    while (l < depPos) {
+                        const auto* node2 = _variableOrder[l - 1];
+                        if (node2->getOperationType() == CGOpCode::LoopEnd &&
+                                &static_cast<const LoopEndOperationNode<Base>*> (node2)->getLoopStart() == n) {
+                            break; // found the end (returned to the same scope)
+                        }
+                        ++l;
+                    }
+                }
+            }
+        }
+
+        if (foundTemporaries) {
+            // move variables
+            repositionEvaluationQueue(depPos, newPos);
+        }
+    }
+
     /**
-     * Determine the highest location in the evaluation queue of the temporary
+     * Determine the highest location in the evaluation queue of temporary
      * variables used by an operation node in the same scope.
      * @return the highest location of the temporary variables or 
      *         the location of node itself if it doesn't use any temporary 
      *         variable (in the same scope)
      */
-    inline size_t findLastTemporaryLocation(OperationNode<Base>& code) {
-        CGOpCode op = code.getOperationType();
-
-        size_t depOrder = code.getEvaluationOrder();
+    inline size_t findLastTemporaryLocation(OperationNode<Base>& node) {
+        size_t depOrder = node.getEvaluationOrder();
         size_t maxTmpOrder = 0; // lowest possible value is 1
-        for (const Argument<Base>& it : code.getArguments()) {
+        for (const Argument<Base>& it : node.getArguments()) {
             if (it.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *it.getOperation();
-                if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
+                CGOpCode aOp = arg.getOperationType();
+                if (aOp == CGOpCode::LoopEnd || aOp == CGOpCode::EndIf || aOp == CGOpCode::ElseIf || aOp == CGOpCode::Else) {
                     continue; //should not move variables to a different scope
                 }
 
-                if (arg.getEvaluationOrder() == depOrder) {
+                if (aOp == CGOpCode::Index) {
+                    size_t iorder = static_cast<IndexOperationNode<Base>&> (arg).getIndexCreationNode().getEvaluationOrder();
+                    if (iorder > maxTmpOrder)
+                        maxTmpOrder = iorder;
+                } else if (arg.getEvaluationOrder() == depOrder) {
                     // dependencies not visited yet
                     size_t orderNew = findLastTemporaryLocation(arg);
                     if (orderNew > maxTmpOrder)
@@ -1802,7 +1822,7 @@ protected:
     inline void repositionEvaluationQueue(size_t fromPos, size_t toPos) {
         // Warning: there is an offset of 1 between the evaluation order saved 
         // in the node and the actual location in the _variableOrder
-        assert(fromPos > toPos);
+        CPPADCG_ASSERT_UNKNOWN(fromPos > toPos);
         OperationNode<Base>* node = _variableOrder[fromPos - 1]; // node to be moved
 
         // move variables in between the order change
