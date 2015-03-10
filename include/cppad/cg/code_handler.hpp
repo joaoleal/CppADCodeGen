@@ -30,6 +30,9 @@ public:
     typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     typedef std::vector<ScopePathElement<Base> > ScopePath;
 protected:
+    struct LoopData; // forward declaration
+
+protected:
     // counter used to determine visitation IDs for the operation tree
     size_t _idVisit;
     // counter used to generate variable IDs
@@ -55,16 +58,10 @@ protected:
      * (each level represents a different variable scope)
      */
     std::vector<std::vector<OperationNode<Base> *> > _scopedVariableOrder;
-    // maps the loop ids of the loop atomic functions
-    std::map<size_t, LoopModel<Base>*> _loops;
-    // the used indexes
-    std::set<const IndexDclrOperationNode<Base>*> _indexes;
-    // the used random index patterns
-    std::set<RandomIndexPattern*> _indexRandomPatterns;
-    //
-    std::vector<IndexPattern*> _loopDependentIndexPatterns;
-    std::vector<const IndexPattern*> _loopDependentIndexPatternManaged; // garbage collection
-    std::vector<IndexPattern*> _loopIndependentIndexPatterns;
+    /**
+     *
+     */
+    LoopData _loops;
     /**
      * maps the IDs of the atomic functions
      */
@@ -97,17 +94,11 @@ protected:
     bool _used;
     // a flag indicating whether or not to reuse the IDs of destroyed variables
     bool _reuseIDs;
-    // the used variables inside a loop from the outside (for different loop depths)
-    std::vector<std::set<OperationNode<Base>*> > _loopOuterVars;
-    // the current loop depth (-1 means no loop)
-    int _loopDepth;
-    // the evaluation order of the loop start for each loop depth
-    std::vector<size_t> _loopStartEvalOrder;
     // scope color/index counter
     size_t _scopeColorCount;
     // the current scope color/index counter
     size_t _currentScopeColor;
-    // all the scopes
+    // all scopes
     std::vector<ScopePath> _scopes;
     // possible altered nodes due to scope conditionals (altered node <-> clone of original)
     std::list<std::pair<OperationNode<Base>*, OperationNode<Base>* > > _alteredNodes;
@@ -143,7 +134,6 @@ public:
         _atomicFunctionsOrder(nullptr),
         _used(false),
         _reuseIDs(true),
-        _loopDepth(-1),
         _scopeColorCount(0),
         _currentScopeColor(0),
         _lang(nullptr),
@@ -316,12 +306,7 @@ public:
      *         registered or nullptr otherwise
      */
     inline const std::string* getLoopName(size_t id) const {
-        typename std::map<size_t, LoopModel<Base>*>::const_iterator it;
-        it = _loops.find(id);
-        if (it != _loops.end())
-            return &(it->second->afun_name());
-        else
-            return nullptr;
+        return _loops.getLoopName(id);
     }
 
     inline const std::vector<ScopePath>& getScopes() const {
@@ -408,16 +393,13 @@ public:
         _atomicFunctionsMaxForward.resize(atomicFunctions.size());
         _atomicFunctionsMaxReverse.resize(atomicFunctions.size());
         _atomicFunctionName2Index.clear();
-        _indexes.clear();
-        _indexRandomPatterns.clear();
-        _loopOuterVars.clear();
-        _loopDepth = -1;
+        _loops.prepare4NewSourceGen();
         _scopeColorCount = 0;
         _currentScopeColor = 0;
         _scopes.reserve(4);
         _scopes.resize(1);
         _alteredNodes.clear();
-        _loopStartEvalOrder.clear();
+
         for (size_t i = 0; i < atomicFunctions.size(); i++) {
             _atomicFunctionName2Index[atomicFunctions[i]] = i;
         }
@@ -546,8 +528,8 @@ public:
                     atomicFunctionId2Index, atomicFunctionId2Name,
                     _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
                     _reuseIDs,
-                    _indexes, _indexRandomPatterns,
-                    _loopDependentIndexPatterns, _loopIndependentIndexPatterns,
+                    _loops.indexes, _loops.indexRandomPatterns,
+                    _loops.dependentIndexPatterns, _loops.independentIndexPatterns,
                     _zeroDependents));
         lang.generateSourceCode(out, _info);
 
@@ -611,16 +593,7 @@ public:
         _idSparseArrayCount = 1;
         _idAtomicCount = 1;
 
-        _loops.clear();
-        _indexes.clear();
-        _indexRandomPatterns.clear();
-        _loopDependentIndexPatterns.clear();
-        _loopIndependentIndexPatterns.clear();
-
-        for (const IndexPattern* itip : _loopDependentIndexPatternManaged) {
-            delete itip;
-        }
-        _loopDependentIndexPatternManaged.clear();
+        _loops.reset();
 
         _used = false;
     }
@@ -680,13 +653,21 @@ public:
 
     const std::map<size_t, LoopModel<Base>*>& getLoops() const;
 
-    LoopModel<Base>* getLoop(size_t loopId) const;
+    inline LoopModel<Base>* getLoop(size_t loopId) const {
+        return _loops.getLoop(loopId);
+    }
 
-    size_t addLoopDependentIndexPattern(IndexPattern& jacPattern);
+    inline size_t addLoopDependentIndexPattern(IndexPattern& jacPattern) {
+        return _loops.addDependentIndexPattern(jacPattern);
+    }
 
-    void manageLoopDependentIndexPattern(const IndexPattern* pattern);
+    inline void manageLoopDependentIndexPattern(const IndexPattern* pattern) {
+        _loops.manageDependentIndexPattern(pattern);
+    }
 
-    size_t addLoopIndependentIndexPattern(IndexPattern& pattern, size_t hint);
+    inline size_t addLoopIndependentIndexPattern(IndexPattern& pattern, size_t hint) {
+        return _loops.addIndependentIndexPattern(pattern, hint);
+    }
 
     /***********************************************************************
      *                           Index patterns
@@ -853,6 +834,10 @@ protected:
                     // same level but different scope
                     _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor, &code);
                 }
+
+                if (op == CGOpCode::LoopEnd) {
+                    _loops.addLoopEndNode(code);
+                }
             }
 
             /**
@@ -868,21 +853,21 @@ protected:
                 const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
                 // indexes that don't depend on a loop start or an index assignment are declared elsewhere
                 if (inode.isDefinedLocally()) {
-                    _indexes.insert(&inode.getIndex());
+                    _loops.indexes.insert(&inode.getIndex());
                 }
             } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep || op == CGOpCode::IndexAssign) {
                 IndexPattern* ip;
                 if (op == CGOpCode::LoopIndexedDep) {
                     size_t pos = code.getInfo()[0];
-                    ip = _loopDependentIndexPatterns[pos];
+                    ip = _loops.dependentIndexPatterns[pos];
                 } else if (op == CGOpCode::LoopIndexedIndep) {
                     size_t pos = code.getInfo()[1];
-                    ip = _loopIndependentIndexPatterns[pos];
+                    ip = _loops.independentIndexPatterns[pos];
                 } else {
                     ip = &static_cast<IndexAssignOperationNode<Base>&> (code).getIndexPattern();
                 }
 
-                findRandomIndexPatterns(ip, _indexRandomPatterns);
+                findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
 
             } else if (op == CGOpCode::DependentRefRhs) {
                 CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
@@ -1463,11 +1448,6 @@ protected:
     }
 
     /***********************************************************************
-     *                        Loop management
-     **********************************************************************/
-    virtual void registerLoop(LoopModel<Base>& loop);
-
-    /***********************************************************************
      * 
      **********************************************************************/
     virtual void checkVariableCreation(OperationNode<Base>& code) {
@@ -1839,25 +1819,25 @@ protected:
      * Determines when each temporary variable is last used in the
      * evaluation order
      * 
-     * @param code The current node to determine the number of usages
+     * @param node The current node for which the number of usages is to be to determined
      */
-    inline void determineLastTempVarUsage(OperationNode<Base>& code) {
-        CGOpCode op = code.getOperationType();
+    inline void determineLastTempVarUsage(OperationNode<Base>& node) {
+        CGOpCode op = node.getOperationType();
 
         if (op == CGOpCode::LoopEnd) {
-            LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (code);
-            _loopDepth++;
-            _loopOuterVars.resize(_loopDepth + 1);
-            _loopStartEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
+            LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+            _loops.depth++;
+            _loops.outerVars.resize(_loops.depth + 1);
+            _loops.startEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
 
         } else if (op == CGOpCode::LoopStart) {
-            _loopDepth--; // leaving the current loop
+            _loops.depth--; // leaving the current loop
         }
 
         /**
          * count variable usage
          */
-        for (const Argument<Base>& it : code.getArguments()) {
+        for (const Argument<Base>& it : node.getArguments()) {
             if (it.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *it.getOperation();
 
@@ -1868,18 +1848,18 @@ protected:
 
                 markVisited(arg);
 
-                size_t order = code.getEvaluationOrder();
+                size_t order = node.getEvaluationOrder();
                 OperationNode<Base>* aa = getOperationFromAlias(arg); // follow alias!
                 if (aa != nullptr) {
                     if (aa->getLastUsageEvaluationOrder() < order) {
                         aa->setLastUsageEvaluationOrder(order);
                     }
 
-                    if (_loopDepth >= 0 &&
-                            aa->getEvaluationOrder() < _loopStartEvalOrder[_loopDepth] &&
+                    if (_loops.depth >= 0 &&
+                            aa->getEvaluationOrder() < _loops.startEvalOrder[_loops.depth] &&
                             isTemporary(*aa)) {
                         // outer variable used inside the loop
-                        _loopOuterVars[_loopDepth].insert(aa);
+                        _loops.outerVars[_loops.depth].insert(aa);
                     }
                 }
             }
@@ -1890,21 +1870,21 @@ protected:
              * temporary variables from outside the loop which are used
              * within the loop cannot be overwritten inside that loop
              */
-            size_t order = code.getEvaluationOrder();
+            size_t order = node.getEvaluationOrder();
 
-            const std::set<OperationNode<Base>*>& outerLoopUsages = _loopOuterVars.back();
+            const std::set<OperationNode<Base>*>& outerLoopUsages = _loops.outerVars.back();
             for (OperationNode<Base>* outerVar : outerLoopUsages) {
                 OperationNode<Base>* aa = getOperationFromAlias(*outerVar); // follow alias!
                 if (aa != nullptr && aa->getLastUsageEvaluationOrder() < order)
                     aa->setLastUsageEvaluationOrder(order);
             }
 
-            _loopDepth--;
-            _loopOuterVars.pop_back();
-            _loopStartEvalOrder.pop_back();
+            _loops.depth--;
+            _loops.outerVars.pop_back();
+            _loops.startEvalOrder.pop_back();
 
         } else if (op == CGOpCode::LoopStart) {
-            _loopDepth++; // coming back to the loop
+            _loops.depth++; // coming back to the loop
         }
 
     }
@@ -1929,7 +1909,7 @@ protected:
     inline void updateEvaluationQueueOrder(OperationNode<Base>& node,
                                            size_t newEvalOrder) {
         size_t oldEvalOrder = node.getEvaluationOrder();
-        
+
         node.setEvaluationOrder(newEvalOrder);
 
         for (const Argument<Base>& a : node.getArguments()) {
@@ -2010,6 +1990,61 @@ protected:
     static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
                                                                 OperationNode<Base>& node);
 
+    /***************************************************************************
+     *                   Loop related structure/methods
+     **************************************************************************/
+    struct LoopData {
+        // maps the loop ids of the loop atomic functions
+        std::map<size_t, LoopModel<Base>*> loopModels;
+        std::vector<LoopEndOperationNode<Base>*> endNodes;
+        // the used indexes
+        std::set<const IndexDclrOperationNode<Base>*> indexes;
+        // the used random index patterns
+        std::set<RandomIndexPattern*> indexRandomPatterns;
+        //
+        std::vector<IndexPattern*> dependentIndexPatterns;
+        std::vector<const IndexPattern*> dependentIndexPatternManaged; // garbage collection
+        std::vector<IndexPattern*> independentIndexPatterns;
+        // variables used inside a loop which are assigned outside (for different loop depths)
+        std::vector<std::set<OperationNode<Base>*> > outerVars;
+        // the current loop depth (-1 means no loop)
+        int depth;
+        // the evaluation order of the loop start for each loop depth
+        std::vector<size_t> startEvalOrder;
+
+        inline LoopData() :
+            depth(-1) {
+        }
+
+        inline void prepare4NewSourceGen();
+
+        inline void reset();
+
+        /**
+         * Provides the name used by a loop atomic function with a given ID.
+         * 
+         * @param id the atomic function ID.
+         * @return a pointer to the atomic loop function name if it was
+         *         registered, nullptr otherwise
+         */
+        inline const std::string* getLoopName(size_t id) const;
+
+        inline void registerModel(LoopModel<Base>& loop);
+
+        inline LoopModel<Base>* getLoop(size_t loopId) const;
+
+        size_t addDependentIndexPattern(IndexPattern& jacPattern);
+
+        void manageDependentIndexPattern(const IndexPattern* pattern);
+
+        size_t addIndependentIndexPattern(IndexPattern& pattern, size_t hint);
+
+        void addLoopEndNode(OperationNode<Base>& node);
+    };
+
+    /***************************************************************************
+     *                                friends
+     **************************************************************************/
     friend class CG<Base>;
     friend class CGAbstractAtomicFun<Base>;
     friend class BaseAbstractAtomicFun<Base>;

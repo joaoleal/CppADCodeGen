@@ -19,19 +19,56 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void CodeHandler<Base>::registerLoop(LoopModel<Base>& loop) {
-    _loops[loop.getLoopId()] = &loop;
-}
-
-template<class Base>
 const std::map<size_t, LoopModel<Base>*>& CodeHandler<Base>::getLoops() const {
-    return _loops;
+    return _loops.loopModels;
 }
 
 template<class Base>
-LoopModel<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
-    typename std::map<size_t, LoopModel<Base>*>::const_iterator it = _loops.find(loopId);
-    if (it != _loops.end()) {
+inline void CodeHandler<Base>::LoopData::prepare4NewSourceGen() {
+    indexes.clear();
+    indexRandomPatterns.clear();
+    outerVars.clear();
+    depth = -1;
+    startEvalOrder.clear();
+    endNodes.clear();
+
+    endNodes.reserve(loopModels.size());
+}
+
+template<class Base>
+inline void CodeHandler<Base>::LoopData::reset() {
+    loopModels.clear();
+    indexes.clear();
+    indexRandomPatterns.clear();
+    dependentIndexPatterns.clear();
+    independentIndexPatterns.clear();
+    endNodes.clear();
+
+    for (const IndexPattern* itip : dependentIndexPatternManaged) {
+        delete itip;
+    }
+    dependentIndexPatternManaged.clear();
+}
+
+template<class Base>
+inline const std::string* CodeHandler<Base>::LoopData::getLoopName(size_t id) const {
+    typename std::map<size_t, LoopModel<Base>*>::const_iterator it;
+    it = loopModels.find(id);
+    if (it != loopModels.end())
+        return &(it->second->afun_name());
+    else
+        return nullptr;
+}
+
+template<class Base>
+void CodeHandler<Base>::LoopData::registerModel(LoopModel<Base>& loop) {
+    loopModels[loop.getLoopId()] = &loop;
+}
+
+template<class Base>
+LoopModel<Base>* CodeHandler<Base>::LoopData::getLoop(size_t loopId) const {
+    typename std::map<size_t, LoopModel<Base>*>::const_iterator it = loopModels.find(loopId);
+    if (it != loopModels.end()) {
         return it->second;
     }
 
@@ -39,37 +76,44 @@ LoopModel<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
 }
 
 template<class Base>
-size_t CodeHandler<Base>::addLoopDependentIndexPattern(IndexPattern& pattern) {
-    size_t size = _loopDependentIndexPatterns.size();
-    if (_loopDependentIndexPatterns.capacity() == size) {
-        _loopDependentIndexPatterns.reserve((size * 3) / 2 + 1);
+size_t CodeHandler<Base>::LoopData::addDependentIndexPattern(IndexPattern& pattern) {
+    size_t size = dependentIndexPatterns.size();
+    if (dependentIndexPatterns.capacity() == size) {
+        dependentIndexPatterns.reserve((size * 3) / 2 + 1);
     }
-    _loopDependentIndexPatterns.push_back(&pattern);
+    dependentIndexPatterns.push_back(&pattern);
 
     return size;
 }
 
 template<class Base>
-void CodeHandler<Base>::manageLoopDependentIndexPattern(const IndexPattern* pattern) {
-    size_t sizeM = _loopDependentIndexPatternManaged.size();
-    if (_loopDependentIndexPatternManaged.capacity() == sizeM) {
-        _loopDependentIndexPatternManaged.reserve((sizeM * 3) / 2 + 1);
+void CodeHandler<Base>::LoopData::manageDependentIndexPattern(const IndexPattern* pattern) {
+    size_t sizeM = dependentIndexPatternManaged.size();
+    if (dependentIndexPatternManaged.capacity() == sizeM) {
+        dependentIndexPatternManaged.reserve((sizeM * 3) / 2 + 1);
     }
-    _loopDependentIndexPatternManaged.push_back(pattern);
+    dependentIndexPatternManaged.push_back(pattern);
 }
 
 template<class Base>
-size_t CodeHandler<Base>::addLoopIndependentIndexPattern(IndexPattern& pattern, size_t hint) {
-    size_t size = _loopIndependentIndexPatterns.size();
-    if (hint < size && _loopIndependentIndexPatterns[hint] == &pattern) {
+size_t CodeHandler<Base>::LoopData::addIndependentIndexPattern(IndexPattern& pattern, size_t hint) {
+    size_t size = independentIndexPatterns.size();
+    if (hint < size && independentIndexPatterns[hint] == &pattern) {
         return hint;
     }
-    if (_loopIndependentIndexPatterns.capacity() == size) {
-        _loopIndependentIndexPatterns.reserve((size * 3) / 2 + 1);
+    if (independentIndexPatterns.capacity() == size) {
+        independentIndexPatterns.reserve((size * 3) / 2 + 1);
     }
-    _loopIndependentIndexPatterns.push_back(&pattern);
+    independentIndexPatterns.push_back(&pattern);
 
     return size;
+}
+
+template<class Base>
+void CodeHandler<Base>::LoopData::addLoopEndNode(OperationNode<Base>& node) {
+    CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::LoopEnd);
+    LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+    endNodes.push_back(&loopEnd);
 }
 
 } // END cg namespace
