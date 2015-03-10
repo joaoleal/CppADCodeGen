@@ -263,7 +263,7 @@ public:
     inline void markVisited(OperationNode<Base>& node) const {
         node.setVisitId(_idVisit);
     }
-    
+
     /**
      * Provides the name used by an atomic function with a given ID.
      * 
@@ -1407,7 +1407,7 @@ protected:
                                       OperationNode<Base>* endIf) {
         if (node == nullptr || isVisited(*node))
             return;
-        
+
         markVisited(*node);
 
         CGOpCode op = node->getOperationType();
@@ -1628,6 +1628,8 @@ protected:
     inline void reduceTemporaryVariables(CppAD::vector<CG<Base> >& dependent) {
         using CppAD::vector;
 
+        reorderOperations(dependent);
+
         /**
          * determine the last line where each temporary variable is used
          */
@@ -1701,6 +1703,136 @@ protected:
 
         _idArrayCount = arrayComp.getIdCount();
         _idSparseArrayCount = sparseArrayComp.getIdCount();
+    }
+
+    /**
+     * Change operation order so that the total number of temporary variables is
+     * reduced.
+     * @param dependent The vector of dependent variable values
+     */
+    inline void reorderOperations(CppAD::vector<CG<Base> >& dependent) {
+        // determine the location of the last temporary variable used for each dependent
+        startNewOperationTreeVisit();
+
+        for (size_t i = 0; i < dependent.size(); i++) {
+            OperationNode<Base>* node = dependent[i].getOperationNode();
+            if (node != nullptr) {
+                /**
+                 * determine the location of the last temporary variable
+                 */
+                size_t depPos = node->getEvaluationOrder();
+                size_t lastTmpPos = depPos;
+                if (!isVisited(*node)) {
+                    // dependencies not visited yet
+                    lastTmpPos = findLastTemporaryLocation(*node);
+                }
+                markVisited(*node);
+
+                /**
+                 * move dependent if beneficial
+                 */
+                if (lastTmpPos == depPos || lastTmpPos + 1 == depPos) {
+                    continue; // should not change location of the evaluation of this dependent
+                }
+
+                // should only move if there are temporaries which could use other temporaries released by the dependent
+                bool foundTemporaries = false;
+                size_t newPos;
+                for (size_t l = lastTmpPos + 1; l < depPos; ++l) {
+                    const auto* node = _variableOrder[l - 1];
+                    if (isTemporary(*node) || isTemporaryArray(*node) || isTemporarySparseArray(*node)) {
+                        foundTemporaries = true;
+                        newPos = l;
+                        break;
+                    } else {
+                        /**
+                         * Must be in same scope
+                         */
+                        CGOpCode op = node->getOperationType();
+                        if (op == CGOpCode::StartIf) {
+                            // must not change scope (find the end of this conditional statement)
+                            ++l;
+                            while (l < depPos) {
+                                const auto* node2 = _variableOrder[l - 1];
+                                if (node2->getOperationType() == CGOpCode::EndIf &&
+                                        node2->getArguments()[0].getOperation() == node) {
+                                    break; // found the end (returned to the same scope)
+                                }
+                                ++l;
+                            }
+
+                        } else if (op == CGOpCode::LoopStart) {
+                            // must not change scope (find the end of this loop statement)
+                            ++l;
+                            while (l < depPos) {
+                                const auto* node2 = _variableOrder[l - 1];
+                                if (node2->getOperationType() == CGOpCode::LoopEnd &&
+                                        &static_cast<const LoopEndOperationNode<Base>*> (node2)->getLoopStart() == node) {
+                                    break; // found the end (returned to the same scope)
+                                }
+                                ++l;
+                            }
+                        }
+                    }
+                }
+
+                if (foundTemporaries) {
+                    // move variables
+                    repositionEvaluationQueue(depPos, newPos);
+                }
+            }
+        }
+    }
+
+    /**
+     * Determine the highest location in the evaluation queue of the temporary
+     * variables used by an operation node in the same scope.
+     * @return the highest location of the temporary variables or 
+     *         the location of node itself if it doesn't use any temporary 
+     *         variable (in the same scope)
+     */
+    inline size_t findLastTemporaryLocation(OperationNode<Base>& code) {
+        CGOpCode op = code.getOperationType();
+
+        size_t depOrder = code.getEvaluationOrder();
+        size_t maxTmpOrder = 0; // lowest possible value is 1
+        for (const Argument<Base>& it : code.getArguments()) {
+            if (it.getOperation() != nullptr) {
+                OperationNode<Base>& arg = *it.getOperation();
+                if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
+                    continue; //should not move variables to a different scope
+                }
+
+                if (arg.getEvaluationOrder() == depOrder) {
+                    // dependencies not visited yet
+                    size_t orderNew = findLastTemporaryLocation(arg);
+                    if (orderNew > maxTmpOrder)
+                        maxTmpOrder = orderNew;
+                } else {
+                    // no need to visit dependencies
+                    if (arg.getEvaluationOrder() > maxTmpOrder)
+                        maxTmpOrder = arg.getEvaluationOrder();
+                }
+            }
+        }
+
+        return maxTmpOrder == 0 ? depOrder : maxTmpOrder;
+    }
+
+    inline void repositionEvaluationQueue(size_t fromPos, size_t toPos) {
+        // Warning: there is an offset of 1 between the evaluation order saved 
+        // in the node and the actual location in the _variableOrder
+        assert(fromPos > toPos);
+        OperationNode<Base>* node = _variableOrder[fromPos - 1]; // node to be moved
+
+        // move variables in between the order change
+        for (size_t l = fromPos - 1; l > toPos - 1; --l) {
+            _variableOrder[l] = _variableOrder[l - 1];
+            updateEvaluationQueueOrder(*_variableOrder[l], l + 1);
+        }
+
+        _variableOrder[toPos - 1] = node;
+        updateEvaluationQueueOrder(*node, toPos);
     }
 
     /**
@@ -1779,17 +1911,32 @@ protected:
 
     /**
      * Defines the evaluation order for the code fragments that do not
-     * create variables
+     * create variables (right hand side variables)
      * @param code The operation just added to the evaluation order
      */
-    inline void dependentAdded2EvaluationQueue(OperationNode<Base>& code) {
-        for (const Argument<Base>& a : code.getArguments()) {
+    inline void dependentAdded2EvaluationQueue(OperationNode<Base>& node) {
+        for (const Argument<Base>& a : node.getArguments()) {
             if (a.getOperation() != nullptr) {
-                OperationNode<Base>& node = *a.getOperation();
-                if (node.getEvaluationOrder() == 0) {
-                    node.setEvaluationOrder(code.getEvaluationOrder());
-                    dependentAdded2EvaluationQueue(node);
+                OperationNode<Base>& arg = *a.getOperation();
+                if (arg.getEvaluationOrder() == 0) {
+                    arg.setEvaluationOrder(node.getEvaluationOrder());
+                    dependentAdded2EvaluationQueue(arg);
                 }
+            }
+        }
+    }
+
+    inline void updateEvaluationQueueOrder(OperationNode<Base>& node,
+                                           size_t newEvalOrder) {
+        size_t oldEvalOrder = node.getEvaluationOrder();
+        
+        node.setEvaluationOrder(newEvalOrder);
+
+        for (const Argument<Base>& a : node.getArguments()) {
+            if (a.getOperation() != nullptr) {
+                OperationNode<Base>& arg = *a.getOperation();
+                if (arg.getEvaluationOrder() == oldEvalOrder)
+                    updateEvaluationQueueOrder(arg, newEvalOrder);
             }
         }
     }
