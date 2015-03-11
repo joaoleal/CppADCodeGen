@@ -119,15 +119,17 @@ public:
 
     static inline std::map<size_t, IndexPattern*> detectLinearSections(const std::map<size_t, size_t>& x2y,
                                                                        size_t maxCount = 0) {
+        typedef std::map<size_t, size_t>::const_iterator c_iter;
+
         SmartMapValuePointer<size_t, IndexPattern> linearSections;
 
         LinearIndexPattern* prevPattern = nullptr;
-        std::map<size_t, size_t>::const_iterator prevStart = x2y.begin();
-
-        std::map<size_t, size_t>::const_iterator pStart = x2y.begin();
+        c_iter prevStart = x2y.begin();
+        
+        c_iter pStart = x2y.begin();
         while (pStart != x2y.end()) {
-            std::map<size_t, size_t>::const_iterator pNextSection = x2y.end();
-            std::map<size_t, size_t>::const_iterator p1 = pStart;
+            c_iter pNextSection = x2y.end();
+            c_iter p1 = pStart;
             ++p1;
 
             long xOffset, dy, dx, b;
@@ -169,11 +171,17 @@ public:
             size_t xStart = pStart->first;
             if (dy == 0 && prevPattern != nullptr) { // constant
                 // can we take the last element from the previous section?
-                while (pStart != x2y.begin() && prevPattern->evaluate(xStart - 1) == b) {
+
+                while (pStart != x2y.begin()) {
+                    c_iter prevBack = pStart;
+                    --prevBack; // the values at the end of the previous section
+                    if (prevPattern->evaluate(prevBack->first) != b)
+                        break; // no
+                    
                     // yes
                     --pStart;
                     xStart = pStart->first;
-                    std::map<size_t, size_t>::const_iterator prevStartN = prevStart;
+                    c_iter prevStartN = prevStart;
                     prevStartN++;
                     if (prevStartN == pStart) {
                         // it has only one element -> make it a constant section

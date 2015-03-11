@@ -355,14 +355,14 @@ public:
                            JacobianADMode jacMode,
                            bool jacobian = true,
                            bool hessian = true,
-                           bool forReverseOne = false,
+                           bool forRevOne = false,
                            bool reverseTwo = false) {
 
         bool loadModels = this->testZeroOrder_ || jacobian || hessian;
 
         std::string libBaseName = name;
         if (jacobian) {
-            if (!forReverseOne) libBaseName += "d";
+            if (!forRevOne) libBaseName += "d";
             if (jacMode == JacobianADMode::Forward) libBaseName += "F";
             else if (jacMode == JacobianADMode::Reverse) libBaseName += "R";
         }
@@ -382,8 +382,8 @@ public:
         compHelpL.setCreateHessian(false);
         compHelpL.setCreateSparseJacobian(jacobian);
         compHelpL.setCreateSparseHessian(hessian);
-        compHelpL.setCreateForwardOne(forReverseOne && jacMode == JacobianADMode::Forward);
-        compHelpL.setCreateReverseOne(forReverseOne && jacMode == JacobianADMode::Reverse);
+        compHelpL.setCreateForwardOne(forRevOne && jacMode == JacobianADMode::Forward);
+        compHelpL.setCreateReverseOne(forRevOne && jacMode == JacobianADMode::Reverse);
         compHelpL.setCreateReverseTwo(reverseTwo);
         //compHelpL.setMaxAssignmentsPerFunc(maxAssignPerFunc);
         compHelpL.setRelatedDependents(relatedDepCandidates);

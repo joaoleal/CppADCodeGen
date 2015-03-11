@@ -242,8 +242,8 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                 localIterCount2Jcols[itCount].insert(jcol);
             }
 
-            bool createsLoop = localIterCount2Jcols.size() != 1 || // is there a different number of it
-                    localIterCount2Jcols.begin()->first != 1; // is there always just on iteration?
+            bool createsLoop = localIterCount2Jcols.size() != 1 || // is there a different number of iterations
+                    localIterCount2Jcols.begin()->first != 1; // is there always just one iteration?
 
             /**
              * Model index pattern
