@@ -111,7 +111,11 @@ protected:
 
     //
     inline void makeParameter(const Base& b);
-    inline void makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation);
+    inline void makeVariable(CodeHandler<Base>& handler,
+                             OperationNode<Base>* operation);
+    inline void makeVariable(CodeHandler<Base>& handler,
+                             OperationNode<Base>* operation,
+                             std::unique_ptr<Base>& value);
 
     // creating an argument out of this node
     inline Argument<Base> argument() const;

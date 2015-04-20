@@ -45,10 +45,12 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Add,{argument(), right.argument()}));
+        std::unique_ptr<Base> value;
         if (isValueDefined() && right.isValueDefined()) {
-            setValue(getValue() + right.getValue());
+            value.reset(new Base(getValue() + right.getValue()));
         }
+
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Add,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -76,10 +78,12 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Sub,{argument(), right.argument()}));
+        std::unique_ptr<Base> value;
         if (isValueDefined() && right.isValueDefined()) {
-            setValue(getValue() - right.getValue());
+            value.reset(new Base(getValue() - right.getValue()));
         }
+
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Sub,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -117,10 +121,12 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Mul,{argument(), right.argument()}));
+        std::unique_ptr<Base> value;
         if (isValueDefined() && right.isValueDefined()) {
-            setValue(getValue() * right.getValue());
+            value.reset(new Base(getValue() * right.getValue()));
         }
+
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Mul,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -152,10 +158,12 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
             handler = getCodeHandler();
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Div,{argument(), right.argument()}));
+        std::unique_ptr<Base> value;
         if (isValueDefined() && right.isValueDefined()) {
-            setValue(getValue() / right.getValue());
+            value.reset(new Base(getValue() / right.getValue()));
         }
+
+        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Div,{argument(), right.argument()}), value);
     }
 
     return *this;

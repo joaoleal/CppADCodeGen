@@ -69,12 +69,26 @@ inline void CG<Base>::makeParameter(const Base &b) {
 }
 
 template<class Base>
-inline void CG<Base>::makeVariable(CodeHandler<Base>& handler, OperationNode<Base>* operation) {
+inline void CG<Base>::makeVariable(CodeHandler<Base>& handler,
+                                   OperationNode<Base>* operation) {
     CPPADCG_ASSERT_UNKNOWN(operation != nullptr);
     opNode_ = operation;
     handler_ = &handler;
     delete value_;
     value_ = nullptr;
+
+    handler.manageOperationNode(operation);
+}
+
+template<class Base>
+inline void CG<Base>::makeVariable(CodeHandler<Base>& handler,
+                                   OperationNode<Base>* operation,
+                                   std::unique_ptr<Base>& value) {
+    CPPADCG_ASSERT_UNKNOWN(operation != nullptr);
+    opNode_ = operation;
+    handler_ = &handler;
+    delete value_;
+    value_ = value.release();
 
     handler.manageOperationNode(operation);
 }
