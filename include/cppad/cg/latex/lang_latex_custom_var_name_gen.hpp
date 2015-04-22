@@ -27,6 +27,7 @@ namespace cg {
 template<class Base>
 class LangLatexCustomVariableNameGenerator : public LangLatexDefaultVariableNameGenerator<Base> {
 protected:
+    typedef LangLatexDefaultVariableNameGenerator<Base> Super;
     // the custom names for the dependent variables
     const std::vector<std::string> depNames_;
     // the custom names for the independent variables
@@ -49,7 +50,7 @@ public:
         if (index < depNames_.size() && !depNames_[index].empty()) {
             return depNames_[index];
         } else {
-            return LangLatexDefaultVariableNameGenerator<Base>::generateDependent(index);
+            return Super::generateDependent(index);
         }
     }
 
@@ -58,7 +59,7 @@ public:
         if (index < indepNames_.size() && !indepNames_[index].empty()) {
             return indepNames_[index];
         } else {
-            return LangLatexDefaultVariableNameGenerator<Base>::generateIndependent(independent);
+            return Super::generateIndependent(independent);
         }
     }
 

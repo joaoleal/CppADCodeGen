@@ -3,6 +3,7 @@
 \usepackage{amsmath,amssymb,amsfonts,dsfont}
 %\usepackage{environ} % this package can make it easier to define new environments
 \usepackage{breqn}
+\usepackage{xcolor}
 
 %*******************************************************************************
 % Define new environments
@@ -13,6 +14,8 @@
 \newenvironment{CGLine}{}{}
 \newenvironment{CGEq}{\begin{dmath*}[nocenter]}
                      {\hspace{\linewidth minus\linewidth}\end{dmath*}}
+\newenvironment{CGVar}{\color{blue!60!black}\boldsymbol}
+                      {\ignorespacesafterend}
 
 % Using the environ package it would be:
 %\NewEnviron{CGEq}{\begin{dmath*}[nocenter]%

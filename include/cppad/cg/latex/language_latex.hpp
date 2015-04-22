@@ -45,6 +45,10 @@ protected:
     const std::unique_ptr<LanguageGenerationData<Base> >* _info;
     // current indentation
     size_t _indentationLevel;
+    // text before a variable name
+    std::string _startVar;
+    // text after a variable name
+    std::string _endVar;
     // text before an individual equation
     std::string _startEq;
     // text after an individual equation
@@ -119,6 +123,8 @@ public:
     LanguageLatex() :
         _info(nullptr),
         _indentationLevel(0),
+        _startVar("\\begin{CGVar}"),
+        _endVar("\\end{CGVar}"),
         _startEq("\\begin{CGEq}"),
         _endEq("\\end{CGEq}"),
         _startAlgLine("\\begin{CGLine}"),
@@ -166,6 +172,25 @@ public:
 
     virtual void setFilename(const std::string& name) {
         _filename = name;
+    }
+
+    /**
+     * Defines the Latex environment for each variable.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setVariableEnvironment(const std::string& begin,
+                                        const std::string& end) {
+        _startVar = begin;
+        _endVar = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each variable.
+     */
+    virtual const std::string& getVariableEnvironmentStart() const {
+        return _startVar;
     }
 
     /**
@@ -630,7 +655,7 @@ protected:
                     if (a.array) {
                         _code << a.name;
                     } else {
-                        _code << _nameGen->generateDependent(i);
+                        _code << _startVar << _nameGen->generateDependent(i) << _endVar;
                     }
                     _code << _assignStr;
                     printParameter(Base(0.0));
@@ -680,7 +705,7 @@ protected:
         // dependent duplicates
         if (dependentDuplicates.size() > 0) {
             _code << "% variable duplicates: " << dependentDuplicates.size() << _endline;
-            
+
             checkEquationEnvStart();
             for (size_t index : dependentDuplicates) {
                 const CG<Base>& dep = (*_dependent)[index];
@@ -688,7 +713,9 @@ protected:
                 const std::string& origVarName = *dep.getOperationNode()->getName();
 
                 _code << _startAlgLine << _startEq
-                        << varName << _assignStr << origVarName;
+                        << _startVar << varName << _endVar
+                        << _assignStr
+                        << _startVar << origVarName << _endVar;
                 printAssigmentEnd();
             }
         }
@@ -703,10 +730,10 @@ protected:
                         commentWritten = true;
                     }
                     checkEquationEnvStart();
-                    
+
                     std::string varName = _nameGen->generateDependent(i);
                     _code << _startAlgLine << _startEq
-                            << varName << _assignStr;
+                            << _startVar << varName << _endVar << _assignStr;
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -716,11 +743,13 @@ protected:
                     commentWritten = true;
                 }
                 checkEquationEnvStart();
-                
+
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
                 _code << _startAlgLine << _startEq
-                        << varName << _assignStr << indepName;
+                        << _startVar << varName << _endVar
+                        << _assignStr
+                        << _startVar << indepName << _endVar;
                 printAssigmentEnd(*dependent[i].getOperationNode());
             }
         }
@@ -823,7 +852,7 @@ protected:
         checkEquationEnvStart();
 
         _code << _startAlgLine << _startEq;
-        _code << varName;
+        _code << _startVar << varName << _endVar;
         CGOpCode op = node.getOperationType();
         if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
             _code << " += ";
@@ -988,7 +1017,7 @@ protected:
     virtual void printIndependentVariableName(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
 
-        _code << _nameGen->generateIndependent(op);
+        _code << _startVar << _nameGen->generateIndependent(op) << _endVar;
     }
 
     virtual unsigned print(const Argument<Base>& arg) {
@@ -1005,7 +1034,7 @@ protected:
     virtual unsigned printExpression(OperationNode<Base>& op) throw (CGException) {
         if (op.getVariableID() > 0) {
             // use variable name
-            _code << createVariableName(op);
+            _code << _startVar << createVariableName(op) << _endVar;
             return 1;
         } else {
             // print expression code
@@ -1591,7 +1620,7 @@ protected:
         OperationNode<Base>* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
-        _code << *tmpVar->getName();
+        _code << _startVar << *tmpVar->getName() << _endVar;
     }
 
     virtual void printIndexAssign(OperationNode<Base>& node) {
