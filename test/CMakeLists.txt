@@ -104,14 +104,19 @@ FUNCTION(add_gest_link_libraries test_target_name use_main)
 ENDFUNCTION()
 
 ################################################################################
-# create a temporary folder
+# create a temporary folder for a set of tests
 ################################################################################
 FUNCTION(create_temp_folder_target)
-    GET_FILENAME_COMPONENT(folder_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
-    ADD_CUSTOM_TARGET("create_tmp_folder_${folder_name}"
-                      COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
-                      COMMAND ${CMAKE_COMMAND} -E make_directory "tmp"
-                      COMMENT "Creating tmp folder")
+    IF(NOT TARGET "create_tmp_folder_${folder_name}")
+        GET_FILENAME_COMPONENT(folder_name ${CMAKE_CURRENT_SOURCE_DIR} NAME)
+
+        ADD_CUSTOM_COMMAND(OUTPUT "${CMAKE_CURRENT_BINARY_DIR}/tmp"
+                           COMMAND ${CMAKE_COMMAND} -E remove_directory "tmp" # make sure tmp is empty
+                           COMMAND ${CMAKE_COMMAND} -E make_directory   "tmp"
+                           COMMENT "Creating tmp folder")
+        ADD_CUSTOM_TARGET("create_tmp_folder_${folder_name}" ALL
+                          DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/tmp")
+    ENDIF()
 ENDFUNCTION()
 
 ################################################################################
@@ -152,6 +157,7 @@ FUNCTION(add_cppadcg_test source_file)
     GET_FILENAME_COMPONENT(folder_name ${folder_name} PATH)
     GET_FILENAME_COMPONENT(folder_name ${folder_name} NAME)
 
+    create_temp_folder_target()
     ADD_DEPENDENCIES("${test_target_name}" "create_tmp_folder_${folder_name}")
 
     # Specify MainTest's link libraries
@@ -207,6 +213,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 ADD_SUBDIRECTORY(cppad/cg)
 ADD_SUBDIRECTORY(cppad/extra)
+#ADD_SUBDIRECTORY(zoot)
 
 FILE(COPY "${CMAKE_CURRENT_SOURCE_DIR}/valgrind.sh"
      DESTINATION "${CMAKE_CURRENT_BINARY_DIR}")

@@ -16,8 +16,6 @@
 # ----------------------------------------------------------------------------
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
 
-create_temp_folder_target()
-
 LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
 ADD_DEFINITIONS(${LLVM_CFLAGS_NO_NDEBUG} -DLLVM_WITH_NDEBUG=${LLVM_WITH_NDEBUG})
 

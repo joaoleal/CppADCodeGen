@@ -17,8 +17,6 @@
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-create_temp_folder_target()
-
 add_cppadcg_test(abs.cpp)
 add_cppadcg_test(acos.cpp)
 add_cppadcg_test(add.cpp)

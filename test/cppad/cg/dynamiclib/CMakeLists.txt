@@ -16,13 +16,13 @@
 # ----------------------------------------------------------------------------
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
-create_temp_folder_target()
-
 IF( UNIX )
     add_cppadcg_test(dynamic.cpp)
     add_cppadcg_test(dynamic_atomic.cpp)
     add_cppadcg_test(dynamic_atomic_2.cpp)
     add_cppadcg_test(dynamic_atomic_3.cpp)
+    #add_cppadcg_test(dynamic_atomic_4.cpp)
+    #add_cppadcg_test(dynamic_atomic_5.cpp)
     add_cppadcg_test(dynamic_forward_reverse.cpp)
     add_cppadcg_test(dynamic_forward_reverse_2.cpp)
 ENDIF()
