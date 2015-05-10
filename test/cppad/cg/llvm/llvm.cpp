@@ -70,5 +70,8 @@ TEST_F(CppADCGModelTest, llvm) {
 
     this->testModelResults(*model, *fun.get(), x);
 
+    model.reset(nullptr); // must be freed before llvm_shutdown()
+    llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()
+
     llvm::llvm_shutdown();
 }
