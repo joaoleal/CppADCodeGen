@@ -14,20 +14,18 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR} ${LLVM_INCLUDE_DIRS} ${CLANG_INCLUDE_DIRS} ${DL_INCLUDE_DIRS})
 
 LINK_DIRECTORIES(${LLVM_LIBRARY_DIRS})
 ADD_DEFINITIONS(${LLVM_CFLAGS_NO_NDEBUG} -DLLVM_WITH_NDEBUG=${LLVM_WITH_NDEBUG})
 
 add_cppadcg_test(llvm.cpp)
 
-IF(${LLVM_VERSION_MAJOR} STREQUAL 3 AND ${LLVM_VERSION_MINOR} STREQUAL 2)
+TARGET_LINK_LIBRARIES(llvm
+                      ${LLVM_MODULE_LIBS}
+                      ${LLVM_LDFLAGS})
+
+IF(${LLVM_VERSION_MAJOR} STREQUAL 3 AND (${LLVM_VERSION_MINOR} STREQUAL 2 OR ${LLVM_VERSION_MINOR} STREQUAL 6))
   TARGET_LINK_LIBRARIES(llvm
-                        ${CLANG_LIBS}
-                        ${LLVM_MODULE_LIBS}
-                        ${LLVM_LDFLAGS})
-ELSE()
-  TARGET_LINK_LIBRARIES(llvm
-                        ${LLVM_MODULE_LIBS}
-                        ${LLVM_LDFLAGS})
+                        ${CLANG_LIBS})
 ENDIF()
