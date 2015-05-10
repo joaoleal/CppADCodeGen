@@ -828,7 +828,7 @@ protected:
          * Check the data type
          */
         void (*infoFunc)(const char** baseName, unsigned long*, unsigned long*, unsigned int*, unsigned int*);
-        *(void **) (&infoFunc) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_INFO);
+        infoFunc = reinterpret_cast<decltype(infoFunc)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_INFO));
 
         // local
         const char* localBaseName = typeid (Base).name();
@@ -856,24 +856,24 @@ protected:
     }
 
     virtual void loadFunctions() {
-        *(void **) (&_zero) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWAD_ZERO, false);
-        *(void **) (&_forwardOne) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWARD_ONE, false);
-        *(void **) (&_reverseOne) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_ONE, false);
-        *(void **) (&_reverseTwo) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_TWO, false);
-        *(void **) (&_jacobian) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_JACOBIAN, false);
-        *(void **) (&_hessian) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN, false);
-        *(void **) (&_sparseForwardOne) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_FORWARD_ONE, false);
-        *(void **) (&_sparseReverseOne) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_REVERSE_ONE, false);
-        *(void **) (&_sparseReverseTwo) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_REVERSE_TWO, false);
-        *(void **) (&_sparseJacobian) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_JACOBIAN, false);
-        *(void **) (&_sparseHessian) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_HESSIAN, false);
-        *(void **) (&_forwardOneSparsity) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWARD_ONE_SPARSITY, false);
-        *(void **) (&_reverseOneSparsity) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_ONE_SPARSITY, false);
-        *(void **) (&_reverseTwoSparsity) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_TWO_SPARSITY, false);
-        *(void **) (&_jacobianSparsity) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_JACOBIAN_SPARSITY, false);
-        *(void **) (&_hessianSparsity) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN_SPARSITY, false);
-        *(void **) (&_hessianSparsity2) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN_SPARSITY2, false);
-        *(void **) (&_atomicFunctions) = loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_ATOMIC_FUNC_NAMES, true);
+        _zero = reinterpret_cast<decltype(_zero)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWAD_ZERO, false));
+        _forwardOne = reinterpret_cast<decltype(_forwardOne)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWARD_ONE, false));
+        _reverseOne = reinterpret_cast<decltype(_reverseOne)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_ONE, false));
+        _reverseTwo = reinterpret_cast<decltype(_reverseTwo)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_TWO, false));
+        _jacobian = reinterpret_cast<decltype(_jacobian)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_JACOBIAN, false));
+        _hessian = reinterpret_cast<decltype(_hessian)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN, false));
+        _sparseForwardOne = reinterpret_cast<decltype(_sparseForwardOne)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_FORWARD_ONE, false));
+        _sparseReverseOne = reinterpret_cast<decltype(_sparseReverseOne)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_REVERSE_ONE, false));
+        _sparseReverseTwo = reinterpret_cast<decltype(_sparseReverseTwo)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_REVERSE_TWO, false));
+        _sparseJacobian = reinterpret_cast<decltype(_sparseJacobian)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_JACOBIAN, false));
+        _sparseHessian = reinterpret_cast<decltype(_sparseHessian)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_SPARSE_HESSIAN, false));
+        _forwardOneSparsity = reinterpret_cast<decltype(_forwardOneSparsity)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_FORWARD_ONE_SPARSITY, false));
+        _reverseOneSparsity = reinterpret_cast<decltype(_reverseOneSparsity)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_ONE_SPARSITY, false));
+        _reverseTwoSparsity = reinterpret_cast<decltype(_reverseTwoSparsity)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_REVERSE_TWO_SPARSITY, false));
+        _jacobianSparsity = reinterpret_cast<decltype(_jacobianSparsity)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_JACOBIAN_SPARSITY, false));
+        _hessianSparsity = reinterpret_cast<decltype(_hessianSparsity)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN_SPARSITY, false));
+        _hessianSparsity2 = reinterpret_cast<decltype(_hessianSparsity2)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_HESSIAN_SPARSITY2, false));
+        _atomicFunctions = reinterpret_cast<decltype(_atomicFunctions)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_ATOMIC_FUNC_NAMES, true));
 
         CPPADCG_ASSERT_KNOWN((_sparseForwardOne == nullptr) == (_forwardOneSparsity == nullptr), "Missing functions in the dynamic library");
         CPPADCG_ASSERT_KNOWN((_sparseForwardOne == nullptr) == (_forwardOne == nullptr), "Missing functions in the dynamic library");
