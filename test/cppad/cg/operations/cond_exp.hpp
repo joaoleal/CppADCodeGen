@@ -41,7 +41,7 @@ CppAD::ADFun<T>* CondExp_pvvvFunc(const std::vector<CppAD::AD<T> >& X) {
     ADFun<T>* fun = new ADFun<T> (X, Y);
     // The option 'no_conditional_skip' is essential in order to avoid an 
     // assertion failure in CppAD and so that branches are not skipped with NDEBUG defined
-    fun->optimize("no_conditional_skip");
+    fun->optimize();
 
     return fun;
 }
@@ -67,7 +67,7 @@ CppAD::ADFun<T>* CondExp_vpvvFunc(const std::vector<CppAD::AD<T> >& X) {
     Y[4] = CondExpGt(X[0], one, X[1], X[2]);
 
     // create f: X -> Y 
-    return new ADFun<T > (X, Y);
+    return new ADFun<T> (X, Y);
 }
 
 template<class T>
@@ -95,7 +95,7 @@ CppAD::ADFun<T>* CondExp_vpvpFunc(const std::vector<CppAD::AD<T> >& X) {
     ADFun<T>* fun = new ADFun<T> (X, Y);
     // The option 'no_conditional_skip' is essential in order to avoid an 
     // assertion failure in CppAD and so that branches are not skipped with NDEBUG defined
-    fun->optimize("no_conditional_skip");
+    fun->optimize();
 
     return fun;
 }
@@ -121,7 +121,7 @@ CppAD::ADFun<T>* CondExp_vvpvFunc(const std::vector<CppAD::AD<T> >& X) {
     Y[4] = CondExpGt(X[0], X[1], three, X[2]);
 
     // create f: X -> Y 
-    return new ADFun<T > (X, Y);
+    return new ADFun<T> (X, Y);
 }
 
 template<class T>
@@ -148,7 +148,7 @@ CppAD::ADFun<T>* CondExp_vvvpFunc(const std::vector<CppAD::AD<T> >& X) {
     ADFun<T>* fun = new ADFun<T> (X, Y);
     // The option 'no_conditional_skip' is essential in order to avoid an 
     // assertion failure in CppAD and so that branches are not skipped with NDEBUG defined
-    fun->optimize("no_conditional_skip");
+    fun->optimize();
 
     return fun;
 }
