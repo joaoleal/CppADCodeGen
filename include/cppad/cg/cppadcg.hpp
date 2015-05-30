@@ -130,6 +130,7 @@
 #include <cppad/cg/ordered.hpp>
 #include <cppad/cg/unary.hpp>
 #include <cppad/cg/base_double.hpp>
+#include <cppad/cg/base_float.hpp>
 
 // ---------------------------------------------------------------------------
 // additional utilities
