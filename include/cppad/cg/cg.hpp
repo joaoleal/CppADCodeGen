@@ -194,6 +194,16 @@ protected:
     friend CG<Base> sqrt<Base>(const CG<Base>& var);
     friend CG<Base> tan<Base>(const CG<Base>& var);
     friend CG<Base> tanh<Base>(const CG<Base>& var);
+
+#if CPPAD_USE_CPLUSPLUS_2011
+    // c++11 functions
+    friend CG<Base> erf<Base>(const CG<Base>& var); // error function
+    friend CG<Base> asinh<Base>(const CG<Base>& var); // inverse hyperbolic sin
+    friend CG<Base> acosh<Base>(const CG<Base>& var); // inverse hyperbolic cosine
+    friend CG<Base> atanh<Base>(const CG<Base>& var); // inverse hyperbolic tangent
+    friend CG<Base> expm1<Base>(const CG<Base>& var); // exponential of x minus one
+    friend CG<Base> log1p<Base>(const CG<Base>& var); // logarithm of one plus x
+#endif
 };
 
 template<class Base>

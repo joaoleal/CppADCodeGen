@@ -26,14 +26,17 @@ namespace cg {
 enum class CGOpCode {
     Assign, // a = b
     Abs, //  abs(variable)
-    Acos, // asin(variable)
+    Acos, // acos(variable)
+    Acosh, // acosh(variable)
     Add, //  a + b
     Alias, //  alias (reference to another operation)
     ArrayCreation, // dense array {a, b, c ...}
     SparseArrayCreation, // {a, b, c ...}; {index1, index2, index3, ...};
     ArrayElement, // x[i]
     Asin, // asin(variable)
+    Asinh, // asinh(variable)
     Atan, // atan(variable)
+    Atanh, // atanh(variable)
     AtomicForward, // atomicFunction.forward(q, p, vx, vy, tx, ty)
     AtomicReverse, // atomicFunction.reverse(p, tx, ty, px, py)
     ComLt, // result = left < right? trueCase: falseCase
@@ -45,9 +48,12 @@ enum class CGOpCode {
     Cosh, // cosh(variable)
     Cos, //  cos(variable)
     Div, // a / b
+    Erf, // erf(variable)
     Exp, //  exp(variable)
+    Expm1, //  expm1(variable)
     Inv, //                             independent variable
     Log, //  log(variable)
+    Log1p, //  log1p(variable)
     Mul, // a * b
     Pow, //  pow(a,   b)
     Pri, //  PrintFor(text, parameter or variable, parameter or variable)
@@ -79,7 +85,7 @@ enum class CGOpCode {
     CondResult // assignment inside an if branch
 };
 
-inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
+inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
     switch (op) {
         case CGOpCode::Assign:
             os << "$1 = $2";
@@ -89,6 +95,9 @@ inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
             break;
         case CGOpCode::Acos:
             os << "acos($1)";
+            break;
+        case CGOpCode::Acosh:
+            os << "acosh($1)";
             break;
         case CGOpCode::Add:
             os << "$1 + $2";
@@ -108,8 +117,14 @@ inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
         case CGOpCode::Asin:
             os << "asin($1)";
             break;
+        case CGOpCode::Asinh:
+            os << "asinh($1)";
+            break;
         case CGOpCode::Atan:
             os << "atan($1)";
+            break;
+        case CGOpCode::Atanh:
+            os << "atanh($1)";
             break;
         case CGOpCode::AtomicForward:
             os << "atomicFunction.forward(q, p, vx, vy, tx, ty)";
@@ -144,14 +159,23 @@ inline std::ostream& operator <<(std::ostream& os, const CGOpCode& op) {
         case CGOpCode::Div:
             os << "$1 / $2";
             break;
+        case CGOpCode::Erf:
+            os << "erf($1)";
+            break;
         case CGOpCode::Exp:
             os << "exp($1)";
+            break;
+        case CGOpCode::Expm1:
+            os << "expm1($1)";
             break;
         case CGOpCode::Inv:
             os << "independent()";
             break;
         case CGOpCode::Log:
             os << "log($1)";
+            break;
+        case CGOpCode::Log1p:
+            os << "log1p($1)";
             break;
         case CGOpCode::Mul:
             os << "$1 * $2";

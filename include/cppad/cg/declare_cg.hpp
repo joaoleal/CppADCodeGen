@@ -349,44 +349,89 @@ inline cg::CG<Base> pow(const Base& x, const cg::CG<Base>& y);
 template <class Base>
 inline cg::CG<Base> pow(const cg::CG<Base>& x, const Base& y);
 
+// absolute value
 template<class Base>
-inline cg::CG<Base> abs(const cg::CG<Base>& var);
+inline cg::CG<Base> abs(const cg::CG<Base>& x);
 
 template<class Base>
-inline cg::CG<Base> acos(const cg::CG<Base>& var);
+inline cg::CG<Base> fabs(const cg::CG<Base>& x);
 
+// inverse cosine
 template<class Base>
-inline cg::CG<Base> asin(const cg::CG<Base>& var);
+inline cg::CG<Base> acos(const cg::CG<Base>& x);
 
+// inverse sine
 template<class Base>
-inline cg::CG<Base> atan(const cg::CG<Base>& var);
+inline cg::CG<Base> asin(const cg::CG<Base>& x);
 
+// inverse tangent
 template<class Base>
-inline cg::CG<Base> cos(const cg::CG<Base>& var);
+inline cg::CG<Base> atan(const cg::CG<Base>& x);
 
+// cosine
 template<class Base>
-inline cg::CG<Base> cosh(const cg::CG<Base>& var);
+inline cg::CG<Base> cos(const cg::CG<Base>& x);
 
+// hyperbolic cosine
 template<class Base>
-inline cg::CG<Base> exp(const cg::CG<Base>& var);
+inline cg::CG<Base> cosh(const cg::CG<Base>& x);
 
+// exponential
 template<class Base>
-inline cg::CG<Base> log(const cg::CG<Base>& var);
+inline cg::CG<Base> exp(const cg::CG<Base>& x);
 
+// natural logarithm
 template<class Base>
-inline cg::CG<Base> sin(const cg::CG<Base>& var);
+inline cg::CG<Base> log(const cg::CG<Base>& x);
 
+// sine
 template<class Base>
-inline cg::CG<Base> sinh(const cg::CG<Base>& var);
+inline cg::CG<Base> sin(const cg::CG<Base>& x);
 
+// hyperbolic sine
 template<class Base>
-inline cg::CG<Base> sqrt(const cg::CG<Base>& var);
+inline cg::CG<Base> sinh(const cg::CG<Base>& x);
 
+// square root
 template<class Base>
-inline cg::CG<Base> tan(const cg::CG<Base>& var);
+inline cg::CG<Base> sqrt(const cg::CG<Base>& x);
 
+// tangent
 template<class Base>
-inline cg::CG<Base> tanh(const cg::CG<Base>& var);
+inline cg::CG<Base> tan(const cg::CG<Base>& x);
+
+// hyperbolic tangent 
+template<class Base>
+inline cg::CG<Base> tanh(const cg::CG<Base>& x);
+
+#if CPPAD_USE_CPLUSPLUS_2011
+/**
+ * c++11 functions
+ */
+// error function
+template<class Base>
+inline cg::CG<Base> erf(const cg::CG<Base>& x);
+
+// inverse hyperbolic sin
+template<class Base>
+inline cg::CG<Base> asinh(const cg::CG<Base>& x);
+
+// inverse hyperbolic cosine
+template<class Base>
+inline cg::CG<Base> acosh(const cg::CG<Base>& x);
+
+// inverse hyperbolic tangent
+template<class Base>
+inline cg::CG<Base> atanh(const cg::CG<Base>& x);
+
+// exponential of x minus one
+template<class Base>
+inline cg::CG<Base> expm1(const cg::CG<Base>& x);
+
+// logarithm of one plus x
+template<class Base>
+inline cg::CG<Base> log1p(const cg::CG<Base>& x);
+#endif
 
 } // END CppAD namespace
 

@@ -387,7 +387,7 @@ void CppADCGOperationTest::test0nJac(const std::string& test,
     vector<vector<double> > depCGTape = run0TapeWithValues(*f2.get(), indV);
 
     library = "./tmp/test_" + test + "_jac.so";
-    std::string functionJac = "test_" + test + "_jac_for";
+    std::string functionJac = "test_" + test + "_jac";
     vector<vector<double> > jacCG = runSparseJac(*f2.get(), library, functionJac, indV);
 
     /**
