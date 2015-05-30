@@ -5,6 +5,10 @@ operator-overloading and produces source-code. Such source-code can be
 statically compiled at runtime using an existing compiler and linked dynamically 
 or, alternatively, go through a JIT compilation using Clang/LLVM.
 
+In addition to C source generation, CppADCodeGen can also produce 
+[Latex](http://www.latex-project.org/) source-code files for your algorithm,
+which in turn can be used to create PDF files for documentation purposes.
+
 CppADCodeGen can also be used to perform differentiation index reduction of 
 Differential Algebraic Equations (DAE) through the Pantelides and Dummy 
 Derivatives methods.
@@ -24,7 +28,7 @@ CppADCodeGen is a C++11 header only library so there aren't many dependencies:
 
  - **CppAD** (2015)
  - A **C++11** compiler (such as GCC and Clang).
- - Clang/LLVM 3.2 or 3.4 (only for JIT compilation)
+ - Clang/LLVM 3.2, 3.4, or 3.6 (only for JIT compilation)
  - Eigen 3 (only for DAE differentiation index reduction)
 
 Runtime compilation and dynamic linking:
