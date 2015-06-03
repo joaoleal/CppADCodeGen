@@ -205,10 +205,10 @@ public:
         }
 
         if (nvar != m) {
-            stringstream ss;
-            ss << "The system is not well determined. "
-                    "The of number of equations (" << enodes_.size() << ") does not match the number of unknown variables (" << nvar << ").";
-            throw CGException(ss.str());
+            throw CGException("The system is not well determined. "
+                              "The of number of equations (", enodes_.size(), ")"
+                              " does not match the number of unknown variables "
+                              "(", nvar, ").");
         }
     }
 
@@ -632,7 +632,7 @@ protected:
             try {
                 reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
             } catch (const std::exception& ex) {
-                throw CGException(std::string("Failed to create ADFun: ") + ex.what());
+                throw CGException("Failed to create ADFun: ", ex.what());
             }
 
             if (this->verbosity_ >= Verbosity::High) {
@@ -706,7 +706,7 @@ protected:
             try {
                 reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
             } catch (const std::exception& ex) {
-                throw CGException(std::string("Failed to create ADFun: ") + ex.what());
+                throw CGException("Failed to create ADFun: ", ex.what());
             }
 
             if (this->verbosity_ >= Verbosity::High) {
@@ -729,7 +729,7 @@ protected:
         try {
             v = reducedFun_->Forward(1, u);
         } catch (const std::exception& ex) {
-            throw CGException(std::string("Failed to determine model Jacobian (forward mode): ") + ex.what());
+            throw CGException("Failed to determine model Jacobian (forward mode): ", ex.what());
         }
 
         for (size_t e = 0; e < equations.size(); e++) {
@@ -757,7 +757,7 @@ protected:
                 try {
                     u = reducedFun_->Reverse(1, v);
                 } catch (const std::exception& ex) {
-                    throw CGException(std::string("Failed to determine model Jacobian (reverse mode): ") + ex.what());
+                    throw CGException("Failed to determine model Jacobian (reverse mode): ", ex.what());
                 }
 
                 // reset v to vector of all zeros

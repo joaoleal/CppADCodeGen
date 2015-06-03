@@ -149,7 +149,7 @@ class ModelCSourceGen;
 template<class Base>
 class ModelLibraryCSourceGen;
 
-#ifdef __linux__
+#if CPPAD_CG_SYSTEM_LINUX
 template<class Base>
 class LinuxDynamicLibModel;
 

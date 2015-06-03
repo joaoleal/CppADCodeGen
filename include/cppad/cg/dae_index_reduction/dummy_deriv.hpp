@@ -688,7 +688,7 @@ protected:
              */
             map<int, int>::const_iterator ita = assignedVar2Eq.find(j);
             if (ita == assignedVar2Eq.end()) {
-                throw CGException("Failed to generate semi-explicit DAE: unable to create an explicit equation for " + jj.getName());
+                throw CGException("Failed to generate semi-explicit DAE: unable to create an explicit equation for ", jj.getName());
             }
 
             int bestEquation = ita->second;
@@ -708,7 +708,7 @@ protected:
                 newEqInfo[bestEquation].setAssignedVarIndex(jj.getAntiDerivative());
             } catch (const CGException& ex) {
                 // unable to solve for a dummy variable: keep the equation and variable
-                throw CGException(string("Failed to generate semi-explicit DAE: ") + ex.what());
+                throw CGException("Failed to generate semi-explicit DAE: ", ex.what());
             }
         }
 
@@ -866,7 +866,7 @@ protected:
                                         if (!assignVar2Equation(i, res0, *j, indep0, handler,
                                                                 jacSparsity, tape2FreeVariables,
                                                                 equations, varInfo)) {
-                                            throw CGException("Failed to solve equation " + i.name() + " for variable " + j->name());
+                                            throw CGException("Failed to solve equation ", i.name(), " for variable ", j->name());
                                         }
                                         assigned++;
                                     }
@@ -971,7 +971,7 @@ protected:
                     }
                 }
                 if (!error.empty())
-                    throw CGException("Failed to generate semi-explicit DAE. Could not solve system for the following variables:" + error);
+                    throw CGException("Failed to generate semi-explicit DAE. Could not solve system for the following variables:", error);
             }
 
         } catch (...) {
@@ -1032,7 +1032,7 @@ protected:
             //newEqInfo[bestEquation].setAssignedVarIndex(jj.getAntiDerivative());
         } catch (const CGException& ex) {
             // unable to solve for a dummy variable: keep the equation and variable
-            throw CGException(string("Failed to generate to solve equation ") + i.name() + " for variable " + j.name() + ": " + ex.what());
+            throw CGException("Failed to generate to solve equation ", i.name(), " for variable ", j.name(), ": ", ex.what());
         }
 
 

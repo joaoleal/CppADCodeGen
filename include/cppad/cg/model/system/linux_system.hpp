@@ -15,7 +15,7 @@
  * Author: Joao Leal
  */
 
-#ifdef __linux__
+#if CPPAD_CG_SYSTEM_LINUX
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/wait.h>
@@ -93,7 +93,7 @@ inline std::string getWorkingDirectory() throw (CGException) {
     char* ret = getcwd(buffer, 1024);
     if (ret == nullptr) {
         const char* error = strerror(errno);
-        throw CGException("Failed to get current working directory: " + std::string(error));
+        throw CGException("Failed to get current working directory: ", error);
     }
 
     return buffer;
@@ -104,7 +104,7 @@ inline void createFolder(const std::string& folder) throw (CGException) {
     if (ret == -1) {
         if (errno != EEXIST) {
             const char* error = strerror(errno);
-            throw CGException("Failed to create directory '" + folder + "': " + error);
+            throw CGException("Failed to create directory '", folder + "': ", error);
         }
     }
 }
@@ -237,9 +237,7 @@ inline void callExecutable(const std::string& executable,
         }
 
         if (waitpid(pid, &status, 0) < 0) {
-            std::stringstream s;
-            s << "Waitpid failed for pid " << pid << " [" << readCErrorMsg() << "]";
-            throw CGException(s.str());
+            throw CGException("Waitpid failed for pid ", pid, " [", readCErrorMsg(), "]");
         }
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 

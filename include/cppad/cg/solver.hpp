@@ -108,9 +108,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                     } else if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(1.0)) {
                         continue; // do nothing
                     } else {
-                        std::ostringstream ss;
-                        ss << "Unable to invert operation '" << op << "'";
-                        throw CGException(ss.str());
+                        throw CGException("Unable to invert operation '", op, "'");
                         /*
                         if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(2.0)) {
                             rightHs = sqrt(rightHs); // TODO: should -sqrt(rightHs) somehow be considered???
@@ -147,9 +145,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                 break;
                 //case CGTanOp: //  tan(variable)
             default:
-                std::ostringstream ss;
-                ss << "Unable to invert operation '" << op << "'";
-                throw CGException(ss.str());
+                throw CGException("Unable to invert operation '", op, "'");
         };
     }
 

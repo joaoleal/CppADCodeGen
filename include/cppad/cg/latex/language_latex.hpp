@@ -1167,9 +1167,7 @@ protected:
                 printCondResult(node);
                 break;
             default:
-                std::stringstream ss;
-                ss << "Unknown operation code '" << op << "'.";
-                throw CGException(ss.str());
+                throw CGException("Unknown operation code '", op, "'.");
         }
         return 1;
     }
@@ -1231,9 +1229,7 @@ protected:
                 _code << "\\tan";
                 break;
             default:
-                std::stringstream ss;
-                ss << "Unknown function name for operation code '" << op.getOperationType() << "'.";
-                throw CGException(ss.str());
+                throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
 
         _code << "\\left(";

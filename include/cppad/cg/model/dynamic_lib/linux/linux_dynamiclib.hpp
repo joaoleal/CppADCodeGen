@@ -14,7 +14,7 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#ifdef __linux__
+#if CPPAD_CG_SYSTEM_LINUX
 
 #include <typeinfo>
 #include <dlfcn.h>
@@ -88,7 +88,7 @@ public:
         if (required) {
             char *err = dlerror();
             if (err != nullptr)
-                throw CGException("Failed to load function '" + functionName + "': " + err);
+                throw CGException("Failed to load function '", functionName, "': ", err);
         }
 
         return functor;
@@ -116,7 +116,7 @@ protected:
 
         _version = (*versionFunc)();
         if (ModelLibraryCSourceGen<Base>::API_VERSION != _version)
-            throw CGException("The API version of the dynamic library (", _version, 
+            throw CGException("The API version of the dynamic library (", _version,
                               ") is incompatible with the current version (",
                               ModelLibraryCSourceGen<Base>::API_VERSION, ")");
 

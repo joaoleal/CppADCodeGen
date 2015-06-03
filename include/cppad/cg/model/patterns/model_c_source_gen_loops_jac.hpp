@@ -145,9 +145,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
                     std::vector<size_t>& positions = rowInfo.indexedPositions[tapeJ];
                     positions.resize(iterations, std::numeric_limits<size_t>::max());
                     if (positions[iteration] != std::numeric_limits<size_t>::max()) {
-                        std::ostringstream ss;
-                        ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
-                        throw CGException(ss.str());
+                        throw CGException("Repeated Jacobian elements requested (equation ", i, ", variable ", j, ")");
                     }
                     positions[iteration] = e;
                 }
@@ -165,9 +163,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
                 std::vector<size_t>& positions = rowInfo.nonIndexedPositions[j];
                 positions.resize(iterations, std::numeric_limits<size_t>::max());
                 if (positions[iteration] != std::numeric_limits<size_t>::max()) {
-                    std::ostringstream ss;
-                    ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
-                    throw CGException(ss.str());
+                    throw CGException("Repeated Jacobian elements requested (equation ", i, ", variable ", j, ")");
                 }
                 positions[iteration] = e;
 
@@ -198,9 +194,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
                             std::vector<size_t>& positions = rowInfo.nonIndexedPositions[j];
                             positions.resize(iterations, std::numeric_limits<size_t>::max());
                             if (positions[iteration] != std::numeric_limits<size_t>::max()) {
-                                std::ostringstream ss;
-                                ss << "Repeated jacobian elements requested (equation " << i << ", variable " << j << ")";
-                                throw CGException(ss.str());
+                                throw CGException("Repeated Jacobian elements requested (equation ", i, ", variable ", j, ")");
                             }
                             positions[iteration] = e;
                             jInNonIndexed = true;

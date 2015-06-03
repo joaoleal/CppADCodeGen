@@ -63,6 +63,19 @@
 #include <cppad/local/declare_ad.hpp>
 
 // ---------------------------------------------------------------------------
+// operating system detection
+#ifndef CPPAD_CG_SYSTEM_LINUX
+#   if defined(__linux__) || defined(__linux) || defined(linux)
+#       define CPPAD_CG_SYSTEM_LINUX 1
+#   endif
+#endif
+#ifndef CPPAD_CG_SYSTEM_WIN
+#   if defined(_WIN32) || defined(_WIN64) || defined(__WIN32__) || defined(__TOS_WIN__) || defined(__WINDOWS__)
+#       define CPPAD_CG_SYSTEM_WIN 1
+#   endif
+#endif
+
+// ---------------------------------------------------------------------------
 #include <cppad/cg/cppadcg_assert.hpp>
 #include <cppad/cg/exception.hpp>
 #include <cppad/cg/operation.hpp>

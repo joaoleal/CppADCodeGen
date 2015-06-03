@@ -47,7 +47,7 @@ public:
                                .setEngineKind(EngineKind::JIT)
                                .create());
         if (!_executionEngine.get()) {
-            throw CGException("Could not create ExecutionEngine: " + errStr);
+            throw CGException("Could not create ExecutionEngine: ", errStr);
         }
 
         _fpm.reset(new llvm::FunctionPassManager(_module));
@@ -95,7 +95,7 @@ public:
         llvm::Function* func = _module->getFunction(functionName);
         if (func == nullptr) {
             if (required)
-                throw CGException("Unable to find function '" + functionName + "' in LLVM module");
+                throw CGException("Unable to find function '", functionName, "' in LLVM module");
             return nullptr;
         }
 
@@ -121,17 +121,19 @@ protected:
          * Check the version
          */
         unsigned long (*versionFunc)();
-        versionFunc = reinterpret_cast<decltype(versionFunc)>(loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION));
+        versionFunc = reinterpret_cast<decltype(versionFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION));
 
         this->_version = (*versionFunc)();
         if (ModelLibraryCSourceGen<Base>::API_VERSION != this->_version)
-            throw CGException("The API version of the dynamic library is incompatible with the current version");
+            throw CGException("The API version of the dynamic library (", this->_version,
+                              ") is incompatible with the current version (",
+                              ModelLibraryCSourceGen<Base>::API_VERSION, ")");
 
         /**
          * Load the list of models
          */
         void (*modelsFunc)(char const *const**, int*);
-        modelsFunc = reinterpret_cast<decltype(modelsFunc)>(loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS));
+        modelsFunc = reinterpret_cast<decltype(modelsFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS));
 
         char const*const* model_names = nullptr;
         int model_count;

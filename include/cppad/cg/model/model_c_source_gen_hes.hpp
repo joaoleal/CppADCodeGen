@@ -116,9 +116,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGExcep
                 j22e[j2] = e; // OK
             } else {
                 // repeated elements not allowed
-                std::ostringstream ss;
-                ss << "Repeated Hessian element requested: " << j1 << " " << j2;
-                throw CGException(ss.str());
+                throw CGException("Repeated Hessian element requested: ", j1, " ", j2);
             }
         }
     }
@@ -188,7 +186,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGExcep
         // "cppad.symmetric" may have missing values for functions using atomic 
         // functions which only provide half of the elements 
         // (some values could be zeroed)
-        work.color_method = "cppad.general"; 
+        work.color_method = "cppad.general";
         vector<CGBase> lowerHess(lowerHessRows.size());
         _fun.SparseHessian(indVars, w, _hessSparsity.sparsity, lowerHessRows, lowerHessCols, lowerHess, work);
 

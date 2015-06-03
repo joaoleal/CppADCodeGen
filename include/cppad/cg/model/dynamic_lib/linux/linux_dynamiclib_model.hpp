@@ -14,7 +14,7 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#ifdef __linux__
+#if CPPAD_CG_SYSTEM_LINUX
 
 #include <typeinfo>
 #include <dlfcn.h>

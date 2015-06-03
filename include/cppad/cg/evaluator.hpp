@@ -88,14 +88,10 @@ public:
     inline void evaluate(const ActiveOut* indep, size_t indepSize,
                          ActiveOut* newDep, size_t depSize) throw (CGException) {
         if (handler_.getIndependentVariableSize() != indepSize) {
-            std::stringstream ss;
-            ss << "Invalid independent variable size. Expected " << handler_.getIndependentVariableSize() << " but got " << indepSize << ".";
-            throw CGException(ss.str());
+            throw CGException("Invalid independent variable size. Expected ", handler_.getIndependentVariableSize(), " but got ", indepSize, ".");
         }
         if (dep_.size() != depSize) {
-            std::stringstream ss;
-            ss << "Invalid dependent variable size. Expected " << dep_.size() << " but got " << depSize << ".";
-            throw CGException(ss.str());
+            throw CGException("Invalid dependent variable size. Expected ", dep_.size(), " but got ", depSize, ".");
         }
 
         indep_ = indep;
@@ -300,11 +296,7 @@ protected:
                 result = -evalArg(args[0]);
                 break;
             default:
-            {
-                std::stringstream ss;
-                ss << "Unknown operation code '" << code << "'";
-                throw CGException(ss.str());
-            }
+                throw CGException("Unknown operation code '", code, "'");
         }
 
         // save it for reuse

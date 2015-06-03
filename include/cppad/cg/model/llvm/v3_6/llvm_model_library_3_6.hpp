@@ -52,7 +52,7 @@ public:
                 // .setMCJITMemoryManager(llvm::make_unique<llvm::SectionMemoryManager>())
                                .create());
         if (!_executionEngine.get()) {
-            throw CGException("Could not create ExecutionEngine: " + errStr);
+            throw CGException("Could not create ExecutionEngine: ", errStr);
         }
 
         _fpm.reset(new llvm::FunctionPassManager(_module));
@@ -84,7 +84,7 @@ public:
         llvm::Function* func = _module->getFunction(functionName);
         if (func == nullptr) {
             if (required)
-                throw CGException("Unable to find function '" + functionName + "' in LLVM module");
+                throw CGException("Unable to find function '", functionName, "' in LLVM module");
             return nullptr;
         }
 
@@ -93,7 +93,7 @@ public:
         llvm::raw_os_ostream os(std::cerr);
         bool failed = llvm::verifyFunction(*func, &os);
         if (failed)
-            throw CGException("Function '" + functionName + "' verification failed");
+            throw CGException("Function '", functionName, "' verification failed");
 #endif
 
         // Optimize the function.
@@ -102,7 +102,7 @@ public:
         // JIT the function, returning a function pointer.
         uint64_t fPtr = _executionEngine->getFunctionAddress(functionName);
         if (fPtr == 0 && required) {
-            throw CGException("Unable to find function '" + functionName + "' in LLVM module");
+            throw CGException("Unable to find function '", functionName, "' in LLVM module");
         }
         return (void*) fPtr;
     }
@@ -121,7 +121,9 @@ protected:
 
         this->_version = (*versionFunc)();
         if (ModelLibraryCSourceGen<Base>::API_VERSION != this->_version)
-            throw CGException("The API version of the dynamic library is incompatible with the current version");
+            throw CGException("The API version of the dynamic library (", this->_version,
+                              ") is incompatible with the current version (",
+                              ModelLibraryCSourceGen<Base>::API_VERSION, ")");
 
         /**
          * Load the list of models
