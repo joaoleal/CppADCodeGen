@@ -76,8 +76,8 @@
 
 // ---------------------------------------------------------------------------
 // system dependent files
-#include <cppad/cg/model/system.hpp>
-#include <cppad/cg/model/dynamic_lib/linux/linux_system.hpp>
+#include <cppad/cg/model/system/system.hpp>
+#include <cppad/cg/model/system/linux_system.hpp>
 
 // ---------------------------------------------------------------------------
 // some utilities
