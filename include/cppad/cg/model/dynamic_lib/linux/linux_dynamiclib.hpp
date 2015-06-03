@@ -112,17 +112,19 @@ protected:
          * Check the version
          */
         unsigned long (*versionFunc)();
-        *(void **) (&versionFunc) = loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION);
+        versionFunc = reinterpret_cast<decltype(versionFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION));
 
         _version = (*versionFunc)();
         if (ModelLibraryCSourceGen<Base>::API_VERSION != _version)
-            throw CGException("The API version of the dynamic library is incompatible with the current version");
+            throw CGException("The API version of the dynamic library (", _version, 
+                              ") is incompatible with the current version (",
+                              ModelLibraryCSourceGen<Base>::API_VERSION, ")");
 
         /**
          * Load the list of models
          */
         void (*modelsFunc)(char const *const**, int*);
-        *(void **) (&modelsFunc) = loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS);
+        modelsFunc = reinterpret_cast<decltype(modelsFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS));
 
         char const*const* model_names = nullptr;
         int model_count;
