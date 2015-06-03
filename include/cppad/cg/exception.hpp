@@ -33,6 +33,13 @@ public:
         _message(message) {
     }
 
+    template<typename... Ts>
+    explicit CGException(const Ts&... ts) throw () {
+        std::ostringstream s;
+        createMessage(s, ts...);
+        _message = s.str();
+    }
+
     CGException() throw () = delete;
 
     const char* what() const throw () {
@@ -42,7 +49,25 @@ public:
     virtual ~CGException() throw () {
     }
 
+private:
+
+    template <typename T, typename... Ts>
+    inline void createMessage(std::ostringstream& s, const T& t, const Ts&... ts) throw () {
+        s << t;
+        createMessage(s, ts...);
+    }
+
+    template <typename T>
+    inline void createMessage(std::ostringstream& s, const T& t) throw () {
+        s << t;
+    }
+
 };
+
+inline std::ostream& operator<<(std::ostream& out, const CGException& rhs) {
+    out << rhs.what();
+    return out;
+}
 
 } // END cg namespace
 } // END CppAD namespace
