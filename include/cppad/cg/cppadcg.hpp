@@ -130,6 +130,7 @@
 #include <cppad/cg/ordered.hpp>
 #include <cppad/cg/unary.hpp>
 #include <cppad/cg/base_double.hpp>
+#include <cppad/cg/base_float.hpp>
 
 // ---------------------------------------------------------------------------
 // additional utilities
@@ -166,6 +167,7 @@
 #include <cppad/cg/c/language_c_arrays.hpp>
 #include <cppad/cg/c/language_c_index_patterns.hpp>
 #include <cppad/cg/c/language_c_double.hpp>
+#include <cppad/cg/c/language_c_float.hpp>
 #include <cppad/cg/c/lang_c_default_var_name_gen.hpp>
 #include <cppad/cg/c/lang_c_default_hessian_var_name_gen.hpp>
 #include <cppad/cg/c/lang_c_default_reverse2_var_name_gen.hpp>

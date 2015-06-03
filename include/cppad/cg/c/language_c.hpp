@@ -443,6 +443,15 @@ public:
     CPPAD_CG_C_LANG_FUNCNAME(tan)
     CPPAD_CG_C_LANG_FUNCNAME(pow)
 
+#if CPPAD_USE_CPLUSPLUS_2011
+    CPPAD_CG_C_LANG_FUNCNAME(erf)
+    CPPAD_CG_C_LANG_FUNCNAME(asinh)
+    CPPAD_CG_C_LANG_FUNCNAME(acosh)
+    CPPAD_CG_C_LANG_FUNCNAME(atanh)
+    CPPAD_CG_C_LANG_FUNCNAME(expm1)
+    CPPAD_CG_C_LANG_FUNCNAME(log1p)
+#endif
+
     inline virtual ~LanguageC() {
     }
 
@@ -467,7 +476,7 @@ public:
             } else {
                 if (infoSize != 2)
                     out << "(";
-                
+
                 if (max - min == 1)
                     out << min << " == " << index << " || " << index << " == " << max;
                 else
@@ -1101,6 +1110,14 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 printUnaryFunction(node);
                 break;
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
@@ -1256,6 +1273,26 @@ protected:
             case CGOpCode::Tan:
                 _code << tanFuncName();
                 break;
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+                _code << erfFuncName();
+                break;
+            case CGOpCode::Asinh:
+                _code << asinhFuncName();
+                break;
+            case CGOpCode::Acosh:
+                _code << acoshFuncName();
+                break;
+            case CGOpCode::Atanh:
+                _code << atanhFuncName();
+                break;
+            case CGOpCode::Expm1:
+                _code << expm1FuncName();
+                break;
+            case CGOpCode::Log1p:
+                _code << log1pFuncName();
+                break;
+#endif
             default:
                 std::stringstream ss;
                 ss << "Unknown function name for operation code '" << op.getOperationType() << "'.";
@@ -1883,6 +1920,14 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
+#if CPPAD_USE_CPLUSPLUS_2011
+            case CGOpCode::Erf:
+            case CGOpCode::Asinh:
+            case CGOpCode::Acosh:
+            case CGOpCode::Atanh:
+            case CGOpCode::Expm1:
+            case CGOpCode::Log1p:
+#endif
                 return true;
             default:
                 return false;
