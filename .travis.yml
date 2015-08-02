@@ -33,7 +33,7 @@ install:
   - mkdir build
   - mkdir install
   - cd build
-  - cmake cmake_install_prefix:PATH=cppadcg_deps/cppad/install ..
+  - cmake cmake_install_prefix:PATH=../install ..
   - make install
   - cd ../../..
     
