@@ -1,0 +1,32 @@
+language: cpp
+
+compiler:
+  - clang
+  - gcc
+
+# use travis-ci docker based infrastructure
+sudo: false
+
+addons:
+  apt:
+    packages:
+    - cppad
+    - libeigen3-dev
+    - libclang-dev
+    - llvm-3.6-dev
+    - clang-3.6
+    - cmake
+    - libgtest-dev
+    - gdb
+    - texlive-extra-utils
+
+script:
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF ..
+  - cd test
+  - make
+  - make test
+
+os:
+  - linux
