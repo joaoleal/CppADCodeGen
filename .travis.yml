@@ -22,7 +22,7 @@ addons:
 
 env:
   global:
-    - CPPAD_HOME=~/cppadcg_deps/cppad/install/include
+    - CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
 
     
 install:
@@ -34,6 +34,7 @@ install:
   - mkdir install
   - cd build
   - cmake cmake_install_prefix:PATH=cppadcg_deps/cppad/install ..
+  - make install
   - cd ../../..
     
 script:
