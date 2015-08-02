@@ -36,9 +36,9 @@ IF( CPPAD_FOUND )
     MESSAGE(STATUS "package cppad found")
   ENDIF()
 ELSE( CPPAD_FOUND )
-  FIND_PATH(CPPAD_INCLUDE_DIRS NAMES cppad.hpp
+  FIND_PATH(CPPAD_INCLUDE_DIRS NAMES cppad/cppad.hpp
             HINTS  $ENV{CPPAD_HOME}
-                   "/usr/include/cppad" )
+                   "/usr/include" )
            
   FIND_LIBRARY(CPPAD_IPOPT_LIBRARY 
                 cppad_ipopt
@@ -51,7 +51,7 @@ ELSE( CPPAD_FOUND )
   INCLUDE(FindPackageHandleStandardArgs)
   # handle the QUIETLY and REQUIRED arguments and set CPPAD_FOUND to TRUE
   # if all listed variables are TRUE
-  find_package_handle_standard_args(CPPAD  DEFAULT_MSG
+  find_package_handle_standard_args(CppAD  DEFAULT_MSG
                                     CPPAD_INCLUDE_DIRS)
 
   MARK_AS_ADVANCED(CPPAD_INCLUDE_DIRS CPPAD_LIBRARIES)

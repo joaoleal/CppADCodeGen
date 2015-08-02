@@ -10,16 +10,32 @@ sudo: false
 addons:
   apt:
     packages:
-    - cppad
     - libeigen3-dev
-    - libclang-dev
-    - llvm-3.6-dev
-    - clang-3.6
+    - libclang-3.4-dev
+    - llvm-3.4-dev
+    - clang-3.4
     - cmake
     - libgtest-dev
     - gdb
     - texlive-extra-utils
+#    - cppad
 
+env:
+  global:
+    - CPPAD_HOME=~/cppadcg_deps/cppad/install/include
+
+    
+install:
+  - mkdir cppadcg_deps
+  - cd cppadcg_deps
+  - git clone https://github.com/coin-or/CppAD.git cppad
+  - cd cppad
+  - mkdir build
+  - mkdir install
+  - cd build
+  - cmake cmake_install_prefix:PATH=cppadcg_deps/cppad/install ..
+  - 
+    
 script:
   - mkdir build
   - cd build
