@@ -33,7 +33,7 @@ install:
   - mkdir build
   - mkdir install
   - cd build
-  - cmake cmake_install_prefix:PATH=../install ..
+  - cmake -Dcmake_install_prefix:PATH=../install ..
   - make install
   - cd ../../..
     
