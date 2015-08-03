@@ -82,7 +82,7 @@ INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
 # add gtest dependency
 ################################################################################
 FUNCTION(add_gest_link_libraries test_target_name use_main)
-    IF(CMAKE_COMPILER_IS_GNUCXX)
+    IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
         TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
         IF(${use_main})
             TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
