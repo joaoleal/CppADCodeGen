@@ -14,6 +14,7 @@ addons:
     - libclang-3.4-dev
     - llvm-3.4-dev
     - clang-3.4
+    - g++-4.8
     - cmake
     - libgtest-dev
     - gdb
@@ -24,6 +25,10 @@ env:
   global:
     - CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
 
+before_install:
+  - if [ "$CC" = "clang" ]; then export CC="clang-3.4" CXX="clang++-3.4"; fi
+  - if [ "$CC" = "gcc" ]; then export CC="gcc-4.8" CXX="g++-4.8"; fi
+  - $CXX --version
     
 install:
   - mkdir cppadcg_deps
@@ -42,7 +47,7 @@ script:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF ..
   - cd test
-  - make
+  - make VERBOSE=1
   - make test
 
 os:
