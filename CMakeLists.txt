@@ -77,7 +77,7 @@ SET(install_library_pkg_location "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 ################################################################################
 # Define some optional compiler flags
 ################################################################################
-IF(CMAKE_COMPILER_IS_GNUCXX)
+IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(warning_flags "-Wall") # enable as many warnings as possible
     #SET(warning_flags "${warning_flags} -Wextra") 
     #SET(warning_flags "${warning_flags} -Wshadow") # definition shadows another
