@@ -27,8 +27,8 @@ env:
     - CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
 
 before_install:
-  - if [ "$CXX" == "clang++" ]; then export CC="clang-3.4" CXX="clang++-3.4"; fi
-  - if [ "$CXX" == "g++" ]; then export CC="gcc-4.8" CXX="g++-4.8"; fi
+  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.4)" CXX="$(which clang++-3.4)"; fi
+  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-4.8)" CXX="$(which g++-4.8)"; fi
     
 install:
   - mkdir cppadcg_deps
