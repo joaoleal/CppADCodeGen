@@ -9,6 +9,10 @@ sudo: false
 
 addons:
   apt:
+    sources:
+    - kubuntu-backports
+    - llvm-toolchain-precise-3.4
+    - ubuntu-toolchain-r-test
     packages:
     - libeigen3-dev
     - libclang-3.4-dev
