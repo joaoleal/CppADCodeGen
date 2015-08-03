@@ -50,7 +50,7 @@ script:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF ..
   - cd test
-  - make VERBOSE=1
+  - make
   - make test
 
 os:
