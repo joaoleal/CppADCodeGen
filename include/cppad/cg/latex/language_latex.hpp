@@ -49,6 +49,14 @@ protected:
     std::string _startVar;
     // text after a variable name
     std::string _endVar;
+    // text before a dependent variable name
+    std::string _startDepVar;
+    // text after a dependent variable name
+    std::string _endDepVar;
+    // text before an independent variable name
+    std::string _startIndepVar;
+    // text after an independent variable name
+    std::string _endIndepVar;
     // text before an individual equation
     std::string _startEq;
     // text after an individual equation
@@ -125,6 +133,10 @@ public:
         _indentationLevel(0),
         _startVar("\\begin{CGVar}"),
         _endVar("\\end{CGVar}"),
+        _startDepVar("\\begin{CGDepVar}"),
+        _endDepVar("\\end{CGDepVar}"),
+        _startIndepVar("\\begin{CGIndVar}"),
+        _endIndepVar("\\end{CGIndVar}"),
         _startEq("\\begin{CGEq}"),
         _endEq("\\end{CGEq}"),
         _startAlgLine("\\begin{CGLine}"),
@@ -191,6 +203,65 @@ public:
      */
     virtual const std::string& getVariableEnvironmentStart() const {
         return _startVar;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each variable.
+     */
+    virtual const std::string& getVariableEnvironmentEnd() const {
+        return _endVar;
+    }
+
+    /**
+     * Defines the Latex environment for each dependent variable.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setDependentVarEnvironment(const std::string& begin,
+                                            const std::string& end) {
+        _startDepVar = begin;
+        _endDepVar = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each dependent variable.
+     */
+    virtual const std::string& getDependentVarEnvironmentStart() const {
+        return _startDepVar;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each dependent variable.
+     */
+    virtual const std::string& getDependentVarEnvironmentEnd() const {
+        return _endDepVar;
+    }
+
+    /**
+     * Defines the Latex environment for each independent variable.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setIndependentVarEnvironment(const std::string& begin,
+                                              const std::string& end) {
+        _startIndepVar = begin;
+        _endIndepVar = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each independent variable.
+     */
+    virtual const std::string& getIndependentVarEnvironmentStart() const {
+        return _startIndepVar;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each independent variable.
+     */
+    virtual const std::string& getIndependentVarEnvironmentEnd() const {
+        return _endIndepVar;
     }
 
     /**
@@ -655,7 +726,7 @@ protected:
                     if (a.array) {
                         _code << a.name;
                     } else {
-                        _code << _startVar << _nameGen->generateDependent(i) << _endVar;
+                        _code << _startDepVar << _nameGen->generateDependent(i) << _endDepVar;
                     }
                     _code << _assignStr;
                     printParameter(Base(0.0));
@@ -713,9 +784,9 @@ protected:
                 const std::string& origVarName = *dep.getOperationNode()->getName();
 
                 _code << _startAlgLine << _startEq
-                        << _startVar << varName << _endVar
+                        << _startDepVar << varName << _endDepVar
                         << _assignStr
-                        << _startVar << origVarName << _endVar;
+                        << _startDepVar << origVarName << _endDepVar;
                 printAssigmentEnd();
             }
         }
@@ -733,7 +804,7 @@ protected:
 
                     std::string varName = _nameGen->generateDependent(i);
                     _code << _startAlgLine << _startEq
-                            << _startVar << varName << _endVar << _assignStr;
+                            << _startDepVar << varName << _endDepVar << _assignStr;
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -747,9 +818,9 @@ protected:
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
                 _code << _startAlgLine << _startEq
-                        << _startVar << varName << _endVar
+                        << _startDepVar << varName << _endDepVar
                         << _assignStr
-                        << _startVar << indepName << _endVar;
+                        << _startIndepVar << indepName << _endIndepVar;
                 printAssigmentEnd(*dependent[i].getOperationNode());
             }
         }
@@ -852,7 +923,11 @@ protected:
         checkEquationEnvStart();
 
         _code << _startAlgLine << _startEq;
-        _code << _startVar << varName << _endVar;
+        if (isDep)
+            _code << _startDepVar << varName << _endDepVar;
+        else
+            _code << _startVar << varName << _endVar;
+
         CGOpCode op = node.getOperationType();
         if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
             _code << " += ";
@@ -1017,7 +1092,7 @@ protected:
     virtual void printIndependentVariableName(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
 
-        _code << _startVar << _nameGen->generateIndependent(op) << _endVar;
+        _code << _startIndepVar << _nameGen->generateIndependent(op) << _endIndepVar;
     }
 
     virtual unsigned print(const Argument<Base>& arg) {
@@ -1031,14 +1106,29 @@ protected:
         }
     }
 
-    virtual unsigned printExpression(OperationNode<Base>& op) throw (CGException) {
-        if (op.getVariableID() > 0) {
-            // use variable name
-            _code << _startVar << createVariableName(op) << _endVar;
+    virtual unsigned printExpression(OperationNode<Base>& node) throw (CGException) {
+        if (node.getVariableID() > 0) {
+            const std::string& name = createVariableName(node); // use variable name
+
+            CGOpCode op = node.getOperationType();
+            if (node.getVariableID() >= _minTemporaryVarID || op == CGOpCode::ArrayCreation || op == CGOpCode::SparseArrayCreation || op == CGOpCode::LoopIndexedDep || op == CGOpCode::LoopIndexedIndep) {
+
+                _code << _startVar << name << _endVar;
+
+            } else if (node.getVariableID() <= _independentSize) {
+                // independent variable
+                _code << _startIndepVar << name << _endIndepVar;
+
+            } else {
+                // dependent variable
+                _code << _startDepVar << name << _endDepVar;
+
+            }
+
             return 1;
         } else {
             // print expression code
-            return printExpressionNoVarCheck(op);
+            return printExpressionNoVarCheck(node);
         }
     }
 
