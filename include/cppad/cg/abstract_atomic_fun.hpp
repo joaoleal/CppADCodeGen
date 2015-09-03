@@ -221,7 +221,7 @@ public:
         }
 
         /**
-         * Use the jacobian sparsity to determine which elements
+         * Use the Jacobian sparsity to determine which elements
          * will always be zero
          */
         vector<bool> vxLocal(px.size());
@@ -249,7 +249,7 @@ public:
 
         if (p >= 1) {
             /**
-             * Use the hessian sparsity to determine which elements
+             * Use the Hessian sparsity to determine which elements
              * will always be zero
              */
             vector<bool> vx(n);

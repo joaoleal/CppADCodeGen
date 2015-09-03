@@ -91,7 +91,7 @@ public:
         return _ss.str();
     }
 
-    inline virtual std::string generateIndependent(const OperationNode<Base>& independent) {
+    inline virtual std::string generateIndependent(const OperationNode<Base>& independent) override {
         _ss.clear();
         _ss.str("");
 

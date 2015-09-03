@@ -570,7 +570,7 @@ public:
      **************************************************************************/
     static inline void generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns);
 
-    static inline void printRandomIndexPatternDeclaration(std::ostringstream& os,
+    inline void printRandomIndexPatternDeclaration(std::ostringstream& os,
                                                           const std::string& identation,
                                                           const std::set<RandomIndexPattern*>& randomPatterns);
 
