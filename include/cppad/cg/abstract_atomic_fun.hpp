@@ -49,6 +49,7 @@ protected:
         id_(createNewId()),
         standAlone_(standAlone) {
         CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
+        this->option(CppAD::atomic_base<CGB>::set_sparsity_enum);
     }
 
 public:
