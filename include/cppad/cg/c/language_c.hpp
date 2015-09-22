@@ -518,6 +518,27 @@ public:
     static inline std::string linearIndexPattern2String(const LinearIndexPattern& lip,
                                                         const IndexDclrOperationNode<Base>& index);
 
+    static inline bool isOffsetBy(const IndexPattern* ip,
+                                  const IndexPattern* refIp,
+                                  long offset);
+
+    static inline bool isOffsetBy(const LinearIndexPattern* lIp,
+                                  const LinearIndexPattern* refLIp,
+                                  long offset);
+
+    static inline bool isOffsetBy(const LinearIndexPattern& lIp,
+                                  const LinearIndexPattern& refLIp,
+                                  long offset);
+
+    static inline bool isOffsetBy(const SectionedIndexPattern* lIp,
+                                  const SectionedIndexPattern* refSecp,
+                                  long offset);
+
+    static inline Plane2DIndexPattern* encapsulateIndexPattern(const LinearIndexPattern& refLIp,
+                                                               size_t starti);
+
+    static inline Plane2DIndexPattern* encapsulateIndexPattern(const SectionedIndexPattern& refSecp,
+                                                               size_t starti);
 protected:
 
     virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
@@ -679,7 +700,9 @@ protected:
             }
 
             size_t assignCount = 0;
-            for (OperationNode<Base>* it : variableOrder) {
+            for (size_t i = 0; i < variableOrder.size(); ++i) {
+                OperationNode<Base>* it = variableOrder[i];
+
                 // check if a new function should start
                 if (assignCount >= _maxAssigmentsPerFunction && multiFunction && _currentLoops.empty()) {
                     assignCount = 0;
@@ -693,6 +716,10 @@ protected:
                     continue; // nothing to do (this operation is right hand side only)
                 } else if (node.getOperationType() == CGOpCode::TmpDcl) { // temporary variable declaration does not need any source code here
                     continue; // nothing to do (bogus operation)
+                } else if (node.getOperationType() == CGOpCode::LoopIndexedDep) {
+                    // try to detect a pattern and use a loop instead of individual assignments
+                    i = printLoopIndexDeps(variableOrder, i);
+                    continue;
                 }
 
                 assignCount += printAssigment(node);
@@ -1711,12 +1738,14 @@ protected:
         _currentLoops.pop_back();
     }
 
-    virtual void printLoopIndexedDep(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation");
 
-        // LoopIndexedDep
-        print(node.getArguments()[0]);
-    }
+    virtual size_t printLoopIndexDeps(const std::vector<OperationNode<Base>*>& variableOrder,
+                                      size_t pos);
+
+    virtual size_t printLoopIndexedDepsUsingLoop(const std::vector<OperationNode<Base>*>& variableOrder,
+                                                 size_t starti);
+
+    virtual void printLoopIndexedDep(OperationNode<Base>& node);
 
     virtual void printLoopIndexedIndep(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");

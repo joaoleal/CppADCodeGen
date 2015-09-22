@@ -40,6 +40,8 @@ public:
         CPPADCG_ASSERT_UNKNOWN(pattern1_ != nullptr || pattern2_ != nullptr);
     }
 
+    Plane2DIndexPattern(const Plane2DIndexPattern& orig) = delete;
+
     inline const IndexPattern* getPattern1() const {
         return pattern1_;
     }

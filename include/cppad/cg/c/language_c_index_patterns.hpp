@@ -294,6 +294,110 @@ inline std::string LanguageC<Base>::linearIndexPattern2String(const LinearIndexP
     return ss.str();
 }
 
+template<class Base>
+bool LanguageC<Base>::isOffsetBy(const IndexPattern* ip,
+                                 const IndexPattern* refIp,
+                                 long offset) {
+
+    if (ip->getType() == IndexPatternType::Linear) {
+        const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
+        const LinearIndexPattern* refLIp = static_cast<const LinearIndexPattern*> (refIp);
+        
+        return isOffsetBy(lIp, refLIp, offset);
+        
+    } else if (ip->getType() == IndexPatternType::Sectioned) {
+        const SectionedIndexPattern* lIp = static_cast<const SectionedIndexPattern*> (ip);
+        const SectionedIndexPattern* refSecp = static_cast<const SectionedIndexPattern*> (refIp);
+        
+        return isOffsetBy(lIp, refSecp, offset);
+        
+    } else {
+        return false; // different pattern type
+    }
+}
+
+template<class Base>
+bool LanguageC<Base>::isOffsetBy(const LinearIndexPattern* lIp,
+                                 const LinearIndexPattern* refLIp,
+                                 long offset) {
+
+    if (refLIp == nullptr || refLIp == nullptr)
+        return false; // different pattern type
+
+    return isOffsetBy(*lIp, *refLIp, offset);
+}
+
+template<class Base>
+bool LanguageC<Base>::isOffsetBy(const LinearIndexPattern& lIp,
+                                 const LinearIndexPattern& refLIp,
+                                 long offset) {
+    return refLIp.getLinearSlopeDx() == lIp.getLinearSlopeDx() &&
+            refLIp.getLinearSlopeDy() == lIp.getLinearSlopeDy() &&
+            refLIp.getXOffset() == lIp.getXOffset() &&
+            refLIp.getLinearConstantTerm() + offset == lIp.getLinearConstantTerm();
+}
+
+template<class Base>
+bool LanguageC<Base>::isOffsetBy(const SectionedIndexPattern* lIp,
+                                 const SectionedIndexPattern* refSecp,
+                                 long offset) {
+
+    if (refSecp == nullptr || lIp == nullptr)
+        return false; // different pattern type
+
+    if (refSecp->getLinearSections().size() != lIp->getLinearSections().size())
+        return false; // different pattern type
+
+    auto itRef = refSecp->getLinearSections().begin();
+    for (const auto& section : lIp->getLinearSections()) {
+
+        if (itRef->first != section.first) {
+            return false; // different pattern type
+        } else if (itRef->second->getType() != IndexPatternType::Linear || section.second->getType() != IndexPatternType::Linear) {
+            return false; // unable to handle this now, consider different patterns
+        }
+
+        LinearIndexPattern* refSecLIp = static_cast<LinearIndexPattern*> (itRef->second);
+        LinearIndexPattern* secLIp = static_cast<LinearIndexPattern*> (section.second);
+
+        if (!isOffsetBy(secLIp, refSecLIp, offset)) {
+            return false; // different pattern type
+        }
+
+        ++itRef;
+    }
+
+    return true;
+}
+
+template<class Base>
+Plane2DIndexPattern* LanguageC<Base>::encapsulateIndexPattern(const LinearIndexPattern& refLIp,
+                                                              size_t starti) {
+    std::unique_ptr<IndexPattern> ip2;
+
+    LinearIndexPattern* lip2 = new LinearIndexPattern(refLIp);
+    ip2.reset(lip2);
+    lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
+
+    return new Plane2DIndexPattern(ip2.release(), new LinearIndexPattern(0, 1, 1, 0));
+}
+
+template<class Base>
+Plane2DIndexPattern* LanguageC<Base>::encapsulateIndexPattern(const SectionedIndexPattern& refSecp,
+                                                              size_t starti) {
+    std::unique_ptr<IndexPattern> ip2;
+
+    std::map<size_t, IndexPattern*> sections;
+    for (const auto& section : refSecp.getLinearSections()) {
+        LinearIndexPattern* lip2 = new LinearIndexPattern(*static_cast<LinearIndexPattern*> (section.second));
+        lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
+        sections[section.first] = lip2;
+    }
+    ip2.reset(new SectionedIndexPattern(sections));
+
+    return new Plane2DIndexPattern(ip2.release(), new LinearIndexPattern(0, 1, 1, 0));
+}
+
 } // END cg namespace
 } // END CppAD namespace
 
