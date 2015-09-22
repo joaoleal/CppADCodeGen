@@ -94,7 +94,9 @@ protected:
      * @param source the content of the source file
      * @param output the compiled output file name (the object file path)
      */
-    virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) override {
+    virtual void compileSource(const std::string& source,
+                               const std::string& output,
+                               bool posIndepCode) override {
         std::vector<std::string> args;
         args.push_back("-x");
         args.push_back("c"); // C source files
@@ -108,6 +110,24 @@ protected:
         args.push_back(output);
 
         system::callExecutable(this->_path, args, true, source);
+    }
+
+    virtual void compileFile(const std::string& path,
+                             const std::string& output,
+                             bool posIndepCode) override {
+        std::vector<std::string> args;
+        args.push_back("-x");
+        args.push_back("c"); // C source files
+        args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
+        if (posIndepCode) {
+            args.push_back("-fPIC"); // position-independent code for dynamic linking
+        }
+        args.push_back("-c");
+        args.push_back(path);
+        args.push_back("-o");
+        args.push_back(output);
+
+        system::callExecutable(this->_path, args);
     }
 
 };

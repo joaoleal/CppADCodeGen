@@ -29,18 +29,22 @@ class AbstractCCompiler : public CCompiler<Base> {
 protected:
     std::string _path; // the path to the gcc executable
     std::string _tmpFolder;
+    std::string _sourcesFolder; //  path where source files are save
     std::set<std::string> _ofiles; // compiled object files
     std::set<std::string> _sfiles; // compiled source files
     std::vector<std::string> _compileFlags;
     std::vector<std::string> _compileLibFlags;
     std::vector<std::string> _linkFlags;
     bool _verbose;
+    bool _saveToDiskFirst;
 public:
 
     AbstractCCompiler(const std::string& compilerPath) :
         _path(compilerPath),
         _tmpFolder("cppadcg_tmp"),
-        _verbose(false) {
+        _sourcesFolder("cppadcg_sources"),
+        _verbose(false),
+        _saveToDiskFirst(false) {
     }
 
     AbstractCCompiler(const AbstractCCompiler& orig) = delete;
@@ -60,6 +64,22 @@ public:
 
     virtual void setTemporaryFolder(const std::string& tmpFolder) override {
         _tmpFolder = tmpFolder;
+    }
+    
+    virtual bool isSaveToDiskFirst() const override {
+        return _saveToDiskFirst;
+    }
+
+    virtual void setSaveToDiskFirst(bool saveToDiskFirst) override {
+        _saveToDiskFirst = saveToDiskFirst;
+    }
+
+    virtual const std::string& getSourcesFolder() const override {
+        return _sourcesFolder;
+    }
+
+    virtual void setSourcesFolder(const std::string& srcFolder) override {
+        _sourcesFolder = srcFolder;
     }
 
     virtual const std::set<std::string>& getObjectFiles() const override {
@@ -151,6 +171,10 @@ public:
 
         std::ostringstream os;
 
+        if (_saveToDiskFirst) {
+            system::createFolder(_sourcesFolder);
+        }
+
         // compile each source code file into a different object file
         for (it = sources.begin(); it != sources.end(); ++it) {
             count++;
@@ -178,8 +202,20 @@ public:
                 std::cout.fill(f); // restore fill character
             }
 
-            compile(it->second, file, posIndepCode);
+            if (_saveToDiskFirst) {
+                // save a new source file to disk
+                std::ofstream sourceFile;
+                std::string srcfile = system::createPath(_sourcesFolder, it->first);
+                sourceFile.open(srcfile.c_str());
+                sourceFile << it->second;
+                sourceFile.close();
 
+                // compile the file
+                compileFile(srcfile, file, posIndepCode);
+            } else {
+                 // compile without saving the source code to disk
+                compileSource(it->second, file, posIndepCode);
+            }
 
             if (timer != nullptr) {
                 timer->finishedJob();
@@ -221,13 +257,24 @@ public:
 protected:
 
     /**
-     * Compiles a single source file into an object file
+     * Compiles a single source file into an object file.
      * 
      * @param source the content of the source file
      * @param output the compiled output file name (the object file path)
      */
-    virtual void compile(const std::string& source, const std::string& output, bool posIndepCode) = 0;
+    virtual void compileSource(const std::string& source,
+                               const std::string& output,
+                               bool posIndepCode) = 0;
 
+    /**
+     * Compiles a single source file into an object file.
+     * 
+     * @param path the path to the source file
+     * @param output the compiled output file name (the object file path)
+     */
+    virtual void compileFile(const std::string& path,
+                             const std::string& output,
+                             bool posIndepCode) = 0;
 };
 
 } // END cg namespace

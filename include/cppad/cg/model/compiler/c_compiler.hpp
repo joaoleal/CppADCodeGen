@@ -43,6 +43,26 @@ public:
      */
     virtual void setTemporaryFolder(const std::string& tmpFolder) = 0;
 
+    virtual bool isSaveToDiskFirst() const = 0;
+
+    virtual void setSaveToDiskFirst(bool saveToDiskFirst) = 0;
+
+    /**
+     * Provides the path to a folder where the source files should be created
+     * when the option to save files to disk is active.
+     * 
+     * @return path to a folder.
+     */
+    virtual const std::string& getSourcesFolder() const = 0;
+
+    /**
+     * Defines the path to a folder where the source files should be created
+     * when the option to save files to disk is active.
+     * 
+     * @param srcFolder path to the folder.
+     */
+    virtual void setSourcesFolder(const std::string& srcFolder) = 0;
+
     virtual const std::set<std::string>& getObjectFiles() const = 0;
 
     virtual const std::set<std::string>& getSourceFiles() const = 0;
