@@ -200,7 +200,7 @@ public:
      * @param library the path to the dynamic library to be created
      */
     virtual void buildDynamic(const std::string& library,
-                              JobTimer* timer = nullptr) = 0;
+                              JobTimer* timer = nullptr) override = 0;
 
     virtual void cleanup() override {
         // clean up;
