@@ -335,30 +335,103 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
                                                   OperationNode<Base>& array) {
     const std::string& aName = createVariableName(array);
 
+    // lets see what was the previous values in this array
+    auto itLast = _atomicFuncArrays.find(dataArrayName);
+    bool firstTime = itLast == _atomicFuncArrays.end() || itLast->second.scope != array.getColor();
+    AtomicFuncArray& lastArray = firstTime ? _atomicFuncArrays[dataArrayName] : itLast->second;
+
+    bool changed = false;
+
+    // apply the differences
     if (array.getOperationType() == CGOpCode::ArrayCreation) {
         size_t size = array.getArguments().size();
-        if (size > 0)
-            _code << dataArrayName << ".data = " << aName << "; ";
-        else
-            _code << dataArrayName << ".data = NULL; ";
-        _code << dataArrayName << ".size = " << size << "; "
-                << dataArrayName << ".sparse = " << false << ";";
+
+        if (size > 0) {
+            if (firstTime || aName != lastArray.data) {
+                _code << _indentation;
+                _code << dataArrayName << ".data = " << aName << "; ";
+                lastArray.data = aName;
+                changed = true;
+            }
+        } else {
+            if (firstTime || "NULL" != lastArray.data) {
+                if (!changed) _code << _indentation;
+                _code << dataArrayName << ".data = NULL; ";
+                lastArray.data = "NULL";
+                changed = true;
+            }
+        }
+
+        if (firstTime || size != lastArray.size) {
+            if (!changed) _code << _indentation;
+            _code << dataArrayName << ".size = " << size << "; ";
+            lastArray.size = size;
+            changed = true;
+        }
+        if (firstTime || lastArray.sparse) {
+            if (!changed) _code << _indentation;
+            _code << dataArrayName << ".sparse = " << false << ";";
+            lastArray.sparse = false;
+            changed = true;
+        }
+
     } else {
         CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
         size_t nnz = array.getArguments().size();
-        if (nnz > 0)
-            _code << dataArrayName << ".data = " << aName << "; ";
-        else
-            _code << dataArrayName << ".data = NULL; ";
-        _code << dataArrayName << ".size = " << array.getInfo()[0] << "; "
-                << dataArrayName << ".sparse = " << true << "; "
-                << dataArrayName << ".nnz = " << nnz << "; ";
+        size_t size = array.getInfo()[0];
+
+        if (nnz > 0) {
+            if (firstTime || aName != lastArray.data) {
+                _code << _indentation;
+                _code << dataArrayName << ".data = " << aName << "; ";
+                lastArray.data = aName;
+                changed = true;
+            }
+        } else {
+            if (firstTime || "NULL" != lastArray.data) {
+                _code << _indentation;
+                _code << dataArrayName << ".data = NULL; ";
+                lastArray.data = "NULL";
+                changed = true;
+            }
+        }
+
+        if (firstTime || size != lastArray.size) {
+            if (!changed) _code << _indentation;
+            _code << dataArrayName << ".size = " << size << "; ";
+            lastArray.size = size;
+            changed = true;
+        }
+        if (firstTime || !lastArray.sparse) {
+            if (!changed) _code << _indentation;
+            _code << dataArrayName << ".sparse = " << true << "; ";
+            lastArray.sparse = true;
+            changed = true;
+        }
+        if (firstTime || nnz != lastArray.nnz) {
+            if (!changed) _code << _indentation;
+            _code << dataArrayName << ".nnz = " << nnz << "; ";
+            lastArray.nnz = nnz;
+            changed = true;
+        }
+
         if (nnz > 0) {
             size_t id = array.getVariableID();
-            _code << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
+            if (firstTime || id != lastArray.idx_id) {
+                if (!changed) _code << _indentation;
+                _code << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
+                lastArray.idx_id = id;
+                changed = true;
+            }
+        } else {
+            lastArray.idx_id = std::numeric_limits<size_t>::max();
         }
     }
-    _code << "\n";
+
+    lastArray.scope = array.getColor();
+
+    if (changed)
+        _code << "\n";
 }
 
 template<class Base>

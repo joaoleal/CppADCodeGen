@@ -47,7 +47,8 @@ protected:
     static const std::string _ATOMIC_TY;
     static const std::string _ATOMIC_PX;
     static const std::string _ATOMIC_PY;
-
+private:
+    class AtomicFuncArray; //forward declaration
 protected:
     // the type name of the Base class (e.g. "double")
     const std::string _baseTypeName;
@@ -96,6 +97,8 @@ protected:
     std::vector<const Argument<Base>*> _tmpArrayValues;
     // the values in the temporary sparse array
     std::vector<const Argument<Base>*> _tmpSparseArrayValues;
+    // the current state of Array structures used by atomic functions
+    std::map<std::string, AtomicFuncArray> _atomicFuncArrays;
     // indexes defined as function arguments
     std::vector<const IndexDclrOperationNode<Base>*> _funcArgIndexes;
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
@@ -557,6 +560,7 @@ protected:
         localFuncArgs_ = "";
         auxArrayName_ = "";
         _currentLoops.clear();
+        _atomicFuncArrays.clear();
 
         // save some info
         _info = &info;
@@ -1611,12 +1615,10 @@ protected:
 
         // tx
         for (size_t k = 0; k < p1; k++) {
-            _code << _indentation;
-            printArrayStructInit(_ATOMIC_TX, k, tx, k);
+            printArrayStructInit(_ATOMIC_TX, k, tx, k); // also does indentation
         }
         // ty
-        _code << _indentation;
-        printArrayStructInit(_ATOMIC_TY, *ty[p]);
+        printArrayStructInit(_ATOMIC_TY, *ty[p]); // also does indentation
         _ss.str("");
 
         _code << _indentation << "atomicFun.forward(atomicFun.libModel, "
@@ -1657,17 +1659,14 @@ protected:
 
         // tx
         for (size_t k = 0; k < p1; k++) {
-            _code << _indentation;
-            printArrayStructInit(_ATOMIC_TX, k, tx, k);
+            printArrayStructInit(_ATOMIC_TX, k, tx, k); // also does indentation
         }
         // py
         for (size_t k = 0; k < p1; k++) {
-            _code << _indentation;
-            printArrayStructInit(_ATOMIC_PY, k, py, k);
+            printArrayStructInit(_ATOMIC_PY, k, py, k); // also does indentation
         }
         // px
-        _code << _indentation;
-        printArrayStructInit(_ATOMIC_PX, *px[0]);
+        printArrayStructInit(_ATOMIC_PX, *px[0]); // also does indentation
         _ss.str("");
 
         _code << _indentation << "atomicFun.reverse(atomicFun.libModel, "
@@ -1972,6 +1971,17 @@ protected:
                 return false;
         }
     }
+private:
+
+    class AtomicFuncArray {
+    public:
+        std::string data;
+        unsigned long size;
+        bool sparse;
+        size_t idx_id;
+        unsigned long nnz;
+        size_t scope;
+    };
 };
 template<class Base>
 const std::string LanguageC<Base>::U_INDEX_TYPE = "unsigned long";
