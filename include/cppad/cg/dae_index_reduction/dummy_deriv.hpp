@@ -1498,7 +1498,7 @@ protected:
         std::vector<Vnode<Base>* > newDummies;
         if (avoidConvertAlg2DifVars_) {
             // add algebraic first
-            for (int i = 0; newDummies.size() < work.rows() && i < qr.rank(); i++) {
+            for (int i = 0; newDummies.size() < size_t(work.rows()) && i < qr.rank(); i++) {
                 Vnode<Base>* v = varsLocal[indices(i)];
                 CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
                 size_t tape = v->originalVariable()->tapeIndex();
@@ -1509,7 +1509,7 @@ protected:
                 }
             }
             // add remaining
-            for (int i = 0; newDummies.size() < work.rows(); i++) {
+            for (int i = 0; newDummies.size() < size_t(work.rows()); i++) {
                 Vnode<Base>* v = varsLocal[indices(i)];
                 CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
                 size_t tape = v->originalVariable()->tapeIndex();
