@@ -976,21 +976,24 @@ protected:
 
     virtual bool requiresVariableName(const OperationNode<Base>& var) const {
         CGOpCode op = var.getOperationType();
-        return (var.getTotalUsageCount() > 1 &&
-                op != CGOpCode::Pri &&
-                op != CGOpCode::AtomicForward &&
-                op != CGOpCode::AtomicReverse &&
-                op != CGOpCode::LoopStart &&
-                op != CGOpCode::LoopEnd &&
-                op != CGOpCode::Index &&
-                op != CGOpCode::IndexAssign &&
-                op != CGOpCode::StartIf &&
-                op != CGOpCode::ElseIf &&
-                op != CGOpCode::Else &&
-                op != CGOpCode::EndIf &&
-                op != CGOpCode::CondResult &&
-                op != CGOpCode::LoopIndexedTmp &&
-                op != CGOpCode::Tmp);
+        if (var.getTotalUsageCount() > 1) {
+            return (op != CGOpCode::Pri &&
+                    op != CGOpCode::AtomicForward &&
+                    op != CGOpCode::AtomicReverse &&
+                    op != CGOpCode::LoopStart &&
+                    op != CGOpCode::LoopEnd &&
+                    op != CGOpCode::Index &&
+                    op != CGOpCode::IndexAssign &&
+                    op != CGOpCode::StartIf &&
+                    op != CGOpCode::ElseIf &&
+                    op != CGOpCode::Else &&
+                    op != CGOpCode::EndIf &&
+                    op != CGOpCode::CondResult &&
+                    op != CGOpCode::LoopIndexedTmp &&
+                    op != CGOpCode::Tmp);
+        } else {
+            return isCondAssign(op);
+        }
     }
 
     /**
@@ -1958,7 +1961,7 @@ protected:
         }
     }
 
-    static bool isCondAssign(enum CGOpCode op) {
+    inline static bool isCondAssign(enum CGOpCode op) {
         switch (op) {
             case CGOpCode::ComLt:
             case CGOpCode::ComLe:
