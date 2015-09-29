@@ -15,6 +15,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGModelTest.hpp"
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -25,11 +26,19 @@ public:
     typedef AD<CGD> ADCG;
 protected:
     const std::string _name;
+    bool _forwardOne;
+    bool _reverseOne;
+    bool _reverseTwo;
 public:
 
-    inline CppADCGDynamicTest(const std::string& testName, bool verbose = false, bool printValues = false) :
+    inline CppADCGDynamicTest(const std::string& testName,
+                              bool verbose = false,
+                              bool printValues = false) :
         CppADCGModelTest(verbose, printValues),
-        _name(testName) {
+        _name(testName),
+        _forwardOne(true),
+        _reverseOne(true),
+        _reverseTwo(true) {
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
@@ -90,9 +99,9 @@ public:
         compHelp.setCreateHessian(true);
         compHelp.setCreateSparseJacobian(true);
         compHelp.setCreateSparseHessian(true);
-        compHelp.setCreateForwardOne(true);
-        compHelp.setCreateReverseOne(true);
-        compHelp.setCreateReverseTwo(true);
+        compHelp.setCreateForwardOne(_forwardOne);
+        compHelp.setCreateReverseOne(_reverseOne);
+        compHelp.setCreateReverseTwo(_reverseTwo);
         compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
@@ -101,6 +110,8 @@ public:
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
         GccCompiler<double> compiler;
+        prepareTestCompilerFlags(compiler);
+
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
 
         /**
@@ -138,6 +149,10 @@ public:
          */
         ModelCSourceGen<double> compHelp(fun, _name + "dynamic2");
 
+        compHelp.setCreateForwardOne(_forwardOne);
+        compHelp.setCreateReverseOne(_reverseOne);
+        compHelp.setCreateReverseTwo(_reverseTwo);
+
         compHelp.setCreateSparseJacobian(true);
         compHelp.setCustomSparseJacobianElements(jacRow, jacCol);
 
@@ -151,6 +166,8 @@ public:
         DynamicModelLibraryProcessor<double> p(compDynHelp, "cppad_cg_model_2");
 
         GccCompiler<double> compiler;
+        prepareTestCompilerFlags(compiler);
+
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
 
         /**

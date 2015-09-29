@@ -13,6 +13,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGTest.hpp"
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -89,6 +90,7 @@ public:
         compHelp.setCreateSparseHessian(true);
 
         GccCompiler<double> compiler;
+        prepareTestCompilerFlags(compiler);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 

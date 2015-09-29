@@ -13,6 +13,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGTest.hpp"
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -105,12 +106,8 @@ public:
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
         GccCompiler<double> compiler;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler);
+
         _dynamicLib = p.createDynamicLibrary(compiler);
         _model = _dynamicLib->model(MODEL_NAME);
         _model->addAtomicFunction(*_atomicFun);

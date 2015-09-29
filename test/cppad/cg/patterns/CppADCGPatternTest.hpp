@@ -15,6 +15,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGTest.hpp"
+#include "gccCompilerFlags.hpp"
 #include "pattern_test_model.hpp"
 
 namespace CppAD {
@@ -397,12 +398,7 @@ public:
             compHelpL.setCustomSparseHessianElements(customHessSparsity_);
 
         GccCompiler<double> compiler;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler);
 
         ModelLibraryCSourceGen<double> compDynHelpL(compHelpL);
         compDynHelpL.setVerbose(this->verbose_);

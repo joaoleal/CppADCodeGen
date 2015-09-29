@@ -16,6 +16,7 @@
  */
 
 #include "CppADCGTest.hpp"
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -621,7 +622,14 @@ private:
          * Hessian sparsity
          */
         const std::vector<bool> hessSparsityOrig = hessianSparsity < std::vector<bool>, CGD > (*_fun2);
+        /**
+        printSparsityPattern(hessSparsityOrig, "original", n, n);
 
+        std::vector<size_t> hessOuterRows2, hessOuterCols2;
+        modelLibOuter->HessianSparsity(hessOuterRows2, hessOuterCols2);
+        printSparsityPattern(hessOuterRows2, hessOuterCols2, "outer", n);
+        */
+        
         /**
          * Sparse Hessian
          */
@@ -693,12 +701,7 @@ private:
         DynamicModelLibraryProcessor<double> p(compDynHelp);
 
         GccCompiler<double> compiler;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler);
         _dynamicLib = p.createDynamicLibrary(compiler);
     }
 
@@ -747,12 +750,7 @@ private:
          * (generate and compile source code)
          */
         GccCompiler<double> compiler1;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler1.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler1);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
         compDynHelp.setVerbose(this->verbose_);
@@ -806,7 +804,7 @@ private:
 
         DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
         GccCompiler<double> compiler2;
-        compiler2.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler2);
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
         /**
@@ -933,12 +931,7 @@ private:
         DynamicModelLibraryProcessor<double> p(compDynHelp);
 
         GccCompiler<double> compiler;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler);
         _dynamicLib = p.createDynamicLibrary(compiler);
 
         /**

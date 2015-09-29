@@ -16,6 +16,7 @@
  */
 
 #include "CppADCGTest.hpp"
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -33,6 +34,9 @@ protected:
     DynamicLib<Base>* _dynamicLib;
     DynamicLib<Base>* _dynamicLib2;
     GenericModel<Base>* _modelLib;
+    bool forwardOne = true;
+    bool reverseOne = true;
+    bool reverseTwo = true;
 public:
 
     inline CppADCGDynamicAtomicNestedTest(const std::string& modelName,
@@ -98,12 +102,12 @@ public:
      */
     void testAtomicLibAtomicLib(const CppAD::vector<Base>& xOuter,
                                 const CppAD::vector<Base>& xInner,
-                                const CppAD::vector<Base>& xNorm,
-                                const CppAD::vector<Base>& eqNorm,
+                                const CppAD::vector<Base>& xInnerNorm,
+                                const CppAD::vector<Base>& eqInnerNorm,
                                 Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace std;
 
-        prepareAtomicLibAtomicLib(xOuter, xInner, xNorm, eqNorm);
+        prepareAtomicLibAtomicLib(xOuter, xInner, xInnerNorm, eqInnerNorm);
         ASSERT_TRUE(_modelLib != nullptr);
 
         unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
@@ -210,17 +214,19 @@ private:
         for (size_t j = 0; j < n; j++)
             tx[j * k1 + 1] = 0; // first order
 
-        for (size_t j = 0; j < n; j++) {
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
+        if (forwardOne) {
+            for (size_t j = 0; j < n; j++) {
+                x_pOrig[j] = 1;
+                tx[j * k1 + 1] = 1;
 
-            vector<CGD> y_pOrig = _fun2->Forward(1, x_pOrig);
-            vector<double> y_pOutter = modelLibOuter->ForwardOne(tx);
+                vector<CGD> y_pOrig = _fun2->Forward(1, x_pOrig);
+                vector<double> y_pOutter = modelLibOuter->ForwardOne(tx);
 
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
+                x_pOrig[j] = 0;
+                tx[j * k1 + 1] = 0;
 
-            ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(y_pOutter, y_pOrig, epsilonR, epsilonA));
+            }
         }
 
         /**
@@ -239,20 +245,20 @@ private:
         vector<double> ty(k1 * m);
         for (size_t i = 0; i < m; i++)
             ty[i * k1] = yOuter[i]; // zero order
+        if (reverseOne) {
+            for (size_t i = 0; i < m; i++) {
+                w[i] = 1;
+                wOrig[i] = 1;
 
-        for (size_t i = 0; i < m; i++) {
-            w[i] = 1;
-            wOrig[i] = 1;
+                vector<CGD> dwOrig = _fun2->Reverse(1, wOrig);
+                vector<double> dwOutter = modelLibOuter->ReverseOne(tx, ty, w);
 
-            vector<CGD> dwOrig = _fun2->Reverse(1, wOrig);
-            vector<double> dwOutter = modelLibOuter->ReverseOne(tx, ty, w);
+                w[i] = 0;
+                wOrig[i] = 0;
 
-            w[i] = 0;
-            wOrig[i] = 0;
-
-            ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
+                ASSERT_TRUE(compareValues(dwOutter, dwOrig, epsilonR, epsilonA));
+            }
         }
-
         /**
          * Test second order reverse mode
          */
@@ -262,36 +268,38 @@ private:
         ty.resize(k1 * m);
         vector<double> py(k1 * m);
         vector<CGD> pyOrig(k1 * m);
-        //wOrig.resize(k1 * m);
-        for (size_t j = 0; j < n; j++) {
-            tx[j * k1] = xOuter[j]; // zero order
-            tx[j * k1 + 1] = 0; // first order
-        }
-        for (size_t i = 0; i < m; i++) {
-            ty[i * k1] = yOuter[i]; // zero order
-            py[i * k1] = 0.0;
-            py[i * k1 + 1] = 1.0; // first order
-            pyOrig[i * k1] = 0.0;
-            pyOrig[i * k1 + 1] = 1.0; // first order
-        }
-
-        for (size_t j = 0; j < n; j++) {
-            x_pOrig[j] = 1;
-            tx[j * k1 + 1] = 1;
-
-            _fun2->Forward(1, x_pOrig);
-            vector<CGD> dwOrig = _fun2->Reverse(2, pyOrig);
-            vector<double> dwOutter = modelLibOuter->ReverseTwo(tx, ty, py);
-
-            x_pOrig[j] = 0;
-            tx[j * k1 + 1] = 0;
-
-            // only compare second order information
-            // (location of the elements is different then if py.size() == m)
-            ASSERT_EQ(dwOrig.size(), n * k1);
-            ASSERT_EQ(dwOrig.size(), dwOutter.size());
+        if (reverseTwo) {
+            //wOrig.resize(k1 * m);
             for (size_t j = 0; j < n; j++) {
-                ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
+                tx[j * k1] = xOuter[j]; // zero order
+                tx[j * k1 + 1] = 0; // first order
+            }
+            for (size_t i = 0; i < m; i++) {
+                ty[i * k1] = yOuter[i]; // zero order
+                py[i * k1] = 0.0;
+                py[i * k1 + 1] = 1.0; // first order
+                pyOrig[i * k1] = 0.0;
+                pyOrig[i * k1 + 1] = 1.0; // first order
+            }
+
+            for (size_t j = 0; j < n; j++) {
+                x_pOrig[j] = 1;
+                tx[j * k1 + 1] = 1;
+
+                _fun2->Forward(1, x_pOrig);
+                vector<CGD> dwOrig = _fun2->Reverse(2, pyOrig);
+                vector<double> dwOutter = modelLibOuter->ReverseTwo(tx, ty, py);
+
+                x_pOrig[j] = 0;
+                tx[j * k1 + 1] = 0;
+
+                // only compare second order information
+                // (location of the elements is different then if py.size() == m)
+                ASSERT_EQ(dwOrig.size(), n * k1);
+                ASSERT_EQ(dwOrig.size(), dwOutter.size());
+                for (size_t j = 0; j < n; j++) {
+                    ASSERT_TRUE(nearEqual(dwOutter[j * k1], dwOrig[j * k1].getValue()));
+                }
             }
         }
 
@@ -469,12 +477,7 @@ private:
         DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
 
         GccCompiler<double> compiler1;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler1.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler1);
 
         _dynamicLib = p.createDynamicLibrary(compiler1);
         _modelLib = _dynamicLib->model(_modelName);
@@ -501,9 +504,9 @@ private:
 
         ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
         compHelp2.setCreateForwardZero(true);
-        compHelp2.setCreateForwardOne(true);
-        compHelp2.setCreateReverseOne(true);
-        compHelp2.setCreateReverseTwo(true);
+        compHelp2.setCreateForwardOne(forwardOne);
+        compHelp2.setCreateReverseOne(reverseOne);
+        compHelp2.setCreateReverseTwo(reverseTwo);
         compHelp2.setCreateJacobian(true);
         compHelp2.setCreateHessian(true);
         compHelp2.setCreateSparseJacobian(true);
@@ -520,7 +523,7 @@ private:
          * (compile source code)
          */
         GccCompiler<double> compiler2;
-        compiler2.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler2);
 
         DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
@@ -617,9 +620,9 @@ private:
         //compHelp1.setCreateSparseHessian(true); //not really required
 
         compHelp2.setCreateForwardZero(true);
-        compHelp2.setCreateForwardOne(true);
-        compHelp2.setCreateReverseOne(true);
-        compHelp2.setCreateReverseTwo(createOuterReverse2);
+        compHelp2.setCreateForwardOne(forwardOne);
+        compHelp2.setCreateReverseOne(reverseOne);
+        compHelp2.setCreateReverseTwo(reverseTwo && createOuterReverse2);
         compHelp2.setCreateJacobian(true);
         compHelp2.setCreateHessian(true);
         compHelp2.setCreateSparseJacobian(true);
@@ -643,12 +646,7 @@ private:
          * (compile source code)
          */
         GccCompiler<double> compiler;
-        std::vector<std::string> flags;
-        flags.push_back("-O0");
-        flags.push_back("-g");
-        flags.push_back("-ggdb");
-        flags.push_back("-D_FORTIFY_SOURCE=2");
-        compiler.setCompileFlags(flags);
+        prepareTestCompilerFlags(compiler);
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
 

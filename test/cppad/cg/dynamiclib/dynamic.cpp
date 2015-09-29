@@ -91,5 +91,8 @@ TEST_F(CppADCGDynamicTest1, DynamicCustomElements) {
     hessRow[1] = 2;
     hessCol[1] = 1;
 
+    this->_forwardOne = false;
+    this->_reverseOne = false;
+    this->_reverseTwo = false;
     this->testDynamicCustomElements(u, x, jacRow, jacCol, hessRow, hessCol);
 }

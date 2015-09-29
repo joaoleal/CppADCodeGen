@@ -184,7 +184,7 @@ FUNCTION(add_cppadcg_test source_file)
                          --quiet
                          --error-exitcode=1
                          --log-file=${CMAKE_CURRENT_BINARY_DIR}/valgrind.log.${test_target_name}
-                         --num-callers=16
+                         --num-callers=20
                          ./${test_target_name}
                  COMMENT "Running valgrind on test \"${test_target_name}\"")
     ENDIF()
@@ -202,6 +202,12 @@ IF(${USE_VALGRIND})
         MESSAGE(STATUS "Valgrind found")
     ELSE()
         MESSAGE(WARNING "Valgrind not found")
+    ENDIF()
+ELSE()
+    IF(CMAKE_COMPILER_IS_GNUCXX)
+        SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -fsanitize=address -fno-omit-frame-pointer")
+        ADD_DEFINITIONS("-fsanitize=address")
+        ADD_DEFINITIONS("-DCPPADCG_TEST_SANITIZE")
     ENDIF()
 ENDIF()
 

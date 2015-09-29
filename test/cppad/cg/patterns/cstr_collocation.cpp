@@ -65,7 +65,6 @@ protected:
     std::vector<Base> x; // values for the collocation model
     std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
     std::unique_ptr<GenericModel<double> > atomicModel_;
-    std::vector<std::string> flags_;
 public:
 
     inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
@@ -75,11 +74,6 @@ public:
         //this->verbose_ = true;
         this->hessianEpsilonA_ = std::numeric_limits<Base>::epsilon() * 4e6;
         this->hessianEpsilonR_ = std::numeric_limits<Base>::epsilon() * 1e3;
-
-        flags_.push_back("-O0");
-        flags_.push_back("-g");
-        flags_.push_back("-ggdb");
-        flags_.push_back("-D_FORTIFY_SOURCE=2");
 
         /**
          * CSTR model values
@@ -191,7 +185,6 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
      * create atomic function for the ODE
      */
     colModel_->setIgnoreParameters(false);
-    colModel_->setCompilerFlags(flags_);
     colModel_->createAtomicLib();
     atoms_.push_back(&colModel_->getDoubleAtomic());
 
@@ -212,7 +205,6 @@ TEST_F(CppADCGPatternCstrTest, Atomic) {
      * create atomic function for the ODE
      */
     colModel_->setIgnoreParameters(true);
-    colModel_->setCompilerFlags(flags_);
     colModel_->createAtomicLib();
     atoms_.push_back(&colModel_->getDoubleAtomic());
 

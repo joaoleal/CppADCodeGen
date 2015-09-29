@@ -15,6 +15,7 @@
  * Author: Joao Leal
  */
 
+#include "gccCompilerFlags.hpp"
 #include "../patterns/pattern_test_model.hpp"
 
 namespace CppAD {
@@ -32,7 +33,6 @@ protected:
 
     std::vector<double> xa_; // default atomic model values
 
-    std::vector<std::string> compilerFlags_;
     std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
     std::unique_ptr<GenericModel<double> > atomicModel_;
     std::vector<atomic_base<T>*> atoms_;
@@ -202,10 +202,6 @@ public:
         return dep;
     }
 
-    void setCompilerFlags(const std::vector<std::string>& compilerFlags) {
-        compilerFlags_ = compilerFlags;
-    }
-
     void createAtomicLib() {
         typedef CG<double> CGD;
         typedef AD<CGD> ADCGD;
@@ -264,8 +260,8 @@ public:
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, lName);
         GccCompiler<double> compiler;
-        if (!compilerFlags_.empty())
-            compiler.setCompileFlags(compilerFlags_);
+        prepareTestCompilerFlags(compiler);
+
         atomicDynamicLib_.reset(p.createDynamicLibrary(compiler));
 
         /**
