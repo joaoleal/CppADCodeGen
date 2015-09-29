@@ -533,8 +533,13 @@ public:
                                   const LinearIndexPattern& refLIp,
                                   long offset);
 
-    static inline bool isOffsetBy(const SectionedIndexPattern* lIp,
+
+    static inline bool isOffsetBy(const SectionedIndexPattern* sIp,
                                   const SectionedIndexPattern* refSecp,
+                                  long offset);
+
+    static inline bool isOffsetBy(const SectionedIndexPattern& lIp,
+                                  const SectionedIndexPattern& refSecp,
                                   long offset);
 
     static inline Plane2DIndexPattern* encapsulateIndexPattern(const LinearIndexPattern& refLIp,

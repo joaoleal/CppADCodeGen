@@ -300,17 +300,28 @@ bool LanguageC<Base>::isOffsetBy(const IndexPattern* ip,
                                  long offset) {
 
     if (ip->getType() == IndexPatternType::Linear) {
-        const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
-        const LinearIndexPattern* refLIp = static_cast<const LinearIndexPattern*> (refIp);
-        
-        return isOffsetBy(lIp, refLIp, offset);
-        
+        const LinearIndexPattern* lIp = dynamic_cast<const LinearIndexPattern*> (ip);
+        assert(lIp != nullptr);
+
+        if (refIp->getType() == IndexPatternType::Linear)
+            return false;
+        const LinearIndexPattern* refLIp = dynamic_cast<const LinearIndexPattern*> (refIp);
+        assert(refLIp != nullptr);
+
+        return isOffsetBy(*lIp, *refLIp, offset);
+
     } else if (ip->getType() == IndexPatternType::Sectioned) {
-        const SectionedIndexPattern* lIp = static_cast<const SectionedIndexPattern*> (ip);
-        const SectionedIndexPattern* refSecp = static_cast<const SectionedIndexPattern*> (refIp);
-        
-        return isOffsetBy(lIp, refSecp, offset);
-        
+        const SectionedIndexPattern* sIp = dynamic_cast<const SectionedIndexPattern*> (ip);
+        assert(sIp != nullptr);
+
+        if (refIp->getType() != IndexPatternType::Sectioned)
+            return false;
+        const SectionedIndexPattern* refSecp = dynamic_cast<const SectionedIndexPattern*> (refIp);
+        assert(refSecp != nullptr);
+
+        return isOffsetBy(*sIp, *refSecp, offset);
+
+
     } else {
         return false; // different pattern type
     }
@@ -338,18 +349,25 @@ bool LanguageC<Base>::isOffsetBy(const LinearIndexPattern& lIp,
 }
 
 template<class Base>
-bool LanguageC<Base>::isOffsetBy(const SectionedIndexPattern* lIp,
+bool LanguageC<Base>::isOffsetBy(const SectionedIndexPattern* sIp,
                                  const SectionedIndexPattern* refSecp,
                                  long offset) {
-
-    if (refSecp == nullptr || lIp == nullptr)
+    if (refSecp == nullptr || sIp == nullptr)
         return false; // different pattern type
 
-    if (refSecp->getLinearSections().size() != lIp->getLinearSections().size())
+    return isOffsetBy(*sIp, *refSecp, offset);
+}
+
+template<class Base>
+bool LanguageC<Base>::isOffsetBy(const SectionedIndexPattern& sIp,
+                                 const SectionedIndexPattern& refSecp,
+                                 long offset) {
+
+    if (refSecp.getLinearSections().size() != sIp.getLinearSections().size())
         return false; // different pattern type
 
-    auto itRef = refSecp->getLinearSections().begin();
-    for (const auto& section : lIp->getLinearSections()) {
+    auto itRef = refSecp.getLinearSections().begin();
+    for (const auto& section : sIp.getLinearSections()) {
 
         if (itRef->first != section.first) {
             return false; // different pattern type
