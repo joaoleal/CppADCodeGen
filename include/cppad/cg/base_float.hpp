@@ -45,6 +45,18 @@ inline cg::CG<float> epsilon<cg::CG<float> >() {
     return std::numeric_limits<float>::epsilon();
 }
 
+/**
+ * Absolute Zero multiplication
+ */
+inline cg::CG<float> azmul(const cg::CG<float>& left,
+                           const cg::CG<float>& right) {
+    cg::CG<float> zero(0.0);
+    if (left == zero)
+        return zero;
+    return left * right;
+}
+// CPPAD_AZMUL(cg::CG<float>)
+
 } // END CppAD namespace
 
 #endif

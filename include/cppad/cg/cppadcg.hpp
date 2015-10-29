@@ -14,8 +14,6 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-// all base type requirements
-#include <cppad/base_require.hpp> 
 
 // --------------------------------------------------------------------------
 // System routines that can be used by rest of CppAD with out including 
@@ -45,24 +43,6 @@
 #include <chrono>
 
 // ---------------------------------------------------------------------------
-// definitions needed by rest of includes
-
-// definitions that come from the installation
-#include <cppad/configure.hpp>
-
-// definitions that are local to the CppAD include files
-#include <cppad/local/define.hpp>
-
-// vectors used with CppAD
-#include <cppad/local/testvector.hpp>
-
-// deprecated vectors used with CppAD
-#include <cppad/local/test_vector.hpp>
-
-// Declare classes and functions that are used before defined
-#include <cppad/local/declare_ad.hpp>
-
-// ---------------------------------------------------------------------------
 // operating system detection
 #ifndef CPPAD_CG_SYSTEM_LINUX
 #   if defined(__linux__) || defined(__linux) || defined(linux)
@@ -76,16 +56,14 @@
 #endif
 
 // ---------------------------------------------------------------------------
+// all base type requirements
+# include <cppad/base_require.hpp>
+
+// ---------------------------------------------------------------------------
 #include <cppad/cg/cppadcg_assert.hpp>
 #include <cppad/cg/exception.hpp>
 #include <cppad/cg/operation.hpp>
 #include <cppad/cg/declare_cg.hpp>
-
-// ---------------------------------------------------------------------------
-// CppAD
-#include <cppad/cppad.hpp>
-// addons
-#include <cppad/extra/extra.hpp>
 
 // ---------------------------------------------------------------------------
 // system dependent files
@@ -130,9 +108,7 @@
 #include <cppad/cg/language.hpp>
 #include <cppad/cg/scope_path_element.hpp>
 #include <cppad/cg/array_id_compresser.hpp>
-#include <cppad/cg/code_handler.hpp>
 #include <cppad/cg/patterns/loop_position.hpp>
-#include <cppad/cg/code_handler_loops.hpp>
 #include <cppad/cg/arithmetic.hpp>
 #include <cppad/cg/arithmetic_assign.hpp>
 #include <cppad/cg/math.hpp>
@@ -142,8 +118,24 @@
 #include <cppad/cg/compare.hpp>
 #include <cppad/cg/ordered.hpp>
 #include <cppad/cg/unary.hpp>
+
+// ---------------------------------------------------------------------------
+#include <cppad/cg/code_handler.hpp>
+#include <cppad/cg/code_handler_loops.hpp>
+
+// ---------------------------------------------------------------------------
 #include <cppad/cg/base_double.hpp>
 #include <cppad/cg/base_float.hpp>
+
+// ---------------------------------------------------------------------------
+// CppAD
+#include <cppad/cppad.hpp>
+
+// resolves some ambiguities
+#include <cppad/cg/arithmetic_ad.hpp>
+
+// addons
+#include <cppad/extra/extra.hpp>
 
 // ---------------------------------------------------------------------------
 // additional utilities

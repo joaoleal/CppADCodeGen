@@ -21,15 +21,12 @@ template <class Base>
 inline bool isnan(const cg::CG<Base> &s) {
     using namespace CppAD::cg;
 
-    CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
-
-    static Base scalar_nan = nan(Base(0));
     if (s.isVariable()) {
         return false;
     } else {
         // a parameter
         const Base& v = s.getValue();
-        return (v != v) | (v == scalar_nan);
+        return (v != v);
     }
 }
 

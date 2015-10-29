@@ -15,10 +15,6 @@
  * Author: Joao Leal
  */
 
-#include <cppad/local/define.hpp>
-#include <cppad/local/cppad_assert.hpp>
-#include <cppad/local/base_cond_exp.hpp>
-
 // forward declarations
 namespace CppAD {
 
@@ -27,6 +23,9 @@ class vector;
 
 template<class Base>
 class AD;
+
+template<class Base>
+class ADFun;
 
 namespace cg {
 
