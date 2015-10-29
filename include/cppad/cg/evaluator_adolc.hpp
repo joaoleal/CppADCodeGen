@@ -28,7 +28,7 @@ inline adouble abs(const adouble& val) {
 inline adouble sign(const adouble& val) {
     throw CppAD::cg::CGException("Sign operation not implemented in ADOL-C");
     adouble temp;
-    condassign(temp, val, 1.0, -1.0); // warning it should return zero if val == 0 but there is no way to do this in Adol-C
+    condassign(temp, val, adouble(1.0), adouble(-1.0)); // warning it should return zero if val == 0 but there is no way to do this in Adol-C
     return temp;
 }
 
