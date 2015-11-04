@@ -15,6 +15,7 @@ Build-Depends: debhelper (>= 5),
 Standards-Version: 3.7.2
 
 Package: cppadcodegen-dev
+Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
          cppad-dev (>= 20150302)
@@ -24,6 +25,7 @@ Suggests: libclang-dev (>= 3.2),
 Description: A Package for Differentiation of C++ Algorithms that performs source code generation
 
 Package: cppadcodegen-doc
+Section: doc
 Architecture: all
 Description: Documentation for CppADCodeGen
  HTML Documentation for CppADCodeGen package. 

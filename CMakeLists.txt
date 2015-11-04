@@ -48,6 +48,16 @@ ENDIF()
 # Latex used for test
 FIND_PACKAGE(LATEX)
 
+#
+#             Doxygen
+#
+OPTION(CREATE_DOXYGEN_DOC "Build documentation" OFF)
+IF(${CREATE_DOXYGEN_DOC})
+    FIND_PACKAGE(Doxygen REQUIRED)
+ELSE()
+    FIND_PACKAGE(Doxygen)
+ENDIF()
+
 ###
 # cppcheck tests
 ###
@@ -70,8 +80,9 @@ IF(UNIX)
 ENDIF()
 
 SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
-SET(install_cppad_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
-SET(install_library_pkg_location "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
+SET(install_cppad_include_location   "${CMAKE_INSTALL_PREFIX}/include/cppad")
+SET(install_library_pkg_location     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
+SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
 
 
 ################################################################################
@@ -99,22 +110,12 @@ ENDIF()
 ################################################################################
 ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(example EXCLUDE_FROM_ALL)
+ADD_SUBDIRECTORY(introduction EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(speed EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(pkgconfig)
+ADD_SUBDIRECTORY(doc)
 
 # enable testing must be called here in order for the target test to be created
 ENABLE_TESTING()
 OPTION(ENABLE_TEST_CPPCHECKS "Use CppCheck to verify source code in tests (very lengthy task!)" OFF)
 ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)
-
-################################################################################
-# Generate the API documentation with Doxygen
-################################################################################
-FIND_PACKAGE(Doxygen)
-
-IF(DOXYGEN_FOUND)
-    CONFIGURE_FILE(${CMAKE_CURRENT_SOURCE_DIR}/doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doxyfile @ONLY)
-    ADD_CUSTOM_TARGET(doc ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxyfile
-                      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-                      COMMENT "Generating API documentation with Doxygen" VERBATIM)
-ENDIF()
