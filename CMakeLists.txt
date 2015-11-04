@@ -110,7 +110,7 @@ ENDIF()
 ################################################################################
 ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(example EXCLUDE_FROM_ALL)
-ADD_SUBDIRECTORY(introduction EXCLUDE_FROM_ALL)
+#ADD_SUBDIRECTORY(introduction EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(speed EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(pkgconfig)
 ADD_SUBDIRECTORY(doc)
