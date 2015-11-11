@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Generates presentation markup using the MathML specification.
+ * Generates presentation markup using the html  and MathML specification.
  * 
  * @author Joao Leal
  */
@@ -37,7 +37,12 @@ protected:
     const std::unique_ptr<LanguageGenerationData<Base> >* _info;
     // current indentation
     size_t _indentationLevel;
+    // css style
     std::string _style;
+    // javascript source code
+    std::string _javascript;
+    // additional markup for the head
+    std::string _headExtra;
     std::string _startEq;
     std::string _endEq;
     std::string _forStart;
@@ -53,6 +58,7 @@ protected:
     std::string _condBodyStart;
     std::string _condBodyEnd;
     std::string _assignStr;
+    std::string _assignAddStr;
     // new line characters
     std::string _endline;
     // output stream for the generated source code
@@ -78,7 +84,7 @@ protected:
     std::string _filename;
     // the maximum number of assignment (~lines) per local file
     size_t _maxAssigmentsPerFile;
-    //
+    // maps filenames to their content
     std::map<std::string, std::string>* _sources;
     // the values in the temporary array
     std::vector<const Argument<Base>*> _tmpArrayValues;
@@ -93,7 +99,7 @@ protected:
     bool _inEquationEnv;
 private:
     std::string auxArrayName_;
-
+    std::vector<int> varIds_;
 public:
 
     /**
@@ -108,10 +114,10 @@ public:
                ".condElseIf{}\n"
                ".condElse{}\n"
                ".condBody{padding-left: 2em;}\n"
-               ".dep{}\n"
-               ".indep{}\n"
-               ".tmp{}\n"),
-        _startEq("<math xmlns=\"http://www.w3.org/1998/Math/MathML\">"),
+               "math .dep{color:#600;}\n"
+               "math .indep{color:#060;}\n"
+               "math .tmp{color:#006;}\n"),
+        _startEq("<math>"),
         _endEq("</math><br/>"),
         _forStart("<div class='loop'>"),
         _forEnd("</div>"),
@@ -126,6 +132,7 @@ public:
         _condBodyStart("<div class='condBody'>"),
         _condBodyEnd("</div>"),
         _assignStr("<mo>=</mo>"),
+        _assignAddStr("<mo>+=</mo>"),
         _endline("\n"),
         _nameGen(nullptr),
         _independentSize(0),
@@ -137,12 +144,20 @@ public:
         _parameterPrecision(std::numeric_limits<Base>::digits10) {
     }
 
-    inline const std::string& getAssignString() const {
+    inline const std::string& getAssignMarkup() const {
         return _assignStr;
     }
 
-    inline void setAssignString(const std::string& assign) {
+    inline void setAssignMarkup(const std::string& assign) {
         _assignStr = assign;
+    }
+
+    inline const std::string& getAddAssignMarkup() const {
+        return _assignAddStr;
+    }
+
+    inline void setAddAssignMarkup(const std::string& assignAdd) {
+        _assignAddStr = assignAdd;
     }
 
     inline bool isIgnoreZeroDepAssign() const {
@@ -153,24 +168,54 @@ public:
         _ignoreZeroDepAssign = ignore;
     }
 
-    virtual void setFilename(const std::string& name) {
+    void setFilename(const std::string& name) {
         _filename = name;
     }
 
     /**
-     * Defines the CSS style.
+     * Defines the CSS style to be added to head section of the html document.
      * 
      * @param style the content of the CSS
      */
-    virtual void setStyle(const std::string& style) {
+    void setStyle(const std::string& style) {
         _style = style;
+    }
+
+    const std::string& getStyle() const {
+        return _style;
+    }
+
+    /**
+     * Defines Javascript source code to be added to head section of the html document.
+     * 
+     * @param javascript the Javascript source code
+     */
+    void setJavascript(const std::string& javascript) {
+        _javascript = javascript;
+    }
+
+    const std::string& getJavascript() const {
+        return _javascript;
+    }
+
+    /**
+     * Defines additional markup to be added to head section of the html document.
+     * 
+     * @param headExtra html markup to be added to the head section
+     */
+    void setHeadExtraMarkup(const std::string& headExtra) {
+        _headExtra = headExtra;
+    }
+
+    const std::string& getHeadExtraMarkup() const {
+        return _headExtra;
     }
 
     /**
      * Defines the surrounding markup for each equation.
      * 
-     * @param begin the opening xhtml markup
-     * @param end the closing xhtml markup
+     * @param begin the opening html markup
+     * @param end the closing html markup
      */
     virtual void setEquationMarkup(const std::string& begin,
                                    const std::string& end) {
@@ -195,8 +240,8 @@ public:
     /**
      * Defines the surrounging markup for each for loop.
      * 
-     * @param begin the opening xhtml markup
-     * @param end the closing xhtml markup
+     * @param begin the opening html markup
+     * @param end the closing html markup
      */
     virtual void setForMarkup(const std::string& begin,
                               const std::string& end) {
@@ -221,8 +266,8 @@ public:
     /**
      * Defines the surrounding markup for each If.
      * 
-     * @param begin the opening xhtml markup
-     * @param end the closing xhtml markup
+     * @param begin the opening html markup
+     * @param end the closing html markup
      */
     virtual void setIfMarkup(const std::string& begin,
                              const std::string& end) {
@@ -247,8 +292,8 @@ public:
     /**
      * Defines the surrounding markup for each else if.
      * 
-     * @param begin the opening xhtml markup
-     * @param end the closing xhtml markup
+     * @param begin the opening html markup
+     * @param end the closing html markup
      */
     virtual void setElseIfMarkup(const std::string& begin,
                                  const std::string& end) {
@@ -273,8 +318,8 @@ public:
     /**
      * Defines the surrounding markup for each else.
      * 
-     * @param begin the opening xhtml markup
-     * @param end the closing xhtml markup
+     * @param begin the opening html markup
+     * @param end the closing html markup
      */
     virtual void setElseMarkup(const std::string& begin,
                                const std::string& end) {
@@ -441,6 +486,9 @@ protected:
         _tmpSparseArrayValues.resize(_nameGen->getMaxTemporarySparseArrayVariableID());
         std::fill(_tmpSparseArrayValues.begin(), _tmpSparseArrayValues.end(), nullptr);
 
+        varIds_.resize(_minTemporaryVarID + variableOrder.size());
+        std::fill(varIds_.begin(), varIds_.end(), 0);
+
         /**
          * generate index array names (might be used for variable names)
          */
@@ -547,8 +595,7 @@ protected:
                     if (a.array) {
                         _code << a.name;
                     } else {
-                        size_t id = (*_dependent)[i].getOperationNode()->getVariableID();
-                        _code << "<mrow id='dep" << id << "' class='dep'>" << _nameGen->generateDependent(i) << "</mrow>";
+                        _code << "<mrow id='" << createID(*(*_dependent)[i].getOperationNode()) << "' class='dep'>" << _nameGen->generateDependent(i) << "</mrow>";
                     }
                     _code << _assignStr;
                     printParameter(Base(0.0));
@@ -590,7 +637,7 @@ protected:
                                  "The temporary variables must be saved in an array in order to generate multiple functions");
             printAlgorithmFileStart(_code);
             for (size_t i = 0; i < mathMLFiles.size(); i++) {
-                _code << "<a href='" << mathMLFiles[i] << ".xhtml'>part " << (i + 1) << "</a><br/>" << _endline;
+                _code << "<a href='" << mathMLFiles[i] << ".html'>part " << (i + 1) << "</a><br/>" << _endline;
             }
             printAlgorithmFileEnd(_code);
         }
@@ -602,13 +649,13 @@ protected:
             for (size_t index : dependentDuplicates) {
                 const CG<Base>& dep = dependent[index];
                 std::string varName = _nameGen->generateDependent(index);
-                size_t id = dep.getOperationNode()->getVariableID();
-                const std::string& origVarName = *dep.getOperationNode()->getName();
+                OperationNode<Base>* depNode = dep.getOperationNode();
+                const std::string& origVarName = *depNode->getName();
 
                 _code << _startEq
-                        << "<mrow id='dep" << id << "' class='dep'>" << varName << "</mrow>"
+                        << "<mrow id='" << createID(depNode) << "' class='dep'>" << varName << "</mrow>"
                         << _assignStr
-                        << "<mrow class='dep'>" << origVarName << "</mrow>";
+                        << "<mrow id='" << createID(depNode) << "' class='dep'>" << origVarName << "</mrow>";
                 printAssigmentEnd();
             }
         }
@@ -624,9 +671,8 @@ protected:
                     }
 
                     std::string varName = _nameGen->generateDependent(i);
-                    size_t id = dependent[i].getOperationNode()->getVariableID();
                     _code << _startEq
-                            << "<mrow id='dep" << id << "' class='dep'>" << varName << "</mrow>" << _assignStr;
+                            << "<mrow id='" << createID(dependent[i].getOperationNode()) << "' class='dep'>" << varName << "</mrow>" << _assignStr;
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -638,11 +684,10 @@ protected:
 
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
-                size_t id = dependent[i].getOperationNode()->getVariableID();
                 _code << _startEq
-                        << "<mrow id='dep" << id << "' class='dep'>" << varName << "</mrow>"
+                        << "<mrow id='" << createID(dependent[i].getOperationNode()) << "' class='dep'>" << varName << "</mrow>"
                         << _assignStr
-                        << "<mrow class='indep'>" << indepName << "</mrow>";
+                        << "<mrow id='" << createID(dependent[i].getOperationNode()) << "' class='indep'>" << indepName << "</mrow>";
                 printAssigmentEnd(*dependent[i].getOperationNode());
             }
         }
@@ -659,36 +704,48 @@ protected:
             out << _ss.str();
 
             if (_sources != nullptr) {
-                (*_sources)[_filename + ".xhtml"] = _ss.str();
+                (*_sources)[_filename + ".html"] = _ss.str();
             }
         } else {
             // there are multiple source files (this last one is the master)
-            (*_sources)[_filename + ".xhtml"] = _code.str();
+            (*_sources)[_filename + ".html"] = _code.str();
         }
 
     }
 
     inline virtual void printAlgorithmFileStart(std::ostream& out) {
-        out << "<?xml version=\"1.0\" encoding=\"UTF-8\"?>" << _endline <<
-                "<!DOCTYPE html" << _endline <<
-                "  PUBLIC \"-//W3C//DTD XHTML 1.1 plus MathML 2.0//EN\"" << _endline <<
-                "         \"http://www.w3.org/Math/DTD/mathml2/xhtml-math11-f.dtd\">" << _endline <<
-                "<html xmlns=\"http://www.w3.org/1999/xhtml\" xml:lang=\"en\">" << _endline <<
+        out << "<!DOCTYPE html>" << _endline <<
+                "<html lang=\"en\">" << _endline <<
                 "<head>" << _endline <<
+                "<meta charset=\"utf-8\">" << _endline <<
                 "<title>" << _filename << "</title>" << _endline;
+
+        if (!_headExtra.empty()) {
+            out << _headExtra;
+        }
+
         if (!_style.empty()) {
             out << "<style>" << _endline <<
                     _style <<
                     "</style>" << _endline;
         }
+
+        if (!_javascript.empty()) {
+            out << "<script type=\"text/javascript\">\n" <<
+                    _javascript << "\n"
+                    "</script>\n";
+        }
+
         out << "</head>" << _endline <<
                 "" << _endline <<
                 "<body>" << _endline <<
-                "<!-- source file for '" << _filename << "' (automatically generated by CppADCodeGen) -->" << _endline;
+                "<!-- source file for '" << _filename << "' (automatically generated by CppADCodeGen) -->" << _endline <<
+                "<div id='algorithm'>" << _endline;
     }
 
     inline virtual void printAlgorithmFileEnd(std::ostream& out) {
-        out << "</body>" << _endline <<
+        out << "</div>" << _endline <<
+                "</body>" << _endline <<
                 "</html>";
     }
 
@@ -733,25 +790,22 @@ protected:
     }
 
     inline virtual void printAssigmentStart(OperationNode<Base>& op) {
-        printAssigmentStart(op, createVariableName(op), isDependent(op), op.getVariableID());
+        printAssigmentStart(op, createVariableName(op), isDependent(op));
     }
 
-    inline virtual void printAssigmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep, size_t id) {
+    inline virtual void printAssigmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep) {
         if (!isDep) {
             _temporary[node.getVariableID()] = &node;
         }
 
         _code << _startEq;
-        if (isDep)
-            _code << "<mrow id='dep" << id << "' class='dep'>" << varName << "</mrow>";
-        else
-            _code << "<mrow id='tmp" << id << "' class='tmp'>" << varName << "</mrow>";
+        _code << "<mrow id='" << createID(node) << "' class='" << (isDep ? "dep" : "tmp") << "'>" << varName << "</mrow>";
 
         CGOpCode op = node.getOperationType();
         if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
-            _code << "<mo>+=</mo> ";
+            _code << _assignAddStr; // +=
         } else {
-            _code << _assignStr;
+            _code << _assignStr; // =
         }
     }
 
@@ -774,7 +828,7 @@ protected:
         _ss << _code.str();
         _nameGen->finalizeCustomFunctionVariables(_ss);
 
-        (*_sources)[funcName + ".xhtml"] = _ss.str();
+        (*_sources)[funcName + ".html"] = _ss.str();
         localFuncNames.push_back(funcName);
 
         _code.str("");
@@ -908,10 +962,29 @@ protected:
         return *var.getName();
     }
 
+    inline std::string createID(OperationNode<Base>* var) {
+        return createID(*var);
+    }
+
+    virtual std::string createID(OperationNode<Base>& var) {
+        size_t id = var.getVariableID();
+        if (varIds_.size() <= id) {
+            varIds_.resize(id + 1 + varIds_.size() * 3 / 2, 0);
+        }
+
+        int n = varIds_[id];
+        varIds_[id]++;
+
+        if (n == 0)
+            return "v" + std::to_string(id);
+        else
+            return "v" + std::to_string(id) + "_" + std::to_string(n);
+    }
+
     virtual void printIndependentVariableName(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
         //size_t id = op.getVariableID();
-        _code << "<mrow class='indep'>" << _nameGen->generateIndependent(op) << "</mrow>";
+        _code << "<mrow id='" << createID(op) << "' class='indep'>" << _nameGen->generateIndependent(op) << "</mrow>";
     }
 
     virtual unsigned print(const Argument<Base>& arg) {
@@ -933,15 +1006,15 @@ protected:
             CGOpCode op = node.getOperationType();
             if (node.getVariableID() >= _minTemporaryVarID || op == CGOpCode::ArrayCreation || op == CGOpCode::SparseArrayCreation || op == CGOpCode::LoopIndexedDep || op == CGOpCode::LoopIndexedIndep) {
 
-                _code << "<mrow class='tmp'>" << name << "</mrow>"; // TODO!!!!!!!!!!!!!!!!!!!!!!!
+                _code << "<mrow id='" << createID(node) << "' class='tmp'>" << name << "</mrow>"; // TODO!!!!!!!!!!!!!!!!!!!!!!!
 
             } else if (node.getVariableID() <= _independentSize) {
                 // independent variable
-                _code << "<mrow class='indep'>" << name << "</mrow>";
+                _code << "<mrow id='" << createID(node) << "' class='indep'>" << name << "</mrow>";
 
             } else {
                 // dependent variable
-                _code << "<mrow class='dep'>" << name << "</mrow>";
+                _code << "<mrow id='" << createID(node) << "' class='dep'>" << name << "</mrow>";
 
             }
 
@@ -1316,7 +1389,7 @@ protected:
         if ((trueCase.getParameter() != nullptr && falseCase.getParameter() != nullptr && *trueCase.getParameter() == *falseCase.getParameter()) ||
                 (trueCase.getOperation() != nullptr && falseCase.getOperation() != nullptr && trueCase.getOperation() == falseCase.getOperation())) {
             // true and false cases are the same
-            printAssigmentStart(node, varName, isDep, node.getVariableID());
+            printAssigmentStart(node, varName, isDep);
             print(trueCase);
             printAssigmentEnd(node);
         } else {
@@ -1332,7 +1405,7 @@ protected:
                     << _condBodyStart << _endline;
 
             //checkEquationEnvStart(); // no need
-            printAssigmentStart(node, varName, isDep, node.getVariableID());
+            printAssigmentStart(node, varName, isDep);
             print(trueCase);
             printAssigmentEnd(node);
             _code << _condBodyEnd << _endline << _ifEnd << _endline;
@@ -1341,7 +1414,7 @@ protected:
             _code << _elseStart << _startEq << "<mi>else</mi>" << _endEq << _endline
                     << _condBodyStart << _endline;
             //checkEquationEnvStart(); // no need
-            printAssigmentStart(node, varName, isDep, node.getVariableID());
+            printAssigmentStart(node, varName, isDep);
             print(falseCase);
             printAssigmentEnd(node);
             _code << _condBodyEnd << _endline << _elseEnd << _endline; // end if
@@ -1569,7 +1642,7 @@ protected:
         OperationNode<Base>* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
-        _code << "<mrow id='tmp" << tmpVar->getVariableID() << "' class='tmp'>" << *tmpVar->getName() << "</mrow>";
+        _code << "<mrow id='" << createID(tmpVar) << "' class='tmp'>" << *tmpVar->getName() << "</mrow>";
     }
 
     virtual void printIndexAssign(OperationNode<Base>& node) {

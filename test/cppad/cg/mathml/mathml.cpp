@@ -64,14 +64,40 @@ TEST(CppADCGLatexTest, latex) {
 
     LanguageMathML<double> langMathML;
     LangMathMLDefaultVariableNameGenerator<double> nameGen;
+    langMathML.setStyle(langMathML.getStyle() + "\n.selected{background-color: #ccc;}");
+    langMathML.setJavascript("var selected = [];\n"
+                             "\n"
+                             "function clickHandler(e) {\n"
+                             "    var t = e.target;\n"
+                             "    for (var i = 0, len = selected.length; i < len; ++i)\n"
+                             "        selected[i].classList.remove('selected');\n"
+                             "    selected = [];\n"
+                             "    while (t != document) {\n"
+                             "        if (t.id !== null && t.id !== \"\" && t.id.charAt(0) == 'v') {\n"
+                             "            var baseId = t.id.split('_')[0];\n"
+                             "            var el = document.getElementById(baseId);\n"
+                             "            var n = 0;\n"
+                             "            while (el !== null) {\n"
+                             "                el.classList.add('selected');\n"
+                             "                selected.push(el);\n"
+                             "                n++;\n"
+                             "                el = document.getElementById(baseId + '_' + n);\n"
+                             "            }\n"
+                             "            break;\n"
+                             "        }\n"
+                             "        t = t.parentNode;\n"
+                             "    }\n"
+                             "}\n"
+                             "\n"
+                             "document.addEventListener('DOMContentLoaded', function () {\n"
+                             "    document.getElementById('algorithm').onclick = clickHandler;\n"
+                             "}, false);");
 
     std::ofstream htmlFile;
     htmlFile.open("algorithm.html");
 
+    handler.setReuseVariableIDs(false);
     handler.generateCode(htmlFile, langMathML, vals, nameGen);
 
     htmlFile.close();
-
-    std::string dir = system::getWorkingDirectory();
-
 }

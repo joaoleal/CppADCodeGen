@@ -35,11 +35,11 @@ public:
      */
     const CppAD::vector<CG<Base> >& dependent;
     /**
-     * the lowest ID used for temporary variables
+     * The lowest ID used for temporary variables
      */
     size_t minTemporaryVarID;
     /**
-     * The order of the assignment of the variables in the source code
+     * Variable assignment order in the source code
      */
     const std::vector<OperationNode<Base>*>& variableOrder;
     /**
