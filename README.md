@@ -6,8 +6,10 @@ statically compiled at runtime using an existing compiler and linked dynamically
 or, alternatively, go through a JIT compilation using Clang/LLVM.
 
 In addition to C source generation, CppADCodeGen can also produce 
-[Latex](http://www.latex-project.org/) source-code files for your algorithm,
-which in turn can be used to create PDF files for documentation purposes.
+[Latex](http://www.latex-project.org/) and
+html+[MathML](http://www.w3.org/Math/) source-code files for your algorithm.
+Latex sources can be used to create PDF files for documentation purposes, 
+while html+MathML can be used to display your algorithm in a MathML capable web browser.
 
 CppADCodeGen can also be used to perform differentiation index reduction of 
 Differential Algebraic Equations (DAE) through the Pantelides and Dummy 
@@ -63,7 +65,8 @@ The folder example includes some simple usage cases.
 |Directories |  Description                                                    |
 |------------|-----------------------------------------------------------------|
 |bin         | Helper shell and sed scripts used for CppAD development.        |
-|bug         | Directory containing demonstration of known bugs (may be empty) |
+|bug         | Directory containing demonstration of known bugs (may be empty).|
+|doc         | Holds files for generation of developer documentation.          |
 |debian      | Debian package creation files (Linux).                          |
 |include     | The CppADCodeGen header files.                                  |
 |example     | CppADCodegen example files are here.                            |
@@ -77,7 +80,6 @@ The folder example includes some simple usage cases.
 |AUTHORS        | Statement of authorship and copyright.                       |
 |CMakeLists.txt | CppADCodeGen CMake input file.                               |
 |COPYING        | Statement of user license to use software.                   |
-|doxyfile.in    | Control file for CppADCodeGen developer documentation.       |
 |epl-v10.txt    | A copy of the Eclipse Public License version 1.              |
 |gpl3.txt       | A copy of the GNU General Public License version 3.          |
 |INSTALL        | Points to this file.                                         |
