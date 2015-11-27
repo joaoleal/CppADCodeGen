@@ -47,7 +47,9 @@ protected:
     std::vector<OperationNode<Base> *> _independentVariables;
     // the current dependent variables
     CppAD::vector<CG<Base> >* _dependents;
-    // all the source code blocks created with the CG<Base> objects
+    /**
+     * all OperationNodes created by CG<Base> objects
+     */
     std::vector<OperationNode<Base> *> _codeBlocks;
     /**
      * the order for the variable creation in the source code 
@@ -582,9 +584,8 @@ public:
      * @warning all managed memory will be deleted
      */
     virtual void reset() {
-        typename std::vector<OperationNode<Base> *>::iterator itc;
-        for (itc = _codeBlocks.begin(); itc != _codeBlocks.end(); ++itc) {
-            delete *itc;
+        for (OperationNode<Base>* n: _codeBlocks) {
+            delete n;
         }
         _codeBlocks.clear();
         _independentVariables.clear();
@@ -634,6 +635,49 @@ public:
         for (size_t a = 0; a < args.size(); a++) {
             resetNodes(args[a].getOperation());
         }
+    }
+
+
+    /***********************************************************************
+     *                      access to managed memory
+     **********************************************************************/
+    /**
+     * Provides the current number of OperationNodes created by the model.
+     * This number is not the total number of operations in the final
+     * model since it also contains Operations nodes marking
+     * independent variables and there could be unused operations by
+     * the model (dead-code).
+     * @return The number of OperationNodes created by the model.
+     */
+    inline size_t getManagedNodesCount() const {
+        return _codeBlocks.size();
+    }
+
+    /**
+     * Provides the OperationNodes created by the model.
+     */
+    inline const std::vector<OperationNode<Base> *>& getManagedNodes() const {
+        return _codeBlocks;
+    }
+
+    /**
+     * Allows to delete OperationNodes that are managed internally.
+     * @warning: This is a dangerous method, make sure these nodes are not used
+     *           anywhere else!
+     * @param start The index of the first OperationNode to be deleted
+     * @param end The index after the last OperationNode to be deleted
+     */
+    inline void deleteManagedNodes(size_t start, size_t end) {
+        if (start >= end)
+            return;
+
+        start = std::min<size_t>(start, _codeBlocks.size());
+        end = std::min<size_t>(end, _codeBlocks.size());
+
+        for (size_t i = start; i< end; ++i) {
+            delete _codeBlocks[i];
+        }
+        _codeBlocks.erase(_codeBlocks.begin() + start, _codeBlocks.begin() + end);
     }
 
     /***********************************************************************
