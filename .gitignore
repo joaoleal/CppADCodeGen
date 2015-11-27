@@ -46,6 +46,8 @@ junk.sh
 
 # IDE files
 /nbproject/
+/.idea/
+/.kdev4/
 
 # file browser
 .directory
@@ -54,6 +56,9 @@ junk.sh
 /debian/*/
 /debian/files
 /debian/*.stamp
+
+# temporary test directory
+/test/zoot/
 
 # automatically generated directories
 /test/cppadcg_sources
