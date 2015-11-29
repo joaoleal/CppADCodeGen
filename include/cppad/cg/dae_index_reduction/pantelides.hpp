@@ -67,7 +67,6 @@ public:
         origTimeDependentCount_(0),
         timeOrigVarIndex_(-1) {
 
-        using namespace CppAD::extra;
         using namespace std;
         using std::vector;
 

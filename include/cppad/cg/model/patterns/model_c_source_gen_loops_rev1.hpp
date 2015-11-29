@@ -31,7 +31,6 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using namespace CppAD::extra;
     using CppAD::vector;
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
@@ -395,7 +394,6 @@ std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev
                                                                                      const CppAD::vector<CGBase>& x,
                                                                                      bool constainsAtomics) {
     using namespace std;
-    using namespace CppAD::extra;
     using CppAD::vector;
 
     size_t m = fun.Range();

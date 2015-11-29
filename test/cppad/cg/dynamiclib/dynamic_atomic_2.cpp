@@ -140,7 +140,6 @@ const size_t CppADCGDynamicAtomic2Test::m = 4;
 
 using namespace CppAD;
 using namespace CppAD::cg;
-using namespace CppAD::extra;
 using namespace std;
 
 TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {

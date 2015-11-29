@@ -26,7 +26,6 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using namespace CppAD::extra;
     using CppAD::vector;
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
@@ -870,7 +869,6 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
                                                                                           const CppAD::vector<CGBase>& x,
                                                                                           bool constainsAtomics) {
     using namespace std;
-    using namespace CppAD::extra;
     using CppAD::vector;
 
     size_t n = fun.Domain();

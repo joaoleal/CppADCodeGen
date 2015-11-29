@@ -62,7 +62,6 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using namespace CppAD::extra;
     using CppAD::vector;
 
     size_t m = _fun.Range();

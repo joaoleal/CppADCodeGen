@@ -28,7 +28,7 @@ void zeroOrderDependency(ADFun<Base>& fun,
 
     typedef CppAD::vector<std::set<size_t> > VectorSet;
 
-    const VectorSet jacSparsity = extra::jacobianSparsitySet<VectorSet, Base>(fun);
+    const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
 
     for (size_t i = 0; i < m; i++) {
         for (size_t j : jacSparsity[i]) {
@@ -365,7 +365,7 @@ void printSparsityPattern(const VectorSize& row,
                           const std::string& name,
                           size_t m) {
     CppAD::vector<std::set<size_t> > sparsity(m);
-    extra::generateSparsitySet(row, col, sparsity);
+    generateSparsitySet(row, col, sparsity);
     printSparsityPattern(sparsity, name);
 }
 

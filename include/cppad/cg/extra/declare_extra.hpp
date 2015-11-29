@@ -21,8 +21,7 @@
 
 // forward declarations
 namespace CppAD {
-
-namespace extra {
+namespace cg {
 
 /***********************************************************************
  * Combined Jacobian and Hessian evaluation

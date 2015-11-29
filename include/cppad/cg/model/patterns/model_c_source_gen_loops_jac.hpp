@@ -220,7 +220,6 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(C
                                                                                bool forward) throw (CGException) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using namespace CppAD::extra;
     using CppAD::vector;
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun->Range());
 

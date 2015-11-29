@@ -76,7 +76,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource() throw (CGException) {
 
     if (_jacMode == JacobianADMode::Automatic) {
         if (_custom_jac.defined) {
-            forwardMode = extra::estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
+            forwardMode = estimateBestJacobianADMode(_jacSparsity.rows, _jacSparsity.cols);
         } else {
             forwardMode = n <= m;
         }
@@ -300,10 +300,10 @@ void ModelCSourceGen<Base>::determineJacobianSparsity() {
     /**
      * Determine the sparsity pattern
      */
-    _jacSparsity.sparsity = extra::jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
+    _jacSparsity.sparsity = jacobianSparsitySet<SparsitySetType, CGBase> (_fun);
 
     if (!_custom_jac.defined) {
-        extra::generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
+        generateSparsityIndexes(_jacSparsity.sparsity, _jacSparsity.rows, _jacSparsity.cols);
 
     } else {
         _jacSparsity.rows = _custom_jac.row;

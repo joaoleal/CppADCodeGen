@@ -438,7 +438,7 @@ public:
 
     inline void evalJacobianSparsity() {
         if (!jacSparsity_) {
-            jacTapeSparsity_ = extra::jacobianSparsitySet<CppAD::vector<std::set<size_t> >, CGB>(*fun_);
+            jacTapeSparsity_ = jacobianSparsitySet<CppAD::vector<std::set<size_t> >, CGB>(*fun_);
             jacSparsity_ = true;
         }
     }

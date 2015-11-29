@@ -21,6 +21,7 @@ add_cppadcg_test(inputstream.cpp)
 add_cppadcg_test(temporary.cpp)
 add_cppadcg_test(mult_sparsity_pattern.cpp)
 
+ADD_SUBDIRECTORY(extra)
 ADD_SUBDIRECTORY(operations)
 ADD_SUBDIRECTORY(models)
 ADD_SUBDIRECTORY(dynamiclib)

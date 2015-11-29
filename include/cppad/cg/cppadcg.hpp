@@ -135,7 +135,7 @@
 #include <cppad/cg/arithmetic_ad.hpp>
 
 // addons
-#include <cppad/extra/extra.hpp>
+#include <cppad/cg/extra/extra.hpp>
 
 // ---------------------------------------------------------------------------
 // additional utilities

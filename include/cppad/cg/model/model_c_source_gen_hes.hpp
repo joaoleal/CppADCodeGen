@@ -471,8 +471,8 @@ void ModelCSourceGen<Base>::determineHessianSparsity() {
             LocalSparsityInfo& hessSparsitiesi = _hessSparsities[i];
 
             if (!_custom_hess.defined) {
-                extra::generateSparsityIndexes(hessSparsitiesi.sparsity,
-                                               hessSparsitiesi.rows, hessSparsitiesi.cols);
+                generateSparsityIndexes(hessSparsitiesi.sparsity,
+                                        hessSparsitiesi.rows, hessSparsitiesi.cols);
 
             } else {
                 size_t nnz = _custom_hess.row.size();
@@ -490,8 +490,8 @@ void ModelCSourceGen<Base>::determineHessianSparsity() {
     }
 
     if (!_custom_hess.defined) {
-        extra::generateSparsityIndexes(_hessSparsity.sparsity,
-                                       _hessSparsity.rows, _hessSparsity.cols);
+        generateSparsityIndexes(_hessSparsity.sparsity,
+                                _hessSparsity.rows, _hessSparsity.cols);
 
     } else {
         _hessSparsity.rows = _custom_hess.row;

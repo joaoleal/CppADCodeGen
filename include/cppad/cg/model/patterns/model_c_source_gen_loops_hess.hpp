@@ -1092,7 +1092,6 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
                                   CppAD::vector<std::map<size_t, std::map<size_t, CG<Base> > > >& vhess,
                                   bool individualColoring) {
     using namespace std;
-    using namespace CppAD::extra;
     using CppAD::vector;
 
     typedef CG<Base> CGB;

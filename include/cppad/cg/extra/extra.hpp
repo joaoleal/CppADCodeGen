@@ -17,7 +17,7 @@
 
 #include <cppad/cppad.hpp>
 
-#include <cppad/extra/sparse_forjac_hessian.hpp>
-#include <cppad/extra/sparsity.hpp>
+#include <cppad/cg/extra/sparse_forjac_hessian.hpp>
+#include <cppad/cg/extra/sparsity.hpp>
 
 #endif

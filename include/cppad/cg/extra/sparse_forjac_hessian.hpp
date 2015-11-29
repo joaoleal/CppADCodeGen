@@ -18,8 +18,7 @@
  * Adapted from CppAD
  */
 namespace CppAD {
-
-namespace extra {
+namespace cg {
 
 /**
  * class used by SparseForJacHessian to hold information relative to the
@@ -495,8 +494,8 @@ size_t sparseForJacHessian(ADFun<Base>& fun,
                            const VectorSize& hes_col,
                            VectorBase& hes,
                            SparseForjacHessianWork& work) {
-    vector<VectorBase> vw(1);
-    vector<VectorBase> vhes(1);
+    std::vector<VectorBase> vw(1);
+    std::vector<VectorBase> vhes(1);
     vw[0] = w;
     vhes[0] = hes;
 
@@ -675,7 +674,6 @@ size_t sparseForJacHessian(ADFun<Base>& fun,
 }
 
 }
-
 }
 
 #endif

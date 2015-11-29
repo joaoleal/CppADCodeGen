@@ -80,7 +80,7 @@ protected:
         /**
          * Determine the relevant elements
          */
-        std::vector<std::set<size_t> > jacSparAll = extra::jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
+        std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
         customJacSparsity_.resize(jacSparAll.size());
         for (size_t i = 0; i < jacSparAll.size(); i++) {
             // only differential information for states and controls
@@ -89,7 +89,7 @@ protected:
                 customJacSparsity_[i].insert(jacSparAll[i].begin(), itEnd);
         }
 
-        std::vector<std::set<size_t> > hessSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+        std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         customHessSparsity_.resize(hessSparAll.size());
         for (size_t i = 0; i < ns + nm; i++) {
             std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side

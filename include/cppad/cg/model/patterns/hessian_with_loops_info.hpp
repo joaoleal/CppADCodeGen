@@ -111,7 +111,6 @@ public:
      *                           functions in the model
      */
     inline void evalLoopModelJacobianHessian(bool individualColoring) {
-        using namespace CppAD::extra;
         using CppAD::vector;
 
         ADFun<CG<Base> >& fun = model->getTape();

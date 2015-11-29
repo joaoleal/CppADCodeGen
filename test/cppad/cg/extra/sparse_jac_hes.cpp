@@ -22,13 +22,12 @@
 
 using namespace CppAD;
 using namespace CppAD::cg;
-using namespace CppAD::extra;
 using namespace std;
 
 class SparseJacHes : public CppADCGTest {
 public:
-    typedef std::vector< std::set<size_t> > std_vector_set;
-    typedef CppAD::vector< std::set<size_t> > cppad_vector_set;
+    typedef std::vector<std::set<size_t> > std_vector_set;
+    typedef CppAD::vector<std::set<size_t> > cppad_vector_set;
 public:
 
     inline static std::vector<AD<double> > model1(const std::vector<AD<double> >& X) {

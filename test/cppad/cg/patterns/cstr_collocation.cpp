@@ -149,7 +149,7 @@ public:
 
     inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
         CppADCGPatternTest::defineCustomSparsity(fun);
-        //std::vector<std::set<size_t> > hessSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+        //std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         //printSparsityPattern(hessSparAll, "Full Hessian");
         //customHessSparsity_.resize(x.size());
         //customHessSparsity_[22].insert(22);

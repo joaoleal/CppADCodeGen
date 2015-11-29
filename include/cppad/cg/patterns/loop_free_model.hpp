@@ -111,7 +111,7 @@ public:
 
     inline void evalJacobianSparsity() {
         if (!jacSparsity_) {
-            jacTapeSparsity_ = extra::jacobianSparsitySet<VectorSet, CGB>(*fun_);
+            jacTapeSparsity_ = jacobianSparsitySet<VectorSet, CGB>(*fun_);
             jacSparsity_ = true;
         }
     }
@@ -121,7 +121,6 @@ public:
     }
 
     inline void evalHessianSparsity() {
-        using namespace CppAD::extra;
         using CppAD::vector;
 
         if (!hessSparsity_) {
@@ -252,7 +251,6 @@ public:
                                                                                         bool individualColoring) {
         using namespace std;
         using namespace CppAD::cg::loops;
-        using namespace CppAD::extra;
         using CppAD::vector;
 
         CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated
@@ -366,7 +364,6 @@ public:
                                                   CppAD::vector<CGB>& hess) {
         using namespace std;
         using namespace CppAD::cg::loops;
-        using namespace CppAD::extra;
         using CppAD::vector;
 
         CPPADCG_ASSERT_UNKNOWN(hessSparsity_); // check that the sparsities have been evaluated

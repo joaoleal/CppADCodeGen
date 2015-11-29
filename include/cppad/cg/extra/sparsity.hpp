@@ -16,7 +16,7 @@
  */
 
 namespace CppAD {
-namespace extra {
+namespace cg {
 
 template<class VectorBool, class Base>
 inline VectorBool jacobianForwardSparsity(ADFun<Base>& fun) {
@@ -308,7 +308,7 @@ inline void generateSparsitySet(const VectorSize& row,
     }
 }
 
-} // END extra namespace
+} // END cg namespace
 } // END CppAD namespace
 
 #endif

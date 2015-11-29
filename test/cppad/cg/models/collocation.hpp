@@ -233,7 +233,7 @@ public:
         compHelpL.setTypicalIndependentValues(xa_);
 
         if (ignoreParameters_) {
-            std::vector<std::set<size_t> > jacSparAll = extra::jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
+            std::vector<std::set<size_t> > jacSparAll = jacobianSparsitySet<std::vector<std::set<size_t> > >(fun);
             std::vector<std::set<size_t> > jacSpar(jacSparAll.size());
             for (size_t i = 0; i < jacSparAll.size(); i++) {
                 // only differential information for states and controls
@@ -243,7 +243,7 @@ public:
             }
             compHelpL.setCustomSparseJacobianElements(jacSpar);
 
-            std::vector<std::set<size_t> > hessSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+            std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
             std::vector<std::set<size_t> > hessSpar(hessSparAll.size());
             for (size_t i = 0; i < ns_ + nm_; i++) {
                 std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side

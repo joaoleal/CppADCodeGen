@@ -102,7 +102,7 @@ public:
             size_t n = fun_.Domain();
             size_t m = fun_.Range();
             if (!custom_jac_.isFullDefined()) {
-                custom_jac_.setFullElements(extra::jacobianForwardSparsitySet<vector<std::set<size_t> > >(fun_));
+                custom_jac_.setFullElements(jacobianForwardSparsitySet<vector<std::set<size_t> > >(fun_));
                 fun_.size_forward_set(0);
             }
 
@@ -127,7 +127,7 @@ public:
             size_t n = fun_.Domain();
             size_t m = fun_.Range();
             if (!custom_jac_.isFullDefined()) {
-                custom_jac_.setFullElements(extra::jacobianReverseSparsitySet<vector<std::set<size_t> > >(fun_));
+                custom_jac_.setFullElements(jacobianReverseSparsitySet<vector<std::set<size_t> > >(fun_));
             }
 
             for (size_t i = 0; i < st.size(); i++) {
@@ -148,7 +148,6 @@ public:
                                 const CppAD::vector<std::set<size_t> >& r,
                                 const CppAD::vector<std::set<size_t> >& u,
                                 CppAD::vector<std::set<size_t> >& v) {
-        using namespace CppAD::extra;
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined() || custom_hess_.isFilterDefined()) {

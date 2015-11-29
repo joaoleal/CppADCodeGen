@@ -118,7 +118,6 @@ const size_t CppADCGDynamicForRevTest2::m = 2;
 
 using namespace CppAD;
 using namespace CppAD::cg;
-using namespace CppAD::extra;
 using namespace std;
 
 TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {

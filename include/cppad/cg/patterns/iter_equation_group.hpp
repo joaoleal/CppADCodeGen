@@ -94,7 +94,7 @@ public:
 
         ADFun<CGB>& fun = model->getTape();
 
-        hessTapeSparsity_ = extra::hessianSparsitySet<vector<std::set<size_t> >, CGB>(fun, tapeI);
+        hessTapeSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(fun, tapeI);
 
         /**
          * make a database of the Hessian elements

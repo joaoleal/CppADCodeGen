@@ -175,7 +175,6 @@ private:
                                   const CppAD::vector<Base>& xInner,
                                   Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace CppAD;
-        using namespace CppAD::extra;
         using namespace std;
         using CppAD::vector;
 
@@ -359,7 +358,6 @@ private:
                                            const std::vector<std::set<size_t> >& hessOuterSparsity,
                                            Base epsilonR = 1e-14, Base epsilonA = 1e-14) {
         using namespace CppAD;
-        using namespace CppAD::extra;
         using namespace std;
         using CppAD::vector;
 

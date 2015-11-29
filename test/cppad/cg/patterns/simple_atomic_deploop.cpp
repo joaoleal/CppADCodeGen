@@ -31,7 +31,7 @@ protected:
         /**
          * only the lower left side (not currently required since the hessian is diagonal!)
          */
-        std::vector<std::set<size_t> > hessSparAll = extra::hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
+        std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         customHessSparsity_.resize(hessSparAll.size());
         for (size_t i = 0; i < hessSparAll.size(); i++) {
             std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
