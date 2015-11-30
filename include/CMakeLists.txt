@@ -20,6 +20,5 @@ INSTALL( DIRECTORY "cppad/cg/"
          DESTINATION "${install_cppadcg_include_location}/cg"
          FILES_MATCHING PATTERN "*.hpp")
 
-INSTALL( DIRECTORY "cppad/extra/"
-         DESTINATION "${install_cppad_include_location}/extra"
-         FILES_MATCHING PATTERN "*.hpp")
+INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cppad/cg.hpp"
+	DESTINATION "${install_cppadcg_include_location}/" )
