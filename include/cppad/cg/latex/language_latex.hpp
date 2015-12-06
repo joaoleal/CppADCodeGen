@@ -124,9 +124,7 @@ private:
 public:
 
     /**
-     * Creates a C language source code generator
-     * 
-     * @param varTypeName variable data type (e.g. double)
+     * Creates a Latex language source code generator
      */
     LanguageLatex() :
         _info(nullptr),
@@ -1479,7 +1477,7 @@ protected:
             _code << " " << getComparison(node.getOperationType()) << " ";
             print(right);
             _code << _endEq;
-            _code << "}" << _endline;
+            _code << _endline;
             //checkEquationEnvStart(); // no need
             printAssigmentStart(node, varName, isDep);
             print(trueCase);
