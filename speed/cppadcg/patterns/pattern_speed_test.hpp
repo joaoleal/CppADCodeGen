@@ -717,7 +717,7 @@ protected:
             std::vector<std::set<size_t> > sparsity;
             for (size_t i = 0; i < dtp.size(); i++) {
                 auto t0 = steady_clock::now();
-                sparsity = CppAD::extra::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
+                sparsity = CppAD::cg::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
                 dtp[i] = steady_clock::now() - t0;
             }
             printStat("jacobian sparsity", dtp);
@@ -725,7 +725,7 @@ protected:
             std::vector<duration> dt;
             if (cppAD && sparseJacobian) {
                 std::vector<size_t> rows, cols;
-                CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
+                CppAD::cg::generateSparsityIndexes(sparsity, rows, cols);
                 std::vector<double> jac(rows.size());
 
                 sparse_jacobian_work work;
@@ -748,7 +748,7 @@ protected:
             std::vector<std::set<size_t> > sparsity;
             for (size_t i = 0; i < dtp.size(); i++) {
                 auto t0 = steady_clock::now();
-                sparsity = CppAD::extra::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
+                sparsity = CppAD::cg::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
                 dtp[i] = steady_clock::now() - t0;
             }
             printStat("hessian sparsity", dtp);
@@ -756,7 +756,7 @@ protected:
             std::vector<duration> dt;
             if (cppAD && sparseHessian) {
                 std::vector<size_t> rows, cols;
-                CppAD::extra::generateSparsityIndexes(sparsity, rows, cols);
+                CppAD::cg::generateSparsityIndexes(sparsity, rows, cols);
                 std::vector<double> hess(rows.size());
 
                 std::vector<double> w(model_->Range(), 1.0);

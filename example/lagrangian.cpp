@@ -57,7 +57,7 @@ int main(void) {
      */
     // determine the sparsity pattern
     typedef std::vector<std::set<size_t> > sparType;
-    sparType sparsity = CppAD::extra::hessianSparsitySet<sparType, CGD>(fun); // this could be improved
+    sparType sparsity = CppAD::cg::hessianSparsitySet<sparType, CGD>(fun); // this could be improved
 
     size_t n = fun.Domain();
     assert(sparsity.size() == n);
