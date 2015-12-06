@@ -41,7 +41,7 @@ install:
   - mkdir build
   - mkdir install
   - cd build
-  - cmake -Dcmake_install_prefix:PATH=../install ..
+  - cmake -Dcppad_prefix:PATH=../install ..
   - make install
   - cd ../../..
     
