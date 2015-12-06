@@ -48,6 +48,7 @@ junk.sh
 /nbproject/
 /.idea/
 /.kdev4/
+*.kdev4
 
 # file browser
 .directory
