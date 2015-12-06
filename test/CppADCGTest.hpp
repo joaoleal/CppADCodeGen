@@ -18,8 +18,8 @@
 #include <gtest/gtest.h>
 
 #include <cppad/cg/cppadcg.hpp>
-#include <cppad/memory_leak.hpp>
-#include <cppad/near_equal.hpp>
+#include <cppad/utility/memory_leak.hpp>
+#include <cppad/utility/near_equal.hpp>
 
 #ifndef CPPAD_CG_CPPADCGTEST_HPP
 #define	CPPAD_CG_CPPADCGTEST_HPP
