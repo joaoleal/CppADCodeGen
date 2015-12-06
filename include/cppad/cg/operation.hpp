@@ -19,255 +19,146 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Possible operations
+ * Operation types for OperationNode
  * 
  * @author Joao Leal
  */
 enum class CGOpCode {
-    Assign, // a = b
-    Abs, //  abs(variable)
-    Acos, // acos(variable)
-    Acosh, // acosh(variable)
-    Add, //  a + b
-    Alias, //  alias (reference to another operation)
-    ArrayCreation, // dense array {a, b, c ...}
-    SparseArrayCreation, // {a, b, c ...}; {index1, index2, index3, ...};
-    ArrayElement, // x[i]
-    Asin, // asin(variable)
-    Asinh, // asinh(variable)
-    Atan, // atan(variable)
-    Atanh, // atanh(variable)
-    AtomicForward, // atomicFunction.forward(q, p, vx, vy, tx, ty)
-    AtomicReverse, // atomicFunction.reverse(p, tx, ty, px, py)
-    ComLt, // result = left < right? trueCase: falseCase
-    ComLe, // result = left <= right? trueCase: falseCase
-    ComEq, // result = left == right? trueCase: falseCase
-    ComGe, // result = left >= right? trueCase: falseCase
-    ComGt, // result = left > right? trueCase: falseCase
-    ComNe, // result = left != right? trueCase: falseCase
-    Cosh, // cosh(variable)
-    Cos, //  cos(variable)
-    Div, // a / b
-    Erf, // erf(variable)
-    Exp, //  exp(variable)
-    Expm1, //  expm1(variable)
-    Inv, //                             independent variable
-    Log, //  log(variable)
-    Log1p, //  log1p(variable)
-    Mul, // a * b
-    Pow, //  pow(a,   b)
-    Pri, //  PrintFor(text, parameter or variable, parameter or variable)
-    Sign, // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
-    Sinh, // sinh(variable)
-    Sin, //  sin(variable)
-    Sqrt, // sqrt(variable)
-    Sub, //  a - b
-    Tanh, //  tanh(variable)
-    Tan, //  tan(variable)
-    UnMinus, // -(a)
+    Assign,               // a = b
+    Abs,                  // abs(variable)
+    Acos,                 // acos(variable)
+    Acosh,                // acosh(variable)
+    Add,                  // a + b
+    Alias,                // alias (reference to another operation)
+    ArrayCreation,        // dense array {a, b, c ...}
+    SparseArrayCreation,  // {a, b, c ...}; {index1, index2, index3, ...};
+    ArrayElement,         // x[i]
+    Asin,                 // asin(variable)
+    Asinh,                // asinh(variable)
+    Atan,                 // atan(variable)
+    Atanh,                // atanh(variable)
+    AtomicForward,        // atomicFunction.forward(q, p, vx, vy, tx, ty)
+    AtomicReverse,        // atomicFunction.reverse(p, tx, ty, px, py)
+    ComLt,                // result = left < right? trueCase: falseCase
+    ComLe,                // result = left <= right? trueCase: falseCase
+    ComEq,                // result = left == right? trueCase: falseCase
+    ComGe,                // result = left >= right? trueCase: falseCase
+    ComGt,                // result = left > right? trueCase: falseCase
+    ComNe,                // result = left != right? trueCase: falseCase
+    Cosh,                 // cosh(variable)
+    Cos,                  // cos(variable)
+    Div,                  // a / b
+    Erf,                  // erf(variable)
+    Exp,                  // exp(variable)
+    Expm1,                // expm1(variable)
+    Inv,                  //                             independent variable
+    Log,                  // log(variable)
+    Log1p,                // log1p(variable)
+    Mul,                  // a * b
+    Pow,                  // pow(a,   b)
+    Pri,                  // PrintFor(text, parameter or variable, parameter or variable)
+    Sign,                 // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
+    Sinh,                 // sinh(variable)
+    Sin,                  // sin(variable)
+    Sqrt,                 // sqrt(variable)
+    Sub,                  // a - b
+    Tanh,                 // tanh(variable)
+    Tan,                  // tan(variable)
+    UnMinus,              // -(a)
     DependentMultiAssign, // operation which associates a dependent variables with loops and regular operations
-    DependentRefRhs, // operation referencing a dependent variable (right hand side only)
-    IndexDeclaration, // an integer index declaration
-    Index, // an integer index
-    IndexAssign, // assignment of an integer index to an index pattern expression
-    LoopStart, // for() {}
-    LoopIndexedIndep, // indexed independent used by a loop
-    LoopIndexedDep, // indexed output for a dependent variable from a loop
-    LoopIndexedTmp, // indexed output for a temporary variable from a loop
-    LoopEnd, // endfor
-    TmpDcl, // marks the beginning of the use of a temporary variable across several scopes (used by LoopIndexedTmp)
-    Tmp, // reference to a temporary variable defined by TmpDcl
-    IndexCondExpr, // a condition expression which returns a boolean
-    StartIf, // the start of an if statement
-    ElseIf, // else if()
-    Else, // else
-    EndIf, // end of if
-    CondResult // assignment inside an if branch
+    DependentRefRhs,      // operation referencing a dependent variable (right hand side only)
+    IndexDeclaration,     // an integer index declaration
+    Index,                // an integer index
+    IndexAssign,          // assignment of an integer index to an index pattern expression
+    LoopStart,            // for() {}
+    LoopIndexedIndep,     // indexed independent used by a loop
+    LoopIndexedDep,       // indexed output for a dependent variable from a loop
+    LoopIndexedTmp,       // indexed output for a temporary variable from a loop
+    LoopEnd,              // endfor
+    TmpDcl,               // marks the beginning of the use of a temporary variable across several scopes (used by LoopIndexedTmp)
+    Tmp,                  // reference to a temporary variable defined by TmpDcl
+    IndexCondExpr,        // a condition expression which returns a boolean
+    StartIf,              // the start of an if statement
+    ElseIf,               // else if()
+    Else,                 // else
+    EndIf,                // end of if
+    CondResult,           // assignment inside an if branch
+    UserCustom,           // a custom type added by a user which has no direct support in CppADCodeGen
+    NumberOp              // total number of operation types
 };
 
 inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
-    switch (op) {
-        case CGOpCode::Assign:
-            os << "$1 = $2";
-            break;
-        case CGOpCode::Abs:
-            os << "abs($1)";
-            break;
-        case CGOpCode::Acos:
-            os << "acos($1)";
-            break;
-        case CGOpCode::Acosh:
-            os << "acosh($1)";
-            break;
-        case CGOpCode::Add:
-            os << "$1 + $2";
-            break;
-        case CGOpCode::Alias:
-            os << "alias($1)";
-            break;
-        case CGOpCode::ArrayCreation:
-            os << "new array[size]";
-            break;
-        case CGOpCode::SparseArrayCreation:
-            os << "new sparseArray[size]";
-            break;
-        case CGOpCode::ArrayElement:
-            os << "array[i]";
-            break;
-        case CGOpCode::Asin:
-            os << "asin($1)";
-            break;
-        case CGOpCode::Asinh:
-            os << "asinh($1)";
-            break;
-        case CGOpCode::Atan:
-            os << "atan($1)";
-            break;
-        case CGOpCode::Atanh:
-            os << "atanh($1)";
-            break;
-        case CGOpCode::AtomicForward:
-            os << "atomicFunction.forward(q, p, vx, vy, tx, ty)";
-            break;
-        case CGOpCode::AtomicReverse:
-            os << "atomicFunction.reverse(p, tx, ty, px, py)";
-            break;
-        case CGOpCode::ComLt:
-            os << "result = ($1 < $2)? $3 : $4";
-            break;
-        case CGOpCode::ComLe:
-            os << "result = ($1 <= $2)? $3 : $4";
-            break;
-        case CGOpCode::ComEq:
-            os << "result = ($1 == $2)? $3 : $4";
-            break;
-        case CGOpCode::ComGe:
-            os << "result = ($1 >= $2)? $3 : $4";
-            break;
-        case CGOpCode::ComGt:
-            os << "result = ($1 > $2)? $3 : $4";
-            break;
-        case CGOpCode::ComNe:
-            os << "result = ($1 != $2)? $3 : $4";
-            break;
-        case CGOpCode::Cosh:
-            os << "cosh($1)";
-            break;
-        case CGOpCode::Cos:
-            os << "cos($1)";
-            break;
-        case CGOpCode::Div:
-            os << "$1 / $2";
-            break;
-        case CGOpCode::Erf:
-            os << "erf($1)";
-            break;
-        case CGOpCode::Exp:
-            os << "exp($1)";
-            break;
-        case CGOpCode::Expm1:
-            os << "expm1($1)";
-            break;
-        case CGOpCode::Inv:
-            os << "independent()";
-            break;
-        case CGOpCode::Log:
-            os << "log($1)";
-            break;
-        case CGOpCode::Log1p:
-            os << "log1p($1)";
-            break;
-        case CGOpCode::Mul:
-            os << "$1 * $2";
-            break;
-        case CGOpCode::Pow:
-            os << "pow($1, $2)";
-            break;
-        case CGOpCode::Pri:
-            os << "print($1)";
-            break;
-        case CGOpCode::Sign:
-            os << "sign($1)";
-            break;
-        case CGOpCode::Sinh:
-            os << "sinh($1)";
-            break;
-        case CGOpCode::Sin:
-            os << "sin($1)";
-            break;
-        case CGOpCode::Sqrt:
-            os << "sqrt($1)";
-            break;
-        case CGOpCode::Sub:
-            os << "$1 - $2";
-            break;
-        case CGOpCode::Tanh:
-            os << "tanh($1)";
-            break;
-        case CGOpCode::Tan:
-            os << "tan($1)";
-            break;
-        case CGOpCode::UnMinus:
-            os << "-($1)";
-            break;
-        case CGOpCode::DependentMultiAssign:
-            os << "dep($1) = ($2) + ...";
-            break;
-        case CGOpCode::DependentRefRhs:
-            os << "depref($1)";
-            break;
-        case CGOpCode::IndexDeclaration:
-            os << "index declaration";
-            break;
-        case CGOpCode::Index:
-            os << "index";
-            break;
-        case CGOpCode::IndexAssign:
-            os << "index = expression()";
-            break;
-        case CGOpCode::LoopStart:
-            os << "for";
-            break;
-        case CGOpCode::LoopIndexedIndep:
-            os << "loopIndexedIndep";
-            break;
-        case CGOpCode::LoopIndexedDep:
-            os << "loopIndexedDep";
-            break;
-        case CGOpCode::LoopIndexedTmp:
-            os << "loopIndexedTmp";
-            break;
-        case CGOpCode::LoopEnd:
-            os << "endfor";
-            break;
-        case CGOpCode::TmpDcl:
-            os << "declare tempVar";
-            break;
-        case CGOpCode::Tmp:
-            os << "tempVar";
-            break;
-        case CGOpCode::IndexCondExpr:
-            os << "bool(index expression)";
-            break;
-        case CGOpCode::StartIf:
-            os << "if()";
-            break;
-        case CGOpCode::ElseIf:
-            os << "else if()";
-            break;
-        case CGOpCode::Else:
-            os << "else";
-            break;
-        case CGOpCode::EndIf:
-            os << "endif";
-            break;
-        case CGOpCode::CondResult:
-            os << "ifResult =";
-            break;
-        default:
-            os << "\?\?\?\?()";
-            break;
-    }
+    static const char* OpNameTable[] = {
+            "$1 = $2",                // Assign
+            "abs($1)",                // Abs
+            "acos($1)",               // Acos
+            "acosh($1)",              // Acosh
+            "$1 + $2",                // Add
+            "alias($1)",              // Alias
+            "new array[size]",        // ArrayCreation
+            "new sparseArray[size]",  // SparseArrayCreation
+            "array[i]",               // ArrayElement
+            "asin($1)",               // Asin
+            "asinh($1)",              // Asinh
+            "atan($1)",               // Atan
+            "atanh($1)",              // Atanh
+            "atomicFunction.forward(q, p, vx, vy, tx, ty)", // AtomicForward
+            "atomicFunction.reverse(p, tx, ty, px, py)",    // AtomicReverse
+            "result = ($1 < $2)? $3 : $4",  // ComLt
+            "result = ($1 <= $2)? $3 : $4", // ComLe
+            "result = ($1 == $2)? $3 : $4", // ComEq
+            "result = ($1 >= $2)? $3 : $4", // ComGe
+            "result = ($1 > $2)? $3 : $4",  // ComGt
+            "result = ($1 != $2)? $3 : $4", // ComNe
+            "cosh($1)",               // Cosh
+            "cos($1)",                // Cos
+            "$1 / $2",                // Div
+            "erf($1)",                // Erf
+            "exp($1)",                // Exp
+            "expm1($1)",              // Expm1
+            "independent()",          // Inv
+            "log($1)",                // Log
+            "log1p($1)",              // Log1p
+            "$1 * $2",                // Mul
+            "pow($1, $2)",            // Pow
+            "print($1)",              // Pri
+            "sign($1)",               // Sign
+            "sinh($1)",               // Sinh
+            "sin($1)",                // Sin
+            "sqrt($1)",               // Sqrt
+            "$1 - $2",                // Sub
+            "tanh($1)",               // Tanh
+            "tan($1)",                // Tan
+            "-($1)",                  // UnMinus
+            "dep($1) = ($2) + ...",   // DependentMultiAssign
+            "depref($1)",             // DependentRefRhs
+            "index declaration",      // IndexDeclaration
+            "index",                  // Index
+            "index = expression()",   // IndexAssign
+            "for",                    // LoopStart
+            "loopIndexedIndep",       // LoopIndexedIndep
+            "loopIndexedDep",         // LoopIndexedDep
+            "loopIndexedTmp",         // LoopIndexedTmp
+            "endfor",                 // LoopEnd
+            "declare tempVar",        // TmpDcl
+            "tempVar",                // Tmp
+            "bool(index expression)", // IndexCondExpr
+            "if()",                   // StartIf
+            "else if()",              // ElseIf
+            "else",                   // Else
+            "endif",                  // EndIf
+            "ifResult =",             // CondResult
+            "custom",                 // UserCustom
+            "numeberOp"
+    };
+    // check ensuring conversion to size_t is as expected
+    CPPADCG_ASSERT_UNKNOWN(size_t(CGOpCode::NumberOp) + 1 == sizeof(OpNameTable)/sizeof(OpNameTable[0]));
+
+    // this test ensures that all indices are within the table
+    CPPADCG_ASSERT_UNKNOWN(int(op) >= 0 && size_t(op) < size_t(CGOpCode::NumberOp));
+    
+    os << OpNameTable[size_t(op)];
+
     return os;
 }
 
