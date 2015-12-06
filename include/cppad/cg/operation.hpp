@@ -149,7 +149,7 @@ inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
             "endif",                  // EndIf
             "ifResult =",             // CondResult
             "custom",                 // UserCustom
-            "numeberOp"
+            "numberOp"
     };
     // check ensuring conversion to size_t is as expected
     CPPADCG_ASSERT_UNKNOWN(size_t(CGOpCode::NumberOp) + 1 == sizeof(OpNameTable)/sizeof(OpNameTable[0]));
