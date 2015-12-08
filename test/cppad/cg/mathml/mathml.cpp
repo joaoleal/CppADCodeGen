@@ -52,18 +52,18 @@ TEST(CppADCGLatexTest, latex) {
 
     /**
      * start the special steps for source code generation
-     * for a Jacobian
      */
     CodeHandler<double> handler;
 
     CppAD::vector<CGD> indVars(2);
     handler.makeVariables(indVars);
 
-    //CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
     CppAD::vector<CGD> vals = fun.Forward(0, indVars);
 
     LanguageMathML<double> langMathML;
     LangMathMLDefaultVariableNameGenerator<double> nameGen;
+    
+    // add some additional code to select variables
     langMathML.setStyle(langMathML.getStyle() + "\n.selected{background-color: #ccc;}");
     langMathML.setJavascript("var selected = [];\n"
                              "\n"
@@ -93,6 +93,7 @@ TEST(CppADCGLatexTest, latex) {
                              "    document.getElementById('algorithm').onclick = clickHandler;\n"
                              "}, false);");
 
+    // create the HMTL file
     std::ofstream htmlFile;
     htmlFile.open("algorithm.html");
 
