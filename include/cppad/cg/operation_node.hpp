@@ -80,24 +80,20 @@ public:
     inline OperationNode(CGOpCode op,
                          const Argument<Base>& arg) :
         operation_(op),
-        arguments_ {
-        arg
-    }
-
-    ,
-    var_id_(0),
-    evaluation_order_(0),
-    total_use_count_(0),
-    last_visit_(0),
-    last_usage_order_(0),
-    color_(0),
-    name_(NULL) {
+        arguments_ {arg},
+        var_id_(0),
+        evaluation_order_(0),
+        total_use_count_(0),
+        last_visit_(0),
+        last_usage_order_(0),
+        color_(0),
+        name_(nullptr) {
     }
 
     inline OperationNode(CGOpCode op,
                          std::vector<Argument<Base> >&& args) :
         operation_(op),
-        arguments_(args),
+        arguments_(std::move(args)),
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
@@ -111,8 +107,8 @@ public:
                          std::vector<size_t>&& info,
                          std::vector<Argument<Base> >&& args) :
         operation_(op),
-        info_(info),
-        arguments_(args),
+        info_(std::move(info)),
+        arguments_(std::move(args)),
         var_id_(0),
         evaluation_order_(0),
         total_use_count_(0),
