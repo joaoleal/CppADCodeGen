@@ -114,9 +114,9 @@ public:
                ".condElseIf{}\n"
                ".condElse{}\n"
                ".condBody{padding-left: 2em;}\n"
-               "math .dep{color:#600;}\n"
-               "math .indep{color:#060;}\n"
-               "math .tmp{color:#006;}\n"),
+               ".dep{color:#600;}\n"
+               ".indep{color:#060;}\n"
+               ".tmp{color:#006;}\n"),
         _startEq("<math>"),
         _endEq("</math><br/>"),
         _forStart("<div class='loop'>"),

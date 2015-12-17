@@ -65,6 +65,18 @@ TEST(CppADCGLatexTest, latex) {
     LanguageMathML<double> langMathML;
     LangMathMLDefaultVariableNameGenerator<double> nameGen;
     langMathML.setStyle(langMathML.getStyle() + "\n.selected{background-color: #ccc;}");
+    
+    // use MathJax
+    langMathML.setHeadExtraMarkup("<script type=\"text/javascript\" src=\"https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
+
+#if 0 // use this to define a prefered browser renderer
+    "<script type=\"text/x-mathjax-config\">"
+                                  "  MathJax.Hub.Config({"
+                                  "    MMLorHTML: { prefer: { Firefox: \"MML\" } }"
+                                  "  });"
+                                  "</script>"
+#endif
+    
     langMathML.setJavascript("var selected = [];\n"
                              "\n"
                              "function clickHandler(e) {\n"
