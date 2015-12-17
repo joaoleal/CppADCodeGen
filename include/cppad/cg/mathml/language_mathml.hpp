@@ -1796,7 +1796,7 @@ protected:
         size_t pos = number.find('e');
         if (pos != std::string::npos) {
             _code << "<mn>" << number.substr(0, pos) << "</mn><mo>&times;</mo>";
-            _code << "<msup><nm>10</nm><mn>";
+            _code << "<msup><mn>10</mn><mn>";
             pos++;
             if (number[pos] == '-') {
                 _code << "-";
