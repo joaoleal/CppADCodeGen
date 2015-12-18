@@ -117,8 +117,8 @@ public:
                ".dep{color:#600;}\n"
                ".indep{color:#060;}\n"
                ".tmp{color:#006;}\n"),
-        _startEq("<math>"),
-        _endEq("</math><br/>"),
+        _startEq("<math display=\"block\">"),
+        _endEq("</math>"),
         _forStart("<div class='loop'>"),
         _forEnd("</div>"),
         _forBodyStart("<div class='loopBody'>"),
