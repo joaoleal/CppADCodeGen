@@ -65,6 +65,23 @@ TEST(CppADCGLatexTest, latex) {
     
     // add some additional code to select variables
     langMathML.setStyle(langMathML.getStyle() + "\n.selected{background-color: #ccc;}");
+
+    // use block display
+    langMathML.setEquationMarkup("<math display=\"block\">", "</math>");
+
+    // use inline display
+    //langMathML.setEquationMarkup("<math>", "</math><br/>");
+
+    // use MathJax (and align to the left)
+    langMathML.setHeadExtraMarkup("<script type=\"text/x-mathjax-config\">\n"
+                                  //"MathJax.Hub.Config({    MMLorHTML: { prefer: { Firefox: \"MML\" } }  });\n" // use this to define a prefered browser renderer
+                                  "MathJax.Hub.Config({\n"
+                                  "    jax: [\"input/TeX\",\"output/HTML-CSS\"],\n"
+                                  "    displayAlign: \"left\"\n"
+                                  "});\n"
+                                  "</script>\n"
+                                  "<script type=\"text/javascript\" src=\"https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
+
     langMathML.setJavascript("var selected = [];\n"
                              "\n"
                              "function clickHandler(e) {\n"

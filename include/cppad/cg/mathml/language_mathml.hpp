@@ -114,11 +114,11 @@ public:
                ".condElseIf{}\n"
                ".condElse{}\n"
                ".condBody{padding-left: 2em;}\n"
-               "math .dep{color:#600;}\n"
-               "math .indep{color:#060;}\n"
-               "math .tmp{color:#006;}\n"),
-        _startEq("<math>"),
-        _endEq("</math><br/>"),
+               ".dep{color:#600;}\n"
+               ".indep{color:#060;}\n"
+               ".tmp{color:#006;}\n"),
+        _startEq("<math display=\"block\">"),
+        _endEq("</math>"),
         _forStart("<div class='loop'>"),
         _forEnd("</div>"),
         _forBodyStart("<div class='loopBody'>"),
@@ -1796,7 +1796,7 @@ protected:
         size_t pos = number.find('e');
         if (pos != std::string::npos) {
             _code << "<mn>" << number.substr(0, pos) << "</mn><mo>&times;</mo>";
-            _code << "<msup><nm>10</nm><mn>";
+            _code << "<msup><mn>10</mn><mn>";
             pos++;
             if (number[pos] == '-') {
                 _code << "-";
