@@ -624,8 +624,8 @@ protected:
             vector<ADCG> indep2 = prepareTimeDependentVariables(indepNew, newVarInfo, timeTapeIndex);
             indep2.resize(indep0.size());
 
-            Evaluator<Base, CGBase> evaluator0(handler, dep0);
-            vector<ADCG> depNew = evaluator0.evaluate(indep2);
+            Evaluator<Base, CGBase> evaluator0(handler);
+            vector<ADCG> depNew = evaluator0.evaluate(indep2, dep0);
             depNew.resize(enodes_.size());
 
             try {
@@ -699,8 +699,8 @@ protected:
                 indep2.resize(m);
             }
 
-            Evaluator<Base, CGBase> evaluator(handler0, dep);
-            vector<ADCG> depNew = evaluator.evaluate(indep2);
+            Evaluator<Base, CGBase> evaluator(handler0);
+            vector<ADCG> depNew = evaluator.evaluate(indep2, dep);
 
             try {
                 reducedFun_ = new ADFun<CGBase > (indepNew, depNew);

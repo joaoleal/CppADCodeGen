@@ -399,11 +399,13 @@ public:
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
+        compiler.setSourcesFolder("sources_" + libBaseName);
+        compiler.setSaveToDiskFirst(true);
 
         ModelLibraryCSourceGen<double> compDynHelpL(compHelpL);
         compDynHelpL.setVerbose(this->verbose_);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + libBaseName);
+        //SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + libBaseName);
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, libBaseName + "Loops");
         std::unique_ptr<DynamicLib<double> > dynamicLibL(p.createDynamicLibrary(compiler));

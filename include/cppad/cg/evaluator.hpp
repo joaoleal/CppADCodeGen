@@ -22,28 +22,25 @@ namespace cg {
  * Utility class used for some code transformation.
  * 
  * The color field of Operation nodes is used.
+ *
+ * @todo implement nonrecursive algorithm (so that there will never be any stack limit issues)
  */
 template<class ScalarIn, class ScalarOut, class ActiveOut>
 class EvaluatorBase {
 protected:
     CodeHandler<ScalarIn>& handler_;
-    const std::vector<CG<ScalarIn> >& dep_;
     const ActiveOut* indep_;
-    std::deque<ActiveOut*> evals_;
-    std::deque<CppAD::vector<ActiveOut>* > evalsArrays_;
+    std::vector<ActiveOut*> evals_;
+    std::vector<CppAD::vector<ActiveOut>* > evalsArrays_;
     std::set<OperationNode<ScalarIn>*> evalsAtomic_;
     std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
 public:
 
     /**
      * @param handler The source code handler
-     * @param dep Dependent variable vector (all variables must belong to
-     *             the same code handler)
      */
-    EvaluatorBase(CodeHandler<ScalarIn>& handler,
-                  const std::vector<CG<ScalarIn> >& dep) :
+    EvaluatorBase(CodeHandler<ScalarIn>& handler) :
         handler_(handler),
-        dep_(dep),
         indep_(nullptr) {
     }
 
@@ -74,34 +71,50 @@ public:
      * Performs all the operations required to calculate the dependent 
      * variables with a (potentially) new data type
      * 
-     * @param indep The new independent variables.
+     * @param indepNew The new independent variables.
+     * @param depOld Dependent variable vector (all variables must belong to
+     *               the same code handler)
      * @return The dependent variable values
      */
-    inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indep) throw (CGException) {
-        std::vector<ActiveOut> newDep(dep_.size());
+    inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indepNew,
+                                           const std::vector<CG<ScalarIn> >& depOld) throw (CGException) {
+        std::vector<ActiveOut> depNew(depOld.size());
 
-        evaluate(indep.data(), indep.size(), newDep.data(), newDep.size());
+        evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
 
-        return newDep;
+        return depNew;
     }
 
-    inline void evaluate(const ActiveOut* indep, size_t indepSize,
-                         ActiveOut* newDep, size_t depSize) throw (CGException) {
+    /**
+     * Performs all the operations required to calculate the dependent
+     * variables with a (potentially) new data type
+     *
+     * @param indepNew The new independent variables.
+     * @param indepSize The size of the array of independent variables.
+     * @param depNew The new dependent variable vector that will be created.
+     * @param depOld Dependent variable vector (all variables must belong to
+     *               the same code handler)
+     * @param depSize The size of the array of dependent variables.
+     */
+    inline void evaluate(const ActiveOut* indepNew,
+                         size_t indepSize,
+                         ActiveOut* depNew,
+                         const CG<ScalarIn>* depOld,
+                         size_t depSize) throw (CGException) {
         if (handler_.getIndependentVariableSize() != indepSize) {
             throw CGException("Invalid independent variable size. Expected ", handler_.getIndependentVariableSize(), " but got ", indepSize, ".");
         }
-        if (dep_.size() != depSize) {
-            throw CGException("Invalid dependent variable size. Expected ", dep_.size(), " but got ", depSize, ".");
-        }
 
-        indep_ = indep;
+        CPPADCG_ASSERT_KNOWN(handler_.getIndependentVariableSize() == indepSize, "Invalid size the array of independent variables");
+
+        indep_ = indepNew;
 
         clear(); // clean-up
 
         handler_.startNewOperationTreeVisit();
 
-        for (size_t i = 0; i < dep_.size(); i++) {
-            newDep[i] = evalCG(dep_[i]);
+        for (size_t i = 0; i < depSize; i++) {
+            depNew[i] = evalCG(depOld[i]);
         }
 
         clear(); // clean-up
@@ -245,10 +258,7 @@ protected:
                 result = exp(evalArg(args[0]));
                 break;
             case CGOpCode::Inv: //                             independent variable
-            {
-                size_t index = handler_.getIndependentVariableIndex(node);
-                result = indep_[index];
-            }
+                result = evalIndependent(node);
                 break;
             case CGOpCode::Log: //  log(variable)
                 CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
@@ -296,16 +306,23 @@ protected:
                 result = -evalArg(args[0]);
                 break;
             default:
-                throw CGException("Unknown operation code '", code, "'");
+                result = evalUnsupportedOperation(node);
         }
 
         // save it for reuse
         node.setColor(evals_.size());
         handler_.markVisited(node);
         ActiveOut* resultPtr = new ActiveOut(result);
+        if (evals_.size() == evals_.capacity())
+            evals_.reserve(evals_.size() * 3 / 2 + 1);
         evals_.push_back(resultPtr);
 
         return *resultPtr;
+    }
+
+    virtual ActiveOut evalIndependent(OperationNode<ScalarIn>& node) {
+        size_t index = handler_.getIndependentVariableIndex(node);
+        return indep_[index];
     }
 
     inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) throw (CGException) {
@@ -338,6 +355,10 @@ protected:
         throw CGException("Evaluator is unable to handle atomic functions for these variable types");
     }
 
+    virtual ActiveOut evalUnsupportedOperation(OperationNode<ScalarIn>& node) {
+        throw CGException("Unknown operation code '", node.getOperationType(), "'");
+    }
+
 };
 
 /**
@@ -347,9 +368,8 @@ template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut>
 class Evaluator : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> {
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler,
-                     const std::vector<CG<ScalarIn> >& dep) :
-        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
+    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler) {
     }
 
     inline virtual ~Evaluator() {
@@ -371,9 +391,8 @@ protected:
     using BaseClass::evalArrayCreationOperation;
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler,
-                     const std::vector<CG<ScalarIn> >& dep) :
-        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler, dep) {
+    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler) {
     }
 
     inline virtual ~Evaluator() {
