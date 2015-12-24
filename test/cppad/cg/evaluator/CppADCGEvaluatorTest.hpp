@@ -50,13 +50,13 @@ protected:
          * Test with scalars only
          */
         {
-            Evaluator<Base, Base, CGD> evaluator(handlerOrig, yOrig);
+            Evaluator<Base, Base, CGD> evaluator(handlerOrig);
 
             std::vector<CGD> xNew(xOrig.size());
             for (size_t j = 0; j < xOrig.size(); j++)
                 xNew[j] = testValues[j];
 
-            std::vector<CGD> yNew = evaluator.evaluate(xNew);
+            std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -75,8 +75,8 @@ protected:
             for (size_t j = 0; j < xOrig.size(); j++)
                 xNew[j].setValue(testValues[j]);
 
-            Evaluator<Base, Base, CGD> evaluator(handlerOrig, yOrig);
-            std::vector<CGD> yNew = evaluator.evaluate(xNew);
+            Evaluator<Base, Base, CGD> evaluator(handlerOrig);
+            std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -96,8 +96,8 @@ protected:
             CppAD::Independent(xNew);
 
             // 
-            Evaluator<Base, Base, AD<Base> > evaluator(handlerOrig, yOrig);
-            std::vector<AD<Base> > yNew = evaluator.evaluate(xNew);
+            Evaluator<Base, Base, AD<Base> > evaluator(handlerOrig);
+            std::vector<AD<Base> > yNew = evaluator.evaluate(xNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -128,8 +128,8 @@ protected:
             CppAD::Independent(xNew);
 
             // 
-            Evaluator<Base, CGD, ADCGD> evaluator(handlerOrig, yOrig);
-            std::vector<ADCGD> yNew = evaluator.evaluate(xNew);
+            Evaluator<Base, CGD, ADCGD> evaluator(handlerOrig);
+            std::vector<ADCGD> yNew = evaluator.evaluate(xNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {

@@ -310,7 +310,7 @@ public:
 
         if (reduceEquations_ || generateSemiExplicitDae_) {
 
-            matchVars2Eqs4Eliminaton(newVarInfo, newEqInfo);
+            matchVars2Eqs4Elimination(newVarInfo, newEqInfo);
 
             if (reduceEquations_) {
                 std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
@@ -760,8 +760,8 @@ protected:
         return semiExplicitFun;
     }
 
-    inline void matchVars2Eqs4Eliminaton(std::vector<DaeVarInfo>& varInfo,
-                                         std::vector<DaeEquationInfo>& eqInfo) throw (CGException) {
+    inline void matchVars2Eqs4Elimination(std::vector<DaeVarInfo>& varInfo,
+                                          std::vector<DaeEquationInfo>& eqInfo) throw (CGException) {
         using std::vector;
         using std::map;
         typedef vector<OperationPathNode<Base> > SourceCodePath;
@@ -1333,8 +1333,8 @@ protected:
         }
 
         // evaluate the model
-        Evaluator<Base, CGBase> evaluator0(handler, resNewOrder);
-        vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder);
+        Evaluator<Base, CGBase> evaluator0(handler);
+        vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
 
         return new ADFun<CGBase > (indepNewOrder, depNewOrder);
     }

@@ -39,9 +39,9 @@ template<class Base>
 inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPaths(OperationNode<Base>& root,
                                                                                         OperationNode<Base>& code,
                                                                                         size_t max) {
-    resetManagedNodes();
-
     std::vector<std::vector<OperationPathNode<Base> > > found;
+
+    startNewOperationTreeVisit();
 
     if (max > 0) {
         std::vector<OperationPathNode<Base> > path2node;
@@ -125,7 +125,6 @@ inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::fi
     }
 
     return foundPaths;
-
 }
 
 } // END cg namespace

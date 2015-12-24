@@ -61,8 +61,8 @@ protected:
             xNew[i] <<= testValues[i];
 
         // model
-        Evaluator<Base, Base, adouble> evaluator(handlerOrig, yOrig);
-        std::vector<adouble> yNew = evaluator.evaluate(xNew);
+        Evaluator<Base, Base, adouble> evaluator(handlerOrig);
+        std::vector<adouble> yNew = evaluator.evaluate(xNew, yOrig);
 
         // dependents
         std::vector<double> rhsOut(yNew.size());

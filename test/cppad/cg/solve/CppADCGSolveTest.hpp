@@ -102,8 +102,8 @@ protected:
         }
 
         // determine the result
-        Evaluator<double, double> evaluator(handler, newDep);
-        vector<AD<double> > result = evaluator.evaluate(newIndepLong);
+        Evaluator<double, double> evaluator(handler);
+        vector<AD<double> > result = evaluator.evaluate(newIndepLong, newDep);
 
         double resultVal = CppAD::Value(CppAD::Var2Par(result[0]));
 

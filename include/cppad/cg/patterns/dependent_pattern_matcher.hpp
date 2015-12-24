@@ -755,7 +755,7 @@ private:
         /**
          * Generate the new tape by going again through the operations 
          */
-        Evaluator<Base, CGBase> evaluator(*handler_, nonLoopDeps);
+        Evaluator<Base, CGBase> evaluator(*handler_);
 
         // set atomic functions
         const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = handler_->getAtomicFunctions();
@@ -770,7 +770,7 @@ private:
         }
 
         CppAD::Independent(x);
-        std::vector<AD<CGBase> > y = evaluator.evaluate(x);
+        std::vector<AD<CGBase> > y = evaluator.evaluate(x, nonLoopDeps);
 
         std::unique_ptr<ADFun<CGBase> > tapeNoLoops(new ADFun<CGBase>());
         tapeNoLoops->Dependent(y);

@@ -854,7 +854,7 @@ private:
         /**
          * create the tape
          */
-        Evaluator<Base, CGB> evaluator1stIt(handler_, deps);
+        Evaluator<Base, CGB> evaluator1stIt(handler_);
 
         // load any atomic function used in the original model
         const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
@@ -862,7 +862,7 @@ private:
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator1stIt.addAtomicFunctions(atomics);
 
-        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps);
+        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps, deps);
 
         std::unique_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
         funIndexed->Dependent(newDeps);

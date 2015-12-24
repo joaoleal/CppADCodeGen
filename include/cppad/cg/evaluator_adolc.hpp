@@ -98,9 +98,8 @@ template<class ScalarIn>
 class Evaluator<ScalarIn, double, adouble> : public EvaluatorBase<ScalarIn, double, adouble> {
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler,
-                     const std::vector<CG<ScalarIn> >& dep) :
-        EvaluatorBase<ScalarIn, double, adouble>(handler, dep) {
+    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+        EvaluatorBase<ScalarIn, double, adouble>(handler) {
     }
 
     inline virtual ~Evaluator() {
