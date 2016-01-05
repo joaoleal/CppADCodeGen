@@ -222,9 +222,10 @@ public:
      * @param equationInfo Equation related information of the reduced index
      *                     model
      * @return the reduced index model (must be deleted by user)
+     * @throws CGException on failure
      */
     virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                 std::vector<DaeEquationInfo>& equationInfo) throw (CGException) {
+                                                 std::vector<DaeEquationInfo>& equationInfo) {
         if (reducedFun_ != nullptr)
             throw CGException("reduceIndex() can only be called once!");
 
@@ -243,8 +244,9 @@ public:
      * reduceIndex().
      * 
      * @return the DAE differentiation index.
+     * @throws CGException
      */
-    inline size_t getDifferentiationIndex() const throw (CGException) {
+    inline size_t getDifferentiationIndex() const {
         size_t origM = this->fun_->Range();
         if (origM == enodes_.size()) {
             // no index reduction performed: it is either an index 1 DAE or an ODE
@@ -500,8 +502,9 @@ protected:
      * potentially extra variables are removed later)
      * 
      * @param i equation node to differentiate
+     * @throws CGException
      */
-    inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) throw (CGException) {
+    inline void dirtyDifferentiateEq(Enode<Base>& i, Enode<Base>& newI) {
         for (Vnode<Base>* jj : i.originalVariables()) {
             newI.addVariable(jj);
             if (jj->derivative() != nullptr) {

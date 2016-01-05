@@ -109,7 +109,7 @@ public:
     EquationPattern(const EquationPattern<Base>& other) = delete;
     EquationPattern& operator=(const EquationPattern<Base>& rhs) = delete;
 
-    bool testAdd(size_t iDep2, const CG<Base>& dep2, size_t& minColor) throw (CGException) {
+    bool testAdd(size_t iDep2, const CG<Base>& dep2, size_t& minColor) {
         IndexedIndependent<Base> independentsBackup = indexedOpIndep;
         std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependentsBackup = constOperationIndependents;
         std::map<size_t, std::map<const OperationNode<Base>*, OperationNode<Base>*> > operation2ReferenceBackup = operationEO2Reference;
@@ -259,7 +259,7 @@ private:
 
     bool comparePath(const CG<Base>& dep1,
                      const CG<Base>& dep2,
-                     size_t dep2Index) throw (CGException) {
+                     size_t dep2Index) {
         if (dep1.getCodeHandler() != dep2.getCodeHandler()) {
             if (dep1.getCodeHandler() != nullptr && dep2.getCodeHandler() != nullptr)
                 throw CGException("Only one code handler allowed");

@@ -63,7 +63,7 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseJacobianSource() throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseJacobianSource() {
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
 
@@ -97,7 +97,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource() throw (CGException) {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) {
     using CppAD::vector;
 
     const std::string jobName = "sparse Jacobian";

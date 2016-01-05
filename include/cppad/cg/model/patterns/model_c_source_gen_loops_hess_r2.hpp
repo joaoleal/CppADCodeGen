@@ -21,7 +21,7 @@ namespace cg {
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                          const std::map<size_t, bool>& jrowOrdered,
-                                                                         size_t maxCompressedSize) throw (CGException) {
+                                                                         size_t maxCompressedSize) {
     using namespace std;
     using namespace CppAD::cg::loops;
 

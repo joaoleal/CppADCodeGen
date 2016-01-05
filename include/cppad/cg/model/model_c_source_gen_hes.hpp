@@ -75,7 +75,7 @@ void ModelCSourceGen<Base>::generateHessianSource() {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseHessianSource() throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseHessianSource() {
     /**
      * Determine the sparsity pattern p for Hessian of w^T F
      */
@@ -89,7 +89,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSource() throw (CGException) {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     using CppAD::vector;
 
     const std::string jobName = "sparse Hessian";
@@ -222,7 +222,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() throw (CGExcep
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
     using namespace std;
 
     /**

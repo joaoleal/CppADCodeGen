@@ -821,7 +821,7 @@ protected:
         loadFunctions();
     }
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) = 0;
+    virtual void* loadFunction(const std::string& functionName, bool required = true) = 0;
 
     virtual void validate() {
         /**

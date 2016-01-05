@@ -61,7 +61,7 @@ protected:
     LinuxDynamicLibModel(const LinuxDynamicLibModel&) = delete;
     LinuxDynamicLibModel& operator=(const LinuxDynamicLibModel&) = delete;
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
+    virtual void* loadFunction(const std::string& functionName, bool required = true) override {
         return _dynLib->loadFunction(functionName, required);
     }
 

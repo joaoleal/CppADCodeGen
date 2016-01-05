@@ -48,7 +48,7 @@ public:
         return _includePaths;
     }
 
-    LlvmModelLibrary<Base>* create() throw (CGException) {
+    LlvmModelLibrary<Base>* create() {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
@@ -82,7 +82,7 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) throw (CGException) {
+    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }
@@ -92,14 +92,14 @@ public:
 
 protected:
 
-    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) throw (CGException) {
+    virtual void createLlvmModules(const std::map<std::string, std::string>& sources) {
         for (const auto& p : sources) {
             createLlvmModule(p.first, p.second);
         }
     }
 
     virtual void createLlvmModule(const std::string& filename,
-                                  const std::string& source) throw (CGException) {
+                                  const std::string& source) {
         using namespace llvm;
         using namespace clang;
 

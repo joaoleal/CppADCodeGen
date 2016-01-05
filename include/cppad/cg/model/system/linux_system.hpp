@@ -67,7 +67,7 @@ public:
     FDHandler write;
 public:
 
-    inline void create() throw (CGException) {
+    inline void create() {
         int fd[2]; /** file descriptors used to communicate between processes*/
         if (pipe(fd) < 0) {
             throw CGException("Failed to create pipe");
@@ -87,7 +87,7 @@ const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".so";
 template<class T>
 const std::string SystemInfo<T>::STATIC_LIB_EXTENSION = ".a";
 
-inline std::string getWorkingDirectory() throw (CGException) {
+inline std::string getWorkingDirectory() {
     char buffer[1024];
 
     char* ret = getcwd(buffer, 1024);
@@ -99,7 +99,7 @@ inline std::string getWorkingDirectory() throw (CGException) {
     return buffer;
 }
 
-inline void createFolder(const std::string& folder) throw (CGException) {
+inline void createFolder(const std::string& folder) {
     int ret = mkdir(folder.c_str(), 0755);
     if (ret == -1) {
         if (errno != EEXIST) {
@@ -134,7 +134,7 @@ inline std::string filenameFromPath(const std::string& path) {
 inline void callExecutable(const std::string& executable,
                            const std::vector<std::string>& args,
                            bool pipeSource,
-                           const std::string& pipeMessage) throw (CGException) {
+                           const std::string& pipeMessage) {
     std::string execName = filenameFromPath(executable);
 
     PipeHandler pipeMsg; // file descriptors used to communicate between processes

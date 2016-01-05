@@ -47,12 +47,12 @@ public:
         return _includePaths;
     }
 
-    LlvmModelLibrary<Base>* create() throw (CGException) {
+    LlvmModelLibrary<Base>* create() {
         ClangCompiler<Base> clang;
         return create(clang);
     }
 
-    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) throw (CGException) {
+    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) {
         using namespace llvm;
 
         // backup output format so that it can be restored
@@ -130,7 +130,7 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) throw (CGException) {
+    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }

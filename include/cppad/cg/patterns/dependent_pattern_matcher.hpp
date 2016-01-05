@@ -135,7 +135,7 @@ public:
      * @param loopTapes The models for each loop (must be deleted by the user)
      */
     virtual void generateTapes(LoopFreeModel<Base>*& nonLoopTape,
-                               std::set<LoopModel<Base>*>& loopTapes) throw (CGException) {
+                               std::set<LoopModel<Base>*>& loopTapes) {
 
         for (size_t j = 0; j < independents_.size(); j++) {
             std::vector<size_t>& info = independents_[j].getOperationNode()->getInfo();
@@ -168,7 +168,7 @@ private:
      * 
      * @return information about the detected loops
      */
-    virtual std::vector<Loop<Base>*> findLoops() throw (CGException) {
+    virtual std::vector<Loop<Base>*> findLoops() {
         using namespace std;
 
         size_t rSize = relatedDepCandidates_.size();
@@ -778,7 +778,7 @@ private:
         return new LoopFreeModel<Base>(tapeNoLoops.release(), depTape2Orig);
     }
 
-    std::vector<EquationPattern<Base>*> findRelatedVariables() throw (CGException) {
+    std::vector<EquationPattern<Base>*> findRelatedVariables() {
         eqCurr_ = nullptr;
         color_ = 1; // used to mark visited nodes
 

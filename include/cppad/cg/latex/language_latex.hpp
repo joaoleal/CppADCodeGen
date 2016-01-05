@@ -73,6 +73,8 @@ protected:
     std::string _algFileEnd;
     std::string _forStart;
     std::string _forEnd;
+    std::string _conditionStart;
+    std::string _conditionEnd;
     std::string _ifStart;
     std::string _ifEnd;
     std::string _elseIfStart;
@@ -145,6 +147,8 @@ public:
         _algFileEnd("\\end{CGAlgFile}"),
         _forStart("\\begin{CGFor}"),
         _forEnd("\\end{CGFor}"),
+        _conditionStart("\\begin{CGCond}"),
+        _conditionEnd("\\end{CGCond}"),
         _ifStart("\\begin{CGIf}"),
         _ifEnd("\\end{CGIf}"),
         _elseIfStart("\\begin{CGElseIf}"),
@@ -396,6 +400,32 @@ public:
     }
 
     /**
+     * Defines the Latex environment for each condition.
+     * 
+     * @param begin a string creating the environment
+     * @param end a string terminating the environment
+     */
+    virtual void setConditionEnvironment(const std::string& begin,
+                                         const std::string& end) {
+        _conditionStart = begin;
+        _conditionEnd = end;
+    }
+
+    /**
+     * Provides the string used to create the environment for each condition.
+     */
+    virtual const std::string& getConditionEnvironmentStart() const {
+        return _conditionStart;
+    }
+
+    /**
+     * Provides the string used to terminate the environment for each condition.
+     */
+    virtual const std::string& getConditionEnvironmentEnd() const {
+        return _conditionEnd;
+    }
+
+    /**
      * Defines the Latex environment for each If.
      * 
      * @param begin a string creating the environment
@@ -569,8 +599,8 @@ public:
     static inline void generateNames4RandomIndexPatterns(const std::set<RandomIndexPattern*>& randomPatterns);
 
     inline void printRandomIndexPatternDeclaration(std::ostringstream& os,
-                                                          const std::string& identation,
-                                                          const std::set<RandomIndexPattern*>& randomPatterns);
+                                                   const std::string& identation,
+                                                   const std::set<RandomIndexPattern*>& randomPatterns);
 
     static inline std::string indexPattern2String(const IndexPattern& ip,
                                                   const IndexDclrOperationNode<Base>& index);
@@ -1104,7 +1134,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpression(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printExpression(OperationNode<Base>& node) {
         if (node.getVariableID() > 0) {
             const std::string& name = createVariableName(node); // use variable name
 
@@ -1130,7 +1160,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) {
         CGOpCode op = node.getOperationType();
         switch (op) {
             case CGOpCode::ArrayCreation:
@@ -1260,13 +1290,13 @@ protected:
         return 1;
     }
 
-    virtual unsigned printAssignOp(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printAssignOp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation");
 
         return print(node.getArguments()[0]);
     }
 
-    virtual void printUnaryFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printUnaryFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function");
 
         switch (op.getOperationType()) {
@@ -1325,7 +1355,7 @@ protected:
         _code << "\\right)";
     }
 
-    virtual void printPowFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
         _code << "{";
@@ -1472,11 +1502,11 @@ protected:
             checkEquationEnvEnd();
 
             _code << _ifStart;
-            _code << _startEq;
+            _code << _conditionStart;
             print(left);
             _code << " " << getComparison(node.getOperationType()) << " ";
             print(right);
-            _code << _endEq;
+            _code << _conditionEnd;
             _code << _endline;
             //checkEquationEnvStart(); // no need
             printAssigmentStart(node, varName, isDep);
@@ -1749,11 +1779,13 @@ protected:
 
         checkEquationEnvEnd();
 
-        _code << _ifStart << "{";
+        _code << _ifStart;
         //checkEquationEnvStart(); // no need
+        _code << _conditionStart;
         printIndexCondExprOp(*node.getArguments()[0].getOperation());
         checkEquationEnvEnd();
-        _code << "}" << _endline;
+        _code << _conditionEnd;
+        _code << _endline;
 
         _indentationLevel++;
     }
@@ -1781,11 +1813,13 @@ protected:
         }
 
         // start new else if
-        _code << _elseIfStart << "{";
+        _code << _elseIfStart;
+        _code << _conditionStart;
         //checkEquationEnvStart(); // no need
         printIndexCondExprOp(*node.getArguments()[1].getOperation());
         checkEquationEnvEnd();
-        _code << "}" << _endline;
+        _code << _conditionEnd;
+        _code << _endline;
 
         _indentationLevel++;
     }

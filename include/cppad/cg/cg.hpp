@@ -57,11 +57,15 @@ public:
     inline bool isParameter() const;
     inline bool isValueDefined() const;
 
-    inline const Base& getValue() const throw (CGException);
+    /**
+     * Provides the current numerical value
+     * throw CGException if a value is not defined
+     */
+    inline const Base& getValue() const;
     inline void setValue(const Base& val);
 
-    inline bool isIdenticalZero() const throw (CGException);
-    inline bool isIdenticalOne() const throw (CGException);
+    inline bool isIdenticalZero() const;
+    inline bool isIdenticalOne() const;
 
     inline OperationNode<Base>* getOperationNode() const;
 

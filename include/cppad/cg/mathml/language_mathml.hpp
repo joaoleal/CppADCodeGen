@@ -998,7 +998,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpression(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printExpression(OperationNode<Base>& node) {
         if (node.getVariableID() > 0) {
             const std::string& name = createVariableName(node); // use variable name
             //size_t id = node.getVariableID();
@@ -1025,7 +1025,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) {
         CGOpCode op = node.getOperationType();
         switch (op) {
             case CGOpCode::ArrayCreation:
@@ -1155,13 +1155,13 @@ protected:
         return 1;
     }
 
-    virtual unsigned printAssignOp(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printAssignOp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation");
 
         return print(node.getArguments()[0]);
     }
 
-    virtual void printUnaryFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printUnaryFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function");
 
         switch (op.getOperationType()) {
@@ -1219,7 +1219,7 @@ protected:
         _code << "</mrow></mfenced>";
     }
 
-    virtual void printPowFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
         auto encloseInParentheses = [](const OperationNode<Base>* node) {
