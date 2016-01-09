@@ -30,14 +30,15 @@ public:
     static const std::string STATIC_LIB_EXTENSION;
 };
 
-inline std::string getWorkingDirectory() throw (CGException);
+inline std::string getWorkingDirectory();
 
 /**
  * creates a new folder (system dependent)
  * 
  * @param folder the path to the folder
+ * @throws CGException on failure to create the folder
  */
-inline void createFolder(const std::string& folder) throw (CGException);
+inline void createFolder(const std::string& folder);
 
 /**
  * Creates a new path (system dependent)
@@ -67,11 +68,12 @@ inline std::string filenameFromPath(const std::string& path);
  * @param args the command line arguments to the executable
  * @param pipe whether or not to create a pipe to the executable
  * @param message the information to pass in the pipe
+ * @throws CGException on failure to call the executable
  */
 inline void callExecutable(const std::string& executable,
                            const std::vector<std::string>& args,
                            bool pipe = false,
-                           const std::string& message = "") throw (CGException);
+                           const std::string& message = "");
 
 }
 

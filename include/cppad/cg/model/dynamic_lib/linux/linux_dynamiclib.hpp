@@ -82,7 +82,7 @@ public:
         return _version;
     }
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
+    virtual void* loadFunction(const std::string& functionName, bool required = true) override {
         void* functor = dlsym(_dynLibHandle, functionName.c_str());
 
         if (required) {
@@ -107,7 +107,7 @@ public:
 
 protected:
 
-    inline void validate() throw (CGException) {
+    inline void validate() {
         /**
          * Check the version
          */

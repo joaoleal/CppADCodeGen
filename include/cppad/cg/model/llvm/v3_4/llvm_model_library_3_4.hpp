@@ -91,7 +91,7 @@ public:
          */
     }
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) throw (CGException) override {
+    virtual void* loadFunction(const std::string& functionName, bool required = true) override {
         llvm::Function* func = _module->getFunction(functionName);
         if (func == nullptr) {
             if (required)
@@ -116,7 +116,7 @@ public:
 
 protected:
 
-    inline void validate() throw (CGException) {
+    inline void validate() {
         /**
          * Check the version
          */

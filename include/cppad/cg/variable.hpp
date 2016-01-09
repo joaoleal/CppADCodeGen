@@ -34,7 +34,7 @@ inline bool CG<Base>::isValueDefined() const {
 }
 
 template<class Base>
-inline const Base& CG<Base>::getValue() const throw (CGException) {
+inline const Base& CG<Base>::getValue() const {
     if (!isValueDefined()) {
         throw CGException("No value defined for this variable");
     }
@@ -52,12 +52,12 @@ inline void CG<Base>::setValue(const Base& b) {
 }
 
 template<class Base>
-inline bool CG<Base>::isIdenticalZero() const throw (CGException) {
+inline bool CG<Base>::isIdenticalZero() const {
     return CppAD::IdenticalZero(getValue());
 }
 
 template<class Base>
-inline bool CG<Base>::isIdenticalOne() const throw (CGException) {
+inline bool CG<Base>::isIdenticalOne() const {
     return CppAD::IdenticalOne(getValue());
 }
 

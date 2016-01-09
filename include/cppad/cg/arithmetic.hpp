@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 CodeHandler<Base>* getHandler(const CG<Base>& left,
-                              const CG<Base>& right) throw (CGException) {
+                              const CG<Base>& right) {
 
     CPPADCG_ASSERT_UNKNOWN(!left.isParameter() || !right.isParameter());
 

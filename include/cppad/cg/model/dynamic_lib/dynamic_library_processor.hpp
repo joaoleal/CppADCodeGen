@@ -98,7 +98,7 @@ public:
      * @return The dynamic library if loadLib is true, nullptr otherwise
      */
     DynamicLib<Base>* createDynamicLibrary(CCompiler<Base>& compiler,
-                                           bool loadLib = true) throw (CGException) {
+                                           bool loadLib = true) {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 

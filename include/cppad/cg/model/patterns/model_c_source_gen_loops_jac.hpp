@@ -41,7 +41,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
                                                            CppAD::vector<std::set<size_t> >& noLoopEvalSparsity,
                                                            CppAD::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
                                                            std::map<LoopModel<Base>*, CppAD::vector<std::set<size_t> > >& loopsEvalSparsities,
-                                                           std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException) {
+                                                           std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) {
 
     using namespace std;
     using namespace loops;
@@ -217,7 +217,7 @@ void ModelCSourceGen<Base>::analyseSparseJacobianWithLoops(const std::vector<siz
 template<class Base>
 CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                                                const CppAD::vector<CGBase>& x,
-                                                                               bool forward) throw (CGException) {
+                                                                               bool forward) {
     using namespace std;
     using namespace CppAD::cg::loops;
     using CppAD::vector;

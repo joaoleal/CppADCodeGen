@@ -27,7 +27,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
                                                                             const std::string& keyName,
                                                                             const std::map<size_t, std::set<size_t> >& nonLoopElements,
                                                                             const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
-                                                                            void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) throw (CGException) {
+                                                                            void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) {
     using namespace std;
     using namespace CppAD::cg::loops;
 

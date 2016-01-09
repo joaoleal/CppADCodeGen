@@ -34,6 +34,7 @@ protected:
     std::vector<CppAD::vector<ActiveOut>* > evalsArrays_;
     std::set<OperationNode<ScalarIn>*> evalsAtomic_;
     std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
+    bool underEval_;
 public:
 
     /**
@@ -41,7 +42,15 @@ public:
      */
     EvaluatorBase(CodeHandler<ScalarIn>& handler) :
         handler_(handler),
-        indep_(nullptr) {
+        indep_(nullptr),
+        underEval_(false) {
+    }
+
+    /**
+     * @return true if this Evaluator is currently being used.
+     */
+    inline bool isUnderEvaluation() {
+        return underEval_;
     }
 
     /**
@@ -75,9 +84,10 @@ public:
      * @param depOld Dependent variable vector (all variables must belong to
      *               the same code handler)
      * @return The dependent variable values
+     * @throw CGException
      */
     inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indepNew,
-                                           const std::vector<CG<ScalarIn> >& depOld) throw (CGException) {
+                                           const std::vector<CG<ScalarIn> >& depOld) {
         std::vector<ActiveOut> depNew(depOld.size());
 
         evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
@@ -95,29 +105,46 @@ public:
      * @param depOld Dependent variable vector (all variables must belong to
      *               the same code handler)
      * @param depSize The size of the array of dependent variables.
+     * @throws CGException on error
      */
     inline void evaluate(const ActiveOut* indepNew,
                          size_t indepSize,
                          ActiveOut* depNew,
                          const CG<ScalarIn>* depOld,
-                         size_t depSize) throw (CGException) {
+                         size_t depSize) {
         if (handler_.getIndependentVariableSize() != indepSize) {
             throw CGException("Invalid independent variable size. Expected ", handler_.getIndependentVariableSize(), " but got ", indepSize, ".");
         }
 
         CPPADCG_ASSERT_KNOWN(handler_.getIndependentVariableSize() == indepSize, "Invalid size the array of independent variables");
 
-        indep_ = indepNew;
-
-        clear(); // clean-up
-
-        handler_.startNewOperationTreeVisit();
-
-        for (size_t i = 0; i < depSize; i++) {
-            depNew[i] = evalCG(depOld[i]);
+        if(underEval_) {
+            throw CGException("The same evaluator cannot be used for simultaneous evaluations. "
+                              "Either use a new one or wait for this one to finish its current evaluation.");
         }
 
-        clear(); // clean-up
+        underEval_ = true;
+
+        try {
+
+            indep_ = indepNew;
+
+            clear(); // clean-up
+
+            handler_.startNewOperationTreeVisit();
+
+            for (size_t i = 0; i < depSize; i++) {
+                depNew[i] = evalCG(depOld[i]);
+            }
+
+            clear(); // clean-up
+
+        } catch (...) {
+            underEval_ = false;
+            throw;
+        }
+
+        underEval_ = false;
     }
 
     inline virtual ~EvaluatorBase() {
@@ -141,7 +168,7 @@ protected:
         evalsArrays_.clear();
     }
 
-    inline ActiveOut evalCG(const CG<ScalarIn>& dep) throw (CGException) {
+    inline ActiveOut evalCG(const CG<ScalarIn>& dep) {
         if (dep.isParameter()) {
             // parameter
             return ActiveOut(dep.getValue());
@@ -150,7 +177,7 @@ protected:
         }
     }
 
-    inline ActiveOut evalArg(const Argument<ScalarIn>& arg) throw (CGException) {
+    inline ActiveOut evalArg(const Argument<ScalarIn>& arg) {
         if (arg.getOperation() != nullptr) {
             return evalOperations(*arg.getOperation());
         } else {
@@ -159,7 +186,7 @@ protected:
         }
     }
 
-    inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) throw (CGException) {
+    inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) {
         using CppAD::vector;
 
         // check if this node was previously determined
@@ -325,7 +352,7 @@ protected:
         return indep_[index];
     }
 
-    inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) throw (CGException) {
+    inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) {
         using CppAD::vector;
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
@@ -351,7 +378,7 @@ protected:
         return *resultArray;
     }
 
-    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) {
+    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) {
         throw CGException("Evaluator is unable to handle atomic functions for these variable types");
     }
 
@@ -400,7 +427,10 @@ public:
 
 protected:
 
-    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) throw (CGException) override {
+    /**
+     * @throws CGException on an internal evaluation error
+     */
+    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) override {
         using CppAD::vector;
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {

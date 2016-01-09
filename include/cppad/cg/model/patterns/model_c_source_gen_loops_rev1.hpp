@@ -28,7 +28,7 @@ namespace cg {
  * @param elements  [equation]{vars}
  */
 template<class Base>
-void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
+void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
     using CppAD::vector;

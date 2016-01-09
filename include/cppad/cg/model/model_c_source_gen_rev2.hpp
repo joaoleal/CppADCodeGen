@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseReverseTwoSources() throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseReverseTwoSources() {
 
     determineHessianSparsity();
 
@@ -66,7 +66,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSources() throw (CGException
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
+void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
     using CppAD::vector;
 
     const size_t m = _fun.Range();
@@ -144,7 +144,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::map<size_t, std::vector<size_t> >& elements,
                                                                      const std::vector<size_t>& evalRows,
-                                                                     const std::vector<size_t>& evalCols) throw (CGException) {
+                                                                     const std::vector<size_t>& evalCols) {
     using CppAD::vector;
 
     const size_t m = _fun.Range();

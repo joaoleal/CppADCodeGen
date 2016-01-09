@@ -171,10 +171,10 @@ class JobListener {
 public:
     typedef std::chrono::steady_clock::duration duration;
 
-    virtual void jobStarted(const std::vector<Job>& job) throw (CGException) = 0;
+    virtual void jobStarted(const std::vector<Job>& job) = 0;
 
     virtual void jobEndended(const std::vector<Job>& job,
-                             duration elapsed) throw (CGException) = 0;
+                             duration elapsed) = 0;
 };
 
 /**

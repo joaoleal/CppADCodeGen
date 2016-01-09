@@ -23,7 +23,7 @@ namespace cg {
  **************************************************************************/
 
 template<class Base>
-void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
+void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
     using CppAD::vector;

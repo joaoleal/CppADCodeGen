@@ -1110,7 +1110,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpression(OperationNode<Base>& op) throw (CGException) {
+    virtual unsigned printExpression(OperationNode<Base>& op) {
         if (op.getVariableID() > 0) {
             // use variable name
             _code << createVariableName(op);
@@ -1121,7 +1121,7 @@ protected:
         }
     }
 
-    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printExpressionNoVarCheck(OperationNode<Base>& node) {
         CGOpCode op = node.getOperationType();
         switch (op) {
             case CGOpCode::ArrayCreation:
@@ -1261,13 +1261,13 @@ protected:
         return 1;
     }
 
-    virtual unsigned printAssignOp(OperationNode<Base>& node) throw (CGException) {
+    virtual unsigned printAssignOp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation");
 
         return print(node.getArguments()[0]);
     }
 
-    virtual void printUnaryFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printUnaryFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary function");
 
         switch (op.getOperationType()) {
@@ -1339,7 +1339,7 @@ protected:
         _code << ")";
     }
 
-    virtual void printPowFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
         _code << powFuncName() << "(";
@@ -1349,7 +1349,7 @@ protected:
         _code << ")";
     }
 
-    virtual void printSignFunction(OperationNode<Base>& op) throw (CGException) {
+    virtual void printSignFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for sign() function");
         CPPADCG_ASSERT_UNKNOWN(op.getArguments()[0].getOperation() != nullptr);
         CPPADCG_ASSERT_UNKNOWN(op.getArguments()[0].getOperation()->getVariableID() > 0);

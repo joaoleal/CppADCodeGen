@@ -90,7 +90,7 @@ VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(
 }
 
 template<class Base>
-const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(JobTimer* timer) throw (CGException) {
+const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(JobTimer* timer) {
     if (_sources.empty()) {
         generateSources(timer);
     }
@@ -98,7 +98,7 @@ const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(JobT
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSources(JobTimer* timer) throw (CGException) {
+void ModelCSourceGen<Base>::generateSources(JobTimer* timer) {
     _jobTimer = timer;
 
     generateLoops();
@@ -157,7 +157,7 @@ void ModelCSourceGen<Base>::generateSources(JobTimer* timer) throw (CGException)
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateLoops() throw (CGException) {
+void ModelCSourceGen<Base>::generateLoops() {
     if (_relatedDepCandidates.empty()) {
         return; //nothing to do
     }

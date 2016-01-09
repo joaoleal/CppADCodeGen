@@ -290,7 +290,7 @@ public:
      * @return the reduced index model (must be deleted by user)
      */
     virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                 std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) override {
+                                                 std::vector<DaeEquationInfo>& newEqInfo) override {
 
         /**
          * Variable information for the reduced
@@ -348,7 +348,7 @@ public:
 protected:
 
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
-                                            std::vector<DaeVarInfo>& newVarInfo) throw (CGException) {
+                                            std::vector<DaeVarInfo>& newVarInfo) {
 
         determineJacobian();
 
@@ -646,12 +646,13 @@ protected:
      * @param differentialEqs 
      * @return The new semi-explicit DAE model with less variables (without
      *         the time derivative variables)
+     * @throws CGException on failure
      */
     inline std::unique_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
                                                                     const std::vector<DaeVarInfo>& varInfo,
                                                                     std::vector<DaeVarInfo>& newVarInfo,
                                                                     const std::vector<DaeEquationInfo>& eqInfo,
-                                                                    std::vector<DaeEquationInfo>& newEqInfo) throw (CGException) {
+                                                                    std::vector<DaeEquationInfo>& newEqInfo) {
         using namespace std;
         using std::vector;
         using std::map;
@@ -761,7 +762,7 @@ protected:
     }
 
     inline void matchVars2Eqs4Elimination(std::vector<DaeVarInfo>& varInfo,
-                                          std::vector<DaeEquationInfo>& eqInfo) throw (CGException) {
+                                          std::vector<DaeEquationInfo>& eqInfo) {
         using std::vector;
         using std::map;
         typedef vector<OperationPathNode<Base> > SourceCodePath;
@@ -998,7 +999,7 @@ protected:
                                    std::vector<bool>& jacSparsity,
                                    const std::map<size_t, Vnode<Base>*>& tape2FreeVariables,
                                    std::vector<Enode<Base>*>& equations,
-                                   std::vector<DaeVarInfo>& varInfo) throw (CGException) {
+                                   std::vector<DaeVarInfo>& varInfo) {
         using namespace std;
         using std::vector;
         using std::map;
@@ -1411,7 +1412,7 @@ protected:
 
     inline void selectDummyDerivatives(const std::vector<Enode<Base>* >& eqs,
                                        const std::vector<Vnode<Base>* >& vars,
-                                       MatrixB& work) throw (CGException) {
+                                       MatrixB& work) {
 
         if (eqs.size() == vars.size()) {
             dummyD_.insert(dummyD_.end(), vars.begin(), vars.end());

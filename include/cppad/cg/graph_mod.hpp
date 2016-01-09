@@ -21,14 +21,14 @@ namespace cg {
 template<class Base>
 inline void CodeHandler<Base>::substituteIndependent(const CG<Base>& indep,
                                                      const CG<Base>& dep,
-                                                     bool removeFromIndependents) throw (CGException) {
+                                                     bool removeFromIndependents) {
     substituteIndependent(*indep.getOperationNode(), *dep.getOperationNode(), removeFromIndependents);
 }
 
 template<class Base>
 inline void CodeHandler<Base>::substituteIndependent(OperationNode<Base>& indep,
                                                      OperationNode<Base>& dep,
-                                                     bool removeFromIndependents) throw (CGException) {
+                                                     bool removeFromIndependents) {
     using std::vector;
     typedef CG<Base> CGBase;
 
@@ -63,7 +63,7 @@ inline void CodeHandler<Base>::substituteIndependent(OperationNode<Base>& indep,
 }
 
 template<class Base>
-inline void CodeHandler<Base>::undoSubstituteIndependent(OperationNode<Base>& indep) throw (CGException) {
+inline void CodeHandler<Base>::undoSubstituteIndependent(OperationNode<Base>& indep) {
     typename std::vector<OperationNode<Base> *>::const_iterator it =
             std::find(_independentVariables.begin(), _independentVariables.end(), &indep);
     if (it == _independentVariables.end()) {
@@ -74,7 +74,7 @@ inline void CodeHandler<Base>::undoSubstituteIndependent(OperationNode<Base>& in
 }
 
 template<class Base>
-inline void CodeHandler<Base>::removeIndependent(OperationNode<Base>& indep) throw (CGException) {
+inline void CodeHandler<Base>::removeIndependent(OperationNode<Base>& indep) {
     if (indep.getOperationType() != CGOpCode::Alias) {
         throw CGException("Cannot remove independent variable: not an alias");
     }

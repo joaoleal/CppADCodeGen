@@ -264,7 +264,7 @@ public:
     void createLoopModel(const std::vector<CG<Base> >& dependents,
                          const std::vector<CG<Base> >& independents,
                          const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
-                         std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
+                         std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
 
         CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty());
         for (size_t iter = 0; iter < iterationCount_; iter++) {
@@ -707,7 +707,7 @@ private:
     void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
                               const std::vector<CG<Base> >& independents,
                               const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
-                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
+                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
         typedef CG<Base> CGB;
         typedef AD<CGB> ADCGB;
         CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);

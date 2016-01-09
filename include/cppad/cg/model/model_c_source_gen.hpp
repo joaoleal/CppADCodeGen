@@ -708,11 +708,11 @@ protected:
                                                                      const std::string& tmpName = "v",
                                                                      const std::string& tmpArrayName = "array");
 
-    const std::map<std::string, std::string>& getSources(JobTimer* timer) throw (CGException);
+    const std::map<std::string, std::string>& getSources(JobTimer* timer);
 
-    virtual void generateSources(JobTimer* timer = nullptr) throw (CGException);
+    virtual void generateSources(JobTimer* timer = nullptr);
 
-    virtual void generateLoops() throw (CGException);
+    virtual void generateLoops();
 
     virtual void generateInfoSource();
 
@@ -740,9 +740,9 @@ protected:
 
     virtual void generateJacobianSource();
 
-    virtual void generateSparseJacobianSource() throw (CGException);
+    virtual void generateSparseJacobianSource();
 
-    virtual void generateSparseJacobianSource(bool forward) throw (CGException);
+    virtual void generateSparseJacobianSource(bool forward);
 
     virtual void generateSparseJacobianForRevSource(bool forward);
 
@@ -769,7 +769,7 @@ protected:
      */
     virtual CppAD::vector<CGBase> prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
                                                                  const CppAD::vector<CGBase>& x,
-                                                                 bool forward) throw (CGException);
+                                                                 bool forward);
 
     inline void prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
                                                   LoopModel<Base>& lModel,
@@ -790,7 +790,7 @@ protected:
                                                SparsitySetType& noLoopEvalSparsity,
                                                CppAD::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
                                                std::map<LoopModel<Base>*, SparsitySetType>& loopsEvalSparsities,
-                                               std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo) throw (CGException);
+                                               std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo);
 
 
     virtual void generateSparseJacobianWithLoopsSourceFromForRev(const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
@@ -801,7 +801,7 @@ protected:
                                                                  const std::string& keyName,
                                                                  const std::map<size_t, std::set<size_t> >& nonLoopElements,
                                                                  const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
-                                                                 void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g)) throw (CGException);
+                                                                 void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g));
 
     inline virtual void generateFunctionNameLoopFor1(std::ostringstream& cache,
                                                      const LoopModel<Base>& loop,
@@ -827,11 +827,11 @@ protected:
 
     virtual void generateHessianSource();
 
-    virtual void generateSparseHessianSource() throw (CGException);
+    virtual void generateSparseHessianSource();
 
-    virtual void generateSparseHessianSourceDirectly() throw (CGException);
+    virtual void generateSparseHessianSourceDirectly();
 
-    virtual void generateSparseHessianSourceFromRev2() throw (CGException);
+    virtual void generateSparseHessianSourceFromRev2();
 
     virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                    std::vector<size_t>& userCols);
@@ -881,7 +881,7 @@ protected:
 
     inline virtual void generateSparseHessianWithLoopsSourceFromRev2(const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
                                                                      const std::map<size_t, bool>& ordered,
-                                                                     size_t maxCompressedSize) throw (CGException);
+                                                                     size_t maxCompressedSize);
 
     inline virtual void generateFunctionNameLoopRev2(std::ostringstream& cache,
                                                      const LoopModel<Base>& loop,
@@ -920,7 +920,7 @@ protected:
 
     virtual void generateForwardOneSources();
 
-    virtual void prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+    virtual void prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements);
 
     virtual void createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
                                              size_t j,
@@ -945,7 +945,7 @@ protected:
 
     virtual void generateReverseOneSources();
 
-    virtual void prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+    virtual void prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements);
 
     virtual void createReverseOneWithLoopsNL(CodeHandler<Base>& handler,
                                              size_t i,
@@ -961,13 +961,13 @@ protected:
      * Reverse 2 mode
      **********************************************************************/
 
-    virtual void generateSparseReverseTwoSources() throw (CGException);
+    virtual void generateSparseReverseTwoSources();
 
-    virtual void generateSparseReverseTwoSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+    virtual void generateSparseReverseTwoSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements);
 
     virtual void generateSparseReverseTwoSourcesNoAtomics(const std::map<size_t, std::vector<size_t> >& elements,
                                                           const std::vector<size_t>& evalRows,
-                                                          const std::vector<size_t>& evalCols) throw (CGException);
+                                                          const std::vector<size_t>& evalCols);
 
     virtual void generateReverseTwoSources();
 
@@ -979,7 +979,7 @@ protected:
     /**
      * Loops
      */
-    virtual void prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException);
+    virtual void prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements);
 
     /***********************************************************************
      * Sparsities

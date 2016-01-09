@@ -188,7 +188,10 @@ public:
         return _independentVariables.size();
     }
 
-    size_t getIndependentVariableIndex(const OperationNode<Base>& var) const throw (CGException) {
+    /**
+     * @throws CGException if a variable is not found in the independent vector
+     */
+    size_t getIndependentVariableIndex(const OperationNode<Base>& var) const {
         CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
 
         typename std::vector<OperationNode<Base> *>::const_iterator it =
@@ -330,7 +333,7 @@ public:
                                                  OperationNode<Base>& code,
                                                  size_t max);
 
-    inline bool isSolvable(const SourceCodePath& path) throw (CGException);
+    inline bool isSolvable(const SourceCodePath& path);
 
     /***********************************************************************
      *                   Source code generation
@@ -744,11 +747,12 @@ public:
      * @param expression  The original expression (f(x, y))
      * @param code  The variable to solve for
      * @return  The expression for variable
+     * @throws CGException if it is not possible to solve the expression
      */
     inline CG<Base> solveFor(OperationNode<Base>& expression,
-                             OperationNode<Base>& code) throw (CGException);
+                             OperationNode<Base>& code);
 
-    inline CG<Base> solveFor(const std::vector<OperationPathNode<Base> >& path) throw (CGException);
+    inline CG<Base> solveFor(const std::vector<OperationPathNode<Base> >& path);
 
     /**
      * Eliminates an independent variable by substitution using the provided
@@ -762,14 +766,15 @@ public:
      *                         independents in the model. The substitution
      *                         operation can only be reversed if the 
      *                         variable is not removed.
+     * @throws CGException if the dependent variable does not belong to this handler
      */
     inline void substituteIndependent(const CG<Base>& indep,
                                       const CG<Base>& dep,
-                                      bool removeFromIndeps = true) throw (CGException);
+                                      bool removeFromIndeps = true);
 
     inline void substituteIndependent(OperationNode<Base>& indep,
                                       OperationNode<Base>& dep,
-                                      bool removeFromIndeps = true) throw (CGException);
+                                      bool removeFromIndeps = true);
 
     /**
      * Reverts a substitution of an independent variable that has not been 
@@ -777,8 +782,9 @@ public:
      * Warning: it does not recover any custom name assigned to the variable.
      * 
      * @param indep The independent variable
+     * @throws CGException if the dependent variable does not belong to this handler
      */
-    inline void undoSubstituteIndependent(OperationNode<Base>& indep) throw (CGException);
+    inline void undoSubstituteIndependent(OperationNode<Base>& indep);
 
     /**
      * Finalizes the substitution of an independent variable by eliminating
@@ -786,8 +792,9 @@ public:
      * substitution cannot be undone.
      * 
      * @param indep The independent variable
+     * @throws CGException if the dependent variable is not an not an alias or it does not belong to this handler
      */
-    inline void removeIndependent(OperationNode<Base>& indep) throw (CGException);
+    inline void removeIndependent(OperationNode<Base>& indep);
 
     /**
      * Adds an operation node to the list of nodes to be deleted when this

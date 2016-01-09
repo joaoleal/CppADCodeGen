@@ -59,7 +59,7 @@ std::pair<CG<Base>, IndexPattern*> createReverseMode2Contribution(CodeHandler<Ba
  **************************************************************************/
 
 template<class Base>
-void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements) throw (CGException) {
+void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
     using CppAD::vector;

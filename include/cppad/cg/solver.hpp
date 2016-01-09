@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
-                                            OperationNode<Base>& code) throw (CGException) {
+                                            OperationNode<Base>& code) {
     using std::vector;
 
     // find code in expression
@@ -44,7 +44,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
 }
 
 template<class Base>
-inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<Base> >& path) throw (CGException) {
+inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<Base> >& path) {
 
     CG<Base> rightHs(0.0);
 
@@ -153,7 +153,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
 }
 
 template<class Base>
-inline bool isSolvable(const std::vector<OperationPathNode<Base> >& path) throw (CGException) {
+inline bool isSolvable(const std::vector<OperationPathNode<Base> >& path) {
     for (size_t n = 0; n < path.size() - 1; ++n) {
         const OperationPathNode<Base>& pnodeOp = path[n];
         size_t argIndex = path[n + 1].arg_index;

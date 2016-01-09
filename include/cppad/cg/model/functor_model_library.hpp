@@ -59,7 +59,7 @@ public:
      * @throws CGException If there is a problem loading the function symbol
      */
     virtual void* loadFunction(const std::string& functionName,
-                               bool required = true) throw (CGException) = 0;
+                               bool required = true) = 0;
 
     inline virtual ~FunctorModelLibrary() {
     }
