@@ -25,7 +25,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
 
     // find code in expression
     if (&expression == &code)
-        return CG<Base > (*this, code);
+        return CG<Base>(code);
 
     typedef vector<OperationPathNode<Base> > SourceCodePath;
 
@@ -58,16 +58,16 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
             case CGOpCode::Mul:
             {
                 const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
-                rightHs /= CG<Base > (*this, other);
+                rightHs /= CG<Base>(other);
                 break;
             }
             case CGOpCode::Div:
                 if (argIndex == 0) {
                     const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
-                    rightHs *= CG<Base > (*this, other);
+                    rightHs *= CG<Base>(other);
                 } else {
                     const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
-                    rightHs = CG<Base > (*this, other) / rightHs;
+                    rightHs = CG<Base>(other) / rightHs;
                 }
                 break;
 
@@ -77,7 +77,7 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
             case CGOpCode::Add:
             {
                 const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
-                rightHs -= CG<Base > (*this, other);
+                rightHs -= CG<Base>(other);
                 break;
             }
             case CGOpCode::Alias:
@@ -86,9 +86,9 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
             case CGOpCode::Sub:
             {
                 if (argIndex == 0) {
-                    rightHs += CG<Base > (*this, args[1]);
+                    rightHs += CG<Base>(args[1]);
                 } else {
-                    rightHs = CG<Base > (*this, args[0]) - rightHs;
+                    rightHs = CG<Base>(args[0]) - rightHs;
                 }
                 break;
             }
@@ -113,14 +113,14 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
                         if (exponent.getParameter() != nullptr && *exponent.getParameter() == Base(2.0)) {
                             rightHs = sqrt(rightHs); // TODO: should -sqrt(rightHs) somehow be considered???
                         } else {
-                            rightHs = pow(rightHs, Base(1.0) / CG<Base > (*this, exponent));
+                            rightHs = pow(rightHs, Base(1.0) / CG<Base>(exponent));
                         }
                          */
                     }
                 } else {
                     // 
                     const Argument<Base>& base = args[0];
-                    rightHs = log(rightHs) / log(CG<Base > (*this, base));
+                    rightHs = log(rightHs) / log(CG<Base>(base));
                 }
                 break;
             }

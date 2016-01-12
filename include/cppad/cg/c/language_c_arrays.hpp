@@ -168,7 +168,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
              * from independents array in a loop
              */
             size_t pos = refOp.getInfo()[1];
-            IndexPattern* refIp = (*_info)->loopIndependentIndexPatterns[pos];
+            IndexPattern* refIp = _info->loopIndependentIndexPatterns[pos];
 
             LinearIndexPattern* refLIp = nullptr;
             SectionedIndexPattern* refSecp = nullptr;
@@ -194,7 +194,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break;
 
                 pos = args[i].getOperation()->getInfo()[1];
-                const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
 
                 if (!isOffsetBy(ip, refIp, long(i) - long(starti))) {
                     break; // different pattern type
@@ -212,14 +212,11 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                 p2dip.reset(encapsulateIndexPattern(*refSecp, starti));
             }
 
-            IndexDclrOperationNode<Base> indexI("i");
-            IndexOperationNode<Base> iterationIndexOp(indexI);
+            std::unique_ptr<OperationNode<Base>> op2(OperationNode<Base>::makeTemporaryNode(CGOpCode::LoopIndexedIndep, refOp.getInfo(), refOp.getArguments()));
+            op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
+            op2->getArguments().push_back(_info->auxIterationIndexOp);
 
-            OperationNode<Base> op2(CGOpCode::LoopIndexedIndep, refOp.getInfo(), refOp.getArguments()); //clone
-            op2.getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
-            op2.getArguments().push_back(iterationIndexOp);
-
-            arrayAssign << _nameGen->generateIndexedIndependent(op2, *p2dip);
+            arrayAssign << _nameGen->generateIndexedIndependent(*op2, *p2dip);
         } else if (refOp.getVariableID() >= this->_minTemporaryVarID && op != CGOpCode::LoopIndexedDep && op != CGOpCode::LoopIndexedTmp && op != CGOpCode::Tmp) {
             /**
              * from temporary variable array
@@ -337,7 +334,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
 
     // lets see what was the previous values in this array
     auto itLast = _atomicFuncArrays.find(dataArrayName);
-    bool firstTime = itLast == _atomicFuncArrays.end() || itLast->second.scope != array.getColor();
+    bool firstTime = itLast == _atomicFuncArrays.end() || itLast->second.scope != _info->scope[array];
     AtomicFuncArray& lastArray = firstTime ? _atomicFuncArrays[dataArrayName] : itLast->second;
 
     bool changed = false;
@@ -428,7 +425,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
         }
     }
 
-    lastArray.scope = array.getColor();
+    lastArray.scope = _info->scope[array];
 
     if (changed)
         _code << "\n";

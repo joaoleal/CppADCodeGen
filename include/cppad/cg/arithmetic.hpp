@@ -24,18 +24,19 @@ CodeHandler<Base>* getHandler(const CG<Base>& left,
 
     CPPADCG_ASSERT_UNKNOWN(!left.isParameter() || !right.isParameter());
 
-    CodeHandler<Base>* handler;
-    if (left.isParameter()) {
-        handler = right.getCodeHandler();
-    } else if (right.isParameter()) {
-        handler = left.getCodeHandler();
+    CodeHandler<Base>* lh = left.getCodeHandler();
+    CodeHandler<Base>* rh = right.getCodeHandler();
+
+    if (lh == nullptr) {
+        return rh;
+    } else if (rh == nullptr) {
+        return lh;
     } else {
-        if (left.getCodeHandler() != right.getCodeHandler()) {
+        if (lh != rh) {
             throw CGException("Attempting to use several source code generation handlers in the same source code generation");
         }
-        handler = left.getCodeHandler();
+        return lh;
     }
-    return handler;
 }
 
 template<class Base>
@@ -56,7 +57,7 @@ inline CG<Base> operator+(const CG<Base>& left, const CG<Base>& right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base > (CGOpCode::Add,{left.argument(), right.argument()}));
+        CG<Base> result(*handler->makeNode(CGOpCode::Add,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() + right.getValue());
         }
@@ -78,7 +79,7 @@ inline CG<Base> operator-(const CG<Base>& left, const CG<Base>& right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Sub,{left.argument(), right.argument()}));
+        CG<Base> result(*handler->makeNode(CGOpCode::Sub,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() - right.getValue());
         }
@@ -108,7 +109,7 @@ inline CG<Base> operator*(const CG<Base>& left, const CG<Base>& right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Mul,{left.argument(), right.argument()}));
+        CG<Base> result(*handler->makeNode(CGOpCode::Mul,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() * right.getValue());
         }
@@ -134,7 +135,7 @@ inline CG<Base> operator/(const CG<Base>& left, const CG<Base>& right) {
 
         CodeHandler<Base>* handler = getHandler(left, right);
 
-        CG<Base> result(*handler, new OperationNode<Base> (CGOpCode::Div,{left.argument(), right.argument()}));
+        CG<Base> result(*handler->makeNode(CGOpCode::Div,{left.argument(), right.argument()}));
         if (left.isValueDefined() && right.isValueDefined()) {
             result.setValue(left.getValue() / right.getValue());
         }

@@ -54,8 +54,8 @@ protected:
     const std::string _baseTypeName;
     // spaces for 1 level indentation
     const std::string _spaces;
-    //
-    const std::unique_ptr<LanguageGenerationData<Base> >* _info;
+    // information from the code handler (not owned)
+    LanguageGenerationData<Base>* _info;
     // current indentation
     std::string _indentation;
     // variable name used for the inlet variable
@@ -100,7 +100,7 @@ protected:
     // the current state of Array structures used by atomic functions
     std::map<std::string, AtomicFuncArray> _atomicFuncArrays;
     // indexes defined as function arguments
-    std::vector<const IndexDclrOperationNode<Base>*> _funcArgIndexes;
+    std::vector<const OperationNode<Base>*> _funcArgIndexes;
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
@@ -179,16 +179,16 @@ public:
         _functionName = functionName;
     }
 
-    virtual void setFunctionIndexArgument(const IndexDclrOperationNode<Base>& funcArgIndex) {
+    virtual void setFunctionIndexArgument(const OperationNode<Base>& funcArgIndex) {
         _funcArgIndexes.resize(1);
         _funcArgIndexes[0] = &funcArgIndex;
     }
 
-    virtual void setFunctionIndexArguments(const std::vector<const IndexDclrOperationNode<Base>*>& funcArgIndexes) {
+    virtual void setFunctionIndexArguments(const std::vector<const OperationNode<Base>*>& funcArgIndexes) {
         _funcArgIndexes = funcArgIndexes;
     }
 
-    virtual const std::vector<const IndexDclrOperationNode<Base>*>& getFunctionIndexArguments() const {
+    virtual const std::vector<const OperationNode<Base>*>& getFunctionIndexArguments() const {
         return _funcArgIndexes;
     }
 
@@ -513,14 +513,23 @@ public:
                                                           const std::set<RandomIndexPattern*>& randomPatterns);
 
     static inline std::string indexPattern2String(const IndexPattern& ip,
-                                                  const IndexDclrOperationNode<Base>& index);
+                                                  const OperationNode<Base>& index);
+    
+    static inline std::string indexPattern2String(const IndexPattern& ip,
+                                                  const std::string& index);
 
     static inline std::string indexPattern2String(const IndexPattern& ip,
-                                                  const std::vector<const IndexDclrOperationNode<Base>*>& indexes);
+                                                  const std::vector<const OperationNode<Base>*>& indexes);
+    
+    static inline std::string indexPattern2String(const IndexPattern& ip,
+                                                  const std::vector<const std::string*>& indexes);
 
     static inline std::string linearIndexPattern2String(const LinearIndexPattern& lip,
-                                                        const IndexDclrOperationNode<Base>& index);
+                                                        const OperationNode<Base>& index);
 
+    static inline std::string linearIndexPattern2String(const LinearIndexPattern& lip,
+                                                        const std::string& index);
+    
     static inline bool isOffsetBy(const IndexPattern* ip,
                                   const IndexPattern* refIp,
                                   long offset);
@@ -568,7 +577,7 @@ protected:
         _atomicFuncArrays.clear();
 
         // save some info
-        _info = &info;
+        _info = info.get();
         _independentSize = info->independent.size();
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
@@ -934,8 +943,8 @@ protected:
         }
 
         generateArrayContainersDeclaration(_ss,
-                                           _info->get()->atomicFunctionsMaxForward,
-                                           _info->get()->atomicFunctionsMaxReverse);
+                                           _info->atomicFunctionsMaxForward,
+                                           _info->atomicFunctionsMaxReverse);
 
         if (arraySize > 0 || sArraySize > 0 || zeroDependentArray) {
             _ss << _spaces << U_INDEX_TYPE << " i;\n";
@@ -956,9 +965,10 @@ protected:
         _ss.str("");
     }
 
-    virtual bool createsNewVariable(const OperationNode<Base>& var) const override {
+    virtual bool createsNewVariable(const OperationNode<Base>& var,
+                                    size_t totalUseCount) const override {
         CGOpCode op = var.getOperationType();
-        if (var.getTotalUsageCount() > 1) {
+        if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
         } else {
             return ( op == CGOpCode::ArrayCreation ||
@@ -981,7 +991,7 @@ protected:
 
     virtual bool requiresVariableName(const OperationNode<Base>& var) const {
         CGOpCode op = var.getOperationType();
-        if (var.getTotalUsageCount() > 1) {
+        if (_info->totalUseCount.get(var) > 1) {
             return (op != CGOpCode::Pri &&
                     op != CGOpCode::AtomicForward &&
                     op != CGOpCode::AtomicReverse &&
@@ -1052,12 +1062,12 @@ protected:
 
             } else if (op == CGOpCode::LoopIndexedDep) {
                 size_t pos = var.getInfo()[0];
-                const IndexPattern* ip = (*_info)->loopDependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopDependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedDependent(var, *ip));
 
             } else if (op == CGOpCode::LoopIndexedIndep) {
                 size_t pos = var.getInfo()[1];
-                const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedIndependent(var, *ip));
 
             } else if (var.getVariableID() <= _independentSize) {
@@ -1608,7 +1618,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2, "Invalid number of arguments for atomic forward operation");
 
         size_t id = atomicFor.getInfo()[0];
-        size_t atomicIndex = (*_info)->atomicFunctionId2Index.at(id);
+        size_t atomicIndex = _info->atomicFunctionId2Index.at(id);
 
         std::vector<OperationNode<Base>*> tx(p1), ty(p1);
         for (size_t k = 0; k < p1; k++) {
@@ -1632,7 +1642,7 @@ protected:
         _code << _indentation << "atomicFun.forward(atomicFun.libModel, "
                 << atomicIndex << ", " << q << ", " << p << ", "
                 << _ATOMIC_TX << ", &" << _ATOMIC_TY << "); // "
-                << (*_info)->atomicFunctionId2Name.at(id)
+                << _info->atomicFunctionId2Name.at(id)
                 << "\n";
 
         /**
@@ -1649,7 +1659,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4, "Invalid number of arguments for atomic reverse operation");
 
         size_t id = atomicRev.getInfo()[0];
-        size_t atomicIndex = (*_info)->atomicFunctionId2Index.at(id);
+        size_t atomicIndex = _info->atomicFunctionId2Index.at(id);
         std::vector<OperationNode<Base>*> tx(p1), px(p1), py(p1);
         for (size_t k = 0; k < p1; k++) {
             tx[k] = opArgs[0 * p1 + k].getOperation();
@@ -1680,7 +1690,7 @@ protected:
         _code << _indentation << "atomicFun.reverse(atomicFun.libModel, "
                 << atomicIndex << ", " << p << ", "
                 << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
-                << (*_info)->atomicFunctionId2Name.at(id)
+                << _info->atomicFunctionId2Name.at(id)
                 << "\n";
 
         /**
@@ -1760,7 +1770,7 @@ protected:
 
         // CGLoopIndexedIndepOp
         size_t pos = node.getInfo()[1];
-        const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+        const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
         _code << _nameGen->generateIndexedIndependent(node, *ip);
     }
 
@@ -1988,7 +1998,7 @@ private:
         bool sparse;
         size_t idx_id;
         unsigned long nnz;
-        size_t scope;
+        unsigned short scope;
     };
 };
 template<class Base>

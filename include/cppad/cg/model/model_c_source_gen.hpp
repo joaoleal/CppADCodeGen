@@ -259,7 +259,8 @@ public:
      *            after this object)
      * @param model The model name (must be a valid C function name)
      */
-    ModelCSourceGen(ADFun<CppAD::cg::CG<Base> >& fun, const std::string& model) :
+    ModelCSourceGen(ADFun<CppAD::cg::CG<Base> >& fun,
+                    const std::string& model) :
         _fun(fun),
         _funNoLoops(nullptr),
         _name(model),

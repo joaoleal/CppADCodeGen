@@ -89,6 +89,11 @@ private:
     std::map<OperationNode<Base>*, size_t> origTemp2Index_;
     std::vector<std::set<size_t> > id2Deps;
     size_t idCounter_;
+    /**
+     * the original shared node ID used to sort shared variables to ensure 
+     * reproducibility between different runs
+     */
+    CodeHandlerVector<Base, size_t> origShareNodeId_;
     /// used to mark visited nodes and indexed nodes
     size_t color_;
 public:
@@ -105,16 +110,17 @@ public:
     DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
                             const std::vector<CGBase>& dependents,
                             std::vector<CGBase>& independents) :
-        handler_(nullptr),
+        handler_(independents[0].getCodeHandler()),
         relatedDepCandidates_(relatedDepCandidates),
         dependents_(dependents),
         independents_(independents),
         idCounter_(0),
+        origShareNodeId_(*handler_),
         color_(0) {
         CPPADCG_ASSERT_UNKNOWN(independents_.size() > 0);
         CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr);
-        handler_ = independents_[0].getCodeHandler();
         equations_.reserve(relatedDepCandidates_.size());
+        origShareNodeId_.adjustSize();
     }
 
     const std::vector<EquationPattern<Base>*>& getEquationPatterns() const {
@@ -186,7 +192,7 @@ private:
                      * have no operation, consequently an alias is used
                      */
                     CPPADCG_ASSERT_UNKNOWN(handler_ == dependents_[iDep].getCodeHandler());
-                    dependents_[iDep] = handler_->createCG(new OperationNode<Base>(CGOpCode::Alias, *node));
+                    dependents_[iDep] = CG<Base>(*handler_->makeNode(CGOpCode::Alias, *node));
                 }
             }
         }
@@ -237,7 +243,7 @@ private:
              */
             if (e > 0) {
                 handler_->startNewOperationTreeVisit();
-                
+
                 for (size_t depIt : eq->dependents) {
                     findSharedTemporaries(dependents_[depIt], depIt); // a color is used to mark indexed paths
                 }
@@ -675,7 +681,7 @@ private:
                     Loop<Base>* loop = equation2Loop_.at(otherEq);
                     // the original ID (saved in evaluation order) is used to sort shared variables
                     // to ensure reproducibility between different runs
-                    loopSharedTemps[loop][otherEq][shared->getEvaluationOrder()] = std::make_pair(shared, indexed);
+                    loopSharedTemps[loop][otherEq][origShareNodeId_[shared]] = std::make_pair(shared, indexed);
                 }
             }
         }
@@ -989,7 +995,8 @@ private:
             return;
 
         node->setVariableID(idCounter_);
-        node->setEvaluationOrder(idCounter_);
+        origShareNodeId_.adjustSize(*node);
+        origShareNodeId_[*node] = idCounter_;
         idCounter_++;
 
         const std::vector<Argument<Base> >& args = node->getArguments();
@@ -1010,11 +1017,12 @@ private:
         }
     }
 
-    static void resetHandlerCounters(OperationNode<Base>* node) {
-        if (node == nullptr || node->getVariableID() == 0 || node->getEvaluationOrder() == 0)
+    void resetHandlerCounters(OperationNode<Base>* node) {
+        if (node == nullptr || node->getVariableID() == 0 || origShareNodeId_[*node] == 0)
             return;
 
         node->resetHandlerCounters();
+        origShareNodeId_[*node] = 0;
 
         const std::vector<Argument<Base> >& args = node->getArguments();
         size_t arg_size = args.size();

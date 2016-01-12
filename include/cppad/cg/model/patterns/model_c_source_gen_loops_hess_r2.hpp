@@ -37,7 +37,6 @@ void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const s
     string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
     string suffix = "indep";
     string nlRev2Suffix = "noloop_" + suffix;
-    IndexDclrOperationNode<Base> indexIt("it");
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
@@ -50,7 +49,7 @@ void ModelCSourceGen<Base>::generateSparseHessianWithLoopsSourceFromRev2(const s
     printForRevUsageFunction(_cache, _baseTypeName, _name,
                              model_function, 3,
                              functionRev2, suffix,
-                             "jrow", indexIt, "hess",
+                             "jrow", "it", "hess",
                              _loopRev2Groups,
                              _nonLoopRev2Elements,
                              userHessElLocation, jrowOrdered,

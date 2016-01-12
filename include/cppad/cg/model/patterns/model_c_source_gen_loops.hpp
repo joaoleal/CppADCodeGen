@@ -102,7 +102,7 @@ inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& han
 
     for (size_t j = 0; j < nIndexed; j++) {
         info[1] = handler.addLoopIndependentIndexPattern(*loop.getIndependentIndexPatterns()[j], j);
-        x[j] = handler.createCG(new OperationNode<Base>(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
+        x[j] = CG<Base>(*handler.makeNode(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
     }
 
     return x;
@@ -162,7 +162,7 @@ inline CppAD::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& han
     for (size_t i = 0; i < dep_size; i++) {
         IndexPattern* ip = depIndexes[i];
         info[1] = handler.addLoopIndependentIndexPattern(*ip, x_size + i); // dependent index pattern location
-        deps[i] = handler.createCG(new OperationNode<Base>(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
+        deps[i] = CG<Base>(*handler.makeNode(CGOpCode::LoopIndexedIndep, info, xIndexedArgs));
     }
 
     return deps;
@@ -181,8 +181,7 @@ inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
         // {indexed expression, index(jrowIndexOp) }
         std::vector<Argument<Base> > indexedArgs{asArgument(val), iterationIndexOp};
 
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, aInfo, indexedArgs);
-        handler.manageOperationNodeMemory(yIndexed);
+        OperationNode<Base>* yIndexed = handler.makeNode(CGOpCode::LoopIndexedDep, aInfo, indexedArgs);
 
         return handler.createCG(Argument<Base>(*yIndexed));
 
@@ -190,10 +189,7 @@ inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
             val.getOperationNode()->getOperationType() == CGOpCode::EndIf) {
 
         // {i} : points to itself
-        return handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{i},
-        {
-                                *val.getOperationNode()
-        }));
+        return handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{i}, {*val.getOperationNode()}));
 
     } else {
         return val;
@@ -230,8 +226,7 @@ LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
             info[0] = handler.addLoopDependentIndexPattern(*depInfo.second); // dependent index pattern location
             info[1] = assignOrAdd;
 
-            OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, info, indexedArgs);
-            handler.manageOperationNodeMemory(yIndexed);
+            OperationNode<Base>* yIndexed = handler.makeNode(CGOpCode::LoopIndexedDep, info, indexedArgs);
             endArgs.push_back(*yIndexed);
         } else {
             OperationNode<Base>* n = depInfo.first.getOperationNode();
@@ -240,8 +235,7 @@ LoopEndOperationNode<Base>* createLoopEnd(CodeHandler<Base>& handler,
         }
     }
 
-    LoopEndOperationNode<Base>* loopEnd = new LoopEndOperationNode<Base>(loopStart, endArgs);
-    handler.manageOperationNodeMemory(loopEnd);
+    LoopEndOperationNode<Base>* loopEnd = handler.makeLoopEndNode(loopStart, endArgs);
 
     return loopEnd;
 }
@@ -251,7 +245,7 @@ inline void moveNonIndexedOutsideLoop(CodeHandler<Base>& handler,
                                       LoopStartOperationNode<Base>& loopStart,
                                       LoopEndOperationNode<Base>& loopEnd) {
     //EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
-    const IndexDclrOperationNode<Base>& loopIndex = loopStart.getIndex();
+    const OperationNode<Base>& loopIndex = loopStart.getIndex();
     std::set<OperationNode<Base>*> nonIndexed;
 
     const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
@@ -275,12 +269,12 @@ class LoopNonIndexedLocator {
 private:
     CodeHandler<Base>& handler_;
     std::set<OperationNode<Base>*>& nonIndexed_;
-    const IndexDclrOperationNode<Base>& loopIndex_;
+    const OperationNode<Base>& loopIndex_;
 public:
 
     inline LoopNonIndexedLocator(CodeHandler<Base>& handler,
                                  std::set<OperationNode<Base>*>& nonIndexed,
-                                 const IndexDclrOperationNode<Base>& loopIndex) :
+                                 const OperationNode<Base>& loopIndex) :
         handler_(handler),
         nonIndexed_(nonIndexed),
         loopIndex_(loopIndex) {
@@ -330,8 +324,7 @@ public:
                             // must not place a LoopIndexedTmp operation outside the loop
                             Argument<Base> assignArg = arg->getArguments()[1];
                             if (assignArg.getOperation() != nullptr) { // no point in moving a constant value outside
-                                OperationNode<Base>* assignNode = new OperationNode<Base>(CGOpCode::Assign, assignArg);
-                                handler_.manageOperationNodeMemory(assignNode);
+                                OperationNode<Base>* assignNode = handler_.makeNode(CGOpCode::Assign, assignArg);
                                 arg->getArguments()[1] = *assignNode;
                                 nonIndexed_.insert(assignNode);
                             }
@@ -378,12 +371,14 @@ inline IfElseInfo<Base>* findExistingIfElse(CppAD::vector<IfElseInfo<Base> >& if
 }
 
 template<class Base>
-OperationNode<Base>* createIndexConditionExpressionOp(const std::set<size_t>& iterations,
+OperationNode<Base>* createIndexConditionExpressionOp(CodeHandler<Base>& handler,
+                                                      const std::set<size_t>& iterations,
                                                       const std::set<size_t>& usedIter,
                                                       size_t maxIter,
                                                       IndexOperationNode<Base>& iterationIndexOp) {
     std::vector<size_t> info = createIndexConditionExpression(iterations, usedIter, maxIter);
-    return new OperationNode<Base>(CGOpCode::IndexCondExpr, info,{iterationIndexOp});
+    OperationNode<Base>* node = handler.makeNode(CGOpCode::IndexCondExpr, info,{iterationIndexOp});
+    return node;
 }
 
 std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
@@ -501,23 +496,19 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
 
         } else if (usedIter.size() + iterCount == nLocalIter) {
             // all other iterations: ELSE
-            ifBranch = new OperationNode<Base>(CGOpCode::Else,{Argument<Base>(*ifBranch), nextBranchArg});
-            handler.manageOperationNodeMemory(ifBranch);
+            ifBranch = handler.makeNode(CGOpCode::Else,{Argument<Base>(*ifBranch), nextBranchArg});
         } else {
             // depends on the iteration index
-            OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
-            handler.manageOperationNodeMemory(cond);
+            OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(handler, iterations, usedIter, maxIter, iterationIndexOp);
 
             if (ifStart == nullptr) {
                 // IF
-                ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
+                ifStart = handler.makeNode(CGOpCode::StartIf, *cond);
                 ifBranch = ifStart;
             } else {
                 // ELSE IF
-                ifBranch = new OperationNode<Base>(CGOpCode::ElseIf,{*ifBranch, *cond, nextBranchArg});
+                ifBranch = handler.makeNode(CGOpCode::ElseIf,{*ifBranch, *cond, nextBranchArg});
             }
-
-            handler.manageOperationNodeMemory(ifBranch);
 
             usedIter.insert(iterations.begin(), iterations.end());
         }
@@ -527,8 +518,7 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
 
         Argument<Base> value;
         if (printResult) {
-            PrintOperationNode<Base>* printNode = new PrintOperationNode<Base>("__________", asArgument(branchData.value), "\n");
-            handler.manageOperationNodeMemory(printNode);
+            PrintOperationNode<Base>* printNode = handler.makePrintNode("__________", asArgument(branchData.value), "\n");
             value = *printNode;
         } else {
             value = asArgument(branchData.value);
@@ -538,11 +528,9 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
         std::vector<size_t> ainfo{handler.addLoopDependentIndexPattern(*pattern), 1};
         // {indexed expression, dependency on the index}
         std::vector<Argument<Base> > indexedArgs{value, iterationIndexOp};
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
-        handler.manageOperationNodeMemory(yIndexed);
+        OperationNode<Base>* yIndexed = handler.makeNode(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
 
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{Argument<Base>(*ifBranch), Argument<Base>(*yIndexed)});
-        handler.manageOperationNodeMemory(ifAssign);
+        OperationNode<Base>* ifAssign = handler.makeNode(CGOpCode::CondResult,{Argument<Base>(*ifBranch), Argument<Base>(*yIndexed)});
         nextBranchArg = Argument<Base>(*ifAssign);
 
         if (!reusingIfElse) {
@@ -558,8 +546,7 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     if (reusingIfElse) {
         ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
     } else {
-        ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
-        handler.manageOperationNodeMemory(ifElseBranches->endIf);
+        ifElseBranches->endIf = handler.makeNode(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
     }
 
     return handler.createCG(Argument<Base>(*ifElseBranches->endIf));
@@ -605,11 +592,9 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     } else {
         // depends on the iterations indexes
         const set<size_t> usedIter;
-        OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, maxIter, iterationIndexOp);
-        handler.manageOperationNodeMemory(cond);
+        OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(handler, iterations, usedIter, maxIter, iterationIndexOp);
 
-        ifBranch = new OperationNode<Base>(CGOpCode::StartIf, *cond);
-        handler.manageOperationNodeMemory(ifBranch);
+        ifBranch = handler.makeNode(CGOpCode::StartIf, *cond);
     }
 
     // {dependent index pattern location, assignOrAdd}
@@ -617,11 +602,9 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     // {indexed expression, dependency on the index}
     std::vector<Argument<Base> > indexedArgs{asArgument(ddfdxdx), iterationIndexOp};
 
-    OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
-    handler.manageOperationNodeMemory(yIndexed);
+    OperationNode<Base>* yIndexed = handler.makeNode(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
 
-    OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifBranch, *yIndexed});
-    handler.manageOperationNodeMemory(ifAssign);
+    OperationNode<Base>* ifAssign = handler.makeNode(CGOpCode::CondResult,{*ifBranch, *yIndexed});
     Argument<Base> nextBranchArg = *ifAssign;
 
     if (!reusingIfElse) {
@@ -636,8 +619,7 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
     if (reusingIfElse) {
         ifElseBranches->endIf->getArguments().push_back(nextBranchArg);
     } else {
-        ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
-        handler.manageOperationNodeMemory(ifElseBranches->endIf);
+        ifElseBranches->endIf = handler.makeNode(CGOpCode::EndIf,{*ifBranch, nextBranchArg});
     }
 
     return handler.createCG(Argument<Base>(*ifElseBranches->endIf));
@@ -702,11 +684,9 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
         } else {
             // depends on the iterations indexes
             set<size_t> usedIter;
-            OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(iterations, usedIter, iterCount - 1, iterationIndexOp);
-            handler.manageOperationNodeMemory(cond);
+            OperationNode<Base>* cond = createIndexConditionExpressionOp<Base>(handler, iterations, usedIter, iterCount - 1, iterationIndexOp);
 
-            ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
-            handler.manageOperationNodeMemory(ifStart);
+            ifStart = handler.makeNode(CGOpCode::StartIf, *cond);
         }
 
         // {dependent index pattern location, }
@@ -714,11 +694,9 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
         // {indexed expression, dependency on the index} 
         std::vector<Argument<Base> > indexedArgs{asArgument(value), iterationIndexOp};
 
-        OperationNode<Base>* yIndexed = new OperationNode<Base>(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
-        handler.manageOperationNodeMemory(yIndexed);
+        OperationNode<Base>* yIndexed = handler.makeNode(CGOpCode::LoopIndexedDep, ainfo, indexedArgs);
 
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *yIndexed});
-        handler.manageOperationNodeMemory(ifAssign);
+        OperationNode<Base>* ifAssign = handler.makeNode(CGOpCode::CondResult,{*ifStart, *yIndexed});
 
         if (!reusingIfElse) {
             // existing 'if' with the same iterations
@@ -730,8 +708,7 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
         if (reusingIfElse) {
             ifElseBranches->endIf->getArguments().push_back(*ifAssign);
         } else {
-            ifElseBranches->endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifStart, *ifAssign});
-            handler.manageOperationNodeMemory(ifElseBranches->endIf);
+            ifElseBranches->endIf = handler.makeNode(CGOpCode::EndIf,{*ifStart, *ifAssign});
         }
 
         IndexPattern* p = nullptr;
@@ -920,7 +897,7 @@ void printForRevUsageFunction(std::ostringstream& out,
                               const std::string& localFunction,
                               const std::string& suffix,
                               const std::string& keyIndexName,
-                              const IndexDclrOperationNode<Base>& indexIt,
+                              const std::string& indexIt,
                               const std::string& resultName,
                               const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
                               const std::map<size_t, std::set<size_t> >& nonLoopElements,
@@ -945,9 +922,6 @@ void printForRevUsageFunction(std::ostringstream& out,
      */
     determineForRevUsagePatterns(loopGroups, userElLocation, jcolOrdered,
                                  loopCalls, garbage);
-
-
-    const string& itName = *indexIt.getName();
 
     string nlRev2Suffix = "noloop_" + suffix;
 
@@ -1000,10 +974,10 @@ void printForRevUsageFunction(std::ostringstream& out,
     out << "   " << baseTypeName << " const * inLocal[" << inLocalSize << "];\n"
             "   " << baseTypeName << " inLocal1 = 1;\n"
             "   " << baseTypeName << " * outLocal[1];\n"
-            "   unsigned long " << itName << ";\n"
+            "   unsigned long " << indexIt << ";\n"
             "   unsigned long " << keyIndexName << ";\n"
             "   unsigned long e;\n";
-    CPPADCG_ASSERT_UNKNOWN(itName != "e" && keyIndexName != "e");
+    CPPADCG_ASSERT_UNKNOWN(indexIt != "e" && keyIndexName != "e");
     if (maxCompressedSize > 0) {
         out << "   " << baseTypeName << " compressed[" << maxCompressedSize << "];\n";
     }
@@ -1064,7 +1038,7 @@ void printForRevUsageFunction(std::ostringstream& out,
         size_t itCount = itItlg.first;
         if (itCount > 1) {
             lastCompressed = false;
-            out << "   for(" << itName << " = 0; " << itName << " < " << itCount << "; " << itName << "++) {\n";
+            out << "   for(" << indexIt << " = 0; " << indexIt << " < " << itCount << "; " << indexIt << "++) {\n";
         }
 
         for (const auto& itlg : itItlg.second) {

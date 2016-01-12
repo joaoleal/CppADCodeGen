@@ -94,7 +94,7 @@ inline void moveNonIndexedOutsideLoop(LoopStartOperationNode<Base>& loopStart,
 template<class Base>
 inline bool findNonIndexedNodes(OperationNode<Base>& node,
                                 std::set<OperationNode<Base>*>& nonIndexed,
-                                const IndexDclrOperationNode<Base>& loopIndex);
+                                const OperationNode<Base>& loopIndex);
 
 template<class Base>
 inline IfElseInfo<Base>* findExistingIfElse(CppAD::vector<IfElseInfo<Base> >& ifElses,
@@ -105,7 +105,8 @@ inline std::vector<size_t> createIndexConditionExpression(const std::set<size_t>
                                                           size_t maxIter);
 
 template<class Base>
-inline OperationNode<Base>* createIndexConditionExpressionOp(const std::set<size_t>& iterations,
+inline OperationNode<Base>* createIndexConditionExpressionOp(CodeHandler<Base>& handler,
+                                                             const std::set<size_t>& iterations,
                                                              const std::set<size_t>& usedIter,
                                                              size_t maxIter,
                                                              IndexOperationNode<Base>& iterationIndexOp);

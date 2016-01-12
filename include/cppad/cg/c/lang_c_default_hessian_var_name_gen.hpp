@@ -131,7 +131,7 @@ public:
         CPPADCG_ASSERT_KNOWN(indexedIndep.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(nIndex > 0, "Invalid number of arguments");
 
-        std::vector<const IndexDclrOperationNode<Base>*> indices(nIndex);
+        std::vector<const OperationNode<Base>*> indices(nIndex);
         for (size_t i = 0; i < nIndex; ++i) {// typically there is only one index but there may be more
             CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[i].getOperation() != nullptr, "Invalid argument");
             CPPADCG_ASSERT_KNOWN(indexedIndep.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");

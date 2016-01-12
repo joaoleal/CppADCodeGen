@@ -47,6 +47,9 @@ class CGAtomicFun;
 template<class Base>
 class CodeHandler;
 
+template<class Base, class T>
+class CodeHandlerVector;
+
 template<class Base>
 class CG;
 
@@ -67,9 +70,6 @@ class IndexOperationNode;
 
 template<class Base>
 class IndexAssignOperationNode;
-
-template<class Base>
-class IndexDclrOperationNode;
 
 template<class Base>
 class LoopStartOperationNode;

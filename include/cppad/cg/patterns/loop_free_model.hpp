@@ -193,40 +193,30 @@ public:
              * must create a conditional element so that this 
              * contribution is only evaluated at the relevant iterations
              */
-            OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGOpCode::TmpDcl);
-            handler.manageOperationNodeMemory(tmpDclVar);
+            OperationNode<Base>* tmpDclVar = handler.makeNode(CGOpCode::TmpDcl);
             Argument<Base> tmpArg(*tmpDclVar);
 
             set<size_t> usedIter;
-            OperationNode<Base>* cond = loops::createIndexConditionExpressionOp<Base>(iterations, usedIter, iterCount - 1, iterationIndexOp);
-            handler.manageOperationNodeMemory(cond);
+            OperationNode<Base>* cond = loops::createIndexConditionExpressionOp<Base>(handler, iterations, usedIter, iterCount - 1, iterationIndexOp);
 
             // if
-            OperationNode<Base>* ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
-            handler.manageOperationNodeMemory(ifStart);
+            OperationNode<Base>* ifStart = handler.makeNode(CGOpCode::StartIf, *cond);
 
-
-            OperationNode<Base>* tmpAssign1 = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, asArgument(value)});
-            handler.manageOperationNodeMemory(tmpAssign1);
-            OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *tmpAssign1});
-            handler.manageOperationNodeMemory(ifAssign);
+            OperationNode<Base>* tmpAssign1 = handler.makeNode(CGOpCode::LoopIndexedTmp,{tmpArg, asArgument(value)});
+            OperationNode<Base>* ifAssign = handler.makeNode(CGOpCode::CondResult,{*ifStart, *tmpAssign1});
 
             // else
-            OperationNode<Base>* elseStart = new OperationNode<Base>(CGOpCode::Else,{*ifStart, *ifAssign});
-            handler.manageOperationNodeMemory(elseStart);
+            OperationNode<Base>* elseStart = handler.makeNode(CGOpCode::Else,{*ifStart, *ifAssign});
 
-            OperationNode<Base>* tmpAssign2 = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, Base(0)});
-            handler.manageOperationNodeMemory(tmpAssign2);
-            OperationNode<Base>* elseAssign = new OperationNode<Base>(CGOpCode::CondResult,{*elseStart, *tmpAssign2});
-            handler.manageOperationNodeMemory(elseAssign);
+            OperationNode<Base>* tmpAssign2 = handler.makeNode(CGOpCode::LoopIndexedTmp,{tmpArg, Base(0)});
+            OperationNode<Base>* elseAssign = handler.makeNode(CGOpCode::CondResult,{*elseStart, *tmpAssign2});
 
             // end if
-            OperationNode<Base>* endIf = new OperationNode<Base>(CGOpCode::EndIf,{*elseStart, *elseAssign});
-            handler.manageOperationNodeMemory(endIf);
+            OperationNode<Base>* endIf = handler.makeNode(CGOpCode::EndIf,{*elseStart, *elseAssign});
 
             //
-            OperationNode<Base>* tmpVar = new OperationNode<Base>(CGOpCode::Tmp,{tmpArg, *endIf});
-            return handler.createCG(tmpVar);
+            OperationNode<Base>* tmpVar = handler.makeNode(CGOpCode::Tmp,{tmpArg, *endIf});
+            return CG<Base>(*tmpVar);
         }
 
     }

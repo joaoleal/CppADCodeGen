@@ -149,7 +149,7 @@ public:
             _ss.clear();
             _ss.str("");
 
-            std::vector<const IndexDclrOperationNode<Base>*> indices(nIndex);
+            std::vector<const OperationNode<Base>*> indices(nIndex);
             for (size_t i = 0; i < nIndex; ++i) {// typically there is only one index but there may be more
                 CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation() != nullptr, "Invalid argument");
                 CPPADCG_ASSERT_KNOWN(independent.getArguments()[i].getOperation()->getOperationType() == CGOpCode::Index, "Invalid argument");

@@ -28,12 +28,8 @@ namespace cg {
  */
 template<class Base>
 class LoopEndOperationNode : public OperationNode<Base> {
+    friend class CodeHandler<Base>;
 public:
-
-    inline LoopEndOperationNode(LoopStartOperationNode<Base>& loopStart,
-                                const std::vector<Argument<Base> >& endArgs) :
-        OperationNode<Base>(CGOpCode::LoopEnd, std::vector<size_t>(0), createArguments(loopStart, endArgs)) {
-    }
 
     inline const LoopStartOperationNode<Base>& getLoopStart() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
@@ -46,6 +42,14 @@ public:
     }
 
     inline virtual ~LoopEndOperationNode() {
+    }
+
+protected:
+
+    inline LoopEndOperationNode(CodeHandler<Base>* handler,
+                                LoopStartOperationNode<Base>& loopStart,
+                                const std::vector<Argument<Base> >& endArgs) :
+        OperationNode<Base>(handler, CGOpCode::LoopEnd, std::vector<size_t>(0), createArguments(loopStart, endArgs)) {
     }
 
 private:

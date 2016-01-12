@@ -42,7 +42,6 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
     string model_function = _name + "_" + FUNCTION_SPARSE_JACOBIAN;
     string localFunction = _name + "_" + localFunctionTypeName;
     string nlSuffix = "noloop_" + suffix;
-    IndexDclrOperationNode<Base> indexIt("it");
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
@@ -52,10 +51,10 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
     generateFunctionDeclarationSourceLoopForRev(_cache, langC, _name, keyName, loopGroups, generateLocalFunctionName);
 
     _cache << "\n";
-    printForRevUsageFunction<Base>(_cache, _baseTypeName, _name,
+    printForRevUsageFunction(_cache, _baseTypeName, _name,
             model_function, 2,
             localFunction, suffix,
-            keyName, indexIt, "jac",
+            keyName, "it", "jac",
             loopGroups,
             nonLoopElements,
             userJacElLocation, keyOrdered,

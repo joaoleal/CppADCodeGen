@@ -19,15 +19,23 @@ namespace CppAD {
 namespace cg {
 
 /**
- * An operation
+ * An operation node.
  * 
  * @author Joao Leal
  */
 template<class Base>
 class OperationNode {
+    friend class CodeHandler<Base>;
+public:
+    typedef typename std::vector<Argument<Base> >::iterator iterator;
+    typedef typename std::vector<Argument<Base> >::const_iterator const_iterator;
+    typedef typename std::vector<Argument<Base> >::const_reverse_iterator const_reverse_iterator;
+    typedef typename std::vector<Argument<Base> >::reverse_iterator reverse_iterator;
 public:
     static const std::set<CGOpCode> CUSTOM_NODE_CLASS;
 private:
+    // the source code handler that own this node (only null for temporary OperationNodes)
+    CodeHandler<Base>* handler_;
     // the operations used to create this variable (temporary variables only)
     CGOpCode operation_;
     // additional operation information
@@ -35,104 +43,16 @@ private:
     // the code blocks this block depends upon (empty for independent 
     // variables and possibly for the 1st assignment of a dependent variable)
     std::vector<Argument<Base> > arguments_;
+    // index in the CodeHandler managed nodes array
+    size_t pos_;
     // variable ID that was altered/assigned in this source code
     // (zero means that no left-hand variable is assigned)
     size_t var_id_;
-    //
-    size_t evaluation_order_;
-    // the total number of times the result of this operation is used
-    size_t total_use_count_;
-    // the ID of the last visit to this node
-    size_t last_visit_;
-    // the last source code order in the call graph that uses the result of
-    // this operation as an argument
-    size_t last_usage_order_;
     //
     size_t color_;
     // generated variable name
     std::string* name_;
 public:
-
-    inline OperationNode(const OperationNode& orig) :
-        operation_(orig.operation_),
-        info_(orig.info_),
-        arguments_(orig.arguments_),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(orig.last_usage_order_),
-        color_(orig.color_),
-        name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
-    }
-
-    inline OperationNode(CGOpCode op) :
-        operation_(op),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(0),
-        color_(0),
-        name_(nullptr) {
-    }
-
-    inline OperationNode(CGOpCode op,
-                         const Argument<Base>& arg) :
-        operation_(op),
-        arguments_ {arg},
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(0),
-        color_(0),
-        name_(nullptr) {
-    }
-
-    inline OperationNode(CGOpCode op,
-                         std::vector<Argument<Base> >&& args) :
-        operation_(op),
-        arguments_(std::move(args)),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(0),
-        color_(0),
-        name_(nullptr) {
-    }
-
-    inline OperationNode(CGOpCode op,
-                         std::vector<size_t>&& info,
-                         std::vector<Argument<Base> >&& args) :
-        operation_(op),
-        info_(std::move(info)),
-        arguments_(std::move(args)),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(0),
-        color_(0),
-        name_(nullptr) {
-    }
-
-    inline OperationNode(CGOpCode op,
-                         const std::vector<size_t>& info,
-                         const std::vector<Argument<Base> >& args) :
-        operation_(op),
-        info_(info),
-        arguments_(args),
-        var_id_(0),
-        evaluation_order_(0),
-        total_use_count_(0),
-        last_visit_(0),
-        last_usage_order_(0),
-        color_(0),
-        name_(nullptr) {
-    }
-
     inline void makeAlias(const Argument<Base>& other) {
         CPPADCG_ASSERT_UNKNOWN(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
 
@@ -143,12 +63,26 @@ public:
         delete name_;
         name_ = nullptr;
     }
+    
+    /**
+     * Provides the source code handler that own this node which can be only 
+     * null for temporary OperationNodes.
+     * 
+     * @return a CodeHandler which owns this nodes memory (possibly null)
+     */
+    inline CodeHandler<Base>* getCodeHandler() const {
+        return handler_;
+    }
 
+    /**
+     * @return Mathematical operation type which this node is the result of.
+     */
     inline CGOpCode getOperationType() const {
         return operation_;
     }
 
-    inline void setOperation(CGOpCode op, const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
+    inline void setOperation(CGOpCode op,
+                             const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
         CPPADCG_ASSERT_UNKNOWN(op == operation_ || CUSTOM_NODE_CLASS.find(op) == CUSTOM_NODE_CLASS.end()); // cannot transform into a node with a custom class
 
         operation_ = op;
@@ -197,86 +131,8 @@ public:
         var_id_ = var_id;
     }
 
-    inline size_t getEvaluationOrder() const {
-        return evaluation_order_;
-    }
-
-    inline void setEvaluationOrder(size_t evaluation_order) {
-        evaluation_order_ = evaluation_order;
-    }
-
-    /**
-     * Provides the total number of times the result of this operation is
-     * being used as an argument for another operation.
-     * @return the total usage count
-     */
-    inline size_t getTotalUsageCount() const {
-        return total_use_count_;
-    }
-
-    inline void setTotalUsageCount(size_t cout) {
-        total_use_count_ = cout;
-    }
-
-    inline void increaseTotalUsageCount() {
-        total_use_count_++;
-    }
-
-    inline void resetTotalUsageCount() {
-        total_use_count_ = 0;
-    }
-
-    /**
-     * Provides the ID of the last visitation to this node. 
-     * This is used to navigate through the operation tree.
-     * 
-     * @return the last visitation ID
-     */
-    inline size_t getLastVisitId() const {
-        return last_visit_;
-    }
-
-    /**
-     * Defines the ID of the last visitation to this node. 
-     * This is used to navigate through the operation tree.
-     * 
-     * @param visit the last visitation ID
-     */
-    inline void setVisitId(size_t visit) {
-        last_visit_ = visit;
-    }
-
-    inline void resetVisitId() {
-        last_visit_ = 0;
-    }
-
-    inline size_t getLastUsageEvaluationOrder() const {
-        return last_usage_order_;
-    }
-
-    inline void setLastUsageEvaluationOrder(size_t last) {
-        last_usage_order_ = last;
-        if (operation_ == CGOpCode::ArrayElement) {
-            OperationNode<Base>* array = arguments_[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGOpCode::ArrayCreation);
-            if (array->getLastUsageEvaluationOrder() < last) {
-                array->setLastUsageEvaluationOrder(last);
-            }
-        } else if (operation_ == CGOpCode::Tmp) {
-            OperationNode<Base>* declr = arguments_[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGOpCode::TmpDcl);
-            if (declr->getLastUsageEvaluationOrder() < last) {
-                declr->setLastUsageEvaluationOrder(last);
-            }
-        }
-    }
-
     inline void resetHandlerCounters() {
-        total_use_count_ = 0;
-        last_visit_ = 0;
         var_id_ = 0;
-        evaluation_order_ = 0;
-        last_usage_order_ = 0;
     }
 
     inline const std::string* getName() const {
@@ -302,13 +158,166 @@ public:
     inline void setColor(size_t color) {
         color_ = color;
     }
+    
+    /**
+     * Provides the index in CodeHandler which owns this OperationNode.
+     * A value of std::numeric_limits<size_t>::max() means that it is not 
+     * managed by any CodeHandler.
+     * This value can change if its position changes in the CodeHandler.
+     * 
+     * @return the index in the CodeHandler's array of managed nodes 
+     */
+    inline size_t getHandlerPosition() const {
+        return pos_;
+    }
+   
+    // argument iterators
 
+    inline iterator begin() {
+        return arguments_.begin();
+    }
+
+    inline const_iterator begin() const {
+        return arguments_.begin();
+    }
+
+    inline iterator end() {
+        return arguments_.end();
+    }
+
+    inline const_iterator end() const {
+        return arguments_.end();
+    }
+
+    inline reverse_iterator rbegin() {
+        return arguments_.rbegin();
+    }
+
+    inline const_reverse_iterator rbegin() const {
+        return arguments_.rbegin();
+    }
+
+    inline reverse_iterator rend() {
+        return arguments_.rend();
+    }
+
+    inline const_reverse_iterator rend() const {
+        return arguments_.rend();
+    }
+
+    inline const_iterator cbegin() const noexcept {
+        return arguments_.cbegin();
+    }
+
+    inline const_iterator cend() const noexcept {
+        return arguments_.cend();
+    }
+
+    inline const_reverse_iterator crbegin() const noexcept {
+        return arguments_.crbegin();
+    }
+
+    inline const_reverse_iterator crend() const noexcept {
+        return arguments_.crend();
+    }
+    
     inline virtual ~OperationNode() {
         delete name_;
     }
+    
+protected:
+    
+    inline OperationNode(const OperationNode& orig) :
+        handler_(orig.handler_),
+        operation_(orig.operation_),
+        info_(orig.info_),
+        arguments_(orig.arguments_),
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(orig.color_),
+        name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
+    }
 
-private:
+    inline OperationNode(CodeHandler<Base>* handler,
+                         CGOpCode op) :
+        handler_(handler),
+        operation_(op),
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(0),
+        name_(nullptr) {
+    }
 
+    inline OperationNode(CodeHandler<Base>* handler,
+                         CGOpCode op,
+                         const Argument<Base>& arg) :
+        handler_(handler),
+        operation_(op),
+        arguments_ {arg},
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(0),
+        name_(nullptr) {
+    }
+
+    inline OperationNode(CodeHandler<Base>* handler,
+                         CGOpCode op,
+                         std::vector<Argument<Base> >&& args) :
+        handler_(handler),
+        operation_(op),
+        arguments_(std::move(args)),
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(0),
+        name_(nullptr) {
+    }
+
+    inline OperationNode(CodeHandler<Base>* handler,
+                         CGOpCode op,
+                         std::vector<size_t>&& info,
+                         std::vector<Argument<Base> >&& args) :
+        handler_(handler),
+        operation_(op),
+        info_(std::move(info)),
+        arguments_(std::move(args)),
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(0),
+        name_(nullptr) {
+    }
+
+    inline OperationNode(CodeHandler<Base>* handler,
+                         CGOpCode op,
+                         const std::vector<size_t>& info,
+                         const std::vector<Argument<Base> >& args) :
+        handler_(handler),
+        operation_(op),
+        info_(info),
+        arguments_(args),
+        pos_(std::numeric_limits<size_t>::max()),
+        var_id_(0),
+        color_(0),
+        name_(nullptr) {
+    }
+    
+    inline void setHandlerPosition(size_t pos) {
+        pos_ = pos;
+    }
+
+public:
+
+    /**
+     * Creates a temporary operation node.
+     * 
+     * @warning This node should never be provided to a CodeHandler.
+     */
+    static std::unique_ptr<OperationNode<Base>> makeTemporaryNode(CGOpCode op,
+                                                                  const std::vector<size_t>& info,
+                                                                  const std::vector<Argument<Base> >& args) {
+        return std::unique_ptr<OperationNode<Base>> (new OperationNode<Base>(nullptr, op, info, args));
+    }
+    
+protected:
     static inline std::set<CGOpCode> makeCustomNodeClassesSet();
 
 };

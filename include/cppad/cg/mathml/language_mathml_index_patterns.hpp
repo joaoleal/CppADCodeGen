@@ -149,14 +149,14 @@ void LanguageMathML<Base>::printStaticIndexMatrix(std::ostringstream& os,
 template<class Base>
 inline void LanguageMathML<Base>::indexPattern2String(std::ostream& os,
                                                       const IndexPattern& ip,
-                                                      const IndexDclrOperationNode<Base>& index) {
+                                                      const OperationNode<Base>& index) {
     indexPattern2String(os, ip,{&index});
 }
 
 template<class Base>
 inline void LanguageMathML<Base>::indexPattern2String(std::ostream& os,
                                                       const IndexPattern& ip,
-                                                      const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
+                                                      const std::vector<const OperationNode<Base>*>& indexes) {
     std::stringstream ss;
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
@@ -236,7 +236,7 @@ inline void LanguageMathML<Base>::indexPattern2String(std::ostream& os,
 template<class Base>
 inline void LanguageMathML<Base>::linearIndexPattern2String(std::ostream& os,
                                                             const LinearIndexPattern& lip,
-                                                            const IndexDclrOperationNode<Base>& index) {
+                                                            const OperationNode<Base>& index) {
     long dy = lip.getLinearSlopeDy();
     long dx = lip.getLinearSlopeDx();
     long b = lip.getLinearConstantTerm();

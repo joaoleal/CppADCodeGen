@@ -21,16 +21,20 @@ namespace cg {
 template<class Base>
 class ScopePathElement {
 public:
+    typedef typename CodeHandler<Base>::ScopeIDType ScopeIDType;
+public:
     // the color/index associated with the scope
-    size_t color;
+    ScopeIDType color;
     // the node that marks the beginning of this scope
     OperationNode<Base>* beginning;
     // the node that marks the end of this scope
     OperationNode<Base>* end;
 public:
 
-    inline ScopePathElement(size_t color_ = 0, OperationNode<Base>* nEnd = nullptr, OperationNode<Base>* nBegin = nullptr) :
-        color(color_),
+    inline ScopePathElement(ScopeIDType color = 0,
+                            OperationNode<Base>* nEnd = nullptr,
+                            OperationNode<Base>* nBegin = nullptr) :
+        color(color),
         beginning(nBegin),
         end(nEnd) {
     }

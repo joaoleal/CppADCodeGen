@@ -33,8 +33,8 @@ protected:
     static const std::string _ATOMIC_PX;
     static const std::string _ATOMIC_PY;
 protected:
-    //
-    const std::unique_ptr<LanguageGenerationData<Base> >* _info;
+    // information from the code handler (not owned)
+    LanguageGenerationData<Base>* _info;
     // current indentation
     size_t _indentationLevel;
     // css style
@@ -91,7 +91,7 @@ protected:
     // the values in the temporary sparse array
     std::vector<const Argument<Base>*> _tmpSparseArrayValues;
     // indexes defined as function arguments
-    std::vector<const IndexDclrOperationNode<Base>*> _funcArgIndexes;
+    std::vector<const OperationNode<Base>*> _funcArgIndexes;
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
@@ -341,16 +341,16 @@ public:
         return _elseEnd;
     }
 
-    virtual void setFunctionIndexArgument(const IndexDclrOperationNode<Base>& funcArgIndex) {
+    virtual void setFunctionIndexArgument(const OperationNode<Base>& funcArgIndex) {
         _funcArgIndexes.resize(1);
         _funcArgIndexes[0] = &funcArgIndex;
     }
 
-    virtual void setFunctionIndexArguments(const std::vector<const IndexDclrOperationNode<Base>*>& funcArgIndexes) {
+    virtual void setFunctionIndexArguments(const std::vector<const OperationNode<Base>*>& funcArgIndexes) {
         _funcArgIndexes = funcArgIndexes;
     }
 
-    virtual const std::vector<const IndexDclrOperationNode<Base>*>& getFunctionIndexArguments() const {
+    virtual const std::vector<const OperationNode<Base>*>& getFunctionIndexArguments() const {
         return _funcArgIndexes;
     }
 
@@ -442,15 +442,15 @@ public:
 
     static void indexPattern2String(std::ostream& os,
                                     const IndexPattern& ip,
-                                    const IndexDclrOperationNode<Base>& index);
+                                    const OperationNode<Base>& index);
 
     static void indexPattern2String(std::ostream& os,
                                     const IndexPattern& ip,
-                                    const std::vector<const IndexDclrOperationNode<Base>*>& indexes);
+                                    const std::vector<const OperationNode<Base>*>& indexes);
 
     static inline void linearIndexPattern2String(std::ostream& os,
                                                  const LinearIndexPattern& lip,
-                                                 const IndexDclrOperationNode<Base>& index);
+                                                 const OperationNode<Base>& index);
 
     /***************************************************************************
      *                              protected
@@ -473,7 +473,7 @@ protected:
 
 
         // save some info
-        _info = &info;
+        _info = info.get();
         _independentSize = info->independent.size();
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
@@ -835,9 +835,10 @@ protected:
         _ss.str("");
     }
 
-    virtual bool createsNewVariable(const OperationNode<Base>& var) const override {
+    virtual bool createsNewVariable(const OperationNode<Base>& var,
+                                    size_t totalUseCount) const override {
         CGOpCode op = var.getOperationType();
-        if (var.getTotalUsageCount() > 1) {
+        if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
         } else {
             return ( op == CGOpCode::ArrayCreation ||
@@ -860,7 +861,7 @@ protected:
 
     virtual bool requiresVariableName(const OperationNode<Base>& var) const {
         CGOpCode op = var.getOperationType();
-        return (var.getTotalUsageCount() > 1 &&
+        return (_info->totalUseCount.get(var) > 1 &&
                 op != CGOpCode::AtomicForward &&
                 op != CGOpCode::AtomicReverse &&
                 op != CGOpCode::LoopStart &&
@@ -926,12 +927,12 @@ protected:
 
             } else if (op == CGOpCode::LoopIndexedDep) {
                 size_t pos = var.getInfo()[0];
-                const IndexPattern* ip = (*_info)->loopDependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopDependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedDependent(var, *ip));
 
             } else if (op == CGOpCode::LoopIndexedIndep) {
                 size_t pos = var.getInfo()[1];
-                const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
                 var.setName(_nameGen->generateIndexedIndependent(var, *ip));
 
             } else if (var.getVariableID() <= _independentSize) {
@@ -1486,7 +1487,7 @@ protected:
         _ss.str("");
 
         _code << _startEq
-                << (*_info)->atomicFunctionId2Name.at(id) << "<mo>.</mo><mo>forward</mo>"
+                << _info->atomicFunctionId2Name.at(id) << "<mo>.</mo><mo>forward</mo>"
                 "<mfenced separators=','>"
                 "<mn>" << q << "</mn>"
                 "<mn>" << p << "</mn>"
@@ -1537,7 +1538,7 @@ protected:
         _ss.str("");
 
         _code << _startEq
-                << (*_info)->atomicFunctionId2Name.at(id) << "<mo>.</mo><mo>reverse</mo>"
+                << _info->atomicFunctionId2Name.at(id) << "<mo>.</mo><mo>reverse</mo>"
                 "<mfenced separators=','>"
                 "<mn>" << p << "</mn>"
                 "<mrow class='tmp'>" << _ATOMIC_TX << "</mrow>"
@@ -1623,7 +1624,7 @@ protected:
 
         // CGLoopIndexedIndepOp
         size_t pos = node.getInfo()[1];
-        const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+        const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
         _code << _nameGen->generateIndexedIndependent(node, *ip);
     }
 

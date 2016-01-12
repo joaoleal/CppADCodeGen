@@ -69,10 +69,8 @@ protected:
                                                  const CppAD::vector<CGB>& tx) {
         std::vector<Arg> arrayArgs = asArguments(tx);
         std::vector<size_t> info; // empty
-        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation, info, arrayArgs);
-        handler.manageOperationNode(array);
 
-        return array;
+        return handler.makeNode(CGOpCode::ArrayCreation, info, arrayArgs);
     }
 
     static inline OperationNode<Base>* makeArray(CodeHandler<Base>& handler,
@@ -86,29 +84,20 @@ protected:
             arrayArgs[i] = asArgument(tx[i * (p + 1) + k]);
         }
 
-        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation,{}, arrayArgs);
-        handler.manageOperationNode(array);
-
-        return array;
+        return handler.makeNode(CGOpCode::ArrayCreation,{}, arrayArgs);
     }
 
     static inline OperationNode<Base>* makeZeroArray(CodeHandler<Base>& handler,
                                                      size_t size) {
         CppAD::vector<CGB> tx2(size);
         std::vector<Arg> arrayArgs = asArguments(tx2);
-        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::ArrayCreation,{}, arrayArgs);
-        handler.manageOperationNode(array);
 
-        return array;
+        return handler.makeNode(CGOpCode::ArrayCreation,{}, arrayArgs);
     }
 
     static inline OperationNode<Base>* makeEmptySparseArray(CodeHandler<Base>& handler,
                                                             size_t size) {
-        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::SparseArrayCreation,{size},
-        {
-        }); //empty args
-        handler.manageOperationNode(array);
-        return array;
+        return handler.makeNode(CGOpCode::SparseArrayCreation,{size}, {}); //empty args
     }
 
     static inline OperationNode<Base>* makeSparseArray(CodeHandler<Base>& handler,
@@ -133,9 +122,7 @@ protected:
             }
         }
 
-        OperationNode<Base>* array = new OperationNode<Base>(CGOpCode::SparseArrayCreation, arrayIdx, arrayArgs);
-        handler.manageOperationNode(array);
-        return array;
+        return handler.makeNode(CGOpCode::SparseArrayCreation, arrayIdx, arrayArgs);
     }
 
     static inline bool isParameters(const CppAD::vector<CGB>& tx) {

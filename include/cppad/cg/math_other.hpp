@@ -38,7 +38,7 @@ inline CppAD::cg::CG<Base> pow(const CppAD::cg::CG<Base>& x,
         handler = y.getCodeHandler();
     }
 
-    CG<Base> result(*handler, new OperationNode<Base>(CGOpCode::Pow,{x.argument(), y.argument()}));
+    CG<Base> result(*handler->makeNode(CGOpCode::Pow,{x.argument(), y.argument()}));
     if (x.isValueDefined() && y.isValueDefined()) {
         result.setValue(pow(x.getValue(), y.getValue()));
     }
@@ -84,7 +84,8 @@ inline CppAD::cg::CG<Base> sign(const CppAD::cg::CG<Base>& x) {
         }
     }
 
-    CG<Base> result(*x.getCodeHandler(), new OperationNode<Base>(CGOpCode::Sign, x.argument()));
+    CodeHandler<Base>& h = *x.getOperationNode()->getCodeHandler();
+    CG<Base> result(*h.makeNode(CGOpCode::Sign, x.argument()));
     if (x.isValueDefined()) {
         if (x.getValue() > Base(0.0)) {
             result.setValue(Base(1.0));

@@ -92,7 +92,6 @@
 #include <cppad/cg/argument.hpp>
 #include <cppad/cg/operation_node.hpp>
 #include <cppad/cg/nodes/index_operation_node.hpp>
-#include <cppad/cg/nodes/index_dclr_operation_node.hpp>
 #include <cppad/cg/nodes/index_assign_operation_node.hpp>
 #include <cppad/cg/nodes/loop_start_operation_node.hpp>
 #include <cppad/cg/nodes/loop_end_operation_node.hpp>
@@ -121,6 +120,7 @@
 
 // ---------------------------------------------------------------------------
 #include <cppad/cg/code_handler.hpp>
+#include <cppad/cg/code_handler_vector.hpp>
 #include <cppad/cg/code_handler_loops.hpp>
 
 // ---------------------------------------------------------------------------

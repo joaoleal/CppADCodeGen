@@ -745,7 +745,7 @@ private:
                 }
 
                 size_t i = equationOrder_.at(eq);
-                deps[i] = CGB(handler_, aClone);
+                deps[i] = CGB(aClone);
             }
         }
 
@@ -946,7 +946,7 @@ private:
             return Argument<Base>(*clonesTemporary_.at(id));
         }
 
-        handler_.markVisited(node);
+        //handler_.markVisited(node);
 
         id = idCounter_++;
         node.setVariableID(id);
@@ -975,11 +975,10 @@ private:
                 }
             }
 
-            OperationNode<Base>* cloneOp = new OperationNode<Base>(
+            OperationNode<Base>* cloneOp = handler_.makeNode(
                     node.getOperationType(),
                     node.getInfo(),
                     cloneArgs);
-            handler_.manageOperationNode(cloneOp);
 
             clonesTemporary_[id] = cloneOp;
             return Argument<Base>(*cloneOp);
@@ -1088,8 +1087,6 @@ private:
         }
 
         node.setVariableID(0);
-        node.resetVisitId();
-        node.setLastUsageEvaluationOrder(0);
 
         const std::vector<Argument<Base> >& args = node.getArguments();
         size_t arg_size = args.size();

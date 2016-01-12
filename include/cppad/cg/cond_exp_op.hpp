@@ -40,23 +40,28 @@ inline cg::CodeHandler<Base>* findCodeHandler(const cg::CG<Base>& left,
                                               const cg::CG<Base>& trueCase,
                                               const cg::CG<Base>& falseCase) throw (cg::CGException) {
     cg::CodeHandler<Base>* handler;
+    
+    cg::CodeHandler<Base>* lh = left.getCodeHandler();
+    cg::CodeHandler<Base>* rh = right.getCodeHandler();
+    cg::CodeHandler<Base>* th = trueCase.getCodeHandler();
+    cg::CodeHandler<Base>* fh = falseCase.getCodeHandler();
 
     if (!left.isParameter()) {
-        handler = left.getCodeHandler();
+        handler = lh;
     } else if (!right.isParameter()) {
-        handler = right.getCodeHandler();
+        handler = rh;
     } else if (!trueCase.isParameter()) {
-        handler = trueCase.getCodeHandler();
+        handler = th;
     } else if (!falseCase.isParameter()) {
-        handler = falseCase.getCodeHandler();
+        handler = fh;
     } else {
         CPPAD_ASSERT_UNKNOWN(0);
         throw cg::CGException("Unexpected error!");
     }
 
-    if ((!right.isParameter() && right.getCodeHandler() != handler)
-            || (!trueCase.isParameter() && trueCase.getCodeHandler() != handler)
-            || (!falseCase.isParameter() && falseCase.getCodeHandler() != handler)) {
+    if ((!right.isParameter() && rh != handler)
+            || (!trueCase.isParameter() && th != handler)
+            || (!falseCase.isParameter() && fh != handler)) {
         throw cg::CGException("Attempting to use different source code generation handlers in the same source code generation");
     }
 
@@ -91,7 +96,7 @@ inline cg::CG<Base> CondExp(cg::CGOpCode op,
 
         CodeHandler<Base>* handler = findCodeHandler(left, right, trueCase, falseCase);
 
-        CG<Base> result(*handler, new OperationNode<Base> (op,{left.argument(), right.argument(), trueCase.argument(), falseCase.argument()}));
+        CG<Base> result(*handler->makeNode(op,{left.argument(), right.argument(), trueCase.argument(), falseCase.argument()}));
 
         if (left.isValueDefined() && right.isValueDefined()) {
             if (compare(left.getValue(), right.getValue())) {

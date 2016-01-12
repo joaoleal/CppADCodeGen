@@ -252,9 +252,9 @@ public:
     }
 protected:
 
-    static inline std::vector<const IndexDclrOperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset = 0) {
+    static inline std::vector<const OperationNode<Base>*> getIndexes(const OperationNode<Base>& var, size_t offset = 0) {
         const std::vector<Argument<Base> >& args = var.getArguments();
-        std::vector<const IndexDclrOperationNode<Base>*> indexes(args.size() - offset);
+        std::vector<const OperationNode<Base>*> indexes(args.size() - offset);
 
         for (size_t a = offset; a < args.size(); a++) {
             CPPADCG_ASSERT_KNOWN(args[a].getOperation() != nullptr, "Invalid argument");

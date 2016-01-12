@@ -83,21 +83,20 @@ inline void LanguageC<Base>::printRandomIndexPatternDeclaration(std::ostringstre
 
 template<class Base>
 inline void LanguageC<Base>::createIndexDeclaration() {
-    if (_info == nullptr || _info->get() == nullptr)
+    if (_info == nullptr)
         return;
 
-    const LanguageGenerationData<Base>& info = *_info->get();
-    if (info.indexes.empty())
+    if (_info->indexes.empty())
         return;
 
-    std::set<const IndexDclrOperationNode<Base>*> funcArgs(_funcArgIndexes.begin(), _funcArgIndexes.end());
+    std::set<const OperationNode<Base>*> funcArgs(_funcArgIndexes.begin(), _funcArgIndexes.end());
 
     bool first = true;
 
-    printRandomIndexPatternDeclaration(_ss, _spaces, (*_info)->indexRandomPatterns);
+    printRandomIndexPatternDeclaration(_ss, _spaces, _info->indexRandomPatterns);
 
     _ss << _spaces << U_INDEX_TYPE;
-    for (const IndexDclrOperationNode<Base>* iti : info.indexes) {
+    for (const OperationNode<Base>* iti : _info->indexes) {
 
         if (funcArgs.find(iti) == funcArgs.end()) {
             if (first) first = false;
@@ -180,13 +179,28 @@ void LanguageC<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
 template<class Base>
 inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
-                                                        const IndexDclrOperationNode<Base>& index) {
+                                                        const OperationNode<Base>& index) {
+    return indexPattern2String(ip,{index.getName()});
+}
+
+template<class Base>
+inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
+                                                        const std::string& index) {
     return indexPattern2String(ip,{&index});
 }
 
 template<class Base>
 inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
-                                                        const std::vector<const IndexDclrOperationNode<Base>*>& indexes) {
+                                                        const std::vector<const OperationNode<Base>*>& indexes) {
+    std::vector<const std::string*> indexStr(indexes.size());
+    for (size_t i = 0; i < indexes.size(); ++i)
+        indexStr[i] = indexes[i]->getName();
+    return indexPattern2String(ip, indexStr);
+}
+
+template<class Base>
+inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
+                                                        const std::vector<const std::string*>& indexes) {
     std::stringstream ss;
     switch (ip.getType()) {
         case IndexPatternType::Linear: // y = x * a + b
@@ -209,7 +223,7 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
                 ++its;
                 size_t xStart = its->first;
 
-                ss << "(" << (*indexes[0]->getName()) << "<" << xStart << ")? "
+                ss << "(" << (*indexes[0]) << "<" << xStart << ")? "
                         << indexPattern2String(*lp, *indexes[0]) << ": ";
             }
             ss << indexPattern2String(*its->second, *indexes[0]);
@@ -243,14 +257,14 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
             CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
             const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
             CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
-            return rip.getName() + "[" + (*indexes[0]->getName()) + "]";
+            return rip.getName() + "[" + (*indexes[0]) + "]";
         }
         case IndexPatternType::Random2D:
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
             const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);
             CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
-            return rip.getName() + "[" + (*indexes[0]->getName()) + "][" + (*indexes[1]->getName()) + "]";
+            return rip.getName() + "[" + (*indexes[0]) + "][" + (*indexes[1]) + "]";
         }
         default:
             CPPADCG_ASSERT_UNKNOWN(false); // should never reach this
@@ -260,7 +274,13 @@ inline std::string LanguageC<Base>::indexPattern2String(const IndexPattern& ip,
 
 template<class Base>
 inline std::string LanguageC<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
-                                                              const IndexDclrOperationNode<Base>& index) {
+                                                              const OperationNode<Base>& index) {
+    return linearIndexPattern2String(lip, *index.getName());
+}
+
+template<class Base>
+inline std::string LanguageC<Base>::linearIndexPattern2String(const LinearIndexPattern& lip,
+                                                              const std::string& index) {
     long dy = lip.getLinearSlopeDy();
     long dx = lip.getLinearSlopeDx();
     long b = lip.getLinearConstantTerm();
@@ -271,7 +291,7 @@ inline std::string LanguageC<Base>::linearIndexPattern2String(const LinearIndexP
         if (xOffset != 0) {
             ss << "(";
         }
-        ss << (*index.getName());
+        ss << index;
         if (xOffset != 0) {
             ss << " - " << xOffset << ")";
         }

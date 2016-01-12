@@ -182,7 +182,7 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
              * from independents array in a loop
              */
             size_t pos = refOp.getInfo()[1];
-            IndexPattern* refIp = (*_info)->loopIndependentIndexPatterns[pos];
+            IndexPattern* refIp = _info->loopIndependentIndexPatterns[pos];
             if (refIp->getType() != IndexPatternType::Linear) {
                 return starti; // cannot determine consecutive elements
             }
@@ -202,7 +202,7 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break;
 
                 pos = args[i].getOperation()->getInfo()[1];
-                const IndexPattern* ip = (*_info)->loopIndependentIndexPatterns[pos];
+                const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
                 if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
@@ -223,14 +223,11 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
             Plane2DIndexPattern p2dip(lip2,
                                       new LinearIndexPattern(0, 1, 1, 0));
 
-            IndexDclrOperationNode<Base> indexI("i");
-            IndexOperationNode<Base> iterationIndexOp(indexI);
+            std::unique_ptr<OperationNode<Base>> op2(OperationNode<Base>::makeTemporaryNode(CGOpCode::LoopIndexedIndep, refOp.getInfo(), refOp.getArguments()));
+            op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
+            op2->getArguments().push_back(_info->auxIterationIndexOp);
 
-            OperationNode<Base> op2(refOp.getOperationType(), refOp.getInfo(), refOp.getArguments()); //clone
-            op2.getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
-            op2.getArguments().push_back(iterationIndexOp);
-
-            arrayAssign << _nameGen->generateIndexedIndependent(op2, p2dip);
+            arrayAssign << _nameGen->generateIndexedIndependent(*op2, p2dip);
 
         } else {
             // no loop used

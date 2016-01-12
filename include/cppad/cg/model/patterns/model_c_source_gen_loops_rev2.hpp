@@ -66,12 +66,16 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
 
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
-
-    IndexDclrOperationNode<Base> indexJrowDcl("jrow");
-    IndexDclrOperationNode<Base> indexLocalItDcl("it");
-    IndexDclrOperationNode<Base> indexLocalItCountDcl("itCount");
-    IndexDclrOperationNode<Base> indexIterationDcl(LoopModel<Base>::ITERATION_INDEX_NAME);
-    IndexOperationNode<Base> jrowIndexOp(indexJrowDcl);
+    
+    CodeHandler<Base> handler;
+    handler.setJobTimer(_jobTimer);
+    handler.setZeroDependents(false);
+    
+    auto& indexJrowDcl = *handler.makeIndexDclrNode("jrow");
+    auto& indexLocalItDcl = *handler.makeIndexDclrNode("it");
+    auto& indexLocalItCountDcl = *handler.makeIndexDclrNode("itCount");
+    auto& indexIterationDcl = *handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
+    auto& jrowIndexOp = *handler.makeIndexNode(indexJrowDcl);
 
     std::vector<OperationNode<Base>* > localNodes(5);
     localNodes[0] = &indexJrowDcl;
@@ -79,10 +83,6 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
     localNodes[2] = &indexLocalItCountDcl;
     localNodes[3] = &indexIterationDcl;
     localNodes[4] = &jrowIndexOp;
-
-    CodeHandler<Base> handler;
-    handler.setJobTimer(_jobTimer);
-    handler.setZeroDependents(false);
 
     // independent variables
     vector<CGBase> x(n);
@@ -154,7 +154,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
         for (size_t k = 0; k < tmpsAlias.size(); k++) {
             // to be defined later
-            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGOpCode::Alias));
+            tmpsAlias[k] = CG<Base>(*handler.makeNode(CGOpCode::Alias));
         }
     }
 
@@ -166,8 +166,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         LoopModel<Base>& lModel = *itLoop2Info->first;
         HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
-        info.iterationIndexOp = new IndexOperationNode<Base>(indexIterationDcl);
-        handler.manageOperationNodeMemory(info.iterationIndexOp);
+        info.iterationIndexOp = handler.makeIndexNode(indexIterationDcl);
         set<IndexOperationNode<Base>*> indexesOps;
         indexesOps.insert(info.iterationIndexOp);
 
@@ -311,9 +310,9 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
             /**
              * Local iteration count pattern
              */
-            std::unique_ptr<IndexOperationNode<Base> > localIterIndexOp;
-            std::unique_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
-            std::unique_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
+            IndexOperationNode<Base>* localIterIndexOp = nullptr;
+            IndexOperationNode<Base>* localIterCountIndexOp = nullptr;
+            IndexAssignOperationNode<Base>* itCountAssignOp = nullptr;
             std::unique_ptr<IndexPattern> indexLocalItCountPattern;
 
             if (createsLoop) {
@@ -328,20 +327,19 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
 
                 if (IndexPattern::isConstant(*indexLocalItCountPattern.get())) {
                     size_t itCount = group.jRow2Iterations.begin()->second.size();
-                    loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, itCount);
+                    loopStart = handler.makeLoopStartNode(indexLocalItDcl, itCount);
                 } else {
-                    itCountAssignOp.reset(new IndexAssignOperationNode<Base>(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jrowIndexOp));
-                    localIterCountIndexOp.reset(new IndexOperationNode<Base>(*itCountAssignOp.get()));
-                    loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, *localIterCountIndexOp.get());
+                    itCountAssignOp = handler.makeIndexAssignNode(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jrowIndexOp);
+                    localIterCountIndexOp = handler.makeIndexNode(*itCountAssignOp);
+                    loopStart = handler.makeLoopStartNode(indexLocalItDcl, *localIterCountIndexOp);
                 }
-                handler.manageOperationNodeMemory(loopStart);
 
-                localIterIndexOp.reset(new IndexOperationNode<Base>(*loopStart));
+                localIterIndexOp = handler.makeIndexNode(*loopStart);
             }
 
 
-            IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), &jrowIndexOp, localIterIndexOp.get());
-            info.iterationIndexOp->makeAssigmentDependent(iterationIndexPatternOp);
+            auto* iterationIndexPatternOp = handler.makeIndexAssignNode(indexIterationDcl, *itPattern.get(), &jrowIndexOp, localIterIndexOp);
+            info.iterationIndexOp->makeAssigmentDependent(*iterationIndexPatternOp);
 
             map<size_t, set<size_t> > jrow2CompressedLoc;
             std::vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
@@ -375,10 +373,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                 pxCustom.resize(1);
 
                 // {0} : must point to itself since there is only one dependent
-                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{0},
-                {
-                                               *loopEnd
-                }));
+                pxCustom[0] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{0},{*loopEnd}));
 
             } else {
                 /**

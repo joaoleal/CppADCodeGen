@@ -28,19 +28,8 @@ namespace cg {
  */
 template<class Base>
 class IndexOperationNode : public OperationNode<Base> {
+    friend class CodeHandler<Base>;
 public:
-
-    inline IndexOperationNode(IndexDclrOperationNode<Base>& indexDcl) :
-        OperationNode<Base>(CGOpCode::Index, indexDcl) {
-    }
-
-    inline IndexOperationNode(LoopStartOperationNode<Base>& loopStart) :
-        OperationNode<Base>(CGOpCode::Index,{loopStart.getIndex(), loopStart}) {
-    }
-
-    inline IndexOperationNode(IndexAssignOperationNode<Base>& indexAssign) :
-        OperationNode<Base>(CGOpCode::Index,{indexAssign.getIndex(), indexAssign}) {
-    }
 
     inline bool isDefinedLocally() const {
         return this->getArguments().size() > 1;
@@ -53,14 +42,14 @@ public:
         return *args.back().getOperation();
     }
 
-    inline const IndexDclrOperationNode<Base>& getIndex() const {
+    inline const OperationNode<Base>& getIndex() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
         OperationNode<Base>* aNode = args[0].getOperation();
         CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
 
-        return static_cast<const IndexDclrOperationNode<Base>&> (*aNode);
+        return static_cast<const OperationNode<Base>&> (*aNode);
     }
 
     inline void makeAssigmentDependent(IndexAssignOperationNode<Base>& indexAssign) {
@@ -72,6 +61,23 @@ public:
     }
 
     inline virtual ~IndexOperationNode() {
+    }
+
+protected:
+
+    inline IndexOperationNode(CodeHandler<Base>* handler,
+                              OperationNode<Base>& indexDcl) :
+        OperationNode<Base>(handler, CGOpCode::Index, indexDcl) {
+    }
+
+    inline IndexOperationNode(CodeHandler<Base>* handler,
+                              LoopStartOperationNode<Base>& loopStart) :
+        OperationNode<Base>(handler, CGOpCode::Index,{loopStart.getIndex(), loopStart}) {
+    }
+
+    inline IndexOperationNode(CodeHandler<Base>* handler,
+                              IndexAssignOperationNode<Base>& indexAssign) :
+        OperationNode<Base>(handler, CGOpCode::Index,{indexAssign.getIndex(), indexAssign}) {
     }
 
 };

@@ -36,9 +36,8 @@ inline void CodeHandler<Base>::substituteIndependent(OperationNode<Base>& indep,
     size_t indepIndex = getIndependentVariableIndex(indep);
 
     //check if the dependent variable belongs to this handler
-    typename std::vector<OperationNode<Base> *>::const_iterator it =
-            std::find(_codeBlocks.begin(), _codeBlocks.end(), &dep);
-    if (it == _codeBlocks.end()) {
+    size_t pos = dep.getHandlerPosition();
+    if (pos >= _codeBlocks.size() || &dep != _codeBlocks[pos]) {
         throw CGException("The dependent variable does not belong to this handler");
     }
 

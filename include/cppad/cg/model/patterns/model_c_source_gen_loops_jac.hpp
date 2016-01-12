@@ -303,8 +303,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(C
     /***********************************************************************
      * Generate loop body
      **********************************************************************/
-    IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
-    handler.manageOperationNodeMemory(iterationIndexDcl);
+    OperationNode<Base>* iterationIndexDcl = handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
 
     vector<CGBase> jacLoop;
 
@@ -320,11 +319,9 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(C
         /**
          * make the loop start
          */
-        LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, lModel.getIterationCount());
-        handler.manageOperationNodeMemory(loopStart);
+        LoopStartOperationNode<Base>* loopStart = handler.makeLoopStartNode(*iterationIndexDcl, lModel.getIterationCount());
 
-        IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(*loopStart);
-        handler.manageOperationNodeMemory(iterationIndexOp);
+        IndexOperationNode<Base>* iterationIndexOp = handler.makeIndexNode(*loopStart);
         std::set<IndexOperationNode<Base>*> indexesOps;
         indexesOps.insert(iterationIndexOp);
 
@@ -393,10 +390,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseJacobianWithLoops(C
 
         for (size_t e : allLocations) {
             // an additional alias variable is required so that each dependent variable can have its own ID
-            jac[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{e},
-            {
-                                      *loopEnd
-            }));
+            jac[e] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{e}, {*loopEnd}));
         }
 
         /**

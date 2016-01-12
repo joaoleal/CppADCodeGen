@@ -31,18 +31,18 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
                 return *this;
             }
 
-            handler = right.getCodeHandler();
+            handler = right.opNode_->getCodeHandler();
 
         } else if (right.isParameter()) {
             if (right.isIdenticalZero()) {
                 return *this; // nothing to do
             }
 
-            handler = getCodeHandler();
+            handler = opNode_->getCodeHandler();
 
-        } else {
-            CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
-            handler = getCodeHandler();
+        } else { // both left and right hand sides are variables
+            CPPADCG_ASSERT_UNKNOWN(opNode_->getCodeHandler() == right.opNode_->getCodeHandler());
+            handler = opNode_->getCodeHandler();
         }
 
         std::unique_ptr<Base> value;
@@ -50,7 +50,7 @@ inline CG<Base>& CG<Base>::operator+=(const CG<Base> &right) {
             value.reset(new Base(getValue() + right.getValue()));
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Add,{argument(), right.argument()}), value);
+        makeVariable(*handler->makeNode(CGOpCode::Add,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -64,18 +64,18 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
     } else {
         CodeHandler<Base>* handler;
         if (isParameter()) {
-            handler = right.getCodeHandler();
+            handler = right.opNode_->getCodeHandler();
 
         } else if (right.isParameter()) {
             if (right.isIdenticalZero()) {
                 return *this; // nothing to do
             }
 
-            handler = getCodeHandler();
+            handler = opNode_->getCodeHandler();
 
-        } else {
-            CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
-            handler = getCodeHandler();
+        } else { // both left and right hand sides are variables
+            CPPADCG_ASSERT_UNKNOWN(opNode_->getCodeHandler() == right.opNode_->getCodeHandler());
+            handler = opNode_->getCodeHandler();
         }
 
         std::unique_ptr<Base> value;
@@ -83,7 +83,7 @@ inline CG<Base>& CG<Base>::operator-=(const CG<Base> &right) {
             value.reset(new Base(getValue() - right.getValue()));
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Sub,{argument(), right.argument()}), value);
+        makeVariable(*handler->makeNode(CGOpCode::Sub,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -104,7 +104,7 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
                 return *this;
             }
 
-            handler = right.getCodeHandler();
+            handler = right.opNode_->getCodeHandler();
 
         } else if (right.isParameter()) {
             if (right.isIdenticalZero()) {
@@ -114,11 +114,11 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
                 return *this; // nothing to do
             }
 
-            handler = getCodeHandler();
+            handler = opNode_->getCodeHandler();
 
-        } else {
-            CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
-            handler = getCodeHandler();
+        } else {  // both left and right hand sides are variables
+            CPPADCG_ASSERT_UNKNOWN(opNode_->getCodeHandler() == right.opNode_->getCodeHandler());
+            handler = opNode_->getCodeHandler();
         }
 
         std::unique_ptr<Base> value;
@@ -126,7 +126,7 @@ inline CG<Base>& CG<Base>::operator*=(const CG<Base> &right) {
             value.reset(new Base(getValue() * right.getValue()));
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Mul,{argument(), right.argument()}), value);
+        makeVariable(*handler->makeNode(CGOpCode::Mul,{argument(), right.argument()}), value);
     }
 
     return *this;
@@ -144,18 +144,18 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
                 return *this; // nothing to do (does not consider that right might be infinity or zero)
             }
 
-            handler = right.getCodeHandler();
+            handler = right.opNode_->getCodeHandler();
 
         } else if (right.isParameter()) {
             if (right.isIdenticalOne()) {
                 return *this; // nothing to do
             }
 
-            handler = getCodeHandler();
+            handler = opNode_->getCodeHandler();
 
-        } else {
-            CPPADCG_ASSERT_UNKNOWN(getCodeHandler() == right.getCodeHandler());
-            handler = getCodeHandler();
+        } else {  // both left and right hand sides are variables
+            CPPADCG_ASSERT_UNKNOWN(opNode_->getCodeHandler() == right.opNode_->getCodeHandler());
+            handler = opNode_->getCodeHandler();
         }
 
         std::unique_ptr<Base> value;
@@ -163,7 +163,7 @@ inline CG<Base>& CG<Base>::operator/=(const CG<Base> &right) {
             value.reset(new Base(getValue() / right.getValue()));
         }
 
-        makeVariable(*handler, new OperationNode<Base>(CGOpCode::Div,{argument(), right.argument()}), value);
+        makeVariable(*handler->makeNode(CGOpCode::Div,{argument(), right.argument()}), value);
     }
 
     return *this;

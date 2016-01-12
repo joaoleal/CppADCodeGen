@@ -98,12 +98,8 @@ public:
                              size_t iDepRef) :
         depRef(ref),
         depRefIndex(iDepRef),
-        dependents {
-        iDepRef
-    }
-
-    ,
-    handler_(ref.getCodeHandler()) {
+        dependents {iDepRef},
+        handler_(ref.getCodeHandler()) {
     }
 
     EquationPattern(const EquationPattern<Base>& other) = delete;
@@ -169,19 +165,6 @@ public:
         size_t size = args.size();
         for (size_t a = 0; a < size; a++) {
             uncolor(args[a].getOperation());
-        }
-    }
-
-    static inline void clearEvaluationOrder(OperationNode<Base>* node) {
-        if (node == nullptr || node->getEvaluationOrder() == 0)
-            return;
-
-        node->setEvaluationOrder(0);
-
-        const std::vector<Argument<Base> >& args = node->getArguments();
-        size_t size = args.size();
-        for (size_t a = 0; a < size; a++) {
-            clearEvaluationOrder(args[a].getOperation());
         }
     }
 
@@ -260,8 +243,11 @@ private:
     bool comparePath(const CG<Base>& dep1,
                      const CG<Base>& dep2,
                      size_t dep2Index) {
-        if (dep1.getCodeHandler() != dep2.getCodeHandler()) {
-            if (dep1.getCodeHandler() != nullptr && dep2.getCodeHandler() != nullptr)
+        CodeHandler<Base>* h1 = dep1.getCodeHandler();
+        CodeHandler<Base>* h2 = dep2.getCodeHandler();
+        
+        if (h1 != h2) {
+            if (h1 != nullptr && h2 != nullptr)
                 throw CGException("Only one code handler allowed");
             return false;
         }

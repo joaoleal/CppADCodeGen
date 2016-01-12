@@ -30,14 +30,17 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
     size_t n = _fun.Domain();
+    
+    CodeHandler<Base> handler;
+    handler.setJobTimer(_jobTimer);
+    handler.setZeroDependents(false);
 
-
-    IndexDclrOperationNode<Base> indexJcolDcl("jcol");
-    IndexDclrOperationNode<Base> indexLocalItDcl("it");
-    IndexDclrOperationNode<Base> indexLocalItCountDcl("itCount");
-    IndexDclrOperationNode<Base> indexIterationDcl(LoopModel<Base>::ITERATION_INDEX_NAME);
-    IndexOperationNode<Base> iterationIndexOp(indexIterationDcl);
-    IndexOperationNode<Base> jcolIndexOp(indexJcolDcl);
+    auto& indexJcolDcl = *handler.makeIndexDclrNode("jcol");
+    auto& indexLocalItDcl = *handler.makeIndexDclrNode("it");
+    auto& indexLocalItCountDcl = *handler.makeIndexDclrNode("itCount");
+    auto& indexIterationDcl = *handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
+    auto& iterationIndexOp = *handler.makeIndexNode(indexIterationDcl);
+    auto& jcolIndexOp = *handler.makeIndexNode(indexJcolDcl);
 
     std::vector<OperationNode<Base>*> localNodes(6);
     localNodes[0] = &indexJcolDcl;
@@ -46,10 +49,6 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     localNodes[3] = &indexIterationDcl;
     localNodes[4] = &iterationIndexOp;
     localNodes[5] = &jcolIndexOp;
-
-    CodeHandler<Base> handler;
-    handler.setJobTimer(_jobTimer);
-    handler.setZeroDependents(false);
 
     size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
@@ -277,9 +276,9 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             /**
              * Local iteration count pattern
              */
-            std::unique_ptr<IndexOperationNode<Base> > localIterIndexOp;
-            std::unique_ptr<IndexOperationNode<Base> > localIterCountIndexOp;
-            std::unique_ptr<IndexAssignOperationNode<Base> > itCountAssignOp;
+            IndexOperationNode<Base>* localIterIndexOp = nullptr;
+            IndexOperationNode<Base>* localIterCountIndexOp = nullptr;
+            IndexAssignOperationNode<Base>* itCountAssignOp = nullptr;
             std::unique_ptr<IndexPattern> indexLocalItCountPattern;
 
             if (createsLoop) {
@@ -294,20 +293,19 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
                 if (IndexPattern::isConstant(*indexLocalItCountPattern.get())) {
                     size_t itCount = group.jCol2Iterations.begin()->second.size();
-                    loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, itCount);
+                    loopStart = handler.makeLoopStartNode(indexLocalItDcl, itCount);
                 } else {
-                    itCountAssignOp.reset(new IndexAssignOperationNode<Base>(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jcolIndexOp));
-                    localIterCountIndexOp.reset(new IndexOperationNode<Base>(*itCountAssignOp.get()));
-                    loopStart = new LoopStartOperationNode<Base>(indexLocalItDcl, *localIterCountIndexOp.get());
+                    itCountAssignOp = handler.makeIndexAssignNode(indexLocalItCountDcl, *indexLocalItCountPattern.get(), jcolIndexOp);
+                    localIterCountIndexOp = handler.makeIndexNode(*itCountAssignOp);
+                    loopStart = handler.makeLoopStartNode(indexLocalItDcl, *localIterCountIndexOp);
                 }
-                handler.manageOperationNodeMemory(loopStart);
 
-                localIterIndexOp.reset(new IndexOperationNode<Base>(*loopStart));
+                localIterIndexOp = handler.makeIndexNode(*loopStart);
             }
 
 
-            IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), &jcolIndexOp, localIterIndexOp.get());
-            iterationIndexOp.makeAssigmentDependent(iterationIndexPatternOp);
+            auto* iterationIndexPatternOp = handler.makeIndexAssignNode(indexIterationDcl, *itPattern.get(), &jcolIndexOp, localIterIndexOp);
+            iterationIndexOp.makeAssigmentDependent(*iterationIndexPatternOp);
 
             map<size_t, set<size_t> > jcol2CompressedLoc;
             std::vector<pair<CG<Base>, IndexPattern*> > indexedLoopResults;
@@ -340,10 +338,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                  */
                 pxCustom.resize(1);
                 // {0} : must point to itself since there is only one dependent
-                pxCustom[0] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{0},
-                {
-                                               *loopEnd
-                }));
+                pxCustom[0] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{0}, {*loopEnd}));
 
             } else {
                 /**

@@ -576,8 +576,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
     /**
      * prepare loop independents
      */
-    IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
-    handler.manageOperationNodeMemory(iterationIndexDcl);
+    OperationNode<Base>* iterationIndexDcl = handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
 
     // temporaries (zero order)
     vector<CGBase> tmpsAlias;
@@ -587,7 +586,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
         tmpsAlias.resize(fun.Range() - nonIndexdedEqSize);
         for (size_t k = 0; k < tmpsAlias.size(); k++) {
             // to be defined later
-            tmpsAlias[k] = handler.createCG(new OperationNode<Base>(CGOpCode::Alias));
+            tmpsAlias[k] = CG<Base>(*handler.makeNode(CGOpCode::Alias));
         }
     }
 
@@ -602,11 +601,9 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
         /**
          * make the loop start
          */
-        info.loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, lModel.getIterationCount());
-        handler.manageOperationNodeMemory(info.loopStart);
+        info.loopStart = handler.makeLoopStartNode(*iterationIndexDcl, lModel.getIterationCount());
 
-        info.iterationIndexOp = new IndexOperationNode<Base>(*info.loopStart);
-        handler.manageOperationNodeMemory(info.iterationIndexOp);
+        info.iterationIndexOp = handler.makeIndexNode(*info.loopStart);
         set<IndexOperationNode<Base>*> indexesOps;
         indexesOps.insert(info.iterationIndexOp);
 
@@ -933,13 +930,13 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
         for (size_t e : lowerHessOrder) {
             // an additional alias variable is required so that each dependent variable can have its own ID
             if (hess[e].isParameter() && hess[e].isIdenticalZero()) {
-                hess[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentMultiAssign, *info.loopEnd));
+                hess[e] = CG<Base>(*handler.makeNode(CGOpCode::DependentMultiAssign, *info.loopEnd));
 
             } else if (hess[e].getOperationNode() != nullptr && hess[e].getOperationNode()->getOperationType() == CGOpCode::DependentMultiAssign) {
                 hess[e].getOperationNode()->getArguments().push_back(*info.loopEnd);
 
             } else {
-                hess[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentMultiAssign,{asArgument(hess[e]), *info.loopEnd}));
+                hess[e] = handler.createCG(*handler.makeNode(CGOpCode::DependentMultiAssign,{asArgument(hess[e]), *info.loopEnd}));
             }
         }
 
@@ -961,7 +958,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareSparseHessianWithLoops(Co
     // make use of the symmetry of the Hessian in order to reduce operations
     for (const auto& it2 : duplicates) {
         if (hess[it2.second].isVariable())
-            hess[it2.first] = handler.createCG(new OperationNode<Base> (CGOpCode::Alias, asArgument(hess[it2.second])));
+            hess[it2.first] = CG<Base>(*handler.makeNode(CGOpCode::Alias, asArgument(hess[it2.second])));
         else
             hess[it2.first] = hess[it2.second].getValue();
     }

@@ -21,8 +21,6 @@ namespace cg {
 /**
  * Utility class used for some code transformation.
  * 
- * The color field of Operation nodes is used.
- *
  * @todo implement nonrecursive algorithm (so that there will never be any stack limit issues)
  */
 template<class ScalarIn, class ScalarOut, class ActiveOut>
@@ -30,8 +28,8 @@ class EvaluatorBase {
 protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
-    std::vector<ActiveOut*> evals_;
-    std::vector<CppAD::vector<ActiveOut>* > evalsArrays_;
+    CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
+    std::map<size_t, CppAD::vector<ActiveOut>* > evalsArrays_;
     std::set<OperationNode<ScalarIn>*> evalsAtomic_;
     std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
     bool underEval_;
@@ -40,9 +38,10 @@ public:
     /**
      * @param handler The source code handler
      */
-    EvaluatorBase(CodeHandler<ScalarIn>& handler) :
+    inline EvaluatorBase(CodeHandler<ScalarIn>& handler) :
         handler_(handler),
         indep_(nullptr),
+        evals_(handler),
         underEval_(false) {
     }
 
@@ -84,7 +83,7 @@ public:
      * @param depOld Dependent variable vector (all variables must belong to
      *               the same code handler)
      * @return The dependent variable values
-     * @throw CGException
+     * @throws CGException on error (such as an unhandled operation type)
      */
     inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indepNew,
                                            const std::vector<CG<ScalarIn> >& depOld) {
@@ -105,7 +104,7 @@ public:
      * @param depOld Dependent variable vector (all variables must belong to
      *               the same code handler)
      * @param depSize The size of the array of dependent variables.
-     * @throws CGException on error
+     * @throws CGException on error (such as an unhandled operation type)
      */
     inline void evaluate(const ActiveOut* indepNew,
                          size_t indepSize,
@@ -118,20 +117,20 @@ public:
 
         CPPADCG_ASSERT_KNOWN(handler_.getIndependentVariableSize() == indepSize, "Invalid size the array of independent variables");
 
-        if(underEval_) {
+        if (underEval_) {
             throw CGException("The same evaluator cannot be used for simultaneous evaluations. "
                               "Either use a new one or wait for this one to finish its current evaluation.");
         }
 
         underEval_ = true;
 
+        clear(); // clean-up from any previous call that might have failed
+        evals_.fill(nullptr);
+        evals_.adjustSize();
+
         try {
 
             indep_ = indepNew;
-
-            clear(); // clean-up
-
-            handler_.startNewOperationTreeVisit();
 
             for (size_t i = 0; i < depSize; i++) {
                 depNew[i] = evalCG(depOld[i]);
@@ -162,8 +161,8 @@ protected:
         }
         evals_.clear();
 
-        for (const CppAD::vector<ActiveOut>* it : evalsArrays_) {
-            delete it;
+        for (const auto& p : evalsArrays_) {
+            delete p.second;
         }
         evalsArrays_.clear();
     }
@@ -189,9 +188,11 @@ protected:
     inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) {
         using CppAD::vector;
 
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+
         // check if this node was previously determined
-        if (handler_.isVisited(node)) {
-            return *evals_[node.getColor()];
+        if (evals_[node] != nullptr) {
+            return *evals_[node];
         }
 
         // first evaluation of this node
@@ -337,12 +338,9 @@ protected:
         }
 
         // save it for reuse
-        node.setColor(evals_.size());
-        handler_.markVisited(node);
+        CPPADCG_ASSERT_UNKNOWN(evals_[node] == nullptr);
         ActiveOut* resultPtr = new ActiveOut(result);
-        if (evals_.size() == evals_.capacity())
-            evals_.reserve(evals_.size() * 3 / 2 + 1);
-        evals_.push_back(resultPtr);
+        evals_[node] = resultPtr;
 
         return *resultPtr;
     }
@@ -356,19 +354,19 @@ protected:
         using CppAD::vector;
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
 
-        // check if this array node was previously determined
-        if (handler_.isVisited(node)) {
-            return *evalsArrays_[node.getColor()];
+        // check if this node was previously determined
+        auto it = evalsArrays_.find(node.getHandlerPosition());
+        if (it != evalsArrays_.end()) {
+            return *it->second;
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
         vector<ActiveOut>* resultArray = new vector<ActiveOut>(args.size());
 
         // save it for reuse
-        node.setColor(evalsArrays_.size());
-        handler_.markVisited(node);
-        evalsArrays_.push_back(resultArray);
+        evalsArrays_[node.getHandlerPosition()] = resultArray;
 
         // define its elements
         for (size_t a = 0; a < args.size(); a++) {

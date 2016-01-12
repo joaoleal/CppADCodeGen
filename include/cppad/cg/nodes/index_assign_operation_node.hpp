@@ -28,39 +28,19 @@ namespace cg {
  */
 template<class Base>
 class IndexAssignOperationNode : public OperationNode<Base> {
+    friend class CodeHandler<Base>;
 private:
     IndexPattern& indexPattern_;
 public:
 
-    /**
-     * 
-     * @param index the index that is being assigned
-     * @param indexPattern the index expression used to define the index value
-     * @param index1
-     */
-    inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
-                                    IndexPattern& indexPattern,
-                                    IndexOperationNode<Base>& index1) :
-        OperationNode<Base>(CGOpCode::IndexAssign,{index, index1}),
-    indexPattern_(indexPattern) {
-    }
-
-    inline IndexAssignOperationNode(IndexDclrOperationNode<Base>& index,
-                                    IndexPattern& indexPattern,
-                                    IndexOperationNode<Base>* index1,
-                                    IndexOperationNode<Base>* index2) :
-        OperationNode<Base>(CGOpCode::IndexAssign, std::vector<size_t> (0), createArguments(index, index1, index2)),
-        indexPattern_(indexPattern) {
-    }
-
-    inline IndexDclrOperationNode<Base>& getIndex() const {
+    inline OperationNode<Base>& getIndex() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
         OperationNode<Base>* aNode = args[0].getOperation();
         CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
 
-        return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
+        return static_cast<OperationNode<Base>&> (*aNode);
     }
 
     inline const IndexPattern& getIndexPattern() const {
@@ -71,8 +51,8 @@ public:
         return indexPattern_;
     }
 
-    inline std::vector<const IndexDclrOperationNode<Base>*> getIndexPatternIndexes() const {
-        std::vector<const IndexDclrOperationNode<Base>*> iargs;
+    inline std::vector<const OperationNode<Base>*> getIndexPatternIndexes() const {
+        std::vector<const OperationNode<Base>*> iargs;
 
         const std::vector<Argument<Base> >& args = this->getArguments();
 
@@ -92,9 +72,32 @@ public:
     inline virtual ~IndexAssignOperationNode() {
     }
 
-private:
+protected:
 
-    inline static std::vector<Argument<Base> > createArguments(IndexDclrOperationNode<Base>& index,
+    /**
+     * @param handler owner of this node
+     * @param index the index that is being assigned
+     * @param indexPattern the index expression used to define the index value
+     * @param index1
+     */
+    inline IndexAssignOperationNode(CodeHandler<Base>* handler,
+                                    OperationNode<Base>& index,
+                                    IndexPattern& indexPattern,
+                                    IndexOperationNode<Base>& index1) :
+        OperationNode<Base>(handler, CGOpCode::IndexAssign,{index, index1}),
+        indexPattern_(indexPattern) {
+    }
+
+    inline IndexAssignOperationNode(CodeHandler<Base>* handler,
+                                    OperationNode<Base>& index,
+                                    IndexPattern& indexPattern,
+                                    IndexOperationNode<Base>* index1,
+                                    IndexOperationNode<Base>* index2) :
+        OperationNode<Base>(handler, CGOpCode::IndexAssign, std::vector<size_t> (0), createArguments(index, index1, index2)),
+        indexPattern_(indexPattern) {
+    }
+
+    inline static std::vector<Argument<Base> > createArguments(OperationNode<Base>& index,
                                                                IndexOperationNode<Base>* index1,
                                                                IndexOperationNode<Base>* index2) {
         std::vector<Argument<Base> > args(1 + (index1 != nullptr)+ (index2 != nullptr));

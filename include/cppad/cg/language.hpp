@@ -26,6 +26,8 @@ namespace cg {
 template<class Base>
 class LanguageGenerationData {
 public:
+    typedef typename CodeHandler<Base>::ScopeIDType ScopeIDType;
+public:
     /**
      * The independent variables
      */
@@ -69,13 +71,25 @@ public:
      */
     const bool reuseIDs;
     //
-    const std::set<const IndexDclrOperationNode<Base>*>& indexes;
+    const std::set<const OperationNode<Base>*>& indexes;
     //
     const std::set<RandomIndexPattern*>& indexRandomPatterns;
     //
     const std::vector<IndexPattern*>& loopDependentIndexPatterns;
     //
     const std::vector<IndexPattern*>& loopIndependentIndexPatterns;
+    /**
+     * the total number of times the result of an operation node  is used
+     */
+    const CodeHandlerVector<Base, size_t>& totalUseCount;
+    /**
+     * scope of each managed operation node
+     */
+    const CodeHandlerVector<Base, ScopeIDType>& scope;
+    /**
+     * Auxiliary index (might not be used)
+     */
+    IndexOperationNode<Base>& auxIterationIndexOp;
     /**
      * whether or not the dependent variables should be zeroed before 
      * executing the operation graph
@@ -93,10 +107,13 @@ public:
                            const std::vector<int>& atomicMaxForward,
                            const std::vector<int>& atomicMaxReverse,
                            const bool ri,
-                           const std::set<const IndexDclrOperationNode<Base>*>& indexs,
+                           const std::set<const OperationNode<Base>*>& indexs,
                            const std::set<RandomIndexPattern*>& idxRandomPatterns,
                            const std::vector<IndexPattern*>& dependentIndexPatterns,
                            const std::vector<IndexPattern*>& independentIndexPatterns,
+                           const CodeHandlerVector<Base, size_t>& totalUseCount,
+                           const CodeHandlerVector<Base, ScopeIDType>& scope,
+                           IndexOperationNode<Base>& auxIterationIndexOp,
                            bool zero) :
         independent(ind),
         dependent(dep),
@@ -112,6 +129,9 @@ public:
         indexRandomPatterns(idxRandomPatterns),
         loopDependentIndexPatterns(dependentIndexPatterns),
         loopIndependentIndexPatterns(independentIndexPatterns),
+        totalUseCount(totalUseCount),
+        scope(scope),
+        auxIterationIndexOp(auxIterationIndexOp),
         zeroDependents(zero) {
     }
 };
@@ -124,7 +144,8 @@ public:
 template<class Base>
 class Language {
 protected:
-    virtual void generateSourceCode(std::ostream& out, const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
+    virtual void generateSourceCode(std::ostream& out,
+                                    const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
 
     /**
      * Whether or not a new variable is created as a result of this operation
@@ -132,9 +153,11 @@ protected:
      * @param op Operation
      * @return true if a new variable is created
      */
-    virtual bool createsNewVariable(const OperationNode<Base>& op) const = 0;
+    virtual bool createsNewVariable(const OperationNode<Base>& op,
+                                    size_t totalUseCount) const = 0;
 
-    virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const = 0;
+    virtual bool requiresVariableArgument(enum CGOpCode op,
+                                          size_t argIndex) const = 0;
 
     friend class CodeHandler<Base>;
 };

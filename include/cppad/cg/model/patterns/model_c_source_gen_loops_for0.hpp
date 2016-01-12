@@ -57,8 +57,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
     /**
      * equations in loops
      */
-    IndexDclrOperationNode<Base>* iterationIndexDcl = new IndexDclrOperationNode<Base>(LoopModel<Base>::ITERATION_INDEX_NAME);
-    handler.manageOperationNodeMemory(iterationIndexDcl);
+    OperationNode<Base>* iterationIndexDcl = handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
 
     for (LoopModel<Base>* itl : _loopTapes) {
         LoopModel<Base>& lModel = *itl;
@@ -68,11 +67,9 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
         /**
          * make the loop start
          */
-        LoopStartOperationNode<Base>* loopStart = new LoopStartOperationNode<Base>(*iterationIndexDcl, nIterations);
-        handler.manageOperationNodeMemory(loopStart);
+        LoopStartOperationNode<Base>* loopStart = handler.makeLoopStartNode(*iterationIndexDcl, nIterations);
 
-        IndexOperationNode<Base>* iterationIndexOp = new IndexOperationNode<Base>(*loopStart);
-        handler.manageOperationNodeMemory(iterationIndexOp);
+        IndexOperationNode<Base>* iterationIndexOp = handler.makeIndexNode(*loopStart);
         std::set<IndexOperationNode<Base>*> indexesOps;
         indexesOps.insert(iterationIndexOp);
 
@@ -117,9 +114,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
                 // an additional alias variable is required so that each dependent variable can have its own ID
                 size_t e = dependents[i][it].original;
                 if (e < m) { // some equations are not present in all iteration
-                    y[e] = handler.createCG(new OperationNode<Base> (CGOpCode::DependentRefRhs,{e},
-                    {
-                                            *loopEnd                    }));
+                    y[e] = handler.createCG(*handler.makeNode(CGOpCode::DependentRefRhs,{e}, {*loopEnd}));
                 }
             }
         }

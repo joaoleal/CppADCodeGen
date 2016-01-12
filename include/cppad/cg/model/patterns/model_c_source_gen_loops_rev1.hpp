@@ -36,20 +36,20 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
 
     size_t n = _fun.Domain();
 
-    IndexDclrOperationNode<Base> indexJrowDcl("jrow");
-    IndexDclrOperationNode<Base> indexIterationDcl(LoopModel<Base>::ITERATION_INDEX_NAME);
-    IndexOperationNode<Base> iterationIndexOp(indexIterationDcl);
-    IndexOperationNode<Base> jrowIndexOp(indexJrowDcl);
+    CodeHandler<Base> handler;
+    handler.setJobTimer(_jobTimer);
+    handler.setZeroDependents(false);
+
+    auto& indexJrowDcl = *handler.makeIndexDclrNode("jrow");
+    auto& indexIterationDcl = *handler.makeIndexDclrNode(LoopModel<Base>::ITERATION_INDEX_NAME);
+    auto& iterationIndexOp = *handler.makeIndexNode(indexIterationDcl);
+    auto& jrowIndexOp = *handler.makeIndexNode(indexJrowDcl);
 
     std::vector<OperationNode<Base>*> localNodes(4);
     localNodes[0] = &indexJrowDcl;
     localNodes[1] = &indexIterationDcl;
     localNodes[2] = &iterationIndexOp;
     localNodes[3] = &jrowIndexOp;
-
-    CodeHandler<Base> handler;
-    handler.setJobTimer(_jobTimer);
-    handler.setZeroDependents(false);
 
     size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
@@ -229,8 +229,8 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
             }
 
             std::unique_ptr<IndexPattern> itPattern(IndexPattern::detect(irow2It));
-            IndexAssignOperationNode<Base> iterationIndexPatternOp(indexIterationDcl, *itPattern.get(), jrowIndexOp);
-            iterationIndexOp.makeAssigmentDependent(iterationIndexPatternOp);
+            auto* iterationIndexPatternOp = handler.makeIndexAssignNode(indexIterationDcl, *itPattern.get(), jrowIndexOp);
+            iterationIndexOp.makeAssigmentDependent(*iterationIndexPatternOp);
 
             /**
              * generate the operation graph for this equation pattern

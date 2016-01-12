@@ -63,7 +63,7 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
 
     const OperationNode<Base>& ref = *variableOrder[starti];
 
-    const IndexPattern* refIp = (*_info)->loopDependentIndexPatterns[ref.getInfo()[0]];
+    const IndexPattern* refIp = _info->loopDependentIndexPatterns[ref.getInfo()[0]];
     size_t refAssignOrAdd = ref.getInfo()[1];
 
     /**
@@ -119,7 +119,7 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
         if (node->getInfo()[1] != refAssignOrAdd)
             break;
 
-        const IndexPattern* ip = (*_info)->loopDependentIndexPatterns[node->getInfo()[0]];
+        const IndexPattern* ip = _info->loopDependentIndexPatterns[node->getInfo()[0]];
         if (!isOffsetBy(ip, refIp, offset)) {
             break; // different pattern type
         }
@@ -139,16 +139,13 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
         p2dip.reset(encapsulateIndexPattern(*refSecp, 0));
     }
 
-    IndexDclrOperationNode<Base> indexI("i");
-    IndexOperationNode<Base> iterationIndexOp(indexI);
-
-    OperationNode<Base> op2(CGOpCode::LoopIndexedDep, ref.getInfo(), ref.getArguments()); //clone
-    op2.getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
-    op2.getArguments().push_back(iterationIndexOp);
+    std::unique_ptr<OperationNode<Base>> op2(OperationNode<Base>::makeTemporaryNode(CGOpCode::LoopIndexedDep, ref.getInfo(), ref.getArguments()));
+    op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
+    op2->getArguments().push_back(_info->auxIterationIndexOp);
 
     std::ostringstream rightAssign;
     
-    rightAssign << _nameGen->generateIndexedDependent(op2, *p2dip);
+    rightAssign << _nameGen->generateIndexedDependent(*op2, *p2dip);
 
     /**
      * print the loop

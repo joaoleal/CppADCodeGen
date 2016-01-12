@@ -26,17 +26,24 @@ namespace cg {
 template<class Base>
 class CG {
 private:
-    // the source code handler (nullptr for parameters)
-    CodeHandler<Base>* handler_;
-    // the source code that generated this variable (nullptr for parameters)
+    // the source code that generated this variable (null for parameters)
     OperationNode<Base>* opNode_;
     // value (constant parameters only)
     Base* value_;
 
 public:
-    // default constructor (creates a parameter with a zero value)
+    /**
+     * Default constructor (creates a parameter with a zero value)
+     */
     inline CG();
 
+    /**
+     * Creates a variable resulting from the evaluation this node
+     * 
+     * @param node The operation node.
+     */
+    inline CG(OperationNode<Base>& node);
+    
     // copy constructor
     inline CG(const CG<Base>& orig);
     //assignment operator
@@ -46,10 +53,15 @@ public:
     inline CG(const Base& orig);
     inline CG& operator=(const Base& b);
 
-    //
-
+    /**
+     * @return The code handler that owns the OperationNode when it is a 
+     *         variable, null when it is a parameter.
+     */
     inline CodeHandler<Base>* getCodeHandler() const {
-        return handler_;
+        if (opNode_ != nullptr)
+            return opNode_->getCodeHandler();
+        else
+            return nullptr;
     }
 
     // variable classification methods
@@ -96,29 +108,19 @@ public:
     virtual ~CG();
 protected:
     /**
-     * Creates a variable resulting from the evaluation of node
-     * 
-     * @param handler The code handler.
-     * @param node The source code node. The deletion of this node will be
-     *             managed by the provided handler.
-     */
-    inline CG(CodeHandler<Base>& handler, OperationNode<Base>* node);
-
-    /**
      * Creates a variable/parameter from an existing argument 
      * 
-     * @param handler The code handler.
      * @param arg An argument that may be a parameter or a variable. 
      *            (the node is assumed to already be managed by the handler)
      */
-    inline CG(CodeHandler<Base>& handler, const Argument<Base>& arg);
+    inline CG(const Argument<Base>& arg);
 
     //
     inline void makeParameter(const Base& b);
-    inline void makeVariable(CodeHandler<Base>& handler,
-                             OperationNode<Base>* operation);
-    inline void makeVariable(CodeHandler<Base>& handler,
-                             OperationNode<Base>* operation,
+    
+    inline void makeVariable(OperationNode<Base>& operation);
+    
+    inline void makeVariable(OperationNode<Base>& operation,
                              std::unique_ptr<Base>& value);
 
     // creating an argument out of this node

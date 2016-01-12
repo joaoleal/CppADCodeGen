@@ -1,0 +1,179 @@
+#ifndef CPPAD_CG_CODE_HANDLER_VECTOR_INCLUDED
+#define CPPAD_CG_CODE_HANDLER_VECTOR_INCLUDED
+/* --------------------------------------------------------------------------
+ *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2016 Ciengis
+ *
+ *  CppADCodeGen is distributed under multiple licenses:
+ *
+ *   - Eclipse Public License Version 1.0 (EPL1), and
+ *   - GNU General Public License Version 3 (GPL3).
+ *
+ *  EPL1 terms and conditions can be found in the file "epl-v10.txt", while
+ *  terms and conditions for the GPL3 can be found in the file "gpl3.txt".
+ * ----------------------------------------------------------------------------
+ * Author: Joao Leal
+ */
+
+namespace CppAD {
+namespace cg {
+
+// forward declaration
+template<class Base>
+class CodeHandler;
+
+/**
+ * A vector for data associated with operation nodes managed by a code handler.
+ * 
+ * @author Joao Leal
+ */
+template<class Base, class T>
+class CodeHandlerVector {
+public:
+    typedef typename std::vector<T>::iterator iterator;
+    typedef typename std::vector<T>::const_iterator const_iterator;
+    typedef typename std::vector<T>::const_reverse_iterator const_reverse_iterator;
+    typedef typename std::vector<T>::reverse_iterator reverse_iterator;
+private:
+    /**
+     * data vector
+     */
+    std::vector<T> data_;
+    /**
+     * 
+     */
+    CodeHandler<Base>& handler_;
+public:
+
+    inline CodeHandlerVector(CodeHandler<Base>& handler) :
+        handler_(handler) {
+    }
+
+    inline void clear() {
+        data_.clear();
+    }
+
+    inline void adjustSize() {
+        size_t s = handler_.getManagedNodesCount();
+        if(s >= data_.capacity()) {
+            data_.reserve(s * 3 / 2 + 1);
+        }
+        data_.resize(s);
+    }
+
+    inline void adjustSize(const OperationNode<Base>& node) {
+        size_t p = node.getHandlerPosition();
+        if (p == std::numeric_limits<size_t>::max())
+            throw CGException("An operation node is not managed by this code handler");
+
+        if (p >= data_.size())
+            adjustSize();
+    }
+
+    inline T& get(const OperationNode<Base>& node) {
+        size_t p = node.getHandlerPosition();
+        if (p == std::numeric_limits<size_t>::max())
+            throw CGException("An operation node is not managed by this code handler");
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+
+        return data_[p];
+    }
+
+    inline const T& get(const OperationNode<Base>& node) const {
+        size_t p = node.getHandlerPosition();
+        if (p == std::numeric_limits<size_t>::max())
+            throw CGException("An operation node is not managed by this code handler");
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+
+        return data_[p];
+    }
+
+    inline void set(const OperationNode<Base>& node,
+                    const T& order) {
+        size_t p = node.getHandlerPosition();
+        if (p == std::numeric_limits<size_t>::max())
+            throw CGException("An operation node is not managed by this code handler");
+        CPPADCG_ASSERT_UNKNOWN(p < data_.size());
+
+        data_[node.getHandlerPosition()] = order;
+    }
+
+    inline size_t size() const {
+        return data_.size();
+    }
+
+    inline bool empty() const {
+        return data_.empty();
+    }
+
+    inline void fill(const T& v) {
+        std::fill(data_.begin(), data_.end(), v);
+    }
+
+    // iterators
+
+    inline iterator begin() {
+        return data_.begin();
+    }
+
+    inline const_iterator begin() const {
+        return data_.begin();
+    }
+
+    inline iterator end() {
+        return data_.end();
+    }
+
+    inline const_iterator end() const {
+        return data_.end();
+    }
+
+    inline reverse_iterator rbegin() {
+        return data_.rbegin();
+    }
+
+    inline const_reverse_iterator rbegin() const {
+        return data_.rbegin();
+    }
+
+    inline reverse_iterator rend() {
+        return data_.rend();
+    }
+
+    inline const_reverse_iterator rend() const {
+        return data_.rend();
+    }
+
+    inline const_iterator cbegin() const noexcept {
+        return data_.cbegin();
+    }
+
+    inline const_iterator cend() const noexcept {
+        return data_.cend();
+    }
+
+    inline const_reverse_iterator crbegin() const noexcept {
+        return data_.crbegin();
+    }
+
+    inline const_reverse_iterator crend() const noexcept {
+        return data_.crend();
+    }
+
+    /**
+     * operators
+     */
+    inline T& operator[](const OperationNode<Base>& node) {
+        return get(node);
+    }
+
+    inline const T& operator[](const OperationNode<Base>& node) const {
+        return get(node);
+    }
+
+};
+
+} // END cg namespace
+} // END CppAD namespace
+
+#endif

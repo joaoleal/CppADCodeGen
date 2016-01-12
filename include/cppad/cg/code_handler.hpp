@@ -29,6 +29,7 @@ class CodeHandler {
 public:
     typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     typedef std::vector<ScopePathElement<Base> > ScopePath;
+    typedef unsigned short ScopeIDType;
 protected:
     struct LoopData; // forward declaration
 
@@ -48,9 +49,33 @@ protected:
     // the current dependent variables
     CppAD::vector<CG<Base> >* _dependents;
     /**
+     * nodes managed by this code handler which include all
      * all OperationNodes created by CG<Base> objects
      */
     std::vector<OperationNode<Base> *> _codeBlocks;
+    /**
+     * the ID of the last visit to each managed node
+     */
+    CodeHandlerVector<Base, size_t> _lastVisit;
+    /**
+     * scope of each managed operation node
+     */
+    CodeHandlerVector<Base, ScopeIDType> _scope;
+    /**
+     * evaluation order of each managed node
+     * (zero means that an evaluation position was never assigned)
+     */
+    CodeHandlerVector<Base, size_t> _evaluationOrder;
+    /**
+     * the last index in the evaluation order for which an operation node 
+     * is taken as an argument of another operation node.
+     * (zero means that the node was never used)
+     */
+    CodeHandlerVector<Base, size_t> _lastUsageOrder;
+    /**
+     * the total number of times the result of an operation node  is used
+     */
+    CodeHandlerVector<Base, size_t> _totalUseCount;
     /**
      * the order for the variable creation in the source code 
      */
@@ -97,9 +122,9 @@ protected:
     // a flag indicating whether or not to reuse the IDs of destroyed variables
     bool _reuseIDs;
     // scope color/index counter
-    size_t _scopeColorCount;
+    ScopeIDType _scopeColorCount;
     // the current scope color/index counter
-    size_t _currentScopeColor;
+    ScopeIDType _currentScopeColor;
     // all scopes
     std::vector<ScopePath> _scopes;
     // possible altered nodes due to scope conditionals (altered node <-> clone of original)
@@ -123,6 +148,14 @@ protected:
      * used to track evaluation times and print out messages
      */
     JobTimer* _jobTimer;
+    /**
+     * Auxiliary index declaration (might not be used)
+     */
+    OperationNode<Base>* _auxIndexI;
+    /**
+     * Auxiliary index (might not be used)
+     */
+    IndexOperationNode<Base>* _auxIterationIndexOp;
 public:
 
     CodeHandler(size_t varCount = 50) :
@@ -132,6 +165,11 @@ public:
         _idSparseArrayCount(1),
         _idAtomicCount(1),
         _dependents(nullptr),
+        _lastVisit(*this),
+        _scope(*this),
+        _evaluationOrder(*this),
+        _lastUsageOrder(*this),
+        _totalUseCount(*this),
         _scopedVariableOrder(1),
         _atomicFunctionsOrder(nullptr),
         _used(false),
@@ -147,6 +185,8 @@ public:
         //_variableOrder.reserve(1 + varCount / 3);
         _scopedVariableOrder[0].reserve(1 + varCount / 3);
 
+        _auxIndexI = makeIndexDclrNode("i");
+        _auxIterationIndexOp = makeIndexNode(*_auxIndexI);
     }
 
     CodeHandler(const CodeHandler&) = delete;
@@ -180,8 +220,8 @@ public:
     }
 
     inline void makeVariable(CG<Base>& variable) {
-        _independentVariables.push_back(new OperationNode<Base> (CGOpCode::Inv));
-        variable.makeVariable(*this, _independentVariables.back());
+        _independentVariables.push_back(makeNode(CGOpCode::Inv));
+        variable.makeVariable(*_independentVariables.back());
     }
 
     size_t getIndependentVariableSize() const {
@@ -248,15 +288,20 @@ public:
     }
 
     inline void startNewOperationTreeVisit() {
+        assert(_idVisit < std::numeric_limits<size_t>::max());
+
+        _lastVisit.adjustSize();
         _idVisit++;
     }
 
     inline bool isVisited(const OperationNode<Base>& node) const {
-        return node.getLastVisitId() == _idVisit;
+        size_t p = node.getHandlerPosition();
+        return p < _lastVisit.size() && _lastVisit[node] == _idVisit;
     }
 
-    inline void markVisited(OperationNode<Base>& node) const {
-        node.setVisitId(_idVisit);
+    inline void markVisited(OperationNode<Base>& node) {
+        _lastVisit.adjustSize(node);
+        _lastVisit[node] = _idVisit;
     }
 
     /**
@@ -404,6 +449,10 @@ public:
         _scopes.reserve(4);
         _scopes.resize(1);
         _alteredNodes.clear();
+        _evaluationOrder.adjustSize();
+        _lastUsageOrder.adjustSize();
+        _totalUseCount.adjustSize();
+        _scope.adjustSize();
 
         for (size_t i = 0; i < atomicFunctions.size(); i++) {
             _atomicFunctionName2Index[atomicFunctions[i]] = i;
@@ -494,7 +543,7 @@ public:
 
         for (size_t p = 0; p < _variableOrder.size(); p++) {
             OperationNode<Base>& arg = *_variableOrder[p];
-            arg.setEvaluationOrder(p + 1);
+            setEvaluationOrder(arg, p + 1);
             dependentAdded2EvaluationQueue(arg);
         }
 
@@ -535,6 +584,7 @@ public:
                     _reuseIDs,
                     _loops.indexes, _loops.indexRandomPatterns,
                     _loops.dependentIndexPatterns, _loops.independentIndexPatterns,
+                    _totalUseCount, _scope, *_auxIterationIndexOp,
                     _zeroDependents));
         lang.generateSourceCode(out, _info);
 
@@ -587,7 +637,7 @@ public:
      * @warning all managed memory will be deleted
      */
     virtual void reset() {
-        for (OperationNode<Base>* n: _codeBlocks) {
+        for (OperationNode<Base>* n : _codeBlocks) {
             delete n;
         }
         _codeBlocks.clear();
@@ -609,6 +659,11 @@ public:
     inline void resetNodes() {
         if (_dependents != nullptr)
             resetNodes(*_dependents);
+
+        _scope.fill(0);
+        _evaluationOrder.fill(0);
+        _lastUsageOrder.fill(0);
+        _totalUseCount.fill(0); // must be after resetNodes
     }
 
     /**
@@ -616,7 +671,7 @@ public:
      * by a handler
      * @param dependents the nodes to be reset
      */
-    static inline void resetNodes(CppAD::vector<CG<Base> >& dependents) {
+    inline void resetNodes(CppAD::vector<CG<Base> >& dependents) {
         for (size_t i = 0; i < dependents.size(); i++) {
             resetNodes(dependents[i].getOperationNode());
         }
@@ -627,23 +682,125 @@ public:
      * handler
      * @param node the node to be reset
      */
-    static inline void resetNodes(OperationNode<Base>* node) {
-        if (node == nullptr || node->getTotalUsageCount() == 0)
+    inline void resetNodes(OperationNode<Base>* node) {
+        if (node == nullptr || getTotalUsageCount(*node) == 0)
             return;
 
         node->resetHandlerCounters();
-        node->setColor(0);
 
-        const std::vector<Argument<Base> >& args = node->getArguments();
-        for (size_t a = 0; a < args.size(); a++) {
-            resetNodes(args[a].getOperation());
+        for (Argument<Base>& a : *node) {
+            resetNodes(a.getOperation());
         }
     }
-
 
     /***********************************************************************
      *                      access to managed memory
      **********************************************************************/
+
+    /**
+     * Creates a shallow clone of an operation node
+     */
+    inline OperationNode<Base>* cloneNode(const OperationNode<Base>& n) {
+        return manageOperationNode(new OperationNode<Base>(n));
+    }
+    
+    inline OperationNode<Base>* makeNode(CGOpCode op) {
+        return manageOperationNode(new OperationNode<Base>(this, op));
+    }
+
+    inline OperationNode<Base>* makeNode(CGOpCode op,
+                                         const Argument<Base>& arg) {
+        return manageOperationNode(new OperationNode<Base>(this, op, arg));
+    }
+
+    inline OperationNode<Base>* makeNode(CGOpCode op,
+                                         std::vector<Argument<Base> >&& args) {
+        return manageOperationNode(new OperationNode<Base>(this, op, std::move(args)));
+    }
+
+    inline OperationNode<Base>* makeNode(CGOpCode op,
+                                         std::vector<size_t>&& info,
+                                         std::vector<Argument<Base> >&& args) {
+        return manageOperationNode(new OperationNode<Base>(this, op, std::move(info), std::move(args)));
+    }
+
+    inline OperationNode<Base>* makeNode(CGOpCode op,
+                                         const std::vector<size_t>& info,
+                                         const std::vector<Argument<Base> >& args) {
+        return manageOperationNode(new OperationNode<Base>(this, op, info, args));
+    }
+
+    inline LoopStartOperationNode<Base>* makeLoopStartNode(OperationNode<Base>& indexDcl,
+                                                           size_t iterationCount) {
+        auto* n = new LoopStartOperationNode<Base>(this, indexDcl, iterationCount);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline LoopStartOperationNode<Base>* makeLoopStartNode(OperationNode<Base>& indexDcl,
+                                                           IndexOperationNode<Base>& iterCount) {
+        auto* n = new LoopStartOperationNode<Base>(this, indexDcl, iterCount);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline LoopEndOperationNode<Base>* makeLoopEndNode(LoopStartOperationNode<Base>& loopStart,
+                                                       const std::vector<Argument<Base> >& endArgs) {
+        auto* n = new LoopEndOperationNode<Base>(this, loopStart, endArgs);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline PrintOperationNode<Base>* makePrintNode(const std::string& before,
+                                                   const Argument<Base>& arg,
+                                                   const std::string& after) {
+        auto* n = new PrintOperationNode<Base>(this, before, arg, after);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline IndexOperationNode<Base>* makeIndexNode(OperationNode<Base>& indexDcl) {
+        auto* n = new IndexOperationNode<Base>(this, indexDcl);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline IndexOperationNode<Base>* makeIndexNode(LoopStartOperationNode<Base>& loopStart) {
+        auto* n = new IndexOperationNode<Base>(this, loopStart);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline IndexOperationNode<Base>* makeIndexNode(IndexAssignOperationNode<Base>& indexAssign) {
+        auto* n = new IndexOperationNode<Base>(this, indexAssign);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline IndexAssignOperationNode<Base>* makeIndexAssignNode(OperationNode<Base>& index,
+                                                               IndexPattern& indexPattern,
+                                                               IndexOperationNode<Base>& index1) {
+        auto* n = new IndexAssignOperationNode<Base>(this, index, indexPattern, index1);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline IndexAssignOperationNode<Base>* makeIndexAssignNode(OperationNode<Base>& index,
+                                                               IndexPattern& indexPattern,
+                                                               IndexOperationNode<Base>* index1,
+                                                               IndexOperationNode<Base>* index2) {
+        auto* n = new IndexAssignOperationNode<Base>(this, index, indexPattern, index1, index2);
+        manageOperationNode(n);
+        return n;
+    }
+
+    inline OperationNode<Base>* makeIndexDclrNode(const std::string& name) {
+        CPPADCG_ASSERT_KNOWN(!name.empty(), "index name cannot be empty");
+        auto* n = manageOperationNode(new OperationNode<Base>(this, CGOpCode::IndexDeclaration));
+        n->setName(name);
+        return n;
+    }
+
     /**
      * Provides the current number of OperationNodes created by the model.
      * This number is not the total number of operations in the final
@@ -677,21 +834,22 @@ public:
         start = std::min<size_t>(start, _codeBlocks.size());
         end = std::min<size_t>(end, _codeBlocks.size());
 
-        for (size_t i = start; i< end; ++i) {
+        for (size_t i = start; i < end; ++i) {
             delete _codeBlocks[i];
         }
         _codeBlocks.erase(_codeBlocks.begin() + start, _codeBlocks.begin() + end);
+
+        // update positions
+        for (size_t i = start; i < _codeBlocks.size(); ++i) {
+            _codeBlocks[i]->setHandlerPosition(i);
+        }
     }
 
     /***********************************************************************
      *                        Value generation
      **********************************************************************/
     CG<Base> createCG(const Argument<Base>& arg) {
-        return CG<Base>(*this, arg);
-    }
-
-    CG<Base> createCG(OperationNode<Base>* node) {
-        return CG<Base>(*this, node);
+        return CG<Base>(arg);
     }
 
     /***********************************************************************
@@ -805,7 +963,8 @@ public:
      *         false if it had already been previously added.
      */
     inline bool manageOperationNodeMemory(OperationNode<Base>* code) {
-        if (std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()) {
+        size_t pos = code->getHandlerPosition();
+        if (pos >= _codeBlocks.size() || code != _codeBlocks[pos]) {
             manageOperationNode(code);
             return false;
         }
@@ -821,17 +980,19 @@ public:
 
 protected:
 
-    virtual void manageOperationNode(OperationNode<Base>* code) {
+    virtual OperationNode<Base>* manageOperationNode(OperationNode<Base>* code) {
         //CPPADCG_ASSERT_UNKNOWN(std::find(_codeBlocks.begin(), _codeBlocks.end(), code) == _codeBlocks.end()); // <<< too great of an impact in performance
         if (_codeBlocks.capacity() == _codeBlocks.size()) {
             _codeBlocks.reserve((_codeBlocks.size()*3) / 2 + 1);
         }
 
+        code->setHandlerPosition(_codeBlocks.size());
         _codeBlocks.push_back(code);
+        return code;
     }
 
     virtual void markCodeBlockUsed(OperationNode<Base>& code) {
-        code.increaseTotalUsageCount();
+        increaseTotalUsageCount(code);
 
         CGOpCode op = code.getOperationType();
         if (isIndependent(code)) {
@@ -847,12 +1008,12 @@ protected:
                 markCodeBlockUsed(*arg);
             }
 
-        } else if (code.getTotalUsageCount() == 1) {
+        } else if (getTotalUsageCount(code) == 1) {
             // first time this operation is visited
 
             size_t previousScope = _currentScopeColor;
 
-            code.setColor(_currentScopeColor);
+            _scope[code] = _currentScopeColor;
 
             // check if there is a scope change
             if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
@@ -947,15 +1108,15 @@ protected:
                  * evaluation of the expression is only performed for the 
                  * required iterations
                  */
-                if (code.getColor() == _currentScopeColor) {
+                if (_scope[code] == _currentScopeColor) {
                     // outside an if (defined for all iterations)
                     restoreTemporaryVar(code);
                 } else {
                     updateTemporaryVarInDiffScopes(code);
                 }
 
-            } else if (code.getColor() != _currentScopeColor && op != CGOpCode::LoopIndexedIndep) {
-                size_t oldScope = code.getColor();
+            } else if (_scope[code] != _currentScopeColor && op != CGOpCode::LoopIndexedIndep) {
+                ScopeIDType oldScope = _scope[code];
                 /**
                  * node previously used in a different scope
                  * must make sure it is defined before being used in both
@@ -964,7 +1125,7 @@ protected:
                 size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
 
                 // update the scope where it should be defined
-                size_t newScope;
+                ScopeIDType newScope;
                 if (depth == 0)
                     newScope = 0;
                 else
@@ -977,7 +1138,7 @@ protected:
                     bool addedIf = handleTemporaryVarInDiffScopes(code, oldScope, newScope);
 
                     if (!addedIf) {
-                        code.setColor(newScope);
+                        _scope[code] = newScope;
 
                         /**
                          * Must also update the scope of the arguments used by this operation
@@ -1050,36 +1211,29 @@ protected:
     inline void replaceWithConditionalTempVar(OperationNode<Base>& tmp,
                                               IndexOperationNode<Base>& iterationIndexOp,
                                               const std::vector<size_t>& iterationRegions,
-                                              size_t oldScope,
-                                              size_t commonScopeColor) {
+                                              ScopeIDType oldScope,
+                                              ScopeIDType commonScopeColor) {
         /**
          * clone
          */
-        OperationNode<Base>* opClone = new OperationNode<Base>(tmp);
-        manageOperationNode(opClone);
+        OperationNode<Base>* opClone = cloneNode(tmp);
 
         /**
          * Create condition
          */
-        OperationNode<Base>* tmpDclVar = new OperationNode<Base>(CGOpCode::TmpDcl);
-        manageOperationNode(tmpDclVar);
+        OperationNode<Base>* tmpDclVar = makeNode(CGOpCode::TmpDcl);
         Argument<Base> tmpArg(*tmpDclVar);
 
-        OperationNode<Base>* cond = new OperationNode<Base>(CGOpCode::IndexCondExpr, iterationRegions,{iterationIndexOp});
-        manageOperationNode(cond);
+        OperationNode<Base>* cond = makeNode(CGOpCode::IndexCondExpr, iterationRegions,{iterationIndexOp});
 
         // if
-        OperationNode<Base>* ifStart = new OperationNode<Base>(CGOpCode::StartIf, *cond);
-        manageOperationNode(ifStart);
+        OperationNode<Base>* ifStart = makeNode(CGOpCode::StartIf, *cond);
 
-        OperationNode<Base>* tmpAssign = new OperationNode<Base>(CGOpCode::LoopIndexedTmp,{tmpArg, *opClone});
-        manageOperationNode(tmpAssign);
-        OperationNode<Base>* ifAssign = new OperationNode<Base>(CGOpCode::CondResult,{*ifStart, *tmpAssign});
-        manageOperationNode(ifAssign);
+        OperationNode<Base>* tmpAssign = makeNode(CGOpCode::LoopIndexedTmp,{tmpArg, *opClone});
+        OperationNode<Base>* ifAssign = makeNode(CGOpCode::CondResult,{*ifStart, *tmpAssign});
 
         // end if
-        OperationNode<Base>* endIf = new OperationNode<Base>(CGOpCode::EndIf,{*ifStart, *ifAssign});
-        manageOperationNode(endIf);
+        OperationNode<Base>* endIf = makeNode(CGOpCode::EndIf,{*ifStart, *ifAssign});
 
         /**
          * Change original variable
@@ -1087,6 +1241,14 @@ protected:
         tmp.setOperation(CGOpCode::Tmp,{tmpArg, *endIf});
         tmp.getInfo().resize(1); // used to mark that this node was altered here
 
+        // created new nodes, must adjust vector sizes
+        _scope.adjustSize();
+        _lastVisit.adjustSize();
+        _scope.adjustSize();
+        _evaluationOrder.adjustSize();
+        _lastUsageOrder.adjustSize();
+        _totalUseCount.adjustSize();
+        
         /**
          * add the new scope
          */
@@ -1098,23 +1260,23 @@ protected:
         _scopes[newScopeColor].push_back(ScopePathElement<Base>(newScopeColor, endIf, ifStart));
 
         // apply scope colors
-        tmpDclVar->setColor(commonScopeColor);
-        ifStart->setColor(newScopeColor);
-        cond->setColor(newScopeColor);
-        opClone->setColor(newScopeColor);
-        ifAssign->setColor(newScopeColor);
-        tmpAssign->setColor(newScopeColor);
-        endIf->setColor(commonScopeColor);
-        tmp.setColor(commonScopeColor);
+        _scope[*tmpDclVar] = commonScopeColor;
+        _scope[*ifStart] = newScopeColor;
+        _scope[*cond] = newScopeColor;
+        _scope[*opClone] = newScopeColor;
+        _scope[*ifAssign] = newScopeColor;
+        _scope[*tmpAssign] = newScopeColor;
+        _scope[*endIf] = commonScopeColor;
+        _scope[tmp] = commonScopeColor;
 
         // total usage count
-        tmpDclVar->setTotalUsageCount(1);
-        ifStart->setTotalUsageCount(1);
-        cond->setTotalUsageCount(1);
-        opClone->setTotalUsageCount(1);
-        ifAssign->setTotalUsageCount(1);
-        tmpAssign->setTotalUsageCount(1);
-        endIf-> setTotalUsageCount(1);
+        setTotalUsageCount(*tmpDclVar, 1);
+        setTotalUsageCount(*ifStart, 1);
+        setTotalUsageCount(*cond, 1);
+        setTotalUsageCount(*opClone, 1);
+        setTotalUsageCount(*ifAssign, 1);
+        setTotalUsageCount(*tmpAssign, 1);
+        setTotalUsageCount(*endIf, 1);
 
         /**
          * Must also update the scope of the arguments used by this operation
@@ -1129,7 +1291,7 @@ protected:
     }
 
     inline void updateTemporaryVarInDiffScopes(OperationNode<Base>& code) {
-        if (code.getColor() != _currentScopeColor) {
+        if (_scope[code] != _currentScopeColor) {
             return; //nothing to change
         }
 
@@ -1144,12 +1306,12 @@ protected:
          * so that it is defined before being used in both
          * scopes
          */
-        size_t oldScope = code.getColor();
+        ScopeIDType oldScope = _scope[code];
 
         size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
 
         // update the scope where it should be defined
-        size_t newScope = depth == 0 ? 0 : _scopes[_currentScopeColor][depth - 1].color;
+        ScopeIDType newScope = depth == 0 ? 0 : _scopes[_currentScopeColor][depth - 1].color;
 
         /**
          * does this variable require a condition based on indexes?
@@ -1158,7 +1320,7 @@ protected:
         OperationNode<Base>* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
         OperationNode<Base>* endif = code.getArguments()[0].getOperation();
         CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGOpCode::EndIf);
-        OperationNode<Base>* bScopeOldEnd = _scopes[endif->getColor()].back().end;
+        OperationNode<Base>* bScopeOldEnd = _scopes[_scope[*endif]].back().end;
 
         CGOpCode bNewOp = bScopeNewEnd->getOperationType();
 
@@ -1197,7 +1359,7 @@ protected:
         }
 
         if (oldScope != newScope) {
-            code.setColor(newScope);
+            _scope[code] = newScope;
             /**
              * Must also update the scope of the arguments used by this operation
              */
@@ -1220,7 +1382,7 @@ protected:
         tmp.setOperation(opClone->getOperationType(), opClone->getArguments());
         tmp.getInfo() = opClone->getInfo();
 
-        tmp.setColor(_currentScopeColor);
+        _scope[tmp] = _currentScopeColor;
 
         /**
          * Must also update the scope of the arguments used by this operation
@@ -1228,7 +1390,7 @@ protected:
         const std::vector<Argument<Base> >& args = tmp.getArguments();
         size_t aSize = args.size();
         for (size_t a = 0; a < aSize; a++) {
-            updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, opClone->getColor());
+            updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, _scope[*opClone]);
         }
     }
 
@@ -1239,7 +1401,7 @@ protected:
         tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
         tmp->getInfo() = opClone->getInfo();
 
-        tmp->setColor(_currentScopeColor);
+        _scope[*tmp] = _currentScopeColor;
 
         /**
          * Must also update the scope of the arguments used by this operation
@@ -1247,19 +1409,19 @@ protected:
         const std::vector<Argument<Base> >& args = tmp->getArguments();
         size_t aSize = args.size();
         for (size_t a = 0; a < aSize; a++) {
-            updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, opClone->getColor());
+            updateVarScopeUsage(args[a].getOperation(), _currentScopeColor, _scope[*opClone]);
         }
     }
 
     inline void updateVarScopeUsage(OperationNode<Base>* node,
-                                    size_t usageScope,
-                                    size_t oldUsageScope) {
-        if (node == nullptr || node->getColor() == usageScope)
+                                    ScopeIDType usageScope,
+                                    ScopeIDType oldUsageScope) {
+        if (node == nullptr || _scope[*node] == usageScope)
             return;
 
 
-        size_t oldScope = node->getColor();
-        size_t newScope;
+        ScopeIDType oldScope = _scope[*node];
+        ScopeIDType newScope;
 
         if (oldScope == oldUsageScope) {
             newScope = usageScope;
@@ -1272,7 +1434,7 @@ protected:
         if (newScope == oldScope)
             return;
 
-        node->setColor(newScope);
+        _scope[*node] = newScope;
 
         const std::vector<Argument<Base> >& args = node->getArguments();
         size_t aSize = args.size();
@@ -1295,7 +1457,7 @@ protected:
                 OperationNode<Base>* beginScopeNode = node->getArguments()[0].getOperation();
                 CPPADCG_ASSERT_UNKNOWN(beginScopeNode != nullptr);
 
-                addScopeToVarOrder(beginScopeNode->getColor(), e);
+                addScopeToVarOrder(_scope[*beginScopeNode], e);
             }
 
             //std::cout << "e:" << e << "  " << vorder[p] << "  scope:" << scope << "  p:" << p << "  " << *vorder[p] << std::endl;
@@ -1375,8 +1537,8 @@ protected:
                     const std::vector<Argument<Base> >& eArgs = endIf->getArguments();
                     std::vector<Argument<Base> >& eArgs1 = endIf1->getArguments();
 
-                    size_t ifScope = startIf->getColor();
-                    size_t ifScope1 = startIf1->getColor();
+                    ScopeIDType ifScope = _scope[*startIf];
+                    ScopeIDType ifScope1 = _scope[*startIf1];
                     std::vector<OperationNode<Base> *>& vorderIf = _scopedVariableOrder[ifScope];
                     std::vector<OperationNode<Base> *>& vorderIf1 = _scopedVariableOrder[ifScope1];
 
@@ -1418,11 +1580,13 @@ protected:
         }
     }
 
-    inline void replaceScope(OperationNode<Base>* node, size_t oldScope, size_t newScope) {
-        if (node == nullptr || node->getColor() != oldScope)
+    inline void replaceScope(OperationNode<Base>* node,
+                             ScopeIDType oldScope,
+                             ScopeIDType newScope) {
+        if (node == nullptr || _scope[*node] != oldScope)
             return;
 
-        node->setColor(newScope);
+        _scope[*node] = newScope;
 
         const std::vector<Argument<Base> >& args = node->getArguments();
         for (size_t a = 0; a < args.size(); a++) {
@@ -1475,8 +1639,9 @@ protected:
         }
     }
 
-    inline bool containedInScope(const OperationNode<Base>& node, size_t scope) {
-        size_t nScope = node.getColor();
+    inline bool containedInScope(const OperationNode<Base>& node,
+                                 ScopeIDType scope) {
+        ScopeIDType nScope = _scope[node];
         if (nScope == scope)
             return true;
 
@@ -1484,7 +1649,8 @@ protected:
                 _scopes[nScope][_scopes[scope].size() - 1].color == scope;
     }
 
-    inline static bool containsArgument(const OperationNode<Base>& node, const OperationNode<Base>& arg) {
+    inline static bool containsArgument(const OperationNode<Base>& node,
+                                        const OperationNode<Base>& arg) {
         const std::vector<Argument<Base> >& args = node.getArguments();
         for (size_t a = 0; a < args.size(); a++) {
             if (args[a].getOperation() == &arg) {
@@ -1594,7 +1760,7 @@ protected:
                         arg.setVariableID(_idCount);
                         _idCount++;
 
-                    } else if (_lang->createsNewVariable(arg) ||
+                    } else if (_lang->createsNewVariable(arg, getTotalUsageCount(arg)) ||
                             _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
 
                         addToEvaluationQueue(arg);
@@ -1634,7 +1800,7 @@ protected:
     }
 
     inline void addToEvaluationQueue(OperationNode<Base>& arg) {
-        size_t scope = arg.getColor();
+        ScopeIDType scope = _scope[arg];
         if (scope >= _scopedVariableOrder.size()) {
             _scopedVariableOrder.resize(scope + 1);
         }
@@ -1682,7 +1848,7 @@ protected:
         for (size_t i = 0; i < _variableOrder.size(); i++) {
             OperationNode<Base>* var = _variableOrder[i];
             if (isTemporary(*var) || isTemporaryArray(*var) || isTemporarySparseArray(*var)) {
-                size_t releaseLocation = var->getLastUsageEvaluationOrder() - 1;
+                size_t releaseLocation = getLastUsageEvaluationOrder(*var) - 1;
                 tempVarRelease[releaseLocation].push_back(var);
             }
         }
@@ -1759,7 +1925,7 @@ protected:
             for (size_t i = 1; i < args.size(); ++i) {
                 CPPADCG_ASSERT_UNKNOWN(args[i].getOperation() != nullptr);
                 // TODO: also consider CGOpCode::LoopIndexedDep inside a CGOpCode::endIf
-                if (args[i].getOperation()->getOperationType() == CGOpCode::LoopIndexedDep) { 
+                if (args[i].getOperation()->getOperationType() == CGOpCode::LoopIndexedDep) {
                     reorderOperation(*args[i].getOperation());
                 }
             }
@@ -1770,7 +1936,7 @@ protected:
         /**
          * determine the location of the last temporary variable
          */
-        size_t depPos = node.getEvaluationOrder();
+        size_t depPos = getEvaluationOrder(node);
         size_t lastTmpPos = depPos;
         if (!isVisited(node)) {
             // dependencies not visited yet
@@ -1840,9 +2006,9 @@ protected:
      *         variable (in the same scope)
      */
     inline size_t findLastTemporaryLocation(OperationNode<Base>& node) {
-        size_t depOrder = node.getEvaluationOrder();
+        size_t depOrder = getEvaluationOrder(node);
         size_t maxTmpOrder = 0; // lowest possible value is 1
-        for (const Argument<Base>& it : node.getArguments()) {
+        for (const Argument<Base>& it : node) {
             if (it.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *it.getOperation();
                 CGOpCode aOp = arg.getOperationType();
@@ -1851,18 +2017,18 @@ protected:
                 }
 
                 if (aOp == CGOpCode::Index) {
-                    size_t iorder = static_cast<IndexOperationNode<Base>&> (arg).getIndexCreationNode().getEvaluationOrder();
+                    size_t iorder = getEvaluationOrder(static_cast<IndexOperationNode<Base>&> (arg).getIndexCreationNode());
                     if (iorder > maxTmpOrder)
                         maxTmpOrder = iorder;
-                } else if (arg.getEvaluationOrder() == depOrder) {
+                } else if (getEvaluationOrder(arg) == depOrder) {
                     // dependencies not visited yet
                     size_t orderNew = findLastTemporaryLocation(arg);
                     if (orderNew > maxTmpOrder)
                         maxTmpOrder = orderNew;
                 } else {
                     // no need to visit dependencies
-                    if (arg.getEvaluationOrder() > maxTmpOrder)
-                        maxTmpOrder = arg.getEvaluationOrder();
+                    if (getEvaluationOrder(arg) > maxTmpOrder)
+                        maxTmpOrder = getEvaluationOrder(arg);
                 }
             }
         }
@@ -1899,7 +2065,7 @@ protected:
             LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
             _loops.depth++;
             _loops.outerVars.resize(_loops.depth + 1);
-            _loops.startEvalOrder.push_back(loopEnd.getLoopStart().getEvaluationOrder());
+            _loops.startEvalOrder.push_back(getEvaluationOrder(loopEnd.getLoopStart()));
 
         } else if (op == CGOpCode::LoopStart) {
             _loops.depth--; // leaving the current loop
@@ -1919,15 +2085,15 @@ protected:
 
                 markVisited(arg);
 
-                size_t order = node.getEvaluationOrder();
+                size_t order = getEvaluationOrder(node);
                 OperationNode<Base>* aa = getOperationFromAlias(arg); // follow alias!
                 if (aa != nullptr) {
-                    if (aa->getLastUsageEvaluationOrder() < order) {
-                        aa->setLastUsageEvaluationOrder(order);
+                    if (getLastUsageEvaluationOrder(*aa) < order) {
+                        setLastUsageEvaluationOrder(*aa, order);
                     }
 
                     if (_loops.depth >= 0 &&
-                            aa->getEvaluationOrder() < _loops.startEvalOrder[_loops.depth] &&
+                            getEvaluationOrder(*aa) < _loops.startEvalOrder[_loops.depth] &&
                             isTemporary(*aa)) {
                         // outer variable used inside the loop
                         _loops.outerVars[_loops.depth].insert(aa);
@@ -1941,13 +2107,13 @@ protected:
              * temporary variables from outside the loop which are used
              * within the loop cannot be overwritten inside that loop
              */
-            size_t order = node.getEvaluationOrder();
+            size_t order = getEvaluationOrder(node);
 
             const std::set<OperationNode<Base>*>& outerLoopUsages = _loops.outerVars.back();
             for (OperationNode<Base>* outerVar : outerLoopUsages) {
                 OperationNode<Base>* aa = getOperationFromAlias(*outerVar); // follow alias!
-                if (aa != nullptr && aa->getLastUsageEvaluationOrder() < order)
-                    aa->setLastUsageEvaluationOrder(order);
+                if (aa != nullptr && getLastUsageEvaluationOrder(*aa) < order)
+                    setLastUsageEvaluationOrder(*aa, order);
             }
 
             _loops.depth--;
@@ -1969,8 +2135,8 @@ protected:
         for (const Argument<Base>& a : node.getArguments()) {
             if (a.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *a.getOperation();
-                if (arg.getEvaluationOrder() == 0) {
-                    arg.setEvaluationOrder(node.getEvaluationOrder());
+                if (getEvaluationOrder(arg) == 0) {
+                    setEvaluationOrder(arg, getEvaluationOrder(node));
                     dependentAdded2EvaluationQueue(arg);
                 }
             }
@@ -1979,14 +2145,14 @@ protected:
 
     inline void updateEvaluationQueueOrder(OperationNode<Base>& node,
                                            size_t newEvalOrder) {
-        size_t oldEvalOrder = node.getEvaluationOrder();
+        size_t oldEvalOrder = getEvaluationOrder(node);
 
-        node.setEvaluationOrder(newEvalOrder);
+        setEvaluationOrder(node, newEvalOrder);
 
         for (const Argument<Base>& a : node.getArguments()) {
             if (a.getOperation() != nullptr) {
                 OperationNode<Base>& arg = *a.getOperation();
-                if (arg.getEvaluationOrder() == oldEvalOrder)
+                if (getEvaluationOrder(arg) == oldEvalOrder)
                     updateEvaluationQueueOrder(arg, newEvalOrder);
             }
         }
@@ -2038,14 +2204,70 @@ protected:
         }
     }
 
+    inline size_t getEvaluationOrder(const OperationNode<Base>& node) const {
+        return _evaluationOrder[node];
+    }
+
+    inline void setEvaluationOrder(OperationNode<Base>& node,
+                                   size_t order) {
+        CPPADCG_ASSERT_UNKNOWN(order <= _variableOrder.size());
+        _evaluationOrder[node] = order;
+    }
+
+    inline size_t getLastUsageEvaluationOrder(const OperationNode<Base>& node) const {
+        return _lastUsageOrder[node];
+    }
+
+    inline void setLastUsageEvaluationOrder(const OperationNode<Base>& node,
+                                            size_t last) {
+        CPPADCG_ASSERT_UNKNOWN(last <= _variableOrder.size()); // _lastUsageOrder[node] = 0  means that it was never used
+        _lastUsageOrder[node] = last;
+
+        CGOpCode op = node.getOperationType();
+        if (op == CGOpCode::ArrayElement) {
+            OperationNode<Base>* array = node.getArguments()[0].getOperation();
+            CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGOpCode::ArrayCreation);
+            if (getLastUsageEvaluationOrder(*array) < last) {
+                setLastUsageEvaluationOrder(*array, last);
+            }
+        } else if (op == CGOpCode::Tmp) {
+            OperationNode<Base>* declr = node.getArguments()[0].getOperation();
+            CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGOpCode::TmpDcl);
+            if (getLastUsageEvaluationOrder(*declr) < last) {
+                setLastUsageEvaluationOrder(*declr, last);
+            }
+        }
+    }
+
+    /**
+     * Provides the total number of times the result of an operation node is
+     * being used as an argument for another operation.
+     * @return the total usage count
+     */
+    inline size_t getTotalUsageCount(const OperationNode<Base>& node) const {
+        return _totalUseCount[node];
+    }
+
+    inline void setTotalUsageCount(const OperationNode<Base>& node,
+                                   size_t cout) {
+        _totalUseCount[node] = cout;
+    }
+
+    inline void increaseTotalUsageCount(const OperationNode<Base>& node) {
+        _totalUseCount[node]++;
+    }
+
     inline void resetManagedNodes() {
         _variableOrder.clear();
         _scopedVariableOrder.resize(1);
         _scopedVariableOrder[0].clear();
+        _evaluationOrder.fill(0);
+        _lastUsageOrder.fill(0);
+        _totalUseCount.fill(0);
+        _scope.fill(0);
 
         for (OperationNode<Base>* block : _codeBlocks) {
             block->resetHandlerCounters();
-            block->setColor(0);
         }
     }
 
@@ -2069,7 +2291,7 @@ protected:
         std::map<size_t, LoopModel<Base>*> loopModels;
         std::vector<LoopEndOperationNode<Base>*> endNodes;
         // the used indexes
-        std::set<const IndexDclrOperationNode<Base>*> indexes;
+        std::set<const OperationNode<Base>*> indexes;
         // the used random index patterns
         std::set<RandomIndexPattern*> indexRandomPatterns;
         //

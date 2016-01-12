@@ -28,18 +28,11 @@ namespace cg {
  */
 template<class Base>
 class PrintOperationNode : public OperationNode<Base> {
+    friend class CodeHandler<Base>;
 protected:
     std::string before_;
     std::string after_;
 public:
-
-    inline PrintOperationNode(const std::string& before,
-                              const Argument<Base>& arg,
-                              const std::string& after) :
-        OperationNode<Base>(CGOpCode::Pri, arg),
-        before_(before),
-        after_(after) {
-    }
 
     inline const std::string& getBeforeString() const {
         return before_;
@@ -58,6 +51,17 @@ public:
     }
 
     inline virtual ~PrintOperationNode() {
+    }
+
+protected:
+
+    inline PrintOperationNode(CodeHandler<Base>* handler,
+                              const std::string& before,
+                              const Argument<Base>& arg,
+                              const std::string& after) :
+        OperationNode<Base>(handler, CGOpCode::Pri, arg),
+        before_(before),
+        after_(after) {
     }
 
 };

@@ -28,25 +28,17 @@ namespace cg {
  */
 template<class Base>
 class LoopStartOperationNode : public OperationNode<Base> {
+        friend class CodeHandler<Base>;
 public:
 
-    inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, size_t iterationCount) :
-        OperationNode<Base>(CGOpCode::LoopStart, indexDcl) {
-        this->getInfo().push_back(iterationCount);
-    }
-
-    inline LoopStartOperationNode(IndexDclrOperationNode<Base>& indexDcl, IndexOperationNode<Base>& iterCount) :
-        OperationNode<Base>(CGOpCode::LoopStart,{indexDcl, iterCount}) {
-    }
-
-    inline IndexDclrOperationNode<Base>& getIndex() const {
+    inline OperationNode<Base>& getIndex() const {
         const std::vector<Argument<Base> >& args = this->getArguments();
         CPPADCG_ASSERT_KNOWN(!args.empty(), "Invalid number of arguments");
 
         OperationNode<Base>* aNode = args[0].getOperation();
         CPPADCG_ASSERT_KNOWN(aNode != nullptr && aNode->getOperationType() == CGOpCode::IndexDeclaration, "Invalid argument operation type");
 
-        return static_cast<IndexDclrOperationNode<Base>&> (*aNode);
+        return static_cast<OperationNode<Base>&> (*aNode);
     }
 
     inline IndexOperationNode<Base>* getIterationCountNode() const {
@@ -70,6 +62,21 @@ public:
     }
 
     inline virtual ~LoopStartOperationNode() {
+    }
+
+protected:
+
+    inline LoopStartOperationNode(CodeHandler<Base>* handler,
+                                  OperationNode<Base>& indexDcl,
+                                  size_t iterationCount) :
+        OperationNode<Base>(handler, CGOpCode::LoopStart, indexDcl) {
+        this->getInfo().push_back(iterationCount);
+    }
+
+    inline LoopStartOperationNode(CodeHandler<Base>* handler,
+                                  OperationNode<Base>& indexDcl,
+                                  IndexOperationNode<Base>& iterCount) :
+        OperationNode<Base>(handler, CGOpCode::LoopStart,{indexDcl, iterCount}) {
     }
 
 };
