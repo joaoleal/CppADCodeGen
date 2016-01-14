@@ -28,7 +28,7 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++11 header only library so there aren't many dependencies:
 
- - **CppAD** (2015)
+ - **CppAD** (2016)
  - A **C++11** compiler (such as GCC and Clang).
  - Clang/LLVM 3.2, 3.4, or 3.6 (only for JIT compilation)
  - Eigen 3 (only for DAE differentiation index reduction)
@@ -56,7 +56,7 @@ It will create a debian package outside the project's folder.
 
 See the [wiki](https://github.com/joaoleal/CppADCodeGen/wiki).
 
-The folder example includes some simple usage cases.
+The folder example includes some simple use cases.
 
 ---
 

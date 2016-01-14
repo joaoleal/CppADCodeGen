@@ -45,7 +45,7 @@ IF(LLVM_FOUND)
                     -DLLVM_VERSION_MINOR=${LLVM_VERSION_MINOR})
 ENDIF()
 
-# Latex used for test
+# Latex used for test and example
 FIND_PACKAGE(LATEX)
 
 #
@@ -62,6 +62,11 @@ ENDIF()
 # cppcheck tests
 ###
 INCLUDE(cmake/cppcheck.cmake)
+
+###
+# some utilities
+###
+INCLUDE(cmake/util.cmake)
 
 ################################################################################
 #                              Includes

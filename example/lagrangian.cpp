@@ -15,17 +15,18 @@
 
 #include <iosfwd>
 #include <vector>
-#include <cppad/cg/cppadcg.hpp>
+#include <cppad/cg.hpp>
 
 using namespace CppAD;
 using namespace CppAD::cg;
 
 int main(void) {
-    using namespace CppAD;
-    using namespace CppAD::cg;
-
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
+
+    /***************************************************************************
+     *                               the model
+     **************************************************************************/
 
     size_t nCtr = 2; // number of constraints
     size_t nVar = 3; // number of decision variables
@@ -52,6 +53,10 @@ int main(void) {
 
     ADFun<CGD> fun(v, lag);
 
+    /***************************************************************************
+     *                       Create the dynamic library
+     *                  (generates and compiles source code)
+     **************************************************************************/
     /**
      * Determine Hessian sparsity pattern
      */
@@ -92,9 +97,9 @@ int main(void) {
     SaveFilesModelLibraryProcessor<double> p2(libgen);
     p2.saveSources();
 
-    /**
-     * Use the dynamic library
-     */
+    /***************************************************************************
+     *                       Use the dynamic library
+     **************************************************************************/
     GenericModel<double>* model = dynamicLib->model("Lagrangian");
     std::vector<double> V(v.size());
     V[0] = 2.5;

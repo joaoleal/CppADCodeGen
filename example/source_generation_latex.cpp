@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -12,10 +12,10 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-
 #include <iosfwd>
 #include <vector>
 #include <cppad/cg.hpp>
+#include <cppad/cg/latex/latex.hpp>
 
 using namespace CppAD;
 using namespace CppAD::cg;
@@ -30,53 +30,51 @@ int main(void) {
      **************************************************************************/
 
     // independent variable vector
-    std::vector<ADCG> x(2);
+    CppAD::vector<ADCG> x(2);
+    x[0] = 2.;
+    x[1] = 3.;
     Independent(x);
 
     // dependent variable vector 
-    std::vector<ADCG> y(1);
+    CppAD::vector<ADCG> y(1);
 
-    // the model equation
+    // the model
     ADCG a = x[0] / 1. + x[1] * x[1];
     y[0] = a / 2;
 
-    ADFun<CGD> fun(x, y);
+    ADFun<CGD> fun(x, y); // the model tape
 
     /***************************************************************************
-     *                       Create the dynamic library
-     *                  (generates and compiles source code)
+     *                       Generate the Latex source code
      **************************************************************************/
-    // generates source code
-    ModelCSourceGen<double> cgen(fun, "model");
-    cgen.setCreateJacobian(true);
-    cgen.setCreateForwardOne(true);
-    cgen.setCreateReverseOne(true);
-    cgen.setCreateReverseTwo(true);
-    ModelLibraryCSourceGen<double> libcgen(cgen);
 
-    // compile source code
-    DynamicModelLibraryProcessor<double> p(libcgen);
+    /**
+     * start the special steps for source code generation
+     * for a Jacobian
+     */
+    CodeHandler<double> handler;
 
-    GccCompiler<double> compiler;
-    DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+    CppAD::vector<CGD> xv(x.size());
+    handler.makeVariables(xv);
 
-    // save to files (not really required)
-    SaveFilesModelLibraryProcessor<double> p2(libcgen);
-    p2.saveSources();
+    CppAD::vector<CGD> vals = fun.Forward(0, xv);
+
+    LanguageLatex<double> langLatex;
+    LangLatexDefaultVariableNameGenerator<double> nameGen;
+
+    std::ofstream texfile;
+    texfile.open("algorithm.tex");
+
+    handler.generateCode(texfile, langLatex, vals, nameGen);
+
+    texfile.close();
 
     /***************************************************************************
-     *                       Use the dynamic library
+     *                               Compile a PDF file
      **************************************************************************/
+#ifdef PDFLATEX_COMPILER
+    std::string dir = system::getWorkingDirectory();
 
-    GenericModel<double>* model = dynamicLib->model("model");
-    std::vector<double> xv(x.size());
-    xv[0] = 2.5;
-    xv[1] = 3.5;
-    std::vector<double> jac = model->Jacobian(xv);
-
-    // print out the result
-    std::cout << jac[0] << " " << jac[1] << std::endl;
-
-    delete model;
-    delete dynamicLib;
+    system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-shell-escape", system::createPath(dir, "latex_template.tex")});
+#endif
 }

@@ -15,25 +15,65 @@
 #
 # ----------------------------------------------------------------------------
 
-ADD_EXECUTABLE(source_generation source_generation.cpp)
-SET(EXAMPLES_COMMAND "COMMAND source_generation")
-ADD_CUSTOM_TARGET(example_source_generation
-                  COMMAND source_generation)
+################################################################################
+#                             source_generation_c
+################################################################################
+ADD_EXECUTABLE(source_generation_c source_generation_c.cpp)
+SET(EXAMPLES_COMMAND "COMMAND source_generation_c")
+ADD_CUSTOM_TARGET(example_source_generation_c
+                  COMMAND source_generation_c)
+
+################################################################################
+#                             source_generation_mathml
+################################################################################
+ADD_EXECUTABLE(source_generation_mathml source_generation_mathml.cpp)
+SET(EXAMPLES_COMMAND "COMMAND source_generation_mathml")
+ADD_CUSTOM_TARGET(example_source_generation_mathml
+                  COMMAND source_generation_mathml)
+
+################################################################################
+#                             source_generation_latex
+################################################################################
+ADD_EXECUTABLE(source_generation_latex source_generation_latex.cpp)
+SET(EXAMPLES_COMMAND "COMMAND source_generation_latex")
+ADD_CUSTOM_TARGET(example_source_generation_latex
+                  COMMAND source_generation_latex)
+
+IF(PDFLATEX_COMPILER)
+    ADD_DEFINITIONS(-DPDFLATEX_COMPILER="${PDFLATEX_COMPILER}")
+ENDIF()
+
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/latex_template.tex"
+          "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
+
+# copy template (if required)
+ADD_CUSTOM_TARGET(link_or_copy_latex_template
+                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
+ADD_DEPENDENCIES(source_generation_latex link_or_copy_latex_template)
+
 
 IF(UNIX)
+    ############################################################################
+    #                                  dynamic_linux
+    ############################################################################
     ADD_EXECUTABLE(dynamic_linux dynamic_linux.cpp)
     SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND dynamic_linux")
     TARGET_LINK_LIBRARIES(dynamic_linux ${DL_LIBRARIES})
     ADD_CUSTOM_TARGET(example_dynamic_linux
                       COMMAND dynamic_linux)
 
+    ############################################################################
+    #                                  lagrangian
+    ############################################################################
     ADD_EXECUTABLE(lagrangian lagrangian.cpp)
     SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND lagrangian")
     TARGET_LINK_LIBRARIES(lagrangian ${DL_LIBRARIES})
     ADD_CUSTOM_TARGET(example_lagrangian
                       COMMAND lagrangian)
 
-    # 
+    ############################################################################
+    #                                   patterns
+    ############################################################################
     ADD_EXECUTABLE(patterns patterns.cpp)
     SET(EXAMPLES_COMMAND "${EXAMPLES_COMMAND} COMMAND patterns")
     TARGET_LINK_LIBRARIES(patterns ${DL_LIBRARIES})
@@ -44,7 +84,9 @@ ENDIF(UNIX)
 
 ADD_CUSTOM_TARGET(examples)
                   
-ADD_DEPENDENCIES(examples example_source_generation)
+ADD_DEPENDENCIES(examples example_source_generation_c)
+ADD_DEPENDENCIES(examples example_source_generation_latex)
+ADD_DEPENDENCIES(examples example_source_generation_mathml)
 IF(UNIX)
     ADD_DEPENDENCIES(examples example_dynamic_linux)
     ADD_DEPENDENCIES(examples example_lagrangian)

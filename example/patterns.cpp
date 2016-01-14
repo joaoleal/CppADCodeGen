@@ -15,7 +15,7 @@
 
 #include <iosfwd>
 #include <vector>
-#include <cppad/cg/cppadcg.hpp>
+#include <cppad/cg.hpp>
 
 using namespace CppAD;
 using namespace CppAD::cg;
@@ -24,6 +24,10 @@ int main(void) {
     // use a special object for source code generation
     typedef CG<double> CGD;
     typedef AD<CGD> ADCG;
+
+    /***************************************************************************
+     *                               the model
+     **************************************************************************/
 
     // independent variable vector
     std::vector<ADCG> x(5, ADCG(1));
@@ -54,6 +58,12 @@ int main(void) {
     y[7] = x[4] - b;
 
     ADFun<CGD> fun(x, y);
+
+    /***************************************************************************
+     *                             pattern detection
+     *                                   and 
+     *                             source generation
+     **************************************************************************/
 
     /**
      * Define which dependent variables are related
