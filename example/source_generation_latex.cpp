@@ -50,7 +50,6 @@ int main(void) {
 
     /**
      * start the special steps for source code generation
-     * for a Jacobian
      */
     CodeHandler<double> handler;
 
