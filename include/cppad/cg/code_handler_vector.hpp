@@ -23,12 +23,41 @@ template<class Base>
 class CodeHandler;
 
 /**
+ * A class for synchronization of data vectors associated with operation nodes
+ * managed by a code handler.
+ */
+template<class Base>
+class CodeHandlerVectorSync {
+    friend class CodeHandler<Base>;
+protected:
+    CodeHandler<Base>* handler_;
+public:
+
+    inline CodeHandlerVectorSync(CodeHandler<Base>& handler) :
+        handler_(&handler) {
+        handler_->addVector(this);
+    }
+
+    virtual ~CodeHandlerVectorSync() {
+        if (handler_ != nullptr)
+            handler_->removeVector(this);
+    }
+
+protected:
+    /**
+     * @param start The index of the first OperationNode that was deleted
+     * @param end The index after the last OperationNode that was deleted
+     */
+    virtual void nodesErased(size_t start, size_t end) = 0;
+};
+
+/**
  * A vector for data associated with operation nodes managed by a code handler.
  * 
  * @author Joao Leal
  */
 template<class Base, class T>
-class CodeHandlerVector {
+class CodeHandlerVector : public CodeHandlerVectorSync<Base> {
 public:
     typedef typename std::vector<T>::iterator iterator;
     typedef typename std::vector<T>::const_iterator const_iterator;
@@ -39,14 +68,10 @@ private:
      * data vector
      */
     std::vector<T> data_;
-    /**
-     * 
-     */
-    CodeHandler<Base>& handler_;
 public:
 
     inline CodeHandlerVector(CodeHandler<Base>& handler) :
-        handler_(handler) {
+        CodeHandlerVectorSync<Base>(handler) {
     }
 
     inline void clear() {
@@ -54,8 +79,8 @@ public:
     }
 
     inline void adjustSize() {
-        size_t s = handler_.getManagedNodesCount();
-        if(s >= data_.capacity()) {
+        size_t s = this->handler_->getManagedNodesCount();
+        if (s >= data_.capacity()) {
             data_.reserve(s * 3 / 2 + 1);
         }
         data_.resize(s);
@@ -159,6 +184,16 @@ public:
     inline const_reverse_iterator crend() const noexcept {
         return data_.crend();
     }
+protected:
+
+    virtual void nodesErased(size_t start, size_t end) override {
+        if (start < data_.size()) {
+            end = std::min(end, data_.size());
+            data_.erase(data_.begin() + start, data_.begin() + end);
+        }
+    }
+
+public:
 
     /**
      * operators

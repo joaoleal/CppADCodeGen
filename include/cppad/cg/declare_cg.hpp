@@ -47,6 +47,9 @@ class CGAtomicFun;
 template<class Base>
 class CodeHandler;
 
+template<class Base>
+class CodeHandlerVectorSync;
+
 template<class Base, class T>
 class CodeHandlerVector;
 

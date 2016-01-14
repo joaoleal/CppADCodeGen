@@ -26,6 +26,7 @@ namespace cg {
  */
 template<class Base>
 class CodeHandler {
+    friend class CodeHandlerVectorSync<Base>;
 public:
     typedef std::vector<OperationPathNode<Base> > SourceCodePath;
     typedef std::vector<ScopePathElement<Base> > ScopePath;
@@ -53,6 +54,10 @@ protected:
      * all OperationNodes created by CG<Base> objects
      */
     std::vector<OperationNode<Base> *> _codeBlocks;
+    /**
+     * All CodeHandlerVector associated with this code handler
+     */
+    std::set<CodeHandlerVectorSync<Base>*> _managedVectors;
     /**
      * the ID of the last visit to each managed node
      */
@@ -703,7 +708,7 @@ public:
     inline OperationNode<Base>* cloneNode(const OperationNode<Base>& n) {
         return manageOperationNode(new OperationNode<Base>(n));
     }
-    
+
     inline OperationNode<Base>* makeNode(CGOpCode op) {
         return manageOperationNode(new OperationNode<Base>(this, op));
     }
@@ -843,6 +848,10 @@ public:
         for (size_t i = start; i < _codeBlocks.size(); ++i) {
             _codeBlocks[i]->setHandlerPosition(i);
         }
+
+        for (auto* v : _managedVectors) {
+            v->nodesErased(start, end);
+        }
     }
 
     /***********************************************************************
@@ -976,6 +985,10 @@ public:
      */
     inline virtual ~CodeHandler() {
         reset();
+        
+        for (auto* v : _managedVectors) {
+            v->handler_ = nullptr;
+        }
     }
 
 protected:
@@ -989,6 +1002,14 @@ protected:
         code->setHandlerPosition(_codeBlocks.size());
         _codeBlocks.push_back(code);
         return code;
+    }
+
+    inline void addVector(CodeHandlerVectorSync<Base>* v) {
+        _managedVectors.insert(v);
+    }
+
+    inline void removeVector(CodeHandlerVectorSync<Base>* v) {
+        _managedVectors.erase(v);
     }
 
     virtual void markCodeBlockUsed(OperationNode<Base>& code) {
@@ -1248,7 +1269,7 @@ protected:
         _evaluationOrder.adjustSize();
         _lastUsageOrder.adjustSize();
         _totalUseCount.adjustSize();
-        
+
         /**
          * add the new scope
          */
