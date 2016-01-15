@@ -672,7 +672,7 @@ protected:
 
                     std::string varName = _nameGen->generateDependent(i);
                     _code << _startEq
-                            << "<mrow id='" << createID(dependent[i].getOperationNode()) << "' class='dep'>" << varName << "</mrow>" << _assignStr;
+                            << "<mrow class='dep'>" << varName << "</mrow>" << _assignStr; // id='" << createID(??)
                     printParameter(dependent[i].getValue());
                     printAssigmentEnd();
                 }
@@ -1341,6 +1341,24 @@ protected:
         bool encloseLeft = encloseInParenthesesMul(left);
         bool encloseRight = encloseInParenthesesMul(right);
 
+        auto isNumber = [](const OperationNode<Base>* node, int pos) -> bool {
+            while (node != nullptr) {
+                if (node->getOperationType() == CGOpCode::Alias) {
+                    node = node->getArguments()[0].getOperation();
+                    continue;
+                }
+                CGOpCode op = node->getOperationType();
+                if (op == CGOpCode::Mul) {
+                    node = node->getArguments()[pos].getOperation();
+                } else if (pos == 0 && op == CGOpCode::Pow) {
+                    node = node->getArguments()[0].getOperation();
+                } else {
+                    return false;
+                }
+            }
+            return true; // a constant number
+        };
+
         if (encloseLeft) {
             _code << "<mfenced><mrow>";
         }
@@ -1348,7 +1366,12 @@ protected:
         if (encloseLeft) {
             _code << "</mrow></mfenced>";
         }
-        _code << "<mo>&it;</mo>";
+
+        if (isNumber(left.getOperation(), 1) && isNumber(right.getOperation(), 0))
+            _code << "<mo>&times;</mo>"; // numbers too close together are difficult to distinguish
+        else
+            _code << "<mo>&it;</mo>"; // invisible times
+
         if (encloseRight) {
             _code << "<mfenced><mrow>";
         }
