@@ -30,8 +30,6 @@ protected:
     const ActiveOut* indep_;
     CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
     std::map<size_t, CppAD::vector<ActiveOut>* > evalsArrays_;
-    std::set<OperationNode<ScalarIn>*> evalsAtomic_;
-    std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
     bool underEval_;
 public:
 
@@ -50,29 +48,6 @@ public:
      */
     inline bool isUnderEvaluation() {
         return underEval_;
-    }
-
-    /**
-     * Provides an atomic function.
-     * 
-     * @param id The atomic function ID
-     * @param atomic The atomic function
-     * @return True if an atomic function with the same ID was already
-     *         defined, false otherwise.
-     */
-    virtual bool addAtomicFunction(size_t id, atomic_base<ScalarOut>& atomic) {
-        bool exists = atomicFunctions_.find(id) != atomicFunctions_.end();
-        atomicFunctions_[id] = &atomic;
-        return exists;
-    }
-
-    virtual void addAtomicFunctions(const std::map<size_t, atomic_base<ScalarOut>* >& atomics) {
-        for (const auto& it : atomics) {
-            atomic_base<ScalarOut>* atomic = it.second;
-            if (atomic != nullptr) {
-                atomicFunctions_[it.first] = atomic;
-            }
-        }
     }
 
     /**

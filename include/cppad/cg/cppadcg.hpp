@@ -143,6 +143,7 @@
 #include <cppad/cg/evaluator.hpp>
 #include <cppad/cg/evaluator_ad.hpp>
 #include <cppad/cg/evaluator_adcg.hpp>
+#include <cppad/cg/evaluator_cg.hpp>
 #include <cppad/cg/operation_path.hpp>
 #include <cppad/cg/solver.hpp>
 #include <cppad/cg/graph_mod.hpp>

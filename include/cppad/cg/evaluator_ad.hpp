@@ -19,25 +19,49 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Specialization for an output active type of AD<>
+ * Helper class for the specialization of Evaluator for an output active type of AD<>
  */
 template<class ScalarIn, class ScalarOut>
-class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > {
+class EvaluatorAD : public EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > {
 public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
+    typedef EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> Super;
 protected:
-    typedef EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > BaseClass;
-    using BaseClass::evalsAtomic_;
-    using BaseClass::atomicFunctions_;
-    using BaseClass::handler_;
-    using BaseClass::evalArrayCreationOperation;
+    using Super::handler_;
+    using Super::evalArrayCreationOperation;
+protected:
+    std::set<OperationNode<ScalarIn>*> evalsAtomic_;
+    std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler) :
-        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler) {
+    inline EvaluatorAD(CodeHandler<ScalarIn>& handler) :
+        Super(handler) {
     }
 
-    inline virtual ~Evaluator() {
+    inline virtual ~EvaluatorAD() {
+    }
+
+    /**
+     * Provides an atomic function.
+     * 
+     * @param id The atomic function ID
+     * @param atomic The atomic function
+     * @return True if an atomic function with the same ID was already
+     *         defined, false otherwise.
+     */
+    virtual bool addAtomicFunction(size_t id, atomic_base<ScalarOut>& atomic) {
+        bool exists = atomicFunctions_.find(id) != atomicFunctions_.end();
+        atomicFunctions_[id] = &atomic;
+        return exists;
+    }
+
+    virtual void addAtomicFunctions(const std::map<size_t, atomic_base<ScalarOut>* >& atomics) {
+        for (const auto& it : atomics) {
+            atomic_base<ScalarOut>* atomic = it.second;
+            if (atomic != nullptr) {
+                atomicFunctions_[it.first] = atomic;
+            }
+        }
     }
 
 protected:
@@ -91,6 +115,18 @@ protected:
 
         evalsAtomic_.insert(&node);
     }
+};
+
+/**
+ * Specialization of Evaluator for an output active type of AD<>
+ */
+template<class ScalarIn, class ScalarOut>
+class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorAD<ScalarIn, ScalarOut> {
+public:
+    typedef CppAD::AD<ScalarOut> ActiveOut;
+    typedef EvaluatorAD<ScalarIn, ScalarOut> Super;
+public:
+    using EvaluatorAD<ScalarIn, ScalarOut>::EvaluatorAD; // use same constructor
 };
 
 } // END cg namespace

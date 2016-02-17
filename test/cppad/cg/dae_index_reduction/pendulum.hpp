@@ -66,7 +66,7 @@ inline CppAD::ADFun<Base>* Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
     Z[4] = x * x + y * y - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<Base > (U, Z);
+    return new ADFun<Base> (U, Z);
 }
 
 template<class Base>
@@ -106,7 +106,7 @@ inline CppAD::ADFun<Base>* Pendulum3D() {
     Z[6] = x * x + y * y + z * z - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<Base > (U, Z);
+    return new ADFun<Base> (U, Z);
 }
 
 } // END cg namespace

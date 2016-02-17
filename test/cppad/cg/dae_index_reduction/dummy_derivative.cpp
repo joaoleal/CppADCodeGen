@@ -27,7 +27,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     std::vector<DaeVarInfo> daeVar;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD > (daeVar);
+    ADFun<CGD>* fun = Pendulum2D<CGD> (daeVar);
 
     std::vector<double> x(daeVar.size());
     std::vector<double> normVar(daeVar.size(), 1.0);

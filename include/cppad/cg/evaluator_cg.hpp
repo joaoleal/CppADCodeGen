@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_EVALUATOR_ADCG_INCLUDED
-#define CPPAD_CG_EVALUATOR_ADCG_INCLUDED
+#ifndef CPPAD_CG_EVALUATOR_CG_INCLUDED
+#define CPPAD_CG_EVALUATOR_CG_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
@@ -19,26 +19,18 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Specialization for an output active type of AD<CG<Base>>
+ * Specialization of Evaluator for an output active type of CG<Base>
  */
-template<class ScalarIn, class BaseOut>
-class Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > : public EvaluatorAD<ScalarIn, CG<BaseOut>> {
+template<class ScalarIn, class ScalarOut>
+class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut> > {
 public:
-    typedef CG<BaseOut> ScalarOut;
-    typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef EvaluatorAD<ScalarIn, ScalarOut> Super;
+    typedef CG<ScalarOut> ActiveOut;
 protected:
-    using Super::evalsAtomic_;
-    using Super::atomicFunctions_;
-    using Super::handler_;
-    using Super::evalArrayCreationOperation;
+    typedef EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut> > Super;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
         Super(handler) {
-    }
-
-    inline virtual ~Evaluator() {
     }
 
 protected:
@@ -46,9 +38,8 @@ protected:
     virtual void proccessActiveOut(OperationNode<ScalarIn>& node,
                                    ActiveOut& a) override {
         if (node.getName() != nullptr) {
-            ScalarOut a2(CppAD::Value(a));
-            if (a2.getOperationNode() != nullptr) {
-                a2.getOperationNode()->setName(*node.getName());
+            if (a.getOperationNode() != nullptr) {
+                a.getOperationNode()->setName(*node.getName());
             }
         }
     }
