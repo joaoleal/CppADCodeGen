@@ -38,6 +38,11 @@ public:
         handler_->addVector(this);
     }
 
+    inline CodeHandlerVectorSync(const CodeHandlerVectorSync& orig) :
+        handler_(orig.handler_) {
+        handler_->addVector(this);
+    }
+
     virtual ~CodeHandlerVectorSync() {
         if (handler_ != nullptr)
             handler_->removeVector(this);
@@ -72,6 +77,11 @@ public:
 
     inline CodeHandlerVector(CodeHandler<Base>& handler) :
         CodeHandlerVectorSync<Base>(handler) {
+    }
+
+    inline CodeHandlerVector(const CodeHandlerVector& orig) :
+        CodeHandlerVectorSync<Base>(orig),
+        data_(orig.data_) {
     }
 
     inline void clear() {
