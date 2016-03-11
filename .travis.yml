@@ -36,8 +36,11 @@ before_install:
 install:
   - mkdir cppadcg_deps
   - cd cppadcg_deps
-  - git clone https://github.com/coin-or/CppAD.git cppad
-  - cd cppad
+#  - git clone https://github.com/coin-or/CppAD.git cppad
+#  - cd cppad
+  - wget http://github.com/coin-or/CppAD/archive/20160000.1.tar.gz
+  - tar -xzf 20160000.1.tar.gz
+  - cd CppAD-20160000.1
   - mkdir build
   - mkdir install
   - cd build
