@@ -1,4 +1,4 @@
-# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen)
+# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen)
 
 CppADCodeGen performs **hybrid Automatic Differentiation** (AD), that is, uses 
 operator-overloading and produces source-code. Such source-code can be 
