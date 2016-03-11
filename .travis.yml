@@ -27,7 +27,8 @@ addons:
 
 env:
   global:
-    - CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
+    #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
+    - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20160000.1/install/include
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-4.8)" CXX="$(which g++-4.8)"; fi
