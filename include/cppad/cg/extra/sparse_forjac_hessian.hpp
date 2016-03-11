@@ -211,13 +211,15 @@ public:
 };
 
 template<class VectorSet>
-inline VectorSet computeNotUsed(VectorSet& sparsity,
-                                VectorSet& r_used,
-                                size_t m,
-                                size_t n) {
+inline void computeNotUsed(VectorSet& not_used,
+                           VectorSet& sparsity,
+                           VectorSet& r_used,
+                           size_t m,
+                           size_t n) {
 
-    VectorSet not_used;
+    assert(not_used.n_set() == 0);
     not_used.resize(m, n);
+    
     for (size_t i = 0; i < n; i++) {
         sparsity.begin(i);
         size_t j = sparsity.next_element();
@@ -227,8 +229,6 @@ inline VectorSet computeNotUsed(VectorSet& sparsity,
             j = sparsity.next_element();
         }
     }
-
-    return not_used;
 }
 
 template<class Base, class VectorSet>
@@ -265,6 +265,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         Pattern_type p_transpose;
         bool transpose = true;
         sparsity_user2internal(p_transpose, jac_p, m, n, transpose);
+        //sparsity_user2internal(p_transpose, jac_p, n, m, transpose, "Invalid sparsity pattern");
 
 
         size_t jac_K = work.jac.K;
@@ -291,7 +292,8 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         }
 
         // given a row index, which columns are non-zero and not used
-        Pattern_type jac_not_used = computeNotUsed(p_transpose, jac_c_used, m, n);
+        Pattern_type jac_not_used;
+        computeNotUsed(jac_not_used, p_transpose, jac_c_used, m, n);
 
         /**
          * Hessian
@@ -299,6 +301,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         Pattern_type hes_sparsity;
         transpose = false;
         sparsity_user2internal(hes_sparsity, hes_p, n, n, transpose);
+        //sparsity_user2internal(hes_sparsity, hes_p, n, n, transpose, "Invalid sparsity pattern");
 
         size_t hes_K = work.hes.K;
         CppAD::vector<size_t>& hes_row(work.hes.r_sort);
@@ -322,7 +325,8 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         }
 
         // given a column index, which rows are non-zero and not used
-        Pattern_type hes_not_used = computeNotUsed(hes_sparsity, hes_r_used, n, n);
+        Pattern_type hes_not_used;
+        computeNotUsed(hes_not_used, hes_sparsity, hes_r_used, n, n);
 
         // initial coloring
         for (j1 = 0; j1 < n; j1++) {
