@@ -186,7 +186,7 @@ public:
         } else {
 
             // no point in creating branches where both branch sides are zero
-            if (value.isParameter() && value.isIdenticalZero())
+            if (value.isIdenticalZero())
                 return value;
 
             /**

@@ -116,7 +116,7 @@ protected:
         arrayIdx.reserve(1 + py.size() / 3);
 
         for (size_t i = 0; i < n; i++) {
-            if (!py[i * p1 + k].isParameter() || !py[i * p1 + k].isIdenticalZero()) {
+            if (!py[i * p1 + k].isIdenticalZero()) {
                 arrayArgs.push_back(asArgument(py[i * p1 + k]));
                 arrayIdx.push_back(i);
             }

@@ -108,7 +108,7 @@ public:
 
             vector<std::set<size_t> > r(n);
             for (size_t j = 0; j < n; j++) {
-                if (!tx[j * (p + 1) + 1].isParameter() || !tx[j * (p + 1) + 1].isIdenticalZero())
+                if (!tx[j * (p + 1) + 1].isIdenticalZero())
                     r[j].insert(0);
             }
             vector<std::set<size_t> > s(m);
@@ -233,7 +233,7 @@ public:
 
         vector< std::set<size_t> > rt(m);
         for (size_t i = 0; i < m; i++) {
-            if (!py[i * p1].isParameter() || !py[i * p1].isIdenticalZero()) {
+            if (!py[i * p1].isIdenticalZero()) {
                 rt[i].insert(0);
             }
         }
@@ -258,12 +258,12 @@ public:
 
             for (size_t j = 0; j < n; j++) {
                 vx[j] = !tx[j * p1].isParameter();
-                if (!tx[j * p1 + 1].isParameter() || !tx[j * p1 + 1].isIdenticalZero()) {
+                if (!tx[j * p1 + 1].isIdenticalZero()) {
                     r[j].insert(0);
                 }
             }
             for (size_t i = 0; i < m; i++) {
-                s[i] = !py[i * p1 + 1].isParameter() || !py[i * p1 + 1].isIdenticalZero();
+                s[i] = !py[i * p1 + 1].isIdenticalZero();
             }
 
             this->rev_sparse_hes(vx, s, t, 1, r, u, v);

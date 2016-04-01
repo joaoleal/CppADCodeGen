@@ -23,19 +23,19 @@ namespace cg {
  */
 template <class Base>
 inline CG<Base>::CG() :
-    opNode_(nullptr),
+    node_(nullptr),
     value_(new Base(0.0)) {
 }
 
 template <class Base>
 inline CG<Base>::CG(OperationNode<Base>& node) :
-    opNode_(&node),
+    node_(&node),
     value_(nullptr) {
 }
 
 template <class Base>
 inline CG<Base>::CG(const Argument<Base>& arg) :
-    opNode_(arg.getOperation()),
+    node_(arg.getOperation()),
     value_(arg.getParameter() != nullptr ? new Base(*arg.getParameter()) : nullptr) {
 
 }
@@ -45,7 +45,7 @@ inline CG<Base>::CG(const Argument<Base>& arg) :
  */
 template <class Base>
 inline CG<Base>::CG(const Base &b) :
-    opNode_(nullptr),
+    node_(nullptr),
     value_(new Base(b)) {
 }
 
@@ -54,7 +54,7 @@ inline CG<Base>::CG(const Base &b) :
  */
 template <class Base>
 inline CG<Base>::CG(const CG<Base>& orig) :
-    opNode_(orig.opNode_),
+    node_(orig.node_),
     value_(orig.value_ != nullptr ? new Base(*orig.value_) : nullptr) {
 }
 
@@ -63,7 +63,7 @@ inline CG<Base>::CG(const CG<Base>& orig) :
  */
 template <class Base>
 inline CG<Base>& CG<Base>::operator=(const Base &b) {
-    opNode_ = nullptr;
+    node_ = nullptr;
     if (value_ != nullptr) {
         *value_ = b;
     } else {
@@ -77,7 +77,7 @@ inline CG<Base>& CG<Base>::operator=(const CG<Base> &rhs) {
     if (&rhs == this) {
         return *this;
     }
-    opNode_ = rhs.opNode_;
+    node_ = rhs.node_;
     if (rhs.value_ != nullptr) {
         if (value_ != nullptr) {
             *value_ = *rhs.value_;

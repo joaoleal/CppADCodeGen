@@ -19,13 +19,21 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
+inline CodeHandler<Base>* CG<Base>::getCodeHandler() const {
+    if (node_ != nullptr)
+        return node_->getCodeHandler();
+    else
+        return nullptr;
+}
+
+template<class Base>
 inline bool CG<Base>::isVariable() const {
-    return opNode_ != nullptr;
+    return node_ != nullptr;
 }
 
 template<class Base>
 inline bool CG<Base>::isParameter() const {
-    return opNode_ == nullptr;
+    return node_ == nullptr;
 }
 
 template<class Base>
@@ -53,23 +61,23 @@ inline void CG<Base>::setValue(const Base& b) {
 
 template<class Base>
 inline bool CG<Base>::isIdenticalZero() const {
-    return CppAD::IdenticalZero(getValue());
+    return isParameter() && CppAD::IdenticalZero(getValue());
 }
 
 template<class Base>
 inline bool CG<Base>::isIdenticalOne() const {
-    return CppAD::IdenticalOne(getValue());
+    return isParameter() && CppAD::IdenticalOne(getValue());
 }
 
 template<class Base>
 inline void CG<Base>::makeParameter(const Base &b) {
-    opNode_ = nullptr;
+    node_ = nullptr;
     setValue(b);
 }
 
 template<class Base>
 inline void CG<Base>::makeVariable(OperationNode<Base>& operation) {
-    opNode_ = &operation;
+    node_ = &operation;
     delete value_;
     value_ = nullptr;
 }
@@ -77,20 +85,20 @@ inline void CG<Base>::makeVariable(OperationNode<Base>& operation) {
 template<class Base>
 inline void CG<Base>::makeVariable(OperationNode<Base>& operation,
                                    std::unique_ptr<Base>& value) {
-    opNode_ = &operation;
+    node_ = &operation;
     delete value_;
     value_ = value.release();
 }
 
 template<class Base>
 inline OperationNode<Base>* CG<Base>::getOperationNode() const {
-    return opNode_;
+    return node_;
 }
 
 template<class Base>
 inline Argument<Base> CG<Base>::argument() const {
-    if (opNode_ != nullptr)
-        return Argument<Base> (*opNode_);
+    if (node_ != nullptr)
+        return Argument<Base> (*node_);
     else
         return Argument<Base> (*value_);
 }

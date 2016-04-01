@@ -19,16 +19,24 @@ namespace CppAD {
 namespace cg {
 
 /**
- * A node in the operation graph
+ * The base data type used to create models.
+ * It can represent either the result of a symbolic operation or a constant
+ * parameter value.
  * 
  * @author Joao Leal
  */
 template<class Base>
 class CG {
 private:
-    // the source code that generated this variable (null for parameters)
-    OperationNode<Base>* opNode_;
-    // value (constant parameters only)
+    /**
+     * A node which represents the result from an operation.
+     * It must be defined for variables and null for parameters.
+     */
+    OperationNode<Base>* node_;
+    /**
+     * A constant value which must be defined for parameters.
+     * Its definition is optional for variables.
+     */
     Base* value_;
 
 public:
@@ -43,37 +51,76 @@ public:
      * @param node The operation node.
      */
     inline CG(OperationNode<Base>& node);
-    
-    // copy constructor
+
+    /**
+     * Copy constructor
+     */
     inline CG(const CG<Base>& orig);
-    //assignment operator
+
+    /**
+     * Assignment operator
+     */
     inline CG& operator=(const CG<Base>& rhs);
 
-    // construction and assignment from base type
-    inline CG(const Base& orig);
-    inline CG& operator=(const Base& b);
+    /**
+     * Creates a parameter with the provided value
+     *
+     * @param val The parameter value
+     */
+    inline CG(const Base& val);
+
+    /**
+     * Assignment operator to a parameter value
+     *
+     * @param rhs The parameter value
+     */
+    inline CG& operator=(const Base& rhs);
 
     /**
      * @return The code handler that owns the OperationNode when it is a 
      *         variable, null when it is a parameter.
      */
-    inline CodeHandler<Base>* getCodeHandler() const {
-        if (opNode_ != nullptr)
-            return opNode_->getCodeHandler();
-        else
-            return nullptr;
-    }
+    inline CodeHandler<Base>* getCodeHandler() const;
 
     // variable classification methods
+    /**
+     * Determines if it represents the result from a symbolic operation
+     * which is registered in operation graph of a CodeHandler.
+     *
+     * @return true if it represents the result from a symbolic operation
+     */
     inline bool isVariable() const;
+
+    /**
+     * Determines if it a constant parameter which is not the result of
+     * a symbolic operation.
+     *
+     * @return true if it represents a constant parameter.
+     */
     inline bool isParameter() const;
+
+    /**
+     * Determines if there is value defined.
+     * Parameters must have a value defined while variable can optionally
+     * define it.
+     *
+     * @return true if there is a value defined
+     */
     inline bool isValueDefined() const;
 
     /**
      * Provides the current numerical value
-     * throw CGException if a value is not defined
+     *
+     * @throws CGException if a value is not defined
      */
     inline const Base& getValue() const;
+
+    /**
+     * Defines a value which can alter the resulting model if this object is
+     * a parameter used as an argument to symbolic operations.
+     * Variables can also optionally define a value however there will be
+     * no impact in the resulting model.
+     */
     inline void setValue(const Base& val);
 
     inline bool isIdenticalZero() const;
