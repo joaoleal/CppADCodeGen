@@ -129,7 +129,7 @@ private:
      */
     std::string _name;
     /**
-     * Job starting time (seconds)
+     * Job starting time
      */
     std::chrono::steady_clock::time_point _beginTime;
     /**
