@@ -21,7 +21,7 @@ namespace cg {
 template<class Base>
 void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
     CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
-    const size_t id = array.getVariableID();
+    const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
@@ -34,7 +34,7 @@ void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
         if (newValue) {
             if (firstElement) {
                 _code << _startEq
-                        << "<mrow class='tmp'>" << auxArrayName_ << "</mrow>" << _assignStr << _nameGen->generateTemporaryArray(array)
+                        << "<mrow class='tmp'>" << auxArrayName_ << "</mrow>" << _assignStr << _nameGen->generateTemporaryArray(array, getVariableID(array))
                         << _endEq
                         << " <!-- size: " << args.size() << " -->" << _endline;
                 firstElement = false;
@@ -73,7 +73,7 @@ void LanguageMathML<Base>::printSparseArrayCreationOp(OperationNode<Base>& array
     if (argSize == 0)
         return; // empty array
 
-    const size_t id = array.getVariableID();
+    const size_t id = getVariableID(array);
     size_t startPos = id - 1;
 
     bool firstElement = true;
@@ -83,7 +83,7 @@ void LanguageMathML<Base>::printSparseArrayCreationOp(OperationNode<Base>& array
         if (newValue) {
             if (firstElement) {
                 _code << _startEq
-                        << "<mrow class='tmp'>" << auxArrayName_ << "</mrow>" << _assignStr << _nameGen->generateTemporarySparseArray(array)
+                        << "<mrow class='tmp'>" << auxArrayName_ << "</mrow>" << _assignStr << _nameGen->generateTemporarySparseArray(array, getVariableID(array))
                         << _endEq
                         << " <!-- nnz: " << args.size() << "  size:" << info[0] << " -->" << _endline;
                 firstElement = false;
@@ -160,7 +160,8 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
 
                 if (args[i].getOperation() == nullptr ||
                         args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
-                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), *args[i].getOperation())) {
+                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
+                                                             *args[i].getOperation(), getVariableID(*args[i].getOperation()))) {
                     break;
                 }
             }
@@ -169,8 +170,8 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& indep = _nameGen->getIndependentArrayName(refOp);
-            size_t start = _nameGen->getIndependentArrayIndex(refOp);
+            const std::string& indep = _nameGen->getIndependentArrayName(refOp, getVariableID(refOp));
+            size_t start = _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << "<mrow class='indep'>" << indep << "</mrow>" << "<mfenced open='[' close=']'><mi>i</mi></mfenced>";
@@ -198,7 +199,8 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break; // not an independent index pattern
                 }
 
-                if (!_nameGen->isInSameIndependentArray(refOp, *args[i].getOperation()))
+                if (!_nameGen->isInSameIndependentArray(refOp, getVariableID(refOp),
+                                                        *args[i].getOperation(), getVariableID(*args[i].getOperation())))
                     break;
 
                 pos = args[i].getOperation()->getInfo()[1];
@@ -227,7 +229,7 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
             op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
             op2->getArguments().push_back(_info->auxIterationIndexOp);
 
-            arrayAssign << _nameGen->generateIndexedIndependent(*op2, p2dip);
+            arrayAssign << _nameGen->generateIndexedIndependent(*op2, 0, p2dip);
 
         } else {
             // no loop used
@@ -299,9 +301,9 @@ void LanguageMathML<Base>::printArrayElementOp(OperationNode<Base>& op) {
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
     if (arrayOp.getOperationType() == CGOpCode::ArrayCreation)
-        arrayName = _nameGen->generateTemporaryArray(arrayOp);
+        arrayName = _nameGen->generateTemporaryArray(arrayOp, getVariableID(arrayOp));
     else
-        arrayName = _nameGen->generateTemporarySparseArray(arrayOp);
+        arrayName = _nameGen->generateTemporarySparseArray(arrayOp, getVariableID(arrayOp));
 
     _code << "<mo>(</mo><mrow class='tmp'>" << arrayName << "</mrow><mo>)</mo><mfenced open='[' close=']'><mn>" << op.getInfo()[0] << "</mn></mfenced>";
 }
@@ -345,7 +347,7 @@ inline void LanguageMathML<Base>::printArrayStructInit(const std::string& dataAr
                 << dataArrayName << "<mo>.</mo><mi>sparse</mi><mo>=</mo><mn>" << true << "</mn>"
                 << dataArrayName << "<mo>.</mo><mi>nnz</mi><mo>=</mo><mn>" << nnz << "</mn>";
         if (nnz > 0) {
-            size_t id = array.getVariableID();
+            size_t id = getVariableID(array);
             _code << dataArrayName << "<mo>.</mo><mi>idx</mi><mo>=</mo>&amp;<mo>(</mo><mi>" << _C_SPARSE_INDEX_ARRAY << "</mi><mfenced open='[' close=']'><mn>" << (id - 1) << "</mn></mfenced><mo>)</mo>";
         }
     }
@@ -354,7 +356,7 @@ inline void LanguageMathML<Base>::printArrayStructInit(const std::string& dataAr
 
 template<class Base>
 inline void LanguageMathML<Base>::markArrayChanged(OperationNode<Base>& ty) {
-    size_t id = ty.getVariableID();
+    size_t id = getVariableID(ty);
     size_t tySize = ty.getArguments().size();
 
     if (ty.getOperationType() == CGOpCode::ArrayCreation) {

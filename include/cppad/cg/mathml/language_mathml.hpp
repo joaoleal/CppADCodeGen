@@ -501,7 +501,7 @@ protected:
         for (size_t j = 0; j < _independentSize; j++) {
             OperationNode<Base>& op = *info->independent[j];
             if (op.getName() == nullptr) {
-                op.setName(_nameGen->generateIndependent(op));
+                op.setName(_nameGen->generateIndependent(op, getVariableID(op)));
             }
         }
 
@@ -512,7 +512,7 @@ protected:
                 if (node->getOperationType() == CGOpCode::LoopIndexedDep) {
                     size_t pos = node->getInfo()[0];
                     const IndexPattern* ip = info->loopDependentIndexPatterns[pos];
-                    node->setName(_nameGen->generateIndexedDependent(*node, *ip));
+                    node->setName(_nameGen->generateIndexedDependent(*node, getVariableID(*node), *ip));
 
                 } else {
                     node->setName(_nameGen->generateDependent(i));
@@ -544,11 +544,11 @@ protected:
             if (node != nullptr) {
                 CGOpCode type = node->getOperationType();
                 if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
-                    size_t varID = node->getVariableID();
+                    size_t varID = getVariableID(*node);
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
                         if (it2 == _dependentIDs.end()) {
-                            _dependentIDs[node->getVariableID()] = i;
+                            _dependentIDs[getVariableID(*node)] = i;
                         } else {
                             // there can be several dependent variables with the same ID
                             dependentDuplicates.insert(i);
@@ -574,11 +574,11 @@ protected:
                 if (!isDependent(*node) && op != CGOpCode::IndexDeclaration) {
                     // variable names for temporaries must always be created since they might have been used before with a different name/id
                     if (requiresVariableName(*node) && op != CGOpCode::ArrayCreation && op != CGOpCode::SparseArrayCreation) {
-                        node->setName(_nameGen->generateTemporary(*node));
+                        node->setName(_nameGen->generateTemporary(*node, getVariableID(*node)));
                     } else if (op == CGOpCode::ArrayCreation) {
-                        node->setName(_nameGen->generateTemporaryArray(*node));
+                        node->setName(_nameGen->generateTemporaryArray(*node, getVariableID(*node)));
                     } else if (op == CGOpCode::SparseArrayCreation) {
-                        node->setName(_nameGen->generateTemporarySparseArray(*node));
+                        node->setName(_nameGen->generateTemporarySparseArray(*node, getVariableID(*node)));
                     }
                 }
             }
@@ -713,6 +713,10 @@ protected:
 
     }
 
+    inline size_t getVariableID(const OperationNode<Base>& node) const {
+        return _info->varId[node];
+    }
+
     inline virtual void printAlgorithmFileStart(std::ostream& out) {
         out << "<!DOCTYPE html>" << _endline <<
                 "<html lang=\"en\">" << _endline <<
@@ -778,7 +782,7 @@ protected:
 
         if (nodeRhs.getOperationType() == CGOpCode::ArrayElement) {
             OperationNode<Base>* array = nodeRhs.getArguments()[0].getOperation();
-            size_t arrayId = array->getVariableID();
+            size_t arrayId = getVariableID(*array);
             size_t pos = nodeRhs.getInfo()[0];
             if (array->getOperationType() == CGOpCode::ArrayCreation)
                 _tmpArrayValues[arrayId - 1 + pos] = nullptr; // this could probably be removed!
@@ -795,7 +799,7 @@ protected:
 
     inline virtual void printAssigmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep) {
         if (!isDep) {
-            _temporary[node.getVariableID()] = &node;
+            _temporary[getVariableID(node)] = &node;
         }
 
         _code << _startEq;
@@ -909,7 +913,7 @@ protected:
 
     inline const std::string& createVariableName(OperationNode<Base>& var) {
         CGOpCode op = var.getOperationType();
-        CPPADCG_ASSERT_UNKNOWN(var.getVariableID() > 0);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0);
         CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward);
         CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse);
         CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart);
@@ -920,28 +924,28 @@ protected:
 
         if (var.getName() == nullptr) {
             if (op == CGOpCode::ArrayCreation) {
-                var.setName(_nameGen->generateTemporaryArray(var));
+                var.setName(_nameGen->generateTemporaryArray(var, getVariableID(var)));
 
             } else if (op == CGOpCode::SparseArrayCreation) {
-                var.setName(_nameGen->generateTemporarySparseArray(var));
+                var.setName(_nameGen->generateTemporarySparseArray(var, getVariableID(var)));
 
             } else if (op == CGOpCode::LoopIndexedDep) {
                 size_t pos = var.getInfo()[0];
                 const IndexPattern* ip = _info->loopDependentIndexPatterns[pos];
-                var.setName(_nameGen->generateIndexedDependent(var, *ip));
+                var.setName(_nameGen->generateIndexedDependent(var, getVariableID(var), *ip));
 
             } else if (op == CGOpCode::LoopIndexedIndep) {
                 size_t pos = var.getInfo()[1];
                 const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
-                var.setName(_nameGen->generateIndexedIndependent(var, *ip));
+                var.setName(_nameGen->generateIndexedIndependent(var, getVariableID(var), *ip));
 
-            } else if (var.getVariableID() <= _independentSize) {
+            } else if (getVariableID(var) <= _independentSize) {
                 // independent variable
-                var.setName(_nameGen->generateIndependent(var));
+                var.setName(_nameGen->generateIndependent(var, getVariableID(var)));
 
-            } else if (var.getVariableID() < _minTemporaryVarID) {
+            } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
-                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(var.getVariableID());
+                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
                 CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
 
                 size_t index = it->second;
@@ -955,7 +959,7 @@ protected:
 
             } else {
                 // temporary variable
-                var.setName(_nameGen->generateTemporary(var));
+                var.setName(_nameGen->generateTemporary(var, getVariableID(var)));
             }
         }
 
@@ -968,7 +972,7 @@ protected:
     }
 
     virtual std::string createID(OperationNode<Base>& var) {
-        size_t id = var.getVariableID();
+        size_t id = getVariableID(var);
         if (varIds_.size() <= id) {
             varIds_.resize(id + 1 + varIds_.size() * 3 / 2, 0);
         }
@@ -984,8 +988,8 @@ protected:
 
     virtual void printIndependentVariableName(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
-        //size_t id = op.getVariableID();
-        _code << "<mrow id='" << createID(op) << "' class='indep'>" << _nameGen->generateIndependent(op) << "</mrow>";
+        //size_t id = getVariableID(op);
+        _code << "<mrow id='" << createID(op) << "' class='indep'>" << _nameGen->generateIndependent(op, getVariableID(op)) << "</mrow>";
     }
 
     virtual unsigned print(const Argument<Base>& arg) {
@@ -1000,16 +1004,16 @@ protected:
     }
 
     virtual unsigned printExpression(OperationNode<Base>& node) {
-        if (node.getVariableID() > 0) {
+        if (getVariableID(node) > 0) {
             const std::string& name = createVariableName(node); // use variable name
-            //size_t id = node.getVariableID();
+            //size_t id = getVariableID(node);
 
             CGOpCode op = node.getOperationType();
-            if (node.getVariableID() >= _minTemporaryVarID || op == CGOpCode::ArrayCreation || op == CGOpCode::SparseArrayCreation || op == CGOpCode::LoopIndexedDep || op == CGOpCode::LoopIndexedIndep) {
+            if (getVariableID(node) >= _minTemporaryVarID || op == CGOpCode::ArrayCreation || op == CGOpCode::SparseArrayCreation || op == CGOpCode::LoopIndexedDep || op == CGOpCode::LoopIndexedIndep) {
 
                 _code << "<mrow id='" << createID(node) << "' class='tmp'>" << name << "</mrow>"; // TODO!!!!!!!!!!!!!!!!!!!!!!!
 
-            } else if (node.getVariableID() <= _independentSize) {
+            } else if (getVariableID(node) <= _independentSize) {
                 // independent variable
                 _code << "<mrow id='" << createID(node) << "' class='indep'>" << name << "</mrow>";
 
@@ -1223,9 +1227,9 @@ protected:
     virtual void printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
-        auto encloseInParentheses = [](const OperationNode<Base>* node) {
+        auto encloseInParentheses = [this](const OperationNode<Base>* node) {
             while (node != nullptr) {
-                if (node->getVariableID() != 0)
+                if (getVariableID(*node) != 0)
                     return false;
                 if (node->getOperationType() == CGOpCode::Alias)
                     node = node->getArguments()[0].getOperation();
@@ -1233,7 +1237,7 @@ protected:
                     break;
             }
             return node != nullptr &&
-                    node->getVariableID() == 0 &&
+                    getVariableID(*node) == 0 &&
                     !isFunction(node->getOperationType());
         };
 
@@ -1307,7 +1311,7 @@ protected:
         _code << "</mfrac>";
     }
 
-    static inline bool encloseInParenthesesMul(const Argument<Base>& arg) {
+    inline bool encloseInParenthesesMul(const Argument<Base>& arg) const {
         if (arg.getParameter() != nullptr) {
             return ((*arg.getParameter()) < 0);
         } else {
@@ -1315,9 +1319,9 @@ protected:
         }
     }
 
-    static inline bool encloseInParenthesesMul(const OperationNode<Base>* node) {
+    inline bool encloseInParenthesesMul(const OperationNode<Base>* node) const {
         while (node != nullptr) {
-            if (node->getVariableID() != 0) {
+            if (getVariableID(*node) != 0) {
                 return false;
             } else if (node->getOperationType() == CGOpCode::Alias) {
                 node = node->getArguments()[0].getOperation();
@@ -1326,7 +1330,7 @@ protected:
             }
         }
         return node != nullptr &&
-                node->getVariableID() == 0 &&
+                getVariableID(*node) == 0 &&
                 node->getOperationType() != CGOpCode::Div &&
                 node->getOperationType() != CGOpCode::Mul &&
                 !isFunction(node->getOperationType());
@@ -1399,7 +1403,7 @@ protected:
     }
 
     virtual void printConditionalAssignment(OperationNode<Base>& node) {
-        CPPADCG_ASSERT_UNKNOWN(node.getVariableID() > 0);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
 
         const std::vector<Argument<Base> >& args = node.getArguments();
         const Argument<Base> &left = args[0];
@@ -1648,7 +1652,7 @@ protected:
         // CGLoopIndexedIndepOp
         size_t pos = node.getInfo()[1];
         const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
-        _code << _nameGen->generateIndexedIndependent(node, *ip);
+        _code << _nameGen->generateIndexedIndependent(node, getVariableID(node), *ip);
     }
 
     virtual void printLoopIndexedTmp(OperationNode<Base>& node) {
@@ -1807,7 +1811,7 @@ protected:
         if (arg.getOperationType() == CGOpCode::LoopIndexedDep) {
             return true;
         }
-        size_t id = arg.getVariableID();
+        size_t id = getVariableID(arg);
         return id > _independentSize && id < _minTemporaryVarID;
     }
 

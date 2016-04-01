@@ -82,6 +82,11 @@ protected:
      */
     CodeHandlerVector<Base, size_t> _totalUseCount;
     /**
+     * Provides the variable ID that was altered/assigned to operation nodes.
+     * Zero means that no variable is assigned.
+     */
+    CodeHandlerVector<Base, size_t> _varId;
+    /**
      * the order for the variable creation in the source code 
      */
     std::vector<OperationNode<Base> *> _variableOrder;
@@ -175,6 +180,7 @@ public:
         _evaluationOrder(*this),
         _lastUsageOrder(*this),
         _totalUseCount(*this),
+        _varId(*this),
         _scopedVariableOrder(1),
         _atomicFunctionsOrder(nullptr),
         _used(false),
@@ -246,6 +252,16 @@ public:
         }
 
         return it - _independentVariables.begin();
+    }
+
+    /**
+     * Provides variable IDs that were assigned to operation nodes.
+     * Zero means that no variable is assigned.
+     * The first IDs are reserved for the independent variables.
+     * It can be an empty vector if IDs have not yet been assigned.
+     */
+    inline const CodeHandlerVector<Base, size_t>& getVariablesIDs() const {
+      return _varId;
     }
 
     inline size_t getMaximumVariableID() const {
@@ -457,6 +473,7 @@ public:
         _evaluationOrder.adjustSize();
         _lastUsageOrder.adjustSize();
         _totalUseCount.adjustSize();
+        _varId.adjustSize();
         _scope.adjustSize();
 
         for (size_t i = 0; i < atomicFunctions.size(); i++) {
@@ -475,14 +492,14 @@ public:
          */
         size_t n = _independentVariables.size();
         for (size_t j = 0; j < n; j++) {
-            _independentVariables[j]->setVariableID(_idCount++);
+            _varId[*_independentVariables[j]] = _idCount++;
         }
 
         size_t m = dependent.size();
         for (size_t i = 0; i < m; i++) {
             OperationNode<Base>* node = dependent[i].getOperationNode();
-            if (node != nullptr && node->getVariableID() == 0) {
-                node->setVariableID(_idCount++);
+            if (node != nullptr && _varId[*node] == 0) {
+                _varId[*node] = _idCount++;
             }
         }
 
@@ -516,7 +533,7 @@ public:
                     // make sure new temporary variables are NOT created for
                     // the independent variables and that a dependency did
                     // not use it first
-                    if ((code.getVariableID() == 0 || !isIndependent(code)) && !isVisited(code)) {
+                    if ((_varId[code] == 0 || !isIndependent(code)) && !isVisited(code)) {
                         addToEvaluationQueue(code);
                     }
                 }
@@ -582,7 +599,7 @@ public:
          * Creates the source code for a specific language
          */
         _info.reset(new LanguageGenerationData<Base>(_independentVariables, dependent,
-                    _minTemporaryVarID, _variableOrder,
+                    _minTemporaryVarID, _varId, _variableOrder,
                     nameGen,
                     atomicFunctionId2Index, atomicFunctionId2Name,
                     _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
@@ -662,40 +679,11 @@ public:
      * can be reused again by this handler.
      */
     inline void resetNodes() {
-        if (_dependents != nullptr)
-            resetNodes(*_dependents);
-
         _scope.fill(0);
         _evaluationOrder.fill(0);
         _lastUsageOrder.fill(0);
-        _totalUseCount.fill(0); // must be after resetNodes
-    }
-
-    /**
-     * Resets the nodes and their children so that they can be reused again
-     * by a handler
-     * @param dependents the nodes to be reset
-     */
-    inline void resetNodes(CppAD::vector<CG<Base> >& dependents) {
-        for (size_t i = 0; i < dependents.size(); i++) {
-            resetNodes(dependents[i].getOperationNode());
-        }
-    }
-
-    /**
-     * Resets a node and its children so that they can be reused again by a
-     * handler
-     * @param node the node to be reset
-     */
-    inline void resetNodes(OperationNode<Base>* node) {
-        if (node == nullptr || getTotalUsageCount(*node) == 0)
-            return;
-
-        node->resetHandlerCounters();
-
-        for (Argument<Base>& a : *node) {
-            resetNodes(a.getOperation());
-        }
+        _totalUseCount.fill(0);
+        _varId.fill(0);
     }
 
     /***********************************************************************
@@ -1110,7 +1098,7 @@ protected:
                 OperationNode<Base>* depNode = (*_dependents)[depIndex].getOperationNode();
                 CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
 
-                code.setVariableID(depNode->getVariableID());
+                _varId[code] = _varId[*depNode];
             }
 
             /**
@@ -1269,6 +1257,7 @@ protected:
         _evaluationOrder.adjustSize();
         _lastUsageOrder.adjustSize();
         _totalUseCount.adjustSize();
+        _varId.adjustSize();
 
         /**
          * add the new scope
@@ -1705,9 +1694,9 @@ protected:
                 checkVariableCreation(arg);
 
                 if (aType == CGOpCode::LoopEnd || aType == CGOpCode::ElseIf || aType == CGOpCode::Else || aType == CGOpCode::EndIf) {
-                    if (arg.getVariableID() == 0) {
+                    if (_varId[arg] == 0) {
                         // ID value is not really used but must be non-zero
-                        arg.setVariableID(std::numeric_limits<size_t>::max());
+                        _varId[arg] = std::numeric_limits<size_t>::max();
                     }
                 } else if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
                     /**
@@ -1746,14 +1735,14 @@ protected:
                  * the independent variables and that a dependency did
                  * not use it first
                  */
-                if (arg.getVariableID() == 0 || !isIndependent(arg)) {
+                if (_varId[arg] == 0 || !isIndependent(arg)) {
                     if (aType == CGOpCode::LoopIndexedIndep) {
                         // ID value not really used but must be non-zero
-                        arg.setVariableID(std::numeric_limits<size_t>::max());
+                        _varId[arg] = std::numeric_limits<size_t>::max();
                     } else if (aType == CGOpCode::Alias) {
                         continue; // should never be added to the evaluation queue
                     } else if (aType == CGOpCode::Tmp) {
-                        arg.setVariableID(std::numeric_limits<size_t>::max());
+                        _varId[arg] = std::numeric_limits<size_t>::max();
                     } else if (aType == CGOpCode::LoopStart ||
                             aType == CGOpCode::LoopEnd ||
                             aType == CGOpCode::StartIf ||
@@ -1765,20 +1754,20 @@ protected:
                          * are always added
                          */
                         addToEvaluationQueue(arg);
-                        if (arg.getVariableID() == 0) {
+                        if (_varId[arg] == 0) {
                             // ID value is not really used but must be non-zero
-                            arg.setVariableID(std::numeric_limits<size_t>::max());
+                            _varId[arg] = std::numeric_limits<size_t>::max();
                         }
                     } else if (aType == CGOpCode::Pri) {
                         addToEvaluationQueue(arg);
-                        if (arg.getVariableID() == 0) {
+                        if (_varId[arg] == 0) {
                             // ID value is not really used but must be non-zero
-                            arg.setVariableID(std::numeric_limits<size_t>::max());
+                            _varId[arg] = std::numeric_limits<size_t>::max();
                         }
                     } else if (aType == CGOpCode::TmpDcl) {
                         addToEvaluationQueue(arg);
 
-                        arg.setVariableID(_idCount);
+                        _varId[arg] = _idCount;
                         _idCount++;
 
                     } else if (_lang->createsNewVariable(arg, getTotalUsageCount(arg)) ||
@@ -1786,26 +1775,26 @@ protected:
 
                         addToEvaluationQueue(arg);
 
-                        if (arg.getVariableID() == 0) {
+                        if (_varId[arg] == 0) {
                             if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
-                                arg.setVariableID(_idAtomicCount);
+                                _varId[arg] = _idAtomicCount;
                                 _idAtomicCount++;
                             } else if (aType == CGOpCode::LoopIndexedDep || aType == CGOpCode::LoopIndexedTmp) {
                                 // ID value not really used but must be non-zero
-                                arg.setVariableID(std::numeric_limits<size_t>::max());
+                                _varId[arg] = std::numeric_limits<size_t>::max();
                             } else if (aType == CGOpCode::ArrayCreation) {
                                 // a temporary array
                                 size_t arraySize = arg.getArguments().size();
-                                arg.setVariableID(_idArrayCount);
+                                _varId[arg] = _idArrayCount;
                                 _idArrayCount += arraySize;
                             } else if (aType == CGOpCode::SparseArrayCreation) {
                                 // a temporary array
                                 size_t nnz = arg.getArguments().size();
-                                arg.setVariableID(_idSparseArrayCount);
+                                _varId[arg] = _idSparseArrayCount;
                                 _idSparseArrayCount += nnz;
                             } else {
                                 // a single temporary variable
-                                arg.setVariableID(_idCount);
+                                _varId[arg] = _idCount;
                                 _idCount++;
                             }
                         }
@@ -1880,8 +1869,8 @@ protected:
          */
         std::vector<size_t> freedVariables; // variable IDs no longer in use
         _idCount = _minTemporaryVarID;
-        ArrayIdCompresser<Base> arrayComp(_idArrayCount);
-        ArrayIdCompresser<Base> sparseArrayComp(_idSparseArrayCount);
+        ArrayIdCompresser<Base> arrayComp(_varId, _idArrayCount);
+        ArrayIdCompresser<Base> sparseArrayComp(_varId, _idSparseArrayCount);
 
         for (size_t i = 0; i < _variableOrder.size(); i++) {
             OperationNode<Base>& var = *_variableOrder[i];
@@ -1889,7 +1878,7 @@ protected:
             const std::vector<OperationNode<Base>* >& released = tempVarRelease[i];
             for (size_t r = 0; r < released.size(); r++) {
                 if (isTemporary(*released[r])) {
-                    freedVariables.push_back(released[r]->getVariableID());
+                    freedVariables.push_back(_varId[*released[r]]);
                 } else if (isTemporaryArray(*released[r])) {
                     arrayComp.addFreeArraySpace(*released[r]);
                 } else if (isTemporarySparseArray(*released[r])) {
@@ -1900,21 +1889,21 @@ protected:
             if (isTemporary(var)) {
                 // a single temporary variable
                 if (freedVariables.empty()) {
-                    var.setVariableID(_idCount);
+                    _varId[var] = _idCount;
                     _idCount++;
                 } else {
                     size_t id = freedVariables.back();
                     freedVariables.pop_back();
-                    var.setVariableID(id);
+                    _varId[var] = id;
                 }
             } else if (isTemporaryArray(var)) {
                 // a temporary array
                 size_t arrayStart = arrayComp.reserveArraySpace(var);
-                var.setVariableID(arrayStart + 1);
+                _varId[var] = arrayStart + 1;
             } else if (isTemporarySparseArray(var)) {
                 // a temporary array
                 size_t arrayStart = sparseArrayComp.reserveArraySpace(var);
-                var.setVariableID(arrayStart + 1);
+                _varId[var] = arrayStart + 1;
             }
 
         }
@@ -2201,7 +2190,7 @@ protected:
                 op != CGOpCode::Index &&
                 op != CGOpCode::IndexAssign &&
                 op != CGOpCode::Tmp && // not considered as a temporary (the temporary is CGTmpDclOp)
-                arg.getVariableID() >= _minTemporaryVarID;
+                _varId[arg] >= _minTemporaryVarID;
     }
 
     inline static bool isTemporaryArray(const OperationNode<Base>& arg) {
@@ -2285,11 +2274,8 @@ protected:
         _evaluationOrder.fill(0);
         _lastUsageOrder.fill(0);
         _totalUseCount.fill(0);
+        _varId.fill(0);
         _scope.fill(0);
-
-        for (OperationNode<Base>* block : _codeBlocks) {
-            block->resetHandlerCounters();
-        }
     }
 
     /***********************************************************************

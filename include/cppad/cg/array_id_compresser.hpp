@@ -39,6 +39,10 @@ private:
      */
     std::vector<const Argument<Base>*> _tmpArrayValues;
     /**
+     * Variable IDs
+     */
+    CodeHandlerVector<Base, size_t>& _varId;
+    /**
      * Maximum array id
      */
     size_t _idArrayCount;
@@ -46,11 +50,12 @@ public:
 
     /**
      * Creates an ArrayIdCompresser
-     * @param maxArraySize The likely number of elements in the temporary 
-     *                     array
+     * @param maxArraySize The likely number of elements in the temporary array
      */
-    inline ArrayIdCompresser(size_t maxArraySize) :
+    inline ArrayIdCompresser(CodeHandlerVector<Base, size_t>& varId,
+                             size_t maxArraySize) :
         _tmpArrayValues(maxArraySize, nullptr),
+        _varId(varId),
         _idArrayCount(1) {
     }
 
@@ -59,7 +64,7 @@ public:
     }
 
     inline void addFreeArraySpace(const OperationNode<Base>& released) {
-        size_t arrayStart = released.getVariableID() - 1;
+        size_t arrayStart = _varId[released] - 1;
         const size_t arraySize = released.getArguments().size();
         if (arraySize == 0)
             return; // nothing to do (no free space)
@@ -102,8 +107,8 @@ public:
             const OperationNode<Base>* argOp = args[i].getOperation();
             if (argOp != nullptr && argOp->getOperationType() == CGOpCode::ArrayElement) {
                 const OperationNode<Base>& otherArray = *argOp->getArguments()[0].getOperation();
-                CPPADCG_ASSERT_UNKNOWN(otherArray.getVariableID() > 0); // make sure it had already been assigned space
-                size_t otherArrayStart = otherArray.getVariableID() - 1;
+                CPPADCG_ASSERT_UNKNOWN(_varId[otherArray] > 0); // make sure it had already been assigned space
+                size_t otherArrayStart = _varId[otherArray] - 1;
                 size_t index = argOp->getInfo()[0];
                 blackList.insert(otherArrayStart + index);
             }

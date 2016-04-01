@@ -145,7 +145,7 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
 
     std::ostringstream rightAssign;
     
-    rightAssign << _nameGen->generateIndexedDependent(*op2, *p2dip);
+    rightAssign << _nameGen->generateIndexedDependent(*op2, 0, *p2dip);
 
     /**
      * print the loop
@@ -162,9 +162,9 @@ inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<O
 
     std::string arrayName;
     if (refArray->getOperationType() == CGOpCode::ArrayCreation)
-        arrayName = _nameGen->generateTemporaryArray(*refArray);
+        arrayName = _nameGen->generateTemporaryArray(*refArray, getVariableID(*refArray));
     else
-        arrayName = _nameGen->generateTemporarySparseArray(*refArray);
+        arrayName = _nameGen->generateTemporarySparseArray(*refArray, getVariableID(*refArray));
 
     _code << "(" << arrayName << ")[i + " << startArrayIndex << "];\n";
 

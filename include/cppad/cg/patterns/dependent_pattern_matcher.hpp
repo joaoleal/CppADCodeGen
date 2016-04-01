@@ -66,6 +66,7 @@ private:
 
 private:
     CodeHandler<Base>* handler_;
+    CodeHandlerVector<Base, size_t> varId_;
     const std::vector<std::set<size_t> >& relatedDepCandidates_;
     std::vector<CGBase> dependents_; // a copy
     std::vector<CGBase>& independents_;
@@ -111,6 +112,7 @@ public:
                             const std::vector<CGBase>& dependents,
                             std::vector<CGBase>& independents) :
         handler_(independents[0].getCodeHandler()),
+        varId_(*handler_),
         relatedDepCandidates_(relatedDepCandidates),
         dependents_(dependents),
         independents_(independents),
@@ -196,6 +198,9 @@ private:
                 }
             }
         }
+
+        varId_.adjustSize();
+        varId_.fill(0);
 
         // assign a unique Id to each node
         assignIds();
@@ -673,7 +678,7 @@ private:
         using namespace std;
 
         for (OperationNode<Base>* shared : opShared) {
-            const set<size_t>& deps = id2Deps[shared->getVariableID()];
+            const set<size_t>& deps = id2Deps[varId_[*shared]];
 
             for (size_t dep : deps) {
                 EquationPattern<Base>* otherEq = dep2Equation_.at(dep);
@@ -906,7 +911,7 @@ private:
             node->setColor(0); // mark this operation as being not-indexed
         }
 
-        size_t id = node->getVariableID();
+        size_t id = varId_[*node];
         std::set<size_t>& deps = id2Deps[id];
 
         if (deps.size() > 1 && node->getOperationType() != CGOpCode::Inv) {
@@ -957,7 +962,7 @@ private:
         if (node == nullptr || node->getOperationType() == CGOpCode::Inv)
             return; // nothing to do
 
-        size_t id = node->getVariableID();
+        size_t id = varId_[*node];
 
         std::set<size_t>& deps = id2Deps[id];
 
@@ -991,10 +996,10 @@ private:
     }
 
     void assignIds(OperationNode<Base>* node) {
-        if (node == nullptr || node->getVariableID() > 0)
+        if (node == nullptr || varId_[*node] > 0)
             return;
 
-        node->setVariableID(idCounter_);
+        varId_[*node] = idCounter_;
         origShareNodeId_.adjustSize(*node);
         origShareNodeId_[*node] = idCounter_;
         idCounter_++;
@@ -1018,10 +1023,10 @@ private:
     }
 
     void resetHandlerCounters(OperationNode<Base>* node) {
-        if (node == nullptr || node->getVariableID() == 0 || origShareNodeId_[*node] == 0)
+        if (node == nullptr || varId_[*node] == 0 || origShareNodeId_[*node] == 0)
             return;
 
-        node->resetHandlerCounters();
+        varId_[*node] = 0;
         origShareNodeId_[*node] = 0;
 
         const std::vector<Argument<Base> >& args = node->getArguments();

@@ -45,9 +45,6 @@ private:
     std::vector<Argument<Base> > arguments_;
     // index in the CodeHandler managed nodes array
     size_t pos_;
-    // variable ID that was altered/assigned in this source code
-    // (zero means that no left-hand variable is assigned)
-    size_t var_id_;
     //
     size_t color_;
     // generated variable name
@@ -59,7 +56,6 @@ public:
         operation_ = CGOpCode::Alias;
         arguments_.resize(1);
         arguments_[0] = other;
-        var_id_ = 0;
         delete name_;
         name_ = nullptr;
     }
@@ -112,27 +108,6 @@ public:
 
     inline std::vector<size_t>& getInfo() {
         return info_;
-    }
-
-    /**
-     * Provides the variable ID that was altered/assigned in this source 
-     * code (zero means that no variable is assigned).
-     * @return the variable ID
-     */
-    inline size_t getVariableID() const {
-        return var_id_;
-    }
-
-    /**
-     * Specifies a variable ID to the result of this source code
-     * (zero means that no variable is created).
-     */
-    inline void setVariableID(size_t var_id) {
-        var_id_ = var_id;
-    }
-
-    inline void resetHandlerCounters() {
-        var_id_ = 0;
     }
 
     inline const std::string* getName() const {
@@ -233,7 +208,6 @@ protected:
         info_(orig.info_),
         arguments_(orig.arguments_),
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(orig.color_),
         name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
     }
@@ -243,7 +217,6 @@ protected:
         handler_(handler),
         operation_(op),
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(0),
         name_(nullptr) {
     }
@@ -255,7 +228,6 @@ protected:
         operation_(op),
         arguments_ {arg},
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(0),
         name_(nullptr) {
     }
@@ -267,7 +239,6 @@ protected:
         operation_(op),
         arguments_(std::move(args)),
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(0),
         name_(nullptr) {
     }
@@ -281,7 +252,6 @@ protected:
         info_(std::move(info)),
         arguments_(std::move(args)),
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(0),
         name_(nullptr) {
     }
@@ -295,7 +265,6 @@ protected:
         info_(info),
         arguments_(args),
         pos_(std::numeric_limits<size_t>::max()),
-        var_id_(0),
         color_(0),
         name_(nullptr) {
     }

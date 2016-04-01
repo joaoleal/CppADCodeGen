@@ -41,6 +41,11 @@ public:
      */
     size_t minTemporaryVarID;
     /**
+     * Provides the variable ID that was altered/assigned to operation nodes.
+     * Zero means that no variable is assigned.
+     */
+    const CodeHandlerVector<Base, size_t>& varId;
+    /**
      * Variable assignment order in the source code
      */
     const std::vector<OperationNode<Base>*>& variableOrder;
@@ -100,6 +105,7 @@ public:
     LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
                            const CppAD::vector<CG<Base> >& dep,
                            size_t minTempVID,
+                           const CodeHandlerVector<Base, size_t>& varIds,
                            const std::vector<OperationNode<Base>*>& vo,
                            VariableNameGenerator<Base>& ng,
                            const std::map<size_t, size_t>& atomicId2Index,
@@ -118,6 +124,7 @@ public:
         independent(ind),
         dependent(dep),
         minTemporaryVarID(minTempVID),
+        varId(varIds),
         variableOrder(vo),
         nameGen(ng),
         atomicFunctionId2Index(atomicId2Index),

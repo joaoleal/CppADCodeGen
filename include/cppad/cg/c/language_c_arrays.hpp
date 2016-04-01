@@ -21,7 +21,7 @@ namespace cg {
 template<class Base>
 void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
     CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
-    const size_t id = array.getVariableID();
+    const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
@@ -33,7 +33,7 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(array) << "; // size: " << args.size() << "\n";
+                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporaryArray(array, getVariableID(array)) << "; // size: " << args.size() << "\n";
                 firstElement = false;
             }
 
@@ -68,7 +68,7 @@ void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     if (argSize == 0)
         return; // empty array
 
-    const size_t id = array.getVariableID();
+    const size_t id = getVariableID(array);
     size_t startPos = id - 1;
 
     bool firstElement = true;
@@ -77,7 +77,7 @@ void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
         if (newValue) {
             if (firstElement) {
-                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporarySparseArray(array)
+                _code << _indentation << auxArrayName_ << " = " << _nameGen->generateTemporarySparseArray(array, getVariableID(array))
                         << "; // nnz: " << args.size() << "  size:" << info[0] << "\n";
                 firstElement = false;
             }
@@ -146,7 +146,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
 
                 if (args[i].getOperation() == nullptr ||
                         args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
-                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), *args[i].getOperation())) {
+                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
+                                                             *args[i].getOperation(), getVariableID(*args[i].getOperation()))) {
                     break;
                 }
             }
@@ -155,8 +156,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& indep = _nameGen->getIndependentArrayName(refOp);
-            size_t start = _nameGen->getIndependentArrayIndex(refOp);
+            const std::string& indep = _nameGen->getIndependentArrayName(refOp, getVariableID(refOp));
+            size_t start = _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << indep << "[i]";
@@ -190,7 +191,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break; // not an independent index pattern
                 }
 
-                if (!_nameGen->isInSameIndependentArray(refOp, *args[i].getOperation()))
+                if (!_nameGen->isInSameIndependentArray(refOp, getVariableID(refOp),
+                                                        *args[i].getOperation(), getVariableID(*args[i].getOperation())))
                     break;
 
                 pos = args[i].getOperation()->getInfo()[1];
@@ -216,8 +218,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             op2->getInfo()[1] = std::numeric_limits<size_t>::max(); // just to be safe (this would be the index pattern id in the handler)
             op2->getArguments().push_back(_info->auxIterationIndexOp);
 
-            arrayAssign << _nameGen->generateIndexedIndependent(*op2, *p2dip);
-        } else if (refOp.getVariableID() >= this->_minTemporaryVarID && op != CGOpCode::LoopIndexedDep && op != CGOpCode::LoopIndexedTmp && op != CGOpCode::Tmp) {
+            arrayAssign << _nameGen->generateIndexedIndependent(*op2, 0, *p2dip);
+        } else if (getVariableID(refOp) >= this->_minTemporaryVarID && op != CGOpCode::LoopIndexedDep && op != CGOpCode::LoopIndexedTmp && op != CGOpCode::Tmp) {
             /**
              * from temporary variable array
              */
@@ -228,14 +230,15 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break;
 
                 const OperationNode<Base>& opNode2 = *args[i].getOperation();
-                if (opNode2.getVariableID() < this->_minTemporaryVarID)
+                if (getVariableID(opNode2) < this->_minTemporaryVarID)
                     break;
 
                 CGOpCode op2 = opNode2.getOperationType();
                 if (op2 == CGOpCode::LoopIndexedIndep || op2 == CGOpCode::LoopIndexedDep || op2 == CGOpCode::LoopIndexedTmp || op2 == CGOpCode::Tmp)
                     break;
 
-                if (!_nameGen->isConsecutiveInTemporaryVarArray(*args[i - 1].getOperation(), *args[i].getOperation()))
+                if (!_nameGen->isConsecutiveInTemporaryVarArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
+                                                                *args[i].getOperation(), getVariableID(*args[i].getOperation())))
                     break;
             }
 
@@ -243,8 +246,8 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& tmpName = _nameGen->getTemporaryVarArrayName(refOp);
-            size_t start = _nameGen->getTemporaryVarArrayIndex(refOp);
+            const std::string& tmpName = _nameGen->getTemporaryVarArrayName(refOp, getVariableID(refOp));
+            size_t start = _nameGen->getTemporaryVarArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << tmpName << "[i]";
@@ -310,9 +313,9 @@ void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
     if (arrayOp.getOperationType() == CGOpCode::ArrayCreation)
-        arrayName = _nameGen->generateTemporaryArray(arrayOp);
+        arrayName = _nameGen->generateTemporaryArray(arrayOp, getVariableID(arrayOp));
     else
-        arrayName = _nameGen->generateTemporarySparseArray(arrayOp);
+        arrayName = _nameGen->generateTemporarySparseArray(arrayOp, getVariableID(arrayOp));
 
     _code << "(" << arrayName << ")[" << op.getInfo()[0] << "]";
 }
@@ -413,7 +416,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
         }
 
         if (nnz > 0) {
-            size_t id = array.getVariableID();
+            size_t id = getVariableID(array);
             if (firstTime || id != lastArray.idx_id) {
                 if (!changed) _code << _indentation;
                 _code << dataArrayName << ".idx = &(" << _C_SPARSE_INDEX_ARRAY << "[" << (id - 1) << "]);";
@@ -433,7 +436,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
 
 template<class Base>
 inline void LanguageC<Base>::markArrayChanged(OperationNode<Base>& ty) {
-    size_t id = ty.getVariableID();
+    size_t id = getVariableID(ty);
     size_t tySize = ty.getArguments().size();
 
     if (ty.getOperationType() == CGOpCode::ArrayCreation) {

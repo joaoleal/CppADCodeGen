@@ -187,7 +187,6 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
         // reset nodes not managed by a handler
         if (itl2Eq != loopEqInfo.begin()) {
             for (size_t j = 0; j < localNodes.size(); j++) {
-                localNodes[j]->resetHandlerCounters();
                 localNodes[j]->setColor(0);
             }
         }

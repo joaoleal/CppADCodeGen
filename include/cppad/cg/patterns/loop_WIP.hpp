@@ -65,19 +65,11 @@ public:
     IndexedIndependent<Base> indexedOpIndep;
 private:
     /**
-     * Code handler used to generate the original operation graph
-     */
-    CodeHandler<Base>* handlerOrig_;
-    /**
-     *
-     */
-    std::unique_ptr<CodeHandlerVector<Base, size_t>> varId_;
-    /**
      * The number of iterations this loop will have
      */
     size_t iterationCount_;
     /**
-     * Code handler for the operations in the loop
+     * code handler for the operations in the loop
      */
     LoopCodeHandler<Base> handler_;
     /**
@@ -155,8 +147,6 @@ private:
 public:
 
     inline Loop(EquationPattern<Base>& eq) :
-        handlerOrig_(eq.depRef.getCodeHandler()),
-        varId_(handlerOrig_ != nullptr ? new CodeHandlerVector<Base, size_t>(*handlerOrig_): nullptr),
         iterationCount_(0), // not known yet (only after all equations have been added)
         eqGroups_(1),
         nIndependents_(0),
@@ -165,9 +155,6 @@ public:
         //constOperationIndependents(eq.constOperationIndependents) {
         equations.insert(&eq);
         eqGroups_[0].equations.insert(&eq);
-
-        if(varId_ != nullptr)
-            varId_->adjustSize();
     }
 
     Loop(const Loop<Base>& other) = delete;
@@ -277,7 +264,7 @@ public:
     void createLoopModel(const std::vector<CG<Base> >& dependents,
                          const std::vector<CG<Base> >& independents,
                          const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
-                         std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
+                         std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
 
         CPPADCG_ASSERT_UNKNOWN(dep2Iteration_.empty());
         for (size_t iter = 0; iter < iterationCount_; iter++) {
@@ -356,8 +343,7 @@ public:
          */
         generateIndependentLoopIndexes();
 
-        if(varId_ != nullptr)
-            varId_->fill(0);
+        resetCounters(dependents);
 
         createLoopTapeNModel(dependents, independents, dep2Equation, origTemp2Index);
 
@@ -371,9 +357,7 @@ public:
                 EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
             }
         }
-
-        if(varId_ != nullptr)
-            varId_->fill(0);
+        resetCounters(dependents);
     }
 
     void generateDependentLoopIndexes(const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
@@ -400,6 +384,11 @@ public:
             const set<EquationPattern<Base>*>& eqs = group.equations;
             const std::vector<set<size_t> >& linkedDependents = group.linkedDependents;
             std::vector<set<size_t> >& relatedEqIterationDeps = group.iterationDependents;
+            std::vector<set<EquationPattern<Base>*> > iterationEquations;
+
+            std::cout << "linkedDependents\n";
+            print(linkedDependents);
+            std::cout << "\n";
 
             relatedEqIterationDeps.reserve(iterationDependents_.size());
 
@@ -425,32 +414,46 @@ public:
 
             DependentIndexSorter depSorter(group, freeDependents, dep2Equation);
 
-            set<size_t>::const_iterator itDep = dependents.begin();
-            size_t i = 0; // iteration counter
-            while (itDep != dependents.end()) {
-                size_t dep = *itDep;
-                itDep++;
+            EquationPattern<Base>* eq = dep2Equation.at(*dependents.begin());
 
-                if (iterationDependents_.size() <= i)
+            size_t i = 0; // iteration counter
+            while (!dependents.empty()) {
+                size_t dep;
+                const std::vector<size_t>& fdEp = freeDependents[eq];
+                if (!fdEp.empty()) {
+                    // continue following the order of the dependents in this equation
+                    dep = *fdEp.begin();
+                } else {
+                    // use the lowest unused dependent index
+                    dep = *dependents.begin();
+                }
+
+                // this dependent might not be the best dependent if this equation is not present in all iterations
+                auto bestDep = depSorter.findBestDependentForIteration(dep, eq);
+                dep = bestDep.first;
+                eq = bestDep.second;
+
+                // prepare iteration related containers
+                if (iterationDependents_.size() <= i) {
                     iterationDependents_.resize(i + 1);
+                    iterationEquations.resize(i + 1);
+                }
                 set<size_t>& itDepi = iterationDependents_[i];
 
                 if (relatedEqIterationDeps.size() <= i)
                     relatedEqIterationDeps.resize(i + 1);
                 set<size_t>& ritDepi = relatedEqIterationDeps[i];
 
-                // this dependent might not be the best dependent if this equation is not present in all iterations
-
-                EquationPattern<Base>* eq = dep2Equation.at(dep);
-                auto bestDep = depSorter.findBestDependentForIteration(dep, eq);
-                dep = bestDep.first;
-                eq = bestDep.second;
-
+                // add dependents to an iteration
                 long pos = group.findIndexedLinkedDependent(dep);
                 if (pos >= 0) {
+
+                    // lets see if this iteration can be merged with a previously defined one
+                    size_t i2 = findAvailableIterationForEquations(linkedDependents[pos],
+                                                                   eqs.size(), iterationEquations, dep2Equation);
+
                     // assign the dependent to the first iteration with all its relationships
                     for (size_t dep2 : linkedDependents[pos]) {
-                        if (dep2 == *itDep) itDep++; //make sure the iterator is valid
                         itDepi.insert(dep2);
                         ritDepi.insert(dep2);
                         dependents.erase(dep2);
@@ -461,17 +464,23 @@ public:
                         CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.end());
 
                         eq2FreeDep.erase(itFreeDep2);
+
+                        iterationEquations[i].insert(eq2);
                     }
 
                     i++;
                 } else {
+                    dependents.erase(dep);
+
                     // maybe this dependent shares a non-indexed temporary variable
                     long posN = group.findNonIndexedLinkedRel(eq);
                     if (posN >= 0) {
                         // there are only non-indexed shared relations with other equations (delay processing...)
-                        dependents.erase(dep); // safe because of itDep++
                         nIndexedGroupPos2Eq2deps[posN][eq].insert(dep);
                     } else {
+                        size_t i2 = findAvailableIterationForEquations({dep},
+                                                                       eqs.size(), iterationEquations, dep2Equation);
+
                         itDepi.insert(dep);
                         ritDepi.insert(dep);
 
@@ -481,9 +490,16 @@ public:
 
                         eqFreeDep.erase(itFreeDep);
 
+                        iterationEquations[i].insert(eq);
+
                         i++;
                     }
                 }
+
+                std::cout << "iteration " << (i - 1) << ": ";
+                for (size_t dep : itDepi)
+                    std::cout << "  " << dep;
+                std::cout << std::endl;
 
             }
 
@@ -573,6 +589,34 @@ public:
             iterationCount_ = std::max(iterationCount_, iterationDependents_.size());
         }
 
+    }
+
+    size_t findAvailableIterationForEquations(const std::set<size_t>& dependents,
+                                              size_t nEqs, // total number of equations
+                                              std::vector<std::set<EquationPattern<Base>*> >& iterationEquations,
+                                              const std::map<size_t, EquationPattern<Base>*>& dep2Equation) {
+        // lets see if this iteration can be merged with a previously defined one
+        size_t nIter = iterationEquations.size();
+        for (size_t i2 = 0; i2 < nIter; i2++) {
+            if (nEqs - iterationEquations[i2].size() < dependents.size())
+                continue; // no space (one of the required equations is already used in this iteration)
+
+            bool spaceForEqs = true;
+            for (size_t dep2 : dependents) {
+                EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
+                if (iterationEquations[i2].find(eq2) != iterationEquations[i2].end()) {
+                    spaceForEqs = false;
+                    break;
+                }
+            }
+            if (spaceForEqs) {
+                std::cout << "combine iter in " << i2 << std::endl;
+                return i2;
+                break;
+            }
+        }
+
+        return nIter; // new iteration required
     }
 
     /**
@@ -693,6 +737,26 @@ private:
     }
 
     /**
+     * Resets the node counters for the reference iteration of each equation
+     * group
+     * 
+     * @param dependents
+     */
+    void resetCounters(const std::vector<CG<Base> >& dependents) {
+        for (size_t g = 0; g < eqGroups_.size(); g++) {
+            const EquationGroup<Base>& group = eqGroups_[g];
+            const std::set<size_t>& itDeps = group.iterationDependents[group.refIteration];
+
+            for (size_t depIndex : itDeps) {
+                OperationNode<Base>* node = dependents[depIndex].getOperationNode();
+                if (node != nullptr) {
+                    Loop<Base>::resetCounters(*node);
+                }
+            }
+        }
+    }
+
+    /**
      * Creates the model for the loop equations
      * 
      * @param dependents original model dependent variable vector
@@ -703,7 +767,7 @@ private:
     void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
                               const std::vector<CG<Base> >& independents,
                               const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
-                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
+                              std::map<OperationNode<Base>*, size_t>& origTemp2Index) throw (CGException) {
         typedef CG<Base> CGB;
         typedef AD<CGB> ADCGB;
         CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);
@@ -741,7 +805,7 @@ private:
                 }
 
                 size_t i = equationOrder_.at(eq);
-                deps[i] = CGB(aClone);
+                deps[i] = CGB(handler_, aClone);
             }
         }
 
@@ -850,7 +914,7 @@ private:
         /**
          * create the tape
          */
-        Evaluator<Base, CGB> evaluator1stIt(handler_);
+        Evaluator<Base, CGB> evaluator1stIt(handler_, deps);
 
         // load any atomic function used in the original model
         const std::map<size_t, CGAbstractAtomicFun<Base>* >& atomicsOrig = origHandler.getAtomicFunctions();
@@ -858,7 +922,7 @@ private:
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator1stIt.addAtomicFunctions(atomics);
 
-        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps, deps);
+        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps);
 
         std::unique_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
         funIndexed->Dependent(newDeps);
@@ -935,17 +999,17 @@ private:
 
         CPPADCG_ASSERT_UNKNOWN(node.getOperationType() != CGOpCode::Inv);
 
-        size_t id = (*varId_)[node];
+        size_t id = node.getVariableID();
 
         if (id > 0) {
             // been here before
             return Argument<Base>(*clonesTemporary_.at(id));
         }
 
-        //handler_.markVisited(node);
+        handler_.markVisited(node);
 
         id = idCounter_++;
-        (*varId_)[node] = id;
+        node.setVariableID(id);
 
         if (node.getColor() > 0 || node.getOperationType() == CGOpCode::ArrayCreation) {
             /**
@@ -971,9 +1035,10 @@ private:
                 }
             }
 
-            OperationNode<Base>* cloneOp = handler_.makeNode(node.getOperationType(),
-                                                             node.getInfo(),
-                                                             cloneArgs);
+            OperationNode<Base>* cloneOp = handler_.makeNode(
+                    node.getOperationType(),
+                    node.getInfo(),
+                    cloneArgs);
 
             clonesTemporary_[id] = cloneOp;
             return Argument<Base>(*cloneOp);
@@ -1071,9 +1136,26 @@ private:
 
         size_t id = idCounter_++;
         clonesTemporary_[id] = cloneOp;
-        (*varId_)[node] = id;
+        node.setVariableID(id);
 
         return *cloneOp;
+    }
+
+    static void resetCounters(OperationNode<Base>& node) {
+        if (node.getVariableID() == 0) {
+            return;
+        }
+
+        node.setVariableID(0);
+        node.resetVisitId();
+
+        const std::vector<Argument<Base> >& args = node.getArguments();
+        size_t arg_size = args.size();
+        for (size_t i = 0; i < arg_size; i++) {
+            if (args[i].getOperation() != nullptr) {
+                resetCounters(*args[i].getOperation());
+            }
+        }
     }
 
     /**

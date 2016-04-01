@@ -243,7 +243,6 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         // reset nodes not managed by a handler
         if (itLoop2Info != loopHessInfo.begin()) {
             for (size_t j = 0; j < localNodes.size(); j++) {
-                localNodes[j]->resetHandlerCounters();
                 localNodes[j]->setColor(0);
             }
         }

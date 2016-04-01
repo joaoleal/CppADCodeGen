@@ -51,19 +51,22 @@ public:
         }
     }
 
-    virtual std::string generateIndependent(const OperationNode<Base>& independent) override {
-        size_t index = independent.getVariableID() - 1;
+    virtual std::string generateIndependent(const OperationNode<Base>& independent,
+                                           size_t id) override {
+        size_t index = id - 1;
         if (index < indepNames_.size() && !indepNames_[index].empty()) {
             return indepNames_[index];
         } else {
-            return LangCDefaultVariableNameGenerator<Base>::generateIndependent(independent);
+            return LangCDefaultVariableNameGenerator<Base>::generateIndependent(independent, id);
         }
     }
 
     virtual bool isConsecutiveInIndepArray(const OperationNode<Base>& indepFirst,
-                                           const OperationNode<Base>& indepSecond) override {
-        size_t index1 = indepFirst.getVariableID() - 1;
-        size_t index2 = indepSecond.getVariableID() - 1;
+                                           size_t idFirst,
+                                           const OperationNode<Base>& indepSecond,
+                                           size_t idSecond) override {
+        size_t index1 = idFirst - 1;
+        size_t index2 = idSecond - 1;
 
         if ((index1 > indepNames_.size() || indepNames_[index1].empty()) &&
                 (index2 > indepNames_.size() || indepNames_[index2].empty())) {
@@ -74,9 +77,11 @@ public:
     }
 
     virtual bool isInSameIndependentArray(const OperationNode<Base>& indep1,
-                                          const OperationNode<Base>& indep2) override {
-        size_t index1 = indep1.getVariableID() - 1;
-        size_t index2 = indep2.getVariableID() - 1;
+                                          size_t id1,
+                                          const OperationNode<Base>& indep2,
+                                          size_t id2) override {
+        size_t index1 = id1 - 1;
+        size_t index2 = id2 - 1;
 
         return (index1 > indepNames_.size() || indepNames_[index1].empty()) &&
                 (index2 > indepNames_.size() || indepNames_[index2].empty());
