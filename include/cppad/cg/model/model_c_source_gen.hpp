@@ -166,7 +166,7 @@ protected:
     /// generate source code for a sparse Hessian
     bool _sparseHessian;
     /**
-     * generate source-code the Hessian sparsity pattern for each 
+     * generate source-code for the Hessian sparsity pattern for each
      * equation/dependent
      */
     bool _hessianByEquation;
@@ -176,6 +176,16 @@ protected:
     bool _reverseOne;
     /// generate source code for reverse second order mode
     bool _reverseTwo;
+    /**
+     * whether or not the sparse Jacobian should reuse the forward or reverse
+     * one functions when _sparseJacobian is true
+     */
+    bool _sparseJacobianReusesOne;
+    /**
+     * whether or not the sparse Hessian should reuse the reverse two
+     * functions when _sparseHessian is true
+     */
+    bool _sparseHessianReusesRev2;
     JacobianADMode _jacMode;
     /**
      * Custom Jacobian element indexes 
@@ -276,6 +286,8 @@ public:
         _forwardOne(false),
         _reverseOne(false),
         _reverseTwo(false),
+        _sparseJacobianReusesOne(true),
+        _sparseHessianReusesRev2(true),
         _jacMode(JacobianADMode::Automatic),
         _atomicsIndeps(nullptr),
         _maxAssignPerFunc(20000),
@@ -309,7 +321,7 @@ public:
 
     /**
      * Defines typical values for the independent variable vector. These 
-     * values can be usefull when there is a need to call atomic functions,
+     * values can be useful when there is a need to call atomic functions,
      * since they may allow to reduce some operations.
      * 
      * @param x The typical values. An empty vector removes the currently
@@ -419,16 +431,18 @@ public:
 
     /**
      * Determines whether or not to generate source-code for a function
-     * that evaluates a sparse Hessian. If ReverseTwo is also enabled the
-     * generated source-code will use the individual generated functions
-     * from the second-order reverse mode. 
+     * that evaluates a sparse Hessian.
+     * If ReverseTwo and SparseHessianReusesRev2 are also enabled the generated
+     * source-code will use the individual generated functions from the
+     * second-order reverse mode.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a negative impact on the performe of the evaluation of the
+     * can have a negative impact on the performance of the evaluation of the
      * sparse hessian since Hessian symmetry will not be exploited. To
      * improve performance one can request only the upper or lower elements
      * of the hessian using setCustomSparseHessianElements().
      * 
      * @see setCustomSparseHessianElements()
+     * @see setSparseHessianReusesRev2()
      * 
      * @return true if source-code for a sparse Hessian should be created,
      *         false otherwise
@@ -439,22 +453,50 @@ public:
 
     /**
      * Defines whether or not to generate source-code for a function
-     * that evaluates a sparse Hessian. If ReverseTwo is also enabled the
-     * generated source-code will use the individual generated functions
-     * from the second-order reverse mode. 
+     * that evaluates a sparse Hessian.
+     * If ReverseTwo and SparseHessianReusesRev2 are also enabled the generated
+     * source-code will use the individual generated functions from the
+     * second-order reverse mode.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a negative impact on the performe of the evaluation of the
+     * can have a negative impact on the performance of the evaluation of the
      * sparse hessian since Hessian symmetry will not be exploited. To
      * improve performance one can request only the upper or lower elements
      * of the hessian using setCustomSparseHessianElements().
      * 
      * @see setCustomSparseHessianElements()
+     * @see setSparseHessianReusesRev2()
      * 
      * @param create true if source-code for a sparse Hessian should be
      *               created, false otherwise
      */
     inline void setCreateSparseHessian(bool create) {
         _sparseHessian = create;
+    }
+
+    /**
+     * Determines whether or not the sparse Hessian should reuse functions
+     * generated for the reverse two pass.
+     * The sparse Hessian will only make use of the reverse two mode if both
+     * this flag is set to true and the reverseTwo mode is enabled.
+     *
+     * @return true if the functions created for reverse 2 mode should be
+     *         reused to determine the sparse Hessian, false otherwise
+     */
+    inline bool isSparseHessianReusesRev2() const {
+        return _sparseHessianReusesRev2;
+    }
+
+    /**
+     * Defines whether or not the sparse Hessian should reuse functions
+     * generated for the reverse two pass.
+     * The sparse Hessian will only make use of the reverse two mode if both
+     * this flag is set to true and the reverseTwo mode is enabled.
+     *
+     * @param reuse true if the functions created for reverse 2 mode should be
+     *              reused to determine the sparse Hessian, false otherwise
+     */
+    inline void setSparseHessianReusesRev2(bool reuse) {
+        _sparseHessianReusesRev2 = reuse;
     }
 
     /**
@@ -491,7 +533,7 @@ public:
      * functions are enabled, then the sparse Jacobian evaluation might
      * use those functions.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a small negative impact on the performe of the evaluation of
+     * can have a small negative impact on the performance of the evaluation of
      * the parse Jacobian.
 
      * @see setCustomSparseJacobianElements()
@@ -509,7 +551,7 @@ public:
      * functions are enabled, then the sparse Jacobian evaluation might
      * use those functions.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a small negative impact on the performe of the evaluation of
+     * can have a small negative impact on the performance of the evaluation of
      * the parse Jacobian.
 
      * @see setCustomSparseJacobianElements()
@@ -519,6 +561,35 @@ public:
      */
     inline void setCreateSparseJacobian(bool create) {
         _sparseJacobian = create;
+    }
+
+    /**
+     * Determines whether or not the sparse Jacobian should reuse functions
+     * generated for the forward one or reverse one pass.
+     * The sparse Jacobian will only make use of these functions if both
+     * this flag is set to true and one of the forward one and reverse one
+     * mode is enabled.
+     *
+     * @return true if the functions created for forward or reverse 1 mode
+     *         should be reused to determine the sparse Jacobian, false otherwise
+     */
+    inline bool isSparseJacobianReuse1stOrderPasses() const {
+        return _sparseJacobianReusesOne;
+    }
+
+    /**
+     * Defines whether or not the sparse Jacobian should reuse functions
+     * generated for the forward one or reverse one pass.
+     * The sparse Jacobian will only make use of these functions if both
+     * this flag is set to true and one of the forward one and reverse one
+     * mode is enabled.
+     *
+     * @param reuse true if the functions created for forward or reverse 1 mode
+     *              should be reused to determine the sparse Jacobian,
+     *              false otherwise
+     */
+    inline void setSparseJacobianReuse1stOrderPasses(bool reuse) {
+        _sparseJacobianReusesOne = reuse;
     }
 
     /**
@@ -549,7 +620,7 @@ public:
      * Jacobian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for forward-mode
-     * might have a small negative impact on the performe of the evaluation
+     * might have a small negative impact on the performance of the evaluation
      * of the sparse Jacobian (if forward mode is selected).
      * 
      * @see isCreateSparseJacobian()
@@ -567,7 +638,7 @@ public:
      * Jacobian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for forward-mode
-     * might have a small negative impact on the performe of the evaluation
+     * might have a small negative impact on the performance of the evaluation
      * of the sparse Jacobian (if forward-mode is selected).
      * 
      * @see setCreateSparseJacobian()
@@ -585,7 +656,7 @@ public:
      * Jacobian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for reverse-mode
-     * might have a small negative impact on the performe of the evaluation
+     * might have a small negative impact on the performance of the evaluation
      * of the sparse Jacobian (if reverse-mode is selected).
      * 
      * @see isCreateSparseJacobian()
@@ -603,7 +674,7 @@ public:
      * Jacobian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for reverse-mode
-     * might have a small negative impact on the performe of the evaluation
+     * might have a small negative impact on the performance of the evaluation
      * of the sparse Jacobian (if reverse-mode is selected).
      * 
      * @see setCreateSparseJacobian()
@@ -621,7 +692,7 @@ public:
      * hessian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a negative impact on the performe of the evaluation of the
+     * can have a negative impact on the performance of the evaluation of the
      * sparse hessian.
      * 
      * Warning: only the values for px[j * (k+1)] will be defined, since
@@ -640,7 +711,7 @@ public:
      * of the hessian when the model is used through a user defined atomic
      * AD function.
      * Enabling the generation of individuals functions for reverse-mode
-     * can have a negative impact on the performe of the evaluation of the
+     * can have a negative impact on the performance of the evaluation of the
      * hessian. To improve performance one can request only the upper or 
      * lower elements of the hessian using setCustomSparseHessianElements()
      * and later only request those elements through the outer model (ADFun).

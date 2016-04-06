@@ -81,7 +81,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSource() {
      */
     determineHessianSparsity();
 
-    if (_reverseTwo) {
+    if (_sparseHessianReusesRev2 && _reverseTwo) {
         generateSparseHessianSourceFromRev2();
     } else {
         generateSparseHessianSourceDirectly();

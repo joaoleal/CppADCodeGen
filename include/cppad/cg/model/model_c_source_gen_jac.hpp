@@ -87,9 +87,9 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource() {
     /**
      * call the appropriate method for source code generation
      */
-    if (_forwardOne && forwardMode) {
+    if (_sparseJacobianReusesOne && _forwardOne && forwardMode) {
         generateSparseJacobianForRevSource(true);
-    } else if (_reverseOne && !forwardMode) {
+    } else if (_sparseJacobianReusesOne && _reverseOne && !forwardMode) {
         generateSparseJacobianForRevSource(false);
     } else {
         generateSparseJacobianSource(forwardMode);
