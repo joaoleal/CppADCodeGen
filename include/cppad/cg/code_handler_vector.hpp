@@ -68,6 +68,8 @@ public:
     typedef typename std::vector<T>::const_iterator const_iterator;
     typedef typename std::vector<T>::const_reverse_iterator const_reverse_iterator;
     typedef typename std::vector<T>::reverse_iterator reverse_iterator;
+    typedef typename std::vector<T>::reference reference;
+    typedef typename std::vector<T>::const_reference const_reference;
 private:
     /**
      * data vector
@@ -107,7 +109,7 @@ public:
             adjustSize();
     }
 
-    inline T& get(const OperationNode<Base>& node) {
+    inline reference get(const OperationNode<Base>& node) {
         CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
 
         size_t p = node.getHandlerPosition();
@@ -118,7 +120,7 @@ public:
         return data_[p];
     }
 
-    inline const T& get(const OperationNode<Base>& node) const {
+    inline const_reference get(const OperationNode<Base>& node) const {
         CPPADCG_ASSERT_UNKNOWN(node.getCodeHandler() == this->handler_);
 
         size_t p = node.getHandlerPosition();
@@ -216,11 +218,11 @@ public:
     /**
      * operators
      */
-    inline T& operator[](const OperationNode<Base>& node) {
+    inline reference operator[](const OperationNode<Base>& node) {
         return get(node);
     }
 
-    inline const T& operator[](const OperationNode<Base>& node) const {
+    inline const_reference operator[](const OperationNode<Base>& node) const {
         return get(node);
     }
 
