@@ -35,7 +35,7 @@ TEST(CppADCGLatexTest, latex) {
     Independent(x);
 
     // dependent variable vector 
-    CppAD::vector<ADCG> y(6);
+    CppAD::vector<ADCG> y(8);
 
     // the model
     ADCG a = x[0] / 1. + x[1] * x[1];
@@ -47,6 +47,8 @@ TEST(CppADCGLatexTest, latex) {
     y[4] = CondExpEq(x[0], x[1], x[1], b);
     ADCG c = CondExpGe(ADCG(3.0), x[0], a, b);
     y[5] = CondExpGt(ADCG(4.0), x[0], ADCG(5.0), c);
+    y[6] = 5 * pow(4, x[0]);
+    y[7] = 3;
 
     ADFun<CGD> fun(x, y); // the model tape
 
@@ -62,7 +64,7 @@ TEST(CppADCGLatexTest, latex) {
 
     LanguageMathML<double> langMathML;
     LangMathMLDefaultVariableNameGenerator<double> nameGen;
-    
+
     // add some additional code to select variables
     langMathML.setStyle(langMathML.getStyle() + "\n.selected{background-color: #ccc;}");
 
