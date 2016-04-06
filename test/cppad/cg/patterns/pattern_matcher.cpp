@@ -171,7 +171,11 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
     size_t n = 2;
 
     setModel(modelCommonTmp);
-    testPatternDetection(m, n, 6);
+
+    size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
+
+    std::vector<std::vector<std::set<size_t> > > loops(1);
+    testPatternDetection(m, n, 6, loops, nonIndexed);
     testLibCreation("modelCommonTmp", m, n, 6);
 }
 
@@ -202,8 +206,12 @@ TEST_F(CppADCGPatternTest, CommonTmp2) {
     size_t m = 2;
     size_t n = 2;
 
+    size_t nonIndexed = 2; // expected non-indexed variables (outside the loop)
+
     setModel(modelCommonTmp2);
-    testPatternDetection(m, n, 6);
+
+    std::vector<std::vector<std::set<size_t> > > loops(1);
+    testPatternDetection(m, n, 6, loops, nonIndexed);
     testLibCreation("modelCommonTmp2", m, n, 6);
 }
 
@@ -237,7 +245,11 @@ TEST_F(CppADCGPatternTest, CommonTmp3) {
     size_t n = 3;
 
     setModel(modelCommonTmp3);
-    testPatternDetection(m, n, 6);
+
+    size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
+
+    std::vector<std::vector<std::set<size_t> > > loops(1);
+    testPatternDetection(m, n, 6, loops, nonIndexed);
     testLibCreation("modelCommonTmp3", m, n, 6);
 }
 
@@ -333,7 +345,11 @@ TEST_F(CppADCGPatternTest, Matcher4Eq) {
     size_t n = 4;
 
     setModel(model4Eq);
-    testPatternDetection(m, n, 6);
+
+    size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
+
+    std::vector<std::vector<std::set<size_t> > > loops(1);
+    testPatternDetection(m, n, 6, loops, nonIndexed);
     testLibCreation("model4Eq", m, n, 6);
 }
 

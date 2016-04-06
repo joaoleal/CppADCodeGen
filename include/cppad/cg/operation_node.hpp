@@ -45,8 +45,6 @@ private:
     std::vector<Argument<Base> > arguments_;
     // index in the CodeHandler managed nodes array
     size_t pos_;
-    //
-    size_t color_;
     // generated variable name
     std::string* name_;
 public:
@@ -125,14 +123,6 @@ public:
         delete name_;
         name_ = nullptr;
     }
-
-    inline size_t getColor() const {
-        return color_;
-    }
-
-    inline void setColor(size_t color) {
-        color_ = color;
-    }
     
     /**
      * Provides the index in CodeHandler which owns this OperationNode.
@@ -208,7 +198,6 @@ protected:
         info_(orig.info_),
         arguments_(orig.arguments_),
         pos_(std::numeric_limits<size_t>::max()),
-        color_(orig.color_),
         name_(orig.name_ != nullptr ? new std::string(*orig.name_) : nullptr) {
     }
 
@@ -217,7 +206,6 @@ protected:
         handler_(handler),
         operation_(op),
         pos_(std::numeric_limits<size_t>::max()),
-        color_(0),
         name_(nullptr) {
     }
 
@@ -228,7 +216,6 @@ protected:
         operation_(op),
         arguments_ {arg},
         pos_(std::numeric_limits<size_t>::max()),
-        color_(0),
         name_(nullptr) {
     }
 
@@ -239,7 +226,6 @@ protected:
         operation_(op),
         arguments_(std::move(args)),
         pos_(std::numeric_limits<size_t>::max()),
-        color_(0),
         name_(nullptr) {
     }
 
@@ -252,7 +238,6 @@ protected:
         info_(std::move(info)),
         arguments_(std::move(args)),
         pos_(std::numeric_limits<size_t>::max()),
-        color_(0),
         name_(nullptr) {
     }
 
@@ -265,7 +250,6 @@ protected:
         info_(info),
         arguments_(args),
         pos_(std::numeric_limits<size_t>::max()),
-        color_(0),
         name_(nullptr) {
     }
     

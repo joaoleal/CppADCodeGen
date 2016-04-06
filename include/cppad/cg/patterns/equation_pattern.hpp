@@ -103,9 +103,13 @@ public:
     }
 
     EquationPattern(const EquationPattern<Base>& other) = delete;
+
     EquationPattern& operator=(const EquationPattern<Base>& rhs) = delete;
 
-    bool testAdd(size_t iDep2, const CG<Base>& dep2, size_t& minColor) {
+    bool testAdd(size_t iDep2,
+                 const CG<Base>& dep2,
+                 size_t& minColor,
+                 CodeHandlerVector<Base, size_t>& varColor) {
         IndexedIndependent<Base> independentsBackup = indexedOpIndep;
         std::map<const OperationNode<Base>*, std::set<size_t> > constOperationIndependentsBackup = constOperationIndependents;
         std::map<size_t, std::map<const OperationNode<Base>*, OperationNode<Base>*> > operation2ReferenceBackup = operationEO2Reference;
@@ -114,7 +118,7 @@ public:
         minColor_ = minColor;
         cmpColor_ = minColor_;
 
-        bool equals = comparePath(depRef, dep2, iDep2);
+        bool equals = comparePath(depRef, dep2, iDep2, varColor);
 
         minColor = cmpColor_;
 
@@ -132,17 +136,11 @@ public:
         }
     }
 
-    inline void colorIndexedPath(size_t dep,
-                                 const std::vector<CG<Base> >& depVals,
-                                 size_t color,
-                                 std::set<const OperationNode<Base>*>& indexedOperations) {
-        colorIndexedPath(depRef, depVals[dep], color, indexedOperations);
-    }
-
-    void uncolor(const std::vector<CG<Base> >& depVals) {
-        for (size_t d : dependents) {
-            uncolor(depVals[d].getOperationNode());
-        }
+    inline void findIndexedPath(size_t dep,
+                                const std::vector<CG<Base> >& depVals,
+                                CodeHandlerVector<Base, bool>& varIndexed,
+                                std::set<const OperationNode<Base>*>& indexedOperations) {
+        findIndexedPath(depRef, depVals[dep], varIndexed, indexedOperations);
     }
 
     std::set<const OperationNode<Base>*> findOperationsUsingIndependents(OperationNode<Base>& node) const {
@@ -155,16 +153,17 @@ public:
         return ops;
     }
 
-    static inline void uncolor(OperationNode<Base>* node) {
-        if (node == nullptr || node->getColor() == 0)
+    static inline void uncolor(OperationNode<Base>* node,
+                               CodeHandlerVector<Base, bool>& varIndexed) {
+        if (node == nullptr || !varIndexed[*node])
             return;
 
-        node->setColor(0);
+        varIndexed[*node] = false;
 
         const std::vector<Argument<Base> >& args = node->getArguments();
         size_t size = args.size();
         for (size_t a = 0; a < size; a++) {
-            uncolor(args[a].getOperation());
+            uncolor(args[a].getOperation(), varIndexed);
         }
     }
 
@@ -242,7 +241,8 @@ private:
 
     bool comparePath(const CG<Base>& dep1,
                      const CG<Base>& dep2,
-                     size_t dep2Index) {
+                     size_t dep2Index,
+                     CodeHandlerVector<Base, size_t>& varColor) {
         CodeHandler<Base>* h1 = dep1.getCodeHandler();
         CodeHandler<Base>* h2 = dep2.getCodeHandler();
         
@@ -260,7 +260,7 @@ private:
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
             CPPADCG_ASSERT_UNKNOWN(depRefOp->getOperationType() != CGOpCode::Inv);
 
-            return comparePath(depRefOp, dep2Op, dep2Index);
+            return comparePath(depRefOp, dep2Op, dep2Index, varColor);
         }
 
         return false;
@@ -268,7 +268,8 @@ private:
 
     bool comparePath(OperationNode<Base>* scRef,
                      OperationNode<Base>* sc2,
-                     size_t dep2) {
+                     size_t dep2,
+                     CodeHandlerVector<Base, size_t>& varColor) {
         saveOperationReference(dep2, sc2, scRef);
         if (dependents.size() == 1) {
             saveOperationReference(depRefIndex, scRef, scRef);
@@ -288,21 +289,21 @@ private:
         }
 
         // check if these nodes where visited before
-        if (sc2->getColor() >= minColor_ && scRef->getColor() >= minColor_) {
+        if (varColor[*sc2] >= minColor_ && varColor[*scRef] >= minColor_) {
             /**
              * been here before for both nodes
-             *  warning: if one would return sc2->getColor() == scRef->getColor()
+             *  warning: if one would return varColor[*sc2] == varColor[*scRef]
              *  it could fail to detect some patterns! e.g.:
              *    it ref ->  v1 + v1 + v2
              *    it 2   ->  v3 + v1 + v1
              *   where v1, v2, v3 have the same expression pattern but 
              *   correspond to different nodes
              */
-            if (sc2->getColor() == scRef->getColor())
+            if (varColor[*sc2] == varColor[*scRef])
                 return true;
         }
-        scRef->setColor(cmpColor_);
-        sc2->setColor(cmpColor_);
+        varColor[*scRef] = cmpColor_;
+        varColor[*sc2] = cmpColor_;
         cmpColor_++;
 
 
@@ -347,7 +348,7 @@ private:
                 if (argRefOp->getOperationType() == CGOpCode::Inv) {
                     related = saveIndependent(scRef, a, argRefOp, arg2Op);
                 } else {
-                    related = comparePath(argRefOp, arg2Op, dep2);
+                    related = comparePath(argRefOp, arg2Op, dep2, varColor);
                 }
 
                 if (!related)
@@ -394,15 +395,15 @@ private:
         return true; // same pattern
     }
 
-    inline void colorIndexedPath(const CG<Base>& depRef,
-                                 const CG<Base>& dep2,
-                                 size_t color,
-                                 std::set<const OperationNode<Base>*>& indexedOperations) {
+    inline void findIndexedPath(const CG<Base>& depRef,
+                                const CG<Base>& dep2,
+                                CodeHandlerVector<Base, bool>& varIndexed,
+                                std::set<const OperationNode<Base>*>& indexedOperations) {
         if (depRef.isVariable() && dep2.isVariable()) {
             OperationNode<Base>* depRefOp = depRef.getOperationNode();
             OperationNode<Base>* dep2Op = dep2.getOperationNode();
             if (depRefOp->getOperationType() != CGOpCode::Inv) {
-                colorIndexedPath(depRefOp, dep2Op, color, indexedOperations);
+                findIndexedPath(depRefOp, dep2Op, varIndexed, indexedOperations);
             } else {
 
                 typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::iterator itop2a;
@@ -415,10 +416,10 @@ private:
         }
     }
 
-    inline bool colorIndexedPath(const OperationNode<Base>* scRef,
-                                 OperationNode<Base>* sc2,
-                                 size_t color,
-                                 std::set<const OperationNode<Base>*>& indexedOperations) {
+    inline bool findIndexedPath(const OperationNode<Base>* scRef,
+                                OperationNode<Base>* sc2,
+                                CodeHandlerVector<Base, bool>& varIndexed,
+                                std::set<const OperationNode<Base>*>& indexedOperations) {
 
         while (scRef->getOperationType() == CGOpCode::Alias) {
             CPPADCG_ASSERT_KNOWN(scRef->getArguments().size() == 1, "Invalid number of arguments for alias");
@@ -464,15 +465,12 @@ private:
                 if (!indexedArg) {
                     const std::vector<Argument<Base> >& args2 = sc2->getArguments();
                     CPPADCG_ASSERT_UNKNOWN(size == args2.size());
-                    indexedDependentPath |= colorIndexedPath(argsRef[a].getOperation(), args2[a].getOperation(), color, indexedOperations);
+                    indexedDependentPath |= findIndexedPath(argsRef[a].getOperation(), args2[a].getOperation(), varIndexed, indexedOperations);
                 }
             }
         }
 
-        if (indexedDependentPath)
-            sc2->setColor(color);
-        else
-            sc2->setColor(0);
+        varIndexed[*sc2] = indexedDependentPath;
 
         if (usesIndexedIndependent)
             indexedOperations.insert(sc2);
@@ -480,7 +478,8 @@ private:
         return indexedDependentPath;
     }
 
-    void findOperationsWithIndeps(OperationNode<Base>& node, std::set<const OperationNode<Base>*>& ops) const {
+    void findOperationsWithIndeps(OperationNode<Base>& node,
+                                  std::set<const OperationNode<Base>*>& ops) const {
         if (handler_->isVisited(node))
             return; // been here before
 

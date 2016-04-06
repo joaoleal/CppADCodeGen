@@ -73,6 +73,10 @@ private:
      */
     std::unique_ptr<CodeHandlerVector<Base, size_t>> varId_;
     /**
+     * Which variables depend on indexed independents
+     */
+    std::unique_ptr<CodeHandlerVector<Base, bool>> varIndexed_;
+    /**
      * The number of iterations this loop will have
      */
     size_t iterationCount_;
@@ -157,6 +161,7 @@ public:
     inline Loop(EquationPattern<Base>& eq) :
         handlerOrig_(eq.depRef.getCodeHandler()),
         varId_(handlerOrig_ != nullptr ? new CodeHandlerVector<Base, size_t>(*handlerOrig_): nullptr),
+        varIndexed_(handlerOrig_ != nullptr ? new CodeHandlerVector<Base, bool>(*handlerOrig_): nullptr),
         iterationCount_(0), // not known yet (only after all equations have been added)
         eqGroups_(1),
         nIndependents_(0),
@@ -288,6 +293,11 @@ public:
             }
         }
 
+        if(varIndexed_ != nullptr) {
+            varIndexed_->adjustSize();
+            varIndexed_->fill(false);
+        }
+
         /**
          * Determine the reference iteration for each
          */
@@ -314,7 +324,7 @@ public:
             CPPADCG_ASSERT_UNKNOWN(refItDep.size() == group.equations.size());
 
             for (size_t dep : refItDep) {
-                EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
+                EquationPattern<Base>::uncolor(dependents[dep].getOperationNode(), *varIndexed_);
             }
 
             for (size_t dep : refItDep) {
@@ -323,7 +333,7 @@ public:
                 // operations that use indexed independent variables in the reference iteration
                 std::set<const OperationNode<Base>*> indexedOperations;
 
-                eq->colorIndexedPath(dep, dependents, 1, indexedOperations);
+                eq->findIndexedPath(dep, dependents, *varIndexed_, indexedOperations);
                 if (dep == eq->depRefIndex) {
                     for (const auto& itop2a : eq->indexedOpIndep.op2Arguments) {
                         // currently there is no way to make a distinction between yi = xi and y_(i+1) = x_(i+1)
@@ -364,14 +374,6 @@ public:
         /**
          * Clean-up
          */
-        for (size_t g = 0; g < eqGroups_.size(); g++) {
-            const EquationGroup<Base>& group = eqGroups_[g];
-            const std::set<size_t>& refItDep = group.iterationDependents[group.refIteration];
-            for (size_t dep : refItDep) {
-                EquationPattern<Base>::uncolor(dependents[dep].getOperationNode());
-            }
-        }
-
         if(varId_ != nullptr)
             varId_->fill(0);
     }
@@ -947,7 +949,7 @@ private:
         id = idCounter_++;
         (*varId_)[node] = id;
 
-        if (node.getColor() > 0 || node.getOperationType() == CGOpCode::ArrayCreation) {
+        if ((*varIndexed_)[node] || node.getOperationType() == CGOpCode::ArrayCreation) {
             /**
              * part of the operation path that depends on the loop indexes
              * or its an array with constant elements

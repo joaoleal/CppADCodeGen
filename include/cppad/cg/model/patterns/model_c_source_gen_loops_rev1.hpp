@@ -182,13 +182,6 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
         const std::vector<std::vector<LoopPosition> >& dependentIndexes = lModel.getDependentIndexes();
         size_t nIterations = lModel.getIterationCount();
 
-        // reset nodes not managed by a handler
-        if (itl2Eq != loopEqInfo.begin()) {
-            for (size_t j = 0; j < localNodes.size(); j++) {
-                localNodes[j]->setColor(0);
-            }
-        }
-
         _cache.str("");
         _cache << "model (reverse one, loop " << lModel.getLoopId() << ")";
         std::string jobName = _cache.str();

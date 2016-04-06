@@ -240,13 +240,6 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         LoopModel<Base>& lModel = *itLoop2Info->first;
         HessianWithLoopsInfo<Base>& info = itLoop2Info->second;
 
-        // reset nodes not managed by a handler
-        if (itLoop2Info != loopHessInfo.begin()) {
-            for (size_t j = 0; j < localNodes.size(); j++) {
-                localNodes[j]->setColor(0);
-            }
-        }
-
         /*******************************************************************
          * create Hessian row groups
          * for the contributions from the equations in loops

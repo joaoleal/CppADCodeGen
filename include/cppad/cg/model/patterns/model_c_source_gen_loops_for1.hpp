@@ -184,14 +184,6 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
         //size_t nIndexed = lModel.getIndexedIndepIndexes().size();
         //size_t nNonIndexed = lModel.getNonIndexedIndepIndexes().size();
 
-        // reset nodes not managed by a handler
-        if (itl2Eq != loopEqInfo.begin()) {
-            for (size_t j = 0; j < localNodes.size(); j++) {
-                localNodes[j]->setColor(0);
-            }
-        }
-
-
         _cache.str("");
         _cache << "model (forward one, loop " << lModel.getLoopId() << ")";
         std::string jobName = _cache.str();

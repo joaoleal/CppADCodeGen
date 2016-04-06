@@ -67,6 +67,7 @@ private:
 private:
     CodeHandler<Base>* handler_;
     CodeHandlerVector<Base, size_t> varId_;
+    CodeHandlerVector<Base, bool> varIndexed_; // which nodes depend on indexed independent variables
     const std::vector<std::set<size_t> >& relatedDepCandidates_;
     std::vector<CGBase> dependents_; // a copy
     std::vector<CGBase>& independents_;
@@ -113,6 +114,7 @@ public:
                             std::vector<CGBase>& independents) :
         handler_(independents[0].getCodeHandler()),
         varId_(*handler_),
+        varIndexed_(*handler_),
         relatedDepCandidates_(relatedDepCandidates),
         dependents_(dependents),
         independents_(independents),
@@ -231,7 +233,8 @@ private:
         /**
          * Find and organize relationships
          */
-        color_++; // this is the color used to mark indexed nodes (must be higher than any previously used color)
+        varIndexed_.adjustSize();
+        varIndexed_.fill(false);
 
         for (size_t e = 0; e < eq_size; e++) {
             EquationPattern<Base>* eq = equations_[e];
@@ -258,7 +261,7 @@ private:
                  */
                 for (size_t depIt : eq->dependents) {
                     OperationNode<Base>* node = dependents_[depIt].getOperationNode();
-                    EquationPattern<Base>::uncolor(node); // must uncolor
+                    EquationPattern<Base>::uncolor(node, varIndexed_); // must uncolor
                 }
             }
 
@@ -483,15 +486,6 @@ private:
          * clean-up evaluation order
          */
         resetHandlerCounters();
-
-        /**
-         * clean-up colors
-         */
-        size_t m = dependents_.size();
-        for (size_t i = 0; i < m; i++) {
-            OperationNode<Base>* node = dependents_[i].getOperationNode();
-            EquationPattern<Base>::uncolor(node);
-        }
 
         return loops_;
     }
@@ -791,7 +785,11 @@ private:
 
     std::vector<EquationPattern<Base>*> findRelatedVariables() {
         eqCurr_ = nullptr;
+        CodeHandlerVector<Base, size_t> varColor(*handler_);
         color_ = 1; // used to mark visited nodes
+
+        varColor.adjustSize();
+        varColor.fill(0);
 
         size_t rSize = relatedDepCandidates_.size();
         for (size_t r = 0; r < rSize; r++) {
@@ -822,7 +820,7 @@ private:
                         continue;
                     }
 
-                    if (eqCurr_->testAdd(iDep, dependents_[iDep], color_)) {
+                    if (eqCurr_->testAdd(iDep, dependents_[iDep], color_, varColor)) {
                         used.insert(iDep);
                     }
                 }
@@ -859,7 +857,7 @@ private:
         OperationNode<Base>* depNode = value.getOperationNode();
         size_t opCount = 0;
         if (findSharedTemporaries(depNode, depIndex, opCount)) {
-            depNode->setColor(color_);
+            varIndexed_[*depNode] = true;
             return true;
         }
         return false;
@@ -882,7 +880,7 @@ private:
 
         if (handler_->isVisited(*node)) {
             opCount++; // this operation
-            return node->getColor() == color_;
+            return varIndexed_[*node];
         }
 
         handler_->markVisited(*node);
@@ -905,11 +903,7 @@ private:
 
         opCount += localOpCount;
 
-        if (indexedOperation) {
-            node->setColor(color_); // mark this operation as being indexed
-        } else {
-            node->setColor(0); // mark this operation as being not-indexed
-        }
+        varIndexed_[*node] = indexedOperation; // mark this operation as being indexed or not-indexed
 
         size_t id = varId_[*node];
         std::set<size_t>& deps = id2Deps[id];

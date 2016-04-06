@@ -43,8 +43,9 @@ public:
 
         vector<CG<Base> > x(n);
         handler_.makeVariables(x);
-        for (size_t j = 0; j < n; j++)
-            x[j].getOperationNode()->setColor(j);
+
+        // make sure the position in the code handler is the same as the independent index
+        assert(x.size() == 0 || (x[0].getOperationNode()->getHandlerPosition() == 0 && x[x.size() - 1].getOperationNode()->getHandlerPosition() == x.size() - 1));
 
         vector<CG<Base> > dep = fun_.Forward(0, x);
 
@@ -64,7 +65,8 @@ private:
         CGOpCode op = node->getOperationType();
         if (op == CGOpCode::Inv) {
             std::set<size_t> indeps;
-            indeps.insert(node->getColor());
+            // particular case where the position in the code handler is the same as the independent index
+            indeps.insert(node->getHandlerPosition());
             return indeps;
         }
 

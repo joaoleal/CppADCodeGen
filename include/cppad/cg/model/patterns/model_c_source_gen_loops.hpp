@@ -248,10 +248,14 @@ inline void moveNonIndexedOutsideLoop(CodeHandler<Base>& handler,
     const OperationNode<Base>& loopIndex = loopStart.getIndex();
     std::set<OperationNode<Base>*> nonIndexed;
 
+    CodeHandlerVector<Base, short> indexed(handler); // 0 - unknown, 1 - non-indexed, 2 - indexed
+    indexed.adjustSize();
+    indexed.fill(0);
+
     const std::vector<Argument<Base> >& endArgs = loopEnd.getArguments();
     for (size_t i = 0; i < endArgs.size(); i++) {
         CPPADCG_ASSERT_UNKNOWN(endArgs[i].getOperation() != nullptr);
-        LoopNonIndexedLocator<Base>(handler, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
+        LoopNonIndexedLocator<Base>(handler, indexed, nonIndexed, loopIndex).findNonIndexedNodes(*endArgs[i].getOperation());
     }
 
     std::vector<Argument<Base> >& startArgs = loopStart.getArguments();
@@ -268,25 +272,30 @@ template<class Base>
 class LoopNonIndexedLocator {
 private:
     CodeHandler<Base>& handler_;
+    CodeHandlerVector<Base, short>& indexed_; // 0 - unknown, 1 - non-indexed, 2 - indexed
     std::set<OperationNode<Base>*>& nonIndexed_;
     const OperationNode<Base>& loopIndex_;
 public:
 
     inline LoopNonIndexedLocator(CodeHandler<Base>& handler,
+                                 CodeHandlerVector<Base, short>& indexed,
                                  std::set<OperationNode<Base>*>& nonIndexed,
                                  const OperationNode<Base>& loopIndex) :
         handler_(handler),
+        indexed_(indexed),
         nonIndexed_(nonIndexed),
         loopIndex_(loopIndex) {
+        indexed_.adjustSize();
     }
 
     inline bool findNonIndexedNodes(OperationNode<Base>& node) {
-        if (node.getColor() > 0)
-            return node.getColor() == 1;
+        short& idx = indexed_[node];
+        if (idx > 0)
+            return idx == 1;
 
         if (node.getOperationType() == CGOpCode::IndexDeclaration) {
             if (&node == &loopIndex_) {
-                node.setColor(2);
+                idx = 2;
                 return false; // depends on the loop index
             }
         }
@@ -305,7 +314,7 @@ public:
             }
         }
 
-        node.setColor(indexedPath ? 2 : 1);
+        idx = indexedPath ? 2 : 1;
 
         if (node.getOperationType() == CGOpCode::ArrayElement ||
                 node.getOperationType() == CGOpCode::AtomicForward ||
@@ -316,7 +325,7 @@ public:
         if (indexedPath && nonIndexedArgs) {
             for (size_t a = 0; a < size; a++) {
                 OperationNode<Base>* arg = args[a].getOperation();
-                if (arg != nullptr && arg->getColor() == 1) {// must be a non indexed expression
+                if (arg != nullptr && indexed_[*arg] == 1) {// must be a non indexed expression
                     CGOpCode op = arg->getOperationType();
                     if (op != CGOpCode::Inv && op != CGOpCode::TmpDcl) {// no point in moving just one variable outside
 

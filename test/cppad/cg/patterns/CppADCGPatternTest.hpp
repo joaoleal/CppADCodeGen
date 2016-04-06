@@ -81,15 +81,17 @@ public:
     void testPatternDetection(size_t m,
                               size_t n,
                               size_t repeat,
-                              size_t n_loops) {
+                              size_t n_loops,
+                              long commonVars = -1) {
         std::vector<std::vector<std::set<size_t> > > loops(n_loops);
-        testPatternDetection(m, n, repeat, loops);
+        testPatternDetection(m, n, repeat, loops, commonVars);
     }
 
     void testPatternDetection(size_t m,
                               size_t n,
                               size_t repeat,
-                              const std::vector<std::vector<std::set<size_t> > >& loops) {
+                              const std::vector<std::vector<std::set<size_t> > >& loops,
+                              long commonVars = -1) {
         //size_t m2 = repeat * m;
         size_t n2 = repeat * n;
 
@@ -100,22 +102,24 @@ public:
         for (size_t j = 0; j < n2; j++)
             xb[j] = 0.5;
 
-        testPatternDetection(m, xb, repeat, loops);
+        testPatternDetection(m, xb, repeat, loops, commonVars);
     }
 
     void testPatternDetection(size_t m,
                               const std::vector<Base>& xb,
                               size_t repeat,
-                              const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
+                              const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1),
+                              long commonVars = -1) {
         std::vector<std::set<size_t> > depCandidates = createRelatedDepCandidates(m, repeat);
 
-        testPatternDetection(xb, repeat, depCandidates, loops);
+        testPatternDetection(xb, repeat, depCandidates, loops, commonVars);
     }
 
     void testPatternDetection(const std::vector<Base>& xb,
                               size_t repeat,
                               const std::vector<std::set<size_t> >& relatedDepCandidates,
-                              const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1)) {
+                              const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1),
+                              long commonVars = -1) {
         using namespace CppAD;
 
         assert(model_ != nullptr);
@@ -125,7 +129,7 @@ public:
          */
         std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb));
 
-        testPatternDetectionResults(*fun, repeat, relatedDepCandidates, loops);
+        testPatternDetectionResults(*fun, repeat, relatedDepCandidates, loops, commonVars);
     }
 
     void testLibCreation(const std::string& libName,
@@ -221,16 +225,18 @@ public:
     void testPatternDetectionResults(ADFun<CGD>& fun,
                                      size_t m,
                                      size_t repeat,
-                                     const std::vector<std::vector<std::set<size_t> > >& loops) {
+                                     const std::vector<std::vector<std::set<size_t> > >& loops,
+                                     long commonVars = -1) {
         std::vector<std::set<size_t> > depCandidates = createRelatedDepCandidates(m, repeat);
 
-        testPatternDetectionResults(fun, repeat, depCandidates, loops);
+        testPatternDetectionResults(fun, repeat, depCandidates, loops, commonVars);
     }
 
     void testPatternDetectionResults(ADFun<CGD>& fun,
                                      size_t repeat,
                                      const std::vector<std::set<size_t> >& depCandidates,
-                                     const std::vector<std::vector<std::set<size_t> > >& loops) {
+                                     const std::vector<std::vector<std::set<size_t> > >& loops,
+                                     long commonVars = -1) {
         using namespace std;
 
         /**
@@ -252,6 +258,10 @@ public:
         LoopFreeModel<Base>* nonLoopTape;
         SmartSetPointer<LoopModel<Base> > loopTapes;
         matcher.generateTapes(nonLoopTape, loopTapes.s);
+
+        if (commonVars >= 0) {
+            ASSERT_EQ(nonLoopTape->getTapeDependentCount(), (size_t) commonVars);
+        }
 
         delete nonLoopTape;
 
