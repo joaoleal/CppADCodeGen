@@ -18,13 +18,30 @@
 namespace CppAD {
 namespace cg {
 
+// forward declarations
+template<class ScalarIn, class ScalarOut, class ActiveOut, class FinalEvaluatorType>
+class EvaluatorOperations;
+
+template<class ScalarIn, class ScalarOut, class ActiveOut, class Operations>
+class EvaluatorBase;
+
 /**
- * Utility class used for some code transformation.
- * 
+ * A base class for evaluators.
+ * Operation implementations (sin(), cos(), ...) should be implemented in a
+ * subclass of type FinalEvaluatorType.
+ * This allows static polymorphism through curiously recurring template
+ * pattern (CRTP). Therefore the default behaviour can be overridden without
+ * the use of virtual methods.
+ *
+ * Evaluators allow to reprocess operations defined in an operation graph
+ * for a different set of independent variables and (possibly) data types.
+ * This class should not be instantiated directly.
+ *
  * @todo implement nonrecursive algorithm (so that there will never be any stack limit issues)
  */
-template<class ScalarIn, class ScalarOut, class ActiveOut>
+template<class ScalarIn, class ScalarOut, class ActiveOut, class FinalEvaluatorType>
 class EvaluatorBase {
+    friend FinalEvaluatorType;
 protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
@@ -171,145 +188,107 @@ protected:
         }
 
         // first evaluation of this node
-        const std::vector<Argument<ScalarIn> >& args = node.getArguments();
         const CGOpCode code = node.getOperationType();
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+
         ActiveOut result;
         switch (code) {
             case CGOpCode::Assign:
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()");
-                result = evalArg(args[0]);
+                result = thisOps.evalAssign(node);
                 break;
             case CGOpCode::Abs: //  abs(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");
-                result = abs(evalArg(args[0]));
+                result = thisOps.evalAbs(node);
                 break;
             case CGOpCode::Acos: // acos(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for acos()");
-                result = acos(evalArg(args[0]));
+                result = thisOps.evalAcos(node);
                 break;
             case CGOpCode::Add: //  a + b
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition");
-                result = evalArg(args[0]) + evalArg(args[1]);
+                result = thisOps.evalAdd(node);
                 break;
             case CGOpCode::Alias:
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias");
-                result = evalArg(args[0]);
+                result = thisOps.evalAlias(node);
                 break;
                 //case CGArrayCreationOp: // {a, b, c ...}
             case CGOpCode::ArrayElement: // x[i]
-            {
-                const std::vector<size_t>& info = node.getInfo();
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
-                CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
-                CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
-                CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
-                size_t index = info[0];
-                vector<ActiveOut>& array = evalArrayCreationOperation(*args[0].getOperation()); // array creation
-                evalAtomicOperation(*args[1].getOperation()); // atomic operation
-
-                result = array[index];
+                result = thisOps.evalArrayElement(node);
                 break;
-            }
             case CGOpCode::Asin: // asin(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()");
-                result = asin(evalArg(args[0]));
+                result = thisOps.evalAsin(node);
                 break;
             case CGOpCode::Atan: // atan(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for atan()");
-                result = atan(evalArg(args[0]));
+                result = thisOps.evalAtan(node);
                 break;
                 //CGAtomicForwardOp
                 //CGAtomicReverseOp
             case CGOpCode::ComLt: // result = left < right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLt, )");
-                result = CondExpOp(CompareLt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareLt(node);
                 break;
             case CGOpCode::ComLe: // result = left <= right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )");
-                result = CondExpOp(CompareLe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareLe(node);
                 break;
             case CGOpCode::ComEq: // result = left == right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )");
-                result = CondExpOp(CompareEq, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareEq(node);
                 break;
             case CGOpCode::ComGe: // result = left >= right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGe, )");
-                result = CondExpOp(CompareGe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareGe(node);
                 break;
             case CGOpCode::ComGt: // result = left > right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGt, )");
-                result = CondExpOp(CompareGt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareGt(node);
                 break;
             case CGOpCode::ComNe: // result = left != right? trueCase: falseCase
-                CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareNe, )");
-                result = CondExpOp(CompareNe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+                result = thisOps.evalCompareNe(node);
                 break;
             case CGOpCode::Cosh: // cosh(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cosh()");
-                result = cosh(evalArg(args[0]));
+                result = thisOps.evalCosh(node);
                 break;
             case CGOpCode::Cos: //  cos(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cos()");
-                result = cos(evalArg(args[0]));
+                result = thisOps.evalCos(node);
                 break;
             case CGOpCode::Div: // a / b
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for division");
-                result = evalArg(args[0]) / evalArg(args[1]);
+                result = thisOps.evalDiv(node);
                 break;
             case CGOpCode::Exp: //  exp(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for exp()");
-                result = exp(evalArg(args[0]));
+                 result = thisOps.evalExp(node);
                 break;
             case CGOpCode::Inv: //                             independent variable
-                result = evalIndependent(node);
+                result = thisOps.evalIndependent(node);
                 break;
             case CGOpCode::Log: //  log(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
-                result = log(evalArg(args[0]));
+                result = thisOps.evalLog(node);
                 break;
             case CGOpCode::Mul: // a * b
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication");
-                result = evalArg(args[0]) * evalArg(args[1]);
+                result = thisOps.evalMul(node);
                 break;
             case CGOpCode::Pow: //  pow(a,   b)
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()");
-                result = pow(evalArg(args[0]), evalArg(args[1]));
+                result = thisOps.evalPow(node);
                 break;
                 //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
             case CGOpCode::Sign: // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sign()");
-                result = sign(evalArg(args[0]));
+                result = thisOps.evalSign(node);
                 break;
             case CGOpCode::Sinh: // sinh(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sinh()");
-                result = sinh(evalArg(args[0]));
+                result = thisOps.evalSinh(node);
                 break;
             case CGOpCode::Sin: //  sin(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sin()");
-                result = sin(evalArg(args[0]));
+                result = thisOps.evalSin(node);
                 break;
             case CGOpCode::Sqrt: // sqrt(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sqrt()");
-                result = sqrt(evalArg(args[0]));
+                result = thisOps.evalSqrt(node);
                 break;
             case CGOpCode::Sub: //  a - b
-                CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for subtraction");
-                result = evalArg(args[0]) - evalArg(args[1]);
+                result = thisOps.evalSub(node);
                 break;
             case CGOpCode::Tanh: //  tanh(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tanh()");
-                result = tanh(evalArg(args[0]));
+                result = thisOps.evalTanh(node);
                 break;
             case CGOpCode::Tan: //  tan(variable)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tan()");
-                result = tan(evalArg(args[0]));
+                result = thisOps.evalTan(node);
                 break;
             case CGOpCode::UnMinus: // -(a)
-                CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for unary minus");
-                result = -evalArg(args[0]);
+                result = thisOps.evalMinus(node);
                 break;
             default:
-                result = evalUnsupportedOperation(node);
+                result = thisOps.evalUnsupportedOperation(node);
         }
 
         // save it for reuse
@@ -317,18 +296,9 @@ protected:
         ActiveOut* resultPtr = new ActiveOut(result);
         evals_[node] = resultPtr;
 
-        proccessActiveOut(node, *resultPtr);
+        thisOps.proccessActiveOut(node, *resultPtr);
 
         return *resultPtr;
-    }
-
-    virtual void proccessActiveOut(OperationNode<ScalarIn>& node,
-                                   ActiveOut& a) {
-    }
-
-    virtual ActiveOut evalIndependent(OperationNode<ScalarIn>& node) {
-        size_t index = handler_.getIndependentVariableIndex(node);
-        return indep_[index];
     }
 
     inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) {
@@ -357,25 +327,257 @@ protected:
         return *resultArray;
     }
 
-    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) {
-        throw CGException("Evaluator is unable to handle atomic functions for these variable types");
+};
+
+
+/**
+ * Defines the default operations for evaluators.
+ * Evaluators allow to reprocess operations defined in an operation graph
+ * for a different set of independent variables and (possibly) data types.
+ *
+ * This allows static polymorphism through curiously recurring template
+ * pattern (CRTP). Therefore the default behaviour can be overridden without
+ * the use of virtual methods.
+ * This class should not be instantiated directly.
+ */
+template<class ScalarIn, class ScalarOut, class ActiveOut, class FinalEvaluatorType>
+class EvaluatorOperations : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType> {
+    /**
+     * must be friends with its super classes since there can be a cast to
+     * this type due to the curiously recurring template pattern (CRTP)
+     */
+    friend class EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType>;
+public:
+    typedef EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType> Base;
+    typedef OperationNode<ScalarIn> NodeIn;
+    typedef Argument<ScalarIn> ArgIn;
+public:
+    inline EvaluatorOperations(CodeHandler<ScalarIn>& handler):
+            Base(handler) {
     }
 
-    virtual ActiveOut evalUnsupportedOperation(OperationNode<ScalarIn>& node) {
+    virtual ~EvaluatorOperations() { }
+
+protected:
+
+    using Base::evalArg;
+
+    inline ActiveOut evalAssign(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for assign()");
+        return evalArg(args[0]);
+    }
+
+    inline ActiveOut evalAbs(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for abs()");
+        return abs(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalAcos(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for acos()");
+        return acos(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalAdd(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for addition");
+        return evalArg(args[0]) + evalArg(args[1]);
+    }
+
+    inline ActiveOut evalAlias(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for alias");
+        return evalArg(args[0]);
+    }
+
+    inline ActiveOut evalArrayElement(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        const std::vector<size_t>& info = node.getInfo();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
+        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
+        size_t index = info[0];
+        CppAD::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
+
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        thisOps.evalAtomicOperation(*args[1].getOperation()); // atomic operation
+
+        return array[index];
+    }
+
+    inline ActiveOut evalAsin(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for asin()");
+        return asin(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalAtan(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for atan()");
+        return atan(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalCompareLt(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLt, )");
+        return CondExpOp(CompareLt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCompareLe(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareLe, )");
+        return CondExpOp(CompareLe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCompareEq(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareEq, )");
+        return CondExpOp(CompareEq, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCompareGe(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGe, )");
+        return CondExpOp(CompareGe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCompareGt(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareGt, )");
+        return CondExpOp(CompareGt, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCompareNe(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 4, "Invalid number of arguments for CondExpOp(CompareNe, )");
+        return CondExpOp(CompareNe, evalArg(args[0]), evalArg(args[1]), evalArg(args[2]), evalArg(args[3]));
+    }
+
+    inline ActiveOut evalCosh(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cosh()");
+        return cosh(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalCos(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for cos()");
+        return cos(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalDiv(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for division");
+        return evalArg(args[0]) / evalArg(args[1]);
+    }
+
+    inline ActiveOut evalExp(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for exp()");
+        return exp(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalIndependent(const NodeIn& node) {
+        size_t index = this->handler_.getIndependentVariableIndex(node);
+        return this->indep_[index];
+    }
+
+    inline ActiveOut evalLog(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for log()");
+        return log(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalMul(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for multiplication");
+        return evalArg(args[0]) * evalArg(args[1]);
+    }
+
+    inline ActiveOut evalPow(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()");
+        return pow(evalArg(args[0]), evalArg(args[1]));
+
+    }
+
+    //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
+    inline ActiveOut evalSign(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sign()");
+        return sign(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalSinh(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sinh()");
+        return sinh(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalSin(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sin()");
+        return sin(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalSqrt(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for sqrt()");
+        return sqrt(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalSub(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for subtraction");
+        return evalArg(args[0]) - evalArg(args[1]);
+    }
+
+    inline ActiveOut evalTanh(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tanh()");
+        return tanh(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalTan(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for tan()");
+        return tan(evalArg(args[0]));
+    }
+
+    inline ActiveOut evalMinus(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for unary minus");
+        return -evalArg(args[0]);
+    }
+
+    inline ActiveOut evalUnsupportedOperation(const NodeIn& node) {
         throw CGException("Unknown operation code '", node.getOperationType(), "'");
     }
 
+    inline void evalAtomicOperation(const NodeIn& node) {
+        throw CGException("Evaluator is unable to handle atomic functions for these variable types");
+    }
+
+    inline void proccessActiveOut(const NodeIn& node,
+                                  ActiveOut& a) {
+    }
 };
 
 /**
- * 
+ * An evaluator allows to reprocess operations defined in an operation graph
+ * for a different set of independent variables and (possibly) data types.
  */
 template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut> >
-class Evaluator : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> {
+class Evaluator : public EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> > {
+public:
+    typedef EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> > Base;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
-        EvaluatorBase<ScalarIn, ScalarOut, ActiveOut>(handler) {
+            Base(handler) {
     }
 
     inline virtual ~Evaluator() {

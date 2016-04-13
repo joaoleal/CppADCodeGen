@@ -95,10 +95,10 @@ namespace cg {
  * Evaluator specialization for Adol-C
  */
 template<class ScalarIn>
-class Evaluator<ScalarIn, double, adouble> : public EvaluatorBase<ScalarIn, double, adouble> {
+class Evaluator<ScalarIn, double, adouble> : public EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> > {
 public:
     typedef adouble ActiveOut;
-    typedef EvaluatorBase<ScalarIn, double, adouble> Super;
+    typedef EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> > Super;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :

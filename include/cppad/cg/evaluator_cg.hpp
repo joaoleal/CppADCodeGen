@@ -22,11 +22,16 @@ namespace cg {
  * Specialization of Evaluator for an output active type of CG<Base>
  */
 template<class ScalarIn, class ScalarOut>
-class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut> > {
+class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > {
+    /**
+     * must be friends with one of its super classes since there is a cast to
+     * this type due to the curiously recurring template pattern (CRTP)
+     */
+    friend EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > >;
 public:
     typedef CG<ScalarOut> ActiveOut;
 protected:
-    typedef EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut> > Super;
+    typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
@@ -35,8 +40,12 @@ public:
 
 protected:
 
-    virtual void proccessActiveOut(OperationNode<ScalarIn>& node,
-                                   ActiveOut& a) override {
+    /**
+     * @note overrides the default proccessActiveOut() even though this method
+     *        is not virtual (hides a method in EvaluatorOperations)
+     */
+    void proccessActiveOut(const OperationNode<ScalarIn>& node,
+                           ActiveOut& a) {
         if (node.getName() != nullptr) {
             if (a.getOperationNode() != nullptr) {
                 a.getOperationNode()->setName(*node.getName());

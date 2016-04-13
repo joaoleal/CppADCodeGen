@@ -20,12 +20,18 @@ namespace cg {
 
 /**
  * Helper class for the specialization of Evaluator for an output active type of AD<>
+ * This class should not be instantiated directly.
  */
-template<class ScalarIn, class ScalarOut>
-class EvaluatorAD : public EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > {
+template<class ScalarIn, class ScalarOut, class FinalEvaluatorType>
+class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType > {
+    /**
+     * must be friends with one of its super classes since there is a cast to
+     * this type due to the curiously recurring template pattern (CRTP)
+     */
+    friend EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
 public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef EvaluatorBase<ScalarIn, ScalarOut, ActiveOut> Super;
+    typedef EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType> Super;
 protected:
     using Super::handler_;
     using Super::evalArrayCreationOperation;
@@ -68,8 +74,10 @@ protected:
 
     /**
      * @throws CGException on an internal evaluation error
+     * @note overrides the default evalAtomicOperation() even though this
+     *       method is not virtual (hides a method in EvaluatorOperations)
      */
-    virtual void evalAtomicOperation(OperationNode<ScalarIn>& node) override {
+    inline void evalAtomicOperation(OperationNode<ScalarIn>& node) {
         using CppAD::vector;
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
@@ -121,12 +129,12 @@ protected:
  * Specialization of Evaluator for an output active type of AD<>
  */
 template<class ScalarIn, class ScalarOut>
-class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorAD<ScalarIn, ScalarOut> {
+class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > {
 public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef EvaluatorAD<ScalarIn, ScalarOut> Super;
+    typedef EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > Super;
 public:
-    using EvaluatorAD<ScalarIn, ScalarOut>::EvaluatorAD; // use same constructor
+    using Super::EvaluatorAD; // use same constructor
 };
 
 } // END cg namespace
