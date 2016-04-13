@@ -19,22 +19,23 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Specialization of Evaluator for an output active type of CG<Base>
+ * Used for the specialization of Evaluator for an output active type of CG<Base>.
+ * This class should not be instantiated directly.
  */
-template<class ScalarIn, class ScalarOut>
-class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > {
+template<class ScalarIn, class ScalarOut, class FinalEvaluatorType>
+class EvaluatorCG : public EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType> {
     /**
      * must be friends with one of its super classes since there is a cast to
      * this type due to the curiously recurring template pattern (CRTP)
      */
-    friend EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > >;
+    friend EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
 public:
     typedef CG<ScalarOut> ActiveOut;
 protected:
-    typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
+    typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType> Super;
 public:
 
-    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+    inline EvaluatorCG(CodeHandler<ScalarIn>& handler) :
         Super(handler) {
     }
 
@@ -53,6 +54,17 @@ protected:
         }
     }
 
+};
+
+/**
+ * Specialization of Evaluator for an output active type of CG<Base>
+ */
+template<class ScalarIn, class ScalarOut>
+class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > {
+protected:
+    typedef EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
+public:
+    using Super::EvaluatorCG;
 };
 
 } // END cg namespace
