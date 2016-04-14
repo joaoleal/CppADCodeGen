@@ -64,7 +64,10 @@ class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorCG<Scalar
 protected:
     typedef EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
 public:
-    using Super::EvaluatorCG;
+    
+    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+        Super(handler) {
+    }
 };
 
 } // END cg namespace

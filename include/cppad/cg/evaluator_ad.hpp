@@ -74,6 +74,7 @@ protected:
 
     /**
      * @throws CGException on an internal evaluation error
+     *
      * @note overrides the default evalAtomicOperation() even though this
      *       method is not virtual (hides a method in EvaluatorOperations)
      */
@@ -134,7 +135,11 @@ public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
     typedef EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > Super;
 public:
-    using Super::EvaluatorAD; // use same constructor
+    
+    inline Evaluator(CodeHandler<ScalarIn>& handler) :
+        Super(handler) {
+    }
+    
 };
 
 } // END cg namespace
