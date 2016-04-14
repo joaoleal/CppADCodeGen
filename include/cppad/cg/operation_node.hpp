@@ -34,20 +34,38 @@ public:
 public:
     static const std::set<CGOpCode> CUSTOM_NODE_CLASS;
 private:
-    // the source code handler that own this node (only null for temporary OperationNodes)
+    /**
+     * the source code handler that own this node 
+     * (only null for temporary OperationNodes)
+     */
     CodeHandler<Base>* handler_;
-    // the operations used to create this variable (temporary variables only)
+    /**
+     * the operation type represented by this node
+     */
     CGOpCode operation_;
-    // additional operation information
+    /**
+     * additional information/options associated with the operation type
+     */
     std::vector<size_t> info_;
-    // the code blocks this block depends upon (empty for independent 
-    // variables and possibly for the 1st assignment of a dependent variable)
+    /**
+     * arguments required by the operation 
+     * (empty for independent variables and possibly for the 1st assignment
+     *  of a dependent variable)
+     */
     std::vector<Argument<Base> > arguments_;
-    // index in the CodeHandler managed nodes array
+    /**
+     * index in the CodeHandler managed nodes array
+     */
     size_t pos_;
-    // generated variable name
+    /**
+     * name for the result of this operation
+     */
     std::string* name_;
 public:
+    /**
+     * Changes the current operation type into an Alias.
+     * @param other the operation node or value this node is going to reference
+     */
     inline void makeAlias(const Argument<Base>& other) {
         CPPADCG_ASSERT_UNKNOWN(CUSTOM_NODE_CLASS.find(operation_) == CUSTOM_NODE_CLASS.end()); // TODO: consider relaxing this check
 
@@ -59,8 +77,8 @@ public:
     }
     
     /**
-     * Provides the source code handler that own this node which can be only 
-     * null for temporary OperationNodes.
+     * Provides the source code handler that owns this node.
+     * It can only be null for temporary nodes.
      * 
      * @return a CodeHandler which owns this nodes memory (possibly null)
      */
@@ -69,12 +87,20 @@ public:
     }
 
     /**
+     * Provides the operation type represented by this node.
      * @return Mathematical operation type which this node is the result of.
      */
     inline CGOpCode getOperationType() const {
         return operation_;
     }
 
+    /**
+     * Changes the current operation type.
+     * The previous operation information/options might also have to be 
+     * changed, use getInfo() to change it if required.
+     * @param op the new operation type
+     * @param arguments the arguments for the new operation
+     */
     inline void setOperation(CGOpCode op,
                              const std::vector<Argument<Base> >& arguments = std::vector<Argument<Base> >()) {
         CPPADCG_ASSERT_UNKNOWN(op == operation_ || CUSTOM_NODE_CLASS.find(op) == CUSTOM_NODE_CLASS.end()); // cannot transform into a node with a custom class
@@ -85,33 +111,51 @@ public:
 
     /**
      * Provides the arguments used in the operation represented by this
-     * code fragment.
-     * @return the arguments for the operation in this code fragment
+     * node.
+     * @return the arguments for the operation in this node (read-only)
      */
     inline const std::vector<Argument<Base> >& getArguments() const {
         return arguments_;
     }
 
+    /**
+     * Provides the arguments used in the operation represented by this
+     * node.
+     * @return the arguments for the operation in this node
+     */
     inline std::vector<Argument<Base> >& getArguments() {
         return arguments_;
     }
 
     /**
      * Provides additional information used in the operation.
-     * @return the additional operation information/options
+     * @return the additional operation information/options  (read-only)
      */
     inline const std::vector<size_t>& getInfo() const {
         return info_;
     }
 
+    /**
+     * Provides additional information used in the operation.
+     * @return the additional operation information/options
+     */
     inline std::vector<size_t>& getInfo() {
         return info_;
     }
 
+    /**
+     * Provide the variable name assigned to this node.
+     * @return a variable name for the result of this operation or null if
+     *         no name was assigned to this node yet
+     */
     inline const std::string* getName() const {
         return name_;
     }
 
+    /**
+     * Defines a new variable name for this node
+     * @param name a variable name
+     */
     inline void setName(const std::string& name) {
         if (name_ != nullptr)
             *name_ = name;
@@ -119,6 +163,9 @@ public:
             name_ = new std::string(name);
     }
 
+    /**
+     * Clears any name assigned to this node.
+     */
     inline void clearName() {
         delete name_;
         name_ = nullptr;
