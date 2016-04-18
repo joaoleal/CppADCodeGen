@@ -97,6 +97,8 @@ protected:
     size_t _parameterPrecision;
     // whether or not we are in an equation/align block
     bool _inEquationEnv;
+    // whether or not to always enclose the base of a power within parenthesis
+    bool _powBaseEnclose;
 private:
     std::string auxArrayName_;
     std::vector<int> varIds_;
@@ -141,7 +143,8 @@ public:
         _filename("algorithm"),
         _maxAssigmentsPerFile(0),
         _sources(nullptr),
-        _parameterPrecision(std::numeric_limits<Base>::digits10) {
+        _parameterPrecision(std::numeric_limits<Base>::digits10),
+        _powBaseEnclose(false) {
     }
 
     inline const std::string& getAssignMarkup() const {
@@ -372,6 +375,28 @@ public:
      */
     virtual void setParameterPrecision(size_t p) {
         _parameterPrecision = p;
+    }
+
+    /**
+     * Defines whether or not to always enclose the base of a power within
+     * parenthesis.
+     * By default the base is only enclosed in parenthesis if it contains of a
+     * mathematical expression.
+     *
+     * @param enclose true to always enclose the base in parenthesis
+     */
+    virtual void setAlwaysEnclosePowBase(bool enclose) {
+        _powBaseEnclose = enclose;
+    }
+
+    /**
+     * Whether or not to always enclose the base of a power within
+     * parenthesis.
+     *
+     * @return true if the base is always enclosed within parenthesis
+     */
+    virtual bool isAlwaysEnclosePowBase() const {
+        return _powBaseEnclose;
     }
 
     virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction,
@@ -1242,7 +1267,7 @@ protected:
         };
 
 
-        bool encloseBase = encloseInParentheses(op.getArguments()[0].getOperation());
+        bool encloseBase = _powBaseEnclose || encloseInParentheses(op.getArguments()[0].getOperation());
         bool encloseExpo = encloseInParentheses(op.getArguments()[1].getOperation());
 
         _code << "<msup>";
