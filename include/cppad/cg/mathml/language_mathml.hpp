@@ -95,8 +95,6 @@ protected:
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
-    // whether or not we are in an equation/align block
-    bool _inEquationEnv;
     // whether or not to always enclose the base of a power within parenthesis
     bool _powBaseEnclose;
 private:
