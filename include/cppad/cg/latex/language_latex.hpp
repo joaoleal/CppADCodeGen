@@ -120,6 +120,8 @@ protected:
     size_t _parameterPrecision;
     // whether or not we are in an equation/align block
     bool _inEquationEnv;
+    // whether or not to always enclose the base of a power within parenthesis
+    bool _powBaseEnclose;
 private:
     std::string auxArrayName_;
 
@@ -165,7 +167,8 @@ public:
         _maxAssigmentsPerFile(0),
         _sources(nullptr),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
-        _inEquationEnv(false) {
+        _inEquationEnv(false),
+        _powBaseEnclose(false) {
     }
 
     inline const std::string& getAssignString() const {
@@ -534,6 +537,28 @@ public:
      */
     virtual void setParameterPrecision(size_t p) {
         _parameterPrecision = p;
+    }
+
+    /**
+     * Defines whether or not to always enclose the base of a power within
+     * parenthesis.
+     * By default the base is only enclosed in parenthesis if it contains of a
+     * mathematical expression.
+     *
+     * @param enclose true to always enclose the base in parenthesis
+     */
+    virtual void setAlwaysEnclosePowBase(bool enclose) {
+        _powBaseEnclose = enclose;
+    }
+
+    /**
+     * Whether or not to always enclose the base of a power within
+     * parenthesis.
+     *
+     * @return true if the base is always enclosed within parenthesis
+     */
+    virtual bool isAlwaysEnclosePowBase() const {
+        return _powBaseEnclose;
     }
 
     virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction,
@@ -1363,10 +1388,35 @@ protected:
     virtual void printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
+        auto encloseInParentheses = [this](const OperationNode<Base>* node) {
+            while (node != nullptr) {
+                if (getVariableID(*node) != 0)
+                    return false;
+                if (node->getOperationType() == CGOpCode::Alias)
+                    node = node->getArguments()[0].getOperation();
+                else
+                    break;
+            }
+            return node != nullptr &&
+                   getVariableID(*node) == 0 &&
+                   !isFunction(node->getOperationType());
+        };
+
+        bool encloseBase = _powBaseEnclose || encloseInParentheses(op.getArguments()[0].getOperation());
+        bool encloseExpo = encloseInParentheses(op.getArguments()[1].getOperation());
+
         _code << "{";
+        if (encloseBase)
+            _code << "\\left(";
         print(op.getArguments()[0]);
+        if (encloseBase)
+            _code << "\\right)";
         _code << "}^{";
+        if (encloseExpo)
+            _code << "\\left(";
         print(op.getArguments()[1]);
+        if (encloseExpo)
+            _code << "\\right)";
         _code << "}";
     }
 

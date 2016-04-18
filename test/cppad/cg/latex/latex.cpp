@@ -35,13 +35,15 @@ TEST(CppADCGLatexTest, latex) {
     Independent(x);
 
     // dependent variable vector 
-    CppAD::vector<ADCG> y(2);
+    CppAD::vector<ADCG> y(4);
 
     // the model
     ADCG a = x[0] / 1. + x[1] * x[1];
     ADCG b = a / 2e-6;
     y[0] = b + 1 / (sign(b)*5 * a);
-    y[1] = x[1];
+    y[1] = b + pow(a, 2 * b);
+    y[2] = b + pow(3 * a, 2.0);
+    y[3] = x[1];
 
     ADFun<CGD> fun(x, y); // the model tape
 
