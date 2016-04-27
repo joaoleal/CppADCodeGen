@@ -82,6 +82,10 @@ protected:
     std::string _elseStart;
     std::string _elseEnd;
     std::string _assignStr;
+    // markup for multiplications
+    std::string _multOpStr;
+    // markup for multiplications with parameters
+    std::string _multValOpStr;
     // new line characters
     std::string _endline;
     // output stream for the generated source code
@@ -106,7 +110,7 @@ protected:
     // the name of the file to be created without the extension
     std::string _filename;
     // the maximum number of assignment (~lines) per local file
-    size_t _maxAssigmentsPerFile;
+    size_t _maxAssignmentsPerFile;
     //
     std::map<std::string, std::string>* _sources;
     // the values in the temporary array
@@ -158,13 +162,15 @@ public:
         _elseStart("\\begin{CGElse}"),
         _elseEnd("\\end{CGElse}"),
         _assignStr(" = "),
+        _multOpStr(" "),
+        _multValOpStr("\\times"),
         _endline("\n"),
         _nameGen(nullptr),
         _independentSize(0),
         _dependent(nullptr),
         _ignoreZeroDepAssign(false),
         _filename("algorithm"),
-        _maxAssigmentsPerFile(0),
+        _maxAssignmentsPerFile(0),
         _sources(nullptr),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
         _inEquationEnv(false),
@@ -561,9 +567,52 @@ public:
         return _powBaseEnclose;
     }
 
-    virtual void setMaxAssigmentsPerFunction(size_t maxAssigmentsPerFunction,
-                                             std::map<std::string, std::string>* sources) {
-        _maxAssigmentsPerFile = maxAssigmentsPerFunction;
+
+    /**
+     * Provides the operator used to define multiplications.
+     * The default is an empty space.
+     *
+     * @note Multiplications of constant parameters use a different
+     *       multiplication markup string
+     */
+    inline const std::string& getMultiplicationOperator() const {
+        return _multOpStr;
+    }
+
+    /**
+     * Defines the operator used for multiplications.
+     * The default is an empty space.
+     * Other common alternatives are "\cdot" and "\times".
+     *
+     * @note Multiplications of constant parameters use a different
+     *       multiplication operator
+     */
+    inline void setMultiplicationOperator(const std::string& multOpStr) {
+        _multOpStr = multOpStr;
+    }
+
+    /**
+     * Provides the operator used for multiplication of constant parameters.
+     * The default is "\times".
+     */
+    inline const std::string& getMultiplicationConstParOperator() const {
+        return _multValOpStr;
+    }
+
+    /**
+     * Defines the operator used for multiplication of constant parameters.
+     * The default is "\times".
+     * Another common alternative is "\cdot".
+     * Please take into account that numbers too close together are difficult
+     * to distinguish.
+     */
+    inline void setMultiplicationConstParOperator(const std::string& multValOpStr) {
+        _multValOpStr = multValOpStr;
+    }
+
+    virtual void setMaxAssignmentsPerFunction(size_t maxAssignmentsPerFunction,
+                                              std::map<std::string, std::string>* sources) {
+        _maxAssignmentsPerFile = maxAssignmentsPerFunction;
         _sources = sources;
     }
 
@@ -645,7 +694,7 @@ protected:
                                     const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
         using CppAD::vector;
 
-        const bool multiFile = _maxAssigmentsPerFile > 0 && _sources != nullptr;
+        const bool multiFile = _maxAssignmentsPerFile > 0 && _sources != nullptr;
 
         // clean up
         _code.str("");
@@ -743,7 +792,7 @@ protected:
         // the names of local functions
         std::vector<std::string> inputLatexFiles;
         if (multiFile) {
-            inputLatexFiles.reserve(variableOrder.size() / _maxAssigmentsPerFile);
+            inputLatexFiles.reserve(variableOrder.size() / _maxAssignmentsPerFile);
         }
 
         /**
@@ -790,7 +839,7 @@ protected:
             size_t assignCount = 0;
             for (OperationNode<Base>* it : variableOrder) {
                 // check if a new function should start
-                if (assignCount >= _maxAssigmentsPerFile && multiFile && _currentLoops.empty()) {
+                if (assignCount >= _maxAssignmentsPerFile && multiFile && _currentLoops.empty()) {
                     assignCount = 0;
                     saveLocalFunction(inputLatexFiles, inputLatexFiles.empty() && info->zeroDependents);
                 }
@@ -804,7 +853,7 @@ protected:
                     continue; // nothing to do (bogus operation)
                 }
 
-                assignCount += printAssigment(node);
+                assignCount += printAssignment(node);
             }
 
             if (inputLatexFiles.size() > 0 && assignCount > 0) {
@@ -840,7 +889,7 @@ protected:
                         << _startDepVar << varName << _endDepVar
                         << _assignStr
                         << _startDepVar << origVarName << _endDepVar;
-                printAssigmentEnd();
+                printAssignmentEnd();
             }
         }
 
@@ -859,7 +908,7 @@ protected:
                     _code << _startAlgLine << _startEq
                             << _startDepVar << varName << _endDepVar << _assignStr;
                     printParameter(dependent[i].getValue());
-                    printAssigmentEnd();
+                    printAssignmentEnd();
                 }
             } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv) {
                 if (!commentWritten) {
@@ -874,7 +923,7 @@ protected:
                         << _startDepVar << varName << _endDepVar
                         << _assignStr
                         << _startIndepVar << indepName << _endIndepVar;
-                printAssigmentEnd(*dependent[i].getOperationNode());
+                printAssignmentEnd(*dependent[i].getOperationNode());
             }
         }
 
@@ -928,31 +977,31 @@ protected:
         }
     }
 
-    inline unsigned printAssigment(OperationNode<Base>& node) {
-        return printAssigment(node, node);
+    inline unsigned printAssignment(OperationNode<Base>& node) {
+        return printAssignment(node, node);
     }
 
-    inline unsigned printAssigment(OperationNode<Base>& nodeName,
+    inline unsigned printAssignment(OperationNode<Base>& nodeName,
                                    const Argument<Base>& nodeRhs) {
         if (nodeRhs.getOperation() != nullptr) {
-            return printAssigment(nodeName, *nodeRhs.getOperation());
+            return printAssignment(nodeName, *nodeRhs.getOperation());
         } else {
-            printAssigmentStart(nodeName);
+            printAssignmentStart(nodeName);
             printParameter(*nodeRhs.getParameter());
-            printAssigmentEnd(nodeName);
+            printAssignmentEnd(nodeName);
             return 1;
         }
     }
 
-    inline unsigned printAssigment(OperationNode<Base>& nodeName,
+    inline unsigned printAssignment(OperationNode<Base>& nodeName,
                                    OperationNode<Base>& nodeRhs) {
         bool createsVar = directlyAssignsVariable(nodeRhs); // do we need to do the assignment here?
         if (!createsVar) {
-            printAssigmentStart(nodeName);
+            printAssignmentStart(nodeName);
         }
         unsigned lines = printExpressionNoVarCheck(nodeRhs);
         if (!createsVar) {
-            printAssigmentEnd(nodeRhs);
+            printAssignmentEnd(nodeRhs);
         }
 
         if (nodeRhs.getOperationType() == CGOpCode::ArrayElement) {
@@ -968,11 +1017,11 @@ protected:
         return lines;
     }
 
-    inline virtual void printAssigmentStart(OperationNode<Base>& op) {
-        printAssigmentStart(op, createVariableName(op), isDependent(op));
+    inline virtual void printAssignmentStart(OperationNode<Base>& op) {
+        printAssignmentStart(op, createVariableName(op), isDependent(op));
     }
 
-    inline virtual void printAssigmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep) {
+    inline virtual void printAssignmentStart(OperationNode<Base>& node, const std::string& varName, bool isDep) {
         if (!isDep) {
             _temporary[getVariableID(node)] = &node;
         }
@@ -993,12 +1042,12 @@ protected:
         }
     }
 
-    inline virtual void printAssigmentEnd() {
+    inline virtual void printAssignmentEnd() {
         _code << _endEq << _endAlgLine << _endline;
     }
 
-    inline virtual void printAssigmentEnd(OperationNode<Base>& op) {
-        printAssigmentEnd();
+    inline virtual void printAssignmentEnd(OperationNode<Base>& op) {
+        printAssignmentEnd();
     }
 
     virtual void saveLocalFunction(std::vector<std::string>& localFuncNames,
@@ -1501,6 +1550,24 @@ protected:
         bool encloseLeft = encloseInParenthesesMul(left);
         bool encloseRight = encloseInParenthesesMul(right);
 
+        auto isNumber = [](const OperationNode<Base>* node, int pos) -> bool {
+            while (node != nullptr) {
+                if (node->getOperationType() == CGOpCode::Alias) {
+                    node = node->getArguments()[0].getOperation();
+                    continue;
+                }
+                CGOpCode op = node->getOperationType();
+                if (op == CGOpCode::Mul) {
+                    node = node->getArguments()[pos].getOperation();
+                } else if (pos == 0 && op == CGOpCode::Pow) {
+                    node = node->getArguments()[0].getOperation();
+                } else {
+                    return false;
+                }
+            }
+            return true; // a constant number
+        };
+
         if (encloseLeft) {
             _code << "\\left(";
         }
@@ -1508,7 +1575,12 @@ protected:
         if (encloseLeft) {
             _code << "\\right)";
         }
-        _code << " ";
+
+        if (isNumber(left.getOperation(), 1) && isNumber(right.getOperation(), 0))
+            _code << _multValOpStr; // numbers too close together are difficult to distinguish
+        else
+            _code << _multOpStr; // e.g. invisible times
+
         if (encloseRight) {
             _code << "\\left(";
         }
@@ -1550,9 +1622,9 @@ protected:
         if ((trueCase.getParameter() != nullptr && falseCase.getParameter() != nullptr && *trueCase.getParameter() == *falseCase.getParameter()) ||
                 (trueCase.getOperation() != nullptr && falseCase.getOperation() != nullptr && trueCase.getOperation() == falseCase.getOperation())) {
             // true and false cases are the same
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(trueCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
         } else {
             checkEquationEnvEnd();
 
@@ -1564,16 +1636,16 @@ protected:
             _code << _conditionEnd;
             _code << _endline;
             //checkEquationEnvStart(); // no need
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(trueCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
             checkEquationEnvEnd();
             _code << _ifEnd << _endline;
             _code << _elseStart << _endline; // else
             //checkEquationEnvStart(); // no need
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(falseCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
             checkEquationEnvEnd();
             _code << _elseEnd << _endline; // end if
         }
@@ -1718,7 +1790,7 @@ protected:
             }
 
             if (useArg) {
-                printAssigment(node, arg); // ignore other arguments!
+                printAssignment(node, arg); // ignore other arguments!
                 return 1;
             }
         }
@@ -1929,7 +2001,7 @@ protected:
 
         // just follow the argument
         OperationNode<Base>& nodeArg = *node.getArguments()[1].getOperation();
-        printAssigment(nodeArg);
+        printAssignment(nodeArg);
     }
 
     inline bool isDependent(const OperationNode<Base>& arg) const {
