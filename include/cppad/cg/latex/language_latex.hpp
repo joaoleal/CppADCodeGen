@@ -1429,9 +1429,9 @@ protected:
                 throw CGException("Unknown function name for operation code '", op.getOperationType(), "'.");
         }
 
-        _code << "\\left(";
+        _code << "\\mathopen{}\\left(";
         print(op.getArguments()[0]);
-        _code << "\\right)";
+        _code << "\\right)\\mathclose{}";
     }
 
     virtual void printPowFunction(OperationNode<Base>& op) {
