@@ -259,11 +259,34 @@ protected:
 #endif
 };
 
+
+/**
+ * Overrides the default behaviour of operator<<(std::ostream& os, const CG<Base>& c).
+ * It can be used recover OperationNode names.
+ *
+ * @todo replace this struct with a template variable once C++14 is used
+ */
+template<class Base>
+struct CGOStreamFunc {
+    static thread_local std::function<std::ostream& (std::ostream&, const CG<Base>&)> FUNC;
+};
+
+template<class Base>
+thread_local std::function<std::ostream& (std::ostream&, const CG<Base>&)> CGOStreamFunc<Base>::FUNC = nullptr;
+
+/**
+ * Output stream operator for CG objects.
+ * Default behavior can be overridden using CGOStreamFunc::FUN.
+ */
 template<class Base>
 inline std::ostream& operator<<(
         std::ostream& os, //< stream to write to
         const CG<Base>& v//< vector that is output
         ) {
+    if(CGOStreamFunc<Base>::FUNC != nullptr) {
+        return CGOStreamFunc<Base>::FUNC(os, v);
+    }
+
     if (v.isParameter()) {
         os << v.getValue();
     } else {
