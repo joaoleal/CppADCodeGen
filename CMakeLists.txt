@@ -18,7 +18,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "2.0.0" )
+SET(cppadcg_version      "2.1.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -93,6 +93,12 @@ SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg"
 ################################################################################
 # Define some optional compiler flags
 ################################################################################
+IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
+    # aim for this version which has explicit support for c++11
+    SET(CMAKE_CXX_STANDARD 11)
+    SET(CMAKE_CXX_STANDARD_REQUIRED TRUE)
+ENDIF()
+
 IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(warning_flags "-Wall") # enable as many warnings as possible
     #SET(warning_flags "${warning_flags} -Wextra") 
@@ -100,7 +106,14 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(warning_flags "${warning_flags} -Wno-system-headers") # do not issue warnings for system headers
     #SET(warning_flags "${warning_flags} -Woverloaded-virtual") # overloaded virtual function has a different signature
 
-    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11 ${warning_flags}")  
+    SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${warning_flags}")
+
+    IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
+        # do nothing
+    ELSE()
+        SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
+    ENDIF()
+
 
     SET(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -g -ggdb -D_FORTIFY_SOURCE=2")
 
