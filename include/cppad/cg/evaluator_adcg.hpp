@@ -37,27 +37,83 @@ protected:
     using Super::atomicFunctions_;
     using Super::handler_;
     using Super::evalArrayCreationOperation;
+protected:
+    /**
+     * Whenever set to true it will add a CppAD::PrintFor(0, "", var, name)
+     * to every variable with a name so that names can be recovered using
+     * a OperationNodeNameStreambuf.
+     */
+    bool printFor_;
+    /**
+     * Whenever set to true it will copy the name in original operation
+     * nodes into new operation nodes created in AD<CG>.
+     */
+    bool adcgName_;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
-        Super(handler) {
+        Super(handler),
+        printFor_(false),
+        adcgName_(true) {
     }
 
     inline virtual ~Evaluator() {
     }
 
+    /**
+     * Whenever set to true it will add a CppAD::PrintFor(0, "", var, name)
+     * to every variable with a name so that names can be recovered using
+     * a OperationNodeNameStreambuf.
+     */
+    inline void setPrintFor(bool printFor) {
+        printFor_ = printFor;
+    }
+
+    /**
+     * true if a CppAD::PrintFor(0, "", var, name) will be added
+     * to every variable with a name so that names can be recovered using
+     * a OperationNodeNameStreambuf.
+     * The default value is false.
+     */
+    inline bool isPrintFor() const {
+        return printFor_;
+    }
+
+    /**
+     * Whenever set to true it will copy the name in original operation
+     * nodes into new operation nodes created in AD<CG>.
+     */
+    inline void setCopyAdCgName(bool adcgName) {
+        adcgName_ = adcgName;
+    }
+
+    /**
+     * Whenever set to true it will copy the name in original operation
+     * nodes into new operation nodes created in AD<CG>.
+     * The default value is true.
+     */
+    inline bool isCopyAdCgName() const {
+        return adcgName_;
+    }
+
 protected:
 
     /**
-     * @note overrides the default proccessActiveOut() even though this method
+     * @note overrides the default processActiveOut() even though this method
      *        is not virtual (hides a method in EvaluatorOperations)
      */
-    void proccessActiveOut(const OperationNode<ScalarIn>& node,
-                                   ActiveOut& a) {
+    void processActiveOut(const OperationNode<ScalarIn>& node,
+                          ActiveOut& a) {
         if (node.getName() != nullptr) {
-            ScalarOut a2(CppAD::Value(a));
-            if (a2.getOperationNode() != nullptr) {
-                a2.getOperationNode()->setName(*node.getName());
+            if(adcgName_ && CppAD::Variable(a)) {
+                ScalarOut a2(CppAD::Value(CppAD::Var2Par(a)));
+                if (a2.getOperationNode() != nullptr) {
+                    a2.getOperationNode()->setName(*node.getName());
+                }
+            }
+
+            if(printFor_) {
+                CppAD::PrintFor(ActiveOut(0), "", a, node.getName()->c_str());
             }
         }
     }

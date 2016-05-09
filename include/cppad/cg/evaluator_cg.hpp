@@ -42,11 +42,11 @@ public:
 protected:
 
     /**
-     * @note overrides the default proccessActiveOut() even though this method
+     * @note overrides the default processActiveOut() even though this method
      *        is not virtual (hides a method in EvaluatorOperations)
      */
-    void proccessActiveOut(const OperationNode<ScalarIn>& node,
-                           ActiveOut& a) {
+    void processActiveOut(const OperationNode<ScalarIn>& node,
+                          ActiveOut& a) {
         if (node.getName() != nullptr) {
             if (a.getOperationNode() != nullptr) {
                 a.getOperationNode()->setName(*node.getName());

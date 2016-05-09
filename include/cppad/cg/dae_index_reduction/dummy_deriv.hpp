@@ -491,7 +491,7 @@ protected:
         vector<CGBase> indep0(this->reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
+        vector<CGBase> res0 = this->forward0(*this->reducedFun_, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -667,7 +667,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = fun.Forward(0, indep0);
+        vector<CGBase> res0 = this->forward0(fun, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -776,7 +776,7 @@ protected:
         vector<CGBase> indep0(this->reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->reducedFun_->Forward(0, indep0);
+        vector<CGBase> res0 = this->forward0(*this->reducedFun_, indep0);
 
         vector<bool> jacSparsity = jacobianSparsity < vector<bool> >(*this->reducedFun_);
 
@@ -1260,7 +1260,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        const vector<CGBase> res0 = fun.Forward(0, indep0);
+        const vector<CGBase> res0 = this->forward0(fun, indep0);
 
         /**
          * Implement the reordering in the model
@@ -1335,6 +1335,7 @@ protected:
 
         // evaluate the model
         Evaluator<Base, CGBase> evaluator0(handler);
+        evaluator0.setPrintFor(this->preserveNames_); // variable names saved with CppAD::PrintFor
         vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
 
         return new ADFun<CGBase > (indepNewOrder, depNewOrder);

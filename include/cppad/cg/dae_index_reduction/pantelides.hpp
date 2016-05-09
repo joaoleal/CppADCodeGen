@@ -45,6 +45,7 @@ protected:
     int origMaxTimeDivOrder_;
     // the number of time dependent variables in the original model
     size_t origTimeDependentCount_;
+    bool preserveNames_;
 private:
     int timeOrigVarIndex_; // time index in the original user model (may not exist)
 public:
@@ -65,6 +66,7 @@ public:
         reducedFun_(nullptr),
         origMaxTimeDivOrder_(0),
         origTimeDependentCount_(0),
+        preserveNames_(false),
         timeOrigVarIndex_(-1) {
 
         using namespace std;
@@ -212,7 +214,26 @@ public:
     }
 
     Pantelides(const Pantelides& p) = delete;
+
     Pantelides& operator=(const Pantelides& p) = delete;
+
+    /**
+     * Defines whether or not original names saved by using
+     * CppAD::PrintFor(0, "", val, name)
+     * should be kept by also adding PrintFor operations in the reduced model.
+     */
+    void setPreserveNames(bool p) {
+        preserveNames_ = p;
+    }
+
+    /**
+     * Whether or not original names saved by using
+     * CppAD::PrintFor(0, "", val, name)
+     * should be kept by also adding PrintFor operations in the reduced model.
+     */
+    bool isPreserveNames() const {
+        return preserveNames_;
+    }
 
     /**
      * Performs the DAE differentiation index reductions
@@ -602,7 +623,7 @@ protected:
             vector<CGBase> indep0(this->fun_->Domain());
             handler.makeVariables(indep0);
 
-            const vector<CGBase> dep0 = this->fun_->Forward(0, indep0);
+            const vector<CGBase> dep0 = forward0(*this->fun_, indep0);
 
             /**
              * generate a new tape
@@ -610,10 +631,10 @@ protected:
 
             vector<ADCG> indepNew;
             if (timeOrigVarIndex_ >= 0) {
-                indepNew = vector<ADCG > (newVarInfo.size()); // variables + time (vnodes include time)
+                indepNew = vector<ADCG> (newVarInfo.size()); // variables + time (vnodes include time)
                 timeTapeIndex = timeOrigVarIndex_;
             } else {
-                indepNew = vector<ADCG > (newVarInfo.size() + 1); // variables + time (new time variable added)
+                indepNew = vector<ADCG> (newVarInfo.size() + 1); // variables + time (new time variable added)
                 timeTapeIndex = indepNew.size() - 1;
             }
 
@@ -628,11 +649,12 @@ protected:
             indep2.resize(indep0.size());
 
             Evaluator<Base, CGBase> evaluator0(handler);
+            evaluator0.setPrintFor(preserveNames_); // variable names saved with CppAD::PrintFor
             vector<ADCG> depNew = evaluator0.evaluate(indep2, dep0);
             depNew.resize(enodes_.size());
 
             try {
-                reducedFun_ = new ADFun<CGBase > (indepNew, depNew);
+                reducedFun_ = new ADFun<CGBase> (indepNew, depNew);
             } catch (const std::exception& ex) {
                 throw CGException("Failed to create ADFun: ", ex.what());
             }
@@ -662,7 +684,7 @@ protected:
             vector<CGBase> indep0(m);
             handler0.makeVariables(indep0);
 
-            vector<CGBase> dep = reducedFun_->Forward(0, indep0);
+            vector<CGBase> dep = forward0(*reducedFun_, indep0);
 
             /**
              * register operations used to differentiate the equations
@@ -703,6 +725,7 @@ protected:
             }
 
             Evaluator<Base, CGBase> evaluator(handler0);
+            evaluator.setPrintFor(preserveNames_); // variable names saved with CppAD::PrintFor
             vector<ADCG> depNew = evaluator.evaluate(indep2, dep);
 
             try {
@@ -822,7 +845,8 @@ protected:
      * 
      * @param fun  The taped model
      */
-    inline static void printModel(ADFun<CG<Base> >* fun, const std::vector<DaeVarInfo>& varInfo) {
+    inline void printModel(ADFun<CG<Base> >* fun,
+                           const std::vector<DaeVarInfo>& varInfo) const {
         std::vector<std::string> vnames(varInfo.size());
         for (size_t p = 0; p < varInfo.size(); p++) {
             vnames[p] = varInfo[p].getName();
@@ -836,8 +860,8 @@ protected:
      * @param fun  The taped model
      * @param vnodes  The independent variables
      */
-    inline static void printModel(ADFun<CG<Base> >* fun,
-                                  const std::vector<std::string>& indepNames) {
+    inline void printModel(ADFun<CG<Base> >* fun,
+                           const std::vector<std::string>& indepNames) const {
         using CppAD::vector;
 
         CPPADCG_ASSERT_UNKNOWN(fun != nullptr);
@@ -848,7 +872,7 @@ protected:
         vector<CGBase> indep0(fun->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> dep0 = fun->Forward(0, indep0);
+        vector<CGBase> dep0 = forward0(*fun, indep0);
 
         LanguageC<double> langC("double");
 
@@ -867,6 +891,20 @@ protected:
         std::cout << "\n" << code.str() << std::endl;
     }
 
+    template<class VectorCGB>
+    inline VectorCGB forward0(ADFun<CGBase>& fun,
+                              const VectorCGB& indep0) const {
+
+        if (preserveNames_) {
+            // stream buffer is used to reload names saved with CppAD::PrintFor()
+            OperationNodeNameStreambuf<double> b;
+            std::ostream out(&b);
+
+            return fun.Forward(0, indep0, out);
+        } else {
+            return fun.Forward(0, indep0);
+        }
+    }
 };
 
 } // END cg namespace

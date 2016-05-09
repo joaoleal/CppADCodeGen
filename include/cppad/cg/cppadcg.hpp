@@ -147,6 +147,7 @@
 #include <cppad/cg/operation_path.hpp>
 #include <cppad/cg/solver.hpp>
 #include <cppad/cg/graph_mod.hpp>
+#include <cppad/cg/operation_node_name_streambuf.hpp>
 
 // ---------------------------------------------------------------------------
 // atomic function utilities

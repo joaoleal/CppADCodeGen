@@ -296,7 +296,7 @@ protected:
         ActiveOut* resultPtr = new ActiveOut(result);
         evals_[node] = resultPtr;
 
-        thisOps.proccessActiveOut(node, *resultPtr);
+        thisOps.processActiveOut(node, *resultPtr);
 
         return *resultPtr;
     }
@@ -561,8 +561,8 @@ protected:
         throw CGException("Evaluator is unable to handle atomic functions for these variable types");
     }
 
-    inline void proccessActiveOut(const NodeIn& node,
-                                  ActiveOut& a) {
+    inline void processActiveOut(const NodeIn& node,
+                                 ActiveOut& a) {
     }
 };
 
