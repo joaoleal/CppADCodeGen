@@ -1,3 +1,10 @@
+cppadcodegen (2.1.0-1) unstable; urgency=low
+
+   * Improved MathML and Latex outputs
+   * Improved Evaluator
+ 
+ -- Joao Leal <development@ciengis.com>  Mon, 09 May 2016 13:00:00 +0000
+ 
 cppadcodegen (2.0.0-1) unstable; urgency=low
 
    * upgraded sources to C++11
