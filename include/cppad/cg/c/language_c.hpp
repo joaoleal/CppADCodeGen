@@ -515,13 +515,13 @@ public:
 
     static inline std::string indexPattern2String(const IndexPattern& ip,
                                                   const OperationNode<Base>& index);
-    
+
     static inline std::string indexPattern2String(const IndexPattern& ip,
                                                   const std::string& index);
 
     static inline std::string indexPattern2String(const IndexPattern& ip,
                                                   const std::vector<const OperationNode<Base>*>& indexes);
-    
+
     static inline std::string indexPattern2String(const IndexPattern& ip,
                                                   const std::vector<const std::string*>& indexes);
 
@@ -530,7 +530,7 @@ public:
 
     static inline std::string linearIndexPattern2String(const LinearIndexPattern& lip,
                                                         const std::string& index);
-    
+
     static inline bool isOffsetBy(const IndexPattern* ip,
                                   const IndexPattern* refIp,
                                   long offset);
@@ -853,7 +853,7 @@ protected:
     inline size_t getVariableID(const OperationNode<Base>& node) const {
         return _info->varId[node];
     }
-    
+
     inline unsigned printAssigment(OperationNode<Base>& node) {
         return printAssigment(node, node);
     }
@@ -1395,9 +1395,19 @@ protected:
     virtual void printOperationAdd(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition");
 
-        print(op.getArguments()[0]);
-        _code << " + ";
-        print(op.getArguments()[1]);
+        const Argument<Base>& left = op.getArguments()[0];
+        const Argument<Base>& right = op.getArguments()[1];
+
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            print(left);
+            _code << " + ";
+            print(right);
+        } else {
+            // right has a negative parameter so we would get v0 + -v1
+            print(left);
+            _code << " - ";
+            printParameter(-*right.getParameter()); // make it positive
+        }
     }
 
     virtual void printOperationMinus(OperationNode<Base>& op) {
@@ -1406,16 +1416,23 @@ protected:
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        bool encloseRight = encloseInParenthesesMul(right.getOperation());
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            bool encloseRight = encloseInParenthesesMul(right.getOperation());
 
-        print(left);
-        _code << " - ";
-        if (encloseRight) {
-            _code << "(";
-        }
-        print(right);
-        if (encloseRight) {
-            _code << ")";
+            print(left);
+            _code << " - ";
+            if (encloseRight) {
+                _code << "(";
+            }
+            print(right);
+            if (encloseRight) {
+                _code << ")";
+            }
+        } else {
+            // right has a negative parameter so we would get v0 - -v1
+            print(left);
+            _code << " + ";
+            printParameter(-*right.getParameter()); // make it positive
         }
     }
 

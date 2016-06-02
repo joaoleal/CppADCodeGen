@@ -41,3 +41,9 @@ TEST_F(CppADCGOperationTest, subFour) {
 
     test0nJac("SubFour", &FourFunc<double >, &FourFunc<CG<double> >, u, 1e-10, 1e-10);
 }
+
+TEST_F(CppADCGOperationTest, subFive) {
+    std::vector<double> u{1}; // independent variable vector
+
+    test0nJac("SubFive", &FiveFunc<double >, &FiveFunc<CG<double> >, u, 1e-10, 1e-10);
+}

@@ -91,4 +91,19 @@ CppAD::ADFun<T>* FourFunc(const std::vector<CppAD::AD<T> >& X) {
     return new ADFun<T > (X, Y);
 }
 
+template<class T>
+CppAD::ADFun<T>* FiveFunc(const std::vector<CppAD::AD<T> >& X) {
+    using namespace CppAD;
+
+    assert(X.size() == 1);
+
+    // special cases where parameter number is equal to
+    // variable index in result.
+    size_t m = 1;
+    std::vector< AD<T> > Y(m);
+    Y[0] = X[0] - (-2.);
+
+    return new ADFun<T > (X, Y);
+}
+
 #endif

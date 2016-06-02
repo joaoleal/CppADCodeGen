@@ -1477,9 +1477,19 @@ protected:
     virtual void printOperationAdd(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition");
 
-        print(op.getArguments()[0]);
-        _code << " + ";
-        print(op.getArguments()[1]);
+        const Argument<Base>& left = op.getArguments()[0];
+        const Argument<Base>& right = op.getArguments()[1];
+
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            print(left);
+            _code << " + ";
+            print(right);
+        } else {
+            // right has a negative parameter so we would get v0 + -v1
+            print(left);
+            _code << " - ";
+            printParameter(-*right.getParameter()); // make it positive
+        }
     }
 
     virtual void printOperationMinus(OperationNode<Base>& op) {
@@ -1488,16 +1498,23 @@ protected:
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        bool encloseRight = encloseInParenthesesMul(right);
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            bool encloseRight = encloseInParenthesesMul(right);
 
-        print(left);
-        _code << " - ";
-        if (encloseRight) {
-            _code << "\\left(";
-        }
-        print(right);
-        if (encloseRight) {
-            _code << "\\right)";
+            print(left);
+            _code << " - ";
+            if (encloseRight) {
+                _code << "\\left(";
+            }
+            print(right);
+            if (encloseRight) {
+                _code << "\\right)";
+            }
+        } else {
+            // right has a negative parameter so we would get v0 - -v1
+            print(left);
+            _code << " + ";
+            printParameter(-*right.getParameter()); // make it positive
         }
     }
 

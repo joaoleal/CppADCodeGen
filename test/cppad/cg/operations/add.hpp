@@ -18,28 +18,24 @@
 #include <assert.h>
 
 template<class T>
-CppAD::ADFun<T>* AddFunc(const std::vector<CppAD::AD<T> >& u) {
+CppAD::ADFun<T>* AddFunc(const std::vector<CppAD::AD<T> >& x) {
     using namespace CppAD;
     using namespace std;
 
-    assert(u.size() == 2);
-
-    size_t s = 0;
-    size_t t = 1;
+    assert(x.size() == 2);
 
     // dependent variable vector and indices
-    std::vector< AD<T> > Z(3);
-    size_t x = 0;
-    size_t y = 1;
-    size_t z = 2;
+    std::vector<AD<T> > y(4);
 
     // dependent variable values
-    Z[x] = u[s] + u[t]; // AD<double> + AD<double>
-    Z[y] = Z[x] + 1.; // AD<double> + double
-    Z[z] = 1. + Z[y]; // double + AD<double> 
+    y[0] = x[0] + x[1]; // AD<double> + AD<double>
+    y[1] = y[0] + 1.; // AD<double> + double
+    y[2] = 1. + y[1]; // double + AD<double>
+    y[2] = 1. + y[1]; // double + AD<double> 
+    y[3] = y[1] + (-1.); // AD<double> + (-double)
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<T > (u, Z);
+    return new ADFun<T>(x, y);
 }
 
 #endif

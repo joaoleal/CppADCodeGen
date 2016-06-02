@@ -1344,9 +1344,19 @@ protected:
     virtual void printOperationAdd(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition");
 
-        print(op.getArguments()[0]);
-        _code << "<mo>+</mo>";
-        print(op.getArguments()[1]);
+        const Argument<Base>& left = op.getArguments()[0];
+        const Argument<Base>& right = op.getArguments()[1];
+
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            print(left);
+            _code << "<mo>+</mo>";
+            print(right);
+        } else {
+            // right has a negative parameter so we would get v0 + -v1
+            print(left);
+            _code << "<mo>-</mo>";
+            printParameter(-*right.getParameter()); // make it positive
+        }
     }
 
     virtual void printOperationMinus(OperationNode<Base>& op) {
@@ -1355,16 +1365,24 @@ protected:
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        bool encloseRight = encloseInParenthesesMul(right);
+        // whether or not to flip + to - and change sign
+        if(right.getParameter() == nullptr || (*right.getParameter() >= 0)) {
+            bool encloseRight = encloseInParenthesesMul(right);
 
-        print(left);
-        _code << "<mo>-</mo>";
-        if (encloseRight) {
-            _code << "<mfenced><mrow>";
-        }
-        print(right);
-        if (encloseRight) {
-            _code << "</mrow></mfenced>";
+            print(left);
+            _code << "<mo>-</mo>";
+            if (encloseRight) {
+                _code << "<mfenced><mrow>";
+            }
+            print(right);
+            if (encloseRight) {
+                _code << "</mrow></mfenced>";
+            }
+        } else {
+            // right has a negative parameter so we would get v0 - -v1
+            print(left);
+            _code << "<mo>+</mo>";
+            printParameter(-*right.getParameter()); // make it positive
         }
     }
 

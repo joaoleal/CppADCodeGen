@@ -21,5 +21,5 @@ using namespace CppAD::cg;
 TEST_F(CppADCGOperationTest, add) {
     std::vector<double> u{3., 2.}; // independent variable vector
 
-    test0nJac("add", &AddFunc<double >, &AddFunc<CG<double> >, u);
+    test0nJac("add", &AddFunc<double>, &AddFunc<CG<double> >, u);
 }
