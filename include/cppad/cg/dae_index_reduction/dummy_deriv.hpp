@@ -38,7 +38,7 @@ bool sortVnodesByOrder(Vnode<Base>* i, Vnode<Base>* j) {
 }
 
 /**
- * Utility class used to sort varibles in the DAE
+ * Utility class used to sort variables in the DAE
  */
 class DaeVarOrderInfo {
 public:
@@ -141,8 +141,8 @@ template<class Base>
 class DummyDerivatives : public Pantelides<Base> {
     typedef CG<Base> CGBase;
     typedef AD<CGBase> ADCG;
-    typedef Eigen::Matrix<Base, Eigen::Dynamic, 1 > VectorB;
-    typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1 > VectorCB;
+    typedef Eigen::Matrix<Base, Eigen::Dynamic, 1> VectorB;
+    typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1> VectorCB;
     typedef Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> MatrixB;
 protected:
     // normalization constants for the variables (in the original order)
@@ -167,7 +167,7 @@ protected:
     /**
      * Dummy derivatives
      */
-    std::vector<Vnode<Base>* > dummyD_;
+    std::vector<Vnode<Base>*> dummyD_;
     /**
      * Attempt to reduce the total number of equations by performing variable
      * substitutions
@@ -353,9 +353,9 @@ protected:
         determineJacobian();
 
         // variables of interest
-        std::vector<Vnode<Base>* > vars;
+        std::vector<Vnode<Base>*> vars;
         vars.reserve(this->vnodes_.size() - diffVarStart_);
-        typename std::vector<Vnode<Base>* >::const_reverse_iterator rj;
+        typename std::vector<Vnode<Base>*>::const_reverse_iterator rj;
         for (rj = this->vnodes_.rbegin(); rj != this->vnodes_.rend(); ++rj) {
             Vnode<Base>* jj = *rj;
             if (jj->antiDerivative() != nullptr && jj->derivative() == nullptr) {
@@ -367,8 +367,8 @@ protected:
         std::sort(vars.begin(), vars.end(), sortVnodesByOrder<Base>);
 
         // equations of interest
-        typename std::vector<Enode<Base>* >::const_reverse_iterator ri;
-        std::vector<Enode<Base>* > eqs;
+        typename std::vector<Enode<Base>*>::const_reverse_iterator ri;
+        std::vector<Enode<Base>*> eqs;
         eqs.reserve(this->enodes_.size() - diffEqStart_);
         for (ri = this->enodes_.rbegin(); ri != this->enodes_.rend(); ++ri) {
             Enode<Base>* ii = *ri;
@@ -403,7 +403,7 @@ protected:
              * Collect their predecessors and let them be the
              * current equations.
              */
-            std::vector<Enode<Base>* > newEqs;
+            std::vector<Enode<Base>*> newEqs;
             newEqs.reserve(eqs.size());
 
             for (Enode<Base>* i : eqs) {
@@ -424,7 +424,7 @@ protected:
              * less and let them be the current candidates for
              * elimination.
              */
-            std::vector<Vnode<Base>* > varsNew;
+            std::vector<Vnode<Base>*> varsNew;
             varsNew.reserve(vars.size());
             for (Vnode<Base>* j : vars) {
                 Vnode<Base>* v = j->antiDerivative();
@@ -469,10 +469,10 @@ protected:
      * @return The new DAE reduced model with (possibly) less equations and
      *         variables
      */
-    inline std::unique_ptr<ADFun<CGBase > > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
-                                                            std::vector<DaeVarInfo>& newVarInfo,
-                                                            const std::vector<DaeEquationInfo>& reducedEqInfo,
-                                                            std::vector<DaeEquationInfo>& newEqInfo) {
+    inline std::unique_ptr<ADFun<CGBase> > reduceEquations(const std::vector<DaeVarInfo>& reducedVarInfo,
+                                                           std::vector<DaeVarInfo>& newVarInfo,
+                                                           const std::vector<DaeEquationInfo>& reducedEqInfo,
+                                                           std::vector<DaeEquationInfo>& newEqInfo) {
         using namespace std;
         using std::vector;
         using std::map;
@@ -626,9 +626,9 @@ protected:
          * Implement the model after after the reduction of equations and 
          * variables by substitution
          */
-        std::unique_ptr<ADFun<CGBase > > shortFun(generateReorderedModel(handler, res0,
-                                                                         reducedVarInfo, newVarInfo,
-                                                                         reducedEqInfo, newEqInfo));
+        std::unique_ptr<ADFun<CGBase> > shortFun(generateReorderedModel(handler, res0,
+                                                                        reducedVarInfo, newVarInfo,
+                                                                        reducedEqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
             std::cout << "DAE with less equations and variables:\n";
@@ -648,11 +648,11 @@ protected:
      *         the time derivative variables)
      * @throws CGException on failure
      */
-    inline std::unique_ptr<ADFun<CGBase > > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
-                                                                    const std::vector<DaeVarInfo>& varInfo,
-                                                                    std::vector<DaeVarInfo>& newVarInfo,
-                                                                    const std::vector<DaeEquationInfo>& eqInfo,
-                                                                    std::vector<DaeEquationInfo>& newEqInfo) {
+    inline std::unique_ptr<ADFun<CGBase> > generateSemiExplicitDAE(ADFun<CG<Base> >& fun,
+                                                                   const std::vector<DaeVarInfo>& varInfo,
+                                                                   std::vector<DaeVarInfo>& newVarInfo,
+                                                                   const std::vector<DaeEquationInfo>& eqInfo,
+                                                                   std::vector<DaeEquationInfo>& newEqInfo) {
         using namespace std;
         using std::vector;
         using std::map;
@@ -751,7 +751,7 @@ protected:
          * Implement the reordering and derivative variable elimination in
          * the model
          */
-        std::unique_ptr<ADFun<CGBase > > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+        std::unique_ptr<ADFun<CGBase> > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
             std::cout << "Semi-Eplicit DAE:\n";
@@ -778,7 +778,7 @@ protected:
 
         vector<CGBase> res0 = this->forward0(*this->reducedFun_, indep0);
 
-        vector<bool> jacSparsity = jacobianSparsity < vector<bool> >(*this->reducedFun_);
+        vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*this->reducedFun_);
 
         std::map<int, int> origAssignedVar2Eq;
         for (size_t i = 0; i < eqInfo.size(); ++i) {
@@ -1041,9 +1041,8 @@ protected:
          * substitution
          */
         vector<size_t> nnzs;
-        typename map<size_t, Vnode<Base>*>::const_iterator it;
-        for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
-            size_t tapeJ = it->first;
+        for (const auto& it : tape2FreeVariables) {
+            size_t tapeJ = it.first;
             if (localJacSparsity[n * i.index() + tapeJ] && tapeJ != j.tapeIndex()) {
                 nnzs.push_back(tapeJ);
             }
@@ -1077,8 +1076,8 @@ protected:
             // redetermine solvability
             for (Enode<Base>* itAff : affected) {
                 Enode<Base>& a = *itAff;
-                for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
-                    size_t j = it->first;
+                for (const auto& it : tape2FreeVariables) {
+                    size_t j = it.first;
                     if (localJacSparsity[n * a.index() + j]) {
                         vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode(), 2);
                         if (paths.size() == 1 && isSolvable(paths[0])) {
@@ -1090,8 +1089,8 @@ protected:
 
             // check if any variable stops being solvable
             bool ok = true;
-            for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
-                Vnode<Base>* v = it->second;
+            for (const auto& it : tape2FreeVariables) {
+                Vnode<Base>* v = it.second;
                 if (v == &j)
                     continue;
 
@@ -1120,14 +1119,14 @@ protected:
              */
             for (Enode<Base>* itAff : affected) {
                 Enode<Base>& a = *itAff;
-                for (it = tape2FreeVariables.begin(); it != tape2FreeVariables.end(); ++it) {
-                    size_t v = it->first;
+                for (const auto& it : tape2FreeVariables) {
+                    size_t v = it.first;
                     if (localJacSparsity[n * a.index() + v]) {
                         if (solvable[v].count(&a) > 0) {
-                            a.addVariable(it->second);
+                            a.addVariable(it.second);
                         } else {
                             // not solvable anymore
-                            a.deleteNode(it->second);
+                            a.deleteNode(it.second);
                         }
                     }
                 }
@@ -1151,11 +1150,11 @@ protected:
         return true;
     }
 
-    inline std::unique_ptr<ADFun<CGBase > > reorderModelEqNVars(ADFun<CG<Base> >& fun,
-                                                                const std::vector<DaeVarInfo>& varInfo,
-                                                                std::vector<DaeVarInfo>& newVarInfo,
-                                                                const std::vector<DaeEquationInfo>& eqInfo,
-                                                                std::vector<DaeEquationInfo>& newEqInfo) {
+    inline std::unique_ptr<ADFun<CGBase> > reorderModelEqNVars(ADFun<CG<Base> >& fun,
+                                                               const std::vector<DaeVarInfo>& varInfo,
+                                                               std::vector<DaeVarInfo>& newVarInfo,
+                                                               const std::vector<DaeEquationInfo>& eqInfo,
+                                                               std::vector<DaeEquationInfo>& newEqInfo) {
 
         using namespace std;
         using std::vector;
@@ -1265,7 +1264,7 @@ protected:
         /**
          * Implement the reordering in the model
          */
-        std::unique_ptr<ADFun<CGBase > > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
+        std::unique_ptr<ADFun<CGBase> > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
             std::cout << "reordered DAE equations and variables:\n";
@@ -1338,7 +1337,7 @@ protected:
         evaluator0.setPrintFor(this->preserveNames_); // variable names saved with CppAD::PrintFor
         vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
 
-        return new ADFun<CGBase > (indepNewOrder, depNewOrder);
+        return new ADFun<CGBase>(indepNewOrder, depNewOrder);
     }
 
     /**
@@ -1352,7 +1351,7 @@ protected:
         const size_t n = this->reducedFun_->Domain();
         const size_t m = this->reducedFun_->Range();
 
-        jacSparsity_ = jacobianReverseSparsity < vector<bool>, CGBase > (*this->reducedFun_); // in the original variable order
+        jacSparsity_ = jacobianReverseSparsity<vector<bool>, CGBase>(*this->reducedFun_); // in the original variable order
 
         vector<size_t> row, col;
         row.reserve((this->vnodes_.size() - diffVarStart_) * (m - diffEqStart_));

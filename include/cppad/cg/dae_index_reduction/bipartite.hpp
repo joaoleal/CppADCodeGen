@@ -77,7 +77,7 @@ class Enode : public BiPGraphNode<Base> {
 protected:
     static const std::string TYPE;
     /**
-     * Original variables present in this equation which where not deleted.
+     * Original variables present in this equation.
      * A vector is used instead of a set to ensure reproducibility.
      */
     std::vector<Vnode<Base>*> vnodes_orig_;
@@ -173,8 +173,7 @@ public:
     }
 
     inline void deleteNode(Vnode<Base>* j) {
-        typename std::vector<Vnode<Base>*>::iterator it;
-        it = std::find(vnodes_.begin(), vnodes_.end(), j);
+        auto it = std::find(vnodes_.begin(), vnodes_.end(), j);
         if (it != vnodes_.end())
             vnodes_.erase(it);
     }
@@ -345,8 +344,8 @@ public:
             std::cout << "Deleting " << *this << "\n";
 
         deleted_ = true;
-        for (typename std::vector<Enode<Base>*>::iterator i = enodes_.begin(); i != enodes_.end(); ++i) {
-            (*i)->deleteNode(this);
+        for (Enode<Base>* i : enodes_) {
+            i->deleteNode(this);
         }
         enodes_.clear();
     }
