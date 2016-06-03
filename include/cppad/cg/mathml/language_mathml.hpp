@@ -1436,14 +1436,16 @@ protected:
         bool encloseLeft = encloseInParenthesesMul(left);
         bool encloseRight = encloseInParenthesesMul(right);
 
-        auto isNumber = [](const OperationNode<Base>* node, int pos) -> bool {
+        auto isNumber = [this](const OperationNode<Base>* node, int pos) -> bool {
             while (node != nullptr) {
-                if (node->getOperationType() == CGOpCode::Alias) {
-                    node = node->getArguments()[0].getOperation();
-                    continue;
+                if(getVariableID(*node) != 0) {
+                    return false;
                 }
                 CGOpCode op = node->getOperationType();
-                if (op == CGOpCode::Mul) {
+                if (op == CGOpCode::Alias) {
+                    node = node->getArguments()[0].getOperation();
+                    continue;
+                } else if (op == CGOpCode::Mul) {
                     node = node->getArguments()[pos].getOperation();
                 } else if (pos == 0 && op == CGOpCode::Pow) {
                     node = node->getArguments()[0].getOperation();
