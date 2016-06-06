@@ -108,6 +108,8 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     x[80] = 0;
 
     std::vector<DaeVarInfo> daeVar;
+    
+    std::vector<std::string> eqName; // empty
 
     // create f: U -> Z and vectors used for derivative calculations
     std::unique_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
@@ -115,7 +117,7 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(fun->Range(), 1.0);
 
-    DummyDerivatives<double> dummyD(fun.get(), daeVar, x, normVar, normEq);
+    DummyDerivatives<double> dummyD(fun.get(), daeVar, eqName, x, normVar, normEq);
     dummyD.setAvoidConvertAlg2DifVars(false);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(true);

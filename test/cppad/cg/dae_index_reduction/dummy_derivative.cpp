@@ -46,8 +46,10 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     x[8] = 0.0; // dydt
     x[9] = -1.0; // dvxdt
     x[10] = 9.80665; // dvydt
+    
+    std::vector<std::string> eqName; // empty
 
-    DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
+    DummyDerivatives<double> dummyD(fun, daeVar, eqName, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(false);
 
@@ -99,8 +101,10 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     daeVar[10] = 3;
     daeVar[11] = 4;
     daeVar[12] = 5;
+    
+    std::vector<std::string> eqName; // empty
 
-    DummyDerivatives<double> dummyD(fun, daeVar, x, normVar, normEq);
+    DummyDerivatives<double> dummyD(fun, daeVar, eqName, x, normVar, normEq);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;

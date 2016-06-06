@@ -43,8 +43,10 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     x[8] = 0.0; // dydt
     x[9] = -1.0; // dvxdt
     x[10] = 9.80665; // dvydt
+    
+    std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(fun, daeVar, x);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
@@ -88,7 +90,10 @@ TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     x[10] = -1.0; // dvxdt
     x[11] = 9.80665; // dvydt
     x[12] = 0.0; // dvzdt
-    Pantelides<double> pantelides(fun, daeVar, x);
+    
+    std::vector<std::string> eqName; // empty
+    
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;

@@ -39,11 +39,12 @@ public:
         colored_(false) {
     }
 
-    inline void color(Verbosity verbosity = Verbosity::None) {
+    inline void color(std::ostream& out = std::cout,
+                      Verbosity verbosity = Verbosity::None) {
         colored_ = true;
 
         if (verbosity >= Verbosity::High)
-            std::cout << "      Colored " << nodeType() << " " << name() << "\n";
+            out << "      Colored " << nodeType() << " " << name() << "\n";
     }
 
     inline void uncolor() {
@@ -105,25 +106,23 @@ protected:
     std::string name_;
 public:
 
-    inline Enode(size_t index) :
+    inline Enode(size_t index,
+                 const std::string& name = "") :
         BiPGraphNode<Base>(index),
         differentiation_(nullptr),
         differentiationOf_(nullptr),
-        assign_(nullptr) {
-        std::ostringstream s;
-        s << *this;
-        name_ = s.str();
+        assign_(nullptr),
+        name_(name.empty()? ("Eq" + std::to_string(index)) : name) {
     }
 
-    inline Enode(size_t index, Enode<Base>* differentiationOf) :
+    inline Enode(size_t index,
+                 Enode<Base>* differentiationOf) :
         BiPGraphNode<Base>(index),
         differentiation_(nullptr),
         differentiationOf_(differentiationOf),
-        assign_(nullptr) {
+        assign_(nullptr),
+        name_("Diff(" + differentiationOf->name() + ")") {
         differentiationOf_->setDerivative(this);
-        std::ostringstream s;
-        s << *this;
-        name_ = s.str();
     }
 
     inline const std::vector<Vnode<Base>*>& variables() const {
@@ -201,7 +200,7 @@ inline std::ostream& operator <<(std::ostream& os, const Enode<Base>& i) {
     if (i.derivativeOf() != nullptr) {
         os << "Diff(" << *i.derivativeOf() << ")";
     } else {
-        os << "Equation " << i.index();
+        os << "Equation " << i.name() << " (" << i.index() << ")";
     }
 
     return os;
@@ -254,7 +253,9 @@ protected:
 
 public:
 
-    inline Vnode(size_t index, int tapeIndex, const std::string& name) :
+    inline Vnode(size_t index,
+                 int tapeIndex, 
+                 const std::string& name) :
         BiPGraphNode<Base>(index),
         deleted_(false),
         parameter_(false),
@@ -266,7 +267,10 @@ public:
 
     }
 
-    inline Vnode(size_t index, size_t tapeIndex, Vnode<Base>* derivativeOf, const std::string& name = "") :
+    inline Vnode(size_t index,
+                 size_t tapeIndex,
+                 Vnode<Base>* derivativeOf,
+                 const std::string& name = "") :
         BiPGraphNode<Base>(index),
         deleted_(false),
         parameter_(false),
@@ -330,18 +334,20 @@ public:
         return deleted_;
     }
 
-    inline void makeParameter(Verbosity verbosity = Verbosity::None) {
+    inline void makeParameter(std::ostream& out = std::cout,
+                              Verbosity verbosity = Verbosity::None) {
         parameter_ = true;
-        deleteNode(verbosity);
+        deleteNode(out, verbosity);
     }
 
     inline bool isParameter() const {
         return parameter_;
     }
 
-    inline void deleteNode(Verbosity verbosity = Verbosity::None) {
+    inline void deleteNode(std::ostream& out = std::cout,
+                           Verbosity verbosity = Verbosity::None) {
         if (verbosity >= Verbosity::High)
-            std::cout << "Deleting " << *this << "\n";
+            out << "Deleting " << *this << "\n";
 
         deleted_ = true;
         for (Enode<Base>* i : enodes_) {
@@ -354,9 +360,11 @@ public:
         return assign_;
     }
 
-    inline void setAssigmentEquation(Enode<Base>& i, Verbosity verbosity = Verbosity::None) {
+    inline void setAssignmentEquation(Enode<Base>& i,
+                                      std::ostream& out = std::cout,
+                                      Verbosity verbosity = Verbosity::None) {
         if (verbosity >= Verbosity::High)
-            std::cout << "      Assigning " << *this << " to " << i << "\n";
+            out << "      Assigning " << *this << " to " << i << "\n";
 
         assign_ = &i;
         i.setAssigmentVariable(*this);

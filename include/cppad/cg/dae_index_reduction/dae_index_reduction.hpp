@@ -36,6 +36,8 @@ protected:
     std::vector<DaeVarInfo> varInfo_;
     // verbosity level
     Verbosity verbosity_;
+    // output stream used for logging
+    std::ostream* log_;
 public:
 
     /**
@@ -49,7 +51,8 @@ public:
                       const std::vector<DaeVarInfo>& varInfo) :
         fun_(fun),
         varInfo_(varInfo),
-        verbosity_(Verbosity::None) {
+        verbosity_(Verbosity::None),
+        log_(&std::cout) {
         CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
         CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == fun->Domain());
         for (size_t j = 0; j < varInfo_.size(); ++j) {
@@ -68,6 +71,14 @@ public:
         for (size_t j = 0; j < varInfo_.size(); ++j) {
             determineVariableOrder(varInfo_[j]);
         }
+    }
+
+    inline std::ostream& log() const {
+        return *log_;
+    }
+
+    inline void setLog(std::ostream& out) {
+        log_ = &out;
     }
 
     inline void setVerbosity(Verbosity verbosity) {

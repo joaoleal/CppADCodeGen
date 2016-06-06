@@ -56,10 +56,12 @@ public:
      * 
      * @param fun The DAE model
      * @param varInfo DAE model variable classification
+     * @param eqName Equation names (it can be an empty vector)
      * @param x typical variable values (used to avoid NaNs in CppAD checks)
      */
     Pantelides(ADFun<CG<Base> >* fun,
                const std::vector<DaeVarInfo>& varInfo,
+               const std::vector<std::string>& eqName,
                const std::vector<Base>& x) :
         DaeIndexReduction<Base>(fun, varInfo),
         x_(x),
@@ -79,7 +81,10 @@ public:
         enodes_.reserve(1.2 * m + 1);
         enodes_.resize(m);
         for (size_t i = 0; i < m; i++) {
-            enodes_[i] = new Enode<Base> (i);
+            if(i < eqName.size())
+                enodes_[i] = new Enode<Base> (i, eqName[i]);
+            else
+                enodes_[i] = new Enode<Base> (i);
         }
 
         // locate the time variable (if present)
@@ -250,6 +255,9 @@ public:
         if (reducedFun_ != nullptr)
             throw CGException("reduceIndex() can only be called once!");
 
+        if (this->verbosity_ >= Verbosity::High)
+            log() << "########  Pantelides method  ########\n";
+
         detectSubset2Dif();
 
         if (this->verbosity_ >= Verbosity::High)
@@ -304,26 +312,26 @@ public:
     }
 
     inline void printResultInfo() {
-        std::cout << "\nPantelides DAE differentiation index reduction:\n\n"
+        log() << "\nPantelides DAE differentiation index reduction:\n\n"
                 "   Equations count: " << enodes_.size() << "\n";
         for (Enode<Base>* ii : enodes_) {
-            std::cout << "      " << ii->index() << " - " << *ii << "\n";
+            log() << "      " << ii->index() << " - " << *ii << "\n";
         }
 
-        std::cout << "\n   Variable count: " << vnodes_.size() << "\n";
+        log() << "\n   Variable count: " << vnodes_.size() << "\n";
 
         for (const Vnode<Base>* jj : vnodes_) {
-            std::cout << "      " << jj->index() << " - " << *jj;
+            log() << "      " << jj->index() << " - " << *jj;
             if (jj->assigmentEquation() != nullptr) {
-                std::cout << " assigned to " << *jj->assigmentEquation() << "\n";
+                log() << " assigned to " << *jj->assigmentEquation() << "\n";
             } else if (jj->isParameter()) {
-                std::cout << " is a parameter (time independent)\n";
+                log() << " is a parameter (time independent)\n";
             } else {
-                std::cout << " NOT assigned to any equation\n";
+                log() << " NOT assigned to any equation\n";
             }
         }
 
-        std::cout << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << "\n";
+        log() << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << "\n";
     }
 
     virtual ~Pantelides() {
@@ -335,6 +343,7 @@ public:
     }
 
 protected:
+    using DaeIndexReduction<Base>::log;
 
     static inline std::vector<int> determineVariableDiffOrder(const std::vector<DaeVarInfo>& varInfo) {
         size_t n = varInfo.size();
@@ -375,7 +384,7 @@ protected:
             Enode<Base>* i = enodes_[k];
 
             if (this->verbosity_ >= Verbosity::High)
-                std::cout << "Outer loop: equation k = " << *i << "\n";
+                log() << "Outer loop: equation k = " << *i << "\n";
 
             bool pathfound = false;
             while (!pathfound) {
@@ -386,7 +395,7 @@ protected:
                  */
                 for (Vnode<Base>* jj : vnodes_) {
                     if (!jj->isDeleted() && jj->derivative() != nullptr) {
-                        jj->deleteNode(this->verbosity_);
+                        jj->deleteNode(log(), this->verbosity_);
                     }
                 }
 
@@ -407,7 +416,7 @@ protected:
                             vnodes_.push_back(jDiff);
 
                             if (this->verbosity_ >= Verbosity::High)
-                                std::cout << "Created " << *jDiff << "\n";
+                                log() << "Created " << *jDiff << "\n";
 
                         }
                     }
@@ -424,7 +433,7 @@ protected:
                             dirtyDifferentiateEq(*ll, *lDiff);
 
                             if (this->verbosity_ >= Verbosity::High)
-                                std::cout << "Created " << *lDiff << "\n";
+                                log() << "Created " << *lDiff << "\n";
 
                         }
                     }
@@ -447,14 +456,14 @@ protected:
                     for (Vnode<Base>* jj : vnodes_) {
                         if (jj->isColored() && !jj->isDeleted()) {
                             Vnode<Base>* jDiff = jj->derivative();
-                            jDiff->setAssigmentEquation(*jj->assigmentEquation()->derivative(), this->verbosity_);
+                            jDiff->setAssignmentEquation(*jj->assigmentEquation()->derivative(), log(), this->verbosity_);
                         }
                     }
 
                     i = i->derivative();
 
                     if (this->verbosity_ >= Verbosity::High)
-                        std::cout << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
+                        log() << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
 
                 }
             }
@@ -469,14 +478,14 @@ protected:
      * @return true if an augmented path was found
      */
     bool augmentPath(Enode<Base>& i) {
-        i.color(this->verbosity_);
+        i.color(log(), this->verbosity_);
 
         const std::vector<Vnode<Base>*>& vars = i.variables();
 
         // first look for derivative variables
         for (Vnode<Base>* jj : vars) {
             if (jj->antiDerivative() != nullptr && jj->assigmentEquation() == nullptr) {
-                jj->setAssigmentEquation(i, this->verbosity_);
+                jj->setAssignmentEquation(i, log(), this->verbosity_);
                 return true;
             }
         }
@@ -484,7 +493,7 @@ protected:
         // look for algebraic variables
         for (Vnode<Base>* jj : vars) {
             if (jj->antiDerivative() == nullptr && jj->assigmentEquation() == nullptr) {
-                jj->setAssigmentEquation(i, this->verbosity_);
+                jj->setAssignmentEquation(i, log(), this->verbosity_);
                 return true;
             }
         }
@@ -492,12 +501,12 @@ protected:
 
         for (Vnode<Base>* jj : vars) {
             if (!jj->isColored()) {
-                jj->color(this->verbosity_);
+                jj->color(log(), this->verbosity_);
 
                 Enode<Base>& k = *jj->assigmentEquation();
                 bool pathFound = augmentPath(k);
                 if (pathFound) {
-                    jj->setAssigmentEquation(i, this->verbosity_);
+                    jj->setAssignmentEquation(i, log(), this->verbosity_);
                     return true;
                 }
             }
@@ -660,8 +669,8 @@ protected:
             }
 
             if (this->verbosity_ >= Verbosity::High) {
-                std::cout << "Original model:\n";
-                printModel(reducedFun_, newVarInfo);
+                log() << "Original model:\n";
+                printModel(log(), reducedFun_, newVarInfo);
             }
         }
 
@@ -735,8 +744,8 @@ protected:
             }
 
             if (this->verbosity_ >= Verbosity::High) {
-                std::cout << equations.size() << " new equations:\n";
-                printModel(reducedFun_, newVarInfo);
+                log() << equations.size() << " new equations:\n";
+                printModel(log(), reducedFun_, newVarInfo);
             }
         }
 
@@ -836,8 +845,9 @@ protected:
         return indepOut;
     }
 
-    inline void printModel(ADFun<CG<Base> >* fun) {
-        printModel(fun, this->varInfo_);
+    inline void printModel(std::ostream& out,
+                           ADFun<CG<Base> >* fun) {
+        printModel(out, fun, this->varInfo_);
     }
 
     /**
@@ -845,13 +855,14 @@ protected:
      * 
      * @param fun  The taped model
      */
-    inline void printModel(ADFun<CG<Base> >* fun,
+    inline void printModel(std::ostream& out,
+                           ADFun<CG<Base> >* fun,
                            const std::vector<DaeVarInfo>& varInfo) const {
         std::vector<std::string> vnames(varInfo.size());
         for (size_t p = 0; p < varInfo.size(); p++) {
             vnames[p] = varInfo[p].getName();
         }
-        printModel(fun, vnames);
+        printModel(out, fun, vnames);
     }
 
     /**
@@ -860,7 +871,8 @@ protected:
      * @param fun  The taped model
      * @param vnodes  The independent variables
      */
-    inline void printModel(ADFun<CG<Base> >* fun,
+    inline void printModel(std::ostream& out,
+                           ADFun<CG<Base> >* fun,
                            const std::vector<std::string>& indepNames) const {
         using CppAD::vector;
 
@@ -888,7 +900,7 @@ protected:
 
         std::ostringstream code;
         handler.generateCode(code, langC, dep0, nameGen);
-        std::cout << "\n" << code.str() << std::endl;
+        out << "\n" << code.str() << std::endl;
     }
 
     template<class VectorCGB>

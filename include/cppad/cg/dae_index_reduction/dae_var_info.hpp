@@ -298,17 +298,17 @@ public:
         order_ = order;
     }
 
-    inline void printInfo() {
-        std::cout << name_ << ":\n";
+    inline void printInfo(std::ostream& out = std::cout) const {
+        out << name_ << ":\n";
         if (antiDerivative_ >= 0)
-            std::cout << " derivative-of: " << antiDerivative_ << "\n";
+            out << " derivative-of: " << antiDerivative_ << "\n";
         if (derivative_ >= 0)
-            std::cout << " derivative: " << derivative_ << "\n";
+            out << " derivative: " << derivative_ << "\n";
         if (integratedDependent_)
-            std::cout << " integrated dependent\n";
+            out << " integrated dependent\n";
         else if (integratedVariable_)
-            std::cout << " integrated variable\n";
-        std::cout.flush();
+            out << " integrated variable\n";
+        out.flush();
     }
 
     inline virtual ~DaeVarInfo() {

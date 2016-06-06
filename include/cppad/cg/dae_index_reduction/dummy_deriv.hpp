@@ -193,16 +193,18 @@ public:
      * 
      * @param fun The DAE model
      * @param varInfo DAE model variable classification
+     * @param eqName Equation names (it can be an empty vector)
      * @param x typical variable values (used to determine Jacobian values)
      * @param normVar variable normalization values
      * @param normEq equation normalization values
      */
     DummyDerivatives(ADFun<CG<Base> >* fun,
                      const std::vector<DaeVarInfo>& varInfo,
+                     const std::vector<std::string>& eqName,
                      const std::vector<Base>& x,
                      const std::vector<Base>& normVar,
                      const std::vector<Base>& normEq) :
-        Pantelides<Base>(fun, varInfo, x),
+        Pantelides<Base>(fun, varInfo, eqName, x),
         normVar_(normVar),
         normEq_(normEq),
         diffVarStart_(0),
@@ -305,6 +307,9 @@ public:
         if (fun.get() == nullptr)
             return nullptr; //nothing to do (no index reduction required)
 
+        if (this->verbosity_ >= Verbosity::High)
+            log() << "########  Dummy derivatives method  ########\n";
+
         newEqInfo = reducedEqInfo; // copy
         addDummyDerivatives(reducedVarInfo, newVarInfo);
 
@@ -346,6 +351,8 @@ public:
     }
 
 protected:
+    
+    using Pantelides<Base>::log;
 
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
                                             std::vector<DaeVarInfo>& newVarInfo) {
@@ -383,15 +390,15 @@ protected:
         while (true) {
 
             if (this->verbosity_ >= Verbosity::High) {
-                std::cout << "# equation selection: ";
+                log() << "# equation selection: ";
                 for (size_t i = 0; i < eqs.size(); i++)
-                    std::cout << *eqs[i] << "; ";
-                std::cout << "\n";
+                    log() << *eqs[i] << "; ";
+                log() << "\n";
 
-                std::cout << "# variable selection: ";
+                log() << "# variable selection: ";
                 for (size_t j = 0; j < vars.size(); j++)
-                    std::cout << *vars[j] << "; ";
-                std::cout << "\n";
+                    log() << *vars[j] << "; ";
+                log() << "\n";
             }
 
             // Exploit the current equations for elimination of candidates
@@ -450,13 +457,13 @@ protected:
         }
 
         if (this->verbosity_ >= Verbosity::Low) {
-            std::cout << "## dummy derivatives:\n";
+            log() << "## dummy derivatives:\n";
 
             for (Vnode<Base>* j : dummyD_)
-                std::cout << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
-            std::cout << "# \n";
+                log() << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
+            log() << "# \n";
             if (this->verbosity_ >= Verbosity::High) {
-                Pantelides<Base>::printModel(this->reducedFun_, newVarInfo);
+                Pantelides<Base>::printModel(log(), this->reducedFun_, newVarInfo);
             }
         }
 
@@ -527,6 +534,9 @@ protected:
         set<size_t> erasedVariables;
         set<size_t> erasedEquations;
 
+        if (this->verbosity_ >= Verbosity::High)
+            log() << "Reducing total number of equations by symbolic manipulation:" << std::endl;
+        
         for (Vnode<Base>* dummy : dummyD_) {
 
             /**
@@ -535,7 +545,7 @@ protected:
             map<int, int>::const_iterator ita = assignedVar2Eq.find(dummy->tapeIndex());
             if (ita == assignedVar2Eq.end()) {
                 if (this->verbosity_ >= Verbosity::High)
-                    std::cout << "unable to solve for variable " << dummy->name() << "." << std::endl;
+                    log() << "unable to solve for variable " << dummy->name() << "." << std::endl;
 
                 continue; // unable to solve for a dummy variable: keep the equation and variable
             }
@@ -548,16 +558,16 @@ protected:
                 eqIndexReduced2Short[bestEquation] = -1;
 
                 if (this->verbosity_ >= Verbosity::High) {
-                    std::cout << "######### use equation " << bestEquation << " to solve for variable " << dummy->name() << std::endl;
+                    log() << "######### use equation " << *this->enodes_[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << std::endl;
                     erasedVariables.insert(dummy->tapeIndex());
                     erasedEquations.insert(bestEquation);
-                    printModel(handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
+                    printModel(log(), handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
                 }
 
             } catch (const CGException& ex) {
                 // unable to solve for a dummy variable: keep the equation and variable
                 if (this->verbosity_ >= Verbosity::High)
-                    std::cout << "unable to use equation " << bestEquation << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
+                    log() << "unable to use equation " << *this->enodes_[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
             }
         }
 
@@ -631,8 +641,8 @@ protected:
                                                                         reducedEqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
-            std::cout << "DAE with less equations and variables:\n";
-            Pantelides<Base>::printModel(shortFun.get(), newVarInfo);
+            log() << "DAE with less equations and variables:\n";
+            Pantelides<Base>::printModel(log(), shortFun.get(), newVarInfo);
         }
 
         return shortFun;
@@ -754,8 +764,8 @@ protected:
         std::unique_ptr<ADFun<CGBase> > semiExplicitFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
-            std::cout << "Semi-Eplicit DAE:\n";
-            Pantelides<Base>::printModel(semiExplicitFun.get(), newVarInfo);
+            log() << "Semi-Eplicit DAE:\n";
+            Pantelides<Base>::printModel(log(), semiExplicitFun.get(), newVarInfo);
         }
 
         return semiExplicitFun;
@@ -819,7 +829,7 @@ protected:
 
             // create equation nodes
             for (size_t i = 0; i < this->enodes_.size(); i++) {
-                equations[i] = new Enode<Base>(i);
+                equations[i] = new Enode<Base>(i, this->enodes_[i]->name());
                 const vector<Vnode<Base>*>& origVars = this->enodes_[i]->originalVariables();
                 for (size_t p = 0; p < origVars.size(); p++) {
                     Vnode<Base>* jOrig = origVars[p];
@@ -984,9 +994,9 @@ protected:
         if (this->verbosity_ >= Verbosity::High) {
             for (Vnode<Base>* j : variables) {
                 if (j->assigmentEquation() != nullptr)
-                    std::cout << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
+                    log() << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
             }
-            std::cout << std::endl;
+            log() << std::endl;
         }
         deleteVectorValues(diffVariables);
         deleteVectorValues(dummyVariables);
@@ -1142,8 +1152,8 @@ protected:
         /**
          * Implement the assignment in the graph
          */
-        j.setAssigmentEquation(i, this->verbosity_);
-        j.deleteNode(this->verbosity_);
+        j.setAssignmentEquation(i, log(), this->verbosity_);
+        j.deleteNode(log(), this->verbosity_);
 
         jacSparsity = localJacSparsity;
 
@@ -1267,8 +1277,8 @@ protected:
         std::unique_ptr<ADFun<CGBase> > reorderedFun(generateReorderedModel(handler, res0, varInfo, newVarInfo, eqInfo, newEqInfo));
 
         if (this->verbosity_ >= Verbosity::High) {
-            std::cout << "reordered DAE equations and variables:\n";
-            Pantelides<Base>::printModel(reorderedFun.get(), newVarInfo);
+            log() << "reordered DAE equations and variables:\n";
+            Pantelides<Base>::printModel(log(), reorderedFun.get(), newVarInfo);
         }
 
         return reorderedFun;
@@ -1405,7 +1415,7 @@ protected:
         jacobian_.makeCompressed();
 
         if (this->verbosity_ >= Verbosity::High) {
-            cout << "partial jacobian:\n" << jacobian_ << "\n\n";
+            log() << "\npartial jacobian:\n" << jacobian_ << "\n\n";
             //cout << jacobian_.triangularView<Eigen::Lower > () << "\n\n";
         }
     }
@@ -1417,10 +1427,10 @@ protected:
         if (eqs.size() == vars.size()) {
             dummyD_.insert(dummyD_.end(), vars.begin(), vars.end());
             if (this->verbosity_ >= Verbosity::High) {
-                std::cout << "# new dummy derivatives: ";
+                log() << "# new dummy derivatives: ";
                 for (size_t j = 0; j < vars.size(); j++)
-                    std::cout << *vars[j] << "; ";
-                std::cout << " \n";
+                    log() << *vars[j] << "; ";
+                log() << " \n";
             }
 #ifndef NDEBUG
             for (Vnode<Base>* it : vars) {
@@ -1475,20 +1485,32 @@ protected:
         }
 
         if (this->verbosity_ >= Verbosity::High)
-            std::cout << "subset Jac:\n" << work << "\n";
+            log() << "subset Jac:\n" << work << "\n";
 
         Eigen::ColPivHouseholderQR<MatrixB> qr(work);
         qr.compute(work);
-        if (qr.rank() < work.rows()) {
+
+        if(qr.info() != Eigen::Success) {
+            throw CGException("Failed to select dummy derivatives! "
+                              "QR decomposition of a submatrix of the Jacobian failed!");
+        } else if (qr.rank() < work.rows()) {
             throw CGException("Failed to select dummy derivatives! "
                               "The resulting system is probably singular for the provided data.");
         }
-
+        
         typedef typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType PermutationMatrix;
         typedef typename PermutationMatrix::IndicesType Indices;
 
         const PermutationMatrix& p = qr.colsPermutation();
         const Indices& indices = p.indices();
+        
+        if (this->verbosity_ >= Verbosity::High) {
+            log() << "## matrix Q&R:\n";
+            log() << qr.matrixQR() << "\n";
+            log() << "## matrix P: ";
+            log() << indices.transpose() << "\n";
+        }
+        
         if (indices.size() < work.rows()) {
             throw CGException("Failed to select dummy derivatives! "
                               "The resulting system is probably singular for the provided data.");
@@ -1527,10 +1549,10 @@ protected:
         }
 
         if (this->verbosity_ >= Verbosity::High) {
-            std::cout << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
+            log() << "## new dummy derivatives: "; //"(condition = " << bestCond << "): ";
             for (Vnode<Base>* it : newDummies)
-                std::cout << *it << "; ";
-            std::cout << " \n\n";
+                log() << *it << "; ";
+            log() << " \n\n";
         }
 #ifndef NDEBUG
         for (Vnode<Base>* it : newDummies) {
@@ -1541,7 +1563,8 @@ protected:
         dummyD_.insert(dummyD_.end(), newDummies.begin(), newDummies.end());
     }
 
-    inline static void printModel(CodeHandler<Base>& handler,
+    inline static void printModel(std::ostream& out,
+                                  CodeHandler<Base>& handler,
                                   const std::vector<CGBase>& res,
                                   const std::vector<DaeVarInfo>& varInfo,
                                   const std::set<size_t>& erasedVariables,
@@ -1566,10 +1589,11 @@ protected:
         }
         std::vector<std::string> depNames;
         LangCCustomVariableNameGenerator<Base> nameGen(depNames, indepNames);
-        handler.generateCode(std::cout, lang, resAux, nameGen);
+        handler.generateCode(out, lang, resAux, nameGen);
     }
 
-    inline static void printGraphSparsity(const std::vector<bool>& jacSparsity,
+    inline static void printGraphSparsity(std::ostream& out,
+                                          const std::vector<bool>& jacSparsity,
                                           const std::map<size_t, Vnode<Base>*>& tape2FreeVariables,
                                           const std::vector<Enode<Base>*>& equations,
                                           const size_t n) {
@@ -1579,16 +1603,16 @@ protected:
             for (const auto& it : tape2FreeVariables) {
                 if (jacSparsity[n * eq->index() + it.first]) {
                     if (count == 0)
-                        std::cout << "# Equation " << e << ": \t";
-                    std::cout << " " << it.second->name();
+                        out << "# Equation " << e << ": \t";
+                    out << " " << it.second->name();
                     count++;
                 }
             }
             if (count > 0)
-                std::cout << "\n";
+                out << "\n";
         }
 
-        std::cout << std::endl;
+        out << std::endl;
     }
 
     template<class T>
