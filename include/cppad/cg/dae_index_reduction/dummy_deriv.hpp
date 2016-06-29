@@ -1505,10 +1505,13 @@ protected:
         const Indices& indices = p.indices();
         
         if (this->verbosity_ >= Verbosity::High) {
-            log() << "## matrix Q&R:\n";
-            log() << qr.matrixQR() << "\n";
-            log() << "## matrix P: ";
-            log() << indices.transpose() << "\n";
+            log() << "## matrix Q:\n";
+            MatrixB q = qr.matrixQ();
+            log() << q << "\n";
+            log() << "## matrix R:\n";
+            MatrixB r = qr.matrixR().template triangularView<Eigen::Upper>();
+            log() << r << "\n";
+            log() << "## matrix P: " << indices.transpose() << "\n";
         }
         
         if (indices.size() < work.rows()) {
