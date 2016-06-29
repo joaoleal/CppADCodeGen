@@ -214,7 +214,7 @@ public:
         reorder_(true),
         avoidConvertAlg2DifVars_(true) {
 
-        for (Vnode<Base>* jj : this->vnodes_) {
+        for (Vnode<Base>* jj : this->graph_.variables()) {
             if (jj->antiDerivative() != nullptr) {
                 diffVarStart_ = jj->index();
                 break;
@@ -357,13 +357,16 @@ protected:
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
                                             std::vector<DaeVarInfo>& newVarInfo) {
 
+        auto& vnodes = this->graph_.variables();
+        auto& enodes = this->graph_.equations();
+
         determineJacobian();
 
         // variables of interest
         std::vector<Vnode<Base>*> vars;
-        vars.reserve(this->vnodes_.size() - diffVarStart_);
+        vars.reserve(vnodes.size() - diffVarStart_);
         typename std::vector<Vnode<Base>*>::const_reverse_iterator rj;
-        for (rj = this->vnodes_.rbegin(); rj != this->vnodes_.rend(); ++rj) {
+        for (rj = vnodes.rbegin(); rj != vnodes.rend(); ++rj) {
             Vnode<Base>* jj = *rj;
             if (jj->antiDerivative() != nullptr && jj->derivative() == nullptr) {
                 vars.push_back(jj); // highest order time derivatives in the index 1 model
@@ -376,8 +379,8 @@ protected:
         // equations of interest
         typename std::vector<Enode<Base>*>::const_reverse_iterator ri;
         std::vector<Enode<Base>*> eqs;
-        eqs.reserve(this->enodes_.size() - diffEqStart_);
-        for (ri = this->enodes_.rbegin(); ri != this->enodes_.rend(); ++ri) {
+        eqs.reserve(enodes.size() - diffEqStart_);
+        for (ri = enodes.rbegin(); ri != enodes.rend(); ++ri) {
             Enode<Base>* ii = *ri;
             if (ii->derivativeOf() != nullptr && ii->derivative() == nullptr) {
                 eqs.push_back(ii);
@@ -463,7 +466,7 @@ protected:
                 log() << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
             log() << "# \n";
             if (this->verbosity_ >= Verbosity::High) {
-                Pantelides<Base>::printModel(log(), this->reducedFun_, newVarInfo);
+                this->graph_.printModel(log(), *this->reducedFun_, newVarInfo);
             }
         }
 
@@ -485,6 +488,9 @@ protected:
         using std::map;
         using std::map;
 
+        //auto& vnodes = this->graph_.variables();
+        auto& enodes = this->graph_.equations();
+
         CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == this->reducedFun_->Domain());
         CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == this->reducedFun_->Range());
 
@@ -498,7 +504,7 @@ protected:
         vector<CGBase> indep0(this->reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->forward0(*this->reducedFun_, indep0);
+        vector<CGBase> res0 = this->graph_.forward0(*this->reducedFun_, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -512,7 +518,7 @@ protected:
          * equation indexes in the model with less equations and variables
          * (removed equations have negative indexes)
          */
-        vector<int> eqIndexReduced2Short(this->enodes_.size());
+        vector<int> eqIndexReduced2Short(enodes.size());
         for (size_t i = 0; i < eqIndexReduced2Short.size(); i++) {
             eqIndexReduced2Short[i] = i;
         }
@@ -558,7 +564,7 @@ protected:
                 eqIndexReduced2Short[bestEquation] = -1;
 
                 if (this->verbosity_ >= Verbosity::High) {
-                    log() << "######### use equation " << *this->enodes_[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << std::endl;
+                    log() << "######### use equation " << *enodes[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << std::endl;
                     erasedVariables.insert(dummy->tapeIndex());
                     erasedEquations.insert(bestEquation);
                     printModel(log(), handler, res0, reducedVarInfo, erasedVariables, erasedEquations);
@@ -567,7 +573,7 @@ protected:
             } catch (const CGException& ex) {
                 // unable to solve for a dummy variable: keep the equation and variable
                 if (this->verbosity_ >= Verbosity::High)
-                    log() << "unable to use equation " << *this->enodes_[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
+                    log() << "unable to use equation " << *enodes[newEqInfo[bestEquation].getId()] << " to solve for variable " << dummy->name() << ": " << ex.what() << std::endl;
             }
         }
 
@@ -642,7 +648,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "DAE with less equations and variables:\n";
-            Pantelides<Base>::printModel(log(), shortFun.get(), newVarInfo);
+            this->graph_.printModel(log(), *shortFun, newVarInfo);
         }
 
         return shortFun;
@@ -677,7 +683,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->forward0(fun, indep0);
+        vector<CGBase> res0 = this->graph_.forward0(fun, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -765,7 +771,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "Semi-Eplicit DAE:\n";
-            Pantelides<Base>::printModel(log(), semiExplicitFun.get(), newVarInfo);
+            this->graph_.printModel(log(), *semiExplicitFun, newVarInfo);
         }
 
         return semiExplicitFun;
@@ -777,7 +783,10 @@ protected:
         using std::map;
         typedef vector<OperationPathNode<Base> > SourceCodePath;
 
-        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == this->enodes_.size());
+        auto& vnodes = this->graph_.variables();
+        auto& enodes = this->graph_.equations();
+
+        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == enodes.size());
         CPPADCG_ASSERT_UNKNOWN(varInfo.size() == this->reducedFun_->Domain());
         CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == this->reducedFun_->Range());
 
@@ -786,7 +795,7 @@ protected:
         vector<CGBase> indep0(this->reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->forward0(*this->reducedFun_, indep0);
+        vector<CGBase> res0 = this->graph_.forward0(*this->reducedFun_, indep0);
 
         vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*this->reducedFun_);
 
@@ -801,15 +810,15 @@ protected:
         vector<Vnode<Base>*> diffVariables;
         vector<Vnode<Base>*> dummyVariables;
         vector<Vnode<Base>*> variables;
-        vector<Enode<Base>*> equations(this->enodes_.size(), nullptr);
+        vector<Enode<Base>*> equations(enodes.size(), nullptr);
         try {
             /**
              * Create a new bipartite graph
              */
             // create variable nodes
             map<Vnode<Base>*, Vnode<Base>*> eliminateOrig2New;
-            for (size_t j = 0; j < this->vnodes_.size(); j++) {
-                Vnode<Base>* v = this->vnodes_[j];
+            for (size_t j = 0; j < vnodes.size(); j++) {
+                Vnode<Base>* v = vnodes[j];
                 if (std::find(dummyD_.begin(), dummyD_.end(), v) != dummyD_.end()) {
                     if (reduceEquations_) {
                         dummyVariables.push_back(new Vnode<Base>(j, v->tapeIndex(), v->name()));
@@ -828,9 +837,9 @@ protected:
             variables.insert(variables.end(), dummyVariables.begin(), dummyVariables.end());
 
             // create equation nodes
-            for (size_t i = 0; i < this->enodes_.size(); i++) {
-                equations[i] = new Enode<Base>(i, this->enodes_[i]->name());
-                const vector<Vnode<Base>*>& origVars = this->enodes_[i]->originalVariables();
+            for (size_t i = 0; i < enodes.size(); i++) {
+                equations[i] = new Enode<Base>(i, enodes[i]->name());
+                const vector<Vnode<Base>*>& origVars = enodes[i]->originalVariables();
                 for (size_t p = 0; p < origVars.size(); p++) {
                     Vnode<Base>* jOrig = origVars[p];
 
@@ -1201,7 +1210,7 @@ protected:
         std::vector<DaeVarOrderInfo> varOrder(varInfo.size());
         for (size_t j = 0; j < varInfo.size(); j++) {
             size_t j0;
-            int derivOrder = this->determineVariableDiffOrder(varInfo, j, j0);
+            int derivOrder = this->graph_.determineVariableDiffOrder(varInfo, j, j0);
             if (varInfo[j].isIntegratedVariable()) {
                 derivOrder = -2; // so that it goes last
             }
@@ -1269,7 +1278,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        const vector<CGBase> res0 = this->forward0(fun, indep0);
+        const vector<CGBase> res0 = this->graph_.forward0(fun, indep0);
 
         /**
          * Implement the reordering in the model
@@ -1278,7 +1287,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "reordered DAE equations and variables:\n";
-            Pantelides<Base>::printModel(log(), reorderedFun.get(), newVarInfo);
+            this->graph_.printModel(log(), *reorderedFun, newVarInfo);
         }
 
         return reorderedFun;
@@ -1344,7 +1353,7 @@ protected:
 
         // evaluate the model
         Evaluator<Base, CGBase> evaluator0(handler);
-        evaluator0.setPrintFor(this->preserveNames_); // variable names saved with CppAD::PrintFor
+        evaluator0.setPrintFor(this->graph_.isPreserveNames()); // variable names saved with CppAD::PrintFor
         vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
 
         return new ADFun<CGBase>(indepNewOrder, depNewOrder);
@@ -1361,16 +1370,19 @@ protected:
         const size_t n = this->reducedFun_->Domain();
         const size_t m = this->reducedFun_->Range();
 
+        auto& vnodes = this->graph_.variables();
+        auto& enodes = this->graph_.equations();
+
         jacSparsity_ = jacobianReverseSparsity<vector<bool>, CGBase>(*this->reducedFun_); // in the original variable order
 
         vector<size_t> row, col;
-        row.reserve((this->vnodes_.size() - diffVarStart_) * (m - diffEqStart_));
+        row.reserve((vnodes.size() - diffVarStart_) * (m - diffEqStart_));
         col.reserve(row.capacity());
 
         for (size_t i = diffEqStart_; i < m; i++) {
-            for (size_t j = diffVarStart_; j < this->vnodes_.size(); j++) {
-                CPPADCG_ASSERT_UNKNOWN(this->vnodes_[j]->antiDerivative() != nullptr);
-                size_t t = this->vnodes_[j]->tapeIndex();
+            for (size_t j = diffVarStart_; j < vnodes.size(); j++) {
+                CPPADCG_ASSERT_UNKNOWN(vnodes[j]->antiDerivative() != nullptr);
+                size_t t = vnodes[j]->tapeIndex();
                 if (jacSparsity_[i * n + t]) {
                     row.push_back(i);
                     col.push_back(t);
@@ -1389,18 +1401,18 @@ protected:
                                                  row, col, jac, work);
 
         // resize and zero matrix
-        jacobian_.resize(m - diffEqStart_, this->vnodes_.size() - diffVarStart_);
+        jacobian_.resize(m - diffEqStart_, vnodes.size() - diffVarStart_);
 
         map<size_t, Vnode<Base>*> origIndex2var;
-        for (size_t j = diffVarStart_; j< this->vnodes_.size(); j++) {
-            Vnode<Base>* jj = this->vnodes_[j];
+        for (size_t j = diffVarStart_; j< vnodes.size(); j++) {
+            Vnode<Base>* jj = vnodes[j];
             origIndex2var[jj->tapeIndex()] = jj;
         }
 
         // normalize values
         for (size_t e = 0; e < jac.size(); e++) {
-            Enode<Base>* eqOrig = this->enodes_[row[e]]->originalEquation();
-            Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->origTimeDependentCount_);
+            Enode<Base>* eqOrig = enodes[row[e]]->originalEquation();
+            Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->graph_.getOrigTimeDependentCount());
 
             // normalized jacobian value
             Base normVal = jac[e].getValue() * normVar_[vOrig->tapeIndex()]
@@ -1521,13 +1533,15 @@ protected:
 
         std::vector<Vnode<Base>* > newDummies;
         if (avoidConvertAlg2DifVars_) {
+            const auto& varInfo = this->graph_.getOriginalVariableInfo();
+
             // add algebraic first
             for (int i = 0; newDummies.size() < size_t(work.rows()) && i < qr.rank(); i++) {
                 Vnode<Base>* v = varsLocal[indices(i)];
                 CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
                 size_t tape = v->originalVariable()->tapeIndex();
-                CPPADCG_ASSERT_UNKNOWN(tape < this->varInfo_.size());
-                if (this->varInfo_[tape].getDerivative() < 0) {
+                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size());
+                if (varInfo[tape].getDerivative() < 0) {
                     // derivative of a variable which was originally algebraic only
                     newDummies.push_back(v);
                 }
@@ -1537,8 +1551,8 @@ protected:
                 Vnode<Base>* v = varsLocal[indices(i)];
                 CPPADCG_ASSERT_UNKNOWN(v->originalVariable() != nullptr);
                 size_t tape = v->originalVariable()->tapeIndex();
-                CPPADCG_ASSERT_UNKNOWN(tape < this->varInfo_.size());
-                if (this->varInfo_[tape].getDerivative() >= 0) {
+                CPPADCG_ASSERT_UNKNOWN(tape < varInfo.size());
+                if (varInfo[tape].getDerivative() >= 0) {
                     // derivative of a variable which was already differential
                     newDummies.push_back(v);
                 }

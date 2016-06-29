@@ -78,7 +78,8 @@ public:
      *             automatically generated name)
      * @param id A unique identifier for this variable (used internally)
      */
-    inline DaeVarInfo(const std::string& name = "", size_t id = 0) :
+    inline DaeVarInfo(const std::string& name = "",
+                      size_t id = 0) :
         id_(id),
         antiDerivative_(-1),
         derivative_(-1),
@@ -90,7 +91,9 @@ public:
         originalAntiDerivative_(-1) {
     }
 
-    inline DaeVarInfo(int derivativeOf, const std::string& name = "", size_t id = 0) :
+    inline DaeVarInfo(int derivativeOf,
+                      const std::string& name = "",
+                      size_t id = 0) :
         id_(id),
         antiDerivative_(derivativeOf),
         derivative_(-1),

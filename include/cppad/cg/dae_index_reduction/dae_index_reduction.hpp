@@ -17,6 +17,7 @@
 
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/dae_index_reduction/dae_var_info.hpp>
+#include <cppad/cg/dae_index_reduction/dae_equation_info.hpp>
 #include <cppad/cg/dae_index_reduction/simple_logger.hpp>
 
 namespace CppAD {
@@ -33,8 +34,6 @@ protected:
      * The original model
      */
     ADFun<CG<Base> > * const fun_;
-    // DAE variable information
-    std::vector<DaeVarInfo> varInfo_;
 public:
 
     /**
@@ -44,45 +43,16 @@ public:
      * @param varInfo  DAE  system variable information (in the same order 
      *                 as in the tape)
      */
-    DaeIndexReduction(ADFun<CG<Base> >* fun,
-                      const std::vector<DaeVarInfo>& varInfo) :
-        fun_(fun),
-        varInfo_(varInfo) {
-        CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
-        CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == fun->Domain());
-        for (size_t j = 0; j < varInfo_.size(); ++j) {
-            varInfo_[j].setOriginalIndex(j);
-            varInfo_[j].setId(j);
-        }
-
-        for (size_t j = 0; j < varInfo_.size(); ++j) {
-            int deriv = varInfo_[j].getAntiDerivative();
-            CPPADCG_ASSERT_UNKNOWN(deriv < int(varInfo_.size()));
-            if (deriv >= 0) {
-                varInfo_[deriv].setDerivative(j);
-            }
-        }
-
-        for (size_t j = 0; j < varInfo_.size(); ++j) {
-            determineVariableOrder(varInfo_[j]);
-        }
+    DaeIndexReduction(ADFun<CG<Base> >* fun) :
+        fun_(fun) {
     }
 
     inline virtual ~DaeIndexReduction() {
     }
 
-private:
+    virtual ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                          std::vector<DaeEquationInfo>& equationInfo) = 0;
 
-    inline void determineVariableOrder(DaeVarInfo& var) {
-        if (var.getAntiDerivative() >= 0) {
-            DaeVarInfo& antiD = varInfo_[var.getAntiDerivative()];
-            if (antiD.getOriginalAntiDerivative() < 0) {
-                determineVariableOrder(antiD);
-            }
-            var.setOrder(antiD.getOrder() + 1);
-            var.setOriginalAntiDerivative(var.getOrder() == 1 ? antiD.getOriginalIndex() : antiD.getOriginalAntiDerivative());
-        }
-    }
 };
 
 } // END cg namespace
