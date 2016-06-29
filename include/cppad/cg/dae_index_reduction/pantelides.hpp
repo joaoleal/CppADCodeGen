@@ -19,6 +19,7 @@
 #include <cppad/cg/dae_index_reduction/bipartite.hpp>
 #include <cppad/cg/dae_index_reduction/dae_equation_info.hpp>
 #include <cppad/cg/dae_index_reduction/time_diff.hpp>
+#include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead.hpp>
 
 namespace CppAD {
 namespace cg {
@@ -46,6 +47,8 @@ protected:
     // the number of time dependent variables in the original model
     size_t origTimeDependentCount_;
     bool preserveNames_;
+    AugmentPathDepthLookahead<Base> defaultAugmentPath_;
+    AugmentPath<Base>* augmentPath_;
 private:
     int timeOrigVarIndex_; // time index in the original user model (may not exist)
 public:
@@ -69,6 +72,7 @@ public:
         origMaxTimeDivOrder_(0),
         origTimeDependentCount_(0),
         preserveNames_(false),
+        augmentPath_(&defaultAugmentPath_),
         timeOrigVarIndex_(-1) {
 
         using namespace std;
@@ -222,6 +226,14 @@ public:
 
     Pantelides& operator=(const Pantelides& p) = delete;
 
+    AugmentPath<Base>& getAugmentPath() const {
+        return *augmentPath_;
+    }
+
+    void setAugmentPath(AugmentPath<Base>& a) const {
+        augmentPath_ = &a;
+    }
+
     /**
      * Defines whether or not original names saved by using
      * CppAD::PrintFor(0, "", val, name)
@@ -257,6 +269,8 @@ public:
 
         if (this->verbosity_ >= Verbosity::High)
             log() << "########  Pantelides method  ########\n";
+
+        augmentPath_->setLogger(*this);
 
         detectSubset2Dif();
 
@@ -401,7 +415,7 @@ protected:
 
                 uncolorAll();
 
-                pathfound = augmentPath(*i);
+                pathfound = augmentPath_->augmentPath(*i);
 
                 if (!pathfound) {
                     const size_t vsize = vnodes_.size(); // the size might change
@@ -470,49 +484,6 @@ protected:
 
         }
 
-    }
-
-    /**
-     * 
-     * @param i The equation node
-     * @return true if an augmented path was found
-     */
-    bool augmentPath(Enode<Base>& i) {
-        i.color(log(), this->verbosity_);
-
-        const std::vector<Vnode<Base>*>& vars = i.variables();
-
-        // first look for derivative variables
-        for (Vnode<Base>* jj : vars) {
-            if (jj->antiDerivative() != nullptr && jj->assigmentEquation() == nullptr) {
-                jj->setAssignmentEquation(i, log(), this->verbosity_);
-                return true;
-            }
-        }
-
-        // look for algebraic variables
-        for (Vnode<Base>* jj : vars) {
-            if (jj->antiDerivative() == nullptr && jj->assigmentEquation() == nullptr) {
-                jj->setAssignmentEquation(i, log(), this->verbosity_);
-                return true;
-            }
-        }
-
-
-        for (Vnode<Base>* jj : vars) {
-            if (!jj->isColored()) {
-                jj->color(log(), this->verbosity_);
-
-                Enode<Base>& k = *jj->assigmentEquation();
-                bool pathFound = augmentPath(k);
-                if (pathFound) {
-                    jj->setAssignmentEquation(i, log(), this->verbosity_);
-                    return true;
-                }
-            }
-        }
-
-        return false;
     }
 
     inline void uncolorAll() {

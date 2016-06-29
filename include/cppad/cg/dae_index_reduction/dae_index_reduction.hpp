@@ -17,6 +17,7 @@
 
 #include <cppad/cg/cppadcg.hpp>
 #include <cppad/cg/dae_index_reduction/dae_var_info.hpp>
+#include <cppad/cg/dae_index_reduction/simple_logger.hpp>
 
 namespace CppAD {
 namespace cg {
@@ -26,7 +27,7 @@ namespace cg {
  * reduction of implicit DAEs.
  */
 template<class Base>
-class DaeIndexReduction {
+class DaeIndexReduction : protected SimpleLogger {
 protected:
     /**
      * The original model
@@ -34,10 +35,6 @@ protected:
     ADFun<CG<Base> > * const fun_;
     // DAE variable information
     std::vector<DaeVarInfo> varInfo_;
-    // verbosity level
-    Verbosity verbosity_;
-    // output stream used for logging
-    std::ostream* log_;
 public:
 
     /**
@@ -50,9 +47,7 @@ public:
     DaeIndexReduction(ADFun<CG<Base> >* fun,
                       const std::vector<DaeVarInfo>& varInfo) :
         fun_(fun),
-        varInfo_(varInfo),
-        verbosity_(Verbosity::None),
-        log_(&std::cout) {
+        varInfo_(varInfo) {
         CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
         CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == fun->Domain());
         for (size_t j = 0; j < varInfo_.size(); ++j) {
@@ -71,22 +66,6 @@ public:
         for (size_t j = 0; j < varInfo_.size(); ++j) {
             determineVariableOrder(varInfo_[j]);
         }
-    }
-
-    inline std::ostream& log() const {
-        return *log_;
-    }
-
-    inline void setLog(std::ostream& out) {
-        log_ = &out;
-    }
-
-    inline void setVerbosity(Verbosity verbosity) {
-        verbosity_ = verbosity;
-    }
-
-    inline Verbosity getVerbosity() const {
-        return verbosity_;
     }
 
     inline virtual ~DaeIndexReduction() {
