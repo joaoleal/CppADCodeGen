@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_BIPARTITE_INCLUDED
-#define CPPAD_CG_BIPARTITE_INCLUDED
+#ifndef CPPAD_CG_BIPARTITE_NODES_INCLUDED
+#define CPPAD_CG_BIPARTITE_NODES_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis

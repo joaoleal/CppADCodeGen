@@ -16,7 +16,7 @@
  */
 
 #include <cppad/cg/dae_index_reduction/dae_index_reduction.hpp>
-#include <cppad/cg/dae_index_reduction/bipartite.hpp>
+#include <cppad/cg/dae_index_reduction/bipartite_nodes.hpp>
 #include <cppad/cg/dae_index_reduction/dae_equation_info.hpp>
 #include <cppad/cg/dae_index_reduction/time_diff.hpp>
 #include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead.hpp>
