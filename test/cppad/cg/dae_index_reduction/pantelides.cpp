@@ -17,10 +17,46 @@
 
 #include "CppADCGIndexReductionTest.hpp"
 #include "pendulum.hpp"
+#include "simple2d.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
+
+
+TEST_F(IndexReductionTest, PantelidesSimple2D) {
+    typedef CG<double> CGD;
+
+    std::vector<DaeVarInfo> daeVar;
+    // create f: U -> Z and vectors used for derivative calculations
+    ADFun<CGD>* fun = Simple2D<CGD> (daeVar);
+
+    std::vector<double> x(daeVar.size());
+    x[0] = -1.0; // x1
+    x[1] = 1.0; // x2
+
+    x[2] = 0.0; // time
+
+    x[3] = 0.0; // dx1dt
+    x[4] = 0.0; // dx2dt
+
+    std::vector<std::string> eqName; // empty
+
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    pantelides.setVerbosity(Verbosity::High);
+
+    std::vector<DaeVarInfo> newDaeVar;
+    std::vector<DaeEquationInfo> equationInfo;
+    ADFun<CGD>* reducedFun = nullptr;
+    ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
+
+    ASSERT_TRUE(reducedFun != nullptr);
+
+    ASSERT_EQ(size_t(2), pantelides.getDifferentiationIndex());
+
+    delete fun;
+    delete reducedFun;
+}
 
 TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     typedef CG<double> CGD;
@@ -47,6 +83,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     std::vector<std::string> eqName; // empty
 
     Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
@@ -94,6 +131,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     std::vector<std::string> eqName; // empty
     
     Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;

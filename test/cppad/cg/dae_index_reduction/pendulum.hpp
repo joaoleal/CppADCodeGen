@@ -43,8 +43,8 @@ inline CppAD::ADFun<Base>* Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
     daeVar.resize(U.size());
     daeVar[0] = DaeVarInfo("x");
     daeVar[1] = DaeVarInfo("y");
-    daeVar[2] = DaeVarInfo("vx");
-    daeVar[3] = DaeVarInfo("vy");
+    daeVar[2] = DaeVarInfo("w"); // vx
+    daeVar[3] = DaeVarInfo("z"); // vy
     daeVar[4] = DaeVarInfo("T");
     daeVar[5] = DaeVarInfo("l");
     daeVar[5].makeConstant();
