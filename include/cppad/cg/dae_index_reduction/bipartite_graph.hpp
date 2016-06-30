@@ -23,7 +23,8 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Pantelides DAE index reduction algorithm
+ * Bipartite graph which holds nodes to represent variables and equations
+ * in a DAE system.
  */
 template<class Base>
 class BipartiteGraph {
@@ -267,7 +268,15 @@ public:
         return vnodes_;
     }
 
+    inline const std::vector<Vnode<Base>*>& variables() const {
+        return vnodes_;
+    }
+
     inline std::vector<Enode<Base>*>& equations() {
+        return enodes_;
+    }
+
+    inline const std::vector<Enode<Base>*>& equations() const {
         return enodes_;
     }
 
@@ -373,6 +382,9 @@ public:
     }
 
     inline Vnode<Base>* createDerivate(Vnode<Base>& j) {
+        if (j.derivative() != nullptr)
+            return j.derivative();
+
         // add new variable derivatives of colored variables
         size_t newVarCount = vnodes_.size() - origTimeDependentCount_;
         size_t tapeIndex = varInfo_.size() + newVarCount;
@@ -386,13 +398,16 @@ public:
         return jDiff;
     }
 
-    inline Enode<Base>* createDerivate(Enode<Base>& i) {
-        // add new derivative equations for colored equations
+    inline Enode<Base>* createDerivate(Enode<Base>& i,
+                                       bool addOrigVars = true) {
+        if (i.derivative() != nullptr)
+            return i.derivative();
+
         Enode<Base>* iDiff = new Enode<Base> (enodes_.size(), &i);
         enodes_.push_back(iDiff);
 
         // differentiate newI and create edges!!!
-        dirtyDifferentiateEq(i, *iDiff);
+        dirtyDifferentiateEq(i, *iDiff, addOrigVars);
 
         if (logger_.getVerbosity() >= Verbosity::High)
             logger_.log() << "Created " << *iDiff << "\n";
@@ -401,23 +416,34 @@ public:
     }
 
     /**
-     * Adds a new equation assuming the new equation differential contains 
+     * Adds edges to a new equation resulting from the differentiation
+     * of another assuming the new equation differential contains
      * all variables present in the original equation and their time
      * derivatives (not exactly correct but it works because the 
-     * potentially extra variables are removed later)
+     * potentially extra variables are removed later in the Pantelides method).
+     *
+     * An example with incorrectly added variables would be the dirty
+     * differentiation of:
+     *   x1 + x2 == 0
+     * wich include the variables [x1, dx1dt, x2, dx2dt] although it should
+     * only be [dx1dt, dx2dt].
      * 
      * @param i equation node to differentiate
      * @throws CGException
      */
     inline void dirtyDifferentiateEq(Enode<Base>& i,
-                                     Enode<Base>& newI) {
+                                     Enode<Base>& iDiff,
+                                     bool addOrigVars = true) {
         for (Vnode<Base>* jj : i.originalVariables()) {
-            newI.addVariable(jj);
+            if(addOrigVars) {
+                iDiff.addVariable(jj);
+            }
+
             if (jj->derivative() != nullptr) {
-                newI.addVariable(jj->derivative());
-            }// else if(!jj->isParameter()) {
-            //   newI.addVariable(createDerivate(*jj));
-            //}
+                iDiff.addVariable(jj->derivative());
+            } else if(!jj->isParameter()) {
+                iDiff.addVariable(createDerivate(*jj));
+            }
         }
     }
 
@@ -838,6 +864,27 @@ private:
         }
     }
 };
+
+template<class Base>
+inline std::ostream& operator<<(std::ostream& os,
+                                const BipartiteGraph<Base>& g) {
+    for (const Enode<Base>* i : g.equations()) {
+        for (const Vnode<Base>* j : i->originalVariables()) {
+            os << i->name();
+            if (j->isDeleted()) {
+                os << "~~";
+            } else if (j->assigmentEquation() == i) {
+                os << "==";
+            } else {
+                os << "--";
+            }
+            os << j->name() << " ";
+        }
+        os << std::endl;
+    }
+
+    return os;
+}
 
 } // END cg namespace
 } // END CppAD namespace

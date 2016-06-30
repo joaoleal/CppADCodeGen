@@ -59,7 +59,7 @@ public:
             if (!jj->isColored()) {
                 jj->color(this->logger_->log(), this->logger_->getVerbosity());
 
-                Enode<Base>& k = *jj->assigmentEquation();
+                Enode<Base>& k = *jj->assigmentEquation(); // all variables are assigned to another equation
                 bool pathFound = augmentPath(k);
                 if (pathFound) {
                     jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
