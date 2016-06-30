@@ -48,7 +48,7 @@ public:
      * @param fun The DAE model
      * @param varInfo DAE model variable classification
      * @param eqName Equation names (it can be an empty vector)
-     * @param x typical variable values (used to avoid NaNs in CppAD checks)
+     * @param x Typical variable values (used to avoid NaNs in CppAD checks)
      */
     Pantelides(ADFun<CG<Base> >* fun,
                const std::vector<DaeVarInfo>& varInfo,
@@ -65,6 +65,9 @@ public:
     Pantelides(const Pantelides& p) = delete;
 
     Pantelides& operator=(const Pantelides& p) = delete;
+
+    virtual ~Pantelides() {
+    }
 
     AugmentPath<Base>& getAugmentPath() const {
         return *augmentPath_;
@@ -133,9 +136,6 @@ public:
         return graph_.getDifferentiationIndex();
     }
 
-    virtual ~Pantelides() {
-    }
-
 protected:
     using DaeIndexReduction<Base>::log;
 
@@ -162,7 +162,7 @@ protected:
                  * delete all V-nodes with A!=0 and their incident edges
                  * from the graph
                  */
-                for (Vnode<Base>* jj : graph_.variables()) {
+                for (Vnode<Base>* jj : vnodes) {
                     if (!jj->isDeleted() && jj->derivative() != nullptr) {
                         jj->deleteNode(log(), this->verbosity_);
                     }
@@ -178,15 +178,7 @@ protected:
                         Vnode<Base>* jj = vnodes[l];
                         if (jj->isColored() && !jj->isDeleted()) {
                             // add new variable derivatives of colored variables
-                            size_t newVarCount = vnodes.size() - graph_.getOrigTimeDependentCount();
-                            size_t tapeIndex = graph_.getOriginalVariableInfo().size() + newVarCount;
-
-                            Vnode<Base>* jDiff = new Vnode<Base> (vnodes.size(), tapeIndex, jj);
-                            vnodes.push_back(jDiff);
-
-                            if (this->verbosity_ >= Verbosity::High)
-                                log() << "Created " << *jDiff << "\n";
-
+                            graph_.createDerivate(*jj);
                         }
                     }
 
@@ -194,16 +186,8 @@ protected:
                     for (size_t l = 0; l < esize; l++) {
                         ll = enodes[l];
                         if (ll->isColored()) {
-                            // add new derivative equations for colored equations
-                            Enode<Base>* lDiff = new Enode<Base> (enodes.size(), ll);
-                            enodes.push_back(lDiff);
-
-                            // differentiate newI and create edges!!!
-                            graph_.dirtyDifferentiateEq(*ll, *lDiff);
-
-                            if (this->verbosity_ >= Verbosity::High)
-                                log() << "Created " << *lDiff << "\n";
-
+                            // add new derivative equations for colored equations and create edges
+                            graph_.createDerivate(*ll);
                         }
                     }
 

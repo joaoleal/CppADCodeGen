@@ -34,7 +34,7 @@ protected:
 public:
 
     virtual bool augmentPath(Enode<Base>& i) override final {
-        i.color(this->logger_->log(), this->logger_->getVerbosity());
+        i.color(this->logger_->log(), this->logger_->getVerbosity()); // avoids infinite recursion
 
         const std::vector<Vnode<Base>*>& vars = i.variables();
 

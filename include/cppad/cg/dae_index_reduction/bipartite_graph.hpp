@@ -372,6 +372,34 @@ public:
         }
     }
 
+    inline Vnode<Base>* createDerivate(Vnode<Base>& j) {
+        // add new variable derivatives of colored variables
+        size_t newVarCount = vnodes_.size() - origTimeDependentCount_;
+        size_t tapeIndex = varInfo_.size() + newVarCount;
+
+        Vnode<Base>* jDiff = new Vnode<Base> (vnodes_.size(), tapeIndex, &j);
+        vnodes_.push_back(jDiff);
+
+        if (logger_.getVerbosity() >= Verbosity::High)
+            logger_.log() << "Created " << *jDiff << "\n";
+
+        return jDiff;
+    }
+
+    inline Enode<Base>* createDerivate(Enode<Base>& i) {
+        // add new derivative equations for colored equations
+        Enode<Base>* iDiff = new Enode<Base> (enodes_.size(), &i);
+        enodes_.push_back(iDiff);
+
+        // differentiate newI and create edges!!!
+        dirtyDifferentiateEq(i, *iDiff);
+
+        if (logger_.getVerbosity() >= Verbosity::High)
+            logger_.log() << "Created " << *iDiff << "\n";
+
+        return iDiff;
+    }
+
     /**
      * Adds a new equation assuming the new equation differential contains 
      * all variables present in the original equation and their time
@@ -387,7 +415,9 @@ public:
             newI.addVariable(jj);
             if (jj->derivative() != nullptr) {
                 newI.addVariable(jj->derivative());
-            }
+            }// else if(!jj->isParameter()) {
+            //   newI.addVariable(createDerivate(*jj));
+            //}
         }
     }
 

@@ -28,7 +28,7 @@ namespace cg {
  * reduction of implicit DAEs.
  */
 template<class Base>
-class DaeIndexReduction : protected SimpleLogger {
+class DaeIndexReduction : public SimpleLogger {
 protected:
     /**
      * The original model

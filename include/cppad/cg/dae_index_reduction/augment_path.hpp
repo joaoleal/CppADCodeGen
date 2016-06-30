@@ -48,7 +48,7 @@ public:
      * @param i The equation node
      * @return true if an augmented path was found
      */
-    virtual bool augmentPath(Enode <Base>& i) = 0;
+    virtual bool augmentPath(Enode<Base>& i) = 0;
 
     inline void setLogger(SimpleLogger& logger) {
         logger_ = &logger;

@@ -241,7 +241,7 @@ protected:
     /**
      *  the variable which was differentiated to create this one
      */
-    Vnode<Base> * const antiDerivative_;
+    Vnode<Base>* const antiDerivative_;
     /**
      * The index in the tape
      */
