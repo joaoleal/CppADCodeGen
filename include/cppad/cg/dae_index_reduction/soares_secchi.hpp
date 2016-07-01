@@ -135,8 +135,11 @@ public:
             graph_.remove(*i);
         }
 
-        if (this->verbosity_ >= Verbosity::High)
+        if (this->verbosity_ >= Verbosity::Low) {
             graph_.printResultInfo("Soares Secchi");
+
+            log() << "Structural index: " << graph_.getStructuralIndex() << std::endl;
+        }
 
         std::unique_ptr<ADFun<CGBase>> reducedFun(graph_.generateNewModel(newVarInfo, equationInfo, x_));
 
@@ -217,7 +220,7 @@ protected:
             }
 
             if (this->verbosity_ >= Verbosity::High)
-                log() << graph_ << "\n";
+                graph_.printDot(this->log());
         }
 
         lastAddEq_.clear();

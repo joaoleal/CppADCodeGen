@@ -206,7 +206,7 @@ public:
         if (reducedFun_.get() == nullptr)
             return nullptr; //nothing to do (no index reduction required)
 
-        if (this->verbosity_ >= Verbosity::High)
+        if (this->verbosity_ >= Verbosity::Low)
             log() << "########  Dummy derivatives method  ########" << std::endl;
 
         newEqInfo = reducedEqInfo; // copy

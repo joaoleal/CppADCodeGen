@@ -81,7 +81,7 @@ public:
         if (reduced_)
             throw CGException("reduceIndex() can only be called once!");
 
-        if (this->verbosity_ >= Verbosity::High)
+        if (this->verbosity_ >= Verbosity::Low)
             log() << "########  Pantelides method  ########\n";
 
         augmentPath_->setLogger(*this);
@@ -90,8 +90,11 @@ public:
 
         detectSubset2Dif();
 
-        if (this->verbosity_ >= Verbosity::High)
+        if (this->verbosity_ >= Verbosity::Low) {
             graph_.printResultInfo("Pantelides");
+
+            log() << "Structural index: " << graph_.getStructuralIndex() << std::endl;
+        }
 
         std::unique_ptr<ADFun<CGBase>> reducedFun(graph_.generateNewModel(newVarInfo, equationInfo, x_));
 
@@ -177,9 +180,11 @@ protected:
 
                     i = i->derivative();
 
-                    if (this->verbosity_ >= Verbosity::High)
+                    if (this->verbosity_ >= Verbosity::High) {
                         log() << "Set current equation to (i=" << i->index() << ") " << *i << "\n";
 
+                        graph_.printDot(this->log());
+                    }
                 }
             }
 
