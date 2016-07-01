@@ -21,134 +21,42 @@
 #include <Eigen/QR>
 
 #include <cppad/cg/dae_index_reduction/pantelides.hpp>
+#include <cppad/cg/dae_index_reduction/dummy_deriv_util.hpp>
 
 namespace CppAD {
 namespace cg {
 
 /**
- * Sorts variable nodes according to the variable differentiation order
- * 
- * @param i
- * @param j
- * @return true if i should come before j
- */
-template<class Base>
-bool sortVnodesByOrder(Vnode<Base>* i, Vnode<Base>* j) {
-    return (i->order() > j->order());
-}
-
-/**
- * Utility class used to sort variables in the DAE
- */
-class DaeVarOrderInfo {
-public:
-    size_t originalIndex;
-    size_t originalIndex0;
-    bool hasDerivatives;
-    int order;
-
-    inline DaeVarOrderInfo() :
-        originalIndex(0),
-        originalIndex0(0),
-        hasDerivatives(false),
-        order(-1) {
-    }
-
-    inline DaeVarOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mhasDerivatives, int morder) :
-        originalIndex(moriginalIndex),
-        originalIndex0(moriginalIndex0),
-        hasDerivatives(mhasDerivatives),
-        order(morder) {
-    }
-};
-
-/**
- * Utility class used to sort equations in the DAE system
- */
-class DaeEqOrderInfo {
-public:
-    size_t originalIndex;
-    size_t originalIndex0;
-    bool differential;
-    int assignedVar;
-
-    inline DaeEqOrderInfo() :
-        originalIndex(0),
-        originalIndex0(0),
-        differential(false),
-        assignedVar(-1) {
-    }
-
-    inline DaeEqOrderInfo(size_t moriginalIndex, size_t moriginalIndex0, bool mdifferential, int massignedVar) :
-        originalIndex(moriginalIndex),
-        originalIndex0(moriginalIndex0),
-        differential(mdifferential),
-        assignedVar(massignedVar) {
-    }
-};
-
-/**
- * Sorts variables based on the differentiation order, whether they are 
- * algebraic or differential and the order in the original model
- * 
- * @param i
- * @param j
- * @return true if i should come before j
- */
-inline bool sortVariablesByOrder(const DaeVarOrderInfo& i, const DaeVarOrderInfo& j) {
-    if (j.order < i.order) {
-        return true;
-    } else if (j.order > i.order) {
-        return false;
-    } else if (i.hasDerivatives == j.hasDerivatives) {
-        return j.originalIndex > i.originalIndex;
-    } else {
-        return i.hasDerivatives;
-    }
-}
-
-/**
- * Sorts equations according to the equation type (differential/algebraic)
- * and original index
- * 
- * @param i
- * @param j
- * @return true if i should come before j
- */
-inline bool sortEquationByAssignedOrder2(const DaeEqOrderInfo& i, const DaeEqOrderInfo& j) {
-    if (i.differential) {
-        if (j.differential)
-            return i.assignedVar < j.assignedVar;
-        else
-            return true;
-    } else {
-        if (j.differential) {
-            return false;
-        } else {
-            if (i.originalIndex0 == j.originalIndex0) {
-                return i.originalIndex == j.originalIndex0;
-            } else {
-                return i.originalIndex0 < j.originalIndex0;
-            }
-        }
-    }
-}
-
-/**
  * Dummy derivatives DAE index reduction algorithm
  */
 template<class Base>
-class DummyDerivatives : public Pantelides<Base> {
+class DummyDerivatives : public DaeIndexReduction<Base> {
     typedef CG<Base> CGBase;
     typedef AD<CGBase> ADCG;
     typedef Eigen::Matrix<Base, Eigen::Dynamic, 1> VectorB;
     typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1> VectorCB;
     typedef Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> MatrixB;
 protected:
-    // normalization constants for the variables (in the original order)
+    /**
+     * Method used to identify the structural index
+     */
+    DaeStructuralIndexReduction<Base>* const idxIdentify_;
+    /**
+     * typical values used to determine the Jacobian
+     */
+    std::vector<Base> x_;
+    /**
+     * normalization constants for the variables (in the original order)
+     */
     std::vector<Base> normVar_;
-    // normalization constants for the equations
+    /**
+     * normalization constants for the equations
+     */
     std::vector<Base> normEq_;
+    /**
+     * new index reduced model
+     */
+    std::unique_ptr<ADFun<CGBase> > reducedFun_;
     /** 
      * Jacobian sparsity pattern of the reduced system
      * (in the original variable order)
@@ -191,30 +99,30 @@ public:
      * Creates the DAE index reduction algorithm that implements the dummy
      * derivatives method.
      * 
-     * @param fun The DAE model
-     * @param varInfo DAE model variable classification
-     * @param eqName Equation names (it can be an empty vector)
+     * @param idxIdentify A structural index reduction method that identifies
+     *                    which variables and equations need to be
+     *                    differentiated
      * @param x typical variable values (used to determine Jacobian values)
      * @param normVar variable normalization values
      * @param normEq equation normalization values
      */
-    DummyDerivatives(ADFun<CG<Base> >* fun,
-                     const std::vector<DaeVarInfo>& varInfo,
-                     const std::vector<std::string>& eqName,
+    DummyDerivatives(DaeStructuralIndexReduction<Base>& idxIdentify,
                      const std::vector<Base>& x,
                      const std::vector<Base>& normVar,
                      const std::vector<Base>& normEq) :
-        Pantelides<Base>(fun, varInfo, eqName, x),
-        normVar_(normVar),
-        normEq_(normEq),
-        diffVarStart_(0),
-        diffEqStart_(fun->Range()),
-        reduceEquations_(true),
-        generateSemiExplicitDae_(false),
-        reorder_(true),
-        avoidConvertAlg2DifVars_(true) {
+            DaeIndexReduction<Base>(idxIdentify.getOriginalModel()),
+            idxIdentify_(&idxIdentify),
+            x_(x),
+            normVar_(normVar),
+            normEq_(normEq),
+            diffVarStart_(0),
+            diffEqStart_(idxIdentify.getOriginalModel().Range()),
+            reduceEquations_(true),
+            generateSemiExplicitDae_(false),
+            reorder_(true),
+            avoidConvertAlg2DifVars_(true) {
 
-        for (Vnode<Base>* jj : this->graph_.variables()) {
+        for (Vnode<Base>* jj : idxIdentify.getGraph().variables()) {
             if (jj->antiDerivative() != nullptr) {
                 diffVarStart_ = jj->index();
                 break;
@@ -274,7 +182,7 @@ public:
     /**
      * Whether or not to reorder variables and equations.
      * If reordering is  enabled, variables will sorted as:
-     *   {differential vars, algebraic vars, derivative var, itegrated var}.
+     *   {differential vars, algebraic vars, derivative var, integrated var}.
      * Equations are sorted as:
      *   {differential equations, algebraic equations}.
      */
@@ -282,17 +190,8 @@ public:
         reorder_ = reorder;
     }
 
-    /**
-     * Performs the DAE differentiation index reductions
-     * 
-     * @param newVarInfo Variable related information of the reduced index
-     *                   model
-     * @param equationInfo Equation related information of the reduced index
-     *                     model
-     * @return the reduced index model (must be deleted by user)
-     */
-    virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                 std::vector<DaeEquationInfo>& newEqInfo) override {
+    virtual inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                                std::vector<DaeEquationInfo>& newEqInfo) override {
 
         /**
          * Variable information for the reduced
@@ -303,12 +202,12 @@ public:
          */
         std::vector<DaeEquationInfo> reducedEqInfo;
 
-        std::unique_ptr<ADFun<CG<Base> > > fun(Pantelides<Base>::reduceIndex(reducedVarInfo, reducedEqInfo));
-        if (fun.get() == nullptr)
+        reducedFun_ = idxIdentify_->reduceIndex(reducedVarInfo, reducedEqInfo);
+        if (reducedFun_.get() == nullptr)
             return nullptr; //nothing to do (no index reduction required)
 
         if (this->verbosity_ >= Verbosity::High)
-            log() << "########  Dummy derivatives method  ########\n";
+            log() << "########  Dummy derivatives method  ########" << std::endl;
 
         newEqInfo = reducedEqInfo; // copy
         addDummyDerivatives(reducedVarInfo, newVarInfo);
@@ -322,29 +221,29 @@ public:
                 std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
                 std::unique_ptr<ADFun<CG<Base> > > funShort = reduceEquations(varInfo, newVarInfo,
                                                                               eqInfo, newEqInfo);
-                fun.swap(funShort);
+                reducedFun_.swap(funShort);
             }
 
             if (generateSemiExplicitDae_) {
                 std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
                 std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-                std::unique_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(*fun.get(),
+                std::unique_ptr<ADFun<CG<Base> > > semiExplicit = generateSemiExplicitDAE(*reducedFun_,
                                                                                           varInfo, newVarInfo,
                                                                                           eqInfo, newEqInfo);
-                fun.swap(semiExplicit);
+                reducedFun_.swap(semiExplicit);
             }
         }
 
         if (reorder_) {
             std::vector<DaeVarInfo> varInfo = newVarInfo; // copy
             std::vector<DaeEquationInfo> eqInfo = newEqInfo; // copy
-            std::unique_ptr<ADFun<CG<Base> > > reorderedFun = reorderModelEqNVars(*fun.get(),
-                                                                                  varInfo, newVarInfo,
-                                                                                  eqInfo, newEqInfo);
-            fun.swap(reorderedFun);
+            std::unique_ptr<ADFun<CG<Base>>> reorderedFun = reorderModelEqNVars(*reducedFun_,
+                                                                                varInfo, newVarInfo,
+                                                                                eqInfo, newEqInfo);
+            reducedFun_.swap(reorderedFun);
         }
 
-        return fun.release();
+        return std::unique_ptr<ADFun<CG<Base>>>(reducedFun_.release());
     }
 
     inline virtual ~DummyDerivatives() {
@@ -352,13 +251,13 @@ public:
 
 protected:
     
-    using Pantelides<Base>::log;
+    using DaeIndexReduction<Base>::log;
 
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
                                             std::vector<DaeVarInfo>& newVarInfo) {
-
-        auto& vnodes = this->graph_.variables();
-        auto& enodes = this->graph_.equations();
+        auto& graph = idxIdentify_->getGraph();
+        auto& vnodes = graph.variables();
+        auto& enodes = graph.equations();
 
         determineJacobian();
 
@@ -466,7 +365,7 @@ protected:
                 log() << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
             log() << "# \n";
             if (this->verbosity_ >= Verbosity::High) {
-                this->graph_.printModel(log(), *this->reducedFun_, newVarInfo);
+                graph.printModel(log(), *reducedFun_, newVarInfo);
             }
         }
 
@@ -488,11 +387,12 @@ protected:
         using std::map;
         using std::map;
 
-        //auto& vnodes = this->graph_.variables();
-        auto& enodes = this->graph_.equations();
+        auto& graph = idxIdentify_->getGraph();
+        //auto& vnodes = graph.variables();
+        auto& enodes = graph.equations();
 
-        CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == this->reducedFun_->Domain());
-        CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == this->reducedFun_->Range());
+        CPPADCG_ASSERT_UNKNOWN(reducedVarInfo.size() == reducedFun_->Domain());
+        CPPADCG_ASSERT_UNKNOWN(reducedEqInfo.size() == reducedFun_->Range());
 
         newEqInfo = reducedEqInfo; // copy
 
@@ -501,10 +401,10 @@ protected:
          */
         CodeHandler<Base> handler;
 
-        vector<CGBase> indep0(this->reducedFun_->Domain());
+        vector<CGBase> indep0(reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->graph_.forward0(*this->reducedFun_, indep0);
+        vector<CGBase> res0 = graph.forward0(*reducedFun_, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -648,7 +548,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "DAE with less equations and variables:\n";
-            this->graph_.printModel(log(), *shortFun, newVarInfo);
+            graph.printModel(log(), *shortFun, newVarInfo);
         }
 
         return shortFun;
@@ -673,6 +573,8 @@ protected:
         using std::vector;
         using std::map;
 
+        auto& graph = idxIdentify_->getGraph();
+
         newEqInfo = eqInfo; // copy (we will have the same number of equations)
 
         /**
@@ -683,7 +585,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->graph_.forward0(fun, indep0);
+        vector<CGBase> res0 = graph.forward0(fun, indep0);
 
         map<int, int> assignedVar2Eq;
         for (size_t i = 0; i < newEqInfo.size(); ++i) {
@@ -771,7 +673,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "Semi-Eplicit DAE:\n";
-            this->graph_.printModel(log(), *semiExplicitFun, newVarInfo);
+            graph.printModel(log(), *semiExplicitFun, newVarInfo);
         }
 
         return semiExplicitFun;
@@ -783,21 +685,22 @@ protected:
         using std::map;
         typedef vector<OperationPathNode<Base> > SourceCodePath;
 
-        auto& vnodes = this->graph_.variables();
-        auto& enodes = this->graph_.equations();
+        auto& graph = idxIdentify_->getGraph();
+        auto& vnodes = graph.variables();
+        auto& enodes = graph.equations();
 
         CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == enodes.size());
-        CPPADCG_ASSERT_UNKNOWN(varInfo.size() == this->reducedFun_->Domain());
-        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == this->reducedFun_->Range());
+        CPPADCG_ASSERT_UNKNOWN(varInfo.size() == reducedFun_->Domain());
+        CPPADCG_ASSERT_UNKNOWN(eqInfo.size() == reducedFun_->Range());
 
         CodeHandler<Base> handler;
 
-        vector<CGBase> indep0(this->reducedFun_->Domain());
+        vector<CGBase> indep0(reducedFun_->Domain());
         handler.makeVariables(indep0);
 
-        vector<CGBase> res0 = this->graph_.forward0(*this->reducedFun_, indep0);
+        vector<CGBase> res0 = graph.forward0(*reducedFun_, indep0);
 
-        vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*this->reducedFun_);
+        vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*reducedFun_);
 
         std::map<int, int> origAssignedVar2Eq;
         for (size_t i = 0; i < eqInfo.size(); ++i) {
@@ -1178,6 +1081,8 @@ protected:
         using namespace std;
         using std::vector;
 
+        auto& graph = idxIdentify_->getGraph();
+
         /**
          * Determine the variables that have derivatives in the model
          */
@@ -1210,7 +1115,7 @@ protected:
         std::vector<DaeVarOrderInfo> varOrder(varInfo.size());
         for (size_t j = 0; j < varInfo.size(); j++) {
             size_t j0;
-            int derivOrder = this->graph_.determineVariableDiffOrder(varInfo, j, j0);
+            int derivOrder = graph.determineVariableDiffOrder(varInfo, j, j0);
             if (varInfo[j].isIntegratedVariable()) {
                 derivOrder = -2; // so that it goes last
             }
@@ -1278,7 +1183,7 @@ protected:
         vector<CGBase> indep0(fun.Domain());
         handler.makeVariables(indep0);
 
-        const vector<CGBase> res0 = this->graph_.forward0(fun, indep0);
+        const vector<CGBase> res0 = graph.forward0(fun, indep0);
 
         /**
          * Implement the reordering in the model
@@ -1287,7 +1192,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "reordered DAE equations and variables:\n";
-            this->graph_.printModel(log(), *reorderedFun, newVarInfo);
+            graph.printModel(log(), *reorderedFun, newVarInfo);
         }
 
         return reorderedFun;
@@ -1307,7 +1212,7 @@ protected:
         for (size_t p = 0; p < newVarInfo.size(); p++) {
             int origIndex = newVarInfo[p].getOriginalIndex();
             if (origIndex >= 0) {
-                indepNewOrder[p] = this->x_[origIndex];
+                indepNewOrder[p] = x_[origIndex];
             }
         }
 
@@ -1353,7 +1258,7 @@ protected:
 
         // evaluate the model
         Evaluator<Base, CGBase> evaluator0(handler);
-        evaluator0.setPrintFor(this->graph_.isPreserveNames()); // variable names saved with CppAD::PrintFor
+        evaluator0.setPrintFor(idxIdentify_->getGraph().isPreserveNames()); // variable names saved with CppAD::PrintFor
         vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
 
         return new ADFun<CGBase>(indepNewOrder, depNewOrder);
@@ -1367,13 +1272,14 @@ protected:
         using namespace std;
         using std::vector;
 
-        const size_t n = this->reducedFun_->Domain();
-        const size_t m = this->reducedFun_->Range();
+        const size_t n = reducedFun_->Domain();
+        const size_t m = reducedFun_->Range();
 
-        auto& vnodes = this->graph_.variables();
-        auto& enodes = this->graph_.equations();
+        auto& graph = idxIdentify_->getGraph();
+        auto& vnodes = graph.variables();
+        auto& enodes = graph.equations();
 
-        jacSparsity_ = jacobianReverseSparsity<vector<bool>, CGBase>(*this->reducedFun_); // in the original variable order
+        jacSparsity_ = jacobianReverseSparsity<vector<bool>, CGBase>(*reducedFun_); // in the original variable order
 
         vector<size_t> row, col;
         row.reserve((vnodes.size() - diffVarStart_) * (m - diffEqStart_));
@@ -1393,12 +1299,12 @@ protected:
         vector<CG<Base> > jac(row.size());
 
         vector<CG<Base> > indep(n);
-        std::copy(this->x_.begin(), this->x_.end(), indep.begin());
-        std::fill(indep.begin() + this->x_.size(), indep.end(), 0);
+        std::copy(x_.begin(), x_.end(), indep.begin());
+        std::fill(indep.begin() + x_.size(), indep.end(), 0);
 
         CppAD::sparse_jacobian_work work; // temporary structure for CPPAD
-        this->reducedFun_->SparseJacobianReverse(indep, jacSparsity_,
-                                                 row, col, jac, work);
+        reducedFun_->SparseJacobianReverse(indep, jacSparsity_,
+                                           row, col, jac, work);
 
         // resize and zero matrix
         jacobian_.resize(m - diffEqStart_, vnodes.size() - diffVarStart_);
@@ -1412,7 +1318,7 @@ protected:
         // normalize values
         for (size_t e = 0; e < jac.size(); e++) {
             Enode<Base>* eqOrig = enodes[row[e]]->originalEquation();
-            Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(this->graph_.getOrigTimeDependentCount());
+            Vnode<Base>* vOrig = origIndex2var[col[e]]->originalVariable(graph.getOrigTimeDependentCount());
 
             // normalized jacobian value
             Base normVal = jac[e].getValue() * normVar_[vOrig->tapeIndex()]
@@ -1533,7 +1439,8 @@ protected:
 
         std::vector<Vnode<Base>* > newDummies;
         if (avoidConvertAlg2DifVars_) {
-            const auto& varInfo = this->graph_.getOriginalVariableInfo();
+            auto& graph = idxIdentify_->getGraph();
+            const auto& varInfo = graph.getOriginalVariableInfo();
 
             // add algebraic first
             for (int i = 0; newDummies.size() < size_t(work.rows()) && i < qr.rank(); i++) {

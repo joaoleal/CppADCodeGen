@@ -59,6 +59,10 @@ public:
         return index_;
     }
 
+    inline void setIndex(size_t index) {
+        index_ = index;
+    }
+
     virtual const std::string& name() const = 0;
 
     virtual std::string nodeType() = 0;
@@ -93,7 +97,7 @@ protected:
      */
     Enode<Base>* differentiation_;
     /**
-     * 
+     * Original equation which was differentiated
      */
     Enode<Base>* differentiationOf_;
     /**
@@ -123,6 +127,9 @@ public:
         assign_(nullptr),
         name_("Diff(" + differentiationOf->name() + ")") {
         differentiationOf_->setDerivative(this);
+    }
+
+    inline virtual ~Enode() {
     }
 
     inline const std::vector<Vnode<Base>*>& variables() const {
@@ -177,21 +184,16 @@ public:
             vnodes_.erase(it);
     }
 
+    inline void setDerivative(Enode<Base>* difEq) {
+        differentiation_ = difEq;
+    }
+
     virtual const std::string& name() const {
         return name_;
     }
 
     virtual std::string nodeType() {
         return TYPE;
-    }
-
-    inline virtual ~Enode() {
-    }
-
-protected:
-
-    inline void setDerivative(Enode<Base>* difEq) {
-        differentiation_ = difEq;
     }
 };
 
@@ -284,6 +286,9 @@ public:
         antiDerivative_->setDerivative(this);
     }
 
+    inline virtual ~Vnode() {
+    }
+
     inline virtual const std::string& name() const {
         return name_;
     }
@@ -294,6 +299,10 @@ public:
 
     inline void setTapeIndex(size_t tapeIndex) {
         tapeIndex_ = tapeIndex;
+    }
+
+    inline std::vector<Enode<Base>*>& equations() {
+        return enodes_;
     }
 
     inline const std::vector<Enode<Base>*>& equations() const {
@@ -374,15 +383,16 @@ public:
         return TYPE;
     }
 
+    inline void setDerivative(Vnode<Base>* div) {
+        derivative_ = div;
+    }
+
     unsigned int order() const {
         if (antiDerivative_ == nullptr) {
             return 0u;
         } else {
             return antiDerivative_->order() + 1u;
         }
-    }
-
-    inline virtual ~Vnode() {
     }
 
 protected:
@@ -392,10 +402,6 @@ protected:
             CPPADCG_ASSERT_UNKNOWN(std::find(enodes_.begin(), enodes_.end(), i) == enodes_.end());
             enodes_.push_back(i);
         }
-    }
-
-    inline void setDerivative(Vnode<Base>* div) {
-        derivative_ = div;
     }
 
     friend class Enode<Base>;

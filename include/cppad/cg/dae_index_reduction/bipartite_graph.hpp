@@ -35,7 +35,7 @@ protected:
     /**
      * The original model
      */
-    ADFun<CG<Base> > * const fun_;
+    ADFun<CG<Base> >* const fun_;
     /**
      * DAE variable information for the original system
      */
@@ -73,11 +73,11 @@ public:
      * @param varInfo DAE model variable classification
      * @param eqName Equation names (it can be an empty vector)
      */
-    BipartiteGraph(ADFun<CG<Base> >* fun,
+    BipartiteGraph(ADFun<CG<Base> >& fun,
                    const std::vector<DaeVarInfo>& varInfo,
                    const std::vector<std::string>& eqName,
                    SimpleLogger& logger) :
-            fun_(fun),
+            fun_(&fun),
             varInfo_(varInfo),
             origMaxTimeDivOrder_(0),
             origTimeDependentCount_(0),
@@ -89,8 +89,8 @@ public:
         using std::vector;
 
         CPPADCG_ASSERT_UNKNOWN(fun_ != nullptr);
-        const size_t m = fun->Range(); // equation count
-        const size_t n = fun->Domain(); // total variable count
+        const size_t m = fun.Range(); // equation count
+        const size_t n = fun.Domain(); // total variable count
 
         CPPADCG_ASSERT_UNKNOWN(varInfo_.size() == n);
         for (size_t j = 0; j < n; ++j) {
@@ -220,7 +220,7 @@ public:
         }
 
         // create the edges
-        sparsity_ = jacobianSparsity<vector<bool>, CGBase>(*fun);
+        sparsity_ = jacobianSparsity<vector<bool>, CGBase>(fun);
 
         for (size_t i = 0; i < m; i++) {
             for (size_t p = 0; p < n; p++) {
@@ -307,11 +307,11 @@ public:
     }
 
     /**
-     * Provides the differentiation index after this graph has been reduced.
+     * Provides the structural index after this graph has been reduced.
      * 
      * @return the DAE differentiation index.
      */
-    inline size_t getDifferentiationIndex() const {
+    inline size_t getStructuralIndex() const {
         size_t origM = this->fun_->Range();
         if (origM == enodes_.size()) {
             // no index reduction performed: it is either an index 1 DAE or an ODE
@@ -349,7 +349,7 @@ public:
     }
 
     inline void printResultInfo(const std::string& method) {
-        logger_.log() << "\n" << method << " DAE differentiation index reduction:\n\n"
+        logger_.log() << "\n" << method << " DAE differentiation/structural index reduction:\n\n"
                 "   Equations count: " << enodes_.size() << "\n";
         for (Enode<Base>* ii : enodes_) {
             logger_.log() << "      " << ii->index() << " - " << *ii << "\n";
@@ -368,7 +368,7 @@ public:
             }
         }
 
-        logger_.log() << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << "\n";
+        logger_.log() << "\n   Degrees of freedom: " << vnodes_.size() - enodes_.size() << std::endl;
     }
 
     inline void uncolorAll() {
@@ -416,6 +416,68 @@ public:
     }
 
     /**
+     * Completely removes an equation and any variable that is only referenced
+     * by this equation from the graph.
+     * The equation cannot have a differentiated version of itself in the graph.
+     *
+     * @warning This equation node cannot be referenced after this call and
+     * neither can the variables which are also removed for not being present
+     * in any equation.
+     */
+    inline void remove(const Enode<Base>& i) {
+        CPPADCG_ASSERT_UNKNOWN(enodes_[i.index()] == &i);
+        CPPADCG_ASSERT_UNKNOWN(i.derivative() == nullptr);
+
+        for (Vnode<Base>* j: i.variables()) {
+            // remove the edges (connections in variables)
+            auto& eqs = j->equations();
+            auto it = std::find(eqs.begin(), eqs.end(), &i);
+            CPPADCG_ASSERT_UNKNOWN(it != eqs.end());
+            eqs.erase(it);
+
+            /**
+             * remove variable
+             */
+            while(j->equations().empty()) {
+                CPPADCG_ASSERT_UNKNOWN(vnodes_[j->index()] == j);
+
+                if (j->derivative() == nullptr) {
+                    vnodes_.erase(vnodes_.begin() + j->index());
+
+                    // update variable indices
+                    for (size_t jj = j->index(); jj < vnodes_.size(); ++jj) {
+                        vnodes_[jj]->setTapeIndex(vnodes_[jj]->tapeIndex() - 1);
+                        vnodes_[jj]->setIndex(vnodes_[jj]->index() - 1);
+                    }
+
+                    auto* jOrig = j->antiDerivative();
+                    CPPADCG_ASSERT_UNKNOWN(jOrig != nullptr);
+                    jOrig->setDerivative(nullptr);
+
+                    delete j; // no longer required
+                    j = jOrig;
+                }
+            }
+
+        }
+
+        // update equation indices
+        for (size_t ii = i.index() + 1; ii < enodes_.size(); ++ii) {
+            enodes_[ii]->setIndex(enodes_[ii]->index() - 1);
+        }
+
+        if(i.derivativeOf() != nullptr) {
+            i.derivativeOf()->setDerivative(nullptr);
+        }
+
+        auto it = std::find(enodes_.begin(), enodes_.end(), &i);
+        CPPADCG_ASSERT_UNKNOWN(it != enodes_.end());
+        enodes_.erase(it);
+
+        delete &i; // no longer required
+    }
+
+    /**
      * Adds edges to a new equation resulting from the differentiation
      * of another assuming the new equation differential contains
      * all variables present in the original equation and their time
@@ -450,9 +512,9 @@ public:
     /**
      * Creates a new tape for the index 1 model
      */
-    inline ADFun<CGBase>* generateNewModel(std::vector<DaeVarInfo>& newVarInfo,
-                                           std::vector<DaeEquationInfo>& equationInfo,
-                                           const std::vector<Base>& x) {
+    inline std::unique_ptr<ADFun<CGBase>> generateNewModel(std::vector<DaeVarInfo>& newVarInfo,
+                                                           std::vector<DaeEquationInfo>& equationInfo,
+                                                           const std::vector<Base>& x) {
         using std::vector;
 
         std::unique_ptr<ADFun<CGBase> > reducedFun;
@@ -513,11 +575,11 @@ public:
             }
         }
 
-        std::map<Enode<Base>*, Vnode<Base>*> assigments;
+        std::map<Enode<Base>*, Vnode<Base>*> assignments;
         for (size_t j = 0; j < vnodes_.size(); j++) {
             Vnode<Base>* jj = vnodes_[j];
             if (jj->assigmentEquation() != nullptr) {
-                assigments[jj->assigmentEquation()] = jj;
+                assignments[jj->assigmentEquation()] = jj;
             }
         }
 
@@ -526,7 +588,7 @@ public:
             Enode<Base>* ii = enodes_[i];
             int derivativeOf = ii->derivativeOf() != nullptr ? ii->derivativeOf()->index() : -1;
             int origIndex = ii->derivativeOf() == nullptr ? i : -1;
-            int assignedVarIndex = assigments.count(ii) > 0 ? assigments[ii]->tapeIndex() : -1;
+            int assignedVarIndex = assignments.count(ii) > 0 ? assignments[ii]->tapeIndex() : -1;
 
             equationInfo[i] = DaeEquationInfo(i, origIndex, derivativeOf, assignedVarIndex);
         }
@@ -607,8 +669,6 @@ public:
             //forwardTimeDiff(equations, dep, timeTapeIndex);
             reverseTimeDiff(*reducedFun, equations, dep, timeTapeIndex);
 
-            reducedFun.release(); // not needed anymore
-
             /**
              * reconstruct the new system of equations 
              */
@@ -654,7 +714,7 @@ public:
             }
         }
 
-        return reducedFun.release();
+        return reducedFun;
     }
 
     inline static void forwardTimeDiff(ADFun<CGBase>& reducedFun,

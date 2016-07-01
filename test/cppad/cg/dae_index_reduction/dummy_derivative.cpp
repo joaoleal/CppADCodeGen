@@ -49,21 +49,21 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     
     std::vector<std::string> eqName; // empty
 
-    DummyDerivatives<double> dummyD(fun, daeVar, eqName, x, normVar, normEq);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(false);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(3), dummyD.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
 
     delete fun;
-    delete reducedFun;
 }
 
 TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
@@ -104,17 +104,17 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     
     std::vector<std::string> eqName; // empty
 
-    DummyDerivatives<double> dummyD(fun, daeVar, eqName, x, normVar, normEq);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(3), dummyD.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
 
     delete fun;
-    delete reducedFun;
 }

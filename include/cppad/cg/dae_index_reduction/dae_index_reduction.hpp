@@ -24,34 +24,48 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Base class for algorithms that perform automatic (differentiation) index
- * reduction of implicit DAEs.
+ * Base class for algorithms that perform automatic index reduction of
+ * implicit DAEs.
  */
 template<class Base>
 class DaeIndexReduction : public SimpleLogger {
 protected:
     /**
-     * The original model
+     * The original model representing an implicit DAE system
      */
-    ADFun<CG<Base> > * const fun_;
+    ADFun<CG<Base> >* const fun_;
 public:
 
     /**
-     * Creates a new DAE model index reduction algorithm.
+     * Creates a new algorithm for index reduction of DAE systems.
      * 
-     * @param fun  The original (high index) model
-     * @param varInfo  DAE  system variable information (in the same order 
-     *                 as in the tape)
+     * @param fun The original model (potentially high index)
      */
-    DaeIndexReduction(ADFun<CG<Base> >* fun) :
-        fun_(fun) {
+    DaeIndexReduction(ADFun<CG<Base> >& fun) :
+        fun_(&fun) {
     }
 
     inline virtual ~DaeIndexReduction() {
     }
 
-    virtual ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                          std::vector<DaeEquationInfo>& equationInfo) = 0;
+    /**
+     * Provides the original model with a representation of an implicit DAE
+     * (potentially high index).
+     */
+    inline ADFun<CG<Base> >& getOriginalModel() const {
+        return *fun_;
+    }
+
+    /**
+     * Performs the DAE index reduction and creates a new reduced index model.
+     *
+     * @param newVarInfo Variable related information of the reduced index model
+     * @param equationInfo Equation related information of the reduced index model
+     * @return the reduced index model
+     *         (null if there was no need for index reduction)
+     */
+    virtual std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                         std::vector<DaeEquationInfo>& equationInfo) = 0;
 
 };
 

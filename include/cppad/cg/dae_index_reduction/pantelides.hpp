@@ -15,9 +15,8 @@
  * Author: Joao Leal
  */
 
-#include <cppad/cg/dae_index_reduction/dae_index_reduction.hpp>
+#include <cppad/cg/dae_index_reduction/dae_structural_index_reduction.hpp>
 #include <cppad/cg/dae_index_reduction/augment_path_depth_lookahead.hpp>
-#include <cppad/cg/dae_index_reduction/bipartite_graph.hpp>
 
 namespace CppAD {
 namespace cg {
@@ -26,17 +25,17 @@ namespace cg {
  * Pantelides DAE index reduction algorithm
  */
 template<class Base>
-class Pantelides : public DaeIndexReduction<Base> {
+class Pantelides : public DaeStructuralIndexReduction<Base> {
 protected:
     typedef CppAD::cg::CG<Base> CGBase;
     typedef CppAD::AD<CGBase> ADCG;
 protected:
-    //
-    BipartiteGraph<Base> graph_;
-    // typical values;
+    // avoids having to type this->graph_
+    using DaeStructuralIndexReduction<Base>::graph_;
+    // typical values used to avoid NaNs in the tape validation by CppAD
     std::vector<Base> x_;
-    // new index reduced model
-    ADFun<CGBase>* reducedFun_;
+    // whether or not reduceIndex() has been called
+    bool reduced_;
     AugmentPathDepthLookahead<Base> defaultAugmentPath_;
     AugmentPath<Base>* augmentPath_;
 public:
@@ -45,20 +44,20 @@ public:
      * Creates the DAE index reduction algorithm that implements the 
      * Pantelides method.
      * 
-     * @param fun The DAE model
-     * @param varInfo DAE model variable classification
+     * @param fun The original model (potentially high index)
+     * @param varInfo The DAE system variable information (in the same order
+     *                as in the tape)
      * @param eqName Equation names (it can be an empty vector)
      * @param x Typical variable values (used to avoid NaNs in CppAD checks)
      */
-    Pantelides(ADFun<CG<Base> >* fun,
+    Pantelides(ADFun<CG<Base> >& fun,
                const std::vector<DaeVarInfo>& varInfo,
                const std::vector<std::string>& eqName,
                const std::vector<Base>& x) :
-        DaeIndexReduction<Base>(fun),
-        graph_(fun, varInfo, eqName, *this),
-        x_(x),
-        reducedFun_(nullptr),
-        augmentPath_(&defaultAugmentPath_) {
+            DaeStructuralIndexReduction<Base>(fun, varInfo, eqName),
+            x_(x),
+            reduced_(false),
+            augmentPath_(&defaultAugmentPath_) {
 
     }
 
@@ -77,37 +76,9 @@ public:
         augmentPath_ = &a;
     }
 
-    /**
-     * Defines whether or not original names saved by using
-     * CppAD::PrintFor(0, "", val, name)
-     * should be kept by also adding PrintFor operations in the reduced model.
-     */
-    inline void setPreserveNames(bool p) {
-        graph_.setPreserveNames(p);
-    }
-
-    /**
-     * Whether or not original names saved by using
-     * CppAD::PrintFor(0, "", val, name)
-     * should be kept by also adding PrintFor operations in the reduced model.
-     */
-    inline bool isPreserveNames() const {
-        return graph_.isPreserveNames();
-    }
-
-    /**
-     * Performs the DAE differentiation index reductions
-     * 
-     * @param newVarInfo Variable related information of the reduced index
-     *                   model
-     * @param equationInfo Equation related information of the reduced index
-     *                     model
-     * @return the reduced index model (must be deleted by user)
-     * @throws CGException on failure
-     */
-    virtual inline ADFun<CG<Base> >* reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                 std::vector<DaeEquationInfo>& equationInfo) override {
-        if (reducedFun_ != nullptr)
+    virtual inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                                std::vector<DaeEquationInfo>& equationInfo) override {
+        if (reduced_)
             throw CGException("reduceIndex() can only be called once!");
 
         if (this->verbosity_ >= Verbosity::High)
@@ -115,29 +86,20 @@ public:
 
         augmentPath_->setLogger(*this);
 
+        reduced_ = true;
+
         detectSubset2Dif();
 
         if (this->verbosity_ >= Verbosity::High)
             graph_.printResultInfo("Pantelides");
 
-        reducedFun_ = graph_.generateNewModel(newVarInfo, equationInfo, x_);
+        std::unique_ptr<ADFun<CGBase>> reducedFun(graph_.generateNewModel(newVarInfo, equationInfo, x_));
 
-        return reducedFun_;
-    }
-
-    /**
-     * Provides the differentiation index. It can only be called after
-     * reduceIndex().
-     *
-     * @return the DAE differentiation index.
-     * @throws CGException
-     */
-    inline size_t getDifferentiationIndex() const {
-        return graph_.getDifferentiationIndex();
+        return reducedFun;
     }
 
 protected:
-    using DaeIndexReduction<Base>::log;
+    using DaeStructuralIndexReduction<Base>::log;
 
     /**
      * 

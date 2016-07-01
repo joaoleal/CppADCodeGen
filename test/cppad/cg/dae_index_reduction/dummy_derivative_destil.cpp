@@ -117,7 +117,8 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(fun->Range(), 1.0);
 
-    DummyDerivatives<double> dummyD(fun.get(), daeVar, eqName, x, normVar, normEq);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
     dummyD.setAvoidConvertAlg2DifVars(false);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(true);
@@ -126,12 +127,10 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(2), dummyD.getDifferentiationIndex());
-
-    delete reducedFun;
+    ASSERT_EQ(size_t(2), pantelides.getStructuralIndex());
 }

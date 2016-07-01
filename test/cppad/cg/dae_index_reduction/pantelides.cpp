@@ -42,20 +42,20 @@ TEST_F(IndexReductionTest, PantelidesSimple2D) {
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(2), pantelides.getDifferentiationIndex());
+    // WARNING: the actual index is 1 but the Pantelides returns 2 (as expected from the method)
+    ASSERT_EQ(size_t(2), pantelides.getStructuralIndex());
 
     delete fun;
-    delete reducedFun;
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum2D) {
@@ -82,20 +82,19 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(3), pantelides.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
 
     delete fun;
-    delete reducedFun;
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum3D) {
@@ -130,18 +129,17 @@ TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     
     std::vector<std::string> eqName; // empty
     
-    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> equationInfo;
-    ADFun<CGD>* reducedFun = nullptr;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
     ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
 
     ASSERT_TRUE(reducedFun != nullptr);
 
-    ASSERT_EQ(size_t(3), pantelides.getDifferentiationIndex());
+    ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
 
     delete fun;
-    delete reducedFun;
 }
