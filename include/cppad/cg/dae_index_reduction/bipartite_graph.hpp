@@ -930,25 +930,37 @@ public:
 
         // edges
         for (const Enode<Base>* i : enodes_) {
-            out << "   ";
+            bool added = false;
             for (const Vnode<Base>* j : i->originalVariables()) {
                 if (!j->isDeleted() && j->assigmentEquation() != i) {
+                    if(!added) {
+                        out << "   ";
+                        added = true;
+                    }
                     out << "e" << i->index() << " -> v" << j->index() << "  ";
                 }
             }
-            out << "\n";
+            if (added)
+                out << "\n";
         }
 
         out << "   subgraph assigned {\n";
         out << "      edge[color=blue,penwidth=3.0,style=dashed]\n";
         for (const Enode<Base>* i : enodes_) {
-            out << "      ";
+            bool added = false;
+
             for (const Vnode<Base>* j : i->originalVariables()) {
                 if (!j->isDeleted() && j->assigmentEquation() == i) {
+                    if(!added) {
+                        out << "      ";
+                        added = true;
+                    }
                     out << "e" << i->index() << " -> v" << j->index() << "  ";
                 }
             }
-            out << "\n";
+
+            if (added)
+                out << "\n";
         }
 
         out << "   }\n";
