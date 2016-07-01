@@ -16,11 +16,12 @@
 # ----------------------------------------------------------------------------
 SET(CMAKE_BUILD_TYPE DEBUG)
 
+add_cppadcg_test(pantelides.cpp)
+add_cppadcg_test(soares_secchi.cpp)
+
 IF(EIGEN3_FOUND)
   add_cppadcg_test(dummy_derivative.cpp)
   add_cppadcg_test(dummy_derivative_destil.cpp)
 ELSE()
   MESSAGE(WARNING 'Eigen3 not found: Dummy derivatives tests disabled!')
 ENDIF()
-
-add_cppadcg_test(pantelides.cpp)
