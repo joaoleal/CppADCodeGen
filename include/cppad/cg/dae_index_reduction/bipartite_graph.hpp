@@ -869,6 +869,88 @@ public:
         out << "\n" << code.str() << std::endl;
     }
 
+    inline void printDot(std::ostream& out) const {
+        out << "digraph {\n";
+        out << "   overlap=false;\n";
+        out << "   rankdir=LR;\n";
+        out << "   node [style=filled, fillcolor=\"#bdcef5\", color=\"#17128e\"];\n";
+        out << "   edge [splines=false, dir=none];\n";
+
+        // variables
+        out << "   subgraph variables {\n";
+        out << "      rank=min\n";
+        for (const Vnode<Base>* j : vnodes_) {
+            if(!j->isDeleted()) {
+                out << "      v" << j->index() << " [label=\"" << j->name() << "\"";
+                if (j->isColored())
+                    out << ", color=\"#17c68e\"";
+                out << "];\n";
+            }
+        }
+        out << "   }\n";
+
+        // equations
+        out << "   subgraph equations {\n";
+        out << "      rank=max\n";
+        for (const Enode<Base>* i : enodes_) {
+            out << "      e" << i->index() << " [label=\"" << i->name() << "\"";
+            if (i->isColored())
+                out << ", color=\"#17c68e\"";
+            out << "];\n";
+        }
+        out << "   }\n";
+
+        // derivatives of equations
+        out << "   subgraph eq_derivatives {\n";
+        out << "      edge[dir=forward, color=grey]\n";
+        for (const Enode<Base>* i : enodes_) {
+            if (i->derivative() != nullptr && i->derivativeOf() == nullptr) {
+                while (i->derivative() != nullptr) {
+                    out << "      e" << i->index() << ":e -> e" << i->derivative()->index() << ":e;\n";
+                    i = i->derivative();
+                }
+            }
+        }
+        out << "   }\n";
+
+        // derivatives of variables
+        out << "   subgraph var_derivatives {\n";
+        out << "      edge[dir=forward, color=grey]\n";
+        for (const Vnode<Base>* j : vnodes_) {
+            if (!j->isDeleted() && j->derivative() != nullptr && (j->antiDerivative() == nullptr || j->antiDerivative()->isDeleted())) {
+                if (!j->derivative()->isDeleted()) {
+                    while (j->derivative() != nullptr && !j->derivative()->isDeleted()) {
+                        out << "      v" << j->index() << ":w -> v" << j->derivative()->index() << ":w;\n";
+                        j = j->derivative();
+                    }
+                }
+            }
+        }
+        out << "   }\n";
+
+        // edges
+        for (const Enode<Base>* i : enodes_) {
+            for (const Vnode<Base>* j : i->originalVariables()) {
+                if (!j->isDeleted() && j->assigmentEquation() != i) {
+                    out << "   v" << j->index() << " -> e" << i->index() << ";\n";
+                }
+            }
+        }
+
+        out << "   subgraph assigned {\n";
+        out << "      edge[color=blue,penwidth=3.0,style=dashed]\n";
+        for (const Enode<Base>* i : enodes_) {
+            for (const Vnode<Base>* j : i->originalVariables()) {
+                if (!j->isDeleted() && j->assigmentEquation() == i) {
+                    out << "      v" << j->index() << " -> e" << i->index() << ";\n";
+                }
+            }
+        }
+
+        out << "   }\n";
+        out << "}\n";
+    }
+
     template<class VectorCGB>
     inline VectorCGB forward0(ADFun<CGBase>& fun,
                               const VectorCGB& indep0) const {
