@@ -113,6 +113,9 @@ protected:
 
         Enode<Base>* ll;
 
+        if (this->verbosity_ >= Verbosity::High)
+            graph_.printDot(this->log());
+
         size_t Ndash = enodes.size();
         for (size_t k = 0; k < Ndash; k++) {
             Enode<Base>* i = enodes[k];

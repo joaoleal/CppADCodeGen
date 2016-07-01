@@ -169,6 +169,9 @@ protected:
 
         std::vector<Enode<Base>*> marked;
 
+        if (this->verbosity_ >= Verbosity::High)
+            graph_.printDot(this->log());
+
         while (true) {
             bool needDiff = false;
             // augment the matching one by one
