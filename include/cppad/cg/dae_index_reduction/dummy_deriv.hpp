@@ -784,7 +784,7 @@ protected:
                             for (Vnode<Base>* j : diffVariables) {
                                 if (!j->isDeleted() && j->equations().size() == 1) {
                                     Enode<Base>& i = *j->equations()[0];
-                                    if (i.assigmentVariable() == nullptr) {
+                                    if (i.assignmentVariable() == nullptr) {
                                         if (!assignVar2Equation(i, res0, *j, indep0, handler,
                                                                 jacSparsity, tape2FreeVariables,
                                                                 equations, varInfo)) {
@@ -804,7 +804,7 @@ protected:
                         for (Vnode<Base>* j : dummyVariables) {
                             if (!j->isDeleted() && j->equations().size() == 1) {
                                 Enode<Base>& i = *j->equations()[0];
-                                if (i.assigmentVariable() == nullptr) {
+                                if (i.assignmentVariable() == nullptr) {
                                     if (assignVar2Equation(i, res0, *j, indep0, handler,
                                                            jacSparsity, tape2FreeVariables,
                                                            equations, varInfo))
@@ -820,7 +820,7 @@ protected:
                      */
                     assigned = 0;
                     for (Enode<Base>* i : equations) {
-                        if (i->assigmentVariable() == nullptr && i->variables().size() == 1) {
+                        if (i->assignmentVariable() == nullptr && i->variables().size() == 1) {
                             Vnode<Base>* j = i->variables()[0];
                             if (assignVar2Equation(*i, res0, *j, indep0, handler,
                                                    jacSparsity, tape2FreeVariables,
@@ -840,7 +840,7 @@ protected:
                 for (Vnode<Base>* j : variables) {
                     if (!j->isDeleted()) {
                         for (Enode<Base>* i : j->equations()) {
-                            if (i->assigmentVariable() == nullptr) {
+                            if (i->assignmentVariable() == nullptr) {
                                 if (assignVar2Equation(*i, res0, *j, indep0, handler,
                                                        jacSparsity, tape2FreeVariables,
                                                        equations, varInfo)) {
@@ -863,8 +863,8 @@ protected:
              * save results
              */
             for (Vnode<Base>* j : variables) {
-                if (j->assigmentEquation() != nullptr) {
-                    int i = j->assigmentEquation()->index();
+                if (j->assignmentEquation() != nullptr) {
+                    int i = j->assignmentEquation()->index();
                     DaeEquationInfo& eq = eqInfo[i];
 
                     if (eq.getAssignedVarIndex() != int(j->tapeIndex())) {
@@ -885,7 +885,7 @@ protected:
             if (generateSemiExplicitDae_) {
                 std::string error;
                 for (Vnode<Base>* j : diffVariables) {
-                    if (j->assigmentEquation() == nullptr) {
+                    if (j->assignmentEquation() == nullptr) {
                         // failed!!!
                         if (!error.empty())
                             error += ",";
@@ -905,8 +905,8 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             for (Vnode<Base>* j : variables) {
-                if (j->assigmentEquation() != nullptr)
-                    log() << "## Variable " + j->name() << " assigned to equation " << j->assigmentEquation()->name() << "\n";
+                if (j->assignmentEquation() != nullptr)
+                    log() << "## Variable " + j->name() << " assigned to equation " << j->assignmentEquation()->name() << "\n";
             }
             log() << std::endl;
         }
@@ -1016,9 +1016,9 @@ protected:
                 if (v == &j)
                     continue;
 
-                if (v->assigmentEquation() != nullptr) {
-                    if (affected.count(v->assigmentEquation()) > 0 &&
-                            solvable[v->tapeIndex()].count(v->assigmentEquation()) == 0) {
+                if (v->assignmentEquation() != nullptr) {
+                    if (affected.count(v->assignmentEquation()) > 0 &&
+                            solvable[v->tapeIndex()].count(v->assignmentEquation()) == 0) {
                         ok = false;
                         break;
                     }

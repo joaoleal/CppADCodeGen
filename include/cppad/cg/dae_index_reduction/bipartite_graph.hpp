@@ -359,8 +359,8 @@ public:
 
         for (const Vnode<Base>* jj : vnodes_) {
             logger_.log() << "      " << jj->index() << " - " << *jj;
-            if (jj->assigmentEquation() != nullptr) {
-                logger_.log() << " assigned to " << *jj->assigmentEquation() << "\n";
+            if (jj->assignmentEquation() != nullptr) {
+                logger_.log() << " assigned to " << *jj->assignmentEquation() << "\n";
             } else if (jj->isParameter()) {
                 logger_.log() << " is a parameter (time independent)\n";
             } else {
@@ -463,6 +463,8 @@ public:
 
         // update equation indices
         for (size_t ii = i.index() + 1; ii < enodes_.size(); ++ii) {
+            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() > 0);
+            CPPADCG_ASSERT_UNKNOWN(enodes_[ii]->index() == ii);
             enodes_[ii]->setIndex(enodes_[ii]->index() - 1);
         }
 
@@ -578,8 +580,8 @@ public:
         std::map<Enode<Base>*, Vnode<Base>*> assignments;
         for (size_t j = 0; j < vnodes_.size(); j++) {
             Vnode<Base>* jj = vnodes_[j];
-            if (jj->assigmentEquation() != nullptr) {
-                assignments[jj->assigmentEquation()] = jj;
+            if (jj->assignmentEquation() != nullptr) {
+                assignments[jj->assignmentEquation()] = jj;
             }
         }
 
@@ -930,25 +932,37 @@ public:
 
         // edges
         for (const Enode<Base>* i : enodes_) {
-            out << "   ";
+            bool added = false;
             for (const Vnode<Base>* j : i->originalVariables()) {
-                if (!j->isDeleted() && j->assigmentEquation() != i) {
+                if (!j->isDeleted() && j->assignmentEquation() != i) {
+                    if(!added) {
+                        out << "   ";
+                        added = true;
+                    }
                     out << "e" << i->index() << " -> v" << j->index() << "  ";
                 }
             }
-            out << "\n";
+            if (added)
+                out << "\n";
         }
 
         out << "   subgraph assigned {\n";
         out << "      edge[color=blue,penwidth=3.0,style=dashed]\n";
         for (const Enode<Base>* i : enodes_) {
-            out << "      ";
+            bool added = false;
+
             for (const Vnode<Base>* j : i->originalVariables()) {
-                if (!j->isDeleted() && j->assigmentEquation() == i) {
+                if (!j->isDeleted() && j->assignmentEquation() == i) {
+                    if(!added) {
+                        out << "      ";
+                        added = true;
+                    }
                     out << "e" << i->index() << " -> v" << j->index() << "  ";
                 }
             }
-            out << "\n";
+
+            if (added)
+                out << "\n";
         }
 
         out << "   }\n";
@@ -1019,7 +1033,7 @@ inline std::ostream& operator<<(std::ostream& os,
             os << i->name();
             if (j->isDeleted()) {
                 os << "~~";
-            } else if (j->assigmentEquation() == i) {
+            } else if (j->assignmentEquation() == i) {
                 os << "==";
             } else {
                 os << "--";

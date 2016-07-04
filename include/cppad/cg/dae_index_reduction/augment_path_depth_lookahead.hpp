@@ -40,7 +40,9 @@ public:
 
         // first look for derivative variables
         for (Vnode<Base>* jj : vars) {
-            if (jj->antiDerivative() != nullptr && jj->assigmentEquation() == nullptr) {
+            if (jj->antiDerivative() != nullptr && // not an algebraic variable
+                jj->assignmentEquation() == nullptr) { // not assigned yet
+
                 jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
                 return true;
             }
@@ -48,7 +50,9 @@ public:
 
         // look for algebraic variables
         for (Vnode<Base>* jj : vars) {
-            if (jj->antiDerivative() == nullptr && jj->assigmentEquation() == nullptr) {
+            if (jj->antiDerivative() == nullptr &&
+                jj->assignmentEquation() == nullptr) { // not assigned yet
+
                 jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
                 return true;
             }
@@ -59,11 +63,13 @@ public:
             if (!jj->isColored()) {
                 jj->color(this->logger_->log(), this->logger_->getVerbosity());
 
-                Enode<Base>& k = *jj->assigmentEquation(); // all variables are assigned to another equation
-                bool pathFound = augmentPath(k);
-                if (pathFound) {
-                    jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
-                    return true;
+                Enode<Base>& k = *jj->assignmentEquation(); // all variables are assigned to another equation
+                if(!k.isColored()) {
+                    bool pathFound = augmentPath(k);
+                    if (pathFound) {
+                        jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
+                        return true;
+                    }
                 }
             }
         }

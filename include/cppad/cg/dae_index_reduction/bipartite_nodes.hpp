@@ -150,7 +150,7 @@ public:
         }
     }
 
-    inline Vnode<Base>* assigmentVariable() const {
+    inline Vnode<Base>* assignmentVariable() const {
         return assign_;
     }
 
@@ -365,7 +365,7 @@ public:
         enodes_.clear();
     }
 
-    inline Enode<Base>* assigmentEquation() const {
+    inline Enode<Base>* assignmentEquation() const {
         return assign_;
     }
 

@@ -38,13 +38,13 @@ public:
     virtual bool augmentPath(Enode <Base>& i) override final {
         i.color(this->logger_->log(), this->logger_->getVerbosity()); // avoids infinite recursion
 
-        const std::vector<Vnode < Base>*>&vars = i.variables();
+        const std::vector<Vnode<Base>*>&vars = i.variables();
 
         // first look for derivative variables
         for (Vnode<Base>* jj : vars) {
             if (jj->derivative() == nullptr && // highest order derivative
                 jj->antiDerivative() != nullptr && // not an algebraic variable
-                jj->assigmentEquation() == nullptr) { // not assigned yet
+                jj->assignmentEquation() == nullptr) { // not assigned yet
 
                 jj->setAssignmentEquation(i, this->logger_->log(), this->logger_->getVerbosity());
                 return true;
@@ -56,9 +56,9 @@ public:
                 jj->derivative() == nullptr && // highest order derivative
                 jj->antiDerivative() != nullptr) {  // not an algebraic variable
 
-                Enode<Base>& k = *jj->assigmentEquation(); // all variables are assigned to another equation
+                Enode<Base>& k = *jj->assignmentEquation(); // all variables are assigned to another equation
 
-                if(!k.isColored()) {
+                if (!k.isColored()) {
                     //jj->color(this->logger_->log(), this->logger_->getVerbosity()); // do not color variables!
 
                     bool pathFound = augmentPath(k);

@@ -177,7 +177,7 @@ protected:
                     for (Vnode<Base>* jj : vnodes) {
                         if (jj->isColored() && !jj->isDeleted()) {
                             Vnode<Base>* jDiff = jj->derivative();
-                            jDiff->setAssignmentEquation(*jj->assigmentEquation()->derivative(), log(), this->verbosity_);
+                            jDiff->setAssignmentEquation(*jj->assignmentEquation()->derivative(), log(), this->verbosity_);
                         }
                     }
 

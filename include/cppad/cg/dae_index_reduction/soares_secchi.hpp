@@ -39,7 +39,7 @@ protected:
      * the last equations added to graph
      * (equations used to create the ODE or DAE with index 1)
      */
-    std::vector<Enode<Base>*> lastAddEq_;
+    std::set<Enode<Base>*> lastAddEq_;
     // whether or not reduceIndex() has been called
     bool reduced_;
     //
@@ -167,13 +167,13 @@ protected:
         auto& vnodes = graph_.variables();
         auto& enodes = graph_.equations();
 
-        std::vector<Enode<Base>*> marked;
+        std::set<Enode<Base>*> marked;
+        std::set<Enode<Base>*> lastMarked;
 
         if (this->verbosity_ >= Verbosity::High)
             graph_.printDot(this->log());
 
         while (true) {
-            bool needDiff = false;
             // augment the matching one by one
             for (size_t k = 0; k < enodes.size(); k++) {
                 Enode<Base>* i = enodes[k];
@@ -181,19 +181,17 @@ protected:
                 if (this->verbosity_ >= Verbosity::High)
                     log() << "Outer loop: equation k = " << *i << "\n";
 
-                if (i->assigmentVariable() != nullptr) {
+                if (i->assignmentVariable() != nullptr) {
                     continue;
                 }
 
                 bool pathFound = augmentPathA_->augmentPath(*i);
                 if (!pathFound) {
-                    needDiff = true;
 
-                    marked.clear();
                     for (Enode<Base>* ii: enodes) {
-                        // mark colored equations
-                        if (ii->isColored()) {
-                            marked.push_back(ii);
+                        // mark colored equations to be differentiated
+                        if (ii->isColored() && ii->derivative() == nullptr) {
+                            marked.insert(ii);
 
                             // uncolor equations
                             ii->uncolor();
@@ -214,7 +212,7 @@ protected:
                 }
             }
 
-            if (!needDiff)
+            if (marked.empty())
                 break;
 
             // diff all MARKED equations
@@ -224,12 +222,15 @@ protected:
 
             if (this->verbosity_ >= Verbosity::High)
                 graph_.printDot(this->log());
+
+            lastMarked.swap(marked);
+            marked.clear();
         }
 
         lastAddEq_.clear();
-        lastAddEq_.reserve(marked.size());
-        for (const Enode<Base>* i: marked)
-            lastAddEq_.push_back(i->derivative());
+        for (const Enode<Base>* i: lastMarked) {
+            lastAddEq_.insert(i->derivative());
+        }
 
     }
 
