@@ -17,7 +17,11 @@
 SET(CMAKE_BUILD_TYPE DEBUG)
 
 add_cppadcg_test(pantelides.cpp)
+add_cppadcg_test(pantelides_flash.cpp)
+
 add_cppadcg_test(soares_secchi.cpp)
+add_cppadcg_test(soares_secchi_flash.cpp)
+add_cppadcg_test(soares_secchi_destil.cpp)
 
 IF(EIGEN3_FOUND)
   add_cppadcg_test(dummy_derivative.cpp)
