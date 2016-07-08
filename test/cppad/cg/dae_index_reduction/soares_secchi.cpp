@@ -16,8 +16,8 @@
 #include <cppad/cg/dae_index_reduction/soares_secchi.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
-#include "pendulum.hpp"
-#include "simple2d.hpp"
+#include "model/pendulum.hpp"
+#include "model/simple2d.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;

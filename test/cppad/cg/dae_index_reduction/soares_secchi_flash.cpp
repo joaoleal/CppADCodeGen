@@ -16,7 +16,7 @@
 #include <cppad/cg/dae_index_reduction/soares_secchi.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
-#include "flash.hpp"
+#include "model/flash.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;

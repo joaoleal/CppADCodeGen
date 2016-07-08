@@ -16,7 +16,7 @@
 #include <cppad/cg/dae_index_reduction/dummy_deriv.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
-#include "pendulum.hpp"
+#include "model/pendulum.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;

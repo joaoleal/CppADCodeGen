@@ -16,7 +16,7 @@
 #include <cppad/cg/dae_index_reduction/soares_secchi.hpp>
 
 #include "CppADCGIndexReductionTest.hpp"
-#include "distillation.hpp"
+#include "model/distillation.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;
