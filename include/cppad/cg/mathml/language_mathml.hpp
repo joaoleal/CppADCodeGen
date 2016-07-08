@@ -94,8 +94,7 @@ protected:
     std::vector<const Argument<Base>*> _tmpArrayValues;
     // the values in the temporary sparse array
     std::vector<const Argument<Base>*> _tmpSparseArrayValues;
-    // indexes defined as function arguments
-    std::vector<const OperationNode<Base>*> _funcArgIndexes;
+    //
     std::vector<const LoopStartOperationNode<Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
@@ -390,19 +389,6 @@ public:
      */
     virtual const std::string& getElseEndMarkup() const {
         return _elseEnd;
-    }
-
-    virtual void setFunctionIndexArgument(const OperationNode<Base>& funcArgIndex) {
-        _funcArgIndexes.resize(1);
-        _funcArgIndexes[0] = &funcArgIndex;
-    }
-
-    virtual void setFunctionIndexArguments(const std::vector<const OperationNode<Base>*>& funcArgIndexes) {
-        _funcArgIndexes = funcArgIndexes;
-    }
-
-    virtual const std::vector<const OperationNode<Base>*>& getFunctionIndexArguments() const {
-        return _funcArgIndexes;
     }
 
     /**
