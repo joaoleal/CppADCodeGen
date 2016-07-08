@@ -37,7 +37,8 @@ protected:
     bool memory_check_;
 public:
 
-    inline CppADCGTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGTest(bool verbose = false,
+                       bool printValues = false) :
         verbose_(verbose),
         printValues_(printValues),
         memory_check_(true) {

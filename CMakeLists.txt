@@ -48,6 +48,10 @@ ENDIF()
 # Latex used for test and example
 FIND_PACKAGE(LATEX)
 
+# graphviz used for test
+FIND_PROGRAM(GRAPHVIZ_PATH dot)
+
+
 #
 #             Doxygen
 #
