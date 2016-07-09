@@ -17,7 +17,7 @@
 SET(CMAKE_BUILD_TYPE DEBUG)
 
 ################################################################################
-ADD_DEFINITIONS(-DGRAPHVIZ_PATH="${GRAPHVIZ_PATH}")
+ADD_DEFINITIONS(-DGRAPHVIZ_DOT_PATH="${GRAPHVIZ_DOT_PATH}")
 
 ################################################################################
 # add dot test function

@@ -72,6 +72,6 @@ TEST(CppADCGDotTest, dot) {
 
     std::string dir = system::getWorkingDirectory();
 
-    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_PATH,{"-Tsvg", "-oalgorithm.svg", system::createPath(dir, "algorithm.dot")}));
+    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm.svg", system::createPath(dir, "algorithm.dot")}));
 
 }

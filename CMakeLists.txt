@@ -49,7 +49,7 @@ ENDIF()
 FIND_PACKAGE(LATEX)
 
 # graphviz used for test
-FIND_PROGRAM(GRAPHVIZ_PATH dot)
+FIND_PROGRAM(GRAPHVIZ_DOT_PATH dot)
 
 
 #
