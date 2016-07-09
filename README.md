@@ -6,13 +6,17 @@ statically compiled at runtime using an existing compiler and linked dynamically
 or, alternatively, go through a JIT compilation using Clang/LLVM.
 
 In addition to C source generation, CppADCodeGen can also produce 
-[Latex](http://www.latex-project.org/) and
-html+[MathML](http://www.w3.org/Math/) source-code files for your algorithm.
+ [Latex](http://www.latex-project.org/),
+ html+[MathML](http://www.w3.org/Math/), and 
+ [dot](https://en.wikipedia.org/wiki/DOT_%28graph_description_language%29)
+ source-code files for your algorithm.
 Latex sources can be used to create PDF files for documentation purposes, 
-while html+MathML can be used to display your algorithm in a MathML capable web browser.
+html+MathML can be used to display your algorithm in a web browser, and
+dot files can be used to create images with a graph of your model 
+(see [graphviz](http://graphviz.org/)).
 
 CppADCodeGen can also be used to perform differentiation index reduction of 
-Differential Algebraic Equations (DAE) through the Pantelides and Dummy 
+Differential Algebraic Equations (DAE) through Pantelides, Soares-Secchi, and Dummy 
 Derivatives methods.
 
 CppADCodeGen is built on top of the [CppAD](http://www.coin-or.org/CppAD) 
@@ -28,10 +32,10 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++11 header only library so there aren't many dependencies:
 
- - **CppAD** (2016)
- - A **C++11** compiler (such as GCC and Clang).
- - Clang/LLVM 3.2, 3.4, or 3.6 (only for JIT compilation)
- - Eigen 3 (only for DAE differentiation index reduction)
+ - **CppAD** (2016),
+ - A **C++11** compiler (such as GCC and Clang),
+ - Clang/LLVM 3.2, 3.4, or 3.6 (only for JIT compilation), and
+ - Eigen 3 (only for DAE differentiation index reduction).
 
 Runtime compilation and dynamic linking:
  - Linux (it might be very easy to support other OSes but it is not implemented yet)
