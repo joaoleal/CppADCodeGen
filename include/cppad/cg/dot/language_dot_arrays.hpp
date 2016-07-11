@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_LANGUAGE_MATHML_ARRAYS_INCLUDED
-#define CPPAD_CG_LANGUAGE_MATHML_ARRAYS_INCLUDED
+#ifndef CPPAD_CG_LANGUAGE_DOT_ARRAYS_INCLUDED
+#define CPPAD_CG_LANGUAGE_DOT_ARRAYS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
@@ -19,35 +19,37 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void LanguageDot<Base>::printArrayCreationOp(OperationNode<Base>& array) {
+std::string LanguageDot<Base>::printArrayCreationOp(OperationNode<Base>& array) {
     CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
     _ss.str("");
     _ss << "array[" << args.size() << "]";
-    printNodeDeclaration(array, _ss);
+    std::string name = printNodeDeclaration(array, _ss);
 
     for (size_t i = 0; i < argSize; i++) {
         // try to use a loop for element assignment
-        size_t newI = printArrayCreationUsingLoop(array, i, nullptr);
+        size_t newI = printArrayCreationUsingLoop(name, array, i, nullptr);
 
         // print elements not assign in a loop
         if (newI == i) {
             // individual element assignment
-            print(args[i]);
+            std::string aName = print(args[i]);
 
-            printEdge(args[i], array, std::to_string(i)); // std::to_string(i)
+            printEdge(aName, name, std::to_string(i)); // std::to_string(i)
             _code << _endline;
 
         } else {
             i = newI - 1;
         }
     }
+
+    return name;
 }
 
 template<class Base>
-void LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
+std::string LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
     const std::vector<size_t>& info = array.getInfo();
     CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
@@ -57,23 +59,23 @@ void LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
 
     CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation");
 
-    if (argSize == 0)
-        return; // empty array
-
     _ss.str("");
     _ss << "sparse[" << info[0] << "]"; // nnz: args.size()
-    printNodeDeclaration(array, _ss);
+    std::string name = printNodeDeclaration(array, _ss);
+
+    if (argSize == 0)
+        return name; // empty array
 
     for (size_t i = 0; i < argSize; i++) {
         // try to use a loop for element assignment
-        size_t newI = printArrayCreationUsingLoop(array, i, &info[i]);
+        size_t newI = printArrayCreationUsingLoop(name, array, i, &info[i]);
 
         // print element values not assign in a loop
         if (newI == i) {
             // individual element assignment
-            print(args[i]);
+            std::string aName = print(args[i]);
 
-            printEdge(args[i], array, std::to_string(info[i + 1])); // std::to_string(i)
+            printEdge(aName, name, std::to_string(info[i + 1])); // std::to_string(i)
             _code << _endline;
 
         } else {
@@ -81,10 +83,12 @@ void LanguageDot<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
         }
     }
 
+    return name;
 }
 
 template<class Base>
-inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const OperationNode<Base>& array,
+inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const std::string arrayName,
+                                                             const OperationNode<Base>& array,
                                                              size_t starti,
                                                              const size_t* indexes) {
 
@@ -95,6 +99,9 @@ inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const OperationNode
     /**
      * constant value?
      */
+    if(args[starti].getParameter() == nullptr)
+        return starti;
+
     const Base& value = *args[starti].getParameter();
     for (; i < argSize; i++) {
         if (args[i].getParameter() == nullptr ||
@@ -109,31 +116,33 @@ inline size_t LanguageDot<Base>::printArrayCreationUsingLoop(const OperationNode
     if (i - starti < 3)
         return starti;
 
-    for (size_t ii = starti; ii < i; ii++) {
-        print(args[ii]);
-    }
+    std::string aName = print(args[starti]);
 
     /**
      * print the loop
      */
     if (indexes != nullptr)
-        printEdge(args[i], array, std::to_string(indexes[starti]) + "..." + std::to_string(indexes[i]));
+        printEdge(aName, arrayName, std::to_string(indexes[starti]) + "..." + std::to_string(indexes[i]));
     else
-        printEdge(args[i], array, std::to_string(starti) + "..." + std::to_string(i));
+        printEdge(aName, arrayName, std::to_string(starti) + "..." + std::to_string(i));
     _code << _endline;
 
     return i;
 }
 
 template<class Base>
-void LanguageDot<Base>::printArrayElementOp(OperationNode<Base>& op) {
+std::string LanguageDot<Base>::printArrayElementOp(OperationNode<Base>& op) {
     CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
     CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
     CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
 
+    std::string name = makeNodeName(op);
+
     _ss.str("");
     _ss << "[" << op.getInfo()[0] << "]";
-    printEdges(op, std::vector<std::string>{_ss.str()});
+    printEdges(name, op, std::vector<std::string>{}, std::vector<std::string>{_ss.str()});
+
+    return name;
 }
 
 } // END cg namespace

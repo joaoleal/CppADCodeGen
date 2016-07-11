@@ -56,8 +56,15 @@ protected:
     std::vector<const LoopStartOperationNode <Base>*> _currentLoops;
     // the maximum precision used to print values
     size_t _parameterPrecision;
+    //
+    bool _combineParameterNodes;
+    //
+    std::string _indepNodeStyle;
+    //
+    std::string _depNodeStyle;
 private:
     std::vector<int> varIds_;
+    size_t parIdx_;
 public:
 
     /**
@@ -71,7 +78,11 @@ public:
             _dependent(nullptr),
             _ignoreZeroDepAssign(false),
             _filename("algorithm"),
-            _parameterPrecision(std::numeric_limits<Base>::digits10) {
+            _parameterPrecision(std::numeric_limits<Base>::digits10),
+            _combineParameterNodes(true) {
+    }
+
+    inline virtual ~LanguageDot() {
     }
 
     inline bool isIgnoreZeroDepAssign() const {
@@ -82,7 +93,7 @@ public:
         _ignoreZeroDepAssign = ignore;
     }
 
-    void setFilename(const std::string& name) {
+    inline void setFilename(const std::string& name) {
         _filename = name;
     }
 
@@ -106,7 +117,46 @@ public:
         _parameterPrecision = p;
     }
 
-    inline virtual ~LanguageDot() {
+    /**
+     * Defines the style for the independent variable nodes
+     */
+    inline void setIndepNodeStyle(const std::string& indepNodeStyle) {
+        _indepNodeStyle = indepNodeStyle;
+    }
+
+    /**
+     * Provides the style for the independent variable nodes
+     */
+    inline const std::string& getIndepNodeStyle() const {
+        return _indepNodeStyle;
+    }
+
+    /**
+     * Defines the style for the dependent variable nodes
+     */
+    inline void setDepNodeStyle(const std::string& depNodeStyle) {
+        _depNodeStyle = depNodeStyle;
+    }
+
+    /**
+     * Provides the style for the dependent variable nodes
+     */
+    inline const std::string& getDepNodeStyle() const {
+        return _depNodeStyle;
+    }
+
+    /**
+     * 
+     */
+    inline void setCombineParameterNodes(bool combineParameterNodes) {
+        _combineParameterNodes = combineParameterNodes;
+    }
+    
+    /**
+     * 
+     */
+    inline bool isCombineParameterNodes() const {
+        return _combineParameterNodes;
     }
 
     /***************************************************************************
@@ -120,27 +170,27 @@ public:
         size_t infoSize = info.size();
         for (size_t e = 0; e < infoSize; e += 2) {
             if (e > 0) {
-                out << "<mo>&or;</mo>"; // or
+                out << " or "; // or
             }
             size_t min = info[e];
             size_t max = info[e + 1];
             if (min == max) {
-                out << "<mi>" << index << "</mi><mo>==</mo><mn>" << min << "</nm>";
+                out << index << "==" << min;
             } else if (min == 0) {
-                out << "<mi>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn>";
+                out << index << "≤" << max;
             } else if (max == std::numeric_limits<size_t>::max()) {
-                out << "<mn>" << min << "</mn><mo>&le;</mo><mi>" << index << "</mi>";
+                out << min << "≤" << index;
             } else {
                 if (infoSize != 2)
-                    out << "<mfenced><mrow>";
+                    out << "(";
 
                 if (max - min == 1)
-                    out << "<mn>" << min << "</mn><mo>==</mo><mi>" << index << "</mi><mo>&or;</mo><mi>" << index << "</mi><mo>==</mo><mn>" << max << "</mn>";
+                    out << min << "==" << index << " or " << index << "==" << max;
                 else
-                    out << "<mn>" << min << "</mn><mo>&le;</mo><mi>" << index << "</mi><mo>&and;</mo><mi>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn";
+                    out << min << "≤" << index << " and " << index << "≤" << max;
 
                 if (infoSize != 2)
-                    out << "</mrow></mfenced>";
+                    out << ")";
             }
         }
     }
@@ -190,7 +240,7 @@ protected:
         _code.str("");
         _ss.str("");
         _currentLoops.clear();
-
+        parIdx_ = 0;
 
         // save some info
         _info = info.get();
@@ -217,6 +267,9 @@ protected:
         //generate names for the independent variables
         _code << "subgraph indep {" << _endline;
         _code << "   rank=min" << _endline;
+        if(!_indepNodeStyle.empty()) {
+            _code << "node [" << _indepNodeStyle << "]" << _endline;
+        }
         for (size_t j = 0; j < _independentSize; j++) {
             OperationNode<Base>& op = *info->independent[j];
 
@@ -234,6 +287,9 @@ protected:
         // generate names for the dependent variables (must be after naming independents)
         _code << "subgraph dep {" << _endline;
         _code << "   rank=max" << _endline;
+        if(!_depNodeStyle.empty()) {
+            _code << "node [" << _depNodeStyle << "]" << _endline;
+        }
         for (size_t i = 0; i < dependent.size(); i++) {
 
             OperationNode<Base>* node = dependent[i].getOperationNode();
@@ -344,7 +400,7 @@ protected:
                 const CG<Base>& dep = dependent[index];
                 OperationNode<Base>* depNode = dep.getOperationNode();
 
-                printNodeName(*depNode);
+                _code << makeNodeName(*depNode);
                 _code << " -> y" << index;
                 _code << _endline;
             }
@@ -352,7 +408,7 @@ protected:
 
         for (size_t i = 0; i < dependent.size(); i++) {
             if (!dependent[i].isParameter() && dependent[i].getOperationNode()->getOperationType() != CGOpCode::Inv) {
-                printNodeName(*dependent[i].getOperationNode());
+                _code << makeNodeName(*dependent[i].getOperationNode());
                 _code << " -> y" << i;
                 _code << _endline;
             }
@@ -368,7 +424,7 @@ protected:
                         commentWritten = true;
                     }
 
-                    printNodeName(dependent[i].getValue());
+                    _code << makeNodeName(dependent[i].getValue());
                     _code << " -> y" << i;
                     _code << _endline;
                 }
@@ -378,7 +434,7 @@ protected:
                     commentWritten = true;
                 }
 
-                printNodeName(*dependent[i].getOperationNode());
+                _code << makeNodeName(*dependent[i].getOperationNode());
                 _code << " -> y" << i;
                 _code << _endline;
             }
@@ -521,63 +577,79 @@ protected:
         return *var.getName();
     }
 
-    virtual void print(const Argument <Base>& arg) {
+    virtual std::string print(const Argument<Base>& arg) {
         if (arg.getOperation() != nullptr) {
             // expression
-            printExpression(*arg.getOperation());
+            return printExpression(*arg.getOperation());
         } else {
             // parameter
-            //printParameter(*arg.getParameter());
+            return printParameter(*arg.getParameter());
         }
     }
 
-    virtual void printExpression(OperationNode<Base>& node) {
+    virtual std::string printExpression(OperationNode<Base>& node) {
         if (getVariableID(node) == 0) {
             // print expression code
             return printExpressionNoVarCheck(node);
+        } else {
+            return makeNodeName(node);
         }
     }
 
-    inline void printNodeName(const Argument <Base>& arg) {
-        printNodeName(_code, arg);
+    virtual std::string printParameter(const Base& value) {
+        if(!_combineParameterNodes) {
+            std::string name = makeNodeName(value);
+
+            _code << name;
+            _code << " [label=\"";
+            _code << std::setprecision(_parameterPrecision) << value;
+            _code << "\"]" << _endline;
+
+            return name;
+        } else {
+            return makeNodeName(value);
+        }
     }
 
-    inline virtual void printNodeName(std::ostringstream& out,
-                                      const Argument <Base>& arg) {
+    inline virtual std::string makeNodeName(const OperationNode<Base>& node) {
+        return "v" + std::to_string(node.getHandlerPosition());
+    }
+
+    inline std::string makeNodeName(const Argument<Base>& arg) {
         if (arg.getOperation() != nullptr) {
             // expression
-            printNodeName(out, *arg.getOperation());
+            return makeNodeName(*arg.getOperation());
         } else {
             // parameter
-            printNodeName(out, *arg.getParameter());
+            return makeNodeName(*arg.getParameter());
         }
     }
 
-    inline void printNodeName(const OperationNode<Base>& node) {
-        printNodeName(_code, node);
+    inline virtual std::string makeNodeName(const Base& value) {
+        if(_combineParameterNodes) {
+            // node name for parameters which have the same node for the same value
+            _ss.str("");
+            _ss << "\"" << std::setprecision(_parameterPrecision) << value << "\"";
+            return _ss.str();
+        } else {
+            std::string name = "p" + std::to_string(parIdx_);
+            parIdx_++;
+            return name;
+        }
     }
 
-    inline virtual void printNodeName(std::ostringstream& out,
-                                      const OperationNode<Base>& node) {
-        out << "v" << node.getHandlerPosition();
+    inline std::string printNodeDeclaration(const OperationNode<Base>& op,
+                                            const std::ostringstream& label,
+                                            const std::string& shape = "") {
+        return printNodeDeclaration(op, label.str(), shape);
     }
 
-    inline virtual void printNodeName(std::ostringstream& out,
-                                      const Base& value) {
-        out << "\"" << std::setprecision(_parameterPrecision) << value << "\"";
-    }
+    virtual std::string printNodeDeclaration(const OperationNode<Base>& op,
+                                             const std::string& label = "",
+                                             const std::string& shape = "") {
+        std::string name = makeNodeName(op);
 
-    virtual void printNodeDeclaration(const OperationNode<Base>& op,
-                                      const std::ostringstream& label,
-                                      const std::string& shape = "") {
-        printNodeDeclaration(op, label.str(), shape);
-    }
-
-    virtual void printNodeDeclaration(const OperationNode<Base>& op,
-                                      const std::string& label = "",
-                                      const std::string& shape = "") {
-        printNodeName(op);
-        _code << " [label=\"";
+        _code << name << " [label=\"";
         if(!label.empty()) {
             _code << label;
         } else {
@@ -588,55 +660,103 @@ protected:
             _code << ", shape=" << shape;
         }
         _code << "]" << _endline;
+
+        return name;
     }
 
-    inline void printEdges(OperationNode<Base>& node,
+    inline void printEdges(const std::string& name,
+                           const OperationNode<Base>& node,
                            const std::string& style = "") {
         const auto& args = node.getArguments();
+
+        std::vector<std::string> aNames(args.size());
+        for (size_t i = 0; i < args.size(); ++i) {
+            aNames[i] = print(args[i]);
+        }
+
         for (size_t i = 0; i < args.size(); ++i) {
             if (i > 0)
                 _code << "  ";
-            printEdge(args[i], node, style);
+            printEdge(aNames[i], name, style);
         }
         _code << _endline;
     }
 
-    inline void printEdges(OperationNode<Base>& node,
+    inline void printEdges(const std::string& name,
+                           const OperationNode<Base>& node,
+                           const std::vector<std::string>& args,
+                           const std::string& style = "") {
+        size_t na = node.getArguments().size();
+        size_t nna = args.size();
+        CPPADCG_ASSERT_UNKNOWN(na >= nna);
+
+        for (size_t i = 0; i < na; ++i) {
+            if (i > 0)
+                _code << "  ";
+            if(i < nna && !args[i].empty()) {
+                printEdge(args[i], name, style);
+            } else {
+                std::string n = print(node.getArguments()[i]);
+                printEdge(n, name, style);
+            }
+        }
+        _code << _endline;
+    }
+
+    inline void printEdges(const std::string& name,
+                           const OperationNode<Base>& node,
+                           const std::vector<std::string>& args,
                            const std::vector<std::string>& styles) {
-        const auto& args = node.getArguments();
+        size_t na = node.getArguments().size();
+        size_t nna = args.size();
+        size_t ns = styles.size();
+        CPPADCG_ASSERT_UNKNOWN(na >= nna);
+        CPPADCG_ASSERT_UNKNOWN(na >= ns);
+
+        std::string style;
         for (size_t i = 0; i < args.size(); ++i) {
             if (i > 0)
                 _code << "  ";
-            printEdge(args[i], node, i < styles.size() ? styles[i] : "");
+
+            style = i < ns ? styles[i] : "";
+            if(i < nna && !args[i].empty()) {
+                printEdge(args[i], name, style);
+            } else {
+                std::string n = print(node.getArguments()[i]);
+                printEdge(n, name, style);
+            }
         }
         _code << _endline;
     }
 
-    inline void printEdge(const Argument<Base>& from,
-                          const OperationNode <Base>& to,
+    inline void printEdge(const OperationNode<Base>& from,
+                          const std::string& to,
                           const std::string& style = "") {
-        printNodeName(from);
-        _code << " -> ";
-        printNodeName(to);
+        _code << makeNodeName(from);
+        _code << " -> " << to;
         if (!style.empty())
             _code << "[" << style << "]";
     }
 
-    virtual void printExpressionNoVarCheck(OperationNode<Base>& node) {
+    inline void printEdge(const std::string& from,
+                          const std::string& to,
+                          const std::string& style = "") {
+        _code << from << " -> " << to;
+        if (!style.empty())
+            _code << "[" << style << "]";
+    }
+
+    virtual std::string printExpressionNoVarCheck(OperationNode<Base>& node) {
         CGOpCode op = node.getOperationType();
         switch (op) {
             case CGOpCode::ArrayCreation:
-                printArrayCreationOp(node);
-                break;
+                return printArrayCreationOp(node);
             case CGOpCode::SparseArrayCreation:
-                printSparseArrayCreationOp(node);
-                break;
+                return printSparseArrayCreationOp(node);
             case CGOpCode::ArrayElement:
-                printArrayElementOp(node);
-                break;
+                return printArrayElementOp(node);
             case CGOpCode::Assign:
-                printAssignOp(node);
-                break;
+                return printAssignOp(node);
 
             case CGOpCode::Abs:
             case CGOpCode::Acos:
@@ -652,129 +772,106 @@ protected:
             case CGOpCode::Sqrt:
             case CGOpCode::Tanh:
             case CGOpCode::Tan:
-                printUnaryFunction(node);
-                break;
+                return printUnaryFunction(node);
             case CGOpCode::AtomicForward: // atomicFunction.forward(q, p, vx, vy, tx, ty)
-                printAtomicForwardOp(node);
-                break;
+                return printAtomicForwardOp(node);
             case CGOpCode::AtomicReverse: // atomicFunction.reverse(p, tx, ty, px, py)
-                printAtomicReverseOp(node);
-                break;
+                return printAtomicReverseOp(node);
             case CGOpCode::Add:
-                printOperationAdd(node);
-                break;
+                return printOperationAdd(node);
             case CGOpCode::Alias:
-                printOperationAlias(node);
-                break;
+                return printOperationAlias(node);
             case CGOpCode::ComLt:
             case CGOpCode::ComLe:
             case CGOpCode::ComEq:
             case CGOpCode::ComGe:
             case CGOpCode::ComGt:
             case CGOpCode::ComNe:
-                printConditionalAssignment(node);
-                break;
+                return printConditionalAssignment(node);
             case CGOpCode::Div:
-                printOperationDiv(node);
-                break;
+                return printOperationDiv(node);
             case CGOpCode::Inv:
                 // do nothing
-                break;
+                return makeNodeName(node);
             case CGOpCode::Mul:
-                printOperationMul(node);
-                break;
+                return printOperationMul(node);
             case CGOpCode::Pow:
-                printPowFunction(node);
-                break;
+                return printPowFunction(node);
             case CGOpCode::Pri:
                 // do nothing
-                break;
+                return makeNodeName(node);
             case CGOpCode::Sub:
-                printOperationMinus(node);
-                break;
+                return printOperationMinus(node);
 
             case CGOpCode::UnMinus:
-                printOperationUnaryMinus(node);
-                break;
+                return printOperationUnaryMinus(node);
 
             case CGOpCode::DependentMultiAssign:
-                printDependentMultiAssign(node);
-                break;
+                return printDependentMultiAssign(node);
 
             case CGOpCode::Index:
-                return; // nothing to do
+                return makeNodeName(node); // nothing to do
 
             case CGOpCode::IndexAssign:
-                printIndexAssign(node);
-                break;
+                return printIndexAssign(node);
             case CGOpCode::IndexDeclaration:
-                return; // already done
+                return makeNodeName(node); // already done
 
             case CGOpCode::LoopStart:
-                printLoopStart(node);
-                break;
+                return printLoopStart(node);
             case CGOpCode::LoopIndexedIndep:
-                printLoopIndexedIndep(node);
-                break;
+                return printLoopIndexedIndep(node);
             case CGOpCode::LoopIndexedDep:
-                printLoopIndexedDep(node);
-                break;
+                return printLoopIndexedDep(node);
             case CGOpCode::LoopIndexedTmp:
-                printLoopIndexedTmp(node);
-                break;
+                return printLoopIndexedTmp(node);
             case CGOpCode::TmpDcl:
                 // nothing to do
-                return;
+                return makeNodeName(node);
             case CGOpCode::Tmp:
-                printTmpVar(node);
-                break;
+                return printTmpVar(node);
             case CGOpCode::LoopEnd:
-                printLoopEnd(node);
-                break;
+                return printLoopEnd(node);
             case CGOpCode::IndexCondExpr:
-                printIndexCondExprOp(node);
-                break;
+                return printIndexCondExprOp(node);
             case CGOpCode::StartIf:
-                printStartIf(node);
-                break;
+                return printStartIf(node);
             case CGOpCode::ElseIf:
-                printElseIf(node);
-                break;
+                return printElseIf(node);
             case CGOpCode::Else:
-                printElse(node);
-                break;
+                return printElse(node);
             case CGOpCode::EndIf:
-                printEndIf(node);
-                break;
+                return printEndIf(node);
             case CGOpCode::CondResult:
-                printCondResult(node);
-                break;
+                return printCondResult(node);
             default:
                 throw CGException("Unknown operation code '", op, "'.");
         }
     }
 
-    virtual void printAssignOp(OperationNode<Base>& node) {
+    virtual std::string printAssignOp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for assign operation");
 
-        print(node.getArguments()[0]);
+        return print(node.getArguments()[0]);
     }
 
-    virtual void printPowFunction(OperationNode<Base>& op) {
+    virtual std::string printPowFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for pow() function");
 
-        print(op.getArguments()[0]);
-        print(op.getArguments()[1]);
+        std::string a0 = print(op.getArguments()[0]);
+        std::string a1 = print(op.getArguments()[1]);
 
-        printNodeDeclaration(op);
+        std::string name = printNodeDeclaration(op);
 
-        printEdges(op, std::vector<std::string>{"label=\"$1\"", "label=\"$2\""});
+        printEdges(name, op, std::vector<std::string>{a0, a1}, std::vector<std::string>{"label=\"$1\"", "label=\"$2\""});
+
+        return name;
     }
 
-    virtual void printUnaryFunction(OperationNode<Base>& op) {
+    virtual std::string printUnaryFunction(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for an unary function");
 
-        print(op.getArguments()[0]);
+        std::string a0 = print(op.getArguments()[0]);
 
         // TODO: improve this
         _ss.str("");
@@ -784,90 +881,104 @@ protected:
         if (it != std::string::npos) {
             label = label.substr(0, it);
         }
-        printNodeDeclaration(op, label);
+        std::string name = printNodeDeclaration(op, label);
 
-        printEdges(op);
+        printEdges(name, op, std::vector<std::string> {a0});
+
+        return name;
     }
 
-    virtual void printOperationAlias(OperationNode<Base>& op) {
+    virtual std::string printOperationAlias(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for alias");
 
-        print(op.getArguments()[0]);
+        std::string a0 = print(op.getArguments()[0]);
 
-        printNodeDeclaration(op);
+        std::string name = printNodeDeclaration(op);
 
-        printEdges(op);
+        printEdges(name, op, std::vector<std::string> {a0});
+
+        return name;
     }
 
-    virtual void printOperationAdd(OperationNode<Base>& op) {
+    virtual std::string printOperationAdd(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for addition");
 
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        print(left);
-        print(right);
+        std::string a0 = print(left);
+        std::string a1 = print(right);
 
-        printNodeDeclaration(op, "+");
+        std::string name = printNodeDeclaration(op, "+");
 
-        printEdges(op);
+        printEdges(name, op, std::vector<std::string> {a0, a1});
+
+        return name;
     }
 
-    virtual void printOperationMinus(OperationNode<Base>& op) {
+    virtual std::string printOperationMinus(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for subtraction");
 
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        print(left);
-        print(right);
+        std::string a0 = print(left);
+        std::string a1 = print(right);
 
-        printNodeDeclaration(op);
+        std::string name = printNodeDeclaration(op);
 
-        printEdges(op, std::vector<std::string>{"label=\"left\"", "label=\"right\""});
+        printEdges(name, op, std::vector<std::string> {a0, a1}, std::vector<std::string>{"label=\"$1\"", "label=\"$2\""});
+
+        return name;
     }
 
-    virtual void printOperationDiv(OperationNode<Base>& op) {
+    virtual std::string printOperationDiv(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for division");
 
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        print(left);
-        print(right);
+        std::string a0 = print(left);
+        std::string a1 = print(right);
 
-        printNodeDeclaration(op);
+        std::string name = printNodeDeclaration(op);
 
-        printEdges(op, std::vector<std::string>{"label=\"$1\"", "label=\"$2\""});
+        printEdges(name, op, std::vector<std::string> {a0, a1}, std::vector<std::string>{"label=\"$1\"", "label=\"$2\""});
+
+        return name;
     }
 
-    virtual void printOperationMul(OperationNode<Base>& op) {
+    virtual std::string printOperationMul(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for multiplication");
 
         const Argument<Base>& left = op.getArguments()[0];
         const Argument<Base>& right = op.getArguments()[1];
 
-        print(left);
-        print(right);
+        std::string a0 = print(left);
+        std::string a1 = print(right);
 
-        printNodeDeclaration(op, "×");
+        std::string name = printNodeDeclaration(op, "×");
 
-        printEdges(op);
+        printEdges(name, op, std::vector<std::string> {a0, a1});
+
+        return name;
     }
 
-    virtual void printOperationUnaryMinus(OperationNode<Base>& op) {
+    virtual std::string printOperationUnaryMinus(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 1, "Invalid number of arguments for unary minus");
 
         const Argument<Base>& arg = op.getArguments()[0];
 
-        print(arg);
+        std::string a0 = print(arg);
 
-        printNodeDeclaration(op);
+        std::string name = printNodeDeclaration(op);
 
-        printEdges(op);
+        printEdges(name, op, std::vector<std::string> {a0});
+
+        return name;
     }
 
-    virtual void printConditionalAssignment(OperationNode<Base>& node) {
+    virtual std::string printConditionalAssignment(OperationNode<Base>& node) {
         CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
 
         const std::vector<Argument<Base> >& args = node.getArguments();
@@ -876,30 +987,34 @@ protected:
         const Argument<Base>& trueCase = args[2];
         const Argument<Base>& falseCase = args[3];
 
-        print(left);
-        print(right);
-        print(trueCase);
-        print(falseCase);
+        std::string a0 = print(left);
+        std::string a1 = print(right);
+        std::string a2 = print(trueCase);
+        std::string a3 = print(falseCase);
 
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
         /**
          * Connections
          */
-        printEdges(node, std::vector<std::string>{"label=\"left\"", "label=\"right\"", "label=\"true\"", "label=\"false\""});
+        printEdges(name, node, std::vector<std::string> {a0, a1, a2, a3},
+                   std::vector<std::string>{"label=\"left\"", "label=\"right\"", "label=\"true\"", "label=\"false\""});
+
+        return name;
     }
 
-    virtual void printArrayCreationOp(OperationNode<Base>& op);
+    virtual std::string printArrayCreationOp(OperationNode<Base>& op);
 
-    virtual void printSparseArrayCreationOp(OperationNode<Base>& op);
+    virtual std::string printSparseArrayCreationOp(OperationNode<Base>& op);
 
-    inline size_t printArrayCreationUsingLoop(const OperationNode<Base>& array,
+    inline size_t printArrayCreationUsingLoop(const std::string arrayName,
+                                              const OperationNode<Base>& array,
                                               size_t startj,
                                               const size_t* indexes);
 
-    virtual void printArrayElementOp(OperationNode<Base>& op);
+    virtual std::string printArrayElementOp(OperationNode<Base>& op);
 
-    virtual void printAtomicForwardOp(OperationNode<Base>& atomicFor) {
+    virtual std::string printAtomicForwardOp(OperationNode<Base>& atomicFor) {
         CPPADCG_ASSERT_KNOWN(atomicFor.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation");
         int q = atomicFor.getInfo()[1];
         int p = atomicFor.getInfo()[2];
@@ -909,40 +1024,39 @@ protected:
 
         size_t id = atomicFor.getInfo()[0];
 
-        printNodeDeclaration(atomicFor, _info->atomicFunctionId2Name.at(id) + ".forward(" + std::to_string(q) + ", " + std::to_string(p) + ", tx, ty)");
+        std::string name = printNodeDeclaration(atomicFor, _info->atomicFunctionId2Name.at(id) + ".forward(" + std::to_string(q) + ", " + std::to_string(p) + ", tx, ty)");
 
         /**
          * Edges
          */
-        //size_t id = atomicFor.getInfo()[0];
+        std::vector<std::string> args(opArgs.size()); // argument node names
+
         std::vector<OperationNode<Base>*> tx(p1), ty(p1);
         for (size_t k = 0; k < p1; k++) {
             tx[k] = opArgs[0 * p1 + k].getOperation();
             ty[k] = opArgs[1 * p1 + k].getOperation();
 
-            print(*tx[k]);
-            print(*ty[k]);
+            args[0 * p1 + k] = print(*tx[k]);
+            args[1 * p1 + k] = print(*ty[k]);
         }
 
         for (size_t k = 0; k < p1; k++) {
-            printNodeName(*tx[k]);
-            _code << " -> ";
-            printNodeName(atomicFor);
-            _code << "[label=\"tx" << k << "\"]  ";
+            printEdge(args[0 * p1 + k], name, "label=\"tx" + std::to_string(k) + "\"");
+            _code << "  ";
 
-            printNodeName(*ty[k]);
-            _code << " -> ";
-            printNodeName(atomicFor);
-            _code << "[label=\"ty" << k << "\"]  ";
+            printEdge(args[1 * p1 + k], name, "label=\"ty" + std::to_string(k) + "\"");
+            _code << "  ";
         }
         _code << _endline;
 
         CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
         CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
         CPPADCG_ASSERT_KNOWN(ty[p]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
+
+        return name;
     }
 
-    virtual void printAtomicReverseOp(OperationNode<Base>& atomicRev) {
+    virtual std::string printAtomicReverseOp(OperationNode<Base>& atomicRev) {
         CPPADCG_ASSERT_KNOWN(atomicRev.getInfo().size() == 2, "Invalid number of information elements for atomic reverse operation");
         int p = atomicRev.getInfo()[1];
         size_t p1 = p + 1;
@@ -951,38 +1065,37 @@ protected:
 
         size_t id = atomicRev.getInfo()[0];
 
-        printNodeDeclaration(atomicRev, _info->atomicFunctionId2Name.at(id) + ".reverse(" + std::to_string(p) + ", tx, px, py)");
+        std::string name = printNodeDeclaration(atomicRev, _info->atomicFunctionId2Name.at(id) + ".reverse(" + std::to_string(p) + ", tx, px, py)");
 
         /**
          * Edges
          */
-        //size_t id = atomicRev.getInfo()[0];
+        std::vector<std::string> args(opArgs.size()); // argument node names
+
         std::vector<OperationNode<Base>*> tx(p1), px(p1), py(p1);
         for (size_t k = 0; k < p1; k++) {
             tx[k] = opArgs[0 * p1 + k].getOperation();
             px[k] = opArgs[2 * p1 + k].getOperation();
             py[k] = opArgs[3 * p1 + k].getOperation();
 
-            print(*tx[k]);
-            print(*px[k]);
-            print(*py[k]);
+            args[0 * p1 + k] = print(*tx[k]);
+            args[1 * p1 + k] = print(opArgs[1 * p1 + k]); // todo: consider not showing this
+            args[2 * p1 + k] = print(*px[k]);
+            args[3 * p1 + k] = print(*py[k]);
         }
 
         for (size_t k = 0; k < p1; k++) {
-            printNodeName(*tx[k]);
-            _code << " -> ";
-            printNodeName(atomicRev);
-            _code << "[label=\"tx" << k << "\"]  ";
+            printEdge(args[0 * p1 + k], name, "label=\"tx" + std::to_string(k) + "\"");
+            _code << "  ";
 
-            printNodeName(*px[k]);
-            _code << " -> ";
-            printNodeName(atomicRev);
-            _code << "[label=\"px" << k << "\"]  ";
+            printEdge(args[1 * p1 + k], name, "label=\"ty" + std::to_string(k) + "\"");
+            _code << "  ";
 
-            printNodeName(*py[k]);
-            _code << " -> ";
-            printNodeName(atomicRev);
-            _code << "[label=\"py" << k << "\"]  ";
+            printEdge(args[2 * p1 + k], name, "label=\"px" + std::to_string(k) + "\"");
+            _code << "  ";
+
+            printEdge(args[3 * p1 + k], name, "label=\"py" + std::to_string(k) + "\"");
+            _code << "  ";
         }
         _code << _endline;
 
@@ -993,18 +1106,22 @@ protected:
 
         CPPADCG_ASSERT_KNOWN(py[0]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
         CPPADCG_ASSERT_KNOWN(p == 0 || py[1]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
+
+        return name;
     }
 
-    virtual void printDependentMultiAssign(OperationNode<Base>& node) {
+    virtual std::string printDependentMultiAssign(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::DependentMultiAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments");
 
-        printNodeDeclaration(node, "+=");
+        std::string name = printNodeDeclaration(node, "+=");
 
         const std::vector<Argument<Base> >& args = node.getArguments();
         for (size_t a = 0; a < args.size(); a++) {
             bool useArg = false;
             const Argument<Base>& arg = args[a];
+            std::string aName = print(arg);
+
             if (arg.getParameter() != nullptr) {
                 useArg = true;
             } else {
@@ -1013,23 +1130,19 @@ protected:
             }
 
             if (useArg) {
-                printNodeName(arg);
-                _code << " -> ";
-                printNodeName(node);
-                _code << "[label=\"+=\"]";
+                printEdge(aName, name, "label=\"+=\"");
                 _code << _endline;
-                return;
+                break;
             } else {
-                printNodeName(arg);
-                _code << " -> ";
-                printNodeName(node);
-                _code << "[color=grey]";
+                printEdge(aName, name, "color=grey");
                 _code << _endline;
             }
         }
+
+        return name;
     }
 
-    virtual void printLoopStart(OperationNode<Base>& node) {
+    virtual std::string printLoopStart(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type");
 
         LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
@@ -1046,47 +1159,47 @@ protected:
         } else {
             _ss << "for " << jj << " ∈ [0, " << (lnode.getIterationCount() - 1) << "]";
         }
-        printNodeDeclaration(node, _ss, "parallelogram");
+        std::string name = printNodeDeclaration(node, _ss, "parallelogram");
 
         /**
          * connections
          */
         if (lnode.getIterationCountNode() != nullptr) {
-            printNodeName(*lnode.getIterationCountNode());
-            _code << " -> ";
-            printNodeName(node);
-            _code << "[label=\"" << lnode.getIterationCountNode()->getIndex().getName() << "\"]"; // is label ready necessary?
+            // is label ready necessary?
+            printEdge(*lnode.getIterationCountNode(), name, "label=\"" + (*lnode.getIterationCountNode()->getIndex().getName()) + "\"");
             _code << _endline;
         }
 
-        printNodeName(lnode.getIndex());
-        _code << " -> ";
-        printNodeName(node);
-        _code << "[label=\"index " << jj << "\"]";
+        printEdge(lnode.getIndex(), name, "label=\"index " + jj + "\"");
         _code << _endline;
+
+        return name;
     }
 
-    virtual void printLoopEnd(OperationNode<Base>& node) {
+    virtual std::string printLoopEnd(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopEnd, "Invalid node type");
 
-        printNodeDeclaration(node);
+        std::string name = printNodeDeclaration(node);
 
-        printEdges(node, "color=grey");
+        printEdges(name, node, "color=grey");
 
         _currentLoops.pop_back();
+
+        return name;
     }
 
-    virtual void printLoopIndexedDep(OperationNode<Base>& node) {
+    virtual std::string printLoopIndexedDep(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation");
 
-        // LoopIndexedDep
-        auto& arg = node.getArguments()[0];
-        print(arg);
+        std::string name = printNodeDeclaration(node);
 
-        printEdges(node);
+        // LoopIndexedDep
+        printEdges(name, node);
+
+        return name;
     }
 
-    virtual void printLoopIndexedIndep(OperationNode<Base>& node) {
+    virtual std::string printLoopIndexedIndep(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedIndep, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getInfo().size() == 1, "Invalid number of information elements for loop indexed independent operation");
 
@@ -1094,25 +1207,27 @@ protected:
         const IndexPattern* ip = _info->loopIndependentIndexPatterns[pos];
         _ss << _nameGen->generateIndexedIndependent(node, getVariableID(node), *ip);
 
-        printNodeDeclaration(node, _ss);
+        std::string name = printNodeDeclaration(node, _ss);
 
-        printEdges(node);
+        printEdges(name, node);
+
+        return name;
     }
 
-    virtual void printLoopIndexedTmp(OperationNode<Base>& node) {
+    virtual std::string printLoopIndexedTmp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopIndexedTmp, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for loop indexed temporary operation");
         OperationNode<Base>* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
-        print(node.getArguments()[1]);
+        std::string name = printNodeDeclaration(node);
 
-        printNodeDeclaration(node);
+        printEdges(name, node);
 
-        printEdges(node);
+        return name;
     }
 
-    virtual void printTmpVar(OperationNode<Base>& node) {
+    virtual std::string printTmpVar(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Tmp, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for temporary variable usage operation");
 #ifndef NDEBUG
@@ -1120,9 +1235,11 @@ protected:
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 #endif
         // do nothing
+
+        return makeNodeName(node);
     }
 
-    virtual void printIndexAssign(OperationNode<Base>& node) {
+    virtual std::string printIndexAssign(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation");
 
@@ -1133,21 +1250,21 @@ protected:
         _ss << (*inode.getIndex().getName()) << " = ";
         indexPattern2String(_ss, ip, inode.getIndexPatternIndexes());
 
-        printNodeDeclaration(node, _ss);
+        std::string name = printNodeDeclaration(node, _ss);
 
         /**
          * Connections
          */
         for (const auto* idx: inode.getIndexPatternIndexes()) {
-            printNodeName(*idx);
-            _code << " -> ";
-            printNodeName(node);
+            printEdge(*idx, name);
             _code << "  ";
         }
         _code << _endline;
+
+        return name;
     }
 
-    virtual void printIndexCondExprOp(OperationNode<Base>& node) {
+    virtual std::string printIndexCondExprOp(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexCondExpr, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 1, "Invalid number of arguments for an index condition expression operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an index condition expression operation");
@@ -1158,10 +1275,15 @@ protected:
         IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
         const std::string& index = *iterationIndexOp.getIndex().getName();
 
-        printIndexCondExpr(_code, info, index);
+        _ss.str("");
+        printIndexCondExpr(_ss, info, index);
+
+        std::string name = printNodeDeclaration(node, _ss);
+
+        return name;
     }
 
-    virtual void printStartIf(OperationNode<Base>& node) {
+    virtual std::string printStartIf(OperationNode<Base>& node) {
         /**
          * the first argument is the condition, following arguments are
          * just extra dependencies that must be defined outside the if
@@ -1171,12 +1293,15 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'if start' operation");
 
         //printIndexCondExprOp(*node.getArguments()[0].getOperation());
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
-        printEdges(node, std::vector<std::string>{"label=\"condition\""});
+        printEdges(name, node, std::vector<std::string>{},
+                   std::vector<std::string>{"label=\"condition\""});
+
+        return name;
     }
 
-    virtual void printElseIf(OperationNode<Base>& node) {
+    virtual std::string printElseIf(OperationNode<Base>& node) {
         /**
          * the first argument is the condition, the second argument is the 
          * if start node, the following arguments are assignments in the
@@ -1187,12 +1312,15 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'else if' operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != nullptr, "Invalid argument for an 'else if' operation");
 
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
-        printEdges(node, std::vector<std::string>{"label=\"false\"", "label=\"condition\""});
+        printEdges(name, node, std::vector<std::string>{},
+                   std::vector<std::string>{"label=\"false\"", "label=\"condition\""});
+
+        return name;
     }
 
-    virtual void printElse(OperationNode<Base>& node) {
+    virtual std::string printElse(OperationNode<Base>& node) {
         /**
          * the first argument is the  if start node, the following arguments
          * are assignments in the previous if branch
@@ -1200,20 +1328,25 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Else, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for an 'else' operation");
 
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
-        printEdges(node, std::vector<std::string>{"label=\"false\""});
+        printEdges(name, node, std::vector<std::string>{},
+                   std::vector<std::string>{"label=\"false\""});
+
+        return name;
     }
 
-    virtual void printEndIf(OperationNode<Base>& node) {
+    virtual std::string printEndIf(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::EndIf, "Invalid node type for an 'end if' operation");
 
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
-        printEdges(node);
+        printEdges(name, node);
+
+        return name;
     }
 
-    virtual void printCondResult(OperationNode<Base>& node) {
+    virtual std::string printCondResult(OperationNode<Base>& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::CondResult, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() == 2, "Invalid number of arguments for an assignment inside an if/else operation");
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an an assignment inside an if/else operation");
@@ -1222,9 +1355,11 @@ protected:
         print(node.getArguments()[0]); // condition start (e.g if or else if)
         print(node.getArguments()[1]); // temporary result
 
-        printNodeDeclaration(node, "", "diamond");
+        std::string name = printNodeDeclaration(node, "", "diamond");
 
-        printEdges(node);
+        printEdges(name, node);
+
+        return name;
     }
 
     inline bool isDependent(const OperationNode<Base>& arg) const {

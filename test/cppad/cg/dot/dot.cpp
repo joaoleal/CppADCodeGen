@@ -75,3 +75,57 @@ TEST(CppADCGDotTest, dot) {
     ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm.svg", system::createPath(dir, "algorithm.dot")}));
 
 }
+
+
+TEST(CppADCGDotTest, dot_param) {
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variable vector
+    CppAD::vector<ADCG> x(2);
+    x[0] = 2.;
+    x[1] = 3.;
+    Independent(x);
+
+    // dependent variable vector
+    CppAD::vector<ADCG> y(4);
+
+    // the model
+    ADCG a = x[0] / 1. + x[1] * x[1];
+    ADCG b = a / 2e-6;
+    y[0] = b + 1 / (sign(b)*5 * a);
+    y[1] = b + pow(a, 2 * b);
+    y[2] = b + pow(3 * a, 2.0);
+    y[3] = x[1];
+
+    ADFun<CGD> fun(x, y); // the model tape
+
+    /**
+     * start the special steps for source code generation
+     * for a Jacobian
+     */
+    CodeHandler<double> handler;
+
+    CppAD::vector<CGD> indVars(2);
+    handler.makeVariables(indVars);
+
+    //CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
+    CppAD::vector<CGD> vals = fun.Forward(0, indVars);
+
+    LanguageDot<double> langDot;
+    langDot.setCombineParameterNodes(false);
+    LangCDefaultVariableNameGenerator<double> nameGen;
+
+    std::ofstream texfile;
+    texfile.open("algorithm2.dot");
+
+    handler.generateCode(texfile, langDot, vals, nameGen);
+
+    texfile.close();
+
+    std::string dir = system::getWorkingDirectory();
+
+    ASSERT_NO_THROW(system::callExecutable(GRAPHVIZ_DOT_PATH,{"-Tsvg", "-oalgorithm2.svg", system::createPath(dir, "algorithm2.dot")}));
+
+}
