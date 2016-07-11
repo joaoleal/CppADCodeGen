@@ -51,6 +51,17 @@ ADD_CUSTOM_TARGET(link_or_copy_latex_template
                   DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/latex_template.tex")
 ADD_DEPENDENCIES(source_generation_latex link_or_copy_latex_template)
 
+################################################################################
+#                             source_generation_dot
+################################################################################
+ADD_EXECUTABLE(source_generation_dot source_generation_dot.cpp)
+SET(EXAMPLES_COMMAND "COMMAND source_generation_dot")
+ADD_CUSTOM_TARGET(example_source_generation_dot
+                  COMMAND source_generation_dot)
+
+IF(PDFLATEX_COMPILER)
+    ADD_DEFINITIONS(-DGRAPHVIZ_DOT_PATH="${GRAPHVIZ_DOT_PATH}")
+ENDIF()
 
 IF(UNIX)
     ############################################################################
@@ -87,6 +98,7 @@ ADD_CUSTOM_TARGET(examples)
 ADD_DEPENDENCIES(examples example_source_generation_c)
 ADD_DEPENDENCIES(examples example_source_generation_latex)
 ADD_DEPENDENCIES(examples example_source_generation_mathml)
+ADD_DEPENDENCIES(examples example_source_generation_dot)
 IF(UNIX)
     ADD_DEPENDENCIES(examples example_dynamic_linux)
     ADD_DEPENDENCIES(examples example_lagrangian)
