@@ -262,7 +262,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
         /**
          * constant value?
          */
-        const Base& value = *args[0].getParameter();
+        const Base& value = *args[starti].getParameter();
         for (; i < argSize; i++) {
             if (args[i].getParameter() == nullptr || *args[i].getParameter() != value) {
                 break; // not the same constant value
