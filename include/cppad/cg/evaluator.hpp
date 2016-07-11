@@ -48,6 +48,7 @@ protected:
     CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
     std::map<size_t, CppAD::vector<ActiveOut>* > evalsArrays_;
     bool underEval_;
+    size_t depth_;
 public:
 
     /**
@@ -120,11 +121,14 @@ public:
         evals_.fill(nullptr);
         evals_.adjustSize();
 
+        depth_ = 0;
+
         try {
 
             indep_ = indepNew;
 
             for (size_t i = 0; i < depSize; i++) {
+                CPPADCG_ASSERT_UNKNOWN(depth_ == 0);
                 depNew[i] = evalCG(depOld[i]);
             }
 
@@ -188,108 +192,11 @@ protected:
         }
 
         // first evaluation of this node
-        const CGOpCode code = node.getOperationType();
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
 
-        ActiveOut result;
-        switch (code) {
-            case CGOpCode::Assign:
-                result = thisOps.evalAssign(node);
-                break;
-            case CGOpCode::Abs: //  abs(variable)
-                result = thisOps.evalAbs(node);
-                break;
-            case CGOpCode::Acos: // acos(variable)
-                result = thisOps.evalAcos(node);
-                break;
-            case CGOpCode::Add: //  a + b
-                result = thisOps.evalAdd(node);
-                break;
-            case CGOpCode::Alias:
-                result = thisOps.evalAlias(node);
-                break;
-                //case CGArrayCreationOp: // {a, b, c ...}
-            case CGOpCode::ArrayElement: // x[i]
-                result = thisOps.evalArrayElement(node);
-                break;
-            case CGOpCode::Asin: // asin(variable)
-                result = thisOps.evalAsin(node);
-                break;
-            case CGOpCode::Atan: // atan(variable)
-                result = thisOps.evalAtan(node);
-                break;
-                //CGAtomicForwardOp
-                //CGAtomicReverseOp
-            case CGOpCode::ComLt: // result = left < right? trueCase: falseCase
-                result = thisOps.evalCompareLt(node);
-                break;
-            case CGOpCode::ComLe: // result = left <= right? trueCase: falseCase
-                result = thisOps.evalCompareLe(node);
-                break;
-            case CGOpCode::ComEq: // result = left == right? trueCase: falseCase
-                result = thisOps.evalCompareEq(node);
-                break;
-            case CGOpCode::ComGe: // result = left >= right? trueCase: falseCase
-                result = thisOps.evalCompareGe(node);
-                break;
-            case CGOpCode::ComGt: // result = left > right? trueCase: falseCase
-                result = thisOps.evalCompareGt(node);
-                break;
-            case CGOpCode::ComNe: // result = left != right? trueCase: falseCase
-                result = thisOps.evalCompareNe(node);
-                break;
-            case CGOpCode::Cosh: // cosh(variable)
-                result = thisOps.evalCosh(node);
-                break;
-            case CGOpCode::Cos: //  cos(variable)
-                result = thisOps.evalCos(node);
-                break;
-            case CGOpCode::Div: // a / b
-                result = thisOps.evalDiv(node);
-                break;
-            case CGOpCode::Exp: //  exp(variable)
-                 result = thisOps.evalExp(node);
-                break;
-            case CGOpCode::Inv: //                             independent variable
-                result = thisOps.evalIndependent(node);
-                break;
-            case CGOpCode::Log: //  log(variable)
-                result = thisOps.evalLog(node);
-                break;
-            case CGOpCode::Mul: // a * b
-                result = thisOps.evalMul(node);
-                break;
-            case CGOpCode::Pow: //  pow(a,   b)
-                result = thisOps.evalPow(node);
-                break;
-                //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
-            case CGOpCode::Sign: // result = (x > 0)? 1.0:((x == 0)? 0.0:-1)
-                result = thisOps.evalSign(node);
-                break;
-            case CGOpCode::Sinh: // sinh(variable)
-                result = thisOps.evalSinh(node);
-                break;
-            case CGOpCode::Sin: //  sin(variable)
-                result = thisOps.evalSin(node);
-                break;
-            case CGOpCode::Sqrt: // sqrt(variable)
-                result = thisOps.evalSqrt(node);
-                break;
-            case CGOpCode::Sub: //  a - b
-                result = thisOps.evalSub(node);
-                break;
-            case CGOpCode::Tanh: //  tanh(variable)
-                result = thisOps.evalTanh(node);
-                break;
-            case CGOpCode::Tan: //  tan(variable)
-                result = thisOps.evalTan(node);
-                break;
-            case CGOpCode::UnMinus: // -(a)
-                result = thisOps.evalMinus(node);
-                break;
-            default:
-                result = thisOps.evalUnsupportedOperation(node);
-        }
+        depth_++;
+
+        ActiveOut result = thisOps.evalOperation(node);
 
         // save it for reuse
         CPPADCG_ASSERT_UNKNOWN(evals_[node] == nullptr);
@@ -297,6 +204,8 @@ protected:
         evals_[node] = resultPtr;
 
         thisOps.processActiveOut(node, *resultPtr);
+
+        depth_--;
 
         return *resultPtr;
     }
@@ -361,6 +270,118 @@ public:
 protected:
 
     using Base::evalArg;
+
+    /**
+     * Clones a node with the new type.
+     * Override this method to add a custom node generation behaviour which
+     * does not follow the original operation graph.
+     *
+     * @param node the original node
+     * @return the clone of the original node
+     */
+    inline ActiveOut evalOperation(OperationNode<ScalarIn>& node) {
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+
+        const CGOpCode code = node.getOperationType();
+        switch (code) {
+            case CGOpCode::Assign:
+                return thisOps.evalAssign(node);
+
+            case CGOpCode::Abs: //  abs(variable)
+                return thisOps.evalAbs(node);
+
+            case CGOpCode::Acos: // acos(variable)
+                return thisOps.evalAcos(node);
+
+            case CGOpCode::Add: //  a + b
+                return thisOps.evalAdd(node);
+
+            case CGOpCode::Alias:
+                return thisOps.evalAlias(node);
+
+                //case CGArrayCreationOp: // {a, b, c ...}
+            case CGOpCode::ArrayElement: // x[i]
+                return thisOps.evalArrayElement(node);
+
+            case CGOpCode::Asin: // asin(variable)
+                return thisOps.evalAsin(node);
+
+            case CGOpCode::Atan: // atan(variable)
+                return thisOps.evalAtan(node);
+
+                //CGAtomicForwardOp
+                //CGAtomicReverseOp
+            case CGOpCode::ComLt: // return left < right? trueCase: falseCase
+                return thisOps.evalCompareLt(node);
+
+            case CGOpCode::ComLe: // return left <= right? trueCase: falseCase
+                return thisOps.evalCompareLe(node);
+
+            case CGOpCode::ComEq: // return left == right? trueCase: falseCase
+                return thisOps.evalCompareEq(node);
+
+            case CGOpCode::ComGe: // return left >= right? trueCase: falseCase
+                return thisOps.evalCompareGe(node);
+
+            case CGOpCode::ComGt: // return left > right? trueCase: falseCase
+                return thisOps.evalCompareGt(node);
+
+            case CGOpCode::ComNe: // return left != right? trueCase: falseCase
+                return thisOps.evalCompareNe(node);
+
+            case CGOpCode::Cosh: // cosh(variable)
+                return thisOps.evalCosh(node);
+
+            case CGOpCode::Cos: //  cos(variable)
+                return thisOps.evalCos(node);
+
+            case CGOpCode::Div: // a / b
+                return thisOps.evalDiv(node);
+
+            case CGOpCode::Exp: //  exp(variable)
+                return thisOps.evalExp(node);
+
+            case CGOpCode::Inv: //                             independent variable
+                return thisOps.evalIndependent(node);
+
+            case CGOpCode::Log: //  log(variable)
+                return thisOps.evalLog(node);
+
+            case CGOpCode::Mul: // a * b
+                return thisOps.evalMul(node);
+
+            case CGOpCode::Pow: //  pow(a,   b)
+                return thisOps.evalPow(node);
+
+                //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
+            case CGOpCode::Sign: // return (x > 0)? 1.0:((x == 0)? 0.0:-1)
+                return thisOps.evalSign(node);
+
+            case CGOpCode::Sinh: // sinh(variable)
+                return thisOps.evalSinh(node);
+
+            case CGOpCode::Sin: //  sin(variable)
+                return thisOps.evalSin(node);
+
+            case CGOpCode::Sqrt: // sqrt(variable)
+                return thisOps.evalSqrt(node);
+
+            case CGOpCode::Sub: //  a - b
+                return thisOps.evalSub(node);
+
+            case CGOpCode::Tanh: //  tanh(variable)
+                return thisOps.evalTanh(node);
+
+            case CGOpCode::Tan: //  tan(variable)
+                return thisOps.evalTan(node);
+
+            case CGOpCode::UnMinus: // -(a)
+                return thisOps.evalMinus(node);
+
+            default:
+                return thisOps.evalUnsupportedOperation(node);
+        }
+    }
 
     inline ActiveOut evalAssign(const NodeIn& node) {
         const std::vector<ArgIn>& args = node.getArguments();
