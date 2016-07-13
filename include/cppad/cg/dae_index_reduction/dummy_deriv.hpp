@@ -702,14 +702,6 @@ protected:
 
         vector<bool> jacSparsity = jacobianSparsity<vector<bool> >(*reducedFun_);
 
-        std::map<int, int> origAssignedVar2Eq;
-        for (size_t i = 0; i < eqInfo.size(); ++i) {
-            if (eqInfo[i].getAssignedVarIndex() >= 0) {
-                origAssignedVar2Eq[eqInfo[i].getAssignedVarIndex()] = i;
-            }
-        }
-
-
         vector<Vnode<Base>*> diffVariables;
         vector<Vnode<Base>*> dummyVariables;
         vector<Vnode<Base>*> variables;
@@ -757,6 +749,7 @@ protected:
 
                         vector<SourceCodePath> paths = handler.findPaths(*dep.getOperationNode(), *indep.getOperationNode(), 2);
                         if (paths.size() == 1 && isSolvable(paths[0])) {
+                        //if (handler.isSolvable(*dep.getOperationNode(), *indep.getOperationNode())) {
                             equations[i]->addVariable(j);
                         }
                     }
@@ -770,7 +763,7 @@ protected:
 
 
             /**
-             * Match equations to variables
+             * Match equations to variables (derivatives and dummy derivatives only)
              */
             while (true) {
                 size_t assigned;
@@ -859,6 +852,24 @@ protected:
                 }
             }
 
+
+            /**
+             * Assign algebraic variables (except dummy derivatives)
+             * This is only for information purposes!
+             */
+            for (Vnode<Base>* j : variables) { // previous assignments must not change!
+                if (j->assignmentEquation() != nullptr) {
+                    j->deleteNode();
+                }
+            }
+
+            AugmentPathDepthLookahead<Base> augment;
+            for(Enode<Base>* i: equations) {
+                if (i->assignmentVariable() == nullptr) {
+                    augment.augmentPath(*i);
+                }
+            }
+
             /**
              * save results
              */
@@ -868,14 +879,6 @@ protected:
                     DaeEquationInfo& eq = eqInfo[i];
 
                     if (eq.getAssignedVarIndex() != int(j->tapeIndex())) {
-                        if (eq.getAssignedVarIndex() >= 0) {
-                            // switch variables
-                            if (origAssignedVar2Eq.find(j->tapeIndex()) != origAssignedVar2Eq.end()) {
-                                DaeEquationInfo& origAssignedEq = eqInfo[origAssignedVar2Eq.at(j->tapeIndex())];
-                                origAssignedEq.setAssignedVarIndex(eq.getAssignedVarIndex());
-                            }
-                        }
-
                         eq.setAssignedVarIndex(j->tapeIndex());
                     }
                 }
@@ -954,7 +957,7 @@ protected:
             //newEqInfo[bestEquation].setAssignedVarIndex(jj.getAntiDerivative());
         } catch (const CGException& ex) {
             // unable to solve for a dummy variable: keep the equation and variable
-            throw CGException("Failed to generate to solve equation ", i.name(), " for variable ", j.name(), ": ", ex.what());
+            throw CGException("Failed to solve equation ", i.name(), " for variable ", j.name(), ": ", ex.what());
         }
 
 
@@ -1001,6 +1004,7 @@ protected:
                 for (const auto& it : tape2FreeVariables) {
                     size_t j = it.first;
                     if (localJacSparsity[n * a.index() + j]) {
+                        //if (handler.isSolvable(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode())) {
                         vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode(), 2);
                         if (paths.size() == 1 && isSolvable(paths[0])) {
                             solvable[j].insert(&a);
