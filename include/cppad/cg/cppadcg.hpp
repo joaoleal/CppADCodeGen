@@ -120,6 +120,7 @@
 
 // ---------------------------------------------------------------------------
 #include <cppad/cg/code_handler.hpp>
+#include <cppad/cg/code_handler_impl.hpp>
 #include <cppad/cg/code_handler_vector.hpp>
 #include <cppad/cg/code_handler_loops.hpp>
 

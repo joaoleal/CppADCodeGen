@@ -24,6 +24,27 @@ const std::map<size_t, LoopModel<Base>*>& CodeHandler<Base>::getLoops() const {
 }
 
 template<class Base>
+inline LoopModel<Base>* CodeHandler<Base>::getLoop(size_t loopId) const {
+    return _loops.getLoop(loopId);
+}
+
+template<class Base>
+inline size_t CodeHandler<Base>::addLoopDependentIndexPattern(IndexPattern& jacPattern) {
+    return _loops.addDependentIndexPattern(jacPattern);
+}
+
+template<class Base>
+inline void CodeHandler<Base>::manageLoopDependentIndexPattern(const IndexPattern* pattern) {
+    _loops.manageDependentIndexPattern(pattern);
+}
+
+template<class Base>
+inline size_t CodeHandler<Base>::addLoopIndependentIndexPattern(IndexPattern& pattern,
+                                                                size_t hint) {
+    return _loops.addIndependentIndexPattern(pattern, hint);
+}
+
+template<class Base>
 inline void CodeHandler<Base>::LoopData::prepare4NewSourceGen() {
     indexes.clear();
     indexRandomPatterns.clear();
