@@ -590,6 +590,38 @@ inline void printModel(ADFun<CG<Base> >& fun,
     std::cout << "\n" << code.str() << std::endl;
 }
 
+/**
+ * Prints the model resulting in a single dependent variable.
+ */
+template<class Base>
+inline void printExpression(const CG<Base>& dep,
+                            std::ostream& out = std::cout) {
+    if(dep.getOperationNode() != nullptr) {
+        if(dep.getOperationNode()->getCodeHandler() == nullptr) {
+            throw CGException("Unable to print expression: found an operation node without a CodeHandler!");
+        }
+
+        CodeHandler<Base>& handler = *dep.getOperationNode()->getCodeHandler();
+        LanguageC<double> langC("double");
+        LangCDefaultVariableNameGenerator<double> nameGen;
+
+        CppAD::vector<CG<Base> > depv(1);
+        depv[0] = dep;
+
+        std::ostringstream code;
+        handler.generateCode(code, langC, depv, nameGen);
+        out << code.str();
+    } else {
+        out << "y[0] = " << dep.getValue() << ";" << std::endl;
+    }
+}
+
+template<class Base>
+inline void printExpression(OperationNode<Base>& dep,
+                            std::ostream& out = std::cout) {
+    printExpression(CG<Base>(dep), out);
+}
+
 /***************************************************************************
  * Generic functions for printing stl containers
  **************************************************************************/
