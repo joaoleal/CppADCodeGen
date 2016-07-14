@@ -185,6 +185,7 @@
 #include <cppad/cg/c/lang_c_default_hessian_var_name_gen.hpp>
 #include <cppad/cg/c/lang_c_default_reverse2_var_name_gen.hpp>
 #include <cppad/cg/c/lang_c_custom_var_name_gen.hpp>
+#include <cppad/cg/c/lang_c_util.hpp>
 
 //
 #include <cppad/cg/model/external_function_wrapper.hpp>
