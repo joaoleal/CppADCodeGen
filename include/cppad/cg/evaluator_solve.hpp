@@ -87,7 +87,7 @@ public:
             replaceArgument_(nullptr) {
         CPPADCG_ASSERT_UNKNOWN(paths_->size() == replaceOnPath_->size());
 #ifndef NDEBUG
-        for (size_t i = 0; i < 0; ++i) {
+        for (size_t i = 0; i < paths.size(); ++i) {
             CPPADCG_ASSERT_UNKNOWN(paths[i]->size() == replaceOnPath[i]->size());
         }
 #endif
