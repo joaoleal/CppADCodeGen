@@ -22,7 +22,8 @@ namespace cg {
 class CppADCGSolveTest : public CppADCGTest {
 public:
 
-    inline CppADCGSolveTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGSolveTest(bool verbose = false,
+                            bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
@@ -73,7 +74,7 @@ protected:
         CGD solution = handler.solveFor(*dep[expressionIndex].getOperationNode(), *indVars[indIndex].getOperationNode());
 
         if (verbose_) {
-            printModel(handler, solution);
+            printModel(solution);
         }
 
         /**
@@ -132,16 +133,9 @@ protected:
         return depVals;
     }
 
-    inline void printModel(CodeHandler<double>& handler, CGD& dep) {
-        LanguageC<double> langC("double");
-        LangCDefaultVariableNameGenerator<double> nameGen;
-
-        CppAD::vector<CGD> depv(1);
-        depv[0] = dep;
-
-        std::ostringstream code;
-        handler.generateCode(code, langC, depv, nameGen);
-        std::cout << code.str();
+    inline void printModel(CGD& dep) {
+        printExpression(dep);
+        std::cout << std::endl;
     }
 
 };

@@ -60,6 +60,12 @@ template<class Base>
 struct OperationPathNode;
 
 template<class Base>
+class PathNodeEdges;
+
+template<class Base>
+class BidirGraph;
+
+template<class Base>
 class ScopePathElement;
 
 /***************************************************************************

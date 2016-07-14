@@ -640,7 +640,7 @@ public:
 
             if (logger_.getVerbosity() >= Verbosity::High) {
                 logger_.log() << "Original model:\n";
-                printModel(logger_.log(), *reducedFun, newVarInfo);
+                printModel(logger_.log(), *reducedFun, newVarInfo, equationInfo);
             }
         }
 
@@ -712,7 +712,7 @@ public:
 
             if (logger_.getVerbosity() >= Verbosity::High) {
                 logger_.log() << equations.size() << " new equations:\n";
-                printModel(logger_.log(), *reducedFun, newVarInfo);
+                printModel(logger_.log(), *reducedFun, newVarInfo, equationInfo);
             }
         }
 
@@ -826,23 +826,36 @@ public:
      */
     inline void printModel(std::ostream& out,
                            ADFun<CG<Base> >& fun,
-                           const std::vector<DaeVarInfo>& varInfo) const {
+                           const std::vector<DaeVarInfo>& varInfo,
+                           const std::vector<DaeEquationInfo>& eqInfo) const {
         std::vector<std::string> vnames(varInfo.size());
-        for (size_t p = 0; p < varInfo.size(); p++) {
-            vnames[p] = varInfo[p].getName();
+        for (size_t i = 0; i < varInfo.size(); ++i) {
+            vnames[i] = varInfo[i].getName();
         }
-        printModel(out, fun, vnames);
+        std::vector<std::string> eqnames(eqInfo.size());
+        for (size_t i = 0; i < eqInfo.size(); ++i) {
+            if(eqInfo[i].isExplicit()) {
+                CPPADCG_ASSERT_UNKNOWN(eqInfo[i].getAssignedVarIndex() >= 0);
+                eqnames[i] = "d" + varInfo[eqInfo[i].getAssignedVarIndex()].getName() + "dt";
+            } else {
+                eqnames[i] = "res[" + std::to_string(i) + "]";
+            }
+        }
+
+        printModel(out, fun, vnames, eqnames);
     }
 
     /**
      * Prints out a DAE model to the standard output.
      * 
      * @param fun  The taped model
-     * @param vnodes  The independent variables
+     * @param indepNames  The independent variable names
+     * @param depNames  The dependent variable names
      */
     inline void printModel(std::ostream& out,
                            ADFun<CG<Base> >& fun,
-                           const std::vector<std::string>& indepNames) const {
+                           const std::vector<std::string>& indepNames,
+                           const std::vector<std::string>& depNames = std::vector<std::string>()) const {
         using CppAD::vector;
 
         CPPADCG_ASSERT_UNKNOWN(fun.Domain() == indepNames.size() || fun.Domain() == indepNames.size() + 1); // with or without time
@@ -855,11 +868,6 @@ public:
         vector<CGBase> dep0 = forward0(fun, indep0);
 
         LanguageC<double> langC("double");
-
-        /**
-         * create variable names
-         */
-        std::vector<std::string> depNames;
 
         /**
          * generate the source code

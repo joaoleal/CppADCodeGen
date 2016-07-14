@@ -15,42 +15,75 @@
  * Author: Joao Leal
  */
 
+#include <cppad/cg/evaluator_solve.hpp>
+#include <cppad/cg/dot/dot.hpp>
+
 namespace CppAD {
 namespace cg {
 
 template<class Base>
 inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
-                                            OperationNode<Base>& code) {
+                                            OperationNode<Base>& var) {
     using std::vector;
 
     // find code in expression
-    if (&expression == &code)
-        return CG<Base>(code);
+    if (&expression == &var)
+        return CG<Base>(var);
 
-    typedef vector<OperationPathNode<Base> > SourceCodePath;
+    size_t bifurcations = std::numeric_limits<size_t>::max(); // so that it is possible to enter the loop
 
-    vector<SourceCodePath> paths = findPaths(expression, code, 2);
-    if (paths.empty()) {
-        throw CGException("The provided variable is not present in the expression");
-    } else if (paths.size() > 1) {
-        // todo: support multiple variable locations
-        throw CGException("Unable to determine expression for variable:"
-                          " the provided variable was found in multiple locations (not yet supported)");
+    std::vector<SourceCodePath> paths;
+    BidirGraph<Base> foundGraph;
+    OperationNode<Base> *root = &expression;
+
+    while (bifurcations > 0) {
+        CPPADCG_ASSERT_UNKNOWN(root != nullptr);
+
+        // find possible paths from expression to var
+        size_t oldBif = bifurcations;
+        bifurcations = 0;
+        foundGraph = findPathGraph(*root, var, bifurcations, 50000);
+        CPPADCG_ASSERT_UNKNOWN(oldBif > bifurcations);
+
+        if (!foundGraph.contains(var)) {
+            std::cerr << "Missing variable " << var << std::endl;
+            printExpression(expression, std::cerr);
+            throw CGException("The provided variable ", var.getName() != nullptr ? ("(" + *var.getName() + ")") : "", " is not present in the expression");
+        }
+
+        // find a bifurcation which does not contain any other bifurcations
+        size_t bifPos = 0;
+        paths = foundGraph.findSingleBifurcation(*root, var, bifPos);
+        if (paths.empty()) {
+            throw CGException("The provided variable is not present in the expression");
+
+        } else if (paths.size() == 1) {
+            CPPADCG_ASSERT_UNKNOWN(paths[0][0].node == root);
+            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var);
+
+            return solveFor(paths[0]);
+
+        } else {
+            CPPADCG_ASSERT_UNKNOWN(paths.size() >= 1);
+            CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &var);
+
+            CG<Base> expression2 = collectVariable(*root, paths[0], paths[1], bifPos);
+            root = expression2.getOperationNode();
+        }
     }
 
-    CPPADCG_ASSERT_UNKNOWN(paths[0].back().node == &code);
-
+    CPPADCG_ASSERT_UNKNOWN(paths.size() == 1);
     return solveFor(paths[0]);
 }
 
 template<class Base>
-inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<Base> >& path) {
+inline CG<Base> CodeHandler<Base>::solveFor(const SourceCodePath& path) {
 
     CG<Base> rightHs(0.0);
 
     for (size_t n = 0; n < path.size() - 1; ++n) {
         const OperationPathNode<Base>& pnodeOp = path[n];
-        size_t argIndex = path[n + 1].arg_index;
+        size_t argIndex = path[n].argIndex;
         const std::vector<Argument<Base> >& args = pnodeOp.node->getArguments();
 
         CGOpCode op = pnodeOp.node->getOperationType();
@@ -153,10 +186,35 @@ inline CG<Base> CodeHandler<Base>::solveFor(const std::vector<OperationPathNode<
 }
 
 template<class Base>
-inline bool isSolvable(const std::vector<OperationPathNode<Base> >& path) {
+inline bool CodeHandler<Base>::isSolvable(OperationNode<Base>& expression,
+                                          OperationNode<Base>& var) {
+    size_t bifurcations = 0;
+    BidirGraph<Base> g = findPathGraph(expression, var, bifurcations);
+
+    if(bifurcations == 0) {
+        size_t bifIndex = 0;
+        auto paths = g.findSingleBifurcation(expression, var, bifIndex);
+        if (paths.empty() || paths[0].empty())
+            return false;
+
+        return isSolvable(paths[0]);
+    } else {
+        // TODO: improve this
+        //bool v = isCollectableVariableAddSub();
+        try {
+            solveFor(expression, var);
+            return true;
+        } catch(const CGException& e) {
+            return false;
+        }
+    }
+}
+
+template<class Base>
+inline bool CodeHandler<Base>::isSolvable(const SourceCodePath& path) const {
     for (size_t n = 0; n < path.size() - 1; ++n) {
         const OperationPathNode<Base>& pnodeOp = path[n];
-        size_t argIndex = path[n + 1].arg_index;
+        size_t argIndex = path[n].argIndex;
         const std::vector<Argument<Base> >& args = pnodeOp.node->getArguments();
 
         CGOpCode op = pnodeOp.node->getOperationType();

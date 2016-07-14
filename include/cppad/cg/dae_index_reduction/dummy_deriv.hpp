@@ -210,7 +210,7 @@ public:
             log() << "########  Dummy derivatives method  ########" << std::endl;
 
         newEqInfo = reducedEqInfo; // copy
-        addDummyDerivatives(reducedVarInfo, newVarInfo);
+        addDummyDerivatives(reducedVarInfo, reducedEqInfo, newVarInfo);
 
         if (reduceEquations_ || generateSemiExplicitDae_) {
 
@@ -254,6 +254,7 @@ protected:
     using DaeIndexReduction<Base>::log;
 
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
+                                            const std::vector<DaeEquationInfo>& eqInfo,
                                             std::vector<DaeVarInfo>& newVarInfo) {
         auto& graph = idxIdentify_->getGraph();
         auto& vnodes = graph.variables();
@@ -365,7 +366,7 @@ protected:
                 log() << "# " << *j << "   \t" << newVarInfo[j->tapeIndex()].getName() << "\n";
             log() << "# \n";
             if (this->verbosity_ >= Verbosity::High) {
-                graph.printModel(log(), *reducedFun_, newVarInfo);
+                graph.printModel(log(), *reducedFun_, newVarInfo, eqInfo);
             }
         }
 
@@ -548,7 +549,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "DAE with less equations and variables:\n";
-            graph.printModel(log(), *shortFun, newVarInfo);
+            graph.printModel(log(), *shortFun, newVarInfo, newEqInfo);
         }
 
         return shortFun;
@@ -673,7 +674,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "Semi-Eplicit DAE:\n";
-            graph.printModel(log(), *semiExplicitFun, newVarInfo);
+            graph.printModel(log(), *semiExplicitFun, newVarInfo, newEqInfo);
         }
 
         return semiExplicitFun;
@@ -683,7 +684,6 @@ protected:
                                           std::vector<DaeEquationInfo>& eqInfo) {
         using std::vector;
         using std::map;
-        typedef vector<OperationPathNode<Base> > SourceCodePath;
 
         auto& graph = idxIdentify_->getGraph();
         auto& vnodes = graph.variables();
@@ -747,9 +747,7 @@ protected:
                         CGBase& dep = res0[i]; // the equation residual
                         CGBase& indep = indep0[j->tapeIndex()];
 
-                        vector<SourceCodePath> paths = handler.findPaths(*dep.getOperationNode(), *indep.getOperationNode(), 2);
-                        if (paths.size() == 1 && isSolvable(paths[0])) {
-                        //if (handler.isSolvable(*dep.getOperationNode(), *indep.getOperationNode())) {
+                        if (handler.isSolvable(*dep.getOperationNode(), *indep.getOperationNode())) {
                             equations[i]->addVariable(j);
                         }
                     }
@@ -928,7 +926,6 @@ protected:
         using namespace std;
         using std::vector;
         using std::map;
-        typedef vector<OperationPathNode<Base> > SourceCodePath;
 
         std::vector<bool> localJacSparsity = jacSparsity;
         const size_t n = varInfo.size();
@@ -1002,12 +999,10 @@ protected:
             for (Enode<Base>* itAff : affected) {
                 Enode<Base>& a = *itAff;
                 for (const auto& it : tape2FreeVariables) {
-                    size_t j = it.first;
-                    if (localJacSparsity[n * a.index() + j]) {
-                        //if (handler.isSolvable(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode())) {
-                        vector<SourceCodePath> paths = handler.findPaths(*res0[a.index()].getOperationNode(), *indep0[j].getOperationNode(), 2);
-                        if (paths.size() == 1 && isSolvable(paths[0])) {
-                            solvable[j].insert(&a);
+                    size_t jj = it.first;
+                    if (localJacSparsity[n * a.index() + jj]) {
+                        if (handler.isSolvable(*res0[a.index()].getOperationNode(), *indep0[jj].getOperationNode())) {
+                            solvable[jj].insert(&a);
                         }
                     }
                 }
@@ -1196,7 +1191,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High) {
             log() << "reordered DAE equations and variables:\n";
-            graph.printModel(log(), *reorderedFun, newVarInfo);
+            graph.printModel(log(), *reorderedFun, newVarInfo, newEqInfo);
         }
 
         return reorderedFun;

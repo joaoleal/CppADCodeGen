@@ -1,6 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -17,23 +17,58 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGSolveTest, SolveAdd) {
+/**
+ * @test 2 instances of the save variable with 1 bifurcation
+ */
+TEST_F(CppADCGSolveTest, SolveMul_2var_1bif) {
+    this->verbose_ = true;
+
     // independent variable vector
     std::vector<ADCGD> x(2);
     x[0] = -1.5;
-    x[1] = -0.5;
+    x[1] = -0.25 / 2;
     Independent(x);
 
     // dependent variable vector
     std::vector<ADCGD> y(3);
 
     // model
-    y[0] = x[0] + x[1]; // AD<double> + AD<double>
+    y[0] = x[0] + 2 * x[1] + 2 * x[1]; // AD<double> + (var) + (var)
     y[1] = y[0] + 1.; // AD<double> + double
     y[2] = 1. + y[1]; // double + AD<double>
 
     // create f: x -> y
     ADFun<CGD> fun(x, y);
 
-    test_solve(fun, 2, 1, x);
+    size_t eqIdx = 2;
+    size_t varIdx = 1;
+    test_solve(fun, eqIdx, varIdx, x);
+}
+
+/**
+ * @test 2 instances of the save variable with 2 bifurcations
+ */
+TEST_F(CppADCGSolveTest, SolveMul_2var_2bif) {
+    this->verbose_ = true;
+
+    // independent variable vector
+    std::vector<ADCGD> x(2);
+    x[0] = -1.5;
+    x[1] = -0.25 / 2;
+    Independent(x);
+
+    // dependent variable vector
+    std::vector<ADCGD> y(3);
+
+    // model
+    y[0] = x[0] + 2 * x[1] + 2 * x[1];
+    y[1] = y[0] * 0.5 + 1. + y[0] * 0.5;
+    y[2] = 1. + y[1];
+
+    // create f: x -> y
+    ADFun<CGD> fun(x, y);
+
+    size_t eqIdx = 2;
+    size_t varIdx = 1;
+    test_solve(fun, eqIdx, varIdx, x);
 }

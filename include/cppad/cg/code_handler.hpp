@@ -384,26 +384,32 @@ public:
         return _scopes;
     }
 
-    /***********************************************************************
-     *                   Graph management functions
-     **********************************************************************/
+    /**************************************************************************
+     *                       Graph management functions
+     *************************************************************************/
     /**
      * Finds occurrences of a source code fragment in an operation graph.
      * 
      * @param root the operation graph where to search
-     * @param code the source code fragment to find in root
+     * @param target the source code fragment to find in root
      * @param max the maximum number of occurrences of code to find in root
      * @return the paths from root to code
      */
     inline std::vector<SourceCodePath> findPaths(OperationNode<Base>& root,
-                                                 OperationNode<Base>& code,
+                                                 OperationNode<Base>& target,
                                                  size_t max);
 
-    inline bool isSolvable(const SourceCodePath& path);
+    inline BidirGraph<Base> findPathGraph(OperationNode<Base>& root,
+                                          OperationNode<Base>& target) ;
 
-    /***********************************************************************
-     *                   Source code generation
-     **********************************************************************/
+    inline BidirGraph<Base> findPathGraph(OperationNode<Base>& root,
+                                          OperationNode<Base>& target,
+                                          size_t& bifurcations,
+                                          size_t maxBifurcations = std::numeric_limits<size_t>::max());
+
+    /**************************************************************************
+     *                       Source code generation
+     *************************************************************************/
 
     /**
      * Creates the source code from the operations registered so far.
@@ -650,9 +656,9 @@ public:
         return _idSparseArrayCount - 1;
     }
 
-    /***********************************************************************
-     *                   Reusing handler and nodes
-     **********************************************************************/
+    /**************************************************************************
+     *                       Reusing handler and nodes
+     *************************************************************************/
 
     /**
      * Resets this handler for a usage with completely different nodes.
@@ -686,9 +692,9 @@ public:
         _varId.fill(0);
     }
 
-    /***********************************************************************
-     *                      access to managed memory
-     **********************************************************************/
+    /**************************************************************************
+     *                         access to managed memory
+     *************************************************************************/
 
     /**
      * Creates a shallow clone of an operation node
@@ -842,16 +848,16 @@ public:
         }
     }
 
-    /***********************************************************************
-     *                        Value generation
-     **********************************************************************/
+    /**************************************************************************
+     *                           Value generation
+     *************************************************************************/
     CG<Base> createCG(const Argument<Base>& arg) {
         return CG<Base>(arg);
     }
 
-    /***********************************************************************
-     *                        Loop management
-     **********************************************************************/
+    /**************************************************************************
+     *                           Loop management
+     *************************************************************************/
 
     const std::map<size_t, LoopModel<Base>*>& getLoops() const;
 
@@ -891,23 +897,23 @@ public:
         }
     }
 
-    /***********************************************************************
-     *                   Operation graph manipulation
-     **********************************************************************/
+    /**************************************************************************
+     *                      Operation graph manipulation
+     *************************************************************************/
 
     /**
-     * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
-     * The variable can appear only once in the expression.
-     * 
+     * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x).
+     *
      * @param expression  The original expression (f(x, y))
-     * @param code  The variable to solve for
-     * @return  The expression for variable
+     * @param var  The variable to solve for
+     * @return  The expression for the variable
      * @throws CGException if it is not possible to solve the expression
      */
     inline CG<Base> solveFor(OperationNode<Base>& expression,
-                             OperationNode<Base>& code);
+                             OperationNode<Base>& var);
 
-    inline CG<Base> solveFor(const std::vector<OperationPathNode<Base> >& path);
+    inline bool isSolvable(OperationNode<Base>& expression,
+                           OperationNode<Base>& var);
 
     /**
      * Eliminates an independent variable by substitution using the provided
@@ -2278,9 +2284,9 @@ protected:
         _scope.fill(0);
     }
 
-    /***********************************************************************
-     *                   Graph management functions
-     **********************************************************************/
+    /**************************************************************************
+     *                       Graph management functions
+     *************************************************************************/
 
     inline void findPaths(SourceCodePath& path2node,
                           OperationNode<Base>& code,
@@ -2290,9 +2296,53 @@ protected:
     static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
                                                                 OperationNode<Base>& node);
 
-    /***************************************************************************
-     *                   Loop related structure/methods
-     **************************************************************************/
+    /**************************************************************************
+     *                        Operation graph manipulation
+     *************************************************************************/
+    /**
+     * Solves an expression (e.g. f(x, y) == 0) for a given variable (e.g. x)
+     * The variable can appear only once in the expression.
+     * This is also known as isolation.
+     *
+     * @param path  The path from the equation residual to the variable
+     * @return  The expression for the variable
+     * @throws CGException if it is not possible to solve the expression
+     */
+    inline CG<Base> solveFor(const SourceCodePath& path);
+
+    /**
+     * Reduces the number of occurrences of a variable in an equation.
+     * For instance:
+     *  f(x,y) = x + y + x
+     * could become
+     *  f(x,y) = 2 * x + y
+     *
+     * @param expression  The original expression (f(x, y))
+     * @param path1  A path from the equation residual to where the variable
+     *               is used.
+     * @param path2  A different path from the equation residual to where the
+     *               variable is used.
+     * @return  The new expression for the equation
+     * @throws CGException if it is not possible to combine the multiple
+     *                     occurrences of the variable
+     */
+    inline CG<Base> collectVariable(OperationNode<Base>& expression,
+                                    const SourceCodePath& path1,
+                                    const SourceCodePath& path2,
+                                    size_t bifPos);
+
+    inline CG<Base> collectVariableAddSub(const SourceCodePath& pathLeft,
+                                          const SourceCodePath& pathRight);
+
+    inline bool isCollectableVariableAddSub(const SourceCodePath& pathLeft,
+                                            const SourceCodePath& pathRight,
+                                            bool throwEx);
+
+    inline bool isSolvable(const SourceCodePath& path) const;
+
+    /**************************************************************************
+     *                     Loop related structure/methods
+     *************************************************************************/
     struct LoopData {
         // maps the loop ids of the loop atomic functions
         std::map<size_t, LoopModel<Base>*> loopModels;
@@ -2342,9 +2392,9 @@ protected:
         void addLoopEndNode(OperationNode<Base>& node);
     };
 
-    /***************************************************************************
+    /**************************************************************************
      *                                friends
-     **************************************************************************/
+     *************************************************************************/
     friend class CG<Base>;
     friend class CGAbstractAtomicFun<Base>;
     friend class BaseAbstractAtomicFun<Base>;

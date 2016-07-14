@@ -29,3 +29,7 @@ add_cppadcg_test(solve_sqrt.cpp)
 add_cppadcg_test(solve_sub.cpp)
 add_cppadcg_test(solve_tanh.cpp)
 add_cppadcg_test(solve_unary.cpp)
+
+add_cppadcg_test(solve_add_2.cpp)
+add_cppadcg_test(solve_div_2.cpp)
+add_cppadcg_test(solve_mul_2.cpp)

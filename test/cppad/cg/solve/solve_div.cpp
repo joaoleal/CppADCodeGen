@@ -18,25 +18,27 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGSolveTest, SolveDiv) {
-    // independent variable vector
-    std::vector<ADCGD> u(2);
-    u[0] = 4.0;
-    u[1] = 2.0;
+    //verbose_ = true; // this will print the solutions
 
-    Independent(u);
+    // independent variable vector
+    std::vector<ADCGD> x(2);
+    x[0] = 4.0;
+    x[1] = 1.0;
+
+    Independent(x);
 
     // dependent variable vector
-    std::vector<ADCGD> Z(4);
+    std::vector<ADCGD> y(4);
 
     // model
-    Z[0] = u[0] / u[1];
-    Z[1] = Z[0] / 4.;
-    Z[2] = 2. / Z[1];
-    Z[3] = Z[2] / 1 - 4.0;
+    y[0] = x[0] / (x[1] + 1);
+    y[1] = y[0] / 4.;
+    y[2] = 2. / y[1];
+    y[3] = y[2] / 1 - 4.0; // 2. / (x[0] / (x[1] + 1) / 4.) - 4.0 == 0
 
-    // create f: U -> Z
-    ADFun<CGD> fun(u, Z);
+    // create f: x -> y
+    ADFun<CGD> fun(x, y);
 
-    test_solve(fun, 3, 0, u);
-    test_solve(fun, 3, 1, u);
+    test_solve(fun, 3, 0, x);
+    test_solve(fun, 3, 1, x);
 }

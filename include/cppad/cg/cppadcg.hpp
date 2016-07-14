@@ -144,8 +144,10 @@
 #include <cppad/cg/evaluator_ad.hpp>
 #include <cppad/cg/evaluator_adcg.hpp>
 #include <cppad/cg/evaluator_cg.hpp>
+#include <cppad/cg/operation_path_node.hpp>
 #include <cppad/cg/operation_path.hpp>
 #include <cppad/cg/solver.hpp>
+#include <cppad/cg/collect_variable.hpp>
 #include <cppad/cg/graph_mod.hpp>
 #include <cppad/cg/operation_node_name_streambuf.hpp>
 

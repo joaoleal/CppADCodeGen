@@ -15,25 +15,103 @@
  * Author: Joao Leal
  */
 
+#include <cppad/cg/operation_path_node.hpp>
+#include <cppad/cg/bidir_graph.hpp>
+
 namespace CppAD {
 namespace cg {
 
+/**
+ * Finds all paths from a root node to a target node.
+ *
+ * @param foundGraph stores the graph connecting root to target
+ * @param root the current node
+ * @param target the node to be found
+ * @param bifurcations the current number of bifurcations in the graph
+ * @param maxBifurcations the maximum number of bifurcations allowed
+ *                        (this function will return if this value was reached)
+ */
 template<class Base>
-struct OperationPathNode {
-    size_t arg_index;
-    OperationNode<Base>* node;
-
-    inline OperationPathNode() :
-        arg_index(0),
-        node(nullptr) {
+inline bool findPathGraph(BidirGraph<Base>& foundGraph,
+                          OperationNode<Base>& root,
+                          OperationNode<Base>& target,
+                          size_t& bifurcations,
+                          size_t maxBifurcations = std::numeric_limits<size_t>::max()) {
+    if (bifurcations >= maxBifurcations) {
+        return false;
     }
 
-    inline OperationPathNode(OperationNode<Base>* node_, size_t arg_index_) :
-        arg_index(arg_index_),
-        node(node_) {
+    if (&root == &target) {
+        return true;
     }
 
-};
+    if(foundGraph.contains(root)) {
+        return true; // been here and it was saved in foundGraph
+    }
+
+    auto* h = root.getCodeHandler();
+
+    if(h->isVisited(root)) {
+        return false; // been here but it was not saved in foundGraph
+    }
+
+    // not visited yet
+    h->markVisited(root); // mark node as visited
+
+    PathNodeEdges<Base>& info = foundGraph[root];
+
+    const auto& args = root.getArguments();
+
+    bool found = false;
+    for(size_t i = 0; i < args.size(); ++i) {
+        const Argument<Base>& a = args[i];
+        if(a.getOperation() != nullptr ) {
+            auto& aNode = *a.getOperation();
+            if(findPathGraph(foundGraph, aNode, target, bifurcations, maxBifurcations)) {
+                foundGraph.connect(info, root, i);
+                if(found) {
+                    bifurcations++; // multiple ways to get to target
+                } else {
+                    found = true;
+                }
+            }
+        }
+    }
+
+    if(!found) {
+        foundGraph.erase(root);
+    }
+
+    return found;
+}
+
+template<class Base>
+inline BidirGraph<Base> CodeHandler<Base>::findPathGraph(OperationNode<Base>& root,
+                                                         OperationNode<Base>& target) {
+    size_t bifurcations = 0;
+    return findPathGraph(root, target, bifurcations);
+}
+
+template<class Base>
+inline BidirGraph<Base> CodeHandler<Base>::findPathGraph(OperationNode<Base>& root,
+                                                         OperationNode<Base>& target,
+                                                         size_t& bifurcations,
+                                                         size_t maxBifurcations) {
+    startNewOperationTreeVisit();
+
+    BidirGraph<Base> foundGraph;
+
+    if (bifurcations <=  maxBifurcations) {
+        if (&root == &target) {
+            foundGraph[root];
+        } else {
+            CppAD::cg::findPathGraph<Base>(foundGraph, root, target, bifurcations, maxBifurcations);
+        }
+    }
+
+    return foundGraph;
+}
+
 
 template<class Base>
 inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPaths(OperationNode<Base>& root,
@@ -59,9 +137,9 @@ inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::fi
 }
 
 template<class Base>
-inline void CodeHandler<Base>::findPaths(std::vector<OperationPathNode<Base> >& currPath,
+inline void CodeHandler<Base>::findPaths(SourceCodePath& currPath,
                                          OperationNode<Base>& code,
-                                         std::vector<std::vector<OperationPathNode<Base> > >& found,
+                                         std::vector<SourceCodePath>& found,
                                          size_t max) {
 
     OperationNode<Base>* currNode = currPath.back().node;
@@ -105,7 +183,7 @@ inline void CodeHandler<Base>::findPaths(std::vector<OperationPathNode<Base> >& 
 }
 
 template<class Base>
-inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPathsFromNode(const std::vector<std::vector<OperationPathNode<Base> > > nodePaths,
+inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
                                                                                                 OperationNode<Base>& node) {
 
     std::vector<SourceCodePath> foundPaths;
@@ -116,9 +194,9 @@ inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::fi
         for (size_t i = 0; i < size - 1; i++) {
             const OperationPathNode<Base>& pnode = path[i];
             if (pnode.node == &node) {
-                if (argsFound.find(path[i + 1].arg_index) == argsFound.end()) {
+                if (argsFound.find(path[i + 1].argIndex) == argsFound.end()) {
                     foundPaths.push_back(SourceCodePath(path.begin() + i + 1, path.end()));
-                    argsFound.insert(path[i + 1].arg_index);
+                    argsFound.insert(path[i + 1].argIndex);
                 }
             }
         }
