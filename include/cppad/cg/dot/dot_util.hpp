@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+#include <cppad/cg/c/lang_c_default_var_name_gen.hpp>
+
 namespace CppAD {
 namespace cg {
 
