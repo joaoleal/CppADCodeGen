@@ -17,8 +17,8 @@
 #include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
-#include <cppad/cg/dot/dot.hpp>
-#include <cppad/cg/c/lang_c_default_var_name_gen.hpp>
+#include <cppad/cg/lang/dot/dot.hpp>
+#include <cppad/cg/lang/c/lang_c_default_var_name_gen.hpp>
 #include <gtest/gtest.h>
 
 using namespace CppAD;

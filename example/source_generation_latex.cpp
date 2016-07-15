@@ -15,7 +15,7 @@
 #include <iosfwd>
 #include <vector>
 #include <cppad/cg.hpp>
-#include <cppad/cg/latex/latex.hpp>
+#include <cppad/cg/lang/latex/latex.hpp>
 
 using namespace CppAD;
 using namespace CppAD::cg;

@@ -16,7 +16,7 @@
  */
 
 #include <cppad/cg/evaluator_solve.hpp>
-#include <cppad/cg/dot/dot.hpp>
+#include <cppad/cg/lang/dot/dot.hpp>
 
 namespace CppAD {
 namespace cg {

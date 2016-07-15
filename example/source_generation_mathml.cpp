@@ -15,7 +15,7 @@
 #include <iosfwd>
 #include <vector>
 #include <cppad/cg.hpp>
-#include <cppad/cg/mathml/mathml.hpp>
+#include <cppad/cg/lang/mathml/mathml.hpp>
 
 using namespace CppAD;
 using namespace CppAD::cg;

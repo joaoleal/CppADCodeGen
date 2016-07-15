@@ -17,7 +17,7 @@
 #include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
-#include <cppad/cg/mathml/mathml.hpp>
+#include <cppad/cg/lang/mathml/mathml.hpp>
 #include <gtest/gtest.h>
 
 using namespace CppAD;

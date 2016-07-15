@@ -104,7 +104,7 @@
 #include <cppad/cg/atomic_dependency_locator.hpp>
 #include <cppad/cg/variable_name_generator.hpp>
 #include <cppad/cg/job_timer.hpp>
-#include <cppad/cg/language.hpp>
+#include <cppad/cg/lang/language.hpp>
 #include <cppad/cg/scope_path_element.hpp>
 #include <cppad/cg/array_id_compresser.hpp>
 #include <cppad/cg/patterns/loop_position.hpp>
@@ -174,18 +174,18 @@
 
 // ---------------------------------------------------------------------------
 // C source code generation
-#include <cppad/cg/c/lang_c_atomic_fun.hpp>
-#include <cppad/cg/c/language_c.hpp>
-#include <cppad/cg/c/language_c_arrays.hpp>
-#include <cppad/cg/c/language_c_index_patterns.hpp>
-#include <cppad/cg/c/language_c_double.hpp>
-#include <cppad/cg/c/language_c_float.hpp>
-#include <cppad/cg/c/language_c_loops.hpp>
-#include <cppad/cg/c/lang_c_default_var_name_gen.hpp>
-#include <cppad/cg/c/lang_c_default_hessian_var_name_gen.hpp>
-#include <cppad/cg/c/lang_c_default_reverse2_var_name_gen.hpp>
-#include <cppad/cg/c/lang_c_custom_var_name_gen.hpp>
-#include <cppad/cg/c/lang_c_util.hpp>
+#include <cppad/cg/lang/c/lang_c_atomic_fun.hpp>
+#include <cppad/cg/lang/c/language_c.hpp>
+#include <cppad/cg/lang/c/language_c_arrays.hpp>
+#include <cppad/cg/lang/c/language_c_index_patterns.hpp>
+#include <cppad/cg/lang/c/language_c_double.hpp>
+#include <cppad/cg/lang/c/language_c_float.hpp>
+#include <cppad/cg/lang/c/language_c_loops.hpp>
+#include <cppad/cg/lang/c/lang_c_default_var_name_gen.hpp>
+#include <cppad/cg/lang/c/lang_c_default_hessian_var_name_gen.hpp>
+#include <cppad/cg/lang/c/lang_c_default_reverse2_var_name_gen.hpp>
+#include <cppad/cg/lang/c/lang_c_custom_var_name_gen.hpp>
+#include <cppad/cg/lang/c/lang_c_util.hpp>
 
 //
 #include <cppad/cg/model/external_function_wrapper.hpp>

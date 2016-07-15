@@ -1,8 +1,8 @@
-#ifndef CPPAD_CG_LATEX_INCLUDED
-#define CPPAD_CG_LATEX_INCLUDED
+#ifndef CPPAD_CG_MATHML_INCLUDED
+#define CPPAD_CG_MATHML_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -16,13 +16,11 @@
  */
 
 // ---------------------------------------------------------------------------
-// latex source code generation
-#include <cppad/cg/latex/language_latex.hpp>
-#include <cppad/cg/latex/language_latex_arrays.hpp>
-#include <cppad/cg/latex/language_latex_index_patterns.hpp>
-#include <cppad/cg/latex/lang_latex_default_var_name_gen.hpp>
-//#include <cppad/cg/latex/lang_latex_default_hessian_var_name_gen.hpp>
-//#include <cppad/cg/latex/lang_latex_default_reverse2_var_name_gen.hpp>
-#include <cppad/cg/latex/lang_latex_custom_var_name_gen.hpp>
+// mathml source code generation
+#include <cppad/cg/lang/mathml/language_mathml.hpp>
+#include <cppad/cg/lang/mathml/language_mathml_arrays.hpp>
+#include <cppad/cg/lang/mathml/language_mathml_index_patterns.hpp>
+#include <cppad/cg/lang/mathml/lang_mathml_default_var_name_gen.hpp>
+#include <cppad/cg/lang/mathml/lang_mathml_custom_var_name_gen.hpp>
 
 #endif

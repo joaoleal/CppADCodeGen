@@ -17,7 +17,7 @@
 #include <fstream>
 
 #include <cppad/cg/cppadcg.hpp>
-#include <cppad/cg/latex/latex.hpp>
+#include <cppad/cg/lang/latex/latex.hpp>
 #include <gtest/gtest.h>
 
 using namespace CppAD;
