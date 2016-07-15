@@ -577,6 +577,10 @@ protected:
         return *var.getName();
     }
 
+    virtual bool requiresVariableDependencies() const override {
+        return false;
+    }
+
     virtual std::string print(const Argument<Base>& arg) {
         if (arg.getOperation() != nullptr) {
             // expression

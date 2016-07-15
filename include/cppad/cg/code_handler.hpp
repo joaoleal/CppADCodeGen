@@ -55,9 +55,9 @@ protected:
     CppAD::vector<CGB>* _dependents;
     /**
      * nodes managed by this code handler which include all
-     * all OperationNodes created by CGB objects
+     * all OperationNodes created by CG<Base> objects
      */
-    std::vector<Node *> _codeBlocks;
+    std::vector<Node*> _codeBlocks;
     /**
      * All CodeHandlerVector associated with this code handler
      */
@@ -93,12 +93,16 @@ protected:
     /**
      * the order for the variable creation in the source code 
      */
-    std::vector<Node *> _variableOrder;
+    std::vector<Node*> _variableOrder;
+    /**
+     * maps dependencies between variables in _variableOrder
+     */
+    std::vector<std::set<Node*>> _variableDependencies;
     /**
      * the order for the variable creation in the source code 
      * (each level represents a different variable scope)
      */
-    std::vector<std::vector<Node *> > _scopedVariableOrder;
+    std::vector<std::vector<Node*> > _scopedVariableOrder;
     /**
      *
      */
@@ -663,7 +667,8 @@ protected:
      */
     inline size_t findLastTemporaryLocation(Node& node);
 
-    inline void repositionEvaluationQueue(size_t fromPos, size_t toPos);
+    inline void repositionEvaluationQueue(size_t fromPos,
+                                          size_t toPos);
 
     /**
      * Determines when each temporary variable is last used in the
@@ -672,6 +677,14 @@ protected:
      * @param node The current node for which the number of usages is to be to determined
      */
     inline void determineLastTempVarUsage(Node& node);
+
+    /**
+     * Determines relations between variables with an ID
+     */
+    inline void findVariableDependencies();
+
+    inline void findVariableDependencies(size_t i,
+                                         Node& node);
 
     /**
      * Defines the evaluation order for the code fragments that do not

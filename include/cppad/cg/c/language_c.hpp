@@ -1109,6 +1109,10 @@ protected:
         return *var.getName();
     }
 
+    virtual bool requiresVariableDependencies() const override {
+        return false;
+    }
+
     virtual void printIndependentVariableName(OperationNode<Base>& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
 

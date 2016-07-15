@@ -48,12 +48,17 @@ public:
             handler_->removeVector(this);
     }
 
+    inline CodeHandler<Base>& getHandler() const {
+        return *handler_;
+    }
+
 protected:
     /**
      * @param start The index of the first OperationNode that was deleted
      * @param end The index after the last OperationNode that was deleted
      */
-    virtual void nodesErased(size_t start, size_t end) = 0;
+    virtual void nodesErased(size_t start,
+                             size_t end) = 0;
 };
 
 /**
@@ -206,7 +211,8 @@ public:
     }
 protected:
 
-    virtual void nodesErased(size_t start, size_t end) override {
+    virtual void nodesErased(size_t start,
+                             size_t end) override {
         if (start < data_.size()) {
             end = std::min(end, data_.size());
             data_.erase(data_.begin() + start, data_.begin() + end);

@@ -359,6 +359,14 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
         reduceTemporaryVariables(dependent);
     }
 
+    /**
+     *
+     */
+    _variableDependencies.clear();
+    if(lang.requiresVariableDependencies()) {
+        findVariableDependencies();
+    }
+
     nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1, _idSparseArrayCount - 1);
 
     std::map<std::string, size_t> atomicFunctionName2Id;
@@ -382,7 +390,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
      * Creates the source code for a specific language
      */
     _info.reset(new LanguageGenerationData<Base>(_independentVariables, dependent,
-                                                 _minTemporaryVarID, _varId, _variableOrder,
+                                                 _minTemporaryVarID, _varId, _variableOrder, _variableDependencies,
                                                  nameGen,
                                                  atomicFunctionId2Index, atomicFunctionId2Name,
                                                  _atomicFunctionsMaxForward, _atomicFunctionsMaxReverse,
@@ -1825,6 +1833,42 @@ inline void CodeHandler<Base>::updateEvaluationQueueOrder(Node& node,
             Node& arg = *a.getOperation();
             if (getEvaluationOrder(arg) == oldEvalOrder)
                 updateEvaluationQueueOrder(arg, newEvalOrder);
+        }
+    }
+}
+
+template<class Base>
+inline void CodeHandler<Base>::findVariableDependencies() {
+    _variableDependencies.resize(_variableOrder.size());
+
+    for (size_t i = 0; i < _variableOrder.size(); i++) {
+        Node& var = *_variableOrder[i];
+
+        _variableDependencies[i].clear();
+        startNewOperationTreeVisit();
+
+        for (const auto& a : var) {
+            if (a.getOperation() != nullptr) {
+                findVariableDependencies(i, *a.getOperation());
+            }
+        }
+    }
+}
+
+template<class Base>
+inline void CodeHandler<Base>::findVariableDependencies(size_t i,
+                                                        Node& node) {
+    if (!isVisited(node)) {
+        markVisited(node);
+
+        if(_varId[node] != 0) {
+            _variableDependencies[i].insert(&node);
+        } else {
+            for (const auto& a : node) {
+                if (a.getOperation() != nullptr) {
+                    findVariableDependencies(i, *a.getOperation());
+                }
+            }
         }
     }
 }

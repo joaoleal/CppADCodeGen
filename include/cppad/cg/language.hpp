@@ -26,12 +26,13 @@ namespace cg {
 template<class Base>
 class LanguageGenerationData {
 public:
+    typedef OperationNode<Base> Node;
     typedef typename CodeHandler<Base>::ScopeIDType ScopeIDType;
 public:
     /**
      * The independent variables
      */
-    const std::vector<OperationNode<Base> *>& independent;
+    const std::vector<Node *>& independent;
     /**
      * The dependent variables
      */
@@ -48,7 +49,11 @@ public:
     /**
      * Variable assignment order in the source code
      */
-    const std::vector<OperationNode<Base>*>& variableOrder;
+    const std::vector<Node*>& variableOrder;
+    /**
+     * maps dependencies between variables in variableOrder
+     */
+    const std::vector<std::set<Node*>>& variableDependencies;
     /**
      * Provides the rules for variable name creation
      */
@@ -76,7 +81,7 @@ public:
      */
     const bool reuseIDs;
     //
-    const std::set<const OperationNode<Base>*>& indexes;
+    const std::set<const Node*>& indexes;
     //
     const std::set<RandomIndexPattern*>& indexRandomPatterns;
     //
@@ -102,18 +107,19 @@ public:
     const bool zeroDependents;
 public:
 
-    LanguageGenerationData(const std::vector<OperationNode<Base> *>& ind,
+    LanguageGenerationData(const std::vector<Node *>& ind,
                            const CppAD::vector<CG<Base> >& dep,
                            size_t minTempVID,
                            const CodeHandlerVector<Base, size_t>& varIds,
-                           const std::vector<OperationNode<Base>*>& vo,
+                           const std::vector<Node*>& vo,
+                           const std::vector<std::set<Node*>>& variableDependencies,
                            VariableNameGenerator<Base>& ng,
                            const std::map<size_t, size_t>& atomicId2Index,
                            const std::map<size_t, std::string>& atomicId2Name,
                            const std::vector<int>& atomicMaxForward,
                            const std::vector<int>& atomicMaxReverse,
                            const bool ri,
-                           const std::set<const OperationNode<Base>*>& indexs,
+                           const std::set<const Node*>& indexes,
                            const std::set<RandomIndexPattern*>& idxRandomPatterns,
                            const std::vector<IndexPattern*>& dependentIndexPatterns,
                            const std::vector<IndexPattern*>& independentIndexPatterns,
@@ -126,13 +132,14 @@ public:
         minTemporaryVarID(minTempVID),
         varId(varIds),
         variableOrder(vo),
+        variableDependencies(variableDependencies),
         nameGen(ng),
         atomicFunctionId2Index(atomicId2Index),
         atomicFunctionId2Name(atomicId2Name),
         atomicFunctionsMaxForward(atomicMaxForward),
         atomicFunctionsMaxReverse(atomicMaxReverse),
         reuseIDs(ri),
-        indexes(indexs),
+        indexes(indexes),
         indexRandomPatterns(idxRandomPatterns),
         loopDependentIndexPatterns(dependentIndexPatterns),
         loopIndependentIndexPatterns(independentIndexPatterns),
@@ -150,6 +157,9 @@ public:
  */
 template<class Base>
 class Language {
+    friend class CodeHandler<Base>;
+public:
+    typedef OperationNode<Base> Node;
 protected:
     virtual void generateSourceCode(std::ostream& out,
                                     const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
@@ -160,13 +170,18 @@ protected:
      * @param op Operation
      * @return true if a new variable is created
      */
-    virtual bool createsNewVariable(const OperationNode<Base>& op,
+    virtual bool createsNewVariable(const Node& op,
                                     size_t totalUseCount) const = 0;
 
     virtual bool requiresVariableArgument(enum CGOpCode op,
                                           size_t argIndex) const = 0;
 
-    friend class CodeHandler<Base>;
+    /**
+     * Whether or not this language can use information regarding the
+     * dependencies between different equations/variables.
+     */
+    virtual bool requiresVariableDependencies() const = 0;
+
 };
 
 } // END cg namespace
