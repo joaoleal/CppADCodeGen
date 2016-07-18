@@ -71,6 +71,7 @@ INCLUDE(cmake/cppcheck.cmake)
 # some utilities
 ###
 INCLUDE(cmake/util.cmake)
+INCLUDE(cmake/textfile2h.cmake)
 
 ################################################################################
 #                              Includes
