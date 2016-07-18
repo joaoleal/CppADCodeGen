@@ -20,3 +20,9 @@ SET(CMAKE_BUILD_TYPE DEBUG)
 # tests
 ################################################################################
 add_cppadcg_test(mathml.cpp)
+
+link_file("${CMAKE_CURRENT_SOURCE_DIR}/variableSelection.js"
+          "${CMAKE_CURRENT_BINARY_DIR}/variableSelection.js")
+ADD_CUSTOM_TARGET(link_or_copy_variableSelectionJS
+                  DEPENDS "${CMAKE_CURRENT_BINARY_DIR}/variableSelection.js")
+ADD_DEPENDENCIES("mathml" link_or_copy_variableSelectionJS)
