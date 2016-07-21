@@ -131,6 +131,13 @@ inline std::string filenameFromPath(const std::string& path) {
     }
 }
 
+inline bool isAbsolutePath(const std::string& path) {
+    if (path.empty())
+        return false;
+
+    return path[0] == '/';
+}
+
 inline void callExecutable(const std::string& executable,
                            const std::vector<std::string>& args,
                            bool pipeSource,

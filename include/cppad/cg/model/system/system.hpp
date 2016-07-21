@@ -61,6 +61,14 @@ inline std::string escapePath(const std::string& path);
 inline std::string filenameFromPath(const std::string& path);
 
 /**
+ * Determines if a path is absolute.
+ *
+ * @param path the path
+ * @return true if it is absolute, false if it is relative
+ */
+inline bool isAbsolutePath(const std::string& path);
+
+/**
  * Calls an external executable (system dependent).
  * In the case of an error during execution an exception will be thrown.
  * 
