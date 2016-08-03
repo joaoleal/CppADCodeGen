@@ -1,7 +1,11 @@
 cppadcodegen (2.1.0-1) unstable; urgency=low
 
-   * Improved MathML and Latex outputs
-   * Improved Evaluator
+   * added the dot language (graphviz)
+   * added the Soares-Secchi method for DAE index reduction
+   * moved language related headers to a new folder
+   * improved MathML and Latex outputs
+   * improved Evaluator
+   * improved symbolic solution of the model relative to a single variable
  
  -- Joao Leal <development@ciengis.com>  Mon, 09 May 2016 13:00:00 +0000
  
