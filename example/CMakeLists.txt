@@ -59,7 +59,7 @@ SET(EXAMPLES_COMMAND "COMMAND source_generation_dot")
 ADD_CUSTOM_TARGET(example_source_generation_dot
                   COMMAND source_generation_dot)
 
-IF(PDFLATEX_COMPILER)
+IF(GRAPHVIZ_DOT_PATH)
     ADD_DEFINITIONS(-DGRAPHVIZ_DOT_PATH="${GRAPHVIZ_DOT_PATH}")
 ENDIF()
 
