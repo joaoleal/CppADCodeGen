@@ -131,6 +131,8 @@ inline CG<Base> operator/(const CG<Base>& left, const CG<Base>& right) {
             if (right.isIdenticalOne()) {
                 return left;
             }
+        } else if (left.getOperationNode() == right.getOperationNode()) {
+            return CG<Base>(Base(1.0)); // does not consider the possibility of left/right being infinity or zero
         }
 
         CodeHandler<Base>* handler = getHandler(left, right);
