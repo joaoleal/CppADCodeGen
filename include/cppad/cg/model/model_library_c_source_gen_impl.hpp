@@ -66,7 +66,7 @@ void ModelLibraryCSourceGen<Base>::saveSources(const std::string& sourcesFolder,
 template<class Base>
 const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibrarySources() {
     if (_libSources.empty()) {
-        generateVerionSource(_libSources);
+        generateVersionSource(_libSources);
         generateModelsSource(_libSources);
     }
 
@@ -74,7 +74,7 @@ const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibra
 }
 
 template<class Base>
-void ModelLibraryCSourceGen<Base>::generateVerionSource(std::map<std::string, std::string>& sources) {
+void ModelLibraryCSourceGen<Base>::generateVersionSource(std::map<std::string, std::string>& sources) {
     _cache.str("");
     _cache << "unsigned long " << FUNCTION_VERSION << "() {\n"
             << "   return " << API_VERSION << "u;\n"

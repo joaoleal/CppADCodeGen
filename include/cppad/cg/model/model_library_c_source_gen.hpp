@@ -110,12 +110,12 @@ public:
     void saveSources(const std::string& sourcesFolder);
 
     inline virtual ~ModelLibraryCSourceGen() {
-    };
+    }
 
 protected:
     virtual const std::map<std::string, std::string>& getLibrarySources();
 
-    virtual void generateVerionSource(std::map<std::string, std::string>& sources);
+    virtual void generateVersionSource(std::map<std::string, std::string>& sources);
 
     virtual void generateModelsSource(std::map<std::string, std::string>& sources);
 
