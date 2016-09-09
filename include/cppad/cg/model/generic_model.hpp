@@ -117,11 +117,11 @@ public:
      * @param evalForwardOne4CppAD true to perform the forward mode, 
      *                             false to ignore it
      */
-    inline void setAmoticEvalForwardOne4CppAD(bool evalForwardOne4CppAD) {
+    inline void setAtomicEvalForwardOne4CppAD(bool evalForwardOne4CppAD) {
         _evalAtomicForwardOne4CppAD = evalForwardOne4CppAD;
     }
 
-    inline bool isAmoticEvalForwardOne4CppAD() const {
+    inline bool isAtomicEvalForwardOne4CppAD() const {
         return _evalAtomicForwardOne4CppAD;
     }
 
