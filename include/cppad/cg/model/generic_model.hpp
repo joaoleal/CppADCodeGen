@@ -36,6 +36,10 @@ public:
         _evalAtomicForwardOne4CppAD(true) {
     }
 
+    inline virtual ~GenericModel() {
+        delete _atomic;
+    }
+
     /**
      * Provides the name for this model.
      * 
@@ -43,10 +47,28 @@ public:
      */
     virtual const std::string& getName() const = 0;
 
-    // Jacobian sparsity 
+
+    /**
+     * Determines whether or not the Jacobian sparsity pattern can be requested.
+     *
+     * @return true if it is possible to request the Jacobian sparsity pattern
+     */
+    virtual bool isJacobianSparsityAvailable() = 0;
+
+    // Jacobian sparsity
     virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
     virtual std::vector<bool> JacobianSparsityBool() = 0;
-    virtual void JacobianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
+    virtual void JacobianSparsity(std::vector<size_t>& rows,
+                                  std::vector<size_t>& cols) = 0;
+
+    /**
+     * Determines whether or not the sparsity pattern for the weighted sum of
+     * the Hessians can be requested.
+     *
+     * @return true if it is possible to request the parsity pattern for the
+     *         weighted sum of the Hessians
+     */
+    virtual bool isHessianSparsityAvailable() = 0;
 
     /**
      * Provides the sparsity of the sum of the hessian for each dependent 
@@ -56,7 +78,17 @@ public:
      */
     virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
     virtual std::vector<bool> HessianSparsityBool() = 0;
-    virtual void HessianSparsity(std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
+    virtual void HessianSparsity(std::vector<size_t>& rows,
+                                 std::vector<size_t>& cols) = 0;
+
+    /**
+     * Determines whether or not the sparsity pattern for the Hessian
+     * associated with a dependent variable can be requested.
+     *
+     * @return true if it is possible to request the parsity pattern for the
+     *         Hessians
+     */
+    virtual bool isEquationHessianSparsityAvailable() = 0;
 
     /**
      * Provides the sparsity of the hessian for a dependent variable
@@ -66,7 +98,9 @@ public:
      */
     virtual std::vector<std::set<size_t> > HessianSparsitySet(size_t i) = 0;
     virtual std::vector<bool> HessianSparsityBool(size_t i) = 0;
-    virtual void HessianSparsity(size_t i, std::vector<size_t>& rows, std::vector<size_t>& cols) = 0;
+    virtual void HessianSparsity(size_t i,
+                                 std::vector<size_t>& rows,
+                                 std::vector<size_t>& cols) = 0;
 
     /**
      * Provides the number of independent variables.
@@ -130,6 +164,14 @@ public:
      **********************************************************************/
 
     /**
+     * Determines whether or not the model evaluation (zero-order forward mode)
+     * can be requested.
+     *
+     * @return true if it is possible to evaluate the model
+     */
+    virtual bool isForwardZeroAvailable() = 0;
+
+    /**
      * Evaluates the dependent model variables (zero-order).
      * This method considers that the generic model was prepared
      * with a single array for the independent variables (the default
@@ -160,7 +202,8 @@ public:
      * @param dep The dependent variable vector
      */
     template<typename VectorBase>
-    inline void ForwardZero(const VectorBase& x, VectorBase& dep) {
+    inline void ForwardZero(const VectorBase& x,
+                            VectorBase& dep) {
         dep.resize(Range());
         this->ForwardZero(&x[0], x.size(), &dep[0], dep.size());
     }
@@ -186,6 +229,14 @@ public:
      *                        Dense Jacobian
      **********************************************************************/
 
+    /**
+     * Determines whether or not the dense Jacobian evaluation can be
+     * requested.
+     *
+     * @return true if it is possible to evaluate the dense Jacobian
+     */
+    virtual bool isJacobianAvailable() = 0;
+
     template<typename VectorBase>
     inline VectorBase Jacobian(const VectorBase& x) {
         VectorBase jac(Range() * Domain());
@@ -194,7 +245,8 @@ public:
     }
 
     template<typename VectorBase>
-    inline void Jacobian(const VectorBase& x, VectorBase& jac) {
+    inline void Jacobian(const VectorBase& x,
+                         VectorBase& jac) {
         jac.resize(Range() * Domain());
         Jacobian(&x[0], x.size(), &jac[0], jac.size());
     }
@@ -205,6 +257,16 @@ public:
     /***********************************************************************
      *                        Dense Hessian
      **********************************************************************/
+
+    /**
+     * Determines whether or not the dense evaluation of the weigthed sum of
+     * the Hessians can be requested.
+     *
+     * @return true if it is possible to evaluate the dense weigthed sum of
+     *         the Hessians
+     */
+    virtual bool isHessianAvailable() = 0;
+
     template<typename VectorBase>
     inline VectorBase Hessian(const VectorBase& x,
                               const VectorBase& w) {
@@ -241,6 +303,15 @@ public:
     /***********************************************************************
      *                        Forward one
      **********************************************************************/
+
+    /**
+     * Determines whether or not the first-order forward mode dense
+     * methods can be called.
+     *
+     * @return true if it is possible to evaluate the first-order forward mode
+     *         using the dense vector format
+     */
+    virtual bool isForwardOneAvailable() = 0;
 
     /**
      * Computes results during a forward mode sweep. 
@@ -303,6 +374,15 @@ public:
                             Base ty[], size_t ty_size) = 0;
 
     /**
+     * Determines whether or not the first-order forward mode sparse
+     * method can be called.
+     *
+     * @return true if it is possible to evaluate the first-order forward mode
+     *         using the sparse vector format
+     */
+    virtual bool isSparseForwardOneAvailable() = 0;
+
+    /**
      * Computes results during a first-order forward mode sweep, the
      * first-order Taylor coefficients for dependent variables relative to
      * a single independent variable.
@@ -329,6 +409,15 @@ public:
     /***********************************************************************
      *                        Reverse one
      **********************************************************************/
+
+    /**
+     * Determines whether or not the first-order reverse mode dense
+     * methods can be called.
+     *
+     * @return true if it is possible to evaluate the first-order reverse mode
+     *         using the dense vector format
+     */
+    virtual bool isReverseOneAvailable() = 0;
 
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
@@ -376,6 +465,15 @@ public:
     }
 
     /**
+     * Determines whether or not the first-order reverse mode sparse
+     * method can be called.
+     *
+     * @return true if it is possible to evaluate the first-order reverse mode
+     *         using the sparse vector format
+     */
+    virtual bool isSparseReverseOneAvailable() = 0;
+
+    /**
      * Computes results during a reverse mode sweep (adjoints or partial
      * derivatives of independent variables) for the evaluation of the
      * jacobian when the model is used through a user defined 
@@ -419,6 +517,15 @@ public:
     /***********************************************************************
      *                        Reverse two
      **********************************************************************/
+
+    /**
+     * Determines whether or not the second-order reverse mode dense
+     * methods can be called.
+     *
+     * @return true if it is possible to evaluate the second-order reverse mode
+     *         using the dense vector format
+     */
+    virtual bool isReverseTwoAvailable() = 0;
 
     /**
      * Computes second-order results during a reverse mode sweep (p = 2).
@@ -468,6 +575,15 @@ public:
     }
 
     /**
+     * Determines whether or not the second-order reverse mode sparse
+     * methods can be called.
+     *
+     * @return true if it is possible to evaluate the second-order reverse mode
+     *         using the sparse vector format
+     */
+    virtual bool isSparseReverseTwoAvailable() = 0;
+
+    /**
      * Computes second-order results during a reverse mode sweep (p = 2).
      * This method can be used during the evaluation of the hessian when
      * the model is used through a user defined external/atomic AD function.
@@ -514,6 +630,14 @@ public:
     /***********************************************************************
      *                        Sparse Jacobians
      **********************************************************************/
+
+    /**
+     * Determines whether or not the sparse Jacobian evaluation methods can
+     * be called.
+     *
+     * @return true if it is possible to evaluate the sparse Jacobian
+     */
+    virtual bool isSparseJacobianAvailable() = 0;
 
     /**
      * Calculates a Jacobian using sparse methods and saves it into a dense
@@ -593,6 +717,16 @@ public:
     /***********************************************************************
      *                        Sparse Hessians
      **********************************************************************/
+
+    /**
+     * Determines whether or not the sparse evaluation of the weigthed sum of
+     * the Hessians methods can be called.
+     *
+     * @return true if it is possible to evaluate the sparse weigthed sum of
+     *         the Hessians
+     */
+    virtual bool isSparseHessianAvailable() = 0;
+
     template<typename VectorBase>
     inline VectorBase SparseHessian(const VectorBase& x,
                                     const VectorBase& w) {
@@ -660,10 +794,6 @@ public:
         }
         return *_atomic;
     }
-
-    inline virtual ~GenericModel() {
-        delete _atomic;
-    };
 };
 
 } // END cg namespace

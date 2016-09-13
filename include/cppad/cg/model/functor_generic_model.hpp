@@ -22,6 +22,10 @@ namespace cg {
 
 /**
  * A model which can be accessed through function pointers.
+ * This class is not thread-safe and it should not be used simultaneously in
+ * different threads.
+ * Multiple instances of this class for the same model from the same model
+ * library object can be used simulataneously in different threads.
  * 
  * @author Joao Leal
  */
@@ -103,6 +107,9 @@ public:
     }
 
     // Jacobian sparsity
+    virtual bool isJacobianSparsityAvailable() override {
+        return _jacobianSparsity != nullptr;
+    }
 
     virtual std::vector<bool> JacobianSparsityBool() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Dynamic library closed");
@@ -153,6 +160,9 @@ public:
     }
 
     // Hessian sparsity 
+    virtual bool isHessianSparsityAvailable() override {
+        return _hessianSparsity != nullptr;
+    }
 
     virtual std::vector<bool> HessianSparsityBool() override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
@@ -200,6 +210,10 @@ public:
 
         std::copy(row, row + nnz, rows.begin());
         std::copy(col, col + nnz, cols.begin());
+    }
+
+    virtual bool isEquationHessianSparsityAvailable() override {
+        return _hessianSparsity2 != nullptr;
     }
 
     virtual std::vector<bool> HessianSparsityBool(size_t i) override {
@@ -262,8 +276,11 @@ public:
         return _m;
     }
 
-    /// calculate the dependent values (zero order)
+    virtual bool isForwardZeroAvailable() override {
+        return _zero != nullptr;
+    }
 
+    /// calculate the dependent values (zero order)
     virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
@@ -325,8 +342,11 @@ public:
         }
     }
 
-    /// calculate entire Jacobian       
+    virtual bool isJacobianAvailable() override {
+        return _jacobian != nullptr;
+    }
 
+    /// calculate entire Jacobian
     virtual void Jacobian(const Base* x, size_t x_size,
                           Base* jac, size_t jac_size) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
@@ -344,8 +364,11 @@ public:
         (*_jacobian)(&_in[0], &_out[0], _atomicFuncArg);
     }
 
-    /// calculate Hessian for one component of f
+    virtual bool isHessianAvailable() override {
+        return _hessian != nullptr;
+    }
 
+    /// calculate Hessian for one component of f
     virtual void Hessian(const Base* x, size_t x_size,
                          const Base* w, size_t w_size,
                          Base* hess) override {
@@ -364,6 +387,10 @@ public:
         (*_hessian)(&_inHess[0], &_out[0], _atomicFuncArg);
     }
 
+    virtual bool isForwardOneAvailable() override {
+        return _forwardOne != nullptr;
+    }
+
     virtual void ForwardOne(const Base tx[], size_t tx_size,
                             Base ty[], size_t ty_size) override {
         const size_t k = 1;
@@ -377,6 +404,10 @@ public:
         int ret = (*_forwardOne)(tx, ty, _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
+    }
+
+    virtual bool isSparseForwardOneAvailable() override {
+        return _forwardOneSparsity != nullptr && _sparseForwardOne != nullptr;
     }
 
     virtual void ForwardOne(const Base x[], size_t x_size,
@@ -416,6 +447,10 @@ public:
         }
     }
 
+    virtual bool isReverseOneAvailable() override {
+        return _reverseOne != nullptr;
+    }
+
     virtual void ReverseOne(const Base tx[], size_t tx_size,
                             const Base ty[], size_t ty_size,
                             Base px[], size_t px_size,
@@ -434,6 +469,10 @@ public:
         int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
+    }
+
+    virtual bool isSparseReverseOneAvailable() override {
+        return _reverseOneSparsity != nullptr && _sparseReverseOne != nullptr;
     }
 
     virtual void ReverseOne(const Base x[], size_t x_size,
@@ -473,6 +512,10 @@ public:
         }
     }
 
+    virtual bool isReverseTwoAvailable() override {
+        return _reverseTwo != nullptr;
+    }
+
     virtual void ReverseTwo(const Base tx[], size_t tx_size,
                             const Base ty[], size_t ty_size,
                             Base px[], size_t px_size,
@@ -493,6 +536,10 @@ public:
 
         CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
         CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
+    }
+
+    virtual bool isSparseReverseTwoAvailable() override {
+        return _sparseReverseTwo != nullptr;
     }
 
     virtual void ReverseTwo(const Base x[], size_t x_size,
@@ -536,7 +583,11 @@ public:
         }
     }
 
-    /// calculate sparse Jacobians 
+    virtual bool isSparseJacobianAvailable() override {
+        return _jacobianSparsity != nullptr && _sparseJacobian != nullptr;
+    }
+
+    /// calculate sparse Jacobians
 
     virtual void SparseJacobian(const Base* x, size_t x_size,
                                 Base* jac, size_t jac_size) override {
@@ -648,6 +699,10 @@ public:
 
             (*_sparseJacobian)(&x[0], &_out[0], _atomicFuncArg);
         }
+    }
+
+    virtual bool isSparseHessianAvailable() override {
+        return _hessianSparsity != nullptr && _sparseHessian != nullptr;
     }
 
     /// calculate sparse Hessians 
@@ -821,7 +876,8 @@ protected:
         loadFunctions();
     }
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) = 0;
+    virtual void* loadFunction(const std::string& functionName,
+                               bool required = true) = 0;
 
     virtual void validate() {
         /**
