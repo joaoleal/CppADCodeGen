@@ -151,25 +151,30 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
     //size_t n = _fun.Domain();
     using namespace std;
 
-    map<size_t, std::vector<size_t> > elements;
-    map<size_t, std::vector<set<size_t> > > userJacElLocation; // maps each element to its position in the user jacobian
+    std::map<size_t, CompressedVectorInfo> jacInfo;
     string functionRevFor, revForSuffix;
     if (forward) {
-        // elements[var]{equations}
+        // jacInfo[var].index{equations}
         for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
-            elements[_jacSparsity.cols[e]].push_back(_jacSparsity.rows[e]);
+            jacInfo[_jacSparsity.cols[e]].indexes.push_back(_jacSparsity.rows[e]);
         }
-        userJacElLocation = determineOrderByCol(elements, _jacSparsity);
+        for (auto& it : jacInfo) {
+            size_t col = it.first;
+            it.second.locations = determineOrderByCol(col, it.second.indexes, _jacSparsity.rows, _jacSparsity.cols);
+        }
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE;
         functionRevFor = _cache.str();
         revForSuffix = "indep";
     } else {
-        // elements[equation]{vars}
+        // jacInfo[equation].index{vars}
         for (size_t e = 0; e < _jacSparsity.rows.size(); e++) {
-            elements[_jacSparsity.rows[e]].push_back(_jacSparsity.cols[e]);
+            jacInfo[_jacSparsity.rows[e]].indexes.push_back(_jacSparsity.cols[e]);
         }
-        userJacElLocation = determineOrderByRow(elements, _jacSparsity);
+        for (auto& it : jacInfo) {
+            size_t row = it.first;
+            it.second.locations = determineOrderByRow(row, it.second.indexes, _jacSparsity.rows, _jacSparsity.cols);
+        }
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE;
         functionRevFor = _cache.str();
@@ -181,12 +186,9 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
      * determine to which functions we can provide the jacobian row/column
      * directly without needing a temporary array (compressed)
      */
-    map<size_t, bool> ordered;
-    map<size_t, std::vector<size_t> >::const_iterator it;
-    for (it = elements.begin(); it != elements.end(); ++it) {
-        size_t index = it->first;
-        const std::vector<size_t>& els = it->second;
-        const std::vector<set<size_t> >& location = userJacElLocation.at(index);
+    for (auto& it : jacInfo) {
+        const std::vector<size_t>& els = it.second.indexes;
+        const std::vector<set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
         CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
@@ -202,15 +204,15 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
                 break;
             }
         }
-        ordered[index] = passed;
+        it.second.ordered = passed;
     }
-    CPPADCG_ASSERT_UNKNOWN(elements.size() == ordered.size());
 
     size_t maxCompressedSize = 0;
     map<size_t, bool>::const_iterator itOrd;
-    for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
-        if (it->second.size() > maxCompressedSize && !itOrd->second)
-            maxCompressedSize = it->second.size();
+    map<size_t, std::vector<size_t> >::const_iterator it;
+    for (const auto& it : jacInfo) {
+        if (it.second.indexes.size() > maxCompressedSize && !it.second.ordered)
+            maxCompressedSize = it.second.indexes.size();
     }
 
     if (!_loopTapes.empty()) {
@@ -218,12 +220,12 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
          * with loops
          */
         if (forward) {
-            generateSparseJacobianWithLoopsSourceFromForRev(userJacElLocation, ordered, maxCompressedSize,
+            generateSparseJacobianWithLoopsSourceFromForRev(jacInfo, maxCompressedSize,
                                                             FUNCTION_SPARSE_FORWARD_ONE, "indep", "jcol",
                                                             _nonLoopFor1Elements, _loopFor1Groups,
                                                             generateFunctionNameLoopFor1);
         } else {
-            generateSparseJacobianWithLoopsSourceFromForRev(userJacElLocation, ordered, maxCompressedSize,
+            generateSparseJacobianWithLoopsSourceFromForRev(jacInfo, maxCompressedSize,
                                                             FUNCTION_SPARSE_REVERSE_ONE, "dep", "jrow",
                                                             _nonLoopRev1Elements, _loopRev1Groups,
                                                             generateFunctionNameLoopRev1);
@@ -233,47 +235,65 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
 
     _cache.str("");
     _cache << _name << "_" << FUNCTION_SPARSE_JACOBIAN;
-    string model_function(_cache.str());
+    string functionName(_cache.str());
 
+    if(!_multithread) {
+        _sources[functionName + ".c"] = generateSparseJacobianForRevSingleThreadSource(functionName, jacInfo, maxCompressedSize, functionRevFor, revForSuffix, forward);
+    } else {
+        _sources[functionName + ".c"] = generateSparseJacobianForRevMultiThreadSource(functionName, jacInfo, maxCompressedSize, functionRevFor, revForSuffix, forward);
+    }
+
+    _cache.str("");
+}
+
+template<class Base>
+std::string ModelCSourceGen<Base>::generateSparseJacobianForRevSingleThreadSource(const std::string& functionName,
+                                                                                  std::map<size_t, CompressedVectorInfo> jacInfo,
+                                                                                  size_t maxCompressedSize,
+                                                                                  const std::string& functionRevFor,
+                                                                                  const std::string& revForSuffix,
+                                                                                  bool forward) {
+    
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
             "\n"
-            << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
-    generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, elements, argsDcl);
+           << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+    generateFunctionDeclarationSource(_cache, functionRevFor, revForSuffix, jacInfo, argsDcl);
     _cache << "\n"
-            "void " << model_function << "(" << argsDcl << ") {\n"
-            "   " << _baseTypeName << " const * inLocal[2];\n"
-            "   " << _baseTypeName << " inLocal1 = 1;\n"
-            "   " << _baseTypeName << " * outLocal[1];\n"
-            "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
-            "   " << _baseTypeName << " * jac = out[0];\n"
-            "\n"
-            "   inLocal[0] = in[0];\n"
-            "   inLocal[1] = &inLocal1;\n"
-            "   outLocal[0] = compressed;";
+            "void " << functionName << "(" << argsDcl << ") {\n"
+                   "   " << _baseTypeName << " const * inLocal[2];\n"
+                   "   " << _baseTypeName << " inLocal1 = 1;\n"
+                   "   " << _baseTypeName << " * outLocal[1];\n"
+                   "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
+                   "   " << _baseTypeName << " * jac = out[0];\n"
+                   "\n"
+                   "   inLocal[0] = in[0];\n"
+                   "   inLocal[1] = &inLocal1;\n"
+                   "   outLocal[0] = compressed;\n";
 
     langC.setArgumentIn("inLocal");
     langC.setArgumentOut("outLocal");
     std::string argsLocal = langC.generateDefaultFunctionArguments();
 
-    bool lastCompressed = true;
-    for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
-        size_t index = it->first;
-        const std::vector<size_t>& els = it->second;
-        const std::vector<set<size_t> >& location = userJacElLocation.at(index);
+    bool previousCompressed = true;
+    for (const auto& it : jacInfo) {
+        size_t index = it.first;
+        const std::vector<size_t>& els = it.second.indexes;
+        const std::vector<std::set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
 
         _cache << "\n";
-        if (itOrd->second) {
+        bool compressed = !it.second.ordered;
+        if (!compressed) {
             _cache << "   outLocal[0] = &jac[" << *location[0].begin() << "];\n";
-        } else if (!lastCompressed) {
+        } else if (!previousCompressed) {
             _cache << "   outLocal[0] = compressed;\n";
         }
         _cache << "   " << functionRevFor << "_" << revForSuffix << index << "(" << argsLocal << ");\n";
-        if (!itOrd->second) {
+        if (compressed) {
             for (size_t e = 0; e < els.size(); e++) {
                 _cache << "   ";
                 for (size_t itl : location[e]) {
@@ -282,13 +302,27 @@ void ModelCSourceGen<Base>::generateSparseJacobianForRevSource(bool forward) {
                 _cache << "compressed[" << e << "];\n";
             }
         }
-        lastCompressed = !itOrd->second;
+        previousCompressed = compressed;
     }
 
     _cache << "\n"
             "}\n";
-    _sources[model_function + ".c"] = _cache.str();
-    _cache.str("");
+
+    return _cache.str();
+}
+
+template<class Base>
+std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource(const std::string& functionName,
+                                                                                 std::map<size_t, CompressedVectorInfo> jacInfo,
+                                                                                 size_t maxCompressedSize,
+                                                                                 const std::string& functionRevFor,
+                                                                                 const std::string& revForSuffix,
+                                                                                 bool forward) {
+    LanguageC<Base> langC(_baseTypeName);
+    std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+
+    throw CGException("Not implemented yet!");
+    //return _cache.str();
 }
 
 template<class Base>

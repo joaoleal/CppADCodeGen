@@ -19,6 +19,16 @@ namespace CppAD {
 namespace cg {
 
 /**
+ * Auxiliary internal class
+ */
+class CompressedVectorInfo {
+public:
+    std::vector<std::set<size_t> > locations; // location of each index in the compressed array
+    std::vector<size_t> indexes; // row or column index
+    bool ordered;
+};
+
+/**
  * Generates C source code for a model.
  * 
  * @author Joao Leal
@@ -154,6 +164,8 @@ protected:
      * Typical values of the independent vector 
      */
     std::vector<Base> _x;
+    /// whether or not to create multithreaded code for the Jacobian (experimental)
+    bool _multithread;
     /// generate source code for the zero order model evaluation
     bool _zero;
     bool _zeroEvaluated;
@@ -276,6 +288,7 @@ public:
         _name(model),
         _baseTypeName(ModelCSourceGen<Base>::baseTypeName()),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
+        _multithread(false),
         _zero(true),
         _zeroEvaluated(false),
         _jacobian(false),
@@ -818,6 +831,19 @@ protected:
 
     virtual void generateSparseJacobianForRevSource(bool forward);
 
+    virtual std::string generateSparseJacobianForRevSingleThreadSource(const std::string& functionName,
+                                                                       std::map<size_t, CompressedVectorInfo> jacInfo,
+                                                                       size_t maxCompressedSize,
+                                                                       const std::string& functionRevFor,
+                                                                       const std::string& revForSuffix,
+                                                                       bool forward);
+
+    virtual std::string generateSparseJacobianForRevMultiThreadSource(const std::string& functionName,
+                                                                      std::map<size_t, CompressedVectorInfo> jacInfo,
+                                                                      size_t maxCompressedSize,
+                                                                      const std::string& functionRevFor,
+                                                                      const std::string& revForSuffix,
+                                                                      bool forward);
     /**
      * Generates a sparse Jacobian using loops.
      * 
@@ -865,8 +891,7 @@ protected:
                                                std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo);
 
 
-    virtual void generateSparseJacobianWithLoopsSourceFromForRev(const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
-                                                                 const std::map<size_t, bool>& keyOrdered,
+    virtual void generateSparseJacobianWithLoopsSourceFromForRev(const std::map<size_t, CompressedVectorInfo>& jacInfo,
                                                                  size_t maxCompressedSize,
                                                                  const std::string& localFunctionTypeName,
                                                                  const std::string& suffix,
@@ -951,8 +976,7 @@ protected:
                                               std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
                                               bool useSymmetry);
 
-    inline virtual void generateSparseHessianWithLoopsSourceFromRev2(const std::map<size_t, std::vector<std::set<size_t> > >& userHessElLocation,
-                                                                     const std::map<size_t, bool>& ordered,
+    inline virtual void generateSparseHessianWithLoopsSourceFromRev2(const std::map<size_t, CompressedVectorInfo>& hessInfo,
                                                                      size_t maxCompressedSize);
 
     inline virtual void generateFunctionNameLoopRev2(std::ostringstream& cache,
@@ -1085,12 +1109,22 @@ protected:
                                                                                         const std::vector<size_t>& userRows,
                                                                                         const std::vector<size_t>& userCols);
 
+    static inline std::vector<std::set<size_t> > determineOrderByCol(size_t col,
+                                                                     const std::vector<size_t>& colElements,
+                                                                     const std::vector<size_t>& userRows,
+                                                                     const std::vector<size_t>& userCols);
+
     static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                         const LocalSparsityInfo& sparsity);
 
     static inline std::map<size_t, std::vector<std::set<size_t> > > determineOrderByRow(const std::map<size_t, std::vector<size_t> >& elements,
                                                                                         const std::vector<size_t>& userRows,
                                                                                         const std::vector<size_t>& userCols);
+
+    static inline std::vector<std::set<size_t> > determineOrderByRow(size_t row,
+                                                                     const std::vector<size_t>& rowsElements,
+                                                                     const std::vector<size_t>& userRows,
+                                                                     const std::vector<size_t>& userCols);
     /**
      * 
      */

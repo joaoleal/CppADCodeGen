@@ -19,8 +19,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(const std::map<size_t, std::vector<std::set<size_t> > >& userJacElLocation,
-                                                                            const std::map<size_t, bool>& keyOrdered,
+void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(const std::map<size_t, CompressedVectorInfo>& jacInfo,
                                                                             size_t maxCompressedSize,
                                                                             const std::string& localFunctionTypeName,
                                                                             const std::string& suffix,
@@ -57,7 +56,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianWithLoopsSourceFromForRev(cons
             keyName, "it", "jac",
             loopGroups,
             nonLoopElements,
-            userJacElLocation, keyOrdered,
+            jacInfo,
             generateLocalFunctionName,
             _jacSparsity.rows.size(), maxCompressedSize);
 

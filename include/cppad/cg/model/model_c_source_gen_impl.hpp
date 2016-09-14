@@ -499,12 +499,23 @@ inline std::map<size_t, std::vector<std::set<size_t> > > ModelCSourceGen<Base>::
 
     for (const auto& it : elements) {
         size_t col = it.first;
-        const std::vector<size_t>& els = it.second;
-        std::vector<std::set<size_t> >& userLocationCol = userLocation[col];
-        userLocationCol.resize(els.size());
+        const std::vector<size_t>& colElements = it.second;
 
-        for (size_t er = 0; er < els.size(); er++) {
-            size_t row = els[er];
+        userLocation[col] = determineOrderByCol(col, colElements, userRows, userCols);
+    }
+
+    return userLocation;
+}
+
+template<class Base>
+inline std::vector<std::set<size_t> > ModelCSourceGen<Base>::determineOrderByCol(size_t col,
+                                                                                 const std::vector<size_t>& colElements,
+                                                                                 const std::vector<size_t>& userRows,
+                                                                                 const std::vector<size_t>& userCols) {
+        std::vector<std::set<size_t> > userLocationCol(colElements.size());
+
+        for (size_t er = 0; er < colElements.size(); er++) {
+            size_t row = colElements[er];
             for (size_t e = 0; e < userRows.size(); e++) {
                 if (userRows[e] == row && userCols[e] == col) {
                     userLocationCol[er].insert(e);
@@ -512,9 +523,8 @@ inline std::map<size_t, std::vector<std::set<size_t> > > ModelCSourceGen<Base>::
                 }
             }
         }
-    }
 
-    return userLocation;
+    return userLocationCol;
 }
 
 template<class Base>
@@ -531,22 +541,31 @@ inline std::map<size_t, std::vector<std::set<size_t> > > ModelCSourceGen<Base>::
 
     for (const auto& it : elements) {
         size_t row = it.first;
-        const std::vector<size_t>& els = it.second;
-        std::vector<std::set<size_t> >& userLocationRow = userLocation[row];
-        userLocationRow.resize(els.size());
+        const std::vector<size_t>& rowsElements = it.second;
+        userLocation[row] = determineOrderByRow(row, rowsElements, userRows, userCols);
+    }
 
-        for (size_t ec = 0; ec < els.size(); ec++) {
-            size_t col = els[ec];
-            for (size_t e = 0; e < userRows.size(); e++) {
-                if (userCols[e] == col && userRows[e] == row) {
-                    userLocationRow[ec].insert(e);
-                    break;
-                }
+    return userLocation;
+}
+
+template<class Base>
+inline std::vector<std::set<size_t> > ModelCSourceGen<Base>::determineOrderByRow(size_t row,
+                                                                                 const std::vector<size_t>& rowElements,
+                                                                                 const std::vector<size_t>& userRows,
+                                                                                 const std::vector<size_t>& userCols) {
+    std::vector<std::set<size_t> > userLocationRow(rowElements.size());
+
+    for (size_t ec = 0; ec < rowElements.size(); ec++) {
+        size_t col = rowElements[ec];
+        for (size_t e = 0; e < userRows.size(); e++) {
+            if (userCols[e] == col && userRows[e] == row) {
+                userLocationRow[ec].insert(e);
+                break;
             }
         }
     }
 
-    return userLocation;
+    return userLocationRow;
 }
 
 template<class Base>

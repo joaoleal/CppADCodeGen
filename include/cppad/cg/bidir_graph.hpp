@@ -22,9 +22,10 @@ template<class Base>
 class PathNodeEdges {
 public:
     typedef OperationNode<Base> Node;
+    typedef OperationPathNode<Base> Path;
 public:
     std::vector<size_t> arguments;
-    std::vector<OperationPathNode<Base>> usage; // parent node and argument index in that node
+    std::vector<Path> usage; // parent node and argument index in that node
 };
 
 /**
@@ -124,7 +125,11 @@ public:
         if (paths.size() > 1)
             bifIndex = 0;
 
-        if (paths[0][0].node !=  &expression) {
+        if (paths[0][0].node != &expression) {
+            /**
+             * Add a missing path from the nodes at paths[0][0] to the
+             * expression node
+             */
             SourceCodePath pathCommon;
 
             auto* n = paths[0][0].node;
@@ -170,19 +175,19 @@ private:
         paths.resize(1);
 
         while (!edges->arguments.empty()) {
-            if(edges->arguments.size() > 1) {
+            if (edges->arguments.size() > 1) {
                 // found bifurcation: must restart!
                 size_t a1Index = edges->arguments[0];
                 const auto& a1 = n->getArguments()[a1Index];
                 paths = findPathUpTo(*a1.getOperation(), target);
-                if(paths.size() == 2) {
+                if (paths.size() == 2) {
                     return paths;
                 }
 
-                size_t a2Index =edges->arguments[1];
+                size_t a2Index = edges->arguments[1];
                 const auto& a2 = n->getArguments()[a2Index];
                 auto paths2 = findPathUpTo(*a2.getOperation(), target);
-                if(paths2.size() == 2) {
+                if (paths2.size() == 2) {
                     return paths2;
                 }
 

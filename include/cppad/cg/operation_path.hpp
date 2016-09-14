@@ -101,7 +101,7 @@ inline BidirGraph<Base> CodeHandler<Base>::findPathGraph(OperationNode<Base>& ro
 
     BidirGraph<Base> foundGraph;
 
-    if (bifurcations <=  maxBifurcations) {
+    if (bifurcations <= maxBifurcations) {
         if (&root == &target) {
             foundGraph[root];
         } else {

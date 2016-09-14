@@ -772,16 +772,14 @@ public:
  * 
  * @param loopGroups Used elements from the arrays provided by the group
  *                   function calls (loop->group->{array->{compressed position} })
- * @param userElLocation maps each element to its position 
+ * @param matrixInfo maps each element to its position
  *                      (array -> [compressed elements { original index }] )
- * @param orderedArray
  * @param loopCalls
  * @param garbage holds created ArrayGroups
  */
 template<class Base>
 inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
-                                         const std::map<size_t, std::vector<std::set<size_t> > >& userElLocation,
-                                         const std::map<size_t, bool>& orderedArray,
+                                         const std::map<size_t, CompressedVectorInfo>& matrixInfo,
                                          std::map<size_t, std::map<LoopModel<Base>*, std::map<size_t, ArrayGroup*> > >& loopCalls,
                                          SmartVectorPointer<ArrayGroup>& garbage) {
 
@@ -816,7 +814,7 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
              */
             bool ordered = true;
             for (size_t l = 0; l < localit2jcols.size(); l++) {
-                if (!orderedArray.at(localit2jcols[l])) {
+                if (!matrixInfo.at(localit2jcols[l]).ordered) {
                     ordered = false;
                     break;
                 }
@@ -826,7 +824,7 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
                 arrayStart.resize(localit2jcols.size());
 
                 for (size_t l = 0; l < localit2jcols.size(); l++) {
-                    const std::vector<set<size_t> >& location = userElLocation.at(localit2jcols[l]);
+                    const std::vector<std::set<size_t> >& location = matrixInfo.at(localit2jcols[l]).locations;
                     arrayStart[l] = *location[0].begin();
                 }
 
@@ -860,8 +858,8 @@ inline void determineForRevUsagePatterns(const std::map<LoopModel<Base>*, std::m
 
                         keys.insert(key);
 
-                        const std::vector<std::set<size_t> >& origPos = userElLocation.at(key);
-                        const set<size_t>& compressed = jcols2e.at(key);
+                        const std::vector<std::set<size_t> >& origPos = matrixInfo.at(key).locations;
+                        const std::set<size_t>& compressed = jcols2e.at(key);
 
                         size_t e = 0;
                         for (auto itE = compressed.begin(); itE != compressed.end(); ++itE, e++) {
@@ -910,12 +908,10 @@ void printForRevUsageFunction(std::ostringstream& out,
                               const std::string& resultName,
                               const std::map<LoopModel<Base>*, std::map<size_t, std::map<size_t, std::set<size_t> > > >& loopGroups,
                               const std::map<size_t, std::set<size_t> >& nonLoopElements,
-                              const std::map<size_t, std::vector<std::set<size_t> > >& userElLocation,
-                              const std::map<size_t, bool>& jcolOrdered,
+                              const std::map<size_t, CompressedVectorInfo>& matrixInfo,
                               void (*generateLocalFunctionName)(std::ostringstream& cache, const std::string& modelName, const LoopModel<Base>& loop, size_t g),
                               size_t nnz,
                               size_t maxCompressedSize) {
-
     using namespace std;
 
     /**
@@ -929,8 +925,7 @@ void printForRevUsageFunction(std::ostringstream& out,
      * Determine jrow index patterns and
      * Hessian row start patterns
      */
-    determineForRevUsagePatterns(loopGroups, userElLocation, jcolOrdered,
-                                 loopCalls, garbage);
+    determineForRevUsagePatterns(loopGroups, matrixInfo, loopCalls, garbage);
 
     string nlRev2Suffix = "noloop_" + suffix;
 
@@ -1017,10 +1012,10 @@ void printForRevUsageFunction(std::ostringstream& out,
     for (const auto& it : nonLoopElements) {
         size_t index = it.first;
         const set<size_t>& elPos = it.second;
-        const std::vector<set<size_t> >& location = userElLocation.at(index);
+        const std::vector<set<size_t> >& location = matrixInfo.at(index).locations;
         CPPADCG_ASSERT_UNKNOWN(elPos.size() <= location.size()); // it can be lower because not all elements have to be assigned
         CPPADCG_ASSERT_UNKNOWN(elPos.size() > 0);
-        bool rowOrdered = jcolOrdered.at(index);
+        bool rowOrdered = matrixInfo.at(index).ordered;
 
         out << "\n";
         if (rowOrdered) {

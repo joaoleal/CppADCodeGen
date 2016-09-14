@@ -232,25 +232,25 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
     std::vector<size_t> evalRows, evalCols;
     determineSecondOrderElements4Eval(evalRows, evalCols);
 
+    std::map<size_t, CompressedVectorInfo> hessInfo;
+
     // elements[var]{var}
-    map<size_t, std::vector<size_t> > elements;
     for (size_t e = 0; e < evalRows.size(); e++) {
-        elements[evalRows[e]].push_back(evalCols[e]);
+        hessInfo[evalRows[e]].indexes.push_back(evalCols[e]);
     }
 
     // maps each element to its position in the user hessian
-    map<size_t, std::vector<set<size_t> > > userHessElLocation = determineOrderByRow(elements, evalRows, evalCols);
+    for (auto& it : hessInfo) {
+        it.second.locations = determineOrderByRow(it.first, it.second.indexes, evalRows, evalCols);
+    }
 
     /**
      * determine to which functions we can provide the hessian row directly
      * without needing a temporary array (compressed)
      */
-    map<size_t, bool> ordered;
-    map<size_t, std::vector<size_t> >::const_iterator it;
-    for (it = elements.begin(); it != elements.end(); ++it) {
-        size_t index = it->first;
-        const std::vector<size_t>& els = it->second;
-        const std::vector<set<size_t> >& location = userHessElLocation.at(index);
+    for (auto& it : hessInfo) {
+        const std::vector<size_t>& els = it.second.indexes;
+        const std::vector<set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
         CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
@@ -266,26 +266,24 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
                 break;
             }
         }
-        ordered[index] = passed;
+        it.second.ordered = passed;
     }
-    CPPADCG_ASSERT_UNKNOWN(elements.size() == ordered.size());
 
     /**
      * determine the maximum size of the temporary array
      */
     size_t maxCompressedSize = 0;
 
-    map<size_t, bool>::const_iterator itOrd;
-    for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
-        if (it->second.size() > maxCompressedSize && !itOrd->second)
-            maxCompressedSize = it->second.size();
+    for (const auto& it : hessInfo) {
+        if (it.second.indexes.size() > maxCompressedSize && !it.second.ordered)
+            maxCompressedSize = it.second.indexes.size();
     }
 
     if (!_loopTapes.empty()) {
         /**
          * with loops
          */
-        generateSparseHessianWithLoopsSourceFromRev2(userHessElLocation, ordered, maxCompressedSize);
+        generateSparseHessianWithLoopsSourceFromRev2(hessInfo, maxCompressedSize);
         return;
     }
 
@@ -299,7 +297,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
             << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
-    generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, elements, argsDcl);
+    generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, hessInfo, argsDcl);
     _cache << "\n"
             "void " << model_function << "(" << argsDcl << ") {\n"
             "   " << _baseTypeName << " const * inLocal[3];\n"
@@ -320,22 +318,23 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
     langC.setArgumentIn("inLocal");
     langC.setArgumentOut("outLocal");
     std::string argsLocal = langC.generateDefaultFunctionArguments();
-    bool lastCompressed = true;
-    for (it = elements.begin(), itOrd = ordered.begin(); it != elements.end(); ++it, ++itOrd) {
-        size_t index = it->first;
-        const std::vector<size_t>& els = it->second;
-        const std::vector<set<size_t> >& location = userHessElLocation.at(index);
+    bool previousCompressed = true;
+    for (auto& it : hessInfo) {
+        size_t index = it.first;
+        const std::vector<size_t>& els = it.second.indexes;
+        const std::vector<std::set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
         CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
 
         _cache << "\n";
-        if (itOrd->second) {
+        bool compressed = !it.second.ordered;
+        if (!compressed) {
             _cache << "   outLocal[0] = &hess[" << *location[0].begin() << "];\n";
-        } else if (!lastCompressed) {
+        } else if (!previousCompressed) {
             _cache << "   outLocal[0] = compressed;\n";
         }
         _cache << "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
-        if (!itOrd->second) {
+        if (compressed) {
             for (size_t e = 0; e < els.size(); e++) {
                 _cache << "   ";
                 for (size_t itl : location[e]) {
@@ -344,7 +343,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
                 _cache << "compressed[" << e << "];\n";
             }
         }
-        lastCompressed = !itOrd->second;
+        previousCompressed = compressed;
     }
 
     _cache << "\n"
