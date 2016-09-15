@@ -29,6 +29,10 @@ void cppadcg_thpool_add_job(void (*function_p)(void*), void* arg_p);
 
 void cppadcg_thpool_wait();
 
+void cppadcg_thpool_set_disabled(int disabled);
+
+int cppadcg_thpool_is_disabled();
+
 void cppadcg_thpool_shutdown();
 
 #ifdef __cplusplus

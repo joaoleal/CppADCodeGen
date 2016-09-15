@@ -29,6 +29,7 @@ public:
     static const std::string FUNCTION_VERSION;
     static const std::string FUNCTION_MODELS;
     static const std::string FUNCTION_ONCLOSE;
+    static const std::string FUNCTION_SETTHREADPOOLDISABLED;
     static const std::string FUNCTION_SETTHREADS;
     static const std::string FUNCTION_GETTHREADS;
     static const unsigned long API_VERSION;

@@ -44,6 +44,8 @@ public:
      */
     virtual GenericModel<Base>* model(const std::string& modelName) = 0;
 
+    virtual void setThreadPoolDisabled(bool disabled) = 0;
+
     /**
      * Provides the maximum number of threads used to determine sparse Jacobians
      * and sparse Hessians for the models in this library.

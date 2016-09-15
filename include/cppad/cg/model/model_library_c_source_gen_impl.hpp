@@ -33,6 +33,9 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ONCLOSE = "cppad_cg_on_close";
 
 template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED = "cppad_cg_set_thread_pool_disabled";
+
+template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS = "cppad_cg_set_thread_number";
 
 template<class Base>
@@ -161,6 +164,13 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
     if (pthreads) {
         _cache.str("");
         _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
+        _cache << "   cppadcg_thpool_set_disabled(disabled);\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADPOOLDISABLED + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
         _cache << "   cppadcg_thpool_set_threads(n);\n";
         _cache << "}\n\n";
@@ -170,6 +180,22 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
         _cache << "   return cppadcg_thpool_get_threads();\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
+    } else {
+        _cache.str("");
+        _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADPOOLDISABLED + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADS + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
+        _cache << "   return 1;\n";
         _cache << "}\n\n";
         sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
     }

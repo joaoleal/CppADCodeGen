@@ -36,6 +36,7 @@ protected:
     void* _dynLibHandle;
     unsigned long _version; // API version
     void (*_onClose)();
+    void (*_setThreadPoolDisabled)(int);
     void (*_setThreads)(unsigned int);
     unsigned int (*_getThreads)();
     std::set<std::string> _modelNames;
@@ -46,6 +47,7 @@ public:
         _dynLibName(dynLibName),
         _dynLibHandle(nullptr),
         _onClose(nullptr),
+        _setThreadPoolDisabled(nullptr),
         _setThreads(nullptr),
         _getThreads(nullptr) {
 
@@ -86,6 +88,12 @@ public:
 
     virtual unsigned long getAPIVersion() override {
         return _version;
+    }
+
+    virtual void setThreadPoolDisabled(bool disabled) override {
+        if(_setThreadPoolDisabled != nullptr) {
+            (*_setThreadPoolDisabled)(disabled);
+        }
     }
 
     virtual unsigned int getThreadNumber() const override {
@@ -165,6 +173,7 @@ protected:
         /**
          * Thread pool related functions
          */
+        _setThreadPoolDisabled = reinterpret_cast<decltype(_setThreadPoolDisabled)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED, false));
         _setThreads = reinterpret_cast<decltype(_setThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS, false));
         _getThreads = reinterpret_cast<decltype(_getThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
 

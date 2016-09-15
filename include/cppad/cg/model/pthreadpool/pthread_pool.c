@@ -32,6 +32,7 @@ typedef struct thpool_* threadpool;
 
 static volatile threadpool cppadcg_pool;
 static volatile int cppadcg_pool_n_threads = 2;
+static volatile int cppadcg_pool_disabled = 0; // false
 
 /* ==================== INTERNAL HIGH LEVEL API  ====================== */
 
@@ -60,16 +61,28 @@ void cppadcg_thpool_prepare() {
 }
 
 void cppadcg_thpool_add_job(void (*function_p)(void*), void* arg) {
-    if(cppadcg_pool == NULL) {
-        cppadcg_thpool_prepare();
+    if(cppadcg_pool_disabled) {
+        (*function_p)(arg);
+    } else {
+        if (cppadcg_pool == NULL) {
+            cppadcg_thpool_prepare();
+        }
+        thpool_add_work(cppadcg_pool, function_p, arg);
     }
-    thpool_add_work(cppadcg_pool, function_p, arg);
 }
 
 void cppadcg_thpool_wait() {
     if(cppadcg_pool != NULL) {
         thpool_wait(cppadcg_pool);
     }
+}
+
+void cppadcg_thpool_set_disabled(int disabled) {
+    cppadcg_pool_disabled = disabled;
+}
+
+int cppadcg_thpool_is_disabled() {
+    return cppadcg_pool_disabled;
 }
 
 void cppadcg_thpool_shutdown() {

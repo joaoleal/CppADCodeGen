@@ -33,11 +33,13 @@ protected:
     std::set<std::string> _modelNames;
     std::set<LlvmModel<Base>*> _models;
     void (*_onClose)();
+    void (*_setThreadPoolDisabled)(int);
     void (*_setThreads)(unsigned int);
     unsigned int (*_getThreads)();
 public:
     inline LlvmModelLibrary() :
             _onClose(nullptr),
+            _setThreadPoolDisabled(nullptr),
             _setThreads(nullptr),
             _getThreads(nullptr) {
     }
@@ -58,6 +60,12 @@ public:
 
     virtual unsigned long getAPIVersion() override {
         return _version;
+    }
+
+    virtual void setThreadPoolDisabled(bool disabled) override {
+        if(_setThreadPoolDisabled != nullptr) {
+            (*_setThreadPoolDisabled)(disabled);
+        }
     }
 
     virtual unsigned int getThreadNumber() const override {
@@ -125,6 +133,7 @@ protected:
         /**
          * Thread pool related functions
          */
+        _setThreadPoolDisabled = reinterpret_cast<decltype(_setThreadPoolDisabled)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED, false));
         _setThreads = reinterpret_cast<decltype(_setThreads)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS, false));
         _getThreads = reinterpret_cast<decltype(_getThreads)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
 
