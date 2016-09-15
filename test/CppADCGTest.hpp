@@ -167,7 +167,7 @@ protected:
     template <class T>
     static inline ::testing::AssertionResult nearEqual(const T &x, const T &y,
                                                        const T &r = std::numeric_limits<T>::epsilon() * 100,
-                                                       const T &a = std::numeric_limits<T>::epsilon() * 100) throw (CGException) {
+                                                       const T &a = std::numeric_limits<T>::epsilon() * 100) {
 
         T zero(0);
         if (r <= zero)

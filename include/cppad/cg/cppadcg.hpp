@@ -41,6 +41,7 @@
 #include <string>
 #include <string.h>
 #include <chrono>
+#include <thread>
 
 // ---------------------------------------------------------------------------
 // operating system detection
@@ -209,6 +210,8 @@
 #include <cppad/cg/model/compiler/clang_compiler.hpp>
 
 // model source code generation helpers
+#include <cppad/cg/model/pthreadpool/pthread_pool_c.hpp>
+#include <cppad/cg/model/pthreadpool/pthread_pool_h.hpp>
 #include <cppad/cg/model/model_c_source_gen.hpp>
 #include <cppad/cg/model/model_c_source_gen_impl.hpp>
 #include <cppad/cg/model/model_library_c_source_gen.hpp>

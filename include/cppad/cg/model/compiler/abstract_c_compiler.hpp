@@ -98,6 +98,10 @@ public:
         _compileFlags = compileFlags;
     }
 
+    void addCompileFlag(const std::string& compileFlag) {
+        _compileFlags.push_back(compileFlag);
+    }
+
     const std::vector<std::string>& getLinkFlags() const {
         return _linkFlags;
     }
@@ -106,12 +110,20 @@ public:
         _linkFlags = linkFlags;
     }
 
+    void addLinkFlag(const std::string& linkFlag) {
+        _linkFlags.push_back(linkFlag);
+    }
+
     const std::vector<std::string>& getCompileLibFlags() const {
         return _compileLibFlags;
     }
 
     void setCompileLibFlags(const std::vector<std::string>& compileLibFlags) {
         _compileLibFlags = compileLibFlags;
+    }
+
+    void addCompileLibFlag(const std::string& compileLibFlag) {
+        _compileLibFlags.push_back(compileLibFlag);
     }
 
     virtual bool isVerbose() const override {

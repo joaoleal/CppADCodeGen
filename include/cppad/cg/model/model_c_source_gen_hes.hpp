@@ -287,10 +287,24 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
         return;
     }
 
-    string model_function = _name + "_" + FUNCTION_SPARSE_HESSIAN;
+    string functionName = _name + "_" + FUNCTION_SPARSE_HESSIAN;
     string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
     string rev2Suffix = "indep";
 
+    if (_multithread == MultiThreadingType::NONE) {
+        _sources[functionName + ".c"] = generateSparseHessianRev2SingleThreadSource(functionName, hessInfo, maxCompressedSize, functionRev2, rev2Suffix);
+    } else {
+        _sources[functionName + ".c"] = generateSparseHessianRev2MultiThreadSource(functionName, hessInfo, maxCompressedSize, functionRev2, rev2Suffix);
+    }
+    _cache.str("");
+}
+
+template<class Base>
+std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(const std::string& functionName,
+                                                                               std::map<size_t, CompressedVectorInfo> hessInfo,
+                                                                               size_t maxCompressedSize,
+                                                                               const std::string& functionRev2,
+                                                                               const std::string& rev2Suffix) {
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
@@ -299,7 +313,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
             << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, hessInfo, argsDcl);
     _cache << "\n"
-            "void " << model_function << "(" << argsDcl << ") {\n"
+            "void " << functionName << "(" << argsDcl << ") {\n"
             "   " << _baseTypeName << " const * inLocal[3];\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
             "   " << _baseTypeName << " * outLocal[1];\n";
@@ -348,8 +362,150 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
 
     _cache << "\n"
             "}\n";
-    _sources[model_function + ".c"] = _cache.str();
+    return _cache.str();
+}
+
+
+template<class Base>
+std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(const std::string& functionName,
+                                                                              std::map<size_t, CompressedVectorInfo> hessInfo,
+                                                                              size_t maxCompressedSize,
+                                                                              const std::string& functionRev2,
+                                                                              const std::string& rev2Suffix) {
+    LanguageC<Base> langC(_baseTypeName);
+    std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+
     _cache.str("");
+    _cache << "#include <stdlib.h>\n"
+           << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+    generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, hessInfo, argsDcl);
+
+
+    langC.setArgumentIn("inLocal");
+    langC.setArgumentOut("outLocal");
+    std::string argsLocal = langC.generateDefaultFunctionArguments();
+
+    /**
+     * Create independent functions for each row/column of the Jacobian
+     */
+    for (const auto& it : hessInfo) {
+        size_t index = it.first;
+        const std::vector<size_t>& els = it.second.indexes;
+        const std::vector<std::set<size_t> >& location = it.second.locations;
+        CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
+
+        bool compressed = !it.second.ordered;
+        if (!compressed) {
+            continue;
+        }
+
+        _cache << "void " << functionRev2 << "_" << rev2Suffix << index << "_wrap(" << argsDcl << ") {\n"
+                "   " << _baseTypeName << " const * inLocal[3];\n"
+                "   " << _baseTypeName << " inLocal1 = 1;\n"
+                "   " << _baseTypeName << " * outLocal[1];\n"
+                "   " << _baseTypeName << " compressed[" << it.second.indexes.size() << "];\n"
+                "   " << _baseTypeName << " * hess = out[0];\n"
+                "\n"
+                "   inLocal[0] = in[0];\n"
+                "   inLocal[1] = &inLocal1;\n"
+                "   inLocal[2] = in[1];\n"
+                "   outLocal[0] = compressed;\n";
+        _cache << "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
+        for (size_t e = 0; e < els.size(); e++) {
+            _cache << "   ";
+            for (size_t itl : location[e]) {
+                _cache << "hess[" << itl << "] = ";
+            }
+            _cache << "compressed[" << e << "];\n";
+        }
+        _cache << "}\n";
+    }
+
+    _cache << "\n"
+            "typedef void (*cppadcg_function_type) (" << argsDcl << ");\n";
+
+    /**
+     * PThreads pool needs a function with a void pointer argument
+     */
+    if(_multithread == MultiThreadingType::PTHREADS) {
+        _cache << "\n";
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n";
+        _cache << "\n";
+        _cache << "typedef struct ExecArgStruct {\n"
+                "   cppadcg_function_type func;\n"
+                "   " << _baseTypeName + " const *const * in;\n"
+                "   " << _baseTypeName + "* out[1];\n"
+                "   struct LangCAtomicFun atomicFun;\n"
+                "} ExecArgStruct;\n"
+                "\n"
+                "static void execute_function(void* arg) {\n"
+                "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
+                "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
+                "}\n";
+    }
+
+
+    /**
+     * Hessian function
+     */
+    _cache << "\n"
+            "void " << functionName << "(" << argsDcl << ") {\n"
+            "   static const cppadcg_function_type p[" << hessInfo.size() << "] = {";
+    for (const auto& it : hessInfo) {
+        size_t index = it.first;
+        if (index != hessInfo.begin()->first) _cache << ", ";
+        if (it.second.ordered) {
+            _cache << functionRev2 << "_" << rev2Suffix << index;
+        } else {
+            _cache << functionRev2 << "_" << rev2Suffix << index << "_wrap";
+        }
+    }
+    _cache << "};\n"
+            "   static const long offset["<< hessInfo.size() <<"] = {";
+    for (const auto& it : hessInfo) {
+        if (it.first != hessInfo.begin()->first) _cache << ", ";
+        if (it.second.ordered) {
+            _cache << *it.second.locations[0].begin();
+        } else {
+            _cache << "0";
+        }
+    }
+    _cache << "};\n"
+            "   " << _baseTypeName << " const * inLocal[3];\n"
+            "   " << _baseTypeName << " inLocal1 = 1;\n"
+            "   " << _baseTypeName << " * outLocal[1];\n";
+    _cache << "   " << _baseTypeName << " * hess = out[0];\n"
+            "   long i;\n"
+            "\n"
+            "   inLocal[0] = in[0];\n"
+            "   inLocal[1] = &inLocal1;\n"
+            "   inLocal[2] = in[1];\n";
+
+    if(_multithread == MultiThreadingType::OPENMP) {
+        _cache << "#pragma omp parallel for private(outLocal)\n"
+                "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
+                       "      outLocal[0] = &hess[offset[i]];\n"
+                       "      (*p[i])(" << argsLocal << ");\n"
+                       "   }\n"
+                       "\n";
+    } else {
+        assert(_multithread == MultiThreadingType::PTHREADS);
+        _cache << "   ExecArgStruct args[" << hessInfo.size() << "];\n"
+                "\n"
+                "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
+                       "      args[i].func = p[i];\n"
+                       "      args[i].in = inLocal;\n"
+                       "      args[i].out[0] = &hess[offset[i]];\n"
+                       "      args[i].atomicFun = " << langC .getArgumentAtomic() << ";\n"
+                       "      cppadcg_thpool_add_job((void*)execute_function, (void*)&args[i]);\n"
+                       "   }\n"
+                       "\n"
+                       "   cppadcg_thpool_wait();\n";
+    }
+
+    _cache << "\n"
+            "}\n";
+    return _cache.str();
 }
 
 template<class Base>

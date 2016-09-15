@@ -76,7 +76,7 @@ INCLUDE(cmake/textfile2h.cmake)
 ################################################################################
 #                              Includes
 ################################################################################
-INCLUDE_DIRECTORIES(${CPPAD_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/include" ${DL_INCLUDE_DIRS})
+INCLUDE_DIRECTORIES(${CPPAD_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/include" "${CMAKE_BINARY_DIR}/include" ${DL_INCLUDE_DIRS})
 
 IF(EIGEN3_FOUND)
     INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})

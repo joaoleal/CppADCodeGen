@@ -28,13 +28,7 @@ class GccCompiler : public AbstractCCompiler<Base> {
 public:
 
     GccCompiler() :
-        AbstractCCompiler<Base>("/usr/bin/gcc") {
-
-        this->_compileFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-shared"); // Make shared object
-        this->_compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
-
+        GccCompiler("/usr/bin/gcc") {
     }
 
     GccCompiler(const std::string& gccPath) :

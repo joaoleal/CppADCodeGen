@@ -59,7 +59,7 @@ public:
         /**
          * 
          */
-        validate();
+        this->validate();
     }
 
     LlvmModelLibrary3_2(const LlvmModelLibrary3_2&) = delete;
@@ -112,36 +112,6 @@ public:
     }
 
     inline virtual ~LlvmModelLibrary3_2() {
-    }
-
-protected:
-
-    inline void validate() {
-        /**
-         * Check the version
-         */
-        unsigned long (*versionFunc)();
-        versionFunc = reinterpret_cast<decltype(versionFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION));
-
-        this->_version = (*versionFunc)();
-        if (ModelLibraryCSourceGen<Base>::API_VERSION != this->_version)
-            throw CGException("The API version of the dynamic library (", this->_version,
-                              ") is incompatible with the current version (",
-                              ModelLibraryCSourceGen<Base>::API_VERSION, ")");
-
-        /**
-         * Load the list of models
-         */
-        void (*modelsFunc)(char const *const**, int*);
-        modelsFunc = reinterpret_cast<decltype(modelsFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS));
-
-        char const*const* model_names = nullptr;
-        int model_count;
-        (*modelsFunc)(&model_names, &model_count);
-
-        for (int i = 0; i < model_count; i++) {
-            this->_modelNames.insert(model_names[i]);
-        }
     }
 
     friend class LlvmModel<Base>;

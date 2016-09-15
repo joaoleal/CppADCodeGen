@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2012 Ciengis
+#    Copyright (C) 2016 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -16,11 +16,14 @@
 # ----------------------------------------------------------------------------
 # files to be installed
 # ----------------------------------------------------------------------------
-INSTALL( DIRECTORY "cppad/cg/"
-         DESTINATION "${install_cppadcg_include_location}/cg"
-         FILES_MATCHING PATTERN "*.hpp")
+# transform javascript file into C byte arrays
+textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/pthread_pool.c"
+		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_c.hpp"
+		   VARIABLE_NAME "CPPADCG_THREAD_POOL_C_FILE")
+textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/pthread_pool.h"
+		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_h.hpp"
+		   VARIABLE_NAME "CPPADCG_THREAD_POOL_H_FILE")
 
-INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cppad/cg.hpp"
-	    DESTINATION "${install_cppadcg_include_location}/" )
-
-ADD_SUBDIRECTORY(cppad/cg/model/pthreadpool)
+INSTALL( FILES "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_c.hpp"
+		       "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_h.hpp"
+		DESTINATION "${install_cppadcg_include_location}/cg/model/pthreadpool/")

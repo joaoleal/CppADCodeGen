@@ -44,6 +44,27 @@ public:
      */
     virtual GenericModel<Base>* model(const std::string& modelName) = 0;
 
+    /**
+     * Provides the maximum number of threads used to determine sparse Jacobians
+     * and sparse Hessians for the models in this library.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     *
+     * @return the maximum number of threads
+     */
+    virtual unsigned int getThreadNumber() const = 0;
+
+    /**
+     * Defines the maximum number of threads used to determine sparse Jacobians
+     * and sparse Hessians for the models in this library.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     * It should be defined before using the models.
+     *
+     * @param n the maximum number of threads
+     */
+    virtual void setThreadNumber(unsigned int n) = 0;
+
     inline virtual ~ModelLibrary() {
     }
 

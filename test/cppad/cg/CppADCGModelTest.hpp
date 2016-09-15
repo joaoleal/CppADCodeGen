@@ -43,7 +43,9 @@ public:
                           ADFun<CGD>& fun,
                           const std::vector<Base>& x,
                           double epsilonR = 1e-14,
-                          double epsilonA = 1e-14) {
+                          double epsilonA = 1e-14,
+                          bool denseJacobian = true,
+                          bool denseHessian = true) {
         // dimensions
         ASSERT_EQ(model.Domain(), fun.Domain());
         ASSERT_EQ(model.Range(), fun.Range());
@@ -60,19 +62,23 @@ public:
         std::vector<Base> depCGen = model.ForwardZero(x);
         ASSERT_TRUE(compareValues(depCGen, dep, epsilonR, epsilonA));
 
-        // Jacobian
         std::vector<CGD> jac = fun.Jacobian(x2);
-        depCGen = model.Jacobian(x);
-        ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
-
+        // Jacobian
+        if(denseJacobian) {
+            depCGen = model.Jacobian(x);
+            ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
+        }
+        
         // Hessian
         std::vector<CGD> w2(fun.Range(), 1.0);
         std::vector<Base> w(fun.Range(), 1.0);
 
         std::vector<CGD> hess = fun.Hessian(x2, w2);
-        depCGen = model.Hessian(x, w);
-        ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
-
+        if(denseHessian) {
+            depCGen = model.Hessian(x, w);
+            ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
+        }
+        
         // sparse Jacobian
         std::vector<Base> jacCGen;
         std::vector<size_t> row, col;

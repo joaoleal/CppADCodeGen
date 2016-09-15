@@ -21,13 +21,22 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-const unsigned long ModelLibraryCSourceGen<Base>::API_VERSION = 5;
+const unsigned long ModelLibraryCSourceGen<Base>::API_VERSION = 6;
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_VERSION = "cppad_cg_version";
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_MODELS = "cppad_cg_models";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ONCLOSE = "cppad_cg_on_close";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS = "cppad_cg_set_thread_number";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS = "cppad_cg_get_thread_number";
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::CONST = "const";
@@ -68,6 +77,17 @@ const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibra
     if (_libSources.empty()) {
         generateVersionSource(_libSources);
         generateModelsSource(_libSources);
+        generateOnCloseSource(_libSources);
+        generateThreadPoolSources(_libSources);
+
+        for(const auto& it : _models) {
+            if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
+                it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+                _libSources["thread_pool.c"] = CPPADCG_THREAD_POOL_C_FILE;
+                break;
+            }
+        }
+
     }
 
     return _libSources;
@@ -101,6 +121,58 @@ void ModelLibraryCSourceGen<Base>::generateModelsSource(std::map<std::string, st
             "}\n\n";
 
     sources[FUNCTION_MODELS + ".c"] = _cache.str();
+}
+
+template<class Base>
+void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, std::string>& sources) {
+    bool pthreads = false;
+    for(const auto& it : _models) {
+        if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
+            it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+            pthreads = true;
+            break;
+        }
+    }
+
+    _cache.str("");
+    if (pthreads) {
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+    }
+    _cache << "void " << FUNCTION_ONCLOSE << "() {\n";
+    if (pthreads) {
+        _cache << "cppadcg_thpool_shutdown();\n";
+    }
+    _cache << "}\n\n";
+
+    sources[FUNCTION_ONCLOSE + ".c"] = _cache.str();
+}
+
+template<class Base>
+void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::string, std::string>& sources) {
+    bool pthreads = false;
+    for (const auto& it : _models) {
+        if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
+            it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+            pthreads = true;
+            break;
+        }
+    }
+
+    if (pthreads) {
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
+        _cache << "   cppadcg_thpool_set_threads(n);\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADS + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
+        _cache << "   return cppadcg_thpool_get_threads();\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
+    }
 }
 
 } // END cg namespace

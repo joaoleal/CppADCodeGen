@@ -26,9 +26,12 @@ public:
     typedef AD<CGD> ADCG;
 protected:
     const std::string _name;
+    bool _denseJacobian;
+    bool _denseHessian;
     bool _forwardOne;
     bool _reverseOne;
     bool _reverseTwo;
+    bool _multithread;
 public:
 
     inline CppADCGDynamicTest(const std::string& testName,
@@ -36,9 +39,12 @@ public:
                               bool printValues = false) :
         CppADCGModelTest(verbose, printValues),
         _name(testName),
+        _denseJacobian(true),
+        _denseHessian(true),
         _forwardOne(true),
         _reverseOne(true),
-        _reverseTwo(true) {
+        _reverseTwo(true),
+        _multithread(false) {
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
@@ -95,14 +101,17 @@ public:
         ModelCSourceGen<double> compHelp(fun, _name + "dynamic");
 
         compHelp.setCreateForwardZero(true);
-        compHelp.setCreateJacobian(true);
-        compHelp.setCreateHessian(true);
+        compHelp.setCreateJacobian(_denseJacobian);
+        compHelp.setCreateHessian(_denseHessian);
         compHelp.setCreateSparseJacobian(true);
         compHelp.setCreateSparseHessian(true);
         compHelp.setCreateForwardOne(_forwardOne);
         compHelp.setCreateReverseOne(_reverseOne);
         compHelp.setCreateReverseTwo(_reverseTwo);
         compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
+        if(_multithread) {
+            compHelp.setMultiThreaded(MultiThreadingType::PTHREADS);
+        }
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 
@@ -111,6 +120,13 @@ public:
         DynamicModelLibraryProcessor<double> p(compDynHelp);
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
+        if(compHelp.getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+            compiler.addCompileFlag("-fopenmp");
+            compiler.addCompileFlag("-pthread");
+            compiler.addCompileLibFlag("-fopenmp");
+        } else if(compHelp.getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+            compiler.addCompileFlag("-pthread");
+        }
 
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
 
@@ -120,7 +136,7 @@ public:
         GenericModel<double>* model = dynamicLib->model(_name + "dynamic");
         ASSERT_TRUE(model != nullptr);
 
-        testModelResults(*model, fun, x, epsilonR, epsilonA);
+        testModelResults(*model, fun, x, epsilonR, epsilonA, _denseJacobian, _denseHessian);
 
         delete model;
         delete dynamicLib;
@@ -159,6 +175,10 @@ public:
         compHelp.setCreateSparseHessian(true);
         compHelp.setCustomSparseHessianElements(hessRow, hessCol);
 
+        if(_multithread) {
+            compHelp.setMultiThreaded(MultiThreadingType::PTHREADS);
+        }
+
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_2");
@@ -167,6 +187,13 @@ public:
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
+        if(compHelp.getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+            compiler.addCompileFlag("-fopenmp");
+            compiler.addCompileFlag("-pthread");
+            compiler.addCompileLibFlag("-fopenmp");
+        } else if(compHelp.getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+            compiler.addCompileFlag("-pthread");
+        }
 
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
 

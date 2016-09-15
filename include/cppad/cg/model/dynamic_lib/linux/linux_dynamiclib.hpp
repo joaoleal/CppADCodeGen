@@ -35,13 +35,19 @@ protected:
     /// the dynamic library handler
     void* _dynLibHandle;
     unsigned long _version; // API version
+    void (*_onClose)();
+    void (*_setThreads)(unsigned int);
+    unsigned int (*_getThreads)();
     std::set<std::string> _modelNames;
     std::set<LinuxDynamicLibModel<Base>*> _models;
 public:
 
     LinuxDynamicLib(const std::string& dynLibName) :
         _dynLibName(dynLibName),
-        _dynLibHandle(nullptr) {
+        _dynLibHandle(nullptr),
+        _onClose(nullptr),
+        _setThreads(nullptr),
+        _getThreads(nullptr) {
 
         std::string path;
         if (dynLibName[0] == '/') {
@@ -82,6 +88,19 @@ public:
         return _version;
     }
 
+    virtual unsigned int getThreadNumber() const override {
+        if (_getThreads != nullptr) {
+            return (*_getThreads)();
+        }
+        return 1;
+    }
+
+    virtual void setThreadNumber(unsigned int n) override {
+        if (_setThreads != nullptr) {
+            (*_setThreads)(n);
+        }
+    }
+
     virtual void* loadFunction(const std::string& functionName, bool required = true) override {
         void* functor = dlsym(_dynLibHandle, functionName.c_str());
 
@@ -100,6 +119,10 @@ public:
         }
 
         if (_dynLibHandle != nullptr) {
+            if(_onClose != nullptr) {
+                (*_onClose)();
+            }
+
             dlclose(_dynLibHandle);
             _dynLibHandle = nullptr;
         }
@@ -132,6 +155,21 @@ protected:
 
         for (int i = 0; i < model_count; i++) {
             _modelNames.insert(model_names[i]);
+        }
+
+        /**
+         * Load the the on close function
+         */
+        _onClose = reinterpret_cast<decltype(_onClose)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ONCLOSE, false));
+
+        /**
+         * Thread pool related functions
+         */
+        _setThreads = reinterpret_cast<decltype(_setThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS, false));
+        _getThreads = reinterpret_cast<decltype(_getThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
+
+        if(_setThreads != nullptr) {
+            (*_setThreads)(std::thread::hardware_concurrency());
         }
     }
 

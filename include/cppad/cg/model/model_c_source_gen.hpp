@@ -18,6 +18,12 @@
 namespace CppAD {
 namespace cg {
 
+enum class MultiThreadingType {
+    NONE, // no multithreading
+    OPENMP, // using the OpenMP library (does not work on dynamically loaded model libraries)
+    PTHREADS // using the PThreads library
+};
+
 /**
  * Auxiliary internal class
  */
@@ -165,7 +171,7 @@ protected:
      */
     std::vector<Base> _x;
     /// whether or not to create multithreaded code for the Jacobian (experimental)
-    bool _multithread;
+    MultiThreadingType _multithread;
     /// generate source code for the zero order model evaluation
     bool _zero;
     bool _zeroEvaluated;
@@ -288,7 +294,7 @@ public:
         _name(model),
         _baseTypeName(ModelCSourceGen<Base>::baseTypeName()),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
-        _multithread(false),
+        _multithread(MultiThreadingType::NONE),
         _zero(true),
         _zeroEvaluated(false),
         _jacobian(false),
@@ -370,12 +376,52 @@ public:
 
     /**
      * Defines the maximum precision used to print constant values in the
-     * generated source code
+     * generated source code.
      * 
      * @param p the maximum number of digits
      */
     virtual void setParameterPrecision(size_t p) {
         _parameterPrecision = p;
+    }
+
+    /**
+     * Defines whether or not to generate multithreading directives to
+     * parallelize the sparse Jacobian and sparse Hessian evaluation.
+     * For the sparse Jacobian, the _sparseJacobianReusesOne must be enabled,
+     * at least one of _forwardOne and _reverseOne must be enabled, and loop
+     * detection must be disabled.
+     * For the sparse Hessian, the _sparseHessianReusesRev2 and _reverseTwo
+     * must be enabled and loop detection must be disabled.
+     *
+     * @return multithreading support type
+     */
+    inline MultiThreadingType getMultiThreadedingType() const {
+        return _multithread;
+    }
+
+    /**
+     * Defines whether or not to generate multithreading directives to
+     * parallelize the sparse Jacobian and sparse Hessian evaluation.
+     * For the sparse Jacobian, the _sparseJacobianReusesOne must be enabled,
+     * at least one of _forwardOne and _reverseOne must be enabled, and loop
+     * detection must be disabled.
+     * For the sparse Hessian, the _sparseHessianReusesRev2 and _reverseTwo
+     * must be enabled and loop detection must be disabled.
+     * Do not forget to add the appropriate compiler and linker flags
+     * when multithreading is enabled.
+     *
+     * @param multithread multithreading support type
+     */
+    inline void setMultiThreaded(MultiThreadingType multithread) {
+        _multithread = multithread;
+    }
+
+    inline bool isJacobianMultiThreaded() const {
+        return _multithread != MultiThreadingType::NONE && _loopTapes.empty() && _sparseJacobian && _sparseJacobianReusesOne && (_forwardOne || _reverseOne);
+    }
+
+    inline bool isHessianMultiThreaded() const {
+        return _multithread != MultiThreadingType::NONE && _loopTapes.empty() && _sparseHessian && _sparseHessianReusesRev2 && _reverseTwo;
     }
 
     /**
@@ -929,6 +975,18 @@ protected:
     virtual void generateSparseHessianSourceDirectly();
 
     virtual void generateSparseHessianSourceFromRev2();
+
+    virtual std::string generateSparseHessianRev2SingleThreadSource(const std::string& functionName,
+                                                                    std::map<size_t, CompressedVectorInfo> hessInfo,
+                                                                    size_t maxCompressedSize,
+                                                                    const std::string& functionRev2,
+                                                                    const std::string& rev2Suffix);
+
+    virtual std::string generateSparseHessianRev2MultiThreadSource(const std::string& functionName,
+                                                                   std::map<size_t, CompressedVectorInfo> hessInfo,
+                                                                   size_t maxCompressedSize,
+                                                                   const std::string& functionRev2,
+                                                                   const std::string& rev2Suffix);
 
     virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                    std::vector<size_t>& userCols);

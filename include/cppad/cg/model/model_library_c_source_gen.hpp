@@ -28,6 +28,9 @@ class ModelLibraryCSourceGen : public JobTimer {
 public:
     static const std::string FUNCTION_VERSION;
     static const std::string FUNCTION_MODELS;
+    static const std::string FUNCTION_ONCLOSE;
+    static const std::string FUNCTION_SETTHREADS;
+    static const std::string FUNCTION_GETTHREADS;
     static const unsigned long API_VERSION;
 protected:
     static const std::string CONST;
@@ -66,6 +69,9 @@ public:
 
     ModelLibraryCSourceGen(const ModelLibraryCSourceGen&) = delete;
     ModelLibraryCSourceGen& operator=(const ModelLibraryCSourceGen&) = delete;
+
+    inline virtual ~ModelLibraryCSourceGen() {
+    }
 
     /**
      * Adds additional models to be compiled into the created library.
@@ -109,15 +115,16 @@ public:
      */
     void saveSources(const std::string& sourcesFolder);
 
-    inline virtual ~ModelLibraryCSourceGen() {
-    }
-
 protected:
     virtual const std::map<std::string, std::string>& getLibrarySources();
 
     virtual void generateVersionSource(std::map<std::string, std::string>& sources);
 
     virtual void generateModelsSource(std::map<std::string, std::string>& sources);
+
+    virtual void generateOnCloseSource(std::map<std::string, std::string>& sources);
+
+    virtual void generateThreadPoolSources(std::map<std::string, std::string>& sources);
 
     static void saveSources(const std::string& sourcesFolder,
                             const std::map<std::string, std::string>& sources);
