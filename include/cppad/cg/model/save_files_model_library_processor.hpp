@@ -32,11 +32,22 @@ public:
         ModelLibraryProcessor<Base>(modelLibraryHelper) {
     }
 
+    inline virtual ~SaveFilesModelLibraryProcessor() {
+    }
+
     inline void saveSources() {
         saveSourcesTo("cppadcg_sources");
     }
 
     inline void saveSourcesTo(const std::string& sourcesFolder) {
+
+        auto saveFile = [&](const std::string filename, const std::string& source){
+            std::ofstream sourceFile;
+            std::string file = system::createPath(sourcesFolder, filename);
+            sourceFile.open(file.c_str());
+            sourceFile << source;
+            sourceFile.close();
+        };
 
         system::createFolder(sourcesFolder);
 
@@ -46,12 +57,12 @@ public:
             const std::map<std::string, std::string>& sources = this->getSources(*itm.second);
 
             for (const auto& it : sources) {
-                std::ofstream sourceFile;
-                std::string file = system::createPath(sourcesFolder, it.first);
-                sourceFile.open(file.c_str());
-                sourceFile << it.second;
-                sourceFile.close();
+                saveFile(it.first, it.second);
             }
+        }
+
+        for (const auto& it : this->modelLibraryHelper_->getCustomSources()) {
+            saveFile(it.first, it.second);
         }
     }
 
@@ -59,9 +70,6 @@ public:
                                             const std::string& sourcesFolder) {
         SaveFilesModelLibraryProcessor s(modelLibraryHelper);
         s.saveSourcesTo(sourcesFolder);
-    }
-
-    inline virtual ~SaveFilesModelLibraryProcessor() {
     }
 
 };
