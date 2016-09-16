@@ -25,7 +25,7 @@ INCLUDE(ExternalProject)
 SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
 # Add gtest
-OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" ON)
+OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" OFF)
 IF(GOOGLETEST_SVN)
   # Download from SVN repository
     ExternalProject_Add(
