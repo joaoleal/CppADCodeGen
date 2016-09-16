@@ -52,7 +52,8 @@
 #include <llvm/IR/Verifier.h>
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/SectionMemoryManager.h>
-//#include <llvm/ExecutionEngine/JIT.h>
+//#include <llvm/ExecutionEngine/Interpreter.h> // force static initialisation
+//#include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/PassManager.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/LLVMContext.h>

@@ -69,6 +69,22 @@ inline std::string filenameFromPath(const std::string& path);
 inline bool isAbsolutePath(const std::string& path);
 
 /**
+ * Checks if a path exists and is a directory
+ *
+ * @param path the path
+ * @return true if the path exists and it is a directory
+ */
+inline bool isDirectory(const std::string& path);
+
+/**
+ * Checks if a path exists and is a file
+ *
+ * @param path the path
+ * @return true if the path exists and it is a file
+ */
+inline bool isFile(const std::string& path);
+
+/**
  * Calls an external executable (system dependent).
  * In the case of an error during execution an exception will be thrown.
  * 

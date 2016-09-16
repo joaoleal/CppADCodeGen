@@ -46,6 +46,26 @@ protected:
         return model.getSources(modelLibraryHelper_);
     }
 
+    static std::string findInternalClangCHeaders(const std::string& version,
+                                                 const std::string& resourceDir) {
+        // check existing paths
+        for (std::string path : explode(resourceDir, " ")) {
+            if (system::isFile(system::createPath(path, system::createPath("include", "stddef.h")))) {
+                return ""; // no need to add anything
+            }
+        }
+
+#ifdef CPPAD_CG_SYSTEM_LINUX
+        std::string clangHeaders = "/usr/lib/clang/" + version + "/include";
+        if (system::isDirectory(clangHeaders)) {
+            return clangHeaders; // found them
+        }
+#endif
+
+        // failed to locate headers (hope they are not needed...)
+        return "";
+    }
+
 };
 
 } // END cg namespace

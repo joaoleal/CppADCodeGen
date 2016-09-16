@@ -620,6 +620,32 @@ inline void replaceString(std::string& text,
     }
 }
 
+inline std::vector<std::string> explode(const std::string& text,
+                                        const std::string& delimiter) {
+    std::vector<std::string> matches;
+
+    const size_t dlen = delimiter.length();
+    if (dlen == 0)
+        return matches;
+
+    size_t pos = 0;
+    size_t start = 0;
+    while (true) {
+        pos = text.find(delimiter, start);
+        if (pos == std::string::npos) {
+            break;
+        }
+        matches.push_back(text.substr(start, pos - start));
+        start = pos + dlen;
+    }
+
+    if (start < text.length()) {
+        matches.push_back(text.substr(start, text.length() - start));
+    }
+
+    return matches;
+}
+
 } // END cg namespace
 } // END CppAD namespace
 

@@ -111,7 +111,11 @@ inline void createFolder(const std::string& folder) {
 
 inline std::string createPath(const std::string& baseFolder,
                               const std::string& file) {
-    return baseFolder + "/" + file;
+    if (!baseFolder.empty() && baseFolder.back() == '/') {
+        return baseFolder + file;
+    } else {
+        return baseFolder + "/" + file;
+    }
 }
 
 inline std::string escapePath(const std::string& path) {
@@ -136,6 +140,30 @@ inline bool isAbsolutePath(const std::string& path) {
         return false;
 
     return path[0] == '/';
+}
+
+inline bool isDirectory(const std::string& path) {
+    struct stat info;
+
+    if (stat(path.c_str(), &info) != 0) {
+        return false;
+    } else if (info.st_mode & S_IFDIR) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+inline bool isFile(const std::string& path) {
+    struct stat sts;
+    errno = 0;
+    if (stat(path.c_str(), &sts) == 0 && errno == 0) {
+        return S_ISREG(sts.st_mode);
+    } else if (errno == ENOENT) {
+        return false;
+    }
+    // could check for an error message...
+    return false;
 }
 
 inline void callExecutable(const std::string& executable,

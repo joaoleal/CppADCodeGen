@@ -36,8 +36,11 @@ public:
      * 
      * @param modelLibraryHelper
      */
-    LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
-        ModelLibraryProcessor<Base>(modelLibraryHelper) {
+    LlvmModelLibraryProcessor(ModelLibraryCSourceGen <Base>& modelLibraryHelper) :
+            ModelLibraryProcessor<Base>(modelLibraryHelper) {
+    }
+
+    virtual ~LlvmModelLibraryProcessor() {
     }
 
     inline void setIncludePaths(const std::vector<std::string>& includePaths) {
@@ -82,12 +85,9 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
+    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen <Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
-    }
-
-    virtual ~LlvmModelLibraryProcessor() {
     }
 
 protected:
@@ -107,12 +107,12 @@ protected:
         static const int argc = sizeof (argv) / sizeof (argv[0]);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
-        TextDiagnosticPrinter *diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
+        TextDiagnosticPrinter* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
-        ArrayRef<const char *> args(argv + 1, // skip program name
-                                    argc - 1);
+        ArrayRef<const char*> args(argv + 1, // skip program name
+                                   argc - 1);
         std::unique_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
         if (invocation.get() == nullptr)
             throw CGException("Failed to create compiler invocation");
@@ -149,6 +149,11 @@ protected:
         po.addRemappedFile("string-input", buffer.release());
 
         HeaderSearchOptions& hso = compiler.getInvocation().getHeaderSearchOpts();
+        std::string iClangHeaders = this->findInternalClangCHeaders("3.6", hso.ResourceDir);
+        if(!iClangHeaders.empty()) {
+            hso.AddPath(llvm::StringRef(iClangHeaders), clang::frontend::Angled, false, false);
+        }
+
         for (size_t s = 0; s < _includePaths.size(); s++)
             hso.AddPath(llvm::StringRef(_includePaths[s]), clang::frontend::Angled, false, false);
 

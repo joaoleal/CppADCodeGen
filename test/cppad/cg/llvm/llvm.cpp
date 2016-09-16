@@ -58,6 +58,10 @@ TEST_F(CppADCGModelTest, llvm) {
     compHelp.setCreateHessian(true);
     compHelp.setCreateSparseJacobian(true);
     compHelp.setCreateSparseHessian(true);
+    compHelp.setCreateForwardOne(true);
+    compHelp.setMultiThreaded(MultiThreadingType::PTHREADS);
+
+    ASSERT_TRUE(compHelp.isJacobianMultiThreaded());
 
     ModelLibraryCSourceGen<double> compDynHelp(compHelp);
     compDynHelp.setVerbose(this->verbose_);
