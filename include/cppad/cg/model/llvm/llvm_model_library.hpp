@@ -82,6 +82,13 @@ public:
     }
 
     inline virtual ~LlvmModelLibrary() {
+        // do not call clean-up here
+        // cleanUp() must be called by the subclass (before destruction of the execution engine...)
+    }
+
+protected:
+
+    inline void cleanUp() {
         for (LlvmModel<Base>* model : _models) {
             model->modelLibraryClosed();
         }
@@ -91,8 +98,6 @@ public:
             _onClose = nullptr;
         }
     }
-
-protected:
 
     virtual void destroyed(LlvmModel<Base>* model) {
         _models.erase(model);

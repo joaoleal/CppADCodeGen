@@ -21,7 +21,7 @@ namespace cg {
 template<class Base> class LlvmModel;
 
 /**
- * Class used to load JIT'ed models by LLVM 3.2
+ * Class used to load JIT'ed models by LLVM 3.6
  * 
  * @author Joao Leal
  */
@@ -70,6 +70,10 @@ public:
     LlvmModelLibrary3_6(const LlvmModelLibrary3_6&) = delete;
     LlvmModelLibrary3_6& operator=(const LlvmModelLibrary3_6&) = delete;
 
+    inline virtual ~LlvmModelLibrary3_6() {
+        this->cleanUp();
+    }
+
     /**
      * Set up the optimizer pipeline
      */
@@ -105,9 +109,6 @@ public:
             throw CGException("Unable to find function '", functionName, "' in LLVM module");
         }
         return (void*) fPtr;
-    }
-
-    inline virtual ~LlvmModelLibrary3_6() {
     }
 
     friend class LlvmModel<Base>;

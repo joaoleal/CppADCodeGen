@@ -65,6 +65,10 @@ public:
     LlvmModelLibrary3_2(const LlvmModelLibrary3_2&) = delete;
     LlvmModelLibrary3_2& operator=(const LlvmModelLibrary3_2&) = delete;
 
+    inline virtual ~LlvmModelLibrary3_2() {
+        this->cleanUp();
+    }
+
     /**
      * Set up the optimizer pipeline
      */
@@ -109,9 +113,6 @@ public:
         // JIT the function, returning a function pointer.
         void *fPtr = _executionEngine->getPointerToFunction(func);
         return fPtr;
-    }
-
-    inline virtual ~LlvmModelLibrary3_2() {
     }
 
     friend class LlvmModel<Base>;
