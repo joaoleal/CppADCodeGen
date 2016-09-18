@@ -74,7 +74,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = createBitCode(clang);
+            const std::set<std::string>& bcFiles = this->createBitCode(clang);
 
             /**
              * Load bit code and create a single module
