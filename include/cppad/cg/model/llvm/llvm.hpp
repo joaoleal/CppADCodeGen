@@ -23,6 +23,8 @@
 #include <cppad/cg/model/llvm/v3_4/llvm3_4.hpp>
 #elif LLVM_VERSION_MAJOR==3 && LLVM_VERSION_MINOR==6
 #include <cppad/cg/model/llvm/v3_6/llvm3_6.hpp>
+#elif LLVM_VERSION_MAJOR==3 && LLVM_VERSION_MINOR==8
+#include <cppad/cg/model/llvm/v3_8/llvm3_8.hpp>
 #endif
 
 #endif

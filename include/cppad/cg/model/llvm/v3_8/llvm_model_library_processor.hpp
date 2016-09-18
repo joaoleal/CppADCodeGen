@@ -2,7 +2,7 @@
 #define CPPAD_CG_LLVM_MODEL_LIBRARY_PROCESSOR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2015 Ciengis
+ *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -53,7 +53,30 @@ public:
         return _includePaths;
     }
 
+    /**
+     *
+     * @return a model library
+     */
     LlvmModelLibrary<Base>* create() {
+#if 0
+        llvm::sys::Path clangPath = llvm::sys::Program::FindProgramByName("clang");
+        // Arguments to pass to the clang driver:
+        //	clang getinmemory.c -lcurl -v
+        vector<const char *> args;
+        args.push_back(clangPath.c_str());
+        args.push_back(inputPath.c_str());
+        args.push_back("-l");
+        args.push_back("curl");
+        args.push_back("-v");		// verbose
+
+        // The clang driver needs a DiagnosticsEngine so it can report problems
+        clang::TextDiagnosticPrinter *DiagClient = new clang::TextDiagnosticPrinter(llvm::errs(), clang::DiagnosticOptions());
+        clang::IntrusiveRefCntPtr<clang::DiagnosticIDs> DiagID(new clang::DiagnosticIDs());
+        clang::DiagnosticsEngine Diags(DiagID, DiagClient);
+
+        // Create the clang driver
+        clang::driver::Driver TheDriver(args[0], llvm::sys::getDefaultTargetTriple(), outputPath, true, Diags);
+#endif
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
@@ -80,7 +103,82 @@ public:
 
         llvm::InitializeNativeTarget();
 
-        LlvmModelLibrary3_6<Base>* lib = new LlvmModelLibrary3_6<Base>(_module.release(), _context.release());
+        LlvmModelLibrary3_8<Base>* lib = new LlvmModelLibrary3_8<Base>(_module.release(), _context.release());
+
+        this->modelLibraryHelper_->finishedJob();
+
+        return lib;
+    }
+
+    /**
+     *
+     * @param clang  the external compiler
+     * @return  a model library
+     */
+    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) {
+        using namespace llvm;
+
+        // backup output format so that it can be restored
+        OStreamConfigRestore coutb(std::cout);
+
+        _linker.release();
+
+        LlvmModelLibrary3_8<Base>* lib = nullptr;
+
+        this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
+
+        const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
+        try {
+            /**
+             * generate bit code
+             */
+            const std::set<std::string>& bcFiles = createBitCode(clang);
+
+            /**
+             * Load bit code and create a single module
+             */
+            llvm::InitializeAllTargets();
+            llvm::InitializeAllAsmPrinters();
+
+            _context.reset(new llvm::LLVMContext());
+
+            std::unique_ptr<Module> linkerModule;
+
+            for (const std::string& itbc : bcFiles) {
+                // load bitcode file
+
+                ErrorOr<std::unique_ptr<MemoryBuffer>> buffer = MemoryBuffer::getFile(itbc);
+                if (buffer.get() == nullptr) {
+                    throw CGException(buffer.getError().message());
+                }
+
+                // create the module
+                ErrorOr<std::unique_ptr<Module>> module = llvm::parseBitcodeFile(buffer.get()->getMemBufferRef(), *_context.get());
+                if(module.get() == nullptr) {
+                    throw CGException(module.getError().message());
+                }
+
+                // link modules together
+                if (_linker.get() == nullptr) {
+                    linkerModule.reset(module.get().release());
+                    _linker.reset(new llvm::Linker(*linkerModule)); // module not destroyed
+                } else {
+                    if (_linker->linkInModule(std::move(module.get()))) { // module destroyed
+                        throw CGException("Failed to link");
+                    }
+                }
+            }
+
+            llvm::InitializeNativeTarget();
+
+            // voila
+            lib = new LlvmModelLibrary3_8<Base>(linkerModule.release(), _context.release());
+
+        } catch (...) {
+            clang.cleanup();
+            throw;
+        }
+        clang.cleanup();
 
         this->modelLibraryHelper_->finishedJob();
 
@@ -105,7 +203,10 @@ protected:
         using namespace llvm;
         using namespace clang;
 
-        static const char* argv [] = {"program", "-x", "c", "string-input"};
+        ArrayRef<StringRef> paths;
+        llvm::sys::findProgramByName("clang", paths);
+
+        static const char* argv [] = {"program", "-v", "-x", "c", "string-input"}; // -v flag is required to avoid an error inside createInvocationFromCommandLine()
         static const int argc = sizeof (argv) / sizeof (argv[0]);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
@@ -131,15 +232,6 @@ protected:
         compiler.createDiagnostics(); //compiler.createDiagnostics(argc, const_cast<char**> (argv));
         if (!compiler.hasDiagnostics())
             throw CGException("No diagnostics");
-#if 0
-        compiler.createFileManager();
-        compiler.createSourceManager(compiler.getFileManager());
-        std::shared_ptr<clang::TargetOptions> pto = std::make_shared<clang::TargetOptions>();
-        pto->Triple = llvm::sys::getDefaultTargetTriple();
-        clang::TargetInfo *pti = clang::TargetInfo::CreateTargetInfo(compiler.getDiagnostics(), pto);
-        compiler.setTarget(pti);
-        compiler.createPreprocessor(clang::TU_Complete);
-#endif
 
         // Create memory buffer with source text
         std::unique_ptr<llvm::MemoryBuffer> buffer = llvm::MemoryBuffer::getMemBufferCopy(source, "SIMPLE_BUFFER");
@@ -151,7 +243,7 @@ protected:
         po.addRemappedFile("string-input", buffer.release());
 
         HeaderSearchOptions& hso = compiler.getInvocation().getHeaderSearchOpts();
-        std::string iClangHeaders = this->findInternalClangCHeaders("3.6", hso.ResourceDir);
+        std::string iClangHeaders = this->findInternalClangCHeaders("3.8", hso.ResourceDir);
         if(!iClangHeaders.empty()) {
             hso.AddPath(llvm::StringRef(iClangHeaders), clang::frontend::Angled, false, false);
         }
@@ -170,9 +262,9 @@ protected:
 
         if (_linker.get() == nullptr) {
             _module.reset(module.release());
-            _linker.reset(new llvm::Linker(_module.get()));
+            _linker.reset(new llvm::Linker(*_module.get()));
         } else {
-            if (_linker->linkInModule(module.release())) {
+            if (_linker->linkInModule(std::move(module))) {
                 throw CGException("LLVM failed to link module");
             }
         }

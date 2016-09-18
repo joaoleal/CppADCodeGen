@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+#include <cppad/cg/model/llvm/llvm_base_model_library_processor.hpp>
+
 namespace CppAD {
 namespace cg {
 
@@ -24,7 +26,7 @@ namespace cg {
  * @author Joao Leal
  */
 template<class Base>
-class LlvmModelLibraryProcessor : public ModelLibraryProcessor<Base> {
+class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
     std::vector<std::string> _includePaths;
     std::unique_ptr<llvm::Linker> _linker;
@@ -36,7 +38,10 @@ public:
      * @param modelLibraryHelper
      */
     LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
-        ModelLibraryProcessor<Base>(modelLibraryHelper) {
+            LlvmBaseModelLibraryProcessor<Base>(modelLibraryHelper) {
+    }
+
+    virtual ~LlvmModelLibraryProcessor() {
     }
 
     inline void setIncludePaths(const std::vector<std::string>& includePaths) {
@@ -84,9 +89,6 @@ public:
     static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
-    }
-
-    virtual ~LlvmModelLibraryProcessor() {
     }
 
 protected:

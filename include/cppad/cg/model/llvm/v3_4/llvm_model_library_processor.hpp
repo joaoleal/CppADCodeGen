@@ -15,6 +15,8 @@
  * Author: Joao Leal
  */
 
+#include <cppad/cg/model/llvm/llvm_base_model_library_processor.hpp>
+
 namespace CppAD {
 namespace cg {
 
@@ -24,7 +26,7 @@ namespace cg {
  * @author Joao Leal
  */
 template<class Base>
-class LlvmModelLibraryProcessor : public ModelLibraryProcessor<Base> {
+class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
     std::vector<std::string> _includePaths;
     std::unique_ptr<llvm::Linker> _linker;
@@ -36,7 +38,10 @@ public:
      * @param modelLibraryHelper
      */
     LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
-        ModelLibraryProcessor<Base>(modelLibraryHelper) {
+            LlvmBaseModelLibraryProcessor<Base>(modelLibraryHelper) {
+    }
+
+    virtual ~LlvmModelLibraryProcessor() {
     }
 
     inline void setIncludePaths(const std::vector<std::string>& includePaths) {
@@ -69,19 +74,7 @@ public:
             /**
              * generate bit code
              */
-            for (const auto& p : models) {
-                const std::map<std::string, std::string>& modelSources = this->getSources(*p.second);
-
-                this->modelLibraryHelper_->startingJob("", JobTimer::COMPILING_FOR_MODEL);
-                clang.generateLLVMBitCode(modelSources, this->modelLibraryHelper_);
-                this->modelLibraryHelper_->finishedJob();
-            }
-
-            const std::map<std::string, std::string>& sources = this->getLibrarySources();
-            clang.generateLLVMBitCode(sources, this->modelLibraryHelper_);
-
-            const std::map<std::string, std::string>& customSource = this->modelLibraryHelper_->getCustomSources();
-            clang.generateLLVMBitCode(customSource, this->modelLibraryHelper_);
+            const std::set<std::string>& bcFiles = createBitCode(clang);
 
             /**
              * Load bit code and create a single module
@@ -91,7 +84,6 @@ public:
 
             _context.reset(new llvm::LLVMContext());
 
-            const std::set<std::string>& bcFiles = clang.getBitCodeFiles();
             for (const std::string& itbc : bcFiles) {
                 // load bitcode file
                 OwningPtr<MemoryBuffer> buffer;
@@ -134,10 +126,6 @@ public:
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }
-
-    virtual ~LlvmModelLibraryProcessor() {
-    }
-
 
 protected:
 #if 0
