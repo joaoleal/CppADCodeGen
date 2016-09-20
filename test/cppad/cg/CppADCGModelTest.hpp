@@ -39,7 +39,8 @@ public:
      * @param epsilonR relative error
      * @param epsilonA absolute error
      */
-    void testModelResults(GenericModel<Base>& model,
+    void testModelResults(ModelLibrary<Base>& lib,
+                          GenericModel<Base>& model,
                           ADFun<CGD>& fun,
                           const std::vector<Base>& x,
                           double epsilonR = 1e-14,
@@ -68,7 +69,7 @@ public:
             depCGen = model.Jacobian(x);
             ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
         }
-        
+
         // Hessian
         std::vector<CGD> w2(fun.Range(), 1.0);
         std::vector<Base> w(fun.Range(), 1.0);
@@ -78,7 +79,7 @@ public:
             depCGen = model.Hessian(x, w);
             ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
         }
-        
+
         // sparse Jacobian
         std::vector<Base> jacCGen;
         std::vector<size_t> row, col;
@@ -90,6 +91,15 @@ public:
 
         ASSERT_TRUE(compareValues(jacCGenDense, jac, epsilonR, epsilonA));
 
+        if(lib.getThreadNumber() > 1) {
+            // sparse Jacobian again (make sure the second run is also OK)
+            model.SparseJacobian(x, jacCGen, row, col);
+            for (size_t i = 0; i < jacCGen.size(); i++) {
+                jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
+            }
+            ASSERT_TRUE(compareValues(jacCGenDense, jac, epsilonR, epsilonA));
+        }
+
         // sparse Hessian
         std::vector<Base> hessCGen;
         model.SparseHessian(x, w, hessCGen, row, col);
@@ -99,6 +109,15 @@ public:
         }
 
         ASSERT_TRUE(compareValues(hessCGenDense, hess, epsilonR, epsilonA));
+
+        if(lib.getThreadNumber() > 1) {
+            // sparse Hessian again (make sure the second run is also OK)
+            model.SparseHessian(x, w, hessCGen, row, col);
+            for (size_t i = 0; i < hessCGen.size(); i++) {
+                hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
+            }
+            ASSERT_TRUE(compareValues(hessCGenDense, hess, epsilonR, epsilonA));
+        }
     }
 
     inline ::testing::AssertionResult compareValues(const std::vector<double>& depCGen,

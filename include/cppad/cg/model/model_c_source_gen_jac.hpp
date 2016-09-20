@@ -384,7 +384,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
                 "   struct LangCAtomicFun atomicFun;\n"
                 "} ExecArgStruct;\n"
                 "\n"
-                "static void execute_function(void* arg) {\n"
+                "static void exec_func(void* arg) {\n"
                 "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
                 "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
                 "}\n";
@@ -434,18 +434,53 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
                 "   }\n"
                 "\n";
     } else {
+
+        auto repeatFill = [&](const std::string& txt){
+            _cache << "{";
+            for (const auto& it : jacInfo) {
+                if (it.first != jacInfo.begin()->first) _cache << ", ";
+                _cache << txt;
+            }
+            _cache << "};";
+        };
+
         assert(_multithread == MultiThreadingType::PTHREADS);
-        _cache << "   ExecArgStruct args[" << jacInfo.size() << "];\n"
+        _cache << "   ExecArgStruct* args[" << jacInfo.size() << "];\n"
+                "   static cppadcg_thpool_function_type execute_functions[" << jacInfo.size() << "] = ";
+        repeatFill("(void*)exec_func");
+        _cache << "\n"
+                "   static double elapsed[" << jacInfo.size() << "] = ";
+        repeatFill("0");
+        _cache << "\n"
+                "   static int order[" << jacInfo.size() << "] = {";
+        int i = 0;
+        for (const auto& it : jacInfo) {
+            if (it.first != jacInfo.begin()->first) _cache << ", ";
+            _cache << i;
+            i++;
+        }
+        _cache << "};\n"
+                "   int do_benchmark = " << (jacInfo.size() > 0 ? "(elapsed[0] == 0 && !cppadcg_thpool_is_disabled())" : "0") << ";\n"
                 "\n"
                 "   for(i = 0; i < " << jacInfo.size() << "; ++i) {\n"
-                "      args[i].func = p[i];\n"
-                "      args[i].in = inLocal;\n"
-                "      args[i].out[0] = &jac[offset[i]];\n"
-                "      args[i].atomicFun = " << langC .getArgumentAtomic() << ";\n"
-                "      cppadcg_thpool_add_job((void*)execute_function, (void*)&args[i]);\n"
+                "      args[i] = (ExecArgStruct*) malloc(sizeof(ExecArgStruct));\n"
+                "      args[i]->func = p[i];\n"
+                "      args[i]->in = inLocal;\n"
+                "      args[i]->out[0] = &jac[offset[i]];\n"
+                "      args[i]->atomicFun = " << langC.getArgumentAtomic() << ";\n"
                 "   }\n"
                 "\n"
-                "   cppadcg_thpool_wait();\n";
+                "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, elapsed, order, " << jacInfo.size() << ");\n"
+                "\n"
+                "   cppadcg_thpool_wait();\n"
+                "\n"
+                "   for(i = 0; i < " << jacInfo.size() << "; ++i) {\n"
+                "      free(args[i]);\n"
+                "   }\n"
+                "\n"
+                "   if(do_benchmark) {\n"
+                "      cppadcg_thpool_update_order(elapsed, order, " << jacInfo.size() << ");\n"
+                "   }\n";
     }
 
     _cache << "\n"

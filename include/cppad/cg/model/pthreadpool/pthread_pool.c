@@ -18,6 +18,8 @@
  *  https://github.com/Pithikos/C-Thread-Pool/blob/master/thpool.c
  */
 
+#define MEASURE_TIME
+
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -26,19 +28,40 @@
 #include <time.h>
 #if defined(__linux__)
 #include <sys/prctl.h>
+#ifdef MEASURE_TIME
+#include <time.h>
+#include <sys/time.h>
+#define __USE_GNU /* required before including  resource.h */
+#include <sys/resource.h>
+#endif
 #endif
 
+enum group_strategy {SINGLE_ORDERED, MULTI_HALF_TIME};
+
 typedef struct thpool_* threadpool;
+typedef void (* thpool_function_type)(void*);
 
 static volatile threadpool cppadcg_pool;
 static volatile int cppadcg_pool_n_threads = 2;
 static volatile int cppadcg_pool_disabled = 0; // false
 
+static volatile enum group_strategy group_gen_strategy = SINGLE_ORDERED;
+
 /* ==================== INTERNAL HIGH LEVEL API  ====================== */
 
 static threadpool thpool_init(int num_threads);
 
-static int thpool_add_work(threadpool, void (*function_p)(void*), void* arg_p);
+static int thpool_add_job(threadpool,
+                          thpool_function_type function,
+                          void* arg,
+                          double* elapsed);
+
+static int thpool_add_jobs(threadpool,
+                           thpool_function_type functions[],
+                           void* args[],
+                           double elapsed[],
+                           int order[],
+                           int nJobs);
 
 static void thpool_wait(threadpool);
 
@@ -54,26 +77,91 @@ int cppadcg_thpool_get_threads() {
     return cppadcg_pool_n_threads;
 }
 
+void cppadcg_thpool_set_scheduler_strategy(enum group_strategy s) {
+    group_gen_strategy = s;
+}
+
+enum group_strategy cppadcg_thpool_get_scheduler_strategy() {
+    return group_gen_strategy;
+}
+
 void cppadcg_thpool_prepare() {
     if(cppadcg_pool == NULL) {
         cppadcg_pool = thpool_init(cppadcg_pool_n_threads);
     }
 }
 
-void cppadcg_thpool_add_job(void (*function_p)(void*), void* arg) {
+void cppadcg_thpool_add_job(thpool_function_type function,
+                            void* arg,
+                            double* elapsed) {
     if(cppadcg_pool_disabled) {
-        (*function_p)(arg);
+        (*function)(arg);
     } else {
         if (cppadcg_pool == NULL) {
             cppadcg_thpool_prepare();
         }
-        thpool_add_work(cppadcg_pool, function_p, arg);
+        thpool_add_job(cppadcg_pool, function, arg, elapsed);
+    }
+}
+
+void cppadcg_thpool_add_jobs(thpool_function_type functions[],
+                             void* args[],
+                             double elapsed[],
+                             int order[],
+                             int nJobs) {
+    int i;
+    if (cppadcg_pool_disabled) {
+        for (i = 0; i < nJobs; ++i) {
+            (*functions[i])(args[i]);
+        }
+    } else {
+        if (cppadcg_pool == NULL) {
+            cppadcg_thpool_prepare();
+        }
+        thpool_add_jobs(cppadcg_pool, functions, args, elapsed, order, nJobs);
     }
 }
 
 void cppadcg_thpool_wait() {
     if(cppadcg_pool != NULL) {
         thpool_wait(cppadcg_pool);
+    }
+}
+
+typedef struct pair_double_int {
+    double val;
+    int index;
+} pair_double_int;
+
+static int comparePair(const void* a, const void* b) {
+    if (((pair_double_int*) a)->val < ((pair_double_int*) b)->val)
+        return -1;
+    if (((pair_double_int*) a)->val == ((pair_double_int*) b)->val)
+        return 0;
+    return 1;
+}
+
+void cppadcg_thpool_update_order(double elapsed[],
+                                 int order[],
+                                 int nJobs) {
+    if(nJobs == 0 || elapsed == NULL || order == NULL)
+        return;
+
+    struct pair_double_int elapsed2[nJobs];
+    int i;
+    for(i = 0; i < nJobs; ++i) {
+        elapsed2[i].val = elapsed[i];
+        elapsed2[i].index = i;
+    }
+
+    qsort(elapsed2, nJobs, sizeof(struct pair_double_int), comparePair);
+
+    for (i = 0; i < nJobs; ++i) {
+        order[elapsed2[i].index] = nJobs - i - 1; // descending order
+    }
+
+    for (i = 0; i < nJobs; ++i) {
+        fprintf(stderr, "order  %i  %e\n", order[i], elapsed[i]);
     }
 }
 
@@ -102,25 +190,32 @@ typedef struct bsem {
 
 
 /* Job */
-typedef struct job{
+typedef struct job {
     struct job*  prev;                   /* pointer to previous job   */
-    void   (*function)(void* arg);       /* function pointer          */
+    thpool_function_type function;       /* function pointer          */
     void*  arg;                          /* function's argument       */
+    double* elapsed;                     /* elapsed time              */
 } job;
 
+/* Job group */
+typedef struct job_group {
+    struct job* jobs;                    /* jobs                      */
+    int size;                            /* number of jobs            */
+} job_group;
 
 /* Job queue */
-typedef struct jobqueue{
+typedef struct jobqueue {
     pthread_mutex_t rwmutex;             /* used for queue r/w access */
     job  *front;                         /* pointer to front of queue */
     job  *rear;                          /* pointer to rear  of queue */
     bsem *has_jobs;                      /* flag as binary semaphore  */
     int   len;                           /* number of jobs in queue   */
+    double total_time;                   /* total expected time to complete the work */
 } jobqueue;
 
 
 /* Thread */
-typedef struct thread{
+typedef struct thread {
     int       id;                        /* friendly id               */
     pthread_t pthread;                   /* pointer to actual thread  */
     struct thpool_* thpool_p;            /* access to thpool          */
@@ -128,8 +223,9 @@ typedef struct thread{
 
 
 /* Threadpool */
-typedef struct thpool_{
+typedef struct thpool_ {
     thread**   threads;                  /* pointer to threads        */
+    int num_threads;                     /* total number of threads   */
     volatile int num_threads_alive;      /* threads currently alive   */
     volatile int num_threads_working;    /* threads currently working */
     pthread_mutex_t  thcount_lock;       /* used for thread count etc */
@@ -152,7 +248,10 @@ static int   jobqueue_init(thpool_* thpool_p);
 static void  jobqueue_clear(thpool_* thpool_p);
 static void  jobqueue_push(thpool_* thpool_p,
                            struct job* newjob_p);
-static struct job* jobqueue_pull(thpool_* thpool_p);
+static void jobqueue_multipush(thpool_* thpool_p,
+                               struct job* newjob[],
+                               int nJobs);
+static struct job_group* jobqueue_pull(thpool_* thpool_p);
 static void  jobqueue_destroy(thpool_* thpool_p);
 
 static void  bsem_init(struct bsem *bsem_p, int value);
@@ -192,6 +291,7 @@ struct thpool_* thpool_init(int num_threads) {
         fprintf(stderr, "thpool_init(): Could not allocate memory for thread pool\n");
         return NULL;
     }
+    thpool_p->num_threads = num_threads;
     thpool_p->num_threads_alive = 0;
     thpool_p->num_threads_working = 0;
     thpool_p->threads_on_hold = 0;
@@ -247,36 +347,70 @@ struct thpool_* thpool_init(int num_threads) {
  *    int main() {
  *       ..
  *       int a = 10;
- *       thpool_add_work(thpool, (void*)print_num, (void*)a);
+ *       thpool_add_job(thpool, (void*)print_num, (void*)a);
  *       ..
  *    }
  *
  * @param  threadpool    threadpool to which the work will be added
- * @param  function_p    pointer to function to add as work
- * @param  arg_p         pointer to an argument
+ * @param  function      pointer to function to add as work
+ * @param  arg           pointer to an argument
  * @return 0 on successs, -1 otherwise.
  */
-static int thpool_add_work(thpool_* thpool_p, void (* function_p)(void*), void* arg_p) {
+static int thpool_add_job(thpool_* thpool_p,
+                          thpool_function_type function,
+                          void* arg,
+                          double* elapsed) {
     job* newjob;
 
     newjob = (struct job*) malloc(sizeof(struct job));
     if (newjob == NULL) {
-        fprintf(stderr, "thpool_add_work(): Could not allocate memory for new job\n");
+        fprintf(stderr, "thpool_add_job(): Could not allocate memory for new job\n");
         return -1;
     }
 
     /* add function and argument */
-    newjob->function = function_p;
-    newjob->arg = arg_p;
+    newjob->function = function;
+    newjob->arg = arg;
+    newjob->elapsed = elapsed;
 
     /* add job to queue */
-    pthread_mutex_lock(&thpool_p->jobqueue_p->rwmutex);
     jobqueue_push(thpool_p, newjob);
-    pthread_mutex_unlock(&thpool_p->jobqueue_p->rwmutex);
 
     return 0;
 }
 
+static int thpool_add_jobs(thpool_* thpool_p,
+                           thpool_function_type functions[],
+                           void* args[],
+                           double elapsed[],
+                           int order[],
+                           int nJobs) {
+    job* newjobs[nJobs];
+    int i;
+    int j;
+
+    for(i = 0; i < nJobs; ++i) {
+        newjobs[i] = (struct job*) malloc(sizeof(struct job));
+        if (newjobs[i] == NULL) {
+            fprintf(stderr, "thpool_add_jobs(): Could not allocate memory for new jobs\n");
+            return -1;
+        }
+
+        j = order != NULL ? order[i] : i;
+        /* add function and argument */
+        newjobs[i]->function = functions[j];
+        newjobs[i]->arg = args[j];
+        if(elapsed != NULL)
+            newjobs[i]->elapsed = &elapsed[j];
+        else
+            newjobs[i]->elapsed = NULL;
+    }
+
+    /* add job to queue */
+    jobqueue_multipush(thpool_p, newjobs, nJobs);
+
+    return 0;
+}
 
 /**
  * @brief Wait for all queued jobs to finish
@@ -310,6 +444,7 @@ static void thpool_wait(thpool_* thpool_p) {
     while (thpool_p->jobqueue_p->len || thpool_p->num_threads_working) {
         pthread_cond_wait(&thpool_p->threads_all_idle, &thpool_p->thcount_lock);
     }
+    thpool_p->jobqueue_p->total_time = 0;
     pthread_mutex_unlock(&thpool_p->thcount_lock);
 }
 
@@ -381,7 +516,9 @@ static void thpool_destroy(thpool_* thpool_p) {
  * @param id            id to be given to the thread
  * @return 0 on success, -1 otherwise.
  */
-static int thread_init(thpool_* thpool_p, struct thread** thread_p, int id) {
+static int thread_init(thpool_* thpool_p,
+                       struct thread** thread_p,
+                       int id) {
 
     *thread_p = (struct thread*) malloc(sizeof(struct thread));
     if (thread_p == NULL) {
@@ -406,8 +543,13 @@ static int thread_init(thpool_* thpool_p, struct thread** thread_p, int id) {
 * @return nothing
 */
 static void* thread_do(struct thread* thread_p) {
-
-    /* Set thread name for profiling and debuging */
+#ifdef MEASURE_TIME
+    double elapsed;
+    int info;
+    struct timespec cputime;
+#endif
+    int i;
+    /* Set thread name for profiling and debugging */
     char thread_name[128] = {0};
     sprintf(thread_name, "thread-pool-%d", thread_p->id);
 
@@ -439,18 +581,46 @@ static void* thread_do(struct thread* thread_p) {
             pthread_mutex_unlock(&thpool_p->thcount_lock);
 
             /* Read job from queue and execute it */
-            void (* func_buff)(void* arg);
+            thpool_function_type func_buff;
             void* arg_buff;
             job* job_p;
+            job_group* work_group;
             pthread_mutex_lock(&thpool_p->jobqueue_p->rwmutex);
-            job_p = jobqueue_pull(thpool_p);
+            work_group = jobqueue_pull(thpool_p);
             pthread_mutex_unlock(&thpool_p->jobqueue_p->rwmutex);
-            if (job_p) {
+
+            for (i = 0; i < work_group->size; ++i) {
+                job_p = &work_group->jobs[i];
+#ifdef MEASURE_TIME
+                int do_benchmark = job_p->elapsed != NULL && (*job_p->elapsed) == 0;
+                if(do_benchmark) {
+                    info = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cputime);
+                    if(info == 0) {
+                        elapsed = -(cputime.tv_sec + cputime.tv_nsec * 1e-9);
+                    } else {
+                        fprintf(stderr, "failed clock_gettime()\n");
+                    }
+                }
+#endif
+                /* Execute the job */
                 func_buff = job_p->function;
                 arg_buff = job_p->arg;
                 func_buff(arg_buff);
-                free(job_p);
+
+#ifdef MEASURE_TIME
+                if(do_benchmark && info == 0) {
+                    info = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cputime);
+                    if(info == 0) {
+                        elapsed += cputime.tv_sec + cputime.tv_nsec * 1e-9;
+                        (*job_p->elapsed) = elapsed;
+                    } else {
+                        fprintf(stderr, "failed clock_gettime()\n");
+                    }
+                }
+#endif
             }
+            free(work_group->jobs);
+            free(work_group);
 
             pthread_mutex_lock(&thpool_p->thcount_lock);
             thpool_p->num_threads_working--;
@@ -488,6 +658,7 @@ static int jobqueue_init(thpool_* thpool_p) {
     thpool_p->jobqueue_p->len = 0;
     thpool_p->jobqueue_p->front = NULL;
     thpool_p->jobqueue_p->rear = NULL;
+    thpool_p->jobqueue_p->total_time = 0;
 
     thpool_p->jobqueue_p->has_jobs = (struct bsem*) malloc(sizeof(struct bsem));
     if (thpool_p->jobqueue_p->has_jobs == NULL) {
@@ -503,25 +674,30 @@ static int jobqueue_init(thpool_* thpool_p) {
 
 /* Clear the queue */
 static void jobqueue_clear(thpool_* thpool_p) {
+    int i;
+    struct job_group* group;
+    int size;
 
-    while (thpool_p->jobqueue_p->len) {
-        free(jobqueue_pull(thpool_p));
-    }
+    do {
+        group = jobqueue_pull(thpool_p);
+        size = group->size;
+        free(group->jobs);
+        free(group);
+    } while (size > 0);
 
     thpool_p->jobqueue_p->front = NULL;
     thpool_p->jobqueue_p->rear = NULL;
     bsem_reset(thpool_p->jobqueue_p->has_jobs);
     thpool_p->jobqueue_p->len = 0;
-
+    thpool_p->jobqueue_p->total_time = 0;
 }
 
 
-/* Add (allocated) job to queue
- *
- * Notice: Caller MUST hold a mutex
+/**
+ * Add (allocated) job to queue without locks (internal function)
  */
-static void jobqueue_push(thpool_* thpool_p, struct job* newjob) {
-
+static void jobqueue_push_internal(thpool_* thpool_p,
+                                   struct job* newjob) {
     newjob->prev = NULL;
 
     switch (thpool_p->jobqueue_p->len) {
@@ -536,41 +712,146 @@ static void jobqueue_push(thpool_* thpool_p, struct job* newjob) {
             thpool_p->jobqueue_p->rear = newjob;
 
     }
+    if(newjob->elapsed != NULL) {
+        thpool_p->jobqueue_p->total_time += *newjob->elapsed;
+    }
     thpool_p->jobqueue_p->len++;
+}
+
+/**
+ * Add (allocated) job to queue
+ */
+static void jobqueue_push(thpool_* thpool_p,
+                          struct job* newjob) {
+    pthread_mutex_lock(&thpool_p->jobqueue_p->rwmutex);
+
+    jobqueue_push_internal(thpool_p, newjob);
 
     bsem_post(thpool_p->jobqueue_p->has_jobs);
+
+    pthread_mutex_unlock(&thpool_p->jobqueue_p->rwmutex);
 }
 
 
-/* Get first job from queue(removes it from queue)
- *
- * Notice: Caller MUST hold a mutex
+/**
+ * Add (allocated) multiple jobs to queue
  */
-static struct job* jobqueue_pull(thpool_* thpool_p) {
+static void jobqueue_multipush(thpool_* thpool_p,
+                               struct job* newjob[],
+                               int nJobs) {
+    int i;
 
-    job* job_p;
-    job_p = thpool_p->jobqueue_p->front;
+    pthread_mutex_lock(&thpool_p->jobqueue_p->rwmutex);
+
+    for(i = 0; i < nJobs; ++i) {
+        jobqueue_push_internal(thpool_p, newjob[i]);
+    }
+
+    bsem_post_all(thpool_p->jobqueue_p->has_jobs);
+
+    pthread_mutex_unlock(&thpool_p->jobqueue_p->rwmutex);
+}
+
+static struct job* jobqueue_extract_single(thpool_* thpool_p) {
+    struct job* job_p = thpool_p->jobqueue_p->front;
 
     switch (thpool_p->jobqueue_p->len) {
-
         case 0:  /* if no jobs in queue */
-            break;
+            return NULL;
 
         case 1:  /* if one job in queue */
             thpool_p->jobqueue_p->front = NULL;
             thpool_p->jobqueue_p->rear = NULL;
             thpool_p->jobqueue_p->len = 0;
-            break;
+            thpool_p->jobqueue_p->total_time = 0;
+            return job_p;
 
         default: /* if >1 jobs in queue */
             thpool_p->jobqueue_p->front = job_p->prev;
             thpool_p->jobqueue_p->len--;
-            /* more than one job in queue -> post it */
-            bsem_post(thpool_p->jobqueue_p->has_jobs);
+            if(job_p->elapsed != NULL) {
+                thpool_p->jobqueue_p->total_time -= *job_p->elapsed;
+            }
+            return job_p;
+    }
+}
+
+static void jobqueue_extract_single_group(thpool_* thpool_p,
+                                          job_group* group) {
+    struct job* job_p = jobqueue_extract_single(thpool_p);
+    if(job_p != NULL) {
+        group->size = 1;
+        group->jobs = (struct job*) malloc(sizeof(struct job));
+        group->jobs[0] = *job_p; // copy
+        free(job_p);
+    } else {
+        group->size = 0;
+        group->jobs = NULL;
+    }
+}
+
+/**
+ * Get jobs from the queue(removes them from the queue)
+ *
+ * Notice: Caller MUST hold a mutex
+ */
+static struct job_group* jobqueue_pull(thpool_* thpool_p) {
+
+    job_group* group;
+    group = (struct job_group*) malloc(sizeof(struct job_group));
+    struct job* job_p;
+    double target_time;
+    double time;
+    int i;
+
+    if(group_gen_strategy == SINGLE_ORDERED || thpool_p->jobqueue_p->len <= 1 || thpool_p->jobqueue_p->total_time <= 0) {
+        // SINGLE_ORDERED
+        jobqueue_extract_single_group(thpool_p, group);
+    } else {
+        // MULTI_HALF_TIME
+        target_time = thpool_p->jobqueue_p->total_time / (thpool_p->num_threads * 2); // always positive
+
+        job_p = thpool_p->jobqueue_p->front;
+
+        if (job_p->elapsed == NULL) {
+            // cannot use this strategy (something went wrong!)
+            jobqueue_extract_single_group(thpool_p, group);
+
+        } else {
+            // there are at least 2 jobs in the queue
+            group->size = 1;
+            time = *job_p->elapsed;
+            job_p = job_p->prev;
+
+            do {
+                if (job_p->elapsed == NULL) {
+                    break;
+                }
+                time += *job_p->elapsed;
+                if(time < target_time) {
+                    group->size++;
+                } else {
+                    break;
+                }
+                job_p = job_p->prev;
+            } while(job_p != thpool_p->jobqueue_p->front);
+
+            group->jobs = (struct job*) malloc(group->size * sizeof(struct job));
+            for(i = 0; i< group->size; ++i) {
+                job_p = jobqueue_extract_single(thpool_p);
+                group->jobs[i] = *job_p; // copy
+                free(job_p);
+            }
+        }
 
     }
 
-    return job_p;
+    /* more than one job in queue -> post it */
+    if(thpool_p->jobqueue_p->len > 0) {
+        bsem_post(thpool_p->jobqueue_p->has_jobs);
+    }
+
+    return group;
 }
 
 

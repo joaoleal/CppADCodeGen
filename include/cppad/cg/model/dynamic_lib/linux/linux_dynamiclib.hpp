@@ -39,6 +39,8 @@ protected:
     void (*_setThreadPoolDisabled)(int);
     void (*_setThreads)(unsigned int);
     unsigned int (*_getThreads)();
+    void (*_setSchedulerStrategy)(int);
+    int (*_getSchedulerStrategy)();
     std::set<std::string> _modelNames;
     std::set<LinuxDynamicLibModel<Base>*> _models;
 public:
@@ -49,7 +51,9 @@ public:
         _onClose(nullptr),
         _setThreadPoolDisabled(nullptr),
         _setThreads(nullptr),
-        _getThreads(nullptr) {
+        _getThreads(nullptr),
+        _setSchedulerStrategy(nullptr),
+        _getSchedulerStrategy(nullptr) {
 
         std::string path;
         if (dynLibName[0] == '/') {
@@ -106,6 +110,19 @@ public:
     virtual void setThreadNumber(unsigned int n) override {
         if (_setThreads != nullptr) {
             (*_setThreads)(n);
+        }
+    }
+
+    virtual ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const override {
+        if (_getSchedulerStrategy != nullptr) {
+            return ThreadPoolScheduleStrategy((*_getSchedulerStrategy)());
+        }
+        return ThreadPoolScheduleStrategy::SINGLE_JOB;
+    }
+
+    virtual void setThreadPoolSchedulerStrategy(ThreadPoolScheduleStrategy s) override {
+        if (_setSchedulerStrategy != nullptr) {
+            (*_setSchedulerStrategy)(int(s));
         }
     }
 
@@ -176,6 +193,8 @@ protected:
         _setThreadPoolDisabled = reinterpret_cast<decltype(_setThreadPoolDisabled)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED, false));
         _setThreads = reinterpret_cast<decltype(_setThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS, false));
         _getThreads = reinterpret_cast<decltype(_getThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
+        _setSchedulerStrategy = reinterpret_cast<decltype(_setSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADSCHEDULERSTRAT, false));
+        _getSchedulerStrategy = reinterpret_cast<decltype(_getSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT, false));
 
         if(_setThreads != nullptr) {
             (*_setThreads)(std::thread::hardware_concurrency());

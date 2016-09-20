@@ -438,7 +438,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                 "   struct LangCAtomicFun atomicFun;\n"
                 "} ExecArgStruct;\n"
                 "\n"
-                "static void execute_function(void* arg) {\n"
+                "static void exec_func(void* arg) {\n"
                 "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
                 "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
                 "}\n";
@@ -490,17 +490,31 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                        "\n";
     } else {
         assert(_multithread == MultiThreadingType::PTHREADS);
-        _cache << "   ExecArgStruct args[" << hessInfo.size() << "];\n"
+        _cache << "   ExecArgStruct* args[" << hessInfo.size() << "];\n"
+                "   cppadcg_thpool_function_type execute_functions[" << hessInfo.size() << "] = {";
+        for (const auto& it : hessInfo) {
+            if (it.first != hessInfo.begin()->first) _cache << ", ";
+            _cache << "(void*)exec_func";
+        }
+        _cache << "};\n"
+                "   double* elapsed = NULL;\n"
+                "   int* order = NULL;\n"
                 "\n"
                 "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
-                       "      args[i].func = p[i];\n"
-                       "      args[i].in = inLocal;\n"
-                       "      args[i].out[0] = &hess[offset[i]];\n"
-                       "      args[i].atomicFun = " << langC .getArgumentAtomic() << ";\n"
-                       "      cppadcg_thpool_add_job((void*)execute_function, (void*)&args[i]);\n"
-                       "   }\n"
-                       "\n"
-                       "   cppadcg_thpool_wait();\n";
+                "      args[i] = (ExecArgStruct*) malloc(sizeof(ExecArgStruct));\n"
+                "      args[i]->func = p[i];\n"
+                "      args[i]->in = inLocal;\n"
+                "      args[i]->out[0] = &hess[offset[i]];\n"
+                "      args[i]->atomicFun = " << langC .getArgumentAtomic() << ";\n"
+                "   }\n"
+                "\n"
+                "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, elapsed, order, " << hessInfo.size() << ");\n"
+                "\n"
+                "   cppadcg_thpool_wait();\n"
+                "\n"
+                "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
+                "      free(args[i]);\n"
+                "   }\n";
     }
 
     _cache << "\n"

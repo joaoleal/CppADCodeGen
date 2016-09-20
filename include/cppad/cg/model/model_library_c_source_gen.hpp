@@ -32,6 +32,8 @@ public:
     static const std::string FUNCTION_SETTHREADPOOLDISABLED;
     static const std::string FUNCTION_SETTHREADS;
     static const std::string FUNCTION_GETTHREADS;
+    static const std::string FUNCTION_SETTHREADSCHEDULERSTRAT;
+    static const std::string FUNCTION_GETTHREADSCHEDULERSTRAT;
     static const unsigned long API_VERSION;
 protected:
     static const std::string CONST;

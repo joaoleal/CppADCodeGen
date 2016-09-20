@@ -32,6 +32,8 @@ protected:
     bool _reverseOne;
     bool _reverseTwo;
     bool _multithread;
+    bool _multithreadDisabled;
+    ThreadPoolScheduleStrategy _multithreadScheduler;
 public:
 
     inline CppADCGDynamicTest(const std::string& testName,
@@ -44,7 +46,9 @@ public:
         _forwardOne(true),
         _reverseOne(true),
         _reverseTwo(true),
-        _multithread(false) {
+        _multithread(false),
+        _multithreadDisabled(false),
+        _multithreadScheduler(ThreadPoolScheduleStrategy::SINGLE_JOB) {
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
@@ -136,7 +140,7 @@ public:
         GenericModel<double>* model = dynamicLib->model(_name + "dynamic");
         ASSERT_TRUE(model != nullptr);
 
-        testModelResults(*model, fun, x, epsilonR, epsilonA, _denseJacobian, _denseHessian);
+        testModelResults(*dynamicLib, *model, fun, x, epsilonR, epsilonA, _denseJacobian, _denseHessian);
 
         delete model;
         delete dynamicLib;

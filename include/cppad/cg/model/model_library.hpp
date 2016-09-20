@@ -18,6 +18,11 @@
 namespace CppAD {
 namespace cg {
 
+enum class ThreadPoolScheduleStrategy {
+    SINGLE_JOB, // each thread only executes a single job at a time
+    MULTI_JOB // each thread can execute multiple jobs before returning to the pool
+};
+
 /**
  * Abstract class used to load models
  * 
@@ -66,6 +71,27 @@ public:
      * @param n the maximum number of threads
      */
     virtual void setThreadNumber(unsigned int n) = 0;
+
+    /**
+     * Provides the thread scheduling strategy used to determine sparse Jacobians
+     * and sparse Hessians for the models in this library.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     *
+     * @return the thread scheduling strategy
+     */
+    virtual ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const = 0;
+
+    /**
+     * Defines the thread scheduling strategy used to determine sparse Jacobians
+     * and sparse Hessians for the models in this library.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     * It should be defined before using the models.
+     *
+     * @param s the thread scheduling strategy
+     */
+    virtual void setThreadPoolSchedulerStrategy(ThreadPoolScheduleStrategy s) = 0;
 
     inline virtual ~ModelLibrary() {
     }

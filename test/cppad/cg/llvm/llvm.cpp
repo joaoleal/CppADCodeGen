@@ -72,7 +72,7 @@ TEST_F(CppADCGModelTest, llvm) {
     std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
     ASSERT_TRUE(model.get() != nullptr);
 
-    this->testModelResults(*model, *fun.get(), x);
+    this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
 
     model.reset(nullptr); // must be freed before llvm_shutdown()
     llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()

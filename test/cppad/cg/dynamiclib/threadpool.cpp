@@ -42,7 +42,91 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGThreadPoolTest, DynamicFull) {
+TEST_F(CppADCGThreadPoolTest, PthreadDisabledFullVars) {
+    this->_multithread = true;
+    this->_multithreadDisabled = true;
+
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variables
+    std::vector<ADCG> u(3);
+    u[0] = 1;
+    u[1] = 1;
+    u[2] = 1;
+
+    std::vector<double> x(u.size());
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 1;
+
+    this->_reverseOne = true;
+    this->_reverseTwo = true;
+    this->_denseJacobian = false;
+    this->_denseHessian = false;
+
+    this->testDynamicFull(u, x, 1000);
+}
+
+TEST_F(CppADCGThreadPoolTest, PthreadSingleJobFullVars) {
+    this->_multithread = true;
+    this->_multithreadDisabled = false;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
+
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variables
+    std::vector<ADCG> u(3);
+    u[0] = 1;
+    u[1] = 1;
+    u[2] = 1;
+
+    std::vector<double> x(u.size());
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 1;
+
+    this->_reverseOne = true;
+    this->_reverseTwo = true;
+    this->_denseJacobian = false;
+    this->_denseHessian = false;
+
+    this->testDynamicFull(u, x, 1000);
+}
+
+
+TEST_F(CppADCGThreadPoolTest, PthreadMultiJobFullVars) {
+    this->_multithread = true;
+    this->_multithreadDisabled = false;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variables
+    std::vector<ADCG> u(3);
+    u[0] = 1;
+    u[1] = 1;
+    u[2] = 1;
+
+    std::vector<double> x(u.size());
+    x[0] = 1;
+    x[1] = 2;
+    x[2] = 1;
+
+    this->_reverseOne = true;
+    this->_reverseTwo = true;
+    this->_denseJacobian = false;
+    this->_denseHessian = false;
+
+    this->testDynamicFull(u, x, 1000);
+}
+
+TEST_F(CppADCGThreadPoolTest, FullVars) {
     this->_multithread = true;
 
     // use a special object for source code generation
