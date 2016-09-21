@@ -47,7 +47,7 @@ protected:
     // (some IDs may be the same as the independent variables when dep = indep)
     std::map<size_t, size_t> _dependentIDs;
     // the dependent variable vector
-    const CppAD::vector<CG < Base> >* _dependent;
+    const ArrayWrapper<CG<Base> >* _dependent;
     // whether or not to ignore assignment of constant zero values to dependent variables
     bool _ignoreZeroDepAssign;
     // the name of the file to be created without the extension
@@ -234,8 +234,6 @@ protected:
 
     virtual void generateSourceCode(std::ostream& out,
                                     const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
-        using CppAD::vector;
-
         // clean up
         _code.str("");
         _ss.str("");
@@ -248,7 +246,7 @@ protected:
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
         _minTemporaryVarID = info->minTemporaryVarID;
-        const vector<CG<Base> >& dependent = info->dependent;
+        const ArrayWrapper<CG<Base> >& dependent = info->dependent;
         const std::vector<OperationNode<Base>*>& variableOrder = info->variableOrder;
 
         varIds_.resize(_minTemporaryVarID + variableOrder.size());

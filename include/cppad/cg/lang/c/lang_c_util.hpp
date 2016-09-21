@@ -46,10 +46,10 @@ inline void printModel(ADFun<CG<Base> >& fun,
 
     CodeHandler<Base> handler;
 
-    CppAD::vector<CG<Base> > indep0(fun.Domain());
+    std::vector<CG<Base> > indep0(fun.Domain());
     handler.makeVariables(indep0);
 
-    CppAD::vector<CG<Base> > dep0 = fun.Forward(0, indep0);
+    std::vector<CG<Base> > dep0 = fun.Forward(0, indep0);
 
     LanguageC<Base> langC("double");
 
@@ -79,7 +79,7 @@ inline void printExpression(const CG<Base>& dep,
         LanguageC<double> langC("double");
         LangCDefaultVariableNameGenerator<double> nameGen;
 
-        CppAD::vector<CG<Base> > depv(1);
+        std::vector<CG<Base> > depv(1);
         depv[0] = dep;
 
         std::ostringstream code;

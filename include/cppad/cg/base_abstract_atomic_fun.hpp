@@ -53,7 +53,8 @@ public:
 
 protected:
 
-    static inline void appendAsArguments(typename std::vector<Arg>::iterator begin, const CppAD::vector<CGB>& tx) {
+    static inline void appendAsArguments(typename std::vector<Arg>::iterator begin,
+                                         const CppAD::vector<CGB>& tx) {
         std::vector<Arg> arguments(tx.size());
         typename std::vector<Arg>::iterator it = begin;
         for (size_t i = 0; i < arguments.size(); i++, ++it) {

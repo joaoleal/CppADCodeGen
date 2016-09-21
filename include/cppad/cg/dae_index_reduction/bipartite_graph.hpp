@@ -856,7 +856,7 @@ public:
                            ADFun<CG<Base> >& fun,
                            const std::vector<std::string>& indepNames,
                            const std::vector<std::string>& depNames = std::vector<std::string>()) const {
-        using CppAD::vector;
+        using std::vector;
 
         CPPADCG_ASSERT_UNKNOWN(fun.Domain() == indepNames.size() || fun.Domain() == indepNames.size() + 1); // with or without time
 

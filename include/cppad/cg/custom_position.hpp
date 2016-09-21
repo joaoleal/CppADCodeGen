@@ -27,7 +27,7 @@ private:
     /// allowed elements
     std::vector<std::vector<bool> > elFilter_;
     bool fullDefined_;
-    CppAD::vector<std::set<size_t> > elements_;
+    std::vector<std::set<size_t> > elements_;
 public:
 
     inline CustomPosition() :
@@ -71,17 +71,27 @@ public:
         return fullDefined_;
     }
 
-    inline void setFullElements(const CppAD::vector<std::set<size_t> >& elements) {
+    inline void setFullElements(const std::vector<std::set<size_t> >& elements) {
         elements_ = elements;
         filter(elements_);
         fullDefined_ = true;
     }
 
-    inline const CppAD::vector<std::set<size_t> >& getFullElements()const {
+    inline const std::vector<std::set<size_t> >& getFullElements()const {
         return elements_;
     }
 
     inline void filter(CppAD::vector<std::set<size_t> >& sparsity) const {
+        ArrayWrapper<std::set<size_t> > s(sparsity);
+        filter(s);
+    }
+
+    inline void filter(std::vector<std::set<size_t> >& sparsity) const {
+        ArrayWrapper<std::set<size_t> > s(sparsity);
+        filter(s);
+    }
+
+    inline void filter(ArrayWrapper<std::set<size_t> >& sparsity) const {
         if (!filterDefined_)
             return; // nothing to do
 

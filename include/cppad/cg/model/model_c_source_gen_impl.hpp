@@ -245,9 +245,9 @@ const std::map<size_t, std::set<size_t> >& ModelCSourceGen<Base>::getAtomicsInde
 }
 
 template<class Base>
-CppAD::vector<typename ModelCSourceGen<Base>::Color> ModelCSourceGen<Base>::colorByRow(const std::set<size_t>& columns,
-                                                                                       const SparsitySetType& sparsity) {
-    CppAD::vector<Color> colors(sparsity.size()); // reserve the maximum size to avoid reallocating more space later
+std::vector<typename ModelCSourceGen<Base>::Color> ModelCSourceGen<Base>::colorByRow(const std::set<size_t>& columns,
+                                                                                     const SparsitySetType& sparsity) {
+    std::vector<Color> colors(sparsity.size()); // reserve the maximum size to avoid reallocating more space later
 
     /**
      * try not match the columns of each row to a color which did not have

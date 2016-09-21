@@ -190,6 +190,9 @@ class SmartListPointer;
 template<class Key, class Value>
 class SmartMapValuePointer;
 
+template<class Type>
+class ArrayWrapper;
+
 template<class Base>
 inline void print(const Base& v);
 

@@ -62,7 +62,6 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
 
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
@@ -85,7 +84,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
     localNodes[4] = &jrowIndexOp;
 
     // independent variables
-    vector<CGBase> x(n);
+    std::vector<CGBase> x(n);
     handler.makeVariables(x);
     if (_x.size() > 0) {
         for (size_t i = 0; i < n; i++) {
@@ -100,7 +99,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
     }
 
     // multipliers
-    vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+    std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
     handler.makeVariables(py);
     if (_x.size() > 0) {
         for (size_t i = 0; i < m; i++) {
@@ -131,9 +130,9 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         }
     }
 
-    vector<set<size_t> > noLoopEvalJacSparsity;
-    vector<set<size_t> > noLoopEvalHessSparsity;
-    vector<map<size_t, set<size_t> > > noLoopEvalHessLocations;
+    std::vector<set<size_t> > noLoopEvalJacSparsity;
+    std::vector<set<size_t> > noLoopEvalHessSparsity;
+    std::vector<map<size_t, set<size_t> > > noLoopEvalHessLocations;
     map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> > loopHessInfo;
 
     analyseSparseHessianWithLoops(hessRows, hessCols, hessOrder,
@@ -147,7 +146,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
      * Calculate Hessians and Jacobians
      */
     // temporaries (zero orders)
-    vector<CGBase> tmpsAlias;
+    std::vector<CGBase> tmpsAlias;
     if (_funNoLoops != nullptr) {
         ADFun<CGBase>& fun = _funNoLoops->getTape();
 
@@ -173,7 +172,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
         /**
          * make the loop's indexed variables
          */
-        vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *info.iterationIndexOp);
         info.x = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmpsAlias);
 
         info.w = createLoopDependentVector(handler, lModel, *info.iterationIndexOp);
@@ -209,7 +208,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
     map<size_t, map<size_t, CGBase> > dzDx;
     if (_funNoLoops != nullptr) {
         ADFun<CGBase>& fun = _funNoLoops->getTape();
-        vector<CGBase> yNL(fun.Range());
+        std::vector<CGBase> yNL(fun.Range());
 
         /**
          * Jacobian and Hessian - temporary variables
@@ -344,7 +343,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
             _loopRev2Groups[&lModel][g] = jrow2CompressedLoc;
 
             LoopEndOperationNode<Base>* loopEnd = nullptr;
-            vector<CGBase> pxCustom;
+            std::vector<CGBase> pxCustom;
             if (createsLoop) {
                 /**
                  * make the loop end
@@ -457,7 +456,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
             CodeHandler<Base> handlerNL;
             handlerNL.setJobTimer(_jobTimer);
 
-            vector<CGBase> tx0(n);
+            std::vector<CGBase> tx0(n);
             handlerNL.makeVariables(tx0);
             if (_x.size() > 0) {
                 for (size_t i = 0; i < n; i++) {
@@ -471,10 +470,10 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                 tx1.setValue(Base(1.0));
             }
 
-            vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
+            std::vector<CGBase> py(m); // (k+1)*m is not used because we are not interested in all values
             handlerNL.makeVariables(py);
 
-            vector<CGBase> pyNoLoop(_funNoLoops->getTapeDependentCount());
+            std::vector<CGBase> pyNoLoop(_funNoLoops->getTapeDependentCount());
 
             const std::vector<size_t>& origIndexes = _funNoLoops->getOrigDependentIndexes();
             for (size_t inl = 0; inl < origIndexes.size(); inl++) {
@@ -484,7 +483,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                 }
             }
 
-            vector<CGBase> hessNoLoop(row.size());
+            std::vector<CGBase> hessNoLoop(row.size());
 
             CppAD::sparse_hessian_work work; // temporary structure for CPPAD
             // "cppad.symmetric" may have missing values for functions using
@@ -516,7 +515,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseTwoWithLoops(const std::map<size
                 _cache << "model (reverse two, no loops, indep " << j << ")";
                 const string subJobName = _cache.str();
 
-                vector<CGBase> pxCustom(elements.at(j).size());
+                std::vector<CGBase> pxCustom(elements.at(j).size());
 
                 for (const auto& it2 : cols) {
                     size_t e = it2.first;
@@ -569,7 +568,6 @@ void generateHessianRowGroups(const LoopModel<Base>& lModel,
                               SmartVectorPointer<HessianRowGroup<Base> >& loopGroups) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
 
     /**
      * group rows with the same contribution terms
@@ -617,7 +615,6 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
                                                                             std::map<size_t, std::set<size_t> >& jrow2CompressedLoc) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
 
     typedef CG<Base> CGBase;
 
@@ -1205,7 +1202,7 @@ CG<Base> createReverseMode2Contribution(CodeHandler<Base>& handler,
                                         const std::set<size_t>& iterations,
                                         const CG<Base>& ddfdxdx,
                                         IndexOperationNode<Base>& iterationIndexOp,
-                                        CppAD::vector<IfElseInfo<Base> >& ifElses) {
+                                        std::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
     if (ddfdxdx.isIdenticalZero()) {
@@ -1294,7 +1291,7 @@ public:
     // all iterations
     std::set<size_t> iterations;
     // if-else branches
-    CppAD::vector<IfElseInfo<Base> > ifElses;
+    std::vector<IfElseInfo<Base> > ifElses;
 public:
 
     inline HessianRowGroup(const HessianTermContrib<Base>& c,

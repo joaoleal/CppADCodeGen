@@ -75,6 +75,7 @@
 // some utilities
 #include <cppad/cg/smart_containers.hpp>
 #include <cppad/cg/ostream_config_restore.hpp>
+#include <cppad/cg/array_wrapper.hpp>
 
 // ---------------------------------------------------------------------------
 // indexes

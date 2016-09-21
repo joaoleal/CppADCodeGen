@@ -1492,7 +1492,7 @@ protected:
                                   const std::vector<DaeVarInfo>& varInfo,
                                   const std::set<size_t>& erasedVariables,
                                   const std::set<size_t>& erasedEquations) {
-        using CppAD::vector;
+        using std::vector;
 
         std::vector<std::string> indepNames;
         for (size_t p = 0; p < varInfo.size(); p++) {

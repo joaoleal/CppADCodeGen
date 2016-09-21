@@ -23,7 +23,7 @@ namespace loops {
 template<class Base>
 class HessianWithLoopsEquationGroupInfo {
 public:
-    CppAD::vector<std::set<size_t> > evalHessSparsity;
+    std::vector<std::set<size_t> > evalHessSparsity;
     // (tapeJ1, tapeJ2) -> [positions]
     std::map<pairss, std::vector<HessianElement> > indexedIndexedPositions;
     // (tapeJ1, tapeJ2(j2)) -> [positions]
@@ -63,7 +63,7 @@ class HessianWithLoopsInfo {
 public:
     LoopModel<Base>* model;
     //
-    CppAD::vector<std::set<size_t> > evalJacSparsity;
+    std::vector<std::set<size_t> > evalJacSparsity;
     //
     std::vector<HessianWithLoopsEquationGroupInfo<Base> > equationGroups;
     //(j1, j2) -> position
@@ -74,17 +74,17 @@ public:
     LoopStartOperationNode<Base>* loopStart;
     LoopEndOperationNode<Base>* loopEnd;
     IndexOperationNode<Base>* iterationIndexOp;
-    CppAD::vector<CG<Base> > x; // loop independent variables
-    CppAD::vector<CG<Base> > w;
+    std::vector<CG<Base> > x; // loop independent variables
+    std::vector<CG<Base> > w;
     /**
      * Jacobian
      */
-    CppAD::vector<std::map<size_t, CG<Base> > > dyiDzk;
-    CppAD::vector<std::set<size_t> > noLoopEvalHessTempsSparsity;
+    std::vector<std::map<size_t, CG<Base> > > dyiDzk;
+    std::vector<std::set<size_t> > noLoopEvalHessTempsSparsity;
     std::map<size_t, std::map<size_t, CG<Base> > > dzDxx;
 
     // if-else branches
-    CppAD::vector<IfElseInfo<Base> > ifElses;
+    std::vector<IfElseInfo<Base> > ifElses;
 
     inline HessianWithLoopsInfo() :
         model(nullptr),
@@ -111,7 +111,7 @@ public:
      *                           functions in the model
      */
     inline void evalLoopModelJacobianHessian(bool individualColoring) {
-        using CppAD::vector;
+        using std::vector;
 
         ADFun<CG<Base> >& fun = model->getTape();
         const std::vector<IterEquationGroup<Base> >& eqGroups = model->getEquationsGroups();

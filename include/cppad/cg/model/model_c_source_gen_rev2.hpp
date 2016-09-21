@@ -67,7 +67,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSources() {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
-    using CppAD::vector;
+    using std::vector;
 
     const size_t m = _fun.Range();
     const size_t n = _fun.Domain();
@@ -145,7 +145,7 @@ template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::map<size_t, std::vector<size_t> >& elements,
                                                                      const std::vector<size_t>& evalRows,
                                                                      const std::vector<size_t>& evalCols) {
-    using CppAD::vector;
+    using std::vector;
 
     const size_t m = _fun.Range();
     const size_t n = _fun.Domain();

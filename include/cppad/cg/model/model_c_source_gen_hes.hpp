@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateHessianSource() {
-    using CppAD::vector;
+    using std::vector;
 
     const std::string jobName = "Hessian";
 
@@ -90,7 +90,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSource() {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
-    using CppAD::vector;
+    using std::vector;
 
     const std::string jobName = "sparse Hessian";
     size_t m = _fun.Range();
@@ -593,7 +593,7 @@ void ModelCSourceGen<Base>::determineHessianSparsity() {
         /**
          * Coloring
          */
-        const CppAD::vector<Color> colors = colorByRow(customVarsInHess, jac);
+        const std::vector<Color> colors = colorByRow(customVarsInHess, jac);
 
         /**
          * For each individual equation

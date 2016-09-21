@@ -60,7 +60,7 @@ void ModelCSourceGen<Base>::generateSparseReverseOneSources() {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseOneSourcesWithAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
-    using CppAD::vector;
+    using std::vector;
 
     /**
      * Generate one function for each dependent variable
@@ -135,7 +135,7 @@ void ModelCSourceGen<Base>::generateSparseReverseOneSourcesWithAtomics(const std
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseReverseOneSourcesNoAtomics(const std::map<size_t, std::vector<size_t> >& elements) {
-    using CppAD::vector;
+    using std::vector;
 
     /**
      * Jacobian

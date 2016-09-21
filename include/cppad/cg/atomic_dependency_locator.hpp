@@ -32,8 +32,6 @@ public:
     }
 
     inline std::map<size_t, std::set<size_t> > findAtomicsUsage() {
-        using CppAD::vector;
-
         if (!atomicIndeps_.empty()) {
             return atomicIndeps_;
         }
@@ -41,13 +39,13 @@ public:
         size_t m = fun_.Range();
         size_t n = fun_.Domain();
 
-        vector<CG<Base> > x(n);
+        std::vector<CG<Base> > x(n);
         handler_.makeVariables(x);
 
         // make sure the position in the code handler is the same as the independent index
         assert(x.size() == 0 || (x[0].getOperationNode()->getHandlerPosition() == 0 && x[x.size() - 1].getOperationNode()->getHandlerPosition() == x.size() - 1));
 
-        vector<CG<Base> > dep = fun_.Forward(0, x);
+        std::vector<CG<Base> > dep = fun_.Forward(0, x);
 
         for (size_t i = 0; i < m; i++) {
             findAtomicsUsage(dep[i].getOperationNode());

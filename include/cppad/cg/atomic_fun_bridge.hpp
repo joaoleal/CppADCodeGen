@@ -102,7 +102,7 @@ public:
             size_t n = fun_.Domain();
             size_t m = fun_.Range();
             if (!custom_jac_.isFullDefined()) {
-                custom_jac_.setFullElements(jacobianForwardSparsitySet<vector<std::set<size_t> > >(fun_));
+                custom_jac_.setFullElements(jacobianForwardSparsitySet<std::vector<std::set<size_t> > >(fun_));
                 fun_.size_forward_set(0);
             }
 
@@ -127,7 +127,7 @@ public:
             size_t n = fun_.Domain();
             size_t m = fun_.Range();
             if (!custom_jac_.isFullDefined()) {
-                custom_jac_.setFullElements(jacobianReverseSparsitySet<vector<std::set<size_t> > >(fun_));
+                custom_jac_.setFullElements(jacobianReverseSparsitySet<std::vector<std::set<size_t> > >(fun_));
             }
 
             for (size_t i = 0; i < st.size(); i++) {
@@ -159,9 +159,9 @@ public:
             }
 
             if (!custom_jac_.isFullDefined()) {
-                custom_jac_.setFullElements(jacobianSparsitySet<vector<std::set<size_t> > >(fun_));
+                custom_jac_.setFullElements(jacobianSparsitySet<std::vector<std::set<size_t> > >(fun_));
             }
-            const vector<std::set<size_t> >& jacSparsity = custom_jac_.getFullElements();
+            const std::vector<std::set<size_t> >& jacSparsity = custom_jac_.getFullElements();
 
             /**
              *  V(x)  =  f'^T(x) U(x)  +  Sum(  s(x)i  f''(x)  R(x)   )
@@ -180,9 +180,9 @@ public:
 
             if (allSelected) {
                 if (!custom_hess_.isFullDefined()) {
-                    custom_hess_.setFullElements(hessianSparsitySet<vector<std::set<size_t> > >(fun_)); // f''(x)
+                    custom_hess_.setFullElements(hessianSparsitySet<std::vector<std::set<size_t> > >(fun_)); // f''(x)
                 }
-                const vector<std::set<size_t> >& sF2 = custom_hess_.getFullElements();
+                const std::vector<std::set<size_t> >& sF2 = custom_hess_.getFullElements();
                 CppAD::cg::multMatrixTransMatrixSparsity(sF2, r, v, n, n, q); // f''^T * R
             } else {
                 vector<std::set<size_t> > sparsitySF2R(n);

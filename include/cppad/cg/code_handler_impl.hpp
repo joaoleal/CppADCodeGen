@@ -215,6 +215,26 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                                      CppAD::vector<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      const std::string& jobName) {
+    ArrayWrapper<CGB> deps(dependent);
+    generateCode(out, lang, deps, nameGen, jobName);
+}
+
+template<class Base>
+void CodeHandler<Base>::generateCode(std::ostream& out,
+                                     Language<Base>& lang,
+                                     std::vector<CGB>& dependent,
+                                     VariableNameGenerator<Base>& nameGen,
+                                     const std::string& jobName) {
+    ArrayWrapper<CGB> deps(dependent);
+    generateCode(out, lang, deps, nameGen, jobName);
+}
+
+template<class Base>
+void CodeHandler<Base>::generateCode(std::ostream& out,
+                                     Language<Base>& lang,
+                                     ArrayWrapper<CGB>& dependent,
+                                     VariableNameGenerator<Base>& nameGen,
+                                     const std::string& jobName) {
     std::vector<std::string> atomicFunctions;
     generateCode(out, lang, dependent, nameGen, atomicFunctions, jobName);
 }
@@ -223,6 +243,28 @@ template<class Base>
 void CodeHandler<Base>::generateCode(std::ostream& out,
                                      Language<Base>& lang,
                                      CppAD::vector<CGB>& dependent,
+                                     VariableNameGenerator<Base>& nameGen,
+                                     std::vector<std::string>& atomicFunctions,
+                                     const std::string& jobName) {
+    ArrayWrapper<CGB> deps(dependent);
+    generateCode(out, lang, deps, nameGen, atomicFunctions, jobName);
+}
+
+template<class Base>
+void CodeHandler<Base>::generateCode(std::ostream& out,
+                                     Language<Base>& lang,
+                                     std::vector<CGB>& dependent,
+                                     VariableNameGenerator<Base>& nameGen,
+                                     std::vector<std::string>& atomicFunctions,
+                                     const std::string& jobName) {
+    ArrayWrapper<CGB> deps(dependent);
+    generateCode(out, lang, deps, nameGen, atomicFunctions, jobName);
+}
+
+template<class Base>
+void CodeHandler<Base>::generateCode(std::ostream& out,
+                                     Language<Base>& lang,
+                                     ArrayWrapper<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      std::vector<std::string>& atomicFunctions,
                                      const std::string& jobName) {
@@ -750,7 +792,7 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
         }
 
         /**
-         * loop arguments
+         * iterate over all arguments
          */
         for (const Arg& it : code.getArguments()) {
             if (it.getOperation() != nullptr) {
@@ -1517,8 +1559,7 @@ inline void CodeHandler<Base>::addToEvaluationQueue(Node& arg) {
 }
 
 template<class Base>
-inline void CodeHandler<Base>::reduceTemporaryVariables(CppAD::vector<CGB>& dependent) {
-    using CppAD::vector;
+inline void CodeHandler<Base>::reduceTemporaryVariables(ArrayWrapper<CGB>& dependent) {
 
     reorderOperations(dependent);
 
@@ -1539,7 +1580,7 @@ inline void CodeHandler<Base>::reduceTemporaryVariables(CppAD::vector<CGB>& depe
     }
 
     // where temporary variables can be released
-    vector <std::vector<Node*>> tempVarRelease(_variableOrder.size());
+    std::vector<std::vector<Node*>> tempVarRelease(_variableOrder.size());
     for (size_t i = 0; i < _variableOrder.size(); i++) {
         Node* var = _variableOrder[i];
         if (isTemporary(*var) || isTemporaryArray(*var) || isTemporarySparseArray(*var)) {
@@ -1598,7 +1639,7 @@ inline void CodeHandler<Base>::reduceTemporaryVariables(CppAD::vector<CGB>& depe
 }
 
 template<class Base>
-inline void CodeHandler<Base>::reorderOperations(CppAD::vector<CGB>& dependent) {
+inline void CodeHandler<Base>::reorderOperations(ArrayWrapper<CGB>& dependent) {
     // determine the location of the last temporary variable used for each dependent
     startNewOperationTreeVisit();
 

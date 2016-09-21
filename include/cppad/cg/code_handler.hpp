@@ -52,7 +52,7 @@ protected:
     // the independent variables
     std::vector<Node *> _independentVariables;
     // the current dependent variables
-    CppAD::vector<CGB>* _dependents;
+    ArrayWrapper<CGB>* _dependents;
     /**
      * nodes managed by this code handler which include all
      * all OperationNodes created by CG<Base> objects
@@ -350,6 +350,18 @@ public:
                               VariableNameGenerator<Base>& nameGen,
                               const std::string& jobName = "source");
 
+    virtual void generateCode(std::ostream& out,
+                              Language<Base>& lang,
+                              std::vector<CGB>& dependent,
+                              VariableNameGenerator<Base>& nameGen,
+                              const std::string& jobName = "source");
+
+    virtual void generateCode(std::ostream& out,
+                              Language<Base>& lang,
+                              ArrayWrapper<CGB>& dependent,
+                              VariableNameGenerator<Base>& nameGen,
+                              const std::string& jobName = "source");
+
     /**
      * Creates the source code from the operations registered so far.
      * 
@@ -365,6 +377,20 @@ public:
     virtual void generateCode(std::ostream& out,
                               Language<Base>& lang,
                               CppAD::vector<CGB>& dependent,
+                              VariableNameGenerator<Base>& nameGen,
+                              std::vector<std::string>& atomicFunctions,
+                              const std::string& jobName = "source");
+
+    virtual void generateCode(std::ostream& out,
+                              Language<Base>& lang,
+                              std::vector<CGB>& dependent,
+                              VariableNameGenerator<Base>& nameGen,
+                              std::vector<std::string>& atomicFunctions,
+                              const std::string& jobName = "source");
+
+    virtual void generateCode(std::ostream& out,
+                              Language<Base>& lang,
+                              ArrayWrapper<CGB>& dependent,
                               VariableNameGenerator<Base>& nameGen,
                               std::vector<std::string>& atomicFunctions,
                               const std::string& jobName = "source");
@@ -647,14 +673,14 @@ protected:
 
     inline void addToEvaluationQueue(Node& arg);
 
-    inline void reduceTemporaryVariables(CppAD::vector<CGB>& dependent);
+    inline void reduceTemporaryVariables(ArrayWrapper<CGB>& dependent);
 
     /**
      * Change operation order so that the total number of temporary variables is
      * reduced.
      * @param dependent The vector of dependent variable values
      */
-    inline void reorderOperations(CppAD::vector<CGB>& dependent);
+    inline void reorderOperations(ArrayWrapper<CGB>& dependent);
 
     inline void reorderOperation(Node& node);
 

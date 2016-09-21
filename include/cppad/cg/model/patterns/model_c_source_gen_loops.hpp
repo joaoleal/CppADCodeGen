@@ -86,15 +86,14 @@ public:
 };
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
-                                                          LoopModel<Base>& loop,
-                                                          IndexOperationNode<Base>& iterationIndexOp) {
-    using CppAD::vector;
+inline std::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
+                                                        LoopModel<Base>& loop,
+                                                        IndexOperationNode<Base>& iterationIndexOp) {
 
     const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = loop.getIndexedIndepIndexes();
     size_t nIndexed = indexedIndepIndexes.size();
 
-    vector<CG<Base> > x(nIndexed); // zero order
+    std::vector<CG<Base> > x(nIndexed); // zero order
 
     std::vector<Argument<Base> > xIndexedArgs{iterationIndexOp};
     std::vector<size_t> info(2);
@@ -109,12 +108,11 @@ inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& han
 }
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& handler,
-                                                            LoopModel<Base>& loop,
-                                                            const CppAD::vector<CG<Base> >& indexedIndeps,
-                                                            const CppAD::vector<CG<Base> >& nonIndexed,
-                                                            const CppAD::vector<CG<Base> >& nonIndexedTmps) {
-    using CppAD::vector;
+inline std::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& handler,
+                                                          LoopModel<Base>& loop,
+                                                          const std::vector<CG<Base> >& indexedIndeps,
+                                                          const std::vector<CG<Base> >& nonIndexed,
+                                                          const std::vector<CG<Base> >& nonIndexedTmps) {
 
     const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = loop.getIndexedIndepIndexes();
     const std::vector<LoopPosition>& nonIndexedIndepIndexes = loop.getNonIndexedIndepIndexes();
@@ -125,7 +123,7 @@ inline CppAD::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& h
     size_t nTape = nIndexed + nNonIndexed + temporaryIndependents.size();
 
     // indexed independents
-    vector<CG<Base> > x(nTape);
+    std::vector<CG<Base> > x(nTape);
     for (size_t j = 0; j < nIndexed; j++) {
         x[j] = indexedIndeps[j];
     }
@@ -144,13 +142,12 @@ inline CppAD::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& h
 }
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
-                                                          LoopModel<Base>& loop,
-                                                          IndexOperationNode<Base>& iterationIndexOp) {
-    using CppAD::vector;
+inline std::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
+                                                        LoopModel<Base>& loop,
+                                                        IndexOperationNode<Base>& iterationIndexOp) {
 
-    const vector<IndexPattern*>& depIndexes = loop.getDependentIndexPatterns();
-    vector<CG<Base> > deps(depIndexes.size());
+    const std::vector<IndexPattern*>& depIndexes = loop.getDependentIndexPatterns();
+    std::vector<CG<Base> > deps(depIndexes.size());
 
     size_t dep_size = depIndexes.size();
     size_t x_size = loop.getTapeIndependentCount();
@@ -350,7 +347,7 @@ public:
 };
 
 template<class Base>
-inline IfElseInfo<Base>* findExistingIfElse(CppAD::vector<IfElseInfo<Base> >& ifElses,
+inline IfElseInfo<Base>* findExistingIfElse(std::vector<IfElseInfo<Base> >& ifElses,
                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations) {
     using namespace std;
 
@@ -460,7 +457,7 @@ inline CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
                                               size_t maxIter,
                                               size_t nLocalIter,
                                               IndexOperationNode<Base>& iterationIndexOp,
-                                              CppAD::vector<IfElseInfo<Base> >& ifElses,
+                                              std::vector<IfElseInfo<Base> >& ifElses,
                                               bool printResult = false) {
     using namespace std;
 
@@ -571,7 +568,7 @@ CG<Base> createConditionalContribution(CodeHandler<Base>& handler,
                                        size_t maxIter,
                                        const CG<Base>& ddfdxdx,
                                        IndexOperationNode<Base>& iterationIndexOp,
-                                       CppAD::vector<IfElseInfo<Base> >& ifElses) {
+                                       std::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
     CPPADCG_ASSERT_UNKNOWN(pattern.getLinearSlopeDy() == 0); // must be a constant index
@@ -655,7 +652,7 @@ std::pair<CG<Base>, IndexPattern*> createLoopResult(CodeHandler<Base>& handler,
                                                     IndexPattern* pattern,
                                                     size_t assignOrAdd,
                                                     IndexOperationNode<Base>& iterationIndexOp,
-                                                    CppAD::vector<IfElseInfo<Base> >& ifElses) {
+                                                    std::vector<IfElseInfo<Base> >& ifElses) {
     using namespace std;
 
     if (locationsIter2Pos.size() == iterCount) {

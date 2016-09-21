@@ -43,7 +43,7 @@ template<class Base>
 class ModelCSourceGen {
     typedef CppAD::cg::CG<Base> CGBase;
     typedef CppAD::AD<CGBase> ADCG;
-    typedef CppAD::vector<std::set<size_t> > SparsitySetType;
+    typedef std::vector<std::set<size_t> > SparsitySetType;
     typedef std::pair<size_t, size_t> TapeVarType; // tape independent -> reference orig independent (temporaries only)
 public:
     static const std::string FUNCTION_FORWAD_ZERO;
@@ -862,8 +862,8 @@ protected:
     /**
      * Generates the operation graph for the zero order model with loops
      */
-    virtual CppAD::vector<CGBase> prepareForward0WithLoops(CodeHandler<Base>& handler,
-                                                           const CppAD::vector<CGBase>& x);
+    virtual std::vector<CGBase> prepareForward0WithLoops(CodeHandler<Base>& handler,
+                                                         const std::vector<CGBase>& x);
 
     /***********************************************************************
      * Jacobian
@@ -911,9 +911,9 @@ protected:
      * @param indVars The independent variables
      * @return the operation graph for the compressed jacobin with loops
      */
-    virtual CppAD::vector<CGBase> prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
-                                                                 const CppAD::vector<CGBase>& x,
-                                                                 bool forward);
+    virtual std::vector<CGBase> prepareSparseJacobianWithLoops(CodeHandler<Base>& handler,
+                                                               const std::vector<CGBase>& x,
+                                                               bool forward);
 
     inline void prepareSparseJacobianRowWithLoops(CodeHandler<Base>& handler,
                                                   LoopModel<Base>& lModel,
@@ -923,7 +923,7 @@ protected:
                                                   const std::vector<std::map<size_t, CGBase> >& dzDx,
                                                   const CGBase& py,
                                                   IndexOperationNode<Base>& iterationIndexOp,
-                                                  CppAD::vector<loops::IfElseInfo<Base> >& ifElses,
+                                                  std::vector<loops::IfElseInfo<Base> >& ifElses,
                                                   size_t& jacLE,
                                                   std::vector<std::pair<CG<Base>, IndexPattern*> >& indexedLoopResults,
                                                   std::set<size_t>& allLocations);
@@ -932,7 +932,7 @@ protected:
                                                const std::vector<size_t>& cols,
                                                const std::vector<size_t>& location,
                                                SparsitySetType& noLoopEvalSparsity,
-                                               CppAD::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
+                                               std::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalLocations,
                                                std::map<LoopModel<Base>*, SparsitySetType>& loopsEvalSparsities,
                                                std::map<LoopModel<Base>*, std::vector<loops::JacobianWithLoopsRowInfo> >& loopEqInfo);
 
@@ -1017,20 +1017,20 @@ protected:
      * @param indVars The independent variables
      * @return the operation graph for the compressed jacobin with loops
      */
-    virtual CppAD::vector<CGBase> prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
-                                                                CppAD::vector<CGBase>& indVars,
-                                                                CppAD::vector<CGBase>& w,
-                                                                const std::vector<size_t>& lowerHessRows,
-                                                                const std::vector<size_t>& lowerHessCols,
-                                                                const std::vector<size_t>& lowerHessOrder,
-                                                                const std::map<size_t, size_t>& duplicates);
+    virtual std::vector<CGBase> prepareSparseHessianWithLoops(CodeHandler<Base>& handler,
+                                                              std::vector<CGBase>& indVars,
+                                                              std::vector<CGBase>& w,
+                                                              const std::vector<size_t>& lowerHessRows,
+                                                              const std::vector<size_t>& lowerHessCols,
+                                                              const std::vector<size_t>& lowerHessOrder,
+                                                              const std::map<size_t, size_t>& duplicates);
 
     inline void analyseSparseHessianWithLoops(const std::vector<size_t>& lowerHessRows,
                                               const std::vector<size_t>& lowerHessCols,
                                               const std::vector<size_t>& lowerHessOrder,
                                               SparsitySetType& noLoopEvalJacSparsity,
                                               SparsitySetType& noLoopEvalHessSparsity,
-                                              CppAD::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
+                                              std::vector<std::map<size_t, std::set<size_t> > >& noLoopEvalHessLocations,
                                               std::map<LoopModel<Base>*, loops::HessianWithLoopsInfo<Base> >& loopHessInfo,
                                               bool useSymmetry);
 
@@ -1078,13 +1078,13 @@ protected:
 
     virtual void createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
                                              size_t j,
-                                             CppAD::vector<CG<Base> >& jacCol);
+                                             std::vector<CG<Base> >& jacCol);
 
 
     inline static std::map<size_t, std::map<size_t, CG<Base> > > generateLoopFor1Jac(ADFun<CGBase>& fun,
                                                                                      const SparsitySetType& sparsity,
                                                                                      const SparsitySetType& evalSparsity,
-                                                                                     const CppAD::vector<CGBase>& xl,
+                                                                                     const std::vector<CGBase>& xl,
                                                                                      bool constainsAtomics);
 
     /***********************************************************************
@@ -1103,12 +1103,12 @@ protected:
 
     virtual void createReverseOneWithLoopsNL(CodeHandler<Base>& handler,
                                              size_t i,
-                                             CppAD::vector<CG<Base> >& jacRow);
+                                             std::vector<CG<Base> >& jacRow);
 
     inline static std::vector<std::map<size_t, CGBase> > generateLoopRev1Jac(ADFun<CGBase>& fun,
                                                                              const SparsitySetType& sparsity,
                                                                              const SparsitySetType& evalSparsity,
-                                                                             const CppAD::vector<CGBase>& xl,
+                                                                             const std::vector<CGBase>& xl,
                                                                              bool constainsAtomics);
 
     /***********************************************************************
@@ -1154,8 +1154,8 @@ protected:
      * @param sparsity The sparsity pattern to color
      * @return the colors
      */
-    inline CppAD::vector<ModelCSourceGen<Base>::Color> colorByRow(const std::set<size_t>& columns,
-                                                                  const SparsitySetType& sparsity);
+    inline std::vector<ModelCSourceGen<Base>::Color> colorByRow(const std::set<size_t>& columns,
+                                                                const SparsitySetType& sparsity);
 
     virtual void generateHessianSparsitySource();
 

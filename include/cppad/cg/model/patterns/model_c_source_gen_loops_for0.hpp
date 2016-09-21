@@ -23,18 +23,17 @@ namespace cg {
  **************************************************************************/
 
 template<class Base>
-CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
-                                                                         const CppAD::vector<CGBase>& x) {
+std::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHandler<Base>& handler,
+                                                                       const std::vector<CGBase>& x) {
     using namespace std;
     using namespace loops;
-    using CppAD::vector;
 
     size_t m = _fun.Range();
 
-    vector<CGBase> y(m);
+    std::vector<CGBase> y(m);
 
     // temporaries
-    vector<CGBase> tmps;
+    std::vector<CGBase> tmps;
 
     /**
      * original equations outside the loops 
@@ -42,7 +41,7 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
     if (_funNoLoops != nullptr) {
         const std::vector<size_t>& origEq = _funNoLoops->getOrigDependentIndexes();
 
-        vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
+        std::vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
 
         // original equations
         for (size_t e = 0; e < origEq.size(); e++) {
@@ -73,25 +72,25 @@ CppAD::vector<CG<Base> > ModelCSourceGen<Base>::prepareForward0WithLoops(CodeHan
         std::set<IndexOperationNode<Base>*> indexesOps;
         indexesOps.insert(iterationIndexOp);
 
-        vector<IfElseInfo<Base> > ifElses;
+        std::vector<IfElseInfo<Base> > ifElses;
 
         /**
          * evaluate the loop body
          */
-        vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
-        vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, *iterationIndexOp);
+        std::vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
         if (xl.size() == 0) {
             xl.resize(1); // does not depend on any variable but CppAD requires at least one
             xl[0] = Base(0);
         }
-        vector<CGBase> yl = lModel.getTape().Forward(0, xl);
+        std::vector<CGBase> yl = lModel.getTape().Forward(0, xl);
 
         /**
          * make the loop end
          */
         size_t assignOrAdd = 0;
 
-        const vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
+        const std::vector<IndexPattern*>& depPatterns = lModel.getDependentIndexPatterns();
         std::vector<std::pair<CGBase, IndexPattern*> > indexedLoopResults(yl.size());
         for (size_t i = 0; i < yl.size(); i++) {
             std::map<size_t, size_t> locationsIter2Pos;

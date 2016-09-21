@@ -689,6 +689,7 @@ public:
                                 std::vector<Base>& jac,
                                 std::vector<size_t>& row,
                                 std::vector<size_t>& col) = 0;
+
     virtual void SparseJacobian(const Base* x, size_t x_size,
                                 Base* jac,
                                 size_t const** row,
@@ -752,6 +753,7 @@ public:
                                std::vector<Base>& hess,
                                std::vector<size_t>& row,
                                std::vector<size_t>& col) = 0;
+
     virtual void SparseHessian(const Base* x, size_t x_size,
                                const Base* w, size_t w_size,
                                Base* hess,

@@ -78,7 +78,7 @@ protected:
     // (some IDs may be the same as the independent variables when dep = indep)
     std::map<size_t, size_t> _dependentIDs;
     // the dependent variable vector
-    const CppAD::vector<CG<Base> >* _dependent;
+    const ArrayWrapper<CG<Base> >* _dependent;
     // the temporary variables that may require a declaration
     std::map<size_t, OperationNode<Base>*> _temporary;
     // the operator used for assignment of dependent variables
@@ -561,7 +561,6 @@ protected:
 
     virtual void generateSourceCode(std::ostream& out,
                                     const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
-        using CppAD::vector;
 
         const bool createFunction = !_functionName.empty();
         const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != nullptr;
@@ -584,7 +583,7 @@ protected:
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
         _minTemporaryVarID = info->minTemporaryVarID;
-        const vector<CG<Base> >& dependent = info->dependent;
+        const ArrayWrapper<CG<Base> >& dependent = info->dependent;
         const std::vector<OperationNode<Base>*>& variableOrder = info->variableOrder;
 
         _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());

@@ -36,7 +36,7 @@ public:
     /**
      * The dependent variables
      */
-    const CppAD::vector<CG<Base> >& dependent;
+    const ArrayWrapper<CG<Base> >& dependent;
     /**
      * The lowest ID used for temporary variables
      */
@@ -108,7 +108,7 @@ public:
 public:
 
     LanguageGenerationData(const std::vector<Node *>& ind,
-                           const CppAD::vector<CG<Base> >& dep,
+                           const ArrayWrapper<CG<Base> >& dep,
                            size_t minTempVID,
                            const CodeHandlerVector<Base, size_t>& varIds,
                            const std::vector<Node*>& vo,

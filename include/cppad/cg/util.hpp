@@ -26,7 +26,7 @@ void zeroOrderDependency(ADFun<Base>& fun,
     CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size");
     CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size");
 
-    typedef CppAD::vector<std::set<size_t> > VectorSet;
+    typedef std::vector<std::set<size_t> > VectorSet;
 
     const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
 
@@ -41,7 +41,8 @@ void zeroOrderDependency(ADFun<Base>& fun,
 }
 
 template<class VectorSet>
-inline bool isIdentityPattern(const VectorSet& pattern, size_t mRows) {
+inline bool isIdentityPattern(const VectorSet& pattern,
+                              size_t mRows) {
     CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
     for (size_t i = 0; i < mRows; i++) {
@@ -53,7 +54,9 @@ inline bool isIdentityPattern(const VectorSet& pattern, size_t mRows) {
 }
 
 template<class VectorSet>
-inline VectorSet transposePattern(const VectorSet& pattern, size_t mRows, size_t nCols) {
+inline VectorSet transposePattern(const VectorSet& pattern,
+                                  size_t mRows,
+                                  size_t nCols) {
     CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
     VectorSet transpose(nCols);
@@ -66,7 +69,9 @@ inline VectorSet transposePattern(const VectorSet& pattern, size_t mRows, size_t
 }
 
 template<class VectorSet, class VectorSet2>
-inline void transposePattern(const VectorSet& pattern, size_t mRows, VectorSet2& transpose) {
+inline void transposePattern(const VectorSet& pattern,
+                             size_t mRows,
+                             VectorSet2& transpose) {
     CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
 
     for (size_t i = 0; i < mRows; i++) {
@@ -77,7 +82,8 @@ inline void transposePattern(const VectorSet& pattern, size_t mRows, VectorSet2&
 }
 
 template<class VectorSet, class VectorSet2>
-inline void transposePattern(const VectorSet& pattern, VectorSet2& transpose) {
+inline void transposePattern(const VectorSet& pattern,
+                             VectorSet2& transpose) {
     transposePattern<VectorSet, VectorSet2>(pattern, pattern.size(), transpose);
 }
 
@@ -110,7 +116,7 @@ inline void addMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void multMatrixMatrixSparsity(const VectorSet& a,
                                      const VectorSet2& b,
-                                     CppAD::vector< std::set<size_t> >& result,
+                                     CppAD::vector<std::set<size_t> >& result,
                                      size_t q) {
     multMatrixMatrixSparsity(a, b, result, a.size(), b.size(), q);
 }
@@ -131,7 +137,7 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void multMatrixMatrixSparsity(const VectorSet& a,
                                      const VectorSet2& b,
-                                     CppAD::vector< std::set<size_t> >& result,
+                                     CppAD::vector<std::set<size_t> >& result,
                                      size_t m,
                                      size_t n,
                                      size_t q) {
@@ -183,7 +189,7 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void multMatrixTransMatrixSparsity(const VectorSet& a,
                                           const VectorSet2& b,
-                                          CppAD::vector< std::set<size_t> >& result,
+                                          CppAD::vector<std::set<size_t> >& result,
                                           size_t m,
                                           size_t n,
                                           size_t q) {
@@ -254,7 +260,7 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
 template<class VectorSet, class VectorSet2>
 inline void multMatrixMatrixSparsityTrans(const VectorSet& aT,
                                           const VectorSet2& b,
-                                          CppAD::vector< std::set<size_t> >& rT,
+                                          CppAD::vector<std::set<size_t> >& rT,
                                           size_t m,
                                           size_t n,
                                           size_t q) {
@@ -364,7 +370,7 @@ void printSparsityPattern(const VectorSize& row,
                           const VectorSize& col,
                           const std::string& name,
                           size_t m) {
-    CppAD::vector<std::set<size_t> > sparsity(m);
+    std::vector<std::set<size_t> > sparsity(m);
     generateSparsitySet(row, col, sparsity);
     printSparsityPattern(sparsity, name);
 }
@@ -402,6 +408,16 @@ inline bool intersects(const std::set<size_t>& a,
  * @return The first code handler found or nullptr if none was found
  */
 template<class Base>
+inline CodeHandler<Base>* findHandler(const std::vector<CG<Base> >& ty) {
+    for (size_t i = 0; i < ty.size(); i++) {
+        if (ty[i].getCodeHandler() != nullptr) {
+            return ty[i].getCodeHandler();
+        }
+    }
+    return nullptr;
+}
+
+template<class Base>
 inline CodeHandler<Base>* findHandler(const CppAD::vector<CG<Base> >& ty) {
     for (size_t i = 0; i < ty.size(); i++) {
         if (ty[i].getCodeHandler() != nullptr) {
@@ -418,6 +434,15 @@ inline Argument<Base> asArgument(const CG<Base>& tx) {
     } else {
         return Argument<Base>(*tx.getOperationNode());
     }
+}
+
+template<class Base>
+inline std::vector<Argument<Base> > asArguments(const std::vector<CG<Base> >& tx) {
+    std::vector<Argument<Base> > arguments(tx.size());
+    for (size_t i = 0; i < arguments.size(); i++) {
+        arguments[i] = asArgument(tx[i]);
+    }
+    return arguments;
 }
 
 template<class Base>

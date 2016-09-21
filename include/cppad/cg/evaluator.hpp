@@ -48,7 +48,7 @@ protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
     CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
-    std::map<size_t, CppAD::vector<ActiveOut>* > evalsArrays_;
+    std::map<size_t, std::vector<ActiveOut>* > evalsArrays_;
     bool underEval_;
     size_t depth_;
     SourceCodePath path_;
@@ -198,8 +198,6 @@ protected:
     }
 
     inline const ActiveOut& evalOperations(OperationNode<ScalarIn>& node) {
-        using CppAD::vector;
-
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
 
         // check if this node was previously determined
@@ -228,8 +226,7 @@ protected:
         return *resultPtr;
     }
 
-    inline CppAD::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) {
-        using CppAD::vector;
+    inline std::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) {
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
@@ -241,7 +238,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        vector<ActiveOut>* resultArray = new vector<ActiveOut>(args.size());
+        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsArrays_[node.getHandlerPosition()] = resultArray;
@@ -439,7 +436,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
         CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
         size_t index = info[0];
-        CppAD::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
+        std::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
 
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
         thisOps.evalAtomicOperation(*args[1].getOperation()); // atomic operation

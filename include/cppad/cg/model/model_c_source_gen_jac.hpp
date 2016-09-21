@@ -20,7 +20,7 @@ namespace cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateJacobianSource() {
-    using CppAD::vector;
+    using std::vector;
 
     const std::string jobName = "Jacobian";
 
@@ -98,7 +98,7 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource() {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) {
-    using CppAD::vector;
+    using std::vector;
 
     const std::string jobName = "sparse Jacobian";
 

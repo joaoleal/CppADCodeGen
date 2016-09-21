@@ -59,21 +59,21 @@ class HessianRowGroup;
 class ArrayGroup;
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
-                                                          LoopModel<Base>& loop,
-                                                          IndexOperationNode<Base>& iterationIndexOp);
+inline std::vector<CG<Base> > createIndexedIndependents(CodeHandler<Base>& handler,
+                                                        LoopModel<Base>& loop,
+                                                        IndexOperationNode<Base>& iterationIndexOp);
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& handler,
-                                                            LoopModel<Base>& loop,
-                                                            const CppAD::vector<CG<Base> >& indexedIndeps,
-                                                            const CppAD::vector<CG<Base> >& nonIndexedIndeps,
-                                                            const CppAD::vector<CG<Base> >& nonIndexedTmps);
+inline std::vector<CG<Base> > createLoopIndependentVector(CodeHandler<Base>& handler,
+                                                          LoopModel<Base>& loop,
+                                                          const std::vector<CG<Base> >& indexedIndeps,
+                                                          const std::vector<CG<Base> >& nonIndexedIndeps,
+                                                          const std::vector<CG<Base> >& nonIndexedTmps);
 
 template<class Base>
-inline CppAD::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
-                                                          LoopModel<Base>& loop,
-                                                          IndexOperationNode<Base>& iterationIndexOp);
+inline std::vector<CG<Base> > createLoopDependentVector(CodeHandler<Base>& handler,
+                                                        LoopModel<Base>& loop,
+                                                        IndexOperationNode<Base>& iterationIndexOp);
 
 template<class Base>
 inline CG<Base> createLoopDependentFunctionResult(CodeHandler<Base>& handler,
@@ -97,7 +97,7 @@ inline bool findNonIndexedNodes(OperationNode<Base>& node,
                                 const OperationNode<Base>& loopIndex);
 
 template<class Base>
-inline IfElseInfo<Base>* findExistingIfElse(CppAD::vector<IfElseInfo<Base> >& ifElses,
+inline IfElseInfo<Base>* findExistingIfElse(std::vector<IfElseInfo<Base> >& ifElses,
                                             const std::map<SizeN1stIt, std::pair<size_t, std::set<size_t> > >& first2Iterations);
 
 inline std::vector<size_t> createIndexConditionExpression(const std::set<size_t>& iterations,
@@ -128,15 +128,15 @@ void generateFunctionDeclarationSourceLoopForRev(std::ostringstream& cache,
 
 template<class Base>
 inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
-                                  const CppAD::vector<CG<Base> >& x,
-                                  const CppAD::vector<CppAD::vector<CG<Base> > >& vw,
-                                  CppAD::vector<CG<Base> >& y,
-                                  const CppAD::vector<std::set<size_t> >& jacSparsity,
-                                  const CppAD::vector<std::set<size_t> >& jacEvalSparsity,
-                                  CppAD::vector<std::map<size_t, CG<Base> > >& jac,
-                                  const CppAD::vector<std::set<size_t> >& hesSparsity,
-                                  const CppAD::vector<std::set<size_t> >& hesEvalSparsity,
-                                  CppAD::vector<std::map<size_t, std::map<size_t, CG<Base> > > >& vhess,
+                                  const std::vector<CG<Base> >& x,
+                                  const std::vector<std::vector<CG<Base> > >& vw,
+                                  std::vector<CG<Base> >& y,
+                                  const std::vector<std::set<size_t> >& jacSparsity,
+                                  const std::vector<std::set<size_t> >& jacEvalSparsity,
+                                  std::vector<std::map<size_t, CG<Base> > >& jac,
+                                  const std::vector<std::set<size_t> >& hesSparsity,
+                                  const std::vector<std::set<size_t> >& hesEvalSparsity,
+                                  std::vector<std::map<size_t, std::map<size_t, CG<Base> > > >& vhess,
                                   bool constainsAtomics);
 
 } // END loops namespace

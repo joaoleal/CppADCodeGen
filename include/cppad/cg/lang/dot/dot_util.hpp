@@ -35,7 +35,7 @@ inline void printDotExpression(CG<Base>& dep,
         LanguageDot<double> langDot;
         LangCDefaultVariableNameGenerator<double> nameGen;
 
-        CppAD::vector<CG<Base> > depv(1);
+        std::vector<CG<Base> > depv(1);
         depv[0] = dep;
 
         std::ostringstream code;

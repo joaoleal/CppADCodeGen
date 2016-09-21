@@ -44,7 +44,7 @@ private:
     /**
      * Hessian sparsity pattern of the tape
      */
-    CppAD::vector<std::set<size_t> > hessTapeSparsity_;
+    std::vector<std::set<size_t> > hessTapeSparsity_;
     bool hessSparsity_;
     /**
      * indexed Hessian elements
@@ -79,8 +79,6 @@ public:
     }
 
     inline void evalHessianSparsity() {
-        using CppAD::vector;
-
         if (hessSparsity_) {
             return; // already evaluated
         }
@@ -94,7 +92,7 @@ public:
 
         ADFun<CGB>& fun = model->getTape();
 
-        hessTapeSparsity_ = hessianSparsitySet<vector<std::set<size_t> >, CGB>(fun, tapeI);
+        hessTapeSparsity_ = hessianSparsitySet<std::vector<std::set<size_t> >, CGB>(fun, tapeI);
 
         /**
          * make a database of the Hessian elements
@@ -175,7 +173,7 @@ public:
 
     }
 
-    inline const CppAD::vector<std::set<size_t> >& getHessianSparsity() const {
+    inline const std::vector<std::set<size_t> >& getHessianSparsity() const {
         return hessTapeSparsity_;
     }
 

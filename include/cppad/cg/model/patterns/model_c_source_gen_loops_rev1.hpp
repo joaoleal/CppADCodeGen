@@ -31,7 +31,7 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
+
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
     size_t n = _fun.Domain();
@@ -53,9 +53,9 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
 
     size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
-    vector<set<size_t> > noLoopEvalSparsity;
-    vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
-    map<LoopModel<Base>*, vector<set<size_t> > > loopsEvalSparsities;
+    std::vector<set<size_t> > noLoopEvalSparsity;
+    std::vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
+    map<LoopModel<Base>*, std::vector<set<size_t> > > loopsEvalSparsities;
     map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> > loopEqInfo;
 
     size_t nnz = _jacSparsity.rows.size();
@@ -80,7 +80,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
     analyseSparseJacobianWithLoops(rows, cols, locations,
                                    noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
 
-    vector<CGBase> x(n);
+    std::vector<CGBase> x(n);
     handler.makeVariables(x);
     if (_x.size() > 0) {
         for (size_t i = 0; i < n; i++) {
@@ -102,7 +102,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
      * original equations outside the loops 
      */
     // temporaries (zero orders)
-    vector<CGBase> tmps;
+    std::vector<CGBase> tmps;
 
     // jacobian for temporaries
     std::vector<map<size_t, CGBase> > dzDx(_funNoLoops != nullptr ? _funNoLoops->getTemporaryDependentCount() : 0);
@@ -116,7 +116,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
         /**
          * zero order
          */
-        vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
+        std::vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
 
         tmps.resize(depNL.size() - nonIndexdedEqSize);
         for (size_t i = 0; i < tmps.size(); i++)
@@ -129,13 +129,13 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
         std::vector<map<size_t, CGBase> > dydx = generateLoopRev1Jac(fun, _funNoLoops->getJacobianSparsity(), noLoopEvalSparsity, x, hasAtomics);
 
         const std::vector<size_t>& dependentIndexes = _funNoLoops->getOrigDependentIndexes();
-        map<size_t, vector<CGBase> > jacNl; // by row
+        map<size_t, std::vector<CGBase> > jacNl; // by row
 
         for (size_t inl = 0; inl < nonIndexdedEqSize; inl++) {
             size_t i = dependentIndexes[inl];
 
             // prepare space for the jacobian of the original equations
-            vector<CGBase>& row = jacNl[i];
+            std::vector<CGBase>& row = jacNl[i];
             row.resize(dydx[inl].size());
 
             for (const auto& itjv : dydx[inl]) {
@@ -165,7 +165,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
         /**
          * Create source for each variable present in equations outside loops
          */
-        typename map<size_t, vector<CGBase> >::iterator itJ;
+        typename map<size_t, std::vector<CGBase> >::iterator itJ;
         for (itJ = jacNl.begin(); itJ != jacNl.end(); ++itJ) {
             createReverseOneWithLoopsNL(handler, itJ->first, itJ->second);
         }
@@ -191,8 +191,8 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
          */
         startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
-        vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
-        vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
+        std::vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
 
         bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
         std::vector<map<size_t, CGBase> > dyiDxtape = generateLoopRev1Jac(fun, lModel.getJacobianSparsity(), loopsEvalSparsities[&lModel], xl, hasAtomics);
@@ -231,7 +231,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
             indexedLoopResults.resize(maxRowEls);
             size_t jacLE = 0;
 
-            vector<IfElseInfo<Base> > ifElses;
+            std::vector<IfElseInfo<Base> > ifElses;
 
             prepareSparseJacobianRowWithLoops(handler, lModel,
                                               tapeI, rowInfo,
@@ -241,7 +241,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
                                               jacLE, indexedLoopResults, allLocations);
             indexedLoopResults.resize(jacLE);
 
-            vector<CGBase> pxCustom(indexedLoopResults.size());
+            std::vector<CGBase> pxCustom(indexedLoopResults.size());
 
             for (size_t i = 0; i < indexedLoopResults.size(); i++) {
                 const CGBase& val = indexedLoopResults[i].first;
@@ -356,7 +356,7 @@ void ModelCSourceGen<Base>::prepareSparseReverseOneWithLoops(const std::map<size
 template<class Base>
 void ModelCSourceGen<Base>::createReverseOneWithLoopsNL(CodeHandler<Base>& handler,
                                                         size_t i,
-                                                        CppAD::vector<CG<Base> >& jacRow) {
+                                                        std::vector<CG<Base> >& jacRow) {
     size_t n = _fun.Domain();
 
     _cache.str("");
@@ -383,23 +383,22 @@ template<class Base>
 std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev1Jac(ADFun<CGBase>& fun,
                                                                                      const SparsitySetType& sparsity,
                                                                                      const SparsitySetType& evalSparsity,
-                                                                                     const CppAD::vector<CGBase>& x,
+                                                                                     const std::vector<CGBase>& x,
                                                                                      bool constainsAtomics) {
     using namespace std;
-    using CppAD::vector;
 
     size_t m = fun.Range();
 
     std::vector<map<size_t, CGBase> > dyDx(m);
 
     if (!constainsAtomics) {
-        vector<size_t> row, col;
+        std::vector<size_t> row, col;
         generateSparsityIndexes(evalSparsity, row, col);
 
         if (row.size() == 0)
             return dyDx; // nothing to do
 
-        vector<CGBase> jacLoop(row.size());
+        std::vector<CGBase> jacLoop(row.size());
 
         CppAD::sparse_jacobian_work work; // temporary structure for CppAD
         fun.SparseJacobianReverse(x, sparsity, row, col, jacLoop, work);
@@ -413,7 +412,7 @@ std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev
 
     } else {
 
-        vector<CGBase> w(m);
+        std::vector<CGBase> w(m);
 
         for (size_t i = 0; i < m; i++) {
             const set<size_t>& row = evalSparsity[i];
@@ -424,7 +423,7 @@ std::vector<std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopRev
             fun.Forward(0, x);
 
             w[i] = Base(1);
-            vector<CGBase> dw = fun.Reverse(1, w);
+            std::vector<CGBase> dw = fun.Reverse(1, w);
             CPPADCG_ASSERT_UNKNOWN(dw.size() == fun.Domain());
             w[i] = Base(0);
 

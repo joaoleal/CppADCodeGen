@@ -89,20 +89,20 @@ private:
     /**
      * index patterns for the indexed independent variables
      */
-    CppAD::vector<IndexPattern*> indepIndexPatterns_;
+    std::vector<IndexPattern*> indepIndexPatterns_;
     /**
      * index pattern for the dependent variables
      */
-    CppAD::vector<IndexPattern*> depIndexPatterns_;
+    std::vector<IndexPattern*> depIndexPatterns_;
     /**
      * Jacobian sparsity pattern of the tape
      */
-    CppAD::vector<std::set<size_t> > jacTapeSparsity_;
+    std::vector<std::set<size_t> > jacTapeSparsity_;
     bool jacSparsity_;
     /**
      * Hessian sparsity pattern of the tape
      */
-    CppAD::vector<std::set<size_t> > hessTapeSparsity_;
+    std::vector<std::set<size_t> > hessTapeSparsity_;
     bool hessSparsity_;
 public:
 
@@ -417,11 +417,11 @@ public:
         }
     }
 
-    inline const CppAD::vector<IndexPattern*>& getDependentIndexPatterns() const {
+    inline const std::vector<IndexPattern*>& getDependentIndexPatterns() const {
         return depIndexPatterns_;
     }
 
-    inline const CppAD::vector<IndexPattern*>& getIndependentIndexPatterns() const {
+    inline const std::vector<IndexPattern*>& getIndependentIndexPatterns() const {
         return indepIndexPatterns_;
     }
 
@@ -438,25 +438,23 @@ public:
 
     inline void evalJacobianSparsity() {
         if (!jacSparsity_) {
-            jacTapeSparsity_ = jacobianSparsitySet<CppAD::vector<std::set<size_t> >, CGB>(*fun_);
+            jacTapeSparsity_ = jacobianSparsitySet<std::vector<std::set<size_t> >, CGB>(*fun_);
             jacSparsity_ = true;
         }
     }
 
-    inline const CppAD::vector<std::set<size_t> >& getJacobianSparsity() const {
+    inline const std::vector<std::set<size_t> >& getJacobianSparsity() const {
         return jacTapeSparsity_;
     }
 
     inline void evalHessianSparsity() {
-        using CppAD::vector;
-
         if (!hessSparsity_) {
             size_t n = fun_->Domain();
             hessTapeSparsity_.resize(n);
 
             for (size_t g = 0; g < equationGroups_.size(); g++) {
                 equationGroups_[g].evalHessianSparsity();
-                const vector<std::set<size_t> >& ghess = equationGroups_[g].getHessianSparsity();
+                const std::vector<std::set<size_t> >& ghess = equationGroups_[g].getHessianSparsity();
                 for (size_t j = 0; j < n; j++) {
                     hessTapeSparsity_[j].insert(ghess[j].begin(), ghess[j].end());
                 }
@@ -466,7 +464,7 @@ public:
         }
     }
 
-    inline const CppAD::vector<std::set<size_t> >& getHessianSparsity() const {
+    inline const std::vector<std::set<size_t> >& getHessianSparsity() const {
         return hessTapeSparsity_;
     }
 

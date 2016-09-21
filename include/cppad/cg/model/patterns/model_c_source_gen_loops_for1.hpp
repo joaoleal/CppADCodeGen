@@ -26,7 +26,6 @@ template<class Base>
 void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size_t, std::vector<size_t> >& elements) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
     size_t n = _fun.Domain();
@@ -52,9 +51,9 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
     size_t nonIndexdedEqSize = _funNoLoops != nullptr ? _funNoLoops->getOrigDependentIndexes().size() : 0;
 
-    vector<set<size_t> > noLoopEvalSparsity;
-    vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
-    map<LoopModel<Base>*, vector<set<size_t> > > loopsEvalSparsities;
+    std::vector<set<size_t> > noLoopEvalSparsity;
+    std::vector<map<size_t, set<size_t> > > noLoopEvalLocations; // tape equation -> original J -> locations
+    map<LoopModel<Base>*, std::vector<set<size_t> > > loopsEvalSparsities;
     map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> > loopEqInfo;
 
     size_t nnz = _jacSparsity.rows.size();
@@ -79,7 +78,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     analyseSparseJacobianWithLoops(rows, cols, locations,
                                    noLoopEvalSparsity, noLoopEvalLocations, loopsEvalSparsities, loopEqInfo);
 
-    vector<CGBase> x(n);
+    std::vector<CGBase> x(n);
     handler.makeVariables(x);
     if (_x.size() > 0) {
         for (size_t i = 0; i < n; i++) {
@@ -101,7 +100,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
      * original equations outside the loops 
      */
     // temporaries (zero orders)
-    vector<CGBase> tmps;
+    std::vector<CGBase> tmps;
 
     // Jacobian for temporaries
     map<size_t, map<size_t, CGBase> > dzDx;
@@ -115,7 +114,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
         /**
          * zero order
          */
-        vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
+        std::vector<CGBase> depNL = _funNoLoops->getTape().Forward(0, x);
 
         tmps.resize(depNL.size() - nonIndexdedEqSize);
         for (size_t i = 0; i < tmps.size(); i++)
@@ -130,13 +129,13 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                                                                       noLoopEvalSparsity,
                                                                       x, hasAtomics);
 
-        map<size_t, vector<CGBase> > jacNl; // by column
+        map<size_t, std::vector<CGBase> > jacNl; // by column
         for (const pair<size_t, map<size_t, CGBase> >& itDydxT : dydxT) {
             size_t j = itDydxT.first;
             const map<size_t, CGBase>& dydxjT = itDydxT.second;
 
             // prepare space for the Jacobian of the original equations
-            vector<CGBase>& col = jacNl[j];
+            std::vector<CGBase>& col = jacNl[j];
             col.resize(elements.at(j).size());
 
             for (const pair<size_t, CGBase>& itiv : dydxjT) {
@@ -164,7 +163,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
         /**
          * Create source for each variable present in equations outside loops
          */
-        typename map<size_t, vector<CGBase> >::iterator itJ;
+        typename map<size_t, std::vector<CGBase> >::iterator itJ;
         for (itJ = jacNl.begin(); itJ != jacNl.end(); ++itJ) {
             size_t j = itJ->first;
             if (_nonLoopFor1Elements.find(j) != _nonLoopFor1Elements.end()) // make sure there are elements
@@ -193,8 +192,8 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
          */
         startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
-        vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
-        vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
+        std::vector<CGBase> indexedIndeps = createIndexedIndependents(handler, lModel, iterationIndexOp);
+        std::vector<CGBase> xl = createLoopIndependentVector(handler, lModel, indexedIndeps, x, tmps);
 
         bool hasAtomics = isAtomicsUsed(); // TODO: improve this by checking only the current fun
         map<size_t, map<size_t, CGBase> > dyiDxtapeT = generateLoopFor1Jac(fun,
@@ -309,7 +308,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
             _loopFor1Groups[&lModel][g] = jcol2CompressedLoc;
 
             LoopEndOperationNode<Base>* loopEnd = nullptr;
-            vector<CGBase> pxCustom;
+            std::vector<CGBase> pxCustom;
             if (createsLoop) {
                 /**
                  * make the loop end
@@ -422,7 +421,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 template<class Base>
 void ModelCSourceGen<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handler,
                                                         size_t j,
-                                                        CppAD::vector<CG<Base> >& jacCol) {
+                                                        std::vector<CG<Base> >& jacCol) {
     size_t n = _fun.Domain();
 
     _cache.str("");
@@ -514,7 +513,7 @@ public:
     // all iterations
     std::set<size_t> iterations;
     // if-else branches
-    CppAD::vector<IfElseInfo<Base> > ifElses;
+    std::vector<IfElseInfo<Base> > ifElses;
 public:
 
     inline JacobianColGroup(const JacobianTermContrib<Base>& c,
@@ -533,7 +532,6 @@ void generateForOneColumnGroups(const LoopModel<Base>& lModel,
                                 SmartVectorPointer<JacobianColGroup<Base> >& loopGroups) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
 
     /**
      * group columns with the same contribution terms
@@ -711,7 +709,6 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
                                                                             std::map<size_t, std::set<size_t> >& jcol2CompressedLoc) {
     using namespace std;
     using namespace CppAD::cg::loops;
-    using CppAD::vector;
 
     typedef CG<Base> CGBase;
 
@@ -852,23 +849,22 @@ template<class Base>
 std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLoopFor1Jac(ADFun<CGBase>& fun,
                                                                                           const SparsitySetType& sparsity,
                                                                                           const SparsitySetType& evalSparsity,
-                                                                                          const CppAD::vector<CGBase>& x,
+                                                                                          const std::vector<CGBase>& x,
                                                                                           bool constainsAtomics) {
     using namespace std;
-    using CppAD::vector;
 
     size_t n = fun.Domain();
 
     map<size_t, map<size_t, CGBase> > dyDxT;
 
     if (!constainsAtomics) {
-        vector<size_t> row, col;
+        std::vector<size_t> row, col;
         generateSparsityIndexes(evalSparsity, row, col);
 
         if (row.size() == 0)
             return dyDxT; // nothing to do
 
-        vector<CGBase> jacLoop(row.size());
+        std::vector<CGBase> jacLoop(row.size());
 
         CppAD::sparse_jacobian_work work; // temporary structure for CppAD
         fun.SparseJacobianForward(x, sparsity, row, col, jacLoop, work);
@@ -882,10 +878,10 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
 
     } else {
         //transpose
-        vector<set<size_t> > evalSparsityT(n);
+        std::vector<set<size_t> > evalSparsityT(n);
         transposePattern(evalSparsity, evalSparsityT);
 
-        vector<CGBase> dx(n);
+        std::vector<CGBase> dx(n);
 
         for (size_t j = 0; j < n; j++) {
             const set<size_t>& column = evalSparsityT[j];
@@ -896,7 +892,7 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
             fun.Forward(0, x);
 
             dx[j] = Base(1);
-            vector<CGBase> dy = fun.Forward(1, dx);
+            std::vector<CGBase> dy = fun.Forward(1, dx);
             CPPADCG_ASSERT_UNKNOWN(dy.size() == fun.Range());
             dx[j] = Base(0);
 

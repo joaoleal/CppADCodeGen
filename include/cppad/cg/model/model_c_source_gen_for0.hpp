@@ -20,8 +20,6 @@ namespace cg {
 
 template<class Base>
 void ModelCSourceGen<Base>::generateZeroSource() {
-    using CppAD::vector;
-
     const std::string jobName = "model (zero-order forward)";
 
     startingJob("'" + jobName + "'", JobTimer::GRAPH);
@@ -29,7 +27,7 @@ void ModelCSourceGen<Base>::generateZeroSource() {
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
 
-    vector<CGBase> indVars(_fun.Domain());
+    std::vector<CGBase> indVars(_fun.Domain());
     handler.makeVariables(indVars);
     if (_x.size() > 0) {
         for (size_t i = 0; i < indVars.size(); i++) {
@@ -37,7 +35,7 @@ void ModelCSourceGen<Base>::generateZeroSource() {
         }
     }
 
-    vector<CGBase> dep;
+    std::vector<CGBase> dep;
 
     if (_loopTapes.empty()) {
         dep = _fun.Forward(0, indVars);

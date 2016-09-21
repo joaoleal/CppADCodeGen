@@ -79,7 +79,6 @@ protected:
      *       method is not virtual (hides a method in EvaluatorOperations)
      */
     inline void evalAtomicOperation(OperationNode<ScalarIn>& node) {
-        using CppAD::vector;
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
             return;
@@ -117,8 +116,8 @@ protected:
         if (p != 0) {
             throw CGException("Evaluator can only handle zero forward mode for atomic functions");
         }
-        const vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
-        vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
+        const std::vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
+        std::vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
 
         (*atomicFunction)(ax, ay);
 
