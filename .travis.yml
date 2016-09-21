@@ -45,7 +45,7 @@ install:
   - mkdir build
   - mkdir install
   - cd build
-  - cmake -Dcppad_prefix:PATH=../install ..
+  - cmake -Dcppad_prefix:PATH=../install -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" ..
   - make install
   - cd ../../..
     
