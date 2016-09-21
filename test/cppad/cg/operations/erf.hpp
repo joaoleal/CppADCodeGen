@@ -29,7 +29,7 @@ CppAD::ADFun<T>* ErfTestFunc(const std::vector<CppAD::AD<T> >& x) {
     y[0] = erf(x[0]);
 
     // create f: x -> y and vectors used for derivative calculations
-    return new ADFun<T > (x, y);
+    return new ADFun<T> (x, y);
 }
 
 #endif
