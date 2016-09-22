@@ -262,7 +262,7 @@ public:
 
     inline bool isVisited(const Node& node) const;
 
-    inline void markVisited(Node& node);
+    inline void markVisited(const Node& node);
 
     /**
      * Provides the name used by an atomic function with a given ID.

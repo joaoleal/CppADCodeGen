@@ -168,7 +168,7 @@ inline bool CodeHandler<Base>::isVisited(const Node& node) const {
 }
 
 template<class Base>
-inline void CodeHandler<Base>::markVisited(Node& node) {
+inline void CodeHandler<Base>::markVisited(const Node& node) {
     _lastVisit.adjustSize(node);
     _lastVisit[node] = _idVisit;
 }

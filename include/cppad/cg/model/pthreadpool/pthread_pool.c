@@ -160,9 +160,9 @@ void cppadcg_thpool_update_order(double elapsed[],
         order[elapsed2[i].index] = nJobs - i - 1; // descending order
     }
 
-    for (i = 0; i < nJobs; ++i) {
-        fprintf(stderr, "order  %i  %e\n", order[i], elapsed[i]);
-    }
+    //for (i = 0; i < nJobs; ++i) {
+    //    fprintf(stderr, "order  %i  %e\n", order[i], elapsed[i]);
+    //}
 }
 
 void cppadcg_thpool_set_disabled(int disabled) {
