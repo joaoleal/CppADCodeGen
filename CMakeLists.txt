@@ -22,9 +22,14 @@ SET(cppadcg_version      "2.1.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
-# some additional cmake modules
+# ----------------------------------------------------------------------------
+#                      some additional cmake modules
+# ----------------------------------------------------------------------------
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
+# ----------------------------------------------------------------------------
+#                          find dependencies
+# ----------------------------------------------------------------------------
 FIND_PACKAGE(Threads REQUIRED)
 
 FIND_PACKAGE(CppAD REQUIRED)
@@ -73,18 +78,24 @@ INCLUDE(cmake/cppcheck.cmake)
 INCLUDE(cmake/util.cmake)
 INCLUDE(cmake/textfile2h.cmake)
 
-################################################################################
-#                              Includes
-################################################################################
+# ----------------------------------------------------------------------------
+#                                 Options
+# ----------------------------------------------------------------------------
+OPTION(ENABLE_TEST_CPPCHECKS "Use CppCheck to verify source code in tests (very lengthy task!)" OFF)
+OPTION(ENABLE_THREAD_POOL_TESTS "Enables tests for thread pool" ON)
+
+# ----------------------------------------------------------------------------
+#                                 Includes
+# ----------------------------------------------------------------------------
 INCLUDE_DIRECTORIES(${CPPAD_INCLUDE_DIRS} "${CMAKE_SOURCE_DIR}/include" "${CMAKE_BINARY_DIR}/include" ${DL_INCLUDE_DIRS})
 
 IF(EIGEN3_FOUND)
     INCLUDE_DIRECTORIES(${EIGEN3_INCLUDE_DIR})
 ENDIF()
 
-################################################################################
-#         General installation information
-################################################################################
+# ----------------------------------------------------------------------------
+#                     General installation information
+# ----------------------------------------------------------------------------
 IF(UNIX)
     SET(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install path prefix")
 ENDIF()
@@ -95,9 +106,9 @@ SET(install_library_pkg_location     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
 
 
-################################################################################
-# Define some optional compiler flags
-################################################################################
+# ----------------------------------------------------------------------------
+#                    Define some optional compiler flags
+# ----------------------------------------------------------------------------
 IF(CMAKE_VERSION VERSION_GREATER "3.1.0")
     # aim for this version which has explicit support for c++11
     SET(CMAKE_CXX_STANDARD 11)
@@ -128,9 +139,9 @@ IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(CMAKE_CXX_FLAGS_RELWITHDEBINFO "-O2 -g -ggdb -DNDEBUG -D_FORTIFY_SOURCE=2")
 ENDIF()
 
-################################################################################
+# ----------------------------------------------------------------------------
 # Currently building tests as normal executables
-################################################################################
+# ----------------------------------------------------------------------------
 ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(example EXCLUDE_FROM_ALL)
 #ADD_SUBDIRECTORY(introduction EXCLUDE_FROM_ALL)
@@ -140,5 +151,4 @@ ADD_SUBDIRECTORY(doc)
 
 # enable testing must be called here in order for the target test to be created
 ENABLE_TESTING()
-OPTION(ENABLE_TEST_CPPCHECKS "Use CppCheck to verify source code in tests (very lengthy task!)" OFF)
 ADD_SUBDIRECTORY(test EXCLUDE_FROM_ALL)

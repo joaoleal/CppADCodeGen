@@ -26,5 +26,10 @@ IF( UNIX )
     add_cppadcg_test(dynamic_cond_exp.cpp)
     add_cppadcg_test(dynamic_forward_reverse.cpp)
     add_cppadcg_test(dynamic_forward_reverse_2.cpp)
-    add_cppadcg_test(threadpool.cpp)
+
+    IF ( ENABLE_THREAD_POOL_TESTS )
+        add_cppadcg_test(threadpool.cpp)
+        #add_cppadcg_test(threadpool_distillation.cpp)
+    ENDIF()
+
 ENDIF()

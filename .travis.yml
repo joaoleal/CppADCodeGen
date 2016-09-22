@@ -52,7 +52,7 @@ install:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF ..
+  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF -DENABLE_THREAD_POOL_TESTS=OFF ..
   - cd test
   - make
   - make test
