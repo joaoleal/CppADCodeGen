@@ -188,6 +188,21 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return cppadcg_thpool_get_threads();\n";
         _cache << "}\n\n";
         sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";
+        _cache << "   cppadcg_thpool_set_scheduler_strategy(s);\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "enum group_strategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
+        _cache << "   return cppadcg_thpool_get_scheduler_strategy();\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_GETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
+
     } else {
         _cache.str("");
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
@@ -204,6 +219,19 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return 1;\n";
         _cache << "}\n\n";
         sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_SETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
+
+        _cache.str("");
+        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << "enum group_strategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
+        _cache << "   return SINGLE_ORDERED;\n";
+        _cache << "}\n\n";
+        sources[FUNCTION_GETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
     }
 }
 
