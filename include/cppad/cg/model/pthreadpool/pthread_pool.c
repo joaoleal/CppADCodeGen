@@ -94,14 +94,16 @@ void cppadcg_thpool_prepare() {
 void cppadcg_thpool_add_job(thpool_function_type function,
                             void* arg,
                             double* elapsed) {
-    if(cppadcg_pool_disabled) {
-        (*function)(arg);
-    } else {
-        if (cppadcg_pool == NULL) {
-            cppadcg_thpool_prepare();
+    if (!cppadcg_pool_disabled) {
+        cppadcg_thpool_prepare();
+        if (cppadcg_pool != NULL) {
+            thpool_add_job(cppadcg_pool, function, arg, elapsed);
+            return;
         }
-        thpool_add_job(cppadcg_pool, function, arg, elapsed);
     }
+
+    // thread pool not used
+    (*function)(arg);
 }
 
 void cppadcg_thpool_add_jobs(thpool_function_type functions[],
@@ -110,15 +112,17 @@ void cppadcg_thpool_add_jobs(thpool_function_type functions[],
                              int order[],
                              int nJobs) {
     int i;
-    if (cppadcg_pool_disabled) {
-        for (i = 0; i < nJobs; ++i) {
-            (*functions[i])(args[i]);
+    if (!cppadcg_pool_disabled) {
+        cppadcg_thpool_prepare();
+        if (cppadcg_pool != NULL) {
+            thpool_add_jobs(cppadcg_pool, functions, args, elapsed, order, nJobs);
+            return;
         }
-    } else {
-        if (cppadcg_pool == NULL) {
-            cppadcg_thpool_prepare();
-        }
-        thpool_add_jobs(cppadcg_pool, functions, args, elapsed, order, nJobs);
+    }
+
+    // thread pool not used
+    for (i = 0; i < nJobs; ++i) {
+        (*functions[i])(args[i]);
     }
 }
 
@@ -284,6 +288,13 @@ struct thpool_* thpool_init(int num_threads) {
         num_threads = 0;
     }
 
+    //fprintf(stdout, "thpool_init(): Using %i threads\n", num_threads);
+
+    if(num_threads == 0) {
+        cppadcg_pool_disabled = 1; // true
+        return NULL;
+    }
+
     /* Make new thread pool */
     thpool_* thpool_p;
     thpool_p = (struct thpool_*) malloc(sizeof(struct thpool_));
@@ -297,7 +308,7 @@ struct thpool_* thpool_init(int num_threads) {
     thpool_p->threads_on_hold = 0;
     thpool_p->threads_keepalive = 1;
 
-    /* Initialise the job queue */
+    /* Initialize the job queue */
     if (jobqueue_init(thpool_p) == -1) {
         fprintf(stderr, "thpool_init(): Could not allocate memory for job queue\n");
         free(thpool_p);

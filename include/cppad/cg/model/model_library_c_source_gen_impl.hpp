@@ -42,10 +42,10 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS = "cppad_cg_get_thread_number";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADSCHEDULERSTRAT = "cppadcg_thpool_set_scheduler_strategy";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADSCHEDULERSTRAT = "cppad_cg_thpool_set_scheduler_strategy";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT = "cppadcg_thpool_get_scheduler_strategy";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT = "cppad_cg_thpool_get_scheduler_strategy";
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::CONST = "const";
