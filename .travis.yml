@@ -17,8 +17,8 @@ addons:
     - libclang-3.4-dev
     - llvm-3.4-dev
     - clang-3.4
-    - gcc-4.8
-    - g++-4.8
+    - gcc-5
+    - g++-5
     - cmake
     - libgtest-dev
     - gdb
@@ -31,7 +31,7 @@ env:
     - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20160000.1/install/include
 
 before_install:
-  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-4.8)" CXX="$(which g++-4.8)"; fi
+  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
 #  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.4)" CXX="$(which clang++-3.4)"; fi
     
 install:
