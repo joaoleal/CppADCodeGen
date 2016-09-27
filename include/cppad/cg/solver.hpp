@@ -96,10 +96,10 @@ inline CG<Base> CodeHandler<Base>::solveFor(const SourceCodePath& path) {
             }
             case CGOpCode::Div:
                 if (argIndex == 0) {
-                    const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
+                    const Argument<Base>& other = args[1];
                     rightHs *= CG<Base>(other);
                 } else {
-                    const Argument<Base>& other = args[argIndex == 0 ? 1 : 0];
+                    const Argument<Base>& other = args[0];
                     rightHs = CG<Base>(other) / rightHs;
                 }
                 break;

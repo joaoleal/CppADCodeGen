@@ -462,6 +462,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     if (_jobTimer != nullptr) {
         _jobTimer->finishedJob();
     } else if (_verbose) {
+        OStreamConfigRestore osr(std::cout);
         duration<float> dt = steady_clock::now() - beginTime;
         std::cout << "done [" << std::fixed << std::setprecision(3) << dt.count() << "]" << std::endl;
     }

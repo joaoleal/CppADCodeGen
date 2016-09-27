@@ -39,15 +39,6 @@ protected:
     void (*_setSchedulerStrategy)(int);
     int (*_getSchedulerStrategy)();
 public:
-    inline LlvmModelLibrary() :
-            _onClose(nullptr),
-            _setThreadPoolDisabled(nullptr),
-            _setThreads(nullptr),
-            _getThreads(nullptr),
-            _setSchedulerStrategy(nullptr),
-            _getSchedulerStrategy(nullptr) {
-    }
-
     virtual std::set<std::string> getModelNames() override {
         return _modelNames;
     }
@@ -104,6 +95,15 @@ public:
     }
 
 protected:
+    inline LlvmModelLibrary() :
+            _version(0), // not really required (but it avoids warnings)
+            _onClose(nullptr),
+            _setThreadPoolDisabled(nullptr),
+            _setThreads(nullptr),
+            _getThreads(nullptr),
+            _setSchedulerStrategy(nullptr),
+            _getSchedulerStrategy(nullptr) {
+    }
 
     inline void cleanUp() {
         for (LlvmModel<Base>* model : _models) {

@@ -352,7 +352,7 @@ bool LanguageC<Base>::isOffsetBy(const LinearIndexPattern* lIp,
                                  const LinearIndexPattern* refLIp,
                                  long offset) {
 
-    if (refLIp == nullptr || refLIp == nullptr)
+    if (lIp == nullptr || refLIp == nullptr)
         return false; // different pattern type
 
     return isOffsetBy(*lIp, *refLIp, offset);

@@ -40,7 +40,7 @@ public:
     bool closed;
 public:
 
-    inline FDHandler() : closed(true) {
+    inline FDHandler() : fd(0), closed(true) {
     }
 
     inline explicit FDHandler(int fd) : fd(fd), closed(false) {
@@ -263,12 +263,15 @@ inline void callExecutable(const std::string& executable,
     //Wait for the executable to exit
     int status;
     // Read message from the child
-    std::string message;
+    std::ostringstream message;
+    size_t size = 0;
     char buffer[128];
     do {
-        while (read(pipeMsg.read.fd, buffer, sizeof (buffer)) > 0) {
-            message += buffer;
-            if (message.size() > 1e4) break;
+        ssize_t n;
+        while ((n = read(pipeMsg.read.fd, buffer, sizeof (buffer))) > 0) {
+            message.write(buffer, n);
+            size += n;
+            if (size > 1e4) break;
         }
 
         if (waitpid(pid, &status, 0) < 0) {
@@ -279,24 +282,24 @@ inline void callExecutable(const std::string& executable,
     pipeMsg.read.close();
 
     if (!writeError.empty()) {
-        std::stringstream s;
+        std::ostringstream s;
         s << "Failed to write to pipe";
-        if (!message.empty()) s << ": " << message;
+        if (size > 0) s << ": " << message.str();
         else s << ": " << writeError;
         throw CGException(s.str());
     }
 
     if (WIFEXITED(status)) {
         if (WEXITSTATUS(status) != EXIT_SUCCESS) {
-            std::stringstream s;
+            std::ostringstream s;
             s << "Executable '" << executable << "' (pid " << pid << ") exited with code " << WEXITSTATUS(status);
-            if (!message.empty()) s << ": " << message;
+            if (size > 0) s << ": " << message.str();
             throw CGException(s.str());
         }
     } else if (WIFSIGNALED(status)) {
-        std::stringstream s;
+        std::ostringstream s;
         s << "Executable '" << executable << "' (pid " << pid << ") terminated by signal " << WTERMSIG(status);
-        if (!message.empty()) s << ": " << message;
+        if (size > 0) s << ": " << message.str();
         throw CGException(s.str());
     }
 }

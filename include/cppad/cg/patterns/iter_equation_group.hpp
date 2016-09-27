@@ -74,6 +74,7 @@ private:
 public:
 
     inline IterEquationGroup() :
+        index(std::numeric_limits<size_t>::max()), // not really required
         model(nullptr),
         hessSparsity_(false) {
     }

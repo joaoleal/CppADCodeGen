@@ -34,7 +34,7 @@ public:
         CPPADCG_ASSERT_UNKNOWN(node1 == nullptr || node1->getInfo().size() == 1);
         CPPADCG_ASSERT_UNKNOWN(node2 == nullptr || node2->getInfo().size() == 1);
         CPPADCG_ASSERT_UNKNOWN(node1 == nullptr || node1->getOperationType() == CGOpCode::Inv);
-        CPPADCG_ASSERT_UNKNOWN(node2 == nullptr || node1->getOperationType() == CGOpCode::Inv);
+        CPPADCG_ASSERT_UNKNOWN(node2 == nullptr || node2->getOperationType() == CGOpCode::Inv);
 
         // some variables are not used in all iterations
         if (node1 == nullptr) {
@@ -50,9 +50,7 @@ public:
         size_t index2 = node2->getInfo()[0];
         if (index1 < index2)
             return true;
-        else if (index1 > index2)
-            return false;
-        else
+        else //if (index1 >= index2)
             return false;
     }
 

@@ -57,7 +57,12 @@ public:
         _indepName(indepName),
         _tmpName(tmpName),
         _tmpArrayName(tmpArrayName),
-        _tmpSparseArrayName(tmpSparseArrayName) {
+        _tmpSparseArrayName(tmpSparseArrayName),
+        _minTemporaryID(0), // not really required (but it avoids warnings)
+        _maxTemporaryID(0), // not really required (but it avoids warnings)
+        _maxTemporaryArrayID(0), // not really required (but it avoids warnings)
+        _maxTemporarySparseArrayID(0) { // not really required (but it avoids warnings)
+
         this->_independent.push_back(FuncArgument(_indepName));
         this->_dependent.push_back(FuncArgument(_depName));
         this->_temporary.push_back(FuncArgument(_tmpName));

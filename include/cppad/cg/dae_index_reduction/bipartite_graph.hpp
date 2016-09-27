@@ -442,7 +442,7 @@ public:
                 CPPADCG_ASSERT_UNKNOWN(vnodes_[j->index()] == j);
 
                 if (j->derivative() == nullptr) {
-                    vnodes_.erase(vnodes_.begin() + j->index());
+                    vnodes_.erase(vnodes_.cbegin() + j->index());
 
                     // update variable indices
                     for (size_t jj = j->index(); jj < vnodes_.size(); ++jj) {

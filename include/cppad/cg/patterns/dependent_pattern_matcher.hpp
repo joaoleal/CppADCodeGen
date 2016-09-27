@@ -413,7 +413,7 @@ private:
                     }
                     loop1->merge(*loop2, indexedLoopRelations, nonIndexedLoopRelations);
 
-                    typename std::vector<Loop<Base>*>::iterator it = std::find(loops_.begin(), loops_.end(), loop2);
+                    typename std::vector<Loop<Base>*>::const_iterator it = std::find(loops_.cbegin(), loops_.cend(), loop2);
                     CPPADCG_ASSERT_UNKNOWN(it != loops_.end());
                     loops_.erase(it);
                     delete loop2;

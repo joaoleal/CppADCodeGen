@@ -165,7 +165,8 @@ public:
         iterationCount_(0), // not known yet (only after all equations have been added)
         eqGroups_(1),
         nIndependents_(0),
-        loopModel_(nullptr) {
+        loopModel_(nullptr),
+        idCounter_(0) { // not really required (but it avoids warnings)
         //indexedOpIndep(eq.indexedOpIndep), // must be determined later for a different reference
         //constOperationIndependents(eq.constOperationIndependents) {
         equations.insert(&eq);
@@ -459,7 +460,7 @@ public:
 
                         EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
                         std::vector<size_t>& eq2FreeDep = freeDependents[eq2];
-                        auto itFreeDep2 = find(eq2FreeDep.begin(), eq2FreeDep.end(), dep2); // consider using lower_bound instead
+                        auto itFreeDep2 = find(eq2FreeDep.cbegin(), eq2FreeDep.cend(), dep2); // consider using lower_bound instead
                         CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.end());
 
                         eq2FreeDep.erase(itFreeDep2);

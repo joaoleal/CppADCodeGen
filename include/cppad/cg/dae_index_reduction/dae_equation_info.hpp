@@ -57,7 +57,11 @@ public:
         explicit_(false) {
     }
 
-    inline DaeEquationInfo(size_t id, int originalIndex, int derivativeOf, int assignedVarIndex, bool explicitEq = false) :
+    inline DaeEquationInfo(size_t id,
+                           int originalIndex,
+                           int derivativeOf,
+                           int assignedVarIndex,
+                           bool explicitEq = false) :
         id_(id),
         originalIndex_(originalIndex),
         antiDerivative_(derivativeOf),

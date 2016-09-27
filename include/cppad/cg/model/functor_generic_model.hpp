@@ -847,6 +847,7 @@ protected:
         _name(name),
         _m(0),
         _n(0),
+        _atomicFuncArg{nullptr}, // not really required
         _missingAtomicFunctions(0),
         _zero(nullptr),
         _forwardOne(nullptr),

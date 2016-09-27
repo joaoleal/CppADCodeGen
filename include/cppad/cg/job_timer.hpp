@@ -264,6 +264,8 @@ public:
         _jobs.push_back(Job(type, jobName));
 
         if (_verbose) {
+            OStreamConfigRestore osr(std::cout);
+
             Job& job = _jobs.back();
 
             size_t indent = 0;
@@ -303,6 +305,8 @@ public:
         std::chrono::steady_clock::duration elapsed = steady_clock::now() - job.beginTime();
 
         if (_verbose) {
+            OStreamConfigRestore osr(std::cout);
+
             if (job._nestedJobs) {
                 _os.str("");
                 if (!_jobs.empty())

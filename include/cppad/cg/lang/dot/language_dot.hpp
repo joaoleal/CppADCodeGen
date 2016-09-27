@@ -74,12 +74,14 @@ public:
             _info(nullptr),
             _endline("\n"),
             _nameGen(nullptr),
-            _independentSize(0),
+            _independentSize(0), // not really required (but it avoids warnings)
+            _minTemporaryVarID(0), // not really required (but it avoids warnings)
             _dependent(nullptr),
             _ignoreZeroDepAssign(false),
             _filename("algorithm"),
             _parameterPrecision(std::numeric_limits<Base>::digits10),
-            _combineParameterNodes(true) {
+            _combineParameterNodes(true),
+            parIdx_(0) { // not really required (but it avoids warnings)
     }
 
     inline virtual ~LanguageDot() {

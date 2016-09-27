@@ -127,7 +127,8 @@ public:
         _outArgName("out"),
         _atomicArgName("atomicFun"),
         _nameGen(nullptr),
-        _independentSize(0),
+        _independentSize(0), // not really required (but it avoids warnings)
+        _minTemporaryVarID(0), // not really required (but it avoids warnings)
         _dependent(nullptr),
         _depAssignOperation("="),
         _ignoreZeroDepAssign(false),

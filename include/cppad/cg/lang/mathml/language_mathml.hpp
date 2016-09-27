@@ -147,7 +147,8 @@ public:
         _multValOpStr("<mo>&times;</mo>"),
         _endline("\n"),
         _nameGen(nullptr),
-        _independentSize(0),
+        _independentSize(0), // not really required (but it avoids warnings)
+        _minTemporaryVarID(0), // not really required (but it avoids warnings)
         _dependent(nullptr),
         _ignoreZeroDepAssign(false),
         _filename("algorithm"),
