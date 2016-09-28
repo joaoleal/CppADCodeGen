@@ -11,9 +11,9 @@ addons:
     - llvm-toolchain-precise
     packages:
     - libeigen3-dev
-    - libclang-3.8-dev
-    - llvm-3.8-dev
-    - clang-3.8
+    - libclang-3.4-dev
+    - llvm-3.4-dev
+    - clang-3.4
     - cmake
     - libgtest-dev
     - gdb
@@ -27,7 +27,7 @@ env:
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
-  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.8)" CXX="$(which clang++-3.8)"; fi
+#  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.8)" CXX="$(which clang++-3.8)"; fi
     
 install:
   - mkdir cppadcg_deps
@@ -54,21 +54,3 @@ script:
 
 os:
   - linux
-
-matrix:
-  include:
-    - compiler: gcc
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - gcc-5
-            - g++-5
-    - compiler: clang
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - clang-3.8 # gcc 5 is not compatible with clang
