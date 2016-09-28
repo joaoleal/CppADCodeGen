@@ -51,6 +51,8 @@ public:
 
         system::createFolder(sourcesFolder);
 
+        this->validateModels();
+
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
 
         for (const auto& itm : models) {

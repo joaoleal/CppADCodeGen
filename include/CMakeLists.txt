@@ -23,4 +23,4 @@ INSTALL( DIRECTORY "cppad/cg/"
 INSTALL(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cppad/cg.hpp"
 	    DESTINATION "${install_cppadcg_include_location}/" )
 
-ADD_SUBDIRECTORY(cppad/cg/model/pthreadpool)
+ADD_SUBDIRECTORY(cppad/cg/model/threadpool)

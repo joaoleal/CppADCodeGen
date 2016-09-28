@@ -19,8 +19,8 @@
 extern "C" {
 #endif
 
-enum group_strategy {SINGLE_ORDERED,
-                     MULTI_HALF_TIME};
+enum group_strategy {SINGLE_JOB,
+                     MULTI_JOB};
 
 typedef void (*cppadcg_thpool_function_type)(void*);
 
@@ -29,9 +29,26 @@ void cppadcg_thpool_set_threads(int n);
 
 int cppadcg_thpool_get_threads();
 
+
 void cppadcg_thpool_set_scheduler_strategy(enum group_strategy s);
 
 enum group_strategy cppadcg_thpool_get_scheduler_strategy();
+
+
+void cppadcg_thpool_set_multijob_maxgroupwork(float v);
+
+float cppadcg_thpool_get_multijob_maxgroupwork();
+
+
+void cppadcg_thpool_set_verbose(int v);
+
+int cppadcg_thpool_is_verbose();
+
+
+void cppadcg_thpool_set_disabled(int disabled);
+
+int cppadcg_thpool_is_disabled();
+
 
 void cppadcg_thpool_prepare();
 
@@ -50,10 +67,6 @@ void cppadcg_thpool_wait();
 void cppadcg_thpool_update_order(double elapsed[],
                                  int order[],
                                  int nJobs);
-
-void cppadcg_thpool_set_disabled(int disabled);
-
-int cppadcg_thpool_is_disabled();
 
 void cppadcg_thpool_shutdown();
 

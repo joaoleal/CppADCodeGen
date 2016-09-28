@@ -190,6 +190,7 @@
 #include <cppad/cg/lang/c/lang_c_util.hpp>
 
 //
+#include <cppad/cg/model/threadpool/multi_threading_type.hpp>
 #include <cppad/cg/model/external_function_wrapper.hpp>
 #include <cppad/cg/model/atomic_external_function_wrapper.hpp>
 #include <cppad/cg/model/generic_model_external_function_wrapper.hpp>
@@ -211,8 +212,10 @@
 #include <cppad/cg/model/compiler/clang_compiler.hpp>
 
 // model source code generation helpers
-#include <cppad/cg/model/pthreadpool/pthread_pool_c.hpp>
-#include <cppad/cg/model/pthreadpool/pthread_pool_h.hpp>
+#include <cppad/cg/model/threadpool/pthread_pool_c.hpp>
+#include <cppad/cg/model/threadpool/pthread_pool_h.hpp>
+#include <cppad/cg/model/threadpool/openmp_c.hpp>
+#include <cppad/cg/model/threadpool/openmp_h.hpp>
 #include <cppad/cg/model/model_c_source_gen.hpp>
 #include <cppad/cg/model/model_c_source_gen_impl.hpp>
 #include <cppad/cg/model/model_library_c_source_gen.hpp>

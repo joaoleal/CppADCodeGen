@@ -48,6 +48,18 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT = "cppad_cg_thpool_get_scheduler_strategy";
 
 template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLVERBOSE = "cppad_cg_thpool_set_verbose";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE = "cppad_cg_thpool_is_verbose";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_set_multijob_maxgroupwork";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_get_multijob_maxgroupwork";
+
+template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::CONST = "const";
 
 template<class Base>
@@ -90,10 +102,14 @@ const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibra
         generateThreadPoolSources(_libSources);
 
         for(const auto& it : _models) {
-            if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
-                it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
-                _libSources["thread_pool.c"] = CPPADCG_THREAD_POOL_C_FILE;
-                break;
+            if (it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) {
+                if(it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+                    _libSources["thread_pool.c"] = CPPADCG_PTHREAD_POOL_C_FILE;
+                    break;
+                } else if(it.second->getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+                    _libSources["thread_pool.c"] = CPPADCG_OPENMP_C_FILE;
+                    break;
+                }
             }
         }
 
@@ -145,7 +161,7 @@ void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, s
 
     _cache.str("");
     if (pthreads) {
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n\n";
     }
     _cache << "void " << FUNCTION_ONCLOSE << "() {\n";
     if (pthreads) {
@@ -159,79 +175,149 @@ void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, s
 template<class Base>
 void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::string, std::string>& sources) {
     bool pthreads = false;
+    bool openmp = false;
+
     for (const auto& it : _models) {
-        if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
-            it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
-            pthreads = true;
-            break;
+        if (it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) {
+            if (it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+                pthreads = true;
+            } else if (it.second->getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+                openmp = true;
+            }
         }
+    }
+
+    if (pthreads && openmp) {
+        throw CGException("Cannot mix OpenMP and PThreads multithreading in the same model library");
     }
 
     if (pthreads) {
         _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
+        _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
         _cache << "   cppadcg_thpool_set_disabled(disabled);\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADPOOLDISABLED + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
         _cache << "   cppadcg_thpool_set_threads(n);\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADS + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
         _cache << "   return cppadcg_thpool_get_threads();\n";
         _cache << "}\n\n";
-        sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";
         _cache << "   cppadcg_thpool_set_scheduler_strategy(s);\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "enum group_strategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
         _cache << "   return cppadcg_thpool_get_scheduler_strategy();\n";
         _cache << "}\n\n";
-        sources[FUNCTION_GETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";
+        _cache << "   cppadcg_thpool_set_verbose(v);\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLVERBOSE << "() {\n";
+        _cache << "   return cppadcg_thpool_is_verbose();\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
+        _cache << "   cppadcg_thpool_set_multijob_maxgroupwork(v);\n";
+        _cache << "}\n\n";
+
+        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "   return cppadcg_thpool_get_multijob_maxgroupwork();\n";
+        _cache << "}\n\n";
+
+        sources["thread_pool_access.c"] = _cache.str();
+
+    } else if(openmp) {
+        _cache.str("");
+        _cache << "#include <omp.h>\n";
+        _cache << CPPADCG_OPENMP_H_FILE << "\n\n";
+        _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
+        _cache << "   cppadcg_openmp_set_disabled(disabled);\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
+        _cache << "   omp_set_num_threads(n);\n";
+        _cache << "}\n\n";
+
+        _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
+        _cache << "   return omp_get_num_threads();\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";
+        _cache << "   if(s == SINGLE_JOB) {\n";
+        _cache << "       omp_set_schedule(omp_sched_dynamic, 1);\n";
+        _cache << "   } else {\n";
+        _cache << "       omp_set_schedule(omp_sched_guided, 0);\n";
+        _cache << "   }\n";
+        _cache << "}\n\n";
+
+        _cache << "enum group_strategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
+        _cache << "   enum omp_sched_t kind;\n";
+        _cache << "   int modifier;\n";
+        _cache << "   omp_get_schedule(&kind, &modifier);\n";
+        _cache << "   if(kind == SINGLE_JOB) {\n";
+        _cache << "       return SINGLE_JOB;\n";
+        _cache << "   } else {\n";
+        _cache << "       return MULTI_JOB;\n";
+        _cache << "   }\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLVERBOSE << "() {\n";
+        _cache << "   return 0;\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
+        _cache << "}\n\n";
+
+        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "}\n\n";
+
+        sources["thread_pool_access.c"] = _cache.str();
 
     } else {
         _cache.str("");
+        _cache << "enum group_strategy {SINGLE_JOB, MULTI_JOB};\n"
+                "\n";
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADPOOLDISABLED + ".c"] = _cache.str();
 
-        _cache.str("");
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADS + ".c"] = _cache.str();
 
-        _cache.str("");
         _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
         _cache << "   return 1;\n";
         _cache << "}\n\n";
-        sources[FUNCTION_GETTHREADS + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";
         _cache << "}\n\n";
-        sources[FUNCTION_SETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
 
-        _cache.str("");
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n\n";
         _cache << "enum group_strategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
-        _cache << "   return SINGLE_ORDERED;\n";
+        _cache << "   return SINGLE_JOB;\n";
         _cache << "}\n\n";
-        sources[FUNCTION_GETTHREADSCHEDULERSTRAT + ".c"] = _cache.str();
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLVERBOSE << "() {\n";
+        _cache << "   return 0;\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
+        _cache << "}\n\n";
+
+        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "   return 1.0;\n";
+        _cache << "}\n\n";
+
+        sources["thread_pool_access.c"] = _cache.str();
     }
 }
 

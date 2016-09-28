@@ -58,6 +58,7 @@ public:
      * @return a model library
      */
     LlvmModelLibrary<Base>* create() {
+        this->validateModels();
 #if 0
         llvm::sys::Path clangPath = llvm::sys::Program::FindProgramByName("clang");
         // Arguments to pass to the clang driver:

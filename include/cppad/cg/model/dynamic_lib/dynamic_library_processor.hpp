@@ -104,6 +104,8 @@ public:
 
         this->modelLibraryHelper_->startingJob("", JobTimer::DYNAMIC_MODEL_LIBRARY);
 
+        this->validateModels();
+
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         try {
             for (const auto& p : models) {
@@ -160,6 +162,8 @@ public:
         OStreamConfigRestore coutb(std::cout);
 
         this->modelLibraryHelper_->startingJob("", JobTimer::STATIC_MODEL_LIBRARY);
+
+        this->validateModels();
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         try {

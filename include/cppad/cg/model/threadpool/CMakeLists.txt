@@ -16,14 +16,23 @@
 # ----------------------------------------------------------------------------
 # files to be installed
 # ----------------------------------------------------------------------------
-# transform javascript file into C byte arrays
+# transform text file into C byte arrays
 textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/pthread_pool.c"
 		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_c.hpp"
-		   VARIABLE_NAME "CPPADCG_THREAD_POOL_C_FILE")
+		   VARIABLE_NAME "CPPADCG_PTHREAD_POOL_C_FILE")
 textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/pthread_pool.h"
 		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_h.hpp"
-		   VARIABLE_NAME "CPPADCG_THREAD_POOL_H_FILE")
+		   VARIABLE_NAME "CPPADCG_PTHREAD_POOL_H_FILE")
+
+textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/openmp.c"
+		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/openmp_c.hpp"
+		   VARIABLE_NAME "CPPADCG_OPENMP_C_FILE")
+textfile2h(SOURCE_FILE "${CMAKE_CURRENT_SOURCE_DIR}/openmp.h"
+		   HEADER_FILE "${CMAKE_CURRENT_BINARY_DIR}/openmp_h.hpp"
+		   VARIABLE_NAME "CPPADCG_OPENMP_H_FILE")
 
 INSTALL( FILES "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_c.hpp"
 		       "${CMAKE_CURRENT_BINARY_DIR}/pthread_pool_h.hpp"
-		DESTINATION "${install_cppadcg_include_location}/cg/model/pthreadpool/")
+		       "${CMAKE_CURRENT_BINARY_DIR}/openmp_c.hpp"
+		       "${CMAKE_CURRENT_BINARY_DIR}/openmp_h.hpp"
+		DESTINATION "${install_cppadcg_include_location}/cg/model/threadpool/")

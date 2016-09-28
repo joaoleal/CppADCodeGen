@@ -18,12 +18,6 @@
 namespace CppAD {
 namespace cg {
 
-enum class MultiThreadingType {
-    NONE, // no multithreading
-    OPENMP, // using the OpenMP library (does not work on dynamically loaded model libraries)
-    PTHREADS // using the PThreads library
-};
-
 /**
  * Auxiliary internal class
  */

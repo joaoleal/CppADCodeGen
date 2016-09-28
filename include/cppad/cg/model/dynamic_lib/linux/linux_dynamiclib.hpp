@@ -41,6 +41,10 @@ protected:
     unsigned int (*_getThreads)();
     void (*_setSchedulerStrategy)(int);
     int (*_getSchedulerStrategy)();
+    void (*_setThreadPoolVerbose)(int v);
+    int (*_isThreadPoolVerbose)();
+    void (*_setThreadPoolMultiJobMaxWork)(float v);
+    float (*_getThreadPoolMultiJobMaxWork)();
     std::set<std::string> _modelNames;
     std::set<LinuxDynamicLibModel<Base>*> _models;
 public:
@@ -53,7 +57,11 @@ public:
         _setThreads(nullptr),
         _getThreads(nullptr),
         _setSchedulerStrategy(nullptr),
-        _getSchedulerStrategy(nullptr) {
+        _getSchedulerStrategy(nullptr),
+        _setThreadPoolVerbose(nullptr),
+        _isThreadPoolVerbose(nullptr),
+        _setThreadPoolMultiJobMaxWork(nullptr),
+        _getThreadPoolMultiJobMaxWork(nullptr) {
 
         std::string path;
         if (dynLibName[0] == '/') {
@@ -126,6 +134,32 @@ public:
         }
     }
 
+    virtual void setThreadPoolVerbose(bool v) override {
+        if (_setThreadPoolVerbose != nullptr) {
+            (*_setThreadPoolVerbose)(int(v));
+        }
+    }
+
+    virtual bool isThreadPoolVerbose() override {
+        if (_isThreadPoolVerbose != nullptr) {
+            return bool((*_isThreadPoolVerbose)());
+        }
+        return false;
+    }
+
+    virtual void setThreadPoolMultiJobMaxWork(float v) override {
+        if (_setThreadPoolMultiJobMaxWork != nullptr) {
+            (*_setThreadPoolMultiJobMaxWork)(v);
+        }
+    }
+
+    virtual float getThreadPoolMultiJobMaxWork() override {
+        if (_getThreadPoolMultiJobMaxWork != nullptr) {
+            return (*_getThreadPoolMultiJobMaxWork)();
+        }
+        return 1.0;
+    }
+
     virtual void* loadFunction(const std::string& functionName, bool required = true) override {
         void* functor = dlsym(_dynLibHandle, functionName.c_str());
 
@@ -195,6 +229,10 @@ protected:
         _getThreads = reinterpret_cast<decltype(_getThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
         _setSchedulerStrategy = reinterpret_cast<decltype(_setSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADSCHEDULERSTRAT, false));
         _getSchedulerStrategy = reinterpret_cast<decltype(_getSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT, false));
+        _setThreadPoolVerbose = reinterpret_cast<decltype(_setThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLVERBOSE, false));
+        _isThreadPoolVerbose = reinterpret_cast<decltype(_isThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE, false));
+        _setThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_setThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
+        _getThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_getThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
 
         if(_setThreads != nullptr) {
             (*_setThreads)(std::thread::hardware_concurrency());

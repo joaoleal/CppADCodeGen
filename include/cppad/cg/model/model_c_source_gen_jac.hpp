@@ -375,7 +375,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
      */
     if(_multithread == MultiThreadingType::PTHREADS) {
         _cache << "\n";
-        _cache << CPPADCG_THREAD_POOL_H_FILE << "\n";
+        _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n";
         _cache << "\n";
         _cache << "typedef struct ExecArgStruct {\n"
                 "   cppadcg_function_type func;\n"
@@ -388,6 +388,11 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
                 "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
                 "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
                 "}\n";
+
+    } else if (_multithread == MultiThreadingType::OPENMP) {
+        _cache << "\n";
+        _cache << CPPADCG_OPENMP_H_FILE << "\n";
+        _cache << "\n";
     }
 
     /**
@@ -427,14 +432,16 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
             "\n";
 
     if(_multithread == MultiThreadingType::OPENMP) {
-        _cache << "#pragma omp parallel for private(outLocal)\n"
+        _cache << "int enabled = cppadcg_openmp_is_disabled();\n"
+                "\n"
+                "#pragma omp parallel for private(outLocal) if(enabled)\n"
                 "   for(i = 0; i < " << jacInfo.size() << "; ++i) {\n"
                 "      outLocal[0] = &jac[offset[i]];\n"
                 "      (*p[i])(" << argsLocal << ");\n"
                 "   }\n"
                 "\n";
-    } else {
 
+    } else {
         auto repeatFill = [&](const std::string& txt){
             _cache << "{";
             for (const auto& it : jacInfo) {

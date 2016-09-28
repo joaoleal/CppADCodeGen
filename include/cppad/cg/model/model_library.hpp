@@ -93,6 +93,14 @@ public:
      */
     virtual void setThreadPoolSchedulerStrategy(ThreadPoolScheduleStrategy s) = 0;
 
+    virtual void setThreadPoolVerbose(bool v) = 0;
+
+    virtual bool isThreadPoolVerbose() = 0;
+
+    virtual void setThreadPoolMultiJobMaxWork(float v) = 0;
+
+    virtual float getThreadPoolMultiJobMaxWork() = 0;
+
     inline virtual ~ModelLibrary() {
     }
 

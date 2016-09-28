@@ -43,7 +43,23 @@ protected:
     }
 
     inline const std::map<std::string, std::string>& getSources(ModelCSourceGen<Base>& model) {
+        validateModels();
         return model.getSources(modelLibraryHelper_);
+    }
+
+    void validateModels() const {
+        MultiThreadingType type = MultiThreadingType::NONE;
+        for (const auto& it : modelLibraryHelper_->getModels()) {
+            if (it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) {
+                if (type != it.second->getMultiThreadedingType()) {
+                    if (type == MultiThreadingType::NONE) {
+                        type = it.second->getMultiThreadedingType();
+                    } else {
+                        throw CGException("Cannot mix OpenMP and PThreads multithreading in the same model library");
+                    }
+                }
+            }
+        }
     }
 
 };
