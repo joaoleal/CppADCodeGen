@@ -460,8 +460,9 @@ public:
 
                         EquationPattern<Base>* eq2 = dep2Equation.at(dep2);
                         std::vector<size_t>& eq2FreeDep = freeDependents[eq2];
-                        auto itFreeDep2 = find(eq2FreeDep.cbegin(), eq2FreeDep.cend(), dep2); // consider using lower_bound instead
-                        CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.end());
+                        typename std::vector<size_t>::const_iterator itFreeDep2;
+                        itFreeDep2 = std::find(eq2FreeDep.cbegin(), eq2FreeDep.cend(), dep2); // consider using lower_bound instead
+                        CPPADCG_ASSERT_UNKNOWN(itFreeDep2 != eq2FreeDep.cend());
 
                         eq2FreeDep.erase(itFreeDep2);
                     }
