@@ -61,7 +61,8 @@ public:
         handler_(handler),
         indep_(nullptr),
         evals_(handler),
-        underEval_(false) {
+        underEval_(false),
+        depth_(0) { // not really required (but it avoids warnings)
     }
 
     /**
