@@ -8,6 +8,7 @@ addons:
     sources:
     - kubuntu-backports
     - ubuntu-toolchain-r-test
+    - llvm-toolchain-precise
     packages:
     - libeigen3-dev
     - libclang-3.8-dev
