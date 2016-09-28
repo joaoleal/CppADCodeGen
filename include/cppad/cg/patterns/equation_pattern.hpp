@@ -88,10 +88,6 @@ private:
     size_t currDep_;
     size_t minColor_;
     size_t cmpColor_;
-    /**
-     * a unique index
-     */
-    size_t index_;
 public:
 
     explicit EquationPattern(const CG<Base>& ref,
