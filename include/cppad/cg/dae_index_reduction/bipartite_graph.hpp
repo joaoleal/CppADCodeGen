@@ -152,7 +152,7 @@ public:
         }
 
         stringstream ss;
-        for (int order = 0; order <= origMaxTimeDivOrder_; order++) {
+        for (int order = -1; order <= origMaxTimeDivOrder_; order++) {
             //size_t j = 0; j < varInfo_.size(); j++
             const vector<size_t>& tapeIndexes = order2Tape[order];
             if (order < 0) {
