@@ -1,5 +1,9 @@
 language: cpp
 
+compiler:
+  - clang
+  - gcc
+
 # use travis-ci docker based infrastructure
 sudo: false
 
@@ -8,12 +12,14 @@ addons:
     sources:
     - kubuntu-backports
     - ubuntu-toolchain-r-test
-    - llvm-toolchain-precise
+    #- llvm-toolchain-precise # for clang-3.8
     packages:
     - libeigen3-dev
     - libclang-3.4-dev
     - llvm-3.4-dev
     - clang-3.4
+    - gcc-5
+    - g++-5
     - cmake
     - libgtest-dev
     - gdb
