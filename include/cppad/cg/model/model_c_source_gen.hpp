@@ -394,7 +394,7 @@ public:
      *
      * @return whether or not multithreading can be used for this model
      */
-    inline bool getMultiThreading() const {
+    inline bool isMultiThreading() const {
         return _multiThreading;
     }
 
@@ -408,8 +408,8 @@ public:
      * For the sparse Hessian, the _sparseHessianReusesRev2 and _reverseTwo
      * must be enabled and loop detection must be disabled.
      *
-     * @param multithread whether or not multithreading can be used for this
-     *                    model
+     * @param multiThreading whether or not multithreading can be used for this
+     *                       model
      */
     inline void setMultiThreading(bool multiThreading) {
         _multiThreading = multiThreading;
