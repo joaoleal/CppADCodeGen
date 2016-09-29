@@ -59,7 +59,7 @@ script:
   - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF -DENABLE_THREAD_POOL_TESTS=OFF ..
   - cd test
   - make
-  - make test
+  - CTEST_OUTPUT_ON_FAILURE=TRUE make test
 
 os:
   - linux
