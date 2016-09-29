@@ -21,7 +21,13 @@ namespace cg {
 
 template<class Base>
 DynamicLib<Base>* DynamicModelLibraryProcessor<Base>::loadDynamicLibrary() {
-    return new LinuxDynamicLib<Base> (_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
+    const auto it = _options.find("dlOpenMode");
+    if (it == _options.end()) {
+        return new LinuxDynamicLib<Base>(_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION);
+    } else {
+        int dlOpenMode = std::stoi(it->second);
+        return new LinuxDynamicLib<Base>(_libraryName + system::SystemInfo<>::DYNAMIC_LIB_EXTENSION, dlOpenMode);
+    }
 }
 
 } // END cg namespace

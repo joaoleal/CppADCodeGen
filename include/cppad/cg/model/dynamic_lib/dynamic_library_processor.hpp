@@ -35,6 +35,10 @@ protected:
      * a custom extension for the dynamic library (e.g. ".so.1")
      */
     const std::string* _customLibExtension;
+    /**
+     * System dependent custom options
+     */
+    std::map<std::string, std::string> _options;
 public:
 
     /**
@@ -87,6 +91,20 @@ public:
     inline void removeCustomLibraryExtension() {
         delete _customLibExtension;
         _customLibExtension = nullptr;
+    }
+
+    /**
+     * System dependent custom options
+     */
+    inline std::map<std::string, std::string>& getOptions() {
+        return _options;
+    }
+
+    /**
+     * System dependent custom options
+     */
+    inline const std::map<std::string, std::string>& getOptions() const {
+        return _options;
     }
 
     /**

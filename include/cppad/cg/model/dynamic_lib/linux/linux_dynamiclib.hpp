@@ -49,7 +49,8 @@ protected:
     std::set<LinuxDynamicLibModel<Base>*> _models;
 public:
 
-    LinuxDynamicLib(const std::string& dynLibName) :
+    LinuxDynamicLib(const std::string& dynLibName,
+                    int dlOpenMode = RTLD_NOW) :
         _dynLibName(dynLibName),
         _dynLibHandle(nullptr),
         _onClose(nullptr),
@@ -74,7 +75,7 @@ public:
         }
 
         // load the dynamic library
-        _dynLibHandle = dlopen(path.c_str(), RTLD_NOW);
+        _dynLibHandle = dlopen(path.c_str(), dlOpenMode);
         CPPADCG_ASSERT_KNOWN(_dynLibHandle != nullptr, ("Failed to dynamically load library '" + dynLibName + "': " + dlerror()).c_str());
 
         // validate the dynamic library
