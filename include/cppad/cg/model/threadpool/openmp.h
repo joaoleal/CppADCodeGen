@@ -25,6 +25,12 @@ void cppadcg_openmp_set_disabled(int disabled);
 
 int cppadcg_openmp_is_disabled();
 
+
+void cppadcg_openmp_set_threads(unsigned int n);
+
+unsigned int cppadcg_openmp_get_threads();
+
+
 #ifdef __cplusplus
 }
 #endif

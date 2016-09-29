@@ -242,11 +242,11 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
-        _cache << "   omp_set_num_threads(n);\n";
+        _cache << "   cppadcg_openmp_set_threads(n);\n";
         _cache << "}\n\n";
 
         _cache << "unsigned int " << FUNCTION_GETTHREADS << "() {\n";
-        _cache << "   return omp_get_num_threads();\n";
+        _cache << "   return cppadcg_openmp_get_threads();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum group_strategy s) {\n";

@@ -1204,6 +1204,8 @@ protected:
     static void printFunctionEndPThreads(std::ostringstream& cache,
                                          size_t size);
 
+    static void printFunctionStartOpenMP(std::ostringstream& cache,
+                                         size_t size);
     /**
      * 
      */

@@ -13,7 +13,10 @@
  * Author: Joao Leal
  */
 
+#include <omp.h>
+
 static volatile int cppadcg_openmp_enabled = 1; // false
+static volatile unsigned int cppadcg_openmp_n_threads = 2;
 
 void cppadcg_openmp_set_disabled(int disabled) {
     cppadcg_openmp_enabled = !disabled;
@@ -21,4 +24,14 @@ void cppadcg_openmp_set_disabled(int disabled) {
 
 int cppadcg_openmp_is_disabled() {
     return !cppadcg_openmp_enabled;
+}
+
+void cppadcg_openmp_set_threads(unsigned int n) {
+    if(n <= 0)
+        n = 1;
+    cppadcg_openmp_n_threads = n;
+}
+
+unsigned int cppadcg_openmp_get_threads() {
+    return cppadcg_openmp_n_threads;
 }

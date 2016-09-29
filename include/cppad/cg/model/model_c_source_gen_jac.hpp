@@ -423,9 +423,9 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
             "\n";
 
     if(multiThreadingType == MultiThreadingType::OPENMP) {
-        _cache << "int enabled = cppadcg_openmp_is_disabled();\n"
-                "\n"
-                "#pragma omp parallel for private(outLocal) if(enabled)\n"
+        printFunctionStartOpenMP(_cache, jacInfo.size());
+        _cache << "\n"
+                "#pragma omp parallel for private(outLocal) if(enabled) num_threads(n_threads)\n"
                 "   for(i = 0; i < " << jacInfo.size() << "; ++i) {\n"
                 "      outLocal[0] = &jac[offset[i]];\n"
                 "      (*p[i])(" << argsLocal << ");\n"
