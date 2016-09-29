@@ -45,7 +45,7 @@ static volatile threadpool cppadcg_pool;
 static volatile int cppadcg_pool_n_threads = 2;
 static volatile int cppadcg_pool_disabled = 0; // false
 static volatile int cppadcg_pool_verbose = 0; // false
-static volatile float cppadcg_pool_multijob_maxgroupwork = 0.5;
+static volatile float cppadcg_pool_multijob_maxgroupwork = 0.75;
 
 static volatile enum group_strategy group_gen_strategy = SINGLE_JOB;
 
@@ -266,20 +266,39 @@ void cppadcg_thpool_update_order(double elapsed[],
 
     struct pair_double_int elapsed2[nJobs];
     int i;
+    int nonZero = 0; // false
+
     for(i = 0; i < nJobs; ++i) {
-        elapsed2[i].val = elapsed[i];
-        elapsed2[i].index = i;
+        if(elapsed[i] != 0) {
+            nonZero = 1;
+            break;
+        }
     }
 
-    qsort(elapsed2, nJobs, sizeof(struct pair_double_int), comparePair);
+    if (nonZero) {
+        for(i = 0; i < nJobs; ++i) {
+            elapsed2[i].val = elapsed[i];
+            elapsed2[i].index = i;
+        }
 
-    for (i = 0; i < nJobs; ++i) {
-        order[elapsed2[i].index] = nJobs - i - 1; // descending order
+        qsort(elapsed2, nJobs, sizeof(struct pair_double_int), comparePair);
+
+        for (i = 0; i < nJobs; ++i) {
+            order[elapsed2[i].index] = nJobs - i - 1; // descending order
+        }
+
+        if (cppadcg_pool_verbose) {
+            fprintf(stdout, "new order:\n");
+            for (i = 0; i < nJobs; ++i) {
+                fprintf(stdout, " original: %i   new: %i   time: %e s\n", i, order[i], elapsed[i]);
+            }
+        }
+    } else {
+        if (cppadcg_pool_verbose) {
+            fprintf(stdout, "order not updated: all times are zero\n");
+        }
     }
 
-    //for (i = 0; i < nJobs; ++i) {
-    //    fprintf(stderr, "order  %i  %e\n", order[i], elapsed[i]);
-    //}
 }
 
 void cppadcg_thpool_shutdown() {
@@ -876,10 +895,12 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
 
     if (group_gen_strategy == SINGLE_JOB || thpool_p->jobqueue_p->len <= 1 || thpool_p->jobqueue_p->total_time <= 0) {
         if (cppadcg_pool_verbose) {
-            if (thpool_p->jobqueue_p->len <= 1)
-                fprintf(stdout, "jobqueue_pull(): Using single job instead of multi-job (job queue length is <=1)\n");
-            else if (thpool_p->jobqueue_p->total_time <= 0)
-                fprintf(stdout, "jobqueue_pull(): Using single job instead of multi-job (no timing information)\n");
+            if(group_gen_strategy == MULTI_JOB) {
+                if (thpool_p->jobqueue_p->len <= 1)
+                    fprintf(stdout, "jobqueue_pull(): Work group with 1 job\n");
+                else if (thpool_p->jobqueue_p->total_time <= 0)
+                    fprintf(stdout, "jobqueue_pull(): Using single-job instead of multi-job (no timing information)\n");
+            }
         }
 
         // SINGLE_JOB
@@ -891,6 +912,9 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
         job_p = thpool_p->jobqueue_p->front;
 
         if (job_p->elapsed == NULL) {
+            if (cppadcg_pool_verbose) {
+                fprintf(stderr, "jobqueue_pull(): Using single job instead of multi-job (No timing information for current job)\n");
+            }
             // cannot use this strategy (something went wrong!)
             jobqueue_extract_single_group(thpool_p, group);
 

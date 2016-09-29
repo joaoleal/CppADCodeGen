@@ -132,6 +132,11 @@ public:
         }
 
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+        dynamicLib->setThreadPoolVerbose(this->verbose_);
+        dynamicLib->setThreadNumber(2);
+        dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
+        dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
+        dynamicLib->setThreadPoolMultiJobMaxWork(0.75);
 
         /**
          * test the library
@@ -198,6 +203,11 @@ public:
         }
 
         DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+        dynamicLib->setThreadPoolVerbose(this->verbose_);
+        dynamicLib->setThreadNumber(2);
+        dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
+        dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
+        dynamicLib->setThreadPoolMultiJobMaxWork(0.75);
 
         /**
          * test the library
