@@ -50,6 +50,8 @@ IF(LLVM_FOUND)
                     -DLLVM_VERSION_MINOR=${LLVM_VERSION_MINOR})
 ENDIF()
 
+FIND_PACKAGE(OpenMP)
+
 # Latex used for test and example
 FIND_PACKAGE(LATEX)
 

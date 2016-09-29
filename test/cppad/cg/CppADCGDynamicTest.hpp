@@ -17,6 +17,10 @@
 #include "CppADCGModelTest.hpp"
 #include "gccCompilerFlags.hpp"
 
+#ifdef CPPAD_CG_SYSTEM_LINUX
+#include <dlfcn.h>
+#endif
+
 namespace CppAD {
 namespace cg {
 
@@ -127,6 +131,11 @@ public:
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
+
+#ifdef CPPAD_CG_SYSTEM_LINUX
+            // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
+            p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+#endif
         } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
@@ -198,6 +207,11 @@ public:
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
+
+#ifdef CPPAD_CG_SYSTEM_LINUX
+            // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
+            p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+#endif
         } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
