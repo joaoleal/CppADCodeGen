@@ -42,13 +42,28 @@ public:
 protected:
     static const std::string CONST;
 protected:
-    std::map<std::string, ModelCSourceGen<Base>*> _models; // holds all models
-    std::map<std::string, std::string> _customSource; // custom functions to be compiled in the dynamic library
-    std::ostringstream _cache;
+    /**
+     * Models to be contained whithin the library
+     */
+    std::map<std::string, ModelCSourceGen<Base>*> _models;
+    /**
+     * custom functions to be compiled in the dynamic library
+     */
+    std::map<std::string, std::string> _customSource;
     /**
      * Library level generated source files
      */
     std::map<std::string, std::string> _libSources;
+    /**
+     * Parallelization type for the sparse Jacobian and sparse Hessian
+     * (experimental).
+     * Parallelization can be disabled locally for each model.
+     */
+    MultiThreadingType _multiThreading;
+    /**
+     * temporary stream to generate source code
+     */
+    std::ostringstream _cache;
 public:
 
     /**
@@ -58,7 +73,8 @@ public:
      * @param model A model compilation helper (must only be deleted after
      *              this object)
      */
-    inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& model) {
+    inline ModelLibraryCSourceGen(ModelCSourceGen<Base>& model):
+        _multiThreading(MultiThreadingType::NONE) {
         CPPADCG_ASSERT_KNOWN(_models.find(model.getName()) == _models.end(),
                              "Another model with the same name was already registered");
 
@@ -77,7 +93,7 @@ public:
     ModelLibraryCSourceGen(const ModelLibraryCSourceGen&) = delete;
     ModelLibraryCSourceGen& operator=(const ModelLibraryCSourceGen&) = delete;
 
-    inline virtual ~ModelLibraryCSourceGen() {
+    virtual ~ModelLibraryCSourceGen() {
     }
 
     /**
@@ -93,7 +109,7 @@ public:
         _models[model.getName()] = &model;
     }
 
-    const std::map<std::string, ModelCSourceGen<Base>*>& getModels() const {
+    inline const std::map<std::string, ModelCSourceGen<Base>*>& getModels() const {
         return _models;
     }
 
@@ -109,8 +125,32 @@ public:
      * @return maps filenames to the file content for the user defined
      *         sources.
      */
-    const std::map<std::string, std::string>& getCustomSources() const {
+    inline const std::map<std::string, std::string>& getCustomSources() const {
         return _customSource;
+    }
+
+    /**
+    * Defines whether or not to generate multithreading directives to
+    * parallelize the sparse Jacobian and sparse Hessian evaluation.
+    * Parallelization can be disabled locally for each model.
+    *
+    * @return multithreading support type
+    */
+    inline MultiThreadingType getMultiThreading() const {
+        return _multiThreading;
+    }
+
+    /**
+     * Defines whether or not to generate multithreading directives to
+     * parallelize the sparse Jacobian and sparse Hessian evaluation.
+     * Parallelization can be disabled locally for each model.
+     * Do not forget to add the appropriate compiler and linker flags
+     * when multithreading is enabled.
+     *
+     * @param multiThreading multithreading support type
+     */
+    inline void setMultiThreading(MultiThreadingType multiThreading) {
+        _multiThreading = multiThreading;
     }
 
     /**

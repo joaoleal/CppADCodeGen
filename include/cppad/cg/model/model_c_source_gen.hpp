@@ -164,8 +164,12 @@ protected:
      * Typical values of the independent vector 
      */
     std::vector<Base> _x;
-    /// whether or not to create multithreaded code for the Jacobian (experimental)
-    MultiThreadingType _multithread;
+    /**
+     * Whether or not to enable the generation of multithreaded code for the
+     * sparse Jacobian and sparse Hessian if possible and requested by the
+     * model library (experimental).
+     */
+    bool _multiThreading;
     /// generate source code for the zero order model evaluation
     bool _zero;
     bool _zeroEvaluated;
@@ -288,7 +292,7 @@ public:
         _name(model),
         _baseTypeName(ModelCSourceGen<Base>::baseTypeName()),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
-        _multithread(MultiThreadingType::NONE),
+        _multiThreading(true),
         _zero(true),
         _zeroEvaluated(false),
         _jacobian(false),
@@ -379,43 +383,44 @@ public:
     }
 
     /**
-     * Defines whether or not to generate multithreading directives to
+     * Returns whether or not multithreading directives can be generated to
      * parallelize the sparse Jacobian and sparse Hessian evaluation.
+     * Multithreaded code is only generated if requested by the model library.
      * For the sparse Jacobian, the _sparseJacobianReusesOne must be enabled,
      * at least one of _forwardOne and _reverseOne must be enabled, and loop
      * detection must be disabled.
      * For the sparse Hessian, the _sparseHessianReusesRev2 and _reverseTwo
      * must be enabled and loop detection must be disabled.
      *
-     * @return multithreading support type
+     * @return whether or not multithreading can be used for this model
      */
-    inline MultiThreadingType getMultiThreadedingType() const {
-        return _multithread;
+    inline bool getMultiThreading() const {
+        return _multiThreading;
     }
 
     /**
-     * Defines whether or not to generate multithreading directives to
+     * Defines whether or not multithreading directives can be generated to
      * parallelize the sparse Jacobian and sparse Hessian evaluation.
+     * Multithreaded code is only generated if requested by the model library.
      * For the sparse Jacobian, the _sparseJacobianReusesOne must be enabled,
      * at least one of _forwardOne and _reverseOne must be enabled, and loop
      * detection must be disabled.
      * For the sparse Hessian, the _sparseHessianReusesRev2 and _reverseTwo
      * must be enabled and loop detection must be disabled.
-     * Do not forget to add the appropriate compiler and linker flags
-     * when multithreading is enabled.
      *
-     * @param multithread multithreading support type
+     * @param multithread whether or not multithreading can be used for this
+     *                    model
      */
-    inline void setMultiThreaded(MultiThreadingType multithread) {
-        _multithread = multithread;
+    inline void setMultiThreading(bool multiThreading) {
+        _multiThreading = multiThreading;
     }
 
-    inline bool isJacobianMultiThreaded() const {
-        return _multithread != MultiThreadingType::NONE && _loopTapes.empty() && _sparseJacobian && _sparseJacobianReusesOne && (_forwardOne || _reverseOne);
+    inline bool isJacobianMultiThreadingEnabled() const {
+        return _multiThreading && _loopTapes.empty() && _sparseJacobian && _sparseJacobianReusesOne && (_forwardOne || _reverseOne);
     }
 
-    inline bool isHessianMultiThreaded() const {
-        return _multithread != MultiThreadingType::NONE && _loopTapes.empty() && _sparseHessian && _sparseHessianReusesRev2 && _reverseTwo;
+    inline bool isHessianMultiThreadingEnabled() const {
+        return _multiThreading && _loopTapes.empty() && _sparseHessian && _sparseHessianReusesRev2 && _reverseTwo;
     }
 
     /**
@@ -833,9 +838,11 @@ protected:
                                                                      const std::string& tmpName = "v",
                                                                      const std::string& tmpArrayName = "array");
 
-    const std::map<std::string, std::string>& getSources(JobTimer* timer);
+    const std::map<std::string, std::string>& getSources(MultiThreadingType multiThreadingType,
+                                                         JobTimer* timer);
 
-    virtual void generateSources(JobTimer* timer = nullptr);
+    virtual void generateSources(MultiThreadingType multiThreadingType,
+                                 JobTimer* timer = nullptr);
 
     virtual void generateLoops();
 
@@ -865,11 +872,12 @@ protected:
 
     virtual void generateJacobianSource();
 
-    virtual void generateSparseJacobianSource();
+    virtual void generateSparseJacobianSource(MultiThreadingType multiThreadingType);
 
     virtual void generateSparseJacobianSource(bool forward);
 
-    virtual void generateSparseJacobianForRevSource(bool forward);
+    virtual void generateSparseJacobianForRevSource(bool forward,
+                                                    MultiThreadingType multiThreadingType);
 
     virtual std::string generateSparseJacobianForRevSingleThreadSource(const std::string& functionName,
                                                                        std::map<size_t, CompressedVectorInfo> jacInfo,
@@ -883,7 +891,8 @@ protected:
                                                                       size_t maxCompressedSize,
                                                                       const std::string& functionRevFor,
                                                                       const std::string& revForSuffix,
-                                                                      bool forward);
+                                                                      bool forward,
+                                                                      MultiThreadingType multiThreadingType);
     /**
      * Generates a sparse Jacobian using loops.
      * 
@@ -964,11 +973,11 @@ protected:
 
     virtual void generateHessianSource();
 
-    virtual void generateSparseHessianSource();
+    virtual void generateSparseHessianSource(MultiThreadingType multiThreadingType);
 
     virtual void generateSparseHessianSourceDirectly();
 
-    virtual void generateSparseHessianSourceFromRev2();
+    virtual void generateSparseHessianSourceFromRev2(MultiThreadingType multiThreadingType);
 
     virtual std::string generateSparseHessianRev2SingleThreadSource(const std::string& functionName,
                                                                     std::map<size_t, CompressedVectorInfo> hessInfo,
@@ -980,7 +989,8 @@ protected:
                                                                    std::map<size_t, CompressedVectorInfo> hessInfo,
                                                                    size_t maxCompressedSize,
                                                                    const std::string& functionRev2,
-                                                                   const std::string& rev2Suffix);
+                                                                   const std::string& rev2Suffix,
+                                                                   MultiThreadingType multiThreadingType);
 
     virtual void determineSecondOrderElements4Eval(std::vector<size_t>& userRows,
                                                    std::vector<size_t>& userCols);
@@ -1177,6 +1187,23 @@ protected:
                                                                      const std::vector<size_t>& rowsElements,
                                                                      const std::vector<size_t>& userRows,
                                                                      const std::vector<size_t>& userCols);
+
+    /***********************************************************************
+     * Multi-threading
+     **********************************************************************/
+
+    /**
+     *
+     */
+    static void printFileStartPThreads(std::ostringstream& cache,
+                                       const std::string& baseTypeName);
+
+    static void printFunctionStartPThreads(std::ostringstream& cache,
+                                           size_t size);
+
+    static void printFunctionEndPThreads(std::ostringstream& cache,
+                                         size_t size);
+
     /**
      * 
      */

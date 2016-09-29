@@ -101,18 +101,24 @@ const std::map<std::string, std::string>& ModelLibraryCSourceGen<Base>::getLibra
         generateOnCloseSource(_libSources);
         generateThreadPoolSources(_libSources);
 
-        for(const auto& it : _models) {
-            if (it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) {
-                if(it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
-                    _libSources["thread_pool.c"] = CPPADCG_PTHREAD_POOL_C_FILE;
-                    break;
-                } else if(it.second->getMultiThreadedingType() == MultiThreadingType::OPENMP) {
-                    _libSources["thread_pool.c"] = CPPADCG_OPENMP_C_FILE;
+        if(_multiThreading != MultiThreadingType::NONE) {
+            bool usingMultiThreading = false;
+            for (const auto& it : _models) {
+                if (it.second->isJacobianMultiThreadingEnabled() || it.second->isHessianMultiThreadingEnabled()) {
+                    usingMultiThreading = true;
                     break;
                 }
             }
-        }
 
+            if (usingMultiThreading) {
+                if (_multiThreading == MultiThreadingType::PTHREADS) {
+                    _libSources["thread_pool.c"] = CPPADCG_PTHREAD_POOL_C_FILE;
+
+                } else if (_multiThreading == MultiThreadingType::OPENMP) {
+                    _libSources["thread_pool.c"] = CPPADCG_OPENMP_C_FILE;
+                }
+            }
+        }
     }
 
     return _libSources;
@@ -151,11 +157,12 @@ void ModelLibraryCSourceGen<Base>::generateModelsSource(std::map<std::string, st
 template<class Base>
 void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, std::string>& sources) {
     bool pthreads = false;
-    for(const auto& it : _models) {
-        if ((it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) &&
-            it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
-            pthreads = true;
-            break;
+    if(_multiThreading == MultiThreadingType::PTHREADS) {
+        for (const auto& it : _models) {
+            if (it.second->isJacobianMultiThreadingEnabled() || it.second->isHessianMultiThreadingEnabled()) {
+                pthreads = true;
+                break;
+            }
         }
     }
 
@@ -174,24 +181,18 @@ void ModelLibraryCSourceGen<Base>::generateOnCloseSource(std::map<std::string, s
 
 template<class Base>
 void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::string, std::string>& sources) {
-    bool pthreads = false;
-    bool openmp = false;
 
-    for (const auto& it : _models) {
-        if (it.second->isJacobianMultiThreaded() || it.second->isHessianMultiThreaded()) {
-            if (it.second->getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
-                pthreads = true;
-            } else if (it.second->getMultiThreadedingType() == MultiThreadingType::OPENMP) {
-                openmp = true;
+    bool usingMultiThreading = false;
+    if(_multiThreading != MultiThreadingType::NONE) {
+        for (const auto& it : _models) {
+            if (it.second->isJacobianMultiThreadingEnabled() || it.second->isHessianMultiThreadingEnabled()) {
+                usingMultiThreading = true;
+                break;
             }
         }
     }
 
-    if (pthreads && openmp) {
-        throw CGException("Cannot mix OpenMP and PThreads multithreading in the same model library");
-    }
-
-    if (pthreads) {
+    if (usingMultiThreading && _multiThreading == MultiThreadingType::PTHREADS) {
         _cache.str("");
         _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n\n";
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
@@ -232,7 +233,7 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
 
         sources["thread_pool_access.c"] = _cache.str();
 
-    } else if(openmp) {
+    } else if(usingMultiThreading && _multiThreading == MultiThreadingType::OPENMP) {
         _cache.str("");
         _cache << "#include <omp.h>\n";
         _cache << CPPADCG_OPENMP_H_FILE << "\n\n";

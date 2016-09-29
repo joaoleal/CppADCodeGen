@@ -113,20 +113,21 @@ public:
         compHelp.setCreateReverseOne(_reverseOne);
         compHelp.setCreateReverseTwo(_reverseTwo);
         compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
-        compHelp.setMultiThreaded(_multithread);
+        compHelp.setMultiThreading(true);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
+        compDynHelp.setMultiThreading(_multithread);
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_1");
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
-        if(compHelp.getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+        if(compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
-        } else if(compHelp.getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+        } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 
@@ -177,9 +178,10 @@ public:
         compHelp.setCreateSparseHessian(true);
         compHelp.setCustomSparseHessianElements(hessRow, hessCol);
 
-        compHelp.setMultiThreaded(_multithread);
+        compHelp.setMultiThreading(true);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
+        compDynHelp.setMultiThreading(_multithread);
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_2");
 
@@ -187,11 +189,11 @@ public:
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
-        if(compHelp.getMultiThreadedingType() == MultiThreadingType::OPENMP) {
+        if(compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
-        } else if(compHelp.getMultiThreadedingType() == MultiThreadingType::PTHREADS) {
+        } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 

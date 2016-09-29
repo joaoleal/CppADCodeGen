@@ -60,8 +60,6 @@ protected:
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
-        this->validateModels();
-
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         try {
             /**

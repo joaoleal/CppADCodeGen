@@ -53,8 +53,6 @@ public:
     }
 
     LlvmModelLibrary<Base>* create() {
-        this->validateModels();
-
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 

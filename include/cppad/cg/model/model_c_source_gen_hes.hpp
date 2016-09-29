@@ -75,14 +75,14 @@ void ModelCSourceGen<Base>::generateHessianSource() {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseHessianSource() {
+void ModelCSourceGen<Base>::generateSparseHessianSource(MultiThreadingType multiThreadingType) {
     /**
      * Determine the sparsity pattern p for Hessian of w^T F
      */
     determineHessianSparsity();
 
     if (_sparseHessianReusesRev2 && _reverseTwo) {
-        generateSparseHessianSourceFromRev2();
+        generateSparseHessianSourceFromRev2(multiThreadingType);
     } else {
         generateSparseHessianSourceDirectly();
     }
@@ -222,7 +222,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
+void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2(MultiThreadingType multiThreadingType) {
     using namespace std;
 
     /**
@@ -291,10 +291,10 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2() {
     string functionRev2 = _name + "_" + FUNCTION_SPARSE_REVERSE_TWO;
     string rev2Suffix = "indep";
 
-    if (_multithread == MultiThreadingType::NONE) {
+    if (!_multiThreading || multiThreadingType == MultiThreadingType::NONE) {
         _sources[functionName + ".c"] = generateSparseHessianRev2SingleThreadSource(functionName, hessInfo, maxCompressedSize, functionRev2, rev2Suffix);
     } else {
-        _sources[functionName + ".c"] = generateSparseHessianRev2MultiThreadSource(functionName, hessInfo, maxCompressedSize, functionRev2, rev2Suffix);
+        _sources[functionName + ".c"] = generateSparseHessianRev2MultiThreadSource(functionName, hessInfo, maxCompressedSize, functionRev2, rev2Suffix, multiThreadingType);
     }
     _cache.str("");
 }
@@ -371,7 +371,11 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                                                                               std::map<size_t, CompressedVectorInfo> hessInfo,
                                                                               size_t maxCompressedSize,
                                                                               const std::string& functionRev2,
-                                                                              const std::string& rev2Suffix) {
+                                                                              const std::string& rev2Suffix,
+                                                                              MultiThreadingType multiThreadingType) {
+    CPPADCG_ASSERT_UNKNOWN(_multiThreading);
+    CPPADCG_ASSERT_UNKNOWN(multiThreadingType != MultiThreadingType::NONE);
+
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
 
@@ -424,31 +428,20 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
     _cache << "\n"
             "typedef void (*cppadcg_function_type) (" << argsDcl << ");\n";
 
-    /**
-     * PThreads pool needs a function with a void pointer argument
-     */
-    if(_multithread == MultiThreadingType::PTHREADS) {
-        _cache << "\n";
-        _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n";
-        _cache << "\n";
-        _cache << "typedef struct ExecArgStruct {\n"
-                "   cppadcg_function_type func;\n"
-                "   " << _baseTypeName + " const *const * in;\n"
-                "   " << _baseTypeName + "* out[1];\n"
-                "   struct LangCAtomicFun atomicFun;\n"
-                "} ExecArgStruct;\n"
-                "\n"
-                "static void exec_func(void* arg) {\n"
-                "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
-                "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
-                "}\n";
 
-    } else if (_multithread == MultiThreadingType::OPENMP) {
+    if (multiThreadingType == MultiThreadingType::OPENMP) {
         _cache << "\n";
         _cache << CPPADCG_OPENMP_H_FILE << "\n";
         _cache << "\n";
-    }
 
+    } else {
+        /**
+         * PThreads pool needs a function with a void pointer argument
+         */
+        assert(multiThreadingType == MultiThreadingType::PTHREADS);
+
+        printFileStartPThreads(_cache, _baseTypeName);
+    }
 
     /**
      * Hessian function
@@ -486,7 +479,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
             "   inLocal[1] = &inLocal1;\n"
             "   inLocal[2] = in[1];\n";
 
-    if(_multithread == MultiThreadingType::OPENMP) {
+    if(multiThreadingType == MultiThreadingType::OPENMP) {
         _cache << "int enabled = cppadcg_openmp_is_disabled();\n"
                 "\n"
                 "#pragma omp parallel for private(outLocal) if(enabled)\n"
@@ -497,17 +490,10 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                        "\n";
 
     } else {
-        assert(_multithread == MultiThreadingType::PTHREADS);
-        _cache << "   ExecArgStruct* args[" << hessInfo.size() << "];\n"
-                "   cppadcg_thpool_function_type execute_functions[" << hessInfo.size() << "] = {";
-        for (const auto& it : hessInfo) {
-            if (it.first != hessInfo.begin()->first) _cache << ", ";
-            _cache << "(void*)exec_func";
-        }
-        _cache << "};\n"
-                "   double* elapsed = NULL;\n"
-                "   int* order = NULL;\n"
-                "\n"
+        assert(multiThreadingType == MultiThreadingType::PTHREADS);
+
+        printFunctionStartPThreads(_cache, hessInfo.size());
+        _cache << "\n"
                 "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
                 "      args[i] = (ExecArgStruct*) malloc(sizeof(ExecArgStruct));\n"
                 "      args[i]->func = p[i];\n"
@@ -515,14 +501,8 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
                 "      args[i]->out[0] = &hess[offset[i]];\n"
                 "      args[i]->atomicFun = " << langC .getArgumentAtomic() << ";\n"
                 "   }\n"
-                "\n"
-                "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, elapsed, order, " << hessInfo.size() << ");\n"
-                "\n"
-                "   cppadcg_thpool_wait();\n"
-                "\n"
-                "   for(i = 0; i < " << hessInfo.size() << "; ++i) {\n"
-                "      free(args[i]);\n"
-                "   }\n";
+                "\n";
+        printFunctionEndPThreads(_cache, hessInfo.size());
     }
 
     _cache << "\n"

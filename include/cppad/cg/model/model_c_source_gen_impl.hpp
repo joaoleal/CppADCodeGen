@@ -90,15 +90,17 @@ VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(
 }
 
 template<class Base>
-const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(JobTimer* timer) {
+const std::map<std::string, std::string>& ModelCSourceGen<Base>::getSources(MultiThreadingType multiThreadingType,
+                                                                            JobTimer* timer) {
     if (_sources.empty()) {
-        generateSources(timer);
+        generateSources(multiThreadingType, timer);
     }
     return _sources;
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::generateSources(JobTimer* timer) {
+void ModelCSourceGen<Base>::generateSources(MultiThreadingType multiThreadingType,
+                                            JobTimer* timer) {
     _jobTimer = timer;
 
     generateLoops();
@@ -134,11 +136,11 @@ void ModelCSourceGen<Base>::generateSources(JobTimer* timer) {
     }
 
     if (_sparseJacobian) {
-        generateSparseJacobianSource();
+        generateSparseJacobianSource(multiThreadingType);
     }
 
     if (_sparseHessian) {
-        generateSparseHessianSource();
+        generateSparseHessianSource(multiThreadingType);
     }
 
     if (_sparseJacobian || _forwardOne || _reverseOne) {
@@ -566,6 +568,69 @@ inline std::vector<std::set<size_t> > ModelCSourceGen<Base>::determineOrderByRow
     }
 
     return userLocationRow;
+}
+
+template<class Base>
+void ModelCSourceGen<Base>::printFileStartPThreads(std::ostringstream& cache,
+                                                   const std::string& baseTypeName) {
+    cache << "\n";
+    cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n";
+    cache << "\n";
+    cache << "typedef struct ExecArgStruct {\n"
+            "   cppadcg_function_type func;\n"
+            "   " << baseTypeName + " const *const * in;\n"
+            "   " << baseTypeName + "* out[1];\n"
+            "   struct LangCAtomicFun atomicFun;\n"
+            "} ExecArgStruct;\n"
+            "\n"
+            "static void exec_func(void* arg) {\n"
+            "   ExecArgStruct* eArg = (ExecArgStruct*) arg;\n"
+            "   (*eArg->func)(eArg->in, eArg->out, eArg->atomicFun);\n"
+            "}\n";
+}
+
+template<class Base>
+void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache,
+                                                       size_t size) {
+    auto repeatFill = [&](const std::string& txt){
+        cache << "{";
+        for (size_t i = 0; i < size; ++i) {
+            if (i != 0) cache << ", ";
+            cache << txt;
+        }
+        cache << "};";
+    };
+
+    cache << "   ExecArgStruct* args[" << size << "];\n"
+            "   cppadcg_thpool_function_type execute_functions[" << size << "] = ";
+    repeatFill("(void*)exec_func");
+    cache << "\n"
+            "   static double elapsed[" << size << "] = ";
+    repeatFill("0");
+    cache << "\n"
+            "   static int order[" << size << "] = {";
+    for (size_t i = 0; i < size; ++i) {
+        if (i != 0) cache << ", ";
+        cache << i;
+    }
+    cache << "};\n"
+            "   int do_benchmark = " << (size > 0 ? "(elapsed[0] == 0 && !cppadcg_thpool_is_disabled())" : "0") << ";\n";
+}
+
+template<class Base>
+void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
+                                                     size_t size) {
+    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, elapsed, order, " << size << ");\n"
+            "\n"
+            "   cppadcg_thpool_wait();\n"
+            "\n"
+            "   for(i = 0; i < " << size << "; ++i) {\n"
+            "      free(args[i]);\n"
+            "   }\n"
+            "\n"
+            "   if(do_benchmark) {\n"
+            "      cppadcg_thpool_update_order(elapsed, order, " << size << ");\n"
+            "   }\n";
 }
 
 template<class Base>
