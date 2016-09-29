@@ -27,11 +27,7 @@ template<class Base>
 class GccCompiler : public AbstractCCompiler<Base> {
 public:
 
-    GccCompiler() :
-        GccCompiler("/usr/bin/gcc") {
-    }
-
-    GccCompiler(const std::string& gccPath) :
+    GccCompiler(const std::string& gccPath = "/usr/bin/gcc") :
         AbstractCCompiler<Base>(gccPath) {
 
         this->_compileFlags.push_back("-O2"); // Optimization level

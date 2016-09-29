@@ -29,17 +29,7 @@ protected:
     std::set<std::string> _bcfiles; // bitcode files
 public:
 
-    ClangCompiler() :
-        AbstractCCompiler<Base>("/usr/bin/clang") {
-
-        this->_compileFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-shared"); // Make shared object
-        this->_compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
-
-    }
-
-    ClangCompiler(const std::string& clangPath) :
+    ClangCompiler(const std::string& clangPath = "/usr/bin/clang") :
         AbstractCCompiler<Base>(clangPath) {
 
         this->_compileFlags.push_back("-O2"); // Optimization level
