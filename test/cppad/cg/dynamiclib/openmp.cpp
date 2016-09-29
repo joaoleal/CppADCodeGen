@@ -17,12 +17,12 @@
 namespace CppAD {
 namespace cg {
 
-class CppADCGThreadPoolTest : public CppADCGDynamicTest {
+class CppADCGOpenMPTest : public CppADCGDynamicTest {
 public:
 
-    inline CppADCGThreadPoolTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGOpenMPTest(bool verbose = false, bool printValues = false) :
         CppADCGDynamicTest("pool", verbose, printValues) {
-        this->_multithread = MultiThreadingType::PTHREADS;
+        this->_multithread = MultiThreadingType::OPENMP;
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
@@ -43,8 +43,8 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGThreadPoolTest, PthreadDisabledFullVars) {
-    this->_multithreadDisabled = true;
+TEST_F(CppADCGOpenMPTest, PthreadDisabledFullVars) {
+   this->_multithreadDisabled = true;
 
     // use a special object for source code generation
     typedef CG<double> CGD;
@@ -69,7 +69,7 @@ TEST_F(CppADCGThreadPoolTest, PthreadDisabledFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, PthreadSingleJobFullVars) {
+TEST_F(CppADCGOpenMPTest, PthreadSingleJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
 
@@ -97,7 +97,7 @@ TEST_F(CppADCGThreadPoolTest, PthreadSingleJobFullVars) {
 }
 
 
-TEST_F(CppADCGThreadPoolTest, PthreadMultiJobFullVars) {
+TEST_F(CppADCGOpenMPTest, PthreadMultiJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
 
@@ -124,7 +124,9 @@ TEST_F(CppADCGThreadPoolTest, PthreadMultiJobFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, FullVars) {
+TEST_F(CppADCGOpenMPTest, FullVars) {
+    this->_multithreadDisabled = false;
+    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
 
     // use a special object for source code generation
     typedef CG<double> CGD;
@@ -149,7 +151,9 @@ TEST_F(CppADCGThreadPoolTest, FullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, DynamicCustomElements) {
+TEST_F(CppADCGOpenMPTest, DynamicCustomElements) {
+    this->_multithreadDisabled = false;
+    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
 
     // use a special object for source code generation
     typedef CG<double> CGD;

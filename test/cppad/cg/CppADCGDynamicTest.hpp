@@ -31,7 +31,7 @@ protected:
     bool _forwardOne;
     bool _reverseOne;
     bool _reverseTwo;
-    bool _multithread;
+    MultiThreadingType _multithread;
     bool _multithreadDisabled;
     ThreadPoolScheduleStrategy _multithreadScheduler;
 public:
@@ -46,7 +46,7 @@ public:
         _forwardOne(true),
         _reverseOne(true),
         _reverseTwo(true),
-        _multithread(false),
+        _multithread(MultiThreadingType::NONE),
         _multithreadDisabled(false),
         _multithreadScheduler(ThreadPoolScheduleStrategy::SINGLE_JOB) {
     }
@@ -113,9 +113,7 @@ public:
         compHelp.setCreateReverseOne(_reverseOne);
         compHelp.setCreateReverseTwo(_reverseTwo);
         compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
-        if(_multithread) {
-            compHelp.setMultiThreaded(MultiThreadingType::PTHREADS);
-        }
+        compHelp.setMultiThreaded(_multithread);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 
@@ -179,9 +177,7 @@ public:
         compHelp.setCreateSparseHessian(true);
         compHelp.setCustomSparseHessianElements(hessRow, hessCol);
 
-        if(_multithread) {
-            compHelp.setMultiThreaded(MultiThreadingType::PTHREADS);
-        }
+        compHelp.setMultiThreaded(_multithread);
 
         ModelLibraryCSourceGen<double> compDynHelp(compHelp);
 
