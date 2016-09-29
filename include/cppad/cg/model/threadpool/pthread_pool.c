@@ -18,8 +18,6 @@
  *  https://github.com/Pithikos/C-Thread-Pool/blob/master/thpool.c
  */
 
-#define MEASURE_TIME
-
 #include <unistd.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -28,12 +26,10 @@
 #include <time.h>
 #if defined(__linux__)
 #include <sys/prctl.h>
-#ifdef MEASURE_TIME
 #include <time.h>
 #include <sys/time.h>
 #define __USE_GNU /* required before including  resource.h */
 #include <sys/resource.h>
-#endif
 #endif
 
 enum group_strategy {SINGLE_JOB, MULTI_JOB};
@@ -56,12 +52,12 @@ static threadpool thpool_init(int num_threads);
 static int thpool_add_job(threadpool,
                           thpool_function_type function,
                           void* arg,
-                          double* elapsed);
+                          float* elapsed);
 
 static int thpool_add_jobs(threadpool,
                            thpool_function_type functions[],
                            void* args[],
-                           double elapsed[],
+                           float elapsed[],
                            int order[],
                            int nJobs);
 
@@ -83,7 +79,7 @@ typedef struct job {
     struct job*  prev;                   /* pointer to previous job   */
     thpool_function_type function;       /* function pointer          */
     void*  arg;                          /* function's argument       */
-    double* elapsed;                     /* elapsed time              */
+    float* elapsed;                     /* elapsed time              */
 } job;
 
 /* Job group */
@@ -99,7 +95,8 @@ typedef struct jobqueue {
     job  *rear;                          /* pointer to rear  of queue */
     bsem *has_jobs;                      /* flag as binary semaphore  */
     int   len;                           /* number of jobs in queue   */
-    double total_time;                   /* total expected time to complete the work */
+    float total_time;                   /* total expected time to complete the work */
+    float highest_expected_return;      /* the time when the last running thread is expected to request new work */
 } jobqueue;
 
 
@@ -206,7 +203,7 @@ void cppadcg_thpool_prepare() {
 
 void cppadcg_thpool_add_job(thpool_function_type function,
                             void* arg,
-                            double* elapsed) {
+                            float* elapsed) {
     if (!cppadcg_pool_disabled) {
         cppadcg_thpool_prepare();
         if (cppadcg_pool != NULL) {
@@ -221,7 +218,7 @@ void cppadcg_thpool_add_job(thpool_function_type function,
 
 void cppadcg_thpool_add_jobs(thpool_function_type functions[],
                              void* args[],
-                             double elapsed[],
+                             float elapsed[],
                              int order[],
                              int nJobs) {
     int i;
@@ -246,7 +243,7 @@ void cppadcg_thpool_wait() {
 }
 
 typedef struct pair_double_int {
-    double val;
+    float val;
     int index;
 } pair_double_int;
 
@@ -258,7 +255,7 @@ static int comparePair(const void* a, const void* b) {
     return 1;
 }
 
-void cppadcg_thpool_update_order(double elapsed[],
+void cppadcg_thpool_update_order(float elapsed[],
                                  int order[],
                                  int nJobs) {
     if(nJobs == 0 || elapsed == NULL || order == NULL)
@@ -440,7 +437,7 @@ struct thpool_* thpool_init(int num_threads) {
 static int thpool_add_job(thpool_* thpool_p,
                           thpool_function_type function,
                           void* arg,
-                          double* elapsed) {
+                          float* elapsed) {
     job* newjob;
 
     newjob = (struct job*) malloc(sizeof(struct job));
@@ -463,7 +460,7 @@ static int thpool_add_job(thpool_* thpool_p,
 static int thpool_add_jobs(thpool_* thpool_p,
                            thpool_function_type functions[],
                            void* args[],
-                           double elapsed[],
+                           float elapsed[],
                            int order[],
                            int nJobs) {
     job* newjobs[nJobs];
@@ -526,6 +523,7 @@ static void thpool_wait(thpool_* thpool_p) {
         pthread_cond_wait(&thpool_p->threads_all_idle, &thpool_p->thcount_lock);
     }
     thpool_p->jobqueue_p->total_time = 0;
+    thpool_p->jobqueue_p->highest_expected_return = 0;
     pthread_mutex_unlock(&thpool_p->thcount_lock);
 }
 
@@ -619,6 +617,28 @@ static int thread_init(thpool_* thpool_p,
     return 0;
 }
 
+static float get_thread_time(struct timespec* cputime,
+                             int* info) {
+    *info = clock_gettime(CLOCK_THREAD_CPUTIME_ID, cputime);
+    if(*info == 0) {
+        return cputime->tv_sec + cputime->tv_nsec * 1e-9f;
+    } else {
+        fprintf(stderr, "failed clock_gettime()\n");
+        return 0;
+    }
+}
+
+static float get_monotonic_time(struct timespec* time,
+                                int* info) {
+    *info = clock_gettime(CLOCK_MONOTONIC, time);
+    if(*info == 0) {
+        return time->tv_sec + time->tv_nsec * 1e-9f;
+    } else {
+        fprintf(stderr, "failed clock_gettime()\n");
+        return 0;
+    }
+}
+
 /* What each thread is doing
 *
 * In principle this is an endless loop. The only time this loop gets interrupted is once
@@ -628,11 +648,9 @@ static int thread_init(thpool_* thpool_p,
 * @return nothing
 */
 static void* thread_do(struct thread* thread_p) {
-#ifdef MEASURE_TIME
-    double elapsed;
+    float elapsed;
     int info;
     struct timespec cputime;
-#endif
     int i;
     /* Set thread name for profiling and debugging */
     char thread_name[128] = {0};
@@ -680,33 +698,22 @@ static void* thread_do(struct thread* thread_p) {
             
             for (i = 0; i < work_group->size; ++i) {
                 job_p = &work_group->jobs[i];
-#ifdef MEASURE_TIME
                 int do_benchmark = job_p->elapsed != NULL && (*job_p->elapsed) == 0;
-                if(do_benchmark) {
-                    info = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cputime);
-                    if(info == 0) {
-                        elapsed = -(cputime.tv_sec + cputime.tv_nsec * 1e-9);
-                    } else {
-                        fprintf(stderr, "failed clock_gettime()\n");
-                    }
+                if (do_benchmark) {
+                    elapsed = -get_thread_time(&cputime, &info);
                 }
-#endif
+
                 /* Execute the job */
                 func_buff = job_p->function;
                 arg_buff = job_p->arg;
                 func_buff(arg_buff);
 
-#ifdef MEASURE_TIME
-                if(do_benchmark && info == 0) {
-                    info = clock_gettime(CLOCK_THREAD_CPUTIME_ID, &cputime);
-                    if(info == 0) {
-                        elapsed += cputime.tv_sec + cputime.tv_nsec * 1e-9;
+                if (do_benchmark && info == 0) {
+                    elapsed += get_thread_time(&cputime, &info);
+                    if (info == 0) {
                         (*job_p->elapsed) = elapsed;
-                    } else {
-                        fprintf(stderr, "failed clock_gettime()\n");
                     }
                 }
-#endif
             }
             free(work_group->jobs);
             free(work_group);
@@ -748,6 +755,7 @@ static int jobqueue_init(thpool_* thpool_p) {
     thpool_p->jobqueue_p->front = NULL;
     thpool_p->jobqueue_p->rear = NULL;
     thpool_p->jobqueue_p->total_time = 0;
+    thpool_p->jobqueue_p->highest_expected_return = 0;
 
     thpool_p->jobqueue_p->has_jobs = (struct bsem*) malloc(sizeof(struct bsem));
     if (thpool_p->jobqueue_p->has_jobs == NULL) {
@@ -779,6 +787,7 @@ static void jobqueue_clear(thpool_* thpool_p) {
     bsem_reset(thpool_p->jobqueue_p->has_jobs);
     thpool_p->jobqueue_p->len = 0;
     thpool_p->jobqueue_p->total_time = 0;
+    thpool_p->jobqueue_p->highest_expected_return = 0;
 }
 
 
@@ -853,6 +862,7 @@ static struct job* jobqueue_extract_single(thpool_* thpool_p) {
             thpool_p->jobqueue_p->rear = NULL;
             thpool_p->jobqueue_p->len = 0;
             thpool_p->jobqueue_p->total_time = 0;
+            thpool_p->jobqueue_p->highest_expected_return = 0;
             return job_p;
 
         default: /* if >1 jobs in queue */
@@ -889,8 +899,10 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
     job_group* group;
     group = (struct job_group*) malloc(sizeof(struct job_group));
     struct job* job_p;
-    double target_time;
-    double time, timeNext;
+    float current_time;
+    float duration, duration_next, min_duration, target_duration;
+    struct timespec timeAux;
+    int info;
     int i;
 
     if (group_gen_strategy == SINGLE_JOB || thpool_p->jobqueue_p->len <= 1 || thpool_p->jobqueue_p->total_time <= 0) {
@@ -907,8 +919,6 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
         jobqueue_extract_single_group(thpool_p, group);
     } else {
         // MULTI_JOB
-        target_time = thpool_p->jobqueue_p->total_time * cppadcg_pool_multijob_maxgroupwork / thpool_p->num_threads; // always positive
-
         job_p = thpool_p->jobqueue_p->front;
 
         if (job_p->elapsed == NULL) {
@@ -921,18 +931,27 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
         } else {
             // there are at least 2 jobs in the queue
             group->size = 1;
-            time = *job_p->elapsed;
-            timeNext = time;
+            duration = *job_p->elapsed;
+            duration_next = duration;
             job_p = job_p->prev;
+            target_duration = thpool_p->jobqueue_p->total_time * cppadcg_pool_multijob_maxgroupwork / thpool_p->num_threads; // always positive
+            current_time = get_monotonic_time(&timeAux, &info);
+
+            if (thpool_p->jobqueue_p->highest_expected_return > 0 && info) {
+                min_duration = 0.9f * (thpool_p->jobqueue_p->highest_expected_return - current_time);
+                if (target_duration < min_duration) {
+                    target_duration = min_duration;
+                }
+            }
 
             do {
                 if (job_p->elapsed == NULL) {
                     break;
                 }
-                timeNext += *job_p->elapsed;
-                if (timeNext < target_time) {
+                duration_next += *job_p->elapsed;
+                if (duration_next < target_duration) {
                     group->size++;
-                    time = timeNext;
+                    duration = duration_next;
                 } else {
                     break;
                 }
@@ -940,7 +959,7 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
             } while (job_p != thpool_p->jobqueue_p->front);
 
             if (cppadcg_pool_verbose) {
-                fprintf(stdout, "jobqueue_pull(): Work group with %i jobs for %e s (target: %e s)\n", group->size, time, target_time);
+                fprintf(stdout, "jobqueue_pull(): Work group with %i jobs for %e s (target: %e s)\n", group->size, duration, target_duration);
             }
 
             group->jobs = (struct job*) malloc(group->size * sizeof(struct job));
@@ -949,6 +968,10 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p) {
                 group->jobs[i] = *job_p; // copy
                 free(job_p);
             }
+
+            duration_next = current_time + duration; // the time when the current work is expected to end
+            if(duration_next > thpool_p->jobqueue_p->highest_expected_return)
+                thpool_p->jobqueue_p->highest_expected_return = duration_next;
         }
 
     }

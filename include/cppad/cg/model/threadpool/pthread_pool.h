@@ -54,17 +54,17 @@ void cppadcg_thpool_prepare();
 
 void cppadcg_thpool_add_job(cppadcg_thpool_function_type function,
                             void* arg,
-                            double* elapsed);
+                            float* elapsed);
 
 void cppadcg_thpool_add_jobs(cppadcg_thpool_function_type functions[],
                              void* args[],
-                             double elapsed[],
+                             float elapsed[],
                              int order[],
                              int nJobs);
 
 void cppadcg_thpool_wait();
 
-void cppadcg_thpool_update_order(double elapsed[],
+void cppadcg_thpool_update_order(float elapsed[],
                                  int order[],
                                  int nJobs);
 
