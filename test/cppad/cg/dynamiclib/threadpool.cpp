@@ -62,7 +62,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGThreadPoolTest, PthreadDisabledFullVars) {
+TEST_F(CppADCGThreadPoolTest, DisabledFullVars) {
     this->_multithreadDisabled = true;
 
     this->_reverseOne = true;
@@ -73,7 +73,7 @@ TEST_F(CppADCGThreadPoolTest, PthreadDisabledFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, PthreadSingleJobFullVars) {
+TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
 
@@ -86,7 +86,7 @@ TEST_F(CppADCGThreadPoolTest, PthreadSingleJobFullVars) {
 }
 
 
-TEST_F(CppADCGThreadPoolTest, PthreadMultiJobFullVars) {
+TEST_F(CppADCGThreadPoolTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
 

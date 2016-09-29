@@ -29,7 +29,9 @@ IF( UNIX )
 
     IF ( ENABLE_THREAD_POOL_TESTS )
         add_cppadcg_test(threadpool.cpp)
-        #add_cppadcg_test(openmp.cpp) # disabled until OpenMP allows libraries to be loaded dynamically and then gracefully closed
+        IF (OPENMP_FOUND)
+            #add_cppadcg_test(openmp.cpp) # disabled until OpenMP allows libraries to be loaded dynamically and then gracefully closed
+        ENDIF()
         #add_cppadcg_test(threadpool_distillation.cpp) # works fine but it is too large for simple tests
     ENDIF()
 

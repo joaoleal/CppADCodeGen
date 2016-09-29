@@ -18,20 +18,39 @@ namespace CppAD {
 namespace cg {
 
 class CppADCGOpenMPTest : public CppADCGDynamicTest {
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+protected:
+    std::vector<ADCG> u;
+    std::vector<double> x;
 public:
 
     inline CppADCGOpenMPTest(bool verbose = false, bool printValues = false) :
-        CppADCGDynamicTest("pool", verbose, printValues) {
+            CppADCGDynamicTest("pool_openmp", verbose, printValues),
+            u(9),
+            x(u.size()) {
         this->_multithread = MultiThreadingType::OPENMP;
+
+        // independent variables
+        for (auto& ui : u)
+            ui = 1;
+
+        for (auto& xi : x)
+            xi = 1.5;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
-        std::vector<ADCGD> Z(2);
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+        std::vector<ADCGD> y(6);
 
-        Z[0] = cos(u[0]);
-        Z[1] = u[1] * u[2] + sin(u[0]);
+        for (size_t i = 0; i < 3; ++i) {
+            size_t i0 = i * 2;
+            size_t j0 = i * 3;
 
-        return Z;
+            y[i0] = cos(x[j0]);
+            y[i0 + 1] = x[j0 + 1] * x[j0 + 2] + sin(x[j0]);
+        }
+
+        return y;
     }
 
 };
@@ -43,23 +62,8 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGOpenMPTest, PthreadDisabledFullVars) {
+TEST_F(CppADCGOpenMPTest, DisabledFullVars) {
    this->_multithreadDisabled = true;
-
-    // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
-
-    // independent variables
-    std::vector<ADCG> u(3);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -69,25 +73,10 @@ TEST_F(CppADCGOpenMPTest, PthreadDisabledFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGOpenMPTest, PthreadSingleJobFullVars) {
+TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
 
-    // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
-
-    // independent variables
-    std::vector<ADCG> u(3);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
-
     this->_reverseOne = true;
     this->_reverseTwo = true;
     this->_denseJacobian = false;
@@ -97,24 +86,9 @@ TEST_F(CppADCGOpenMPTest, PthreadSingleJobFullVars) {
 }
 
 
-TEST_F(CppADCGOpenMPTest, PthreadMultiJobFullVars) {
+TEST_F(CppADCGOpenMPTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
-
-    // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
-
-    // independent variables
-    std::vector<ADCG> u(3);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -128,21 +102,6 @@ TEST_F(CppADCGOpenMPTest, FullVars) {
     this->_multithreadDisabled = false;
     //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
 
-    // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
-
-    // independent variables
-    std::vector<ADCG> u(3);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
-
     this->_reverseOne = true;
     this->_reverseTwo = true;
     this->_denseJacobian = false;
@@ -154,21 +113,6 @@ TEST_F(CppADCGOpenMPTest, FullVars) {
 TEST_F(CppADCGOpenMPTest, DynamicCustomElements) {
     this->_multithreadDisabled = false;
     //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
-
-    // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
-
-    // independent variables
-    std::vector<ADCG> u(3);
-    u[0] = 1;
-    u[1] = 1;
-    u[2] = 1;
-
-    std::vector<double> x(u.size());
-    x[0] = 1;
-    x[1] = 2;
-    x[2] = 1;
 
     std::vector<size_t> jacRow(3), jacCol(3); // all elements except 1
     jacRow[0] = 0;
