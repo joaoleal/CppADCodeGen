@@ -74,3 +74,50 @@ TEST(CppADCGLatexTest, latex) {
     ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
 
 }
+
+
+TEST(CppADCGLatexTest, latexJac) {
+    // use a special object for source code generation
+    typedef CG<double> CGD;
+    typedef AD<CGD> ADCG;
+
+    // independent variable vector
+    CppAD::vector<ADCG> x(4);
+    x[0] = 2.;
+    Independent(x);
+
+    // dependent variable vector 
+    CppAD::vector<ADCG> y(1);
+
+    // the model
+    y[0] = x[0] * x[1] * x[2] * x[3];
+
+    ADFun<CGD> fun(x, y); // the model tape
+
+    /**
+     * start the special steps for source code generation
+     * for a Jacobian
+     */
+    CodeHandler<double> handler;
+
+    CppAD::vector<CGD> indVars(x.size());
+    handler.makeVariables(indVars);
+
+    CppAD::vector<CGD> jac = fun.SparseJacobian(indVars);
+    //CppAD::vector<CGD> vals = fun.Forward(0, indVars);
+
+    LanguageLatex<double> langLatex;
+    LangLatexDefaultVariableNameGenerator<double> nameGen;
+
+    std::ofstream texfile;
+    texfile.open("algorithm.tex");
+
+    handler.generateCode(texfile, langLatex, jac, nameGen);
+
+    texfile.close();
+
+    std::string dir = system::getWorkingDirectory();
+
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+
+}
