@@ -66,6 +66,7 @@ public:
         std::vector<CGD> jac = fun.Jacobian(x2);
         // Jacobian
         if(denseJacobian) {
+            if(verbose_) std::cout << "Jacobian" << std::endl;
             depCGen = model.Jacobian(x);
             ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
         }
@@ -76,11 +77,13 @@ public:
 
         std::vector<CGD> hess = fun.Hessian(x2, w2);
         if(denseHessian) {
+            if(verbose_) std::cout << "Hessian" << std::endl;
             depCGen = model.Hessian(x, w);
             ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
         }
 
         // sparse Jacobian
+        if(verbose_) std::cout << "sparse Jacobian" << std::endl;
         std::vector<Base> jacCGen;
         std::vector<size_t> row, col;
         model.SparseJacobian(x, jacCGen, row, col);
@@ -92,6 +95,7 @@ public:
         ASSERT_TRUE(compareValues(jacCGenDense, jac, epsilonR, epsilonA));
 
         if(lib.getThreadNumber() > 1) {
+            if(verbose_) std::cout << "sparse Jacobian" << std::endl;
             // sparse Jacobian again (make sure the second run is also OK)
             model.SparseJacobian(x, jacCGen, row, col);
             for (size_t i = 0; i < jacCGen.size(); i++) {
@@ -101,6 +105,7 @@ public:
         }
 
         // sparse Hessian
+        if(verbose_) std::cout << "sparse Hessian" << std::endl;
         std::vector<Base> hessCGen;
         model.SparseHessian(x, w, hessCGen, row, col);
         std::vector<Base> hessCGenDense(hess.size());
@@ -111,6 +116,7 @@ public:
         ASSERT_TRUE(compareValues(hessCGenDense, hess, epsilonR, epsilonA));
 
         if(lib.getThreadNumber() > 1) {
+            if(verbose_) std::cout << "sparse Hessian" << std::endl;
             // sparse Hessian again (make sure the second run is also OK)
             model.SparseHessian(x, w, hessCGen, row, col);
             for (size_t i = 0; i < hessCGen.size(); i++) {

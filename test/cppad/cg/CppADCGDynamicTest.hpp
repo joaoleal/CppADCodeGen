@@ -126,6 +126,7 @@ public:
 
         DynamicModelLibraryProcessor<double> p(compDynHelp);
         GccCompiler<double> compiler;
+        //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
         if(compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
