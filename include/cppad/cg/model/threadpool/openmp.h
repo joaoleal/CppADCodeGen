@@ -18,8 +18,9 @@
 extern "C" {
 #endif
 
-enum group_strategy {SINGLE_JOB, // omp_sched_dynamic with chunk size 1
-                     MULTI_JOB}; // omp_sched_guided
+enum group_strategy {SCHED_SINGLE_JOB, // omp_sched_dynamic with chunk size 1
+                     SCHED_MULTI_JOB, // omp_sched_guided
+                     SCHED_STATIC}; // omp_sched_static
 
 void cppadcg_openmp_set_disabled(int disabled);
 

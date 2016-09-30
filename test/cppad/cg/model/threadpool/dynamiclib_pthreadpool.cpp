@@ -25,8 +25,8 @@ protected:
     std::vector<double> x;
 public:
 
-    inline CppADCGThreadPoolTest(bool verbose = false, bool printValues = false) :
-        CppADCGDynamicTest("pool", verbose, printValues),
+    inline CppADCGThreadPoolTest(bool verbose = true) :
+        CppADCGDynamicTest("pool", verbose, false),
         u(9),
         x(u.size()) {
         this->_multithread = MultiThreadingType::PTHREADS;
@@ -85,7 +85,6 @@ TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-
 TEST_F(CppADCGThreadPoolTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
@@ -98,7 +97,9 @@ TEST_F(CppADCGThreadPoolTest, MultiJobFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, FullVars) {
+TEST_F(CppADCGThreadPoolTest, StaticFullVars) {
+    this->_multithreadDisabled = false;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::STATIC;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;

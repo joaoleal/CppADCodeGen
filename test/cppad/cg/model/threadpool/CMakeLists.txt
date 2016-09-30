@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2012 Ciengis
+#    Copyright (C) 2016 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -14,16 +14,20 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 IF( UNIX )
-    add_cppadcg_test(dynamic.cpp)
-    add_cppadcg_test(dynamic_atomic.cpp)
-    add_cppadcg_test(dynamic_atomic_2.cpp)
-    add_cppadcg_test(dynamic_atomic_3.cpp)
-    #add_cppadcg_test(dynamic_atomic_4.cpp)
-    #add_cppadcg_test(dynamic_atomic_5.cpp)
-    add_cppadcg_test(dynamic_cond_exp.cpp)
-    add_cppadcg_test(dynamic_forward_reverse.cpp)
-    add_cppadcg_test(dynamic_forward_reverse_2.cpp)
+  ADD_LIBRARY(pthread_pool STATIC
+              ${CMAKE_SOURCE_DIR}/include/cppad/cg/model/threadpool/pthread_pool.c)
+
+  add_cppadcg_test(pthreadpool_raw)
+
+  TARGET_LINK_LIBRARIES(pthreadpool_raw pthread_pool)
+  TARGET_LINK_LIBRARIES(pthreadpool_raw ${CMAKE_THREAD_LIBS_INIT} )
+
 ENDIF()
+
+add_cppadcg_test(dynamiclib_pthreadpool.cpp)
+IF (OPENMP_FOUND)
+  #add_cppadcg_test(dynamiclib_openmp.cpp) # disabled until OpenMP allows libraries to be loaded dynamically and then gracefully closed
+ENDIF()
+#add_cppadcg_test(dynamiclib_pthreadpool_distillation.cpp) # works fine but it is too large for simple tests

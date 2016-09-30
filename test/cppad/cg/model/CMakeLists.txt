@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2012 Ciengis
+#    Copyright (C) 2016 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -14,16 +14,6 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
-IF( UNIX )
-    add_cppadcg_test(dynamic.cpp)
-    add_cppadcg_test(dynamic_atomic.cpp)
-    add_cppadcg_test(dynamic_atomic_2.cpp)
-    add_cppadcg_test(dynamic_atomic_3.cpp)
-    #add_cppadcg_test(dynamic_atomic_4.cpp)
-    #add_cppadcg_test(dynamic_atomic_5.cpp)
-    add_cppadcg_test(dynamic_cond_exp.cpp)
-    add_cppadcg_test(dynamic_forward_reverse.cpp)
-    add_cppadcg_test(dynamic_forward_reverse_2.cpp)
+IF ( ENABLE_THREAD_POOL_TESTS )
+    ADD_SUBDIRECTORY(threadpool)
 ENDIF()

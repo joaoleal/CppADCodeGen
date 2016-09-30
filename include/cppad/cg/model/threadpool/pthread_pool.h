@@ -19,8 +19,9 @@
 extern "C" {
 #endif
 
-enum group_strategy {SINGLE_JOB,
-                     MULTI_JOB};
+enum group_strategy {SCHED_SINGLE_JOB,
+                     SCHED_MULTI_JOB,
+                     SCHED_STATIC};
 
 typedef void (*cppadcg_thpool_function_type)(void*);
 
