@@ -603,7 +603,7 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
 
     cache << "   ExecArgStruct* args[" << size << "];\n"
             "   cppadcg_thpool_function_type execute_functions[" << size << "] = ";
-    repeatFill("(void*)exec_func");
+    repeatFill("exec_func");
     cache << "\n"
             "   static float elapsed[" << size << "] = ";
     repeatFill("0");
