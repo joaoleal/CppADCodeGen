@@ -35,6 +35,11 @@ public:
     static cg::CG<double> max() {
         return std::numeric_limits<double>::max();
     }
+
+    static cg::CG<double> quiet_NaN() {
+        return std::numeric_limits<double>::quiet_NaN();
+    }
+
 };
 
 /**

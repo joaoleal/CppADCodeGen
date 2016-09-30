@@ -35,6 +35,10 @@ public:
     static cg::CG<float> max() {
         return std::numeric_limits<float>::max();
     }
+
+    static cg::CG<float> quiet_NaN() {
+        return std::numeric_limits<float>::quiet_NaN();
+    }
 };
 
 /**
