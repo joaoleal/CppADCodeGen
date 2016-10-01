@@ -625,6 +625,8 @@ static int jobqueue_push_static_jobs(thpool_* thpool_p,
     free(durations);
     free(n_jobs);
     free(groups);
+
+    return 0;
 }
 
 /**
@@ -908,7 +910,6 @@ static int jobqueue_init(thpool_* thpool_p) {
 
 /* Clear the queue */
 static void jobqueue_clear(thpool_* thpool_p) {
-    int i;
     struct job_group* group;
     int size;
 
@@ -1067,7 +1068,7 @@ static struct job_group* jobqueue_pull(thpool_* thpool_p,
         }
 
         jobqueue_extract_single_group(thpool_p, group);
-    } else if(group_gen_strategy == SCHED_MULTI_JOB) {
+    } else { // group_gen_strategy == SCHED_MULTI_JOB
         // SCHED_MULTI_JOB
         group = (struct job_group*) malloc(sizeof(struct job_group));
         group->prev = NULL;
