@@ -59,13 +59,11 @@ TEST_F(CppADCGModelTest, llvm) {
     compHelp.setCreateSparseJacobian(true);
     compHelp.setCreateSparseHessian(true);
     compHelp.setCreateForwardOne(true);
-    compHelp.setMultiThreading(true);
-
-    ASSERT_TRUE(compHelp.isJacobianMultiThreadingEnabled());
+    compHelp.setMultiThreading(false);
 
     ModelLibraryCSourceGen<double> compDynHelp(compHelp);
     compDynHelp.setVerbose(this->verbose_);
-    compDynHelp.setMultiThreading(MultiThreadingType::PTHREADS);
+    compDynHelp.setMultiThreading(MultiThreadingType::NONE);
 
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
