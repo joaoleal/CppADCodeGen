@@ -38,21 +38,24 @@ UNSET(LLVM_LDFLAGS CACHE)
 UNSET(LLVM_MODULE_LIBS CACHE)
 
 IF(LLVM_FIND_VERSION AND NOT LLVM_FIND_VERSION_EXACT)
-  SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "3.5" "3.4" "3.3" "3.2")
+  FIND_PROGRAM(LLVM_CONFIG "llvm-config-${LLVM_VERSION}")
 
-  # Select acceptable versions.
-  FOREACH(version ${_LLVM_KNOWN_VERSIONS})
-  
-    IF(NOT "${version}" VERSION_LESS "${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
-      FIND_PROGRAM(LLVM_CONFIG "llvm-config-${version}")
-      IF(LLVM_CONFIG)
-        BREAK() # Found suitable version
-      ENDIF()
-    ELSE()
-      BREAK() # Lower version than requested
-    ENDIF()
-  ENDFOREACH()
-  
+  IF(NOT LLVM_CONFIG)
+      SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
+
+      # Select acceptable versions.
+      FOREACH(version ${_LLVM_KNOWN_VERSIONS})
+
+          IF(NOT "${version}" VERSION_LESS "${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
+              FIND_PROGRAM(LLVM_CONFIG "llvm-config-${version}")
+              IF(LLVM_CONFIG)
+                  BREAK() # Found suitable version
+              ENDIF()
+          ELSE()
+              BREAK() # Lower version than requested
+          ENDIF()
+      ENDFOREACH()
+  ENDIF()
 ENDIF()
 
 IF(NOT LLVM_CONFIG AND LLVM_FIND_VERSION) # LLVM_FIND_VERSION_EXACT or failed to find using previous search

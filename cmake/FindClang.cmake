@@ -23,7 +23,13 @@ ENDIF()
 
 MACRO(findClangStaticLib _libname_)
   UNSET(CLANG_${_libname_}_LIB CACHE)
-  FIND_LIBRARY(CLANG_${_libname_}_LIB ${_libname_} ${LLVM_LIBRARY_DIRS} ${CLANG_LIBRARY_DIRS})
+  IF(LLVM_LIBRARY_DIRS)
+      FIND_LIBRARY(CLANG_${_libname_}_LIB ${_libname_} PATH ${LLVM_LIBRARY_DIRS})
+  ELSE()
+      FIND_LIBRARY(CLANG_${_libname_}_LIB ${_libname_} ${LLVM_LIBRARY_DIRS} ${CLANG_LIBRARY_DIRS})
+  ENDIF()
+
+
   MARK_AS_ADVANCED(CLANG_${_libname_}_LIB)
   IF(CLANG_${_libname_}_LIB)
      SET(CLANG_LIBS ${CLANG_LIBS} ${CLANG_${_libname_}_LIB})

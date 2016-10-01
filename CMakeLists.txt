@@ -23,6 +23,11 @@ SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
 # ----------------------------------------------------------------------------
+#                                  options
+# ----------------------------------------------------------------------------
+set(LLVM_VERSION "" CACHE STRING "Prefered LLVM and Clang version to be used in tests")
+
+# ----------------------------------------------------------------------------
 #                      some additional cmake modules
 # ----------------------------------------------------------------------------
 SET(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
@@ -42,8 +47,8 @@ IF(UNIX)
     FIND_PACKAGE(DL REQUIRED)
 ENDIF()
 
-FIND_PACKAGE(LLVM)
-FIND_PACKAGE(Clang)
+FIND_PACKAGE(LLVM ${LLVM_VERSION})
+FIND_PACKAGE(Clang ${LLVM_VERSION})
 
 IF(LLVM_FOUND)
     ADD_DEFINITIONS(-DLLVM_VERSION_MAJOR=${LLVM_VERSION_MAJOR}
