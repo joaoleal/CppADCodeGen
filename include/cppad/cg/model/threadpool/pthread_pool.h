@@ -19,9 +19,9 @@
 extern "C" {
 #endif
 
-enum group_strategy {SCHED_SINGLE_JOB,
-                     SCHED_MULTI_JOB,
-                     SCHED_STATIC};
+enum ScheduleStrategy {SCHED_SINGLE_JOB,
+                       SCHED_MULTI_JOB,
+                       SCHED_STATIC};
 
 typedef void (*cppadcg_thpool_function_type)(void*);
 
@@ -31,9 +31,9 @@ void cppadcg_thpool_set_threads(int n);
 int cppadcg_thpool_get_threads();
 
 
-void cppadcg_thpool_set_scheduler_strategy(enum group_strategy s);
+void cppadcg_thpool_set_scheduler_strategy(enum ScheduleStrategy s);
 
-enum group_strategy cppadcg_thpool_get_scheduler_strategy();
+enum ScheduleStrategy cppadcg_thpool_get_scheduler_strategy();
 
 
 void cppadcg_thpool_set_multijob_maxgroupwork(float v);
