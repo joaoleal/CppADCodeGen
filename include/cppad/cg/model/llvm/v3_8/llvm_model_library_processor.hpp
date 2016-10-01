@@ -206,7 +206,7 @@ protected:
         ArrayRef<StringRef> paths;
         llvm::sys::findProgramByName("clang", paths);
 
-        static const char* argv [] = {"program", "-v", "-x", "c", "string-input"}; // -v flag is required to avoid an error inside createInvocationFromCommandLine()
+        static const char* argv [] = {"program", "-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         static const int argc = sizeof (argv) / sizeof (argv[0]);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();

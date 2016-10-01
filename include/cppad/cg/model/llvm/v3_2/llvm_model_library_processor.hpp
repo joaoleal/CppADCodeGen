@@ -104,7 +104,7 @@ protected:
         using namespace llvm;
         using namespace clang;
 
-        static const char* argv [] = {"program", "-x", "c", "string-input"};
+        static const char* argv [] = {"program", "-Wall", "-x", "c", "string-input"};
         static const int argc = sizeof (argv) / sizeof (argv[0]);
 
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
