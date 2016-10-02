@@ -601,11 +601,14 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
         cache << "};";
     };
 
-    cache << "   ExecArgStruct* args[" << size << "];\n"
-            "   cppadcg_thpool_function_type execute_functions[" << size << "] = ";
+    cache << "   ExecArgStruct* args[" << size << "];\n";
+    cache << "   static cppadcg_thpool_function_type execute_functions[" << size << "] = ";
     repeatFill("exec_func");
-    cache << "\n"
-            "   static float elapsed[" << size << "] = ";
+    cache << "\n";
+    cache << "   static float avgElapsed[" << size << "] = ";
+    repeatFill("0");
+    cache << "\n";
+    cache << "   static float elapsed[" << size << "] = ";
     repeatFill("0");
     cache << "\n"
             "   static int order[" << size << "] = {";
@@ -614,13 +617,16 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
         cache << i;
     }
     cache << "};\n"
-            "   int do_benchmark = " << (size > 0 ? "(elapsed[0] == 0 && !cppadcg_thpool_is_disabled())" : "0") << ";\n";
+            "   unsigned int nBench = cppadcg_thpool_get_time_meas();\n"
+            "   static unsigned int meas = 0;\n"
+            "   int do_benchmark = " << (size > 0 ? "(meas < nBench && !cppadcg_thpool_is_disabled())" : "0") << ";\n"
+            "   float* elapsed_p = do_benchmark ? elapsed : NULL;\n";
 }
 
 template<class Base>
 void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
                                                      size_t size) {
-    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, elapsed, order, " << size << ");\n"
+    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, avgElapsed, elapsed_p, order, " << size << ");\n"
             "\n"
             "   cppadcg_thpool_wait();\n"
             "\n"
@@ -629,7 +635,8 @@ void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
             "   }\n"
             "\n"
             "   if(do_benchmark) {\n"
-            "      cppadcg_thpool_update_order(elapsed, order, " << size << ");\n"
+            "      cppadcg_thpool_update_order(avgElapsed, meas, elapsed, order, " << size << ");\n"
+            "      meas++;\n"
             "   }\n";
 }
 

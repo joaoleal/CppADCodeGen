@@ -41,6 +41,11 @@ void cppadcg_thpool_set_multijob_maxgroupwork(float v);
 float cppadcg_thpool_get_multijob_maxgroupwork();
 
 
+unsigned int cppadcg_thpool_get_time_meas();
+
+void cppadcg_thpool_set_time_meas(unsigned int n);
+
+
 void cppadcg_thpool_set_verbose(int v);
 
 int cppadcg_thpool_is_verbose();
@@ -55,17 +60,21 @@ void cppadcg_thpool_prepare();
 
 void cppadcg_thpool_add_job(cppadcg_thpool_function_type function,
                             void* arg,
+                            const float* avgElapsed,
                             float* elapsed);
 
 void cppadcg_thpool_add_jobs(cppadcg_thpool_function_type functions[],
                              void* args[],
+                             const float avgElapsed[],
                              float elapsed[],
-                             int order[],
+                             const int order[],
                              int nJobs);
 
 void cppadcg_thpool_wait();
 
-void cppadcg_thpool_update_order(float elapsed[],
+void cppadcg_thpool_update_order(float avgElapsed[],
+                                 unsigned int n_time_meas,
+                                 const float elapsed[],
                                  int order[],
                                  int nJobs);
 
