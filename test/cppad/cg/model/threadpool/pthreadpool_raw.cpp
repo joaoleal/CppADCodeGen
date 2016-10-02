@@ -132,10 +132,14 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
     inLocal[1] = &inLocal1;
 
     ExecArgStruct* args[6];
-    cppadcg_thpool_function_type execute_functions[6] = {exec_func, exec_func, exec_func, exec_func, exec_func, exec_func};
-    static float elapsed[6] = {0, 0, 0, 0, 0, 0};
+    static cppadcg_thpool_function_type execute_functions[6] = {exec_func, exec_func, exec_func, exec_func, exec_func, exec_func};
+    static float avgElapsed[6] = {0, 0, 0, 0, 0, 0};
+    float elapsed[6] = {0, 0, 0, 0, 0, 0};
     static int order[6] = {0, 1, 2, 3, 4, 5};
-    int do_benchmark = (elapsed[0] == 0 && !cppadcg_thpool_is_disabled());
+    unsigned int nBench = cppadcg_thpool_get_time_meas();
+    static unsigned int meas = 0;
+    int do_benchmark = (meas < nBench && !cppadcg_thpool_is_disabled());
+    float* elapsed_p = do_benchmark ? elapsed : NULL;
 
     for (i = 0; i < 6; ++i) {
         args[i] = (ExecArgStruct*) malloc(sizeof(ExecArgStruct));
@@ -145,7 +149,7 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
         args[i]->atomicFun = atomicFun;
     }
 
-    cppadcg_thpool_add_jobs(execute_functions, (void**) args, elapsed, order, 6);
+    cppadcg_thpool_add_jobs(execute_functions, (void**) args, avgElapsed, elapsed_p, order, 6);
 
     cppadcg_thpool_wait();
 
@@ -154,7 +158,8 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
     }
 
     if (do_benchmark) {
-        cppadcg_thpool_update_order(elapsed, order, 6);
+        cppadcg_thpool_update_order(avgElapsed, meas, elapsed, order, 6);
+        meas++;
     }
 
 }
