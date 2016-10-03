@@ -94,6 +94,8 @@ public:
 
                 // create the module
                 Module* module = llvm::ParseBitcodeFile(buffer.get(), *_context.get(), &errMsg);
+                if(module == nullptr)
+                    throw CGException("Failed to create LLVM bitcode: ", errMsg);
 
                 // link modules together
                 if (_linker.get() == nullptr) {
