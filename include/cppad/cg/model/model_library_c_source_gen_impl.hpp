@@ -36,6 +36,9 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED = "cppad_cg_set_thread_pool_disabled";
 
 template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLDISABLED = "cppad_cg_is_thread_pool_disabled";
+
+template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS = "cppad_cg_set_thread_number";
 
 template<class Base>
@@ -54,10 +57,16 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE = "cppad_cg_thpool_is_verbose";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_set_multijob_maxgroupwork";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_set_multijob_maxgroupwork";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_get_multijob_maxgroupwork";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_get_multijob_maxgroupwork";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS = "cppad_cg_thpool_set_number_of_time_meas";
+
+template<class Base>
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS = "cppad_cg_thpool_get_number_of_time_meas";
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::CONST = "const";
@@ -195,8 +204,13 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
     if (usingMultiThreading && _multiThreading == MultiThreadingType::PTHREADS) {
         _cache.str("");
         _cache << CPPADCG_PTHREAD_POOL_H_FILE << "\n\n";
+
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
         _cache << "   cppadcg_thpool_set_disabled(disabled);\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLDISABLED << "() {\n";
+        _cache << "   return cppadcg_thpool_is_disabled();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
@@ -231,14 +245,27 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return cppadcg_thpool_get_multijob_maxgroupwork();\n";
         _cache << "}\n\n";
 
+        _cache << "void " << FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS << "(unsigned int n) {\n";
+        _cache << "   cppadcg_thpool_set_time_meas(n);\n";
+        _cache << "}\n\n";
+
+        _cache << "unsigned int " << FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS << "() {\n";
+        _cache << "   return cppadcg_thpool_get_time_meas();\n";
+        _cache << "}\n\n";
+
         sources["thread_pool_access.c"] = _cache.str();
 
     } else if(usingMultiThreading && _multiThreading == MultiThreadingType::OPENMP) {
         _cache.str("");
         _cache << "#include <omp.h>\n";
         _cache << CPPADCG_OPENMP_H_FILE << "\n\n";
+
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
         _cache << "   cppadcg_openmp_set_disabled(disabled);\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLDISABLED << "() {\n";
+        _cache << "   return cppadcg_openmp_is_disabled();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
@@ -283,6 +310,14 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "   return 1.0;\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS << "(unsigned int n) {\n";
+        _cache << "}\n\n";
+
+        _cache << "unsigned int " << FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS << "() {\n";
+        _cache << "   return 0;\n";
         _cache << "}\n\n";
 
         sources["thread_pool_access.c"] = _cache.str();
@@ -292,6 +327,10 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "enum ScheduleStrategy {SCHED_SINGLE_JOB, SCHED_MULTI_JOB, SCHED_STATIC};\n"
                 "\n";
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
+        _cache << "}\n\n";
+
+        _cache << "int " << FUNCTION_ISTHREADPOOLDISABLED << "() {\n";
+        _cache << "   return 1;\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADS << "(unsigned int n) {\n";
@@ -320,6 +359,13 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
 
         _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
         _cache << "   return 1.0;\n";
+        _cache << "}\n\n";
+
+        _cache << "void " << FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS << "(unsigned int n) {\n";
+        _cache << "}\n\n";
+
+        _cache << "unsigned int " << FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS << "() {\n";
+        _cache << "   return 0;\n";
         _cache << "}\n\n";
 
         sources["thread_pool_access.c"] = _cache.str();

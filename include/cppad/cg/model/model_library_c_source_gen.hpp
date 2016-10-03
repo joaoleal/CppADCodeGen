@@ -30,14 +30,17 @@ public:
     static const std::string FUNCTION_MODELS;
     static const std::string FUNCTION_ONCLOSE;
     static const std::string FUNCTION_SETTHREADPOOLDISABLED;
+    static const std::string FUNCTION_ISTHREADPOOLDISABLED;
     static const std::string FUNCTION_SETTHREADS;
     static const std::string FUNCTION_GETTHREADS;
     static const std::string FUNCTION_SETTHREADSCHEDULERSTRAT;
     static const std::string FUNCTION_GETTHREADSCHEDULERSTRAT;
     static const std::string FUNCTION_SETTHREADPOOLVERBOSE;
     static const std::string FUNCTION_ISTHREADPOOLVERBOSE;
-    static const std::string FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK;
     static const std::string FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK;
+    static const std::string FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK;
+    static const std::string FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS;
+    static const std::string FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS;
     static const unsigned long API_VERSION;
 protected:
     static const std::string CONST;

@@ -25,7 +25,27 @@ namespace cg {
  */
 template<class Base>
 class FunctorModelLibrary : public ModelLibrary<Base> {
+protected:
+    std::set<std::string> _modelNames;
+    unsigned long _version; // API version
+    void (*_onClose)();
+    void (*_setThreadPoolDisabled)(int);
+    int (*_isThreadPoolDisabled)();
+    void (*_setThreads)(unsigned int);
+    unsigned int (*_getThreads)();
+    void (*_setSchedulerStrategy)(int);
+    int (*_getSchedulerStrategy)();
+    void (*_setThreadPoolVerbose)(int v);
+    int (*_isThreadPoolVerbose)();
+    void (*_setThreadPoolMultiJobMaxWork)(float v);
+    float (*_getThreadPoolMultiJobMaxWork)();
+    void (*_setThreadPoolNumberOfTimeMeas)(unsigned int n);
+    unsigned int (*_getThreadPoolNumberOfTimeMeas)();
 public:
+
+    virtual std::set<std::string> getModelNames() override {
+        return _modelNames;
+    }
 
     /**
      * Creates a new FunctorGenericModel object that can be used to evaluate
@@ -43,7 +63,9 @@ public:
      * 
      * @return the API version
      */
-    virtual unsigned long getAPIVersion() = 0;
+    virtual unsigned long getAPIVersion() {
+        return _version;
+    }
 
     /**
      * Provides a pointer to a function in the model library.
@@ -61,9 +83,157 @@ public:
     virtual void* loadFunction(const std::string& functionName,
                                bool required = true) = 0;
 
+    virtual void setThreadPoolDisabled(bool disabled) override {
+        if(_setThreadPoolDisabled != nullptr) {
+            (*_setThreadPoolDisabled)(disabled);
+        }
+    }
+
+    virtual bool isThreadPoolDisabled() const {
+        if(_isThreadPoolDisabled != nullptr) {
+            return bool((*_isThreadPoolDisabled)());
+        }
+        return true;
+    }
+
+    virtual unsigned int getThreadNumber() const override {
+        if (_getThreads != nullptr) {
+            return (*_getThreads)();
+        }
+        return 1;
+    }
+
+    virtual void setThreadNumber(unsigned int n) override {
+        if (_setThreads != nullptr) {
+            (*_setThreads)(n);
+        }
+    }
+
+    virtual ThreadPoolScheduleStrategy getThreadPoolSchedulerStrategy() const override {
+        if (_getSchedulerStrategy != nullptr) {
+            return ThreadPoolScheduleStrategy((*_getSchedulerStrategy)());
+        }
+        return ThreadPoolScheduleStrategy::SINGLE_JOB;
+    }
+
+    virtual void setThreadPoolSchedulerStrategy(ThreadPoolScheduleStrategy s) override {
+        if (_setSchedulerStrategy != nullptr) {
+            (*_setSchedulerStrategy)(int(s));
+        }
+    }
+
+    virtual void setThreadPoolVerbose(bool v) override {
+        if (_setThreadPoolVerbose != nullptr) {
+            (*_setThreadPoolVerbose)(int(v));
+        }
+    }
+
+    virtual bool isThreadPoolVerbose() const override {
+        if (_isThreadPoolVerbose != nullptr) {
+            return bool((*_isThreadPoolVerbose)());
+        }
+        return false;
+    }
+
+    virtual void setThreadPoolMultiJobMaxWork(float v) override {
+        if (_setThreadPoolMultiJobMaxWork != nullptr) {
+            (*_setThreadPoolMultiJobMaxWork)(v);
+        }
+    }
+
+    virtual float getThreadPoolMultiJobMaxWork() const override {
+        if (_getThreadPoolMultiJobMaxWork != nullptr) {
+            return (*_getThreadPoolMultiJobMaxWork)();
+        }
+        return 1.0;
+    }
+
+    virtual void setThreadPoolNumberOfTimeMeas(unsigned int n) override {
+        if (_setThreadPoolNumberOfTimeMeas != nullptr) {
+            (*_setThreadPoolNumberOfTimeMeas)(n);
+        }
+    }
+
+    virtual unsigned int getThreadPoolNumberOfTimeMeas() const override {
+        if (_getThreadPoolNumberOfTimeMeas != nullptr) {
+            return (*_getThreadPoolNumberOfTimeMeas)();
+        }
+        return 0;
+    }
+
     inline virtual ~FunctorModelLibrary() {
     }
 
+protected:
+    FunctorModelLibrary() :
+            _version(0), // not really required (but it avoids warnings)
+            _onClose(nullptr),
+            _setThreadPoolDisabled(nullptr),
+            _isThreadPoolDisabled(nullptr),
+            _setThreads(nullptr),
+            _getThreads(nullptr),
+            _setSchedulerStrategy(nullptr),
+            _getSchedulerStrategy(nullptr),
+            _setThreadPoolVerbose(nullptr),
+            _isThreadPoolVerbose(nullptr),
+            _setThreadPoolMultiJobMaxWork(nullptr),
+            _getThreadPoolMultiJobMaxWork(nullptr),
+            _setThreadPoolNumberOfTimeMeas(nullptr),
+            _getThreadPoolNumberOfTimeMeas(nullptr) {
+    }
+
+    inline void validate() {
+        /**
+         * Check the version
+         */
+        unsigned long (*versionFunc)();
+        versionFunc = reinterpret_cast<decltype(versionFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_VERSION));
+
+        _version = (*versionFunc)();
+        if (ModelLibraryCSourceGen<Base>::API_VERSION != _version)
+            throw CGException("The API version of the dynamic library (", _version,
+                              ") is incompatible with the current version (",
+                              ModelLibraryCSourceGen<Base>::API_VERSION, ")");
+
+        /**
+         * Load the list of models
+         */
+        void (*modelsFunc)(char const *const**, int*);
+        modelsFunc = reinterpret_cast<decltype(modelsFunc)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_MODELS));
+
+        char const*const* model_names = nullptr;
+        int model_count;
+        (*modelsFunc)(&model_names, &model_count);
+
+        for (int i = 0; i < model_count; i++) {
+            _modelNames.insert(model_names[i]);
+        }
+
+        /**
+         * Load the the on close function
+         */
+        _onClose = reinterpret_cast<decltype(_onClose)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ONCLOSE, false));
+
+        /**
+         * Thread pool related functions
+         */
+        _setThreadPoolDisabled = reinterpret_cast<decltype(_setThreadPoolDisabled)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLDISABLED, false));
+        _isThreadPoolDisabled = reinterpret_cast<decltype(_isThreadPoolDisabled)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLDISABLED, false));
+        _setThreads = reinterpret_cast<decltype(_setThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADS, false));
+        _getThreads = reinterpret_cast<decltype(_getThreads)> (loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADS, false));
+        _setSchedulerStrategy = reinterpret_cast<decltype(_setSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADSCHEDULERSTRAT, false));
+        _getSchedulerStrategy = reinterpret_cast<decltype(_getSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT, false));
+        _setThreadPoolVerbose = reinterpret_cast<decltype(_setThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLVERBOSE, false));
+        _isThreadPoolVerbose = reinterpret_cast<decltype(_isThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE, false));
+        _setThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_setThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
+        _getThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_getThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
+        _setThreadPoolNumberOfTimeMeas = reinterpret_cast<decltype(_setThreadPoolNumberOfTimeMeas)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS, false));
+        _getThreadPoolNumberOfTimeMeas = reinterpret_cast<decltype(_getThreadPoolNumberOfTimeMeas)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS, false));
+
+        if(_setThreads != nullptr) {
+            (*_setThreads)(std::thread::hardware_concurrency());
+        }
+    }
 };
 
 } // END cg namespace

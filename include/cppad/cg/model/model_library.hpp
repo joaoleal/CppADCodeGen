@@ -50,7 +50,21 @@ public:
      */
     virtual GenericModel<Base>* model(const std::string& modelName) = 0;
 
+    /**
+     * Defines whether or not to disable multithreaded model evaluations.
+     * This only works if the models if they were compiled with
+     * multithreading support.
+     *
+     * @param disabled true to only use the current thread to evaluate models.
+     */
     virtual void setThreadPoolDisabled(bool disabled) = 0;
+
+    /**
+     * Determines whether or not multithreaded model evaluations are disabled.
+     *
+     * @return true if only the current thread is used to evaluate models.
+     */
+    virtual bool isThreadPoolDisabled() const = 0;
 
     /**
      * Provides the maximum number of threads used to determine sparse Jacobians
@@ -96,11 +110,36 @@ public:
 
     virtual void setThreadPoolVerbose(bool v) = 0;
 
-    virtual bool isThreadPoolVerbose() = 0;
+    virtual bool isThreadPoolVerbose() const = 0;
 
     virtual void setThreadPoolMultiJobMaxWork(float v) = 0;
 
-    virtual float getThreadPoolMultiJobMaxWork() = 0;
+    virtual float getThreadPoolMultiJobMaxWork() const = 0;
+
+    /**
+     * Defines the number of time measurements taken by each computational
+     * task during multithreaded model evaluations. This is used to schedule
+     * work accross threads. The higher the value the more accurate the
+     * time estimations are but it requires additional calls to retrieve times.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     *
+     * @param n the number of time measurements to take per task.
+     */
+    virtual void setThreadPoolNumberOfTimeMeas(unsigned int n) = 0;
+
+
+    /**
+     * Provides the number of time measurements taken by each computational
+     * task during multithreaded model evaluations. This is used to schedule
+     * work accross threads. The higher the value the more accurate the
+     * time estimations are but it requires additional calls to retrieve times.
+     * This value is only used by the models if they were compiled with
+     * multithreading support.
+     *
+     * @return the number of time measurements to take per task.
+     */
+    virtual unsigned int getThreadPoolNumberOfTimeMeas() const = 0;
 
     inline virtual ~ModelLibrary() {
     }
