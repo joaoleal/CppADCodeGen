@@ -168,15 +168,20 @@ inline bool isFile(const std::string& path) {
 
 inline void callExecutable(const std::string& executable,
                            const std::vector<std::string>& args,
-                           bool pipeSource,
-                           const std::string& pipeMessage) {
+                           std::string* stdOutErrMessage,
+                           const std::string* stdInMessage) {
     std::string execName = filenameFromPath(executable);
 
     PipeHandler pipeMsg; // file descriptors used to communicate between processes
     pipeMsg.create();
 
+    PipeHandler pipeStdOutErr; // file descriptors used to communicate between processes
+    if(stdOutErrMessage != nullptr) {
+        pipeStdOutErr.create();
+    }
+
     PipeHandler pipeSrc;
-    if (pipeSource) {
+    if (stdInMessage != nullptr) {
         //Create pipe for piping source to the compiler
         pipeSrc.create();
     }
@@ -193,11 +198,30 @@ inline void callExecutable(const std::string& executable,
          **********************************************************************/
         pipeMsg.read.close();
 
-        if (pipeSource) {
+        if (stdInMessage != nullptr) {
             pipeSrc.write.close(); // close write end of pipe
             // Send pipe input to stdin
             close(STDIN_FILENO);
-            dup2(pipeSrc.read.fd, STDIN_FILENO);
+            if (dup2(pipeSrc.read.fd, STDIN_FILENO) == -1) {
+                perror("redirecting stdin");
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        if(stdOutErrMessage != nullptr) {
+            pipeStdOutErr.read.close(); // close read end of pipe
+
+            // redirect stdout
+            if (dup2(pipeStdOutErr.write.fd, STDOUT_FILENO) == -1) {
+                perror("redirecting stdout");
+                exit(EXIT_FAILURE);
+            }
+
+            // redirect stderr
+            if (dup2(pipeStdOutErr.write.fd, STDERR_FILENO) == -1) {
+                perror("redirecting stderr");
+                exit(EXIT_FAILURE);
+            }
         }
 
         auto toCharArray = [](const std::string & args) {
@@ -223,6 +247,10 @@ inline void callExecutable(const std::string& executable,
             delete [] args2[i];
         }
 
+        if(stdOutErrMessage != nullptr) {
+            pipeStdOutErr.write.close();
+        }
+
         if (eCode < 0) {
             char buf[512];
             std::string error = executable + ": " + strerror_r(errno, buf, 511); // thread safe
@@ -241,6 +269,9 @@ inline void callExecutable(const std::string& executable,
      * Parent process
      **************************************************************************/
     pipeMsg.write.close();
+    if(stdOutErrMessage != nullptr) {
+        pipeStdOutErr.write.close();
+    }
 
     auto readCErrorMsg = []() {
         int error = errno;
@@ -250,11 +281,11 @@ inline void callExecutable(const std::string& executable,
     };
 
     std::string writeError;
-    if (pipeSource) {
+    if (stdInMessage != nullptr) {
         // close read end of pipe
         pipeSrc.read.close();
         //Pipe source to the executable
-        ssize_t writeFlag = write(pipeSrc.write.fd, pipeMessage.c_str(), pipeMessage.size());
+        ssize_t writeFlag = write(pipeSrc.write.fd, stdInMessage->c_str(), stdInMessage->size());
         if (writeFlag == -1)
             writeError = readCErrorMsg() + " ";
         pipeSrc.write.close();
@@ -263,13 +294,22 @@ inline void callExecutable(const std::string& executable,
     //Wait for the executable to exit
     int status;
     // Read message from the child
-    std::ostringstream message;
+    std::ostringstream messageErr;
+    std::ostringstream messageStdOutErr;
     size_t size = 0;
     char buffer[128];
     do {
         ssize_t n;
+        if(stdOutErrMessage != nullptr) {
+            while ((n = read(pipeStdOutErr.read.fd, buffer, sizeof (buffer))) > 0) {
+                messageStdOutErr.write(buffer, n);
+                size += n;
+                if (size > 1e4) break;
+            }
+        }
+
         while ((n = read(pipeMsg.read.fd, buffer, sizeof (buffer))) > 0) {
-            message.write(buffer, n);
+            messageErr.write(buffer, n);
             size += n;
             if (size > 1e4) break;
         }
@@ -280,11 +320,14 @@ inline void callExecutable(const std::string& executable,
     } while (!WIFEXITED(status) && !WIFSIGNALED(status));
 
     pipeMsg.read.close();
+    if(stdOutErrMessage != nullptr) {
+        pipeStdOutErr.read.close();
+    }
 
     if (!writeError.empty()) {
         std::ostringstream s;
         s << "Failed to write to pipe";
-        if (size > 0) s << ": " << message.str();
+        if (size > 0) s << ": " << messageErr.str();
         else s << ": " << writeError;
         throw CGException(s.str());
     }
@@ -293,14 +336,18 @@ inline void callExecutable(const std::string& executable,
         if (WEXITSTATUS(status) != EXIT_SUCCESS) {
             std::ostringstream s;
             s << "Executable '" << executable << "' (pid " << pid << ") exited with code " << WEXITSTATUS(status);
-            if (size > 0) s << ": " << message.str();
+            if (size > 0) s << ": " << messageErr.str();
             throw CGException(s.str());
         }
     } else if (WIFSIGNALED(status)) {
         std::ostringstream s;
         s << "Executable '" << executable << "' (pid " << pid << ") terminated by signal " << WTERMSIG(status);
-        if (size > 0) s << ": " << message.str();
+        if (size > 0) s << ": " << messageErr.str();
         throw CGException(s.str());
+    }
+
+    if (stdOutErrMessage != nullptr) {
+        *stdOutErrMessage = messageStdOutErr.str();
     }
 }
 

@@ -99,7 +99,7 @@ protected:
         args.push_back("-o");
         args.push_back(output);
 
-        system::callExecutable(this->_path, args, true, source);
+        system::callExecutable(this->_path, args, nullptr, &source);
     }
 
     virtual void compileFile(const std::string& path,

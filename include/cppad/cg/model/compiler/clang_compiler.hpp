@@ -27,6 +27,7 @@ template<class Base>
 class ClangCompiler : public AbstractCCompiler<Base> {
 protected:
     std::set<std::string> _bcfiles; // bitcode files
+    std::string _version;
 public:
 
     ClangCompiler(const std::string& clangPath = "/usr/bin/clang") :
@@ -40,6 +41,28 @@ public:
 
     ClangCompiler(const ClangCompiler& orig) = delete;
     ClangCompiler& operator=(const ClangCompiler& rhs) = delete;
+
+    const std::string& getVersion() {
+        if(_version.empty()) {
+            std::vector<std::string> args {"--version"};
+            std::string output;
+            system::callExecutable(this->_path, args, &output);
+
+            std::string vv = "version ";
+            size_t is = output.find(vv);
+            if(is == std::string::npos) {
+                throw CGException("Failed to determine Clang version");
+            }
+            is += vv.size();
+            size_t i = is;
+            while (i < output.size() && output[i] != ' ' && output[i] != '\n') {
+                i++;
+            }
+
+            _version = output.substr(is, i - is);
+        }
+        return _version;
+    }
 
     virtual const std::set<std::string>& getBitCodeFiles() const {
         return _bcfiles;
@@ -108,6 +131,18 @@ public:
         cleanup();
     }
 
+    static std::vector<std::string> parseVersion(const std::string& version) {
+        auto vv = explode(version, ".");
+        if (vv.size() > 2) {
+            auto vv2 = explode(vv[2], "-");
+            if (vv2.size() > 1) {
+                vv.erase(vv.begin() + 2);
+                vv.insert(vv.begin(), vv2.begin(), vv2.end());
+            }
+        }
+        return vv;
+    }
+
 protected:
 
     /**
@@ -132,7 +167,7 @@ protected:
         args.push_back("-o");
         args.push_back(output);
 
-        system::callExecutable(this->_path, args, true, source);
+        system::callExecutable(this->_path, args, nullptr, &source);
     }
 
     virtual void compileFile(const std::string& path,

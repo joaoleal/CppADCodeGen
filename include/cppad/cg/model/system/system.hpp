@@ -90,14 +90,15 @@ inline bool isFile(const std::string& path);
  * 
  * @param executable the executable path
  * @param args the command line arguments to the executable
- * @param pipe whether or not to create a pipe to the executable
- * @param message the information to pass in the pipe
+ * @param stdOutErrMessage standard output and standard error message
+ *                         from the executable
+ * @param stdInMessage information to pass as standard input to the executable
  * @throws CGException on failure to call the executable
  */
 inline void callExecutable(const std::string& executable,
                            const std::vector<std::string>& args,
-                           bool pipe = false,
-                           const std::string& message = "");
+                           std::string* stdOutErrMessage = nullptr,
+                           const std::string* stdInMessage = nullptr);
 
 }
 

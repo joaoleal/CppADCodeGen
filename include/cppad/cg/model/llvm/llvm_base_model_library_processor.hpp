@@ -56,9 +56,27 @@ protected:
         return "";
     }
 
-    const std::set<std::string>& createBitCode(ClangCompiler<Base>& clang) {
+    const std::set<std::string>& createBitCode(ClangCompiler<Base>& clang,
+                                               const std::string& version) {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
+
+        if (clang.getVersion() != version) {
+            auto expected = ClangCompiler<Base>::parseVersion(version);
+            auto execVersion = ClangCompiler<Base>::parseVersion(clang.getVersion());
+            bool error = expected.size() <= execVersion.size();
+            if (!error) {
+                for (size_t i = 0; i < expected.size(); ++i) {
+                    if (expected[i] != execVersion[i]) {
+                        error = true;
+                        break;
+                    }
+                }
+            }
+            if (error) {
+                throw CGException("Expected a clang with version '", version, "' but found version '", clang.getVersion(), "'");
+            }
+        }
 
         const std::map<std::string, ModelCSourceGen<Base>*>& models = this->modelLibraryHelper_->getModels();
         try {

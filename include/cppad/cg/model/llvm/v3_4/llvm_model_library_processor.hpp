@@ -73,7 +73,7 @@ public:
             /**
              * generate bit code
              */
-            const std::set<std::string>& bcFiles = this->createBitCode(clang);
+            const std::set<std::string>& bcFiles = this->createBitCode(clang, "3.4");
 
             /**
              * Load bit code and create a single module
@@ -87,12 +87,12 @@ public:
                 // load bitcode file
                 OwningPtr<MemoryBuffer> buffer;
 
-                std::string errMsg;
                 error_code ec = MemoryBuffer::getFile(itbc, buffer);
                 if (buffer.get() == nullptr)
                     throw CGException(ec.message());
 
                 // create the module
+                std::string errMsg;
                 Module* module = llvm::ParseBitcodeFile(buffer.get(), *_context.get(), &errMsg);
                 if(module == nullptr)
                     throw CGException("Failed to create LLVM bitcode: ", errMsg);
