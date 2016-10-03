@@ -61,6 +61,10 @@ public:
             }
         }
 
+        for (const auto& it : this->modelLibraryHelper_->getLibrarySources()) {
+            saveFile(it.first, it.second);
+        }
+
         for (const auto& it : this->modelLibraryHelper_->getCustomSources()) {
             saveFile(it.first, it.second);
         }

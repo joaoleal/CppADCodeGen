@@ -110,6 +110,8 @@ public:
                              "Another model with the same name was already registered");
 
         _models[model.getName()] = &model;
+
+        _libSources.clear(); // must regenerate library sources again
     }
 
     inline const std::map<std::string, ModelCSourceGen<Base>*>& getModels() const {
@@ -165,8 +167,16 @@ public:
      */
     void saveSources(const std::string& sourcesFolder);
 
-protected:
+    /**
+     * Provides the sources for the model library level.
+     * These sources include, for instance, functions to retrieve the list of
+     * models contained in the library.
+     * This does not include the sources for the models.
+     *
+     * @return model library sources
+     */
     virtual const std::map<std::string, std::string>& getLibrarySources();
+protected:
 
     virtual void generateVersionSource(std::map<std::string, std::string>& sources);
 
