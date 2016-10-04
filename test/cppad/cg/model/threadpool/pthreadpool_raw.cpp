@@ -136,6 +136,8 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
     static float avgElapsed[6] = {0, 0, 0, 0, 0, 0};
     float elapsed[6] = {0, 0, 0, 0, 0, 0};
     static int order[6] = {0, 1, 2, 3, 4, 5};
+    static int job2Thread[6] = {-1, -1, -1, -1, -1, -1};
+    static int lastElapsedChanged = 1;
     unsigned int nBench = cppadcg_thpool_get_time_meas();
     static unsigned int meas = 0;
     int do_benchmark = (meas < nBench && !cppadcg_thpool_is_disabled());
@@ -149,7 +151,7 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
         args[i]->atomicFun = atomicFun;
     }
 
-    cppadcg_thpool_add_jobs(execute_functions, (void**) args, avgElapsed, elapsed_p, order, 6);
+    cppadcg_thpool_add_jobs(execute_functions, (void**) args, avgElapsed, elapsed_p, order, job2Thread, 6, lastElapsedChanged);
 
     cppadcg_thpool_wait();
 
@@ -160,6 +162,8 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
     if (do_benchmark) {
         cppadcg_thpool_update_order(avgElapsed, meas, elapsed, order, 6);
         meas++;
+    } else {
+        lastElapsedChanged = 0;
     }
 
 }
@@ -188,6 +192,7 @@ public:
             out{out0.data()},
             jac(12) {
         cppadcg_thpool_set_verbose(1);
+        cppadcg_thpool_set_time_meas(5);
 
         jac[0] = -0.99749498660405445;
         jac[1] = 0.070737201667702906;
@@ -239,9 +244,11 @@ TEST_F(PThreadPoolTest, MultiJobJac) {
 TEST_F(PThreadPoolTest, StaticJac) {
     cppadcg_thpool_set_scheduler_strategy(SCHED_STATIC);
 
-    pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);
+    pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun); // last elapsed time measurements
 
-    pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);
+    pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun); // last work group schedule update
+
+    pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun); // reuse previous work group schedule
 
     ASSERT_TRUE(compareValues(jac, out0));
 }

@@ -68,7 +68,9 @@ void cppadcg_thpool_add_jobs(cppadcg_thpool_function_type functions[],
                              const float avgElapsed[],
                              float elapsed[],
                              const int order[],
-                             int nJobs);
+                             int job2Thread[],
+                             int nJobs,
+                             int lastElapsedChanged);
 
 void cppadcg_thpool_wait();
 

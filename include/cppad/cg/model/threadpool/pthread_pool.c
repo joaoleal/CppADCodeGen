@@ -64,7 +64,9 @@ static int thpool_add_jobs(ThPool*,
                            const float avgElapsed[],
                            float elapsed[],
                            const int order[],
-                           int nJobs);
+                           int job2Thread[],
+                           int nJobs,
+                           int lastElapsedChanged);
 
 static void thpool_wait(ThPool*);
 
@@ -238,12 +240,14 @@ void cppadcg_thpool_add_jobs(thpool_function_type functions[],
                              const float avgElapsed[],
                              float elapsed[],
                              const int order[],
-                             int nJobs) {
+                             int job2Thread[],
+                             int nJobs,
+                             int lastElapsedChanged) {
     int i;
     if (!cppadcg_pool_disabled) {
         cppadcg_thpool_prepare();
         if (cppadcg_pool != NULL) {
-            thpool_add_jobs(cppadcg_pool, functions, args, avgElapsed, elapsed, order, nJobs);
+            thpool_add_jobs(cppadcg_pool, functions, args, avgElapsed, elapsed, order, job2Thread, nJobs, lastElapsedChanged);
             return;
         }
     }
@@ -345,7 +349,9 @@ static void jobqueue_multipush(JobQueue* queue,
 static int jobqueue_push_static_jobs(ThPool* thpool,
                                      Job* newjobs[],
                                      const float avgElapsed[],
-                                     int nJobs);
+                                     int jobs2thread[],
+                                     int nJobs,
+                                     int lastElapsedChanged);
 static WorkGroup* jobqueue_pull(ThPool* thpool, int id);
 static void  jobqueue_destroy(ThPool* thpool);
 
@@ -491,7 +497,9 @@ static int thpool_add_jobs(ThPool* thpool,
                            const float avgElapsed[],
                            float elapsed[],
                            const int order[],
-                           int nJobs) {
+                           int job2Thread[],
+                           int nJobs,
+                           int lastElapsedChanged) {
     Job* newjobs[nJobs];
     int i;
     int j;
@@ -520,7 +528,7 @@ static int thpool_add_jobs(ThPool* thpool,
 
     /* add jobs to queue */
     if (group_gen_strategy == SCHED_STATIC && avgElapsed != NULL && order != NULL && nJobs > 0 && avgElapsed[0] > 0) {
-        return jobqueue_push_static_jobs(thpool, newjobs, avgElapsed, nJobs);
+        return jobqueue_push_static_jobs(thpool, newjobs, avgElapsed, job2Thread, nJobs, lastElapsedChanged);
     } else {
         jobqueue_multipush(thpool->jobqueue, newjobs, nJobs);
         return 0;
@@ -533,25 +541,20 @@ static int thpool_add_jobs(ThPool* thpool,
 static int jobqueue_push_static_jobs(ThPool* thpool,
                                      Job* newjobs[],
                                      const float avgElapsed[],
-                                     int nJobs) {
+                                     int jobs2thread[],
+                                     int nJobs,
+                                     int lastElapsedChanged) {
     float total_duration, target_duration, next_duration, best_duration;
     int i, j, iBest;
     int added;
     int num_threads = thpool->num_threads;
     int* n_jobs;
-    int jobs2thread[nJobs];
-    float* durations;
+    float* durations = NULL;
     WorkGroup** groups;
     WorkGroup* group;
 
     if(nJobs < num_threads)
         num_threads = nJobs;
-
-    durations = (float*) malloc(num_threads * sizeof(float));
-    if (durations == NULL) {
-        fprintf(stderr, "jobqueue_push_static_jobs(): Could not allocate memory\n");
-        return -1;
-    }
 
     n_jobs = (int*) malloc(num_threads * sizeof(int));
     if (n_jobs == NULL) {
@@ -565,10 +568,6 @@ static int jobqueue_push_static_jobs(ThPool* thpool,
         return -1;
     }
 
-    for(i = 0; i < num_threads; ++i) {
-        durations[i] = 0;
-    }
-
     for (i = 0; i < num_threads; ++i) {
         n_jobs[i] = 0;
     }
@@ -578,39 +577,61 @@ static int jobqueue_push_static_jobs(ThPool* thpool,
         total_duration += avgElapsed[i];
     }
 
-    // decide in which work group to place each job
-    target_duration = total_duration / num_threads;
 
-    for(j = 0; j < nJobs; ++j) {
-        added = 0;
+    if (nJobs > 0 && (lastElapsedChanged || jobs2thread[0] < 0)) {
+        durations = (float*) malloc(num_threads * sizeof(float));
+        if (durations == NULL) {
+            fprintf(stderr, "jobqueue_push_static_jobs(): Could not allocate memory\n");
+            return -1;
+        }
+
         for(i = 0; i < num_threads; ++i) {
-            next_duration = durations[i] + avgElapsed[j];
-            if(next_duration < target_duration) {
-                durations[i] = next_duration;
-                n_jobs[i]++;
-                jobs2thread[j] = i;
-                added = 1;
-                break;
+            durations[i] = 0;
+        }
+
+        // decide in which work group to place each job
+        target_duration = total_duration / num_threads;
+
+        for (j = 0; j < nJobs; ++j) {
+            added = 0;
+            for (i = 0; i < num_threads; ++i) {
+                next_duration = durations[i] + avgElapsed[j];
+                if (next_duration < target_duration) {
+                    durations[i] = next_duration;
+                    n_jobs[i]++;
+                    jobs2thread[j] = i;
+                    added = 1;
+                    break;
+                }
+            }
+
+            if (!added) {
+                best_duration = durations[0] + avgElapsed[j];
+                iBest = 0;
+                for (i = 1; i < num_threads; ++i) {
+                    next_duration = durations[i] + avgElapsed[j];
+                    if (next_duration < best_duration) {
+                        best_duration = next_duration;
+                        iBest = i;
+                    }
+                }
+                durations[iBest] = best_duration;
+                n_jobs[iBest]++;
+                jobs2thread[j] = iBest;
             }
         }
 
-        if(!added) {
-            best_duration = durations[0] + avgElapsed[j];
-            iBest = 0;
-            for(i = 1; i < num_threads; ++i) {
-                next_duration = durations[i] + avgElapsed[j];
-                if(next_duration < best_duration) {
-                    best_duration = next_duration;
-                    iBest = i;
-                }
-            }
-            durations[iBest] = best_duration;
-            n_jobs[iBest]++;
-            jobs2thread[j] = iBest;
+    } else {
+        // reuse existing information
+
+        for (j = 0; j < nJobs; ++j) {
+            n_jobs[jobs2thread[j]]++;
         }
     }
 
-    // create the work groups
+    /**
+     * create the work groups
+     */
     for (i = 0; i < num_threads; ++i) {
         group = (WorkGroup*) malloc(sizeof(WorkGroup));
         group->size = 0;
@@ -632,8 +653,14 @@ static int jobqueue_push_static_jobs(ThPool* thpool,
     }
 
     if (cppadcg_pool_verbose) {
-        for (i = 0; i < num_threads; ++i) {
-            fprintf(stdout, "jobqueue_push_static_jobs(): work group %i with %i jobs for %e s\n", i, groups[i]->size, durations[i]);
+        if (durations != NULL) {
+            for (i = 0; i < num_threads; ++i) {
+                fprintf(stdout, "jobqueue_push_static_jobs(): work group %i with %i jobs for %e s\n", i, groups[i]->size, durations[i]);
+            }
+        } else {
+            for (i = 0; i < num_threads; ++i) {
+                fprintf(stdout, "jobqueue_push_static_jobs(): work group %i with %i jobs\n", i, groups[i]->size);
+            }
         }
     }
 
@@ -780,6 +807,16 @@ static float get_monotonic_time(struct timespec* time,
     }
 }
 
+static void get_monotonic_time2(struct timespec* time) {
+    int info;
+    info = clock_gettime(CLOCK_MONOTONIC, time);
+    if(info != 0) {
+        time->tv_sec = 0;
+        time->tv_nsec = 0;
+        fprintf(stderr, "failed clock_gettime()\n");
+    }
+}
+
 /* ============================ THREAD ============================== */
 
 
@@ -819,8 +856,14 @@ static void* thread_do(Thread* thread_p) {
     float elapsed;
     int info;
     struct timespec cputime;
+    struct timespec auxtime;
     JobQueue* queue;
+    WorkGroup* work_group;
+    Job* job;
+    thpool_function_type func_buff;
+    void* arg_buff;
     int i;
+
     /* Set thread name for profiling and debugging */
     char thread_name[128] = {0};
     sprintf(thread_name, "thread-pool-%d", thread_p->id);
@@ -856,40 +899,47 @@ static void* thread_do(Thread* thread_p) {
         thpool->num_threads_working++;
         pthread_mutex_unlock(&thpool->thcount_lock);
 
-        /* Read job from queue and execute it */
-        thpool_function_type func_buff;
-        void* arg_buff;
-        Job* job;
-        WorkGroup* work_group;
-        pthread_mutex_lock(&queue->rwmutex);
-        work_group = jobqueue_pull(thpool, thread_p->id);
-        pthread_mutex_unlock(&queue->rwmutex);
+        while (thpool->threads_keepalive) {
+            /* Read job from queue and execute it */
+            pthread_mutex_lock(&queue->rwmutex);
+            work_group = jobqueue_pull(thpool, thread_p->id);
+            pthread_mutex_unlock(&queue->rwmutex);
 
-        if (cppadcg_pool_verbose) {
-            fprintf(stdout, "Thread %i executing %i jobs\n", thread_p->id, work_group->size);
-        }
+            if (work_group == NULL)
+                break;
 
-        for (i = 0; i < work_group->size; ++i) {
-            job = &work_group->jobs[i];
-            int do_benchmark = job->elapsed != NULL;
-            if (do_benchmark) {
-                elapsed = -get_thread_time(&cputime, &info);
+            if (cppadcg_pool_verbose) {
+                get_monotonic_time2(&auxtime);
+                fprintf(stdout, "# Thread %i, started work group at %ld.%.9ld, executing %i jobs \n", thread_p->id, auxtime.tv_sec, auxtime.tv_nsec, work_group->size);
             }
 
-            /* Execute the job */
-            func_buff = job->function;
-            arg_buff = job->arg;
-            func_buff(arg_buff);
+            for (i = 0; i < work_group->size; ++i) {
+                job = &work_group->jobs[i];
+                int do_benchmark = job->elapsed != NULL;
+                if (do_benchmark) {
+                    elapsed = -get_thread_time(&cputime, &info);
+                }
 
-            if (do_benchmark && info == 0) {
-                elapsed += get_thread_time(&cputime, &info);
-                if (info == 0) {
-                    (*job->elapsed) = elapsed;
+                /* Execute the job */
+                func_buff = job->function;
+                arg_buff = job->arg;
+                func_buff(arg_buff);
+
+                if (do_benchmark && info == 0) {
+                    elapsed += get_thread_time(&cputime, &info);
+                    if (info == 0) {
+                        (*job->elapsed) = elapsed;
+                    }
                 }
             }
+            free(work_group->jobs);
+            free(work_group);
+
+            if (cppadcg_pool_verbose) {
+                get_monotonic_time2(&auxtime);
+                fprintf(stdout, "# Thread %i,   ended work group at %ld.%.9ld\n", thread_p->id, auxtime.tv_sec, auxtime.tv_nsec);
+            }
         }
-        free(work_group->jobs);
-        free(work_group);
 
         pthread_mutex_lock(&thpool->thcount_lock);
         thpool->num_threads_working--;
@@ -950,9 +1000,13 @@ static void jobqueue_clear(ThPool* thpool) {
 
     do {
         group = jobqueue_pull(thpool, -1);
-        size = group->size;
-        free(group->jobs);
-        free(group);
+        if (group == NULL) {
+            size = 0;
+        } else {
+            size = group->size;
+            free(group->jobs);
+            free(group);
+        }
     } while (size > 0);
 
     thpool->jobqueue->front = NULL;
@@ -1085,7 +1139,12 @@ static WorkGroup* jobqueue_pull(ThPool* thpool,
         group = queue->group_front;
 
         queue->group_front = group->prev;
-    } else if (group_gen_strategy == SCHED_SINGLE_JOB || queue->len <= 1 || queue->total_time <= 0) {
+
+    } else if (queue->len == 0) {
+        // nothing to do
+        group = NULL;
+
+    } else if (group_gen_strategy == SCHED_SINGLE_JOB || queue->len == 1 || queue->total_time <= 0) {
         // SCHED_SINGLE_JOB
         group = (WorkGroup*) malloc(sizeof(WorkGroup));
         group->prev = NULL;

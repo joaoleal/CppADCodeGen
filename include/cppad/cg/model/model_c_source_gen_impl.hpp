@@ -617,6 +617,10 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
         cache << i;
     }
     cache << "};\n"
+            "   static int job2Thread[" << size << "] = ";
+    repeatFill("-1");
+    cache << "\n"
+            "   static int lastElapsedChanged = 1;\n"
             "   unsigned int nBench = cppadcg_thpool_get_time_meas();\n"
             "   static unsigned int meas = 0;\n"
             "   int do_benchmark = " << (size > 0 ? "(meas < nBench && !cppadcg_thpool_is_disabled())" : "0") << ";\n"
@@ -626,7 +630,7 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
 template<class Base>
 void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
                                                      size_t size) {
-    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**)args, avgElapsed, elapsed_p, order, " << size << ");\n"
+    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**) args, avgElapsed, elapsed_p, order, job2Thread, " << size << ", lastElapsedChanged" << ");\n"
             "\n"
             "   cppadcg_thpool_wait();\n"
             "\n"
@@ -637,7 +641,9 @@ void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
             "   if(do_benchmark) {\n"
             "      cppadcg_thpool_update_order(avgElapsed, meas, elapsed, order, " << size << ");\n"
             "      meas++;\n"
-            "   }\n";
+            "   } else {\n"
+            "        lastElapsedChanged = 0;\n"
+            "    }\n";
 }
 
 template<class Base>
