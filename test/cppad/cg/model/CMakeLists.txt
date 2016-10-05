@@ -14,6 +14,27 @@
 # Author: Joao Leal
 #
 # ----------------------------------------------------------------------------
+ADD_SUBDIRECTORY(dynamiclib)
+
+IF(PDFLATEX_COMPILER)
+    ADD_SUBDIRECTORY(lang/latex)
+ENDIF()
+
+IF(GRAPHVIZ_DOT_PATH)
+    ADD_SUBDIRECTORY(lang/dot)
+ENDIF()
+
+ADD_SUBDIRECTORY(lang/mathml)
+
 IF ( ENABLE_THREAD_POOL_TESTS )
     ADD_SUBDIRECTORY(threadpool)
+ENDIF()
+
+IF(LLVM_FOUND AND ${LLVM_VERSION_MAJOR} STREQUAL 3)
+    IF(((${LLVM_VERSION_MINOR} STREQUAL 2 OR ${LLVM_VERSION_MINOR} STREQUAL 6 OR ${LLVM_VERSION_MINOR} STREQUAL 8) AND CLANG_FOUND)
+            OR
+    (${LLVM_VERSION_MINOR} STREQUAL 3 OR ${LLVM_VERSION_MINOR} STREQUAL 4)
+            )
+        ADD_SUBDIRECTORY(llvm)
+    ENDIF()
 ENDIF()
