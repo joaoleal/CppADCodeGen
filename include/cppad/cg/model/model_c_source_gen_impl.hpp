@@ -657,7 +657,7 @@ void ModelCSourceGen<Base>::printFileStartOpenMP(std::ostringstream& cache) {
 template<class Base>
 void ModelCSourceGen<Base>::printFunctionStartOpenMP(std::ostringstream& cache,
                                                      size_t size) {
-    cache << "   int enabled = cppadcg_openmp_is_disabled();\n"
+    cache << "   int enabled = !cppadcg_openmp_is_disabled();\n"
             "   int verbose = cppadcg_openmp_is_verbose();\n"
             "   unsigned int n_threads = cppadcg_openmp_get_threads();\n"
             "   if(n_threads > " << size << ")\n"
