@@ -86,11 +86,12 @@ typedef struct Job {
     struct Job*  prev;                   /* pointer to previous job              */
     thpool_function_type function;       /* function pointer                     */
     void*  arg;                          /* function's argument                  */
-    const float* avgElapsed;            /* the last measurement of elapsed time */
+    const float* avgElapsed;             /* the last measurement of elapsed time */
     float* elapsed;                      /* the current elapsed time             */
+    int id;                              /* a job identifier used for debugging  */
 } Job;
 
-/* Job group */
+/* Work group */
 typedef struct WorkGroup {
     struct WorkGroup*  prev;             /* pointer to previous WorkGroup  */
     struct Job* jobs;                    /* jobs                           */
@@ -112,23 +113,22 @@ typedef struct JobQueue {
 
 /* Thread */
 typedef struct Thread {
-    int       id;                        /* friendly id               */
+    int id;                              /* friendly id               */
     pthread_t pthread;                   /* pointer to actual thread  */
-    struct ThPool* thpool;             /* access to ThPool          */
+    struct ThPool* thpool;               /* access to ThPool          */
 } Thread;
 
 
 /* Threadpool */
 typedef struct ThPool {
-    Thread**   threads;                  /* pointer to threads        */
+    Thread** threads;                    /* pointer to threads        */
     int num_threads;                     /* total number of threads   */
     volatile int num_threads_alive;      /* threads currently alive   */
     volatile int num_threads_working;    /* threads currently working */
-    pthread_mutex_t  thcount_lock;       /* used for thread count etc */
-    pthread_cond_t  threads_all_idle;    /* signal to thpool_wait     */
-    JobQueue*  jobqueue;               /* pointer to the job queue  */
+    pthread_mutex_t thcount_lock;        /* used for thread count etc */
+    pthread_cond_t threads_all_idle;     /* signal to thpool_wait     */
+    JobQueue* jobqueue;                  /* pointer to the job queue  */
     volatile int threads_keepalive;
-    volatile int threads_on_hold;
 } ThPool;
 
 /* ========================== PUBLIC API ============================ */
@@ -404,7 +404,6 @@ struct ThPool* thpool_init(int num_threads) {
     thpool->num_threads = num_threads;
     thpool->num_threads_alive = 0;
     thpool->num_threads_working = 0;
-    thpool->threads_on_hold = 0;
     thpool->threads_keepalive = 1;
 
     /* Initialize the job queue */
@@ -515,6 +514,7 @@ static int thpool_add_jobs(ThPool* thpool,
         /* add function and argument */
         newjobs[i]->function = functions[j];
         newjobs[i]->arg = args[j];
+        newjobs[i]->id = i;
         if (avgElapsed != NULL)
             newjobs[i]->avgElapsed = &avgElapsed[j];
         else
@@ -817,6 +817,18 @@ static void get_monotonic_time2(struct timespec* time) {
     }
 }
 
+void timespec_diff(struct timespec* end,
+                   struct timespec* start,
+                   struct timespec* result) {
+    if ((end->tv_nsec - start->tv_nsec) < 0) {
+        result->tv_sec = end->tv_sec - start->tv_sec - 1;
+        result->tv_nsec = end->tv_nsec - start->tv_nsec + 1000000000;
+    } else {
+        result->tv_sec = end->tv_sec - start->tv_sec;
+        result->tv_nsec = end->tv_nsec - start->tv_nsec;
+    }
+}
+
 /* ============================ THREAD ============================== */
 
 
@@ -856,13 +868,14 @@ static void* thread_do(Thread* thread_p) {
     float elapsed;
     int info;
     struct timespec cputime;
-    struct timespec auxtime;
+    struct timespec startGroupTime, endGroupTime, startJobTime, endJobTime, diffTime;
     JobQueue* queue;
-    WorkGroup* work_group;
+    WorkGroup* workGroup;
     Job* job;
     thpool_function_type func_buff;
     void* arg_buff;
     int i;
+    int gid = 0; // for debugging only
 
     /* Set thread name for profiling and debugging */
     char thread_name[128] = {0};
@@ -902,19 +915,23 @@ static void* thread_do(Thread* thread_p) {
         while (thpool->threads_keepalive) {
             /* Read job from queue and execute it */
             pthread_mutex_lock(&queue->rwmutex);
-            work_group = jobqueue_pull(thpool, thread_p->id);
+            workGroup = jobqueue_pull(thpool, thread_p->id);
             pthread_mutex_unlock(&queue->rwmutex);
 
-            if (work_group == NULL)
+            if (workGroup == NULL)
                 break;
 
             if (cppadcg_pool_verbose) {
-                get_monotonic_time2(&auxtime);
-                fprintf(stdout, "# Thread %i, started work group at %ld.%.9ld, executing %i jobs \n", thread_p->id, auxtime.tv_sec, auxtime.tv_nsec, work_group->size);
+                get_monotonic_time2(&startGroupTime);
             }
 
-            for (i = 0; i < work_group->size; ++i) {
-                job = &work_group->jobs[i];
+            for (i = 0; i < workGroup->size; ++i) {
+                job = &workGroup->jobs[i];
+
+                if (cppadcg_pool_verbose) {
+                    get_monotonic_time2(&startJobTime);
+                }
+
                 int do_benchmark = job->elapsed != NULL;
                 if (do_benchmark) {
                     elapsed = -get_thread_time(&cputime, &info);
@@ -931,13 +948,23 @@ static void* thread_do(Thread* thread_p) {
                         (*job->elapsed) = elapsed;
                     }
                 }
+
+                if (cppadcg_pool_verbose) {
+                    get_monotonic_time2(&endJobTime);
+                    timespec_diff(&endJobTime, &startJobTime, &diffTime);
+                    fprintf(stdout, "## Thread %i, Group %i, Job %i, started at %ld.%.9ld, ended at %ld.%.9ld, elapsed %ld.%.9ld\n",
+                            thread_p->id, gid, job->id, startJobTime.tv_sec, startJobTime.tv_nsec, endJobTime.tv_sec, endJobTime.tv_nsec, diffTime.tv_sec, diffTime.tv_nsec);
+                }
             }
-            free(work_group->jobs);
-            free(work_group);
+            free(workGroup->jobs);
+            free(workGroup);
 
             if (cppadcg_pool_verbose) {
-                get_monotonic_time2(&auxtime);
-                fprintf(stdout, "# Thread %i,   ended work group at %ld.%.9ld\n", thread_p->id, auxtime.tv_sec, auxtime.tv_nsec);
+                get_monotonic_time2(&endGroupTime);
+                timespec_diff(&endGroupTime, &startGroupTime, &diffTime);
+                fprintf(stdout, "# Thread %i, Group %i, started at %ld.%.9ld, ended at %ld.%.9ld, elapsed %ld.%.9ld, executing %i jobs\n",
+                        thread_p->id, gid, startGroupTime.tv_sec, startGroupTime.tv_nsec, endGroupTime.tv_sec, endGroupTime.tv_nsec, diffTime.tv_sec, diffTime.tv_nsec, workGroup->size);
+                gid++;
             }
         }
 

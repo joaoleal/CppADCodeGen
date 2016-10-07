@@ -377,7 +377,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
      */
     if(multiThreadingType == MultiThreadingType::OPENMP) {
         _cache << "\n";
-        _cache << CPPADCG_OPENMP_H_FILE << "\n";
+        printFileStartOpenMP(_cache);
         _cache << "\n";
 
     } else {
@@ -424,13 +424,12 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
 
     if(multiThreadingType == MultiThreadingType::OPENMP) {
         printFunctionStartOpenMP(_cache, jacInfo.size());
-        _cache << "\n"
-                "#pragma omp parallel for private(outLocal) if(enabled) num_threads(n_threads)\n"
-                "   for(i = 0; i < " << jacInfo.size() << "; ++i) {\n"
-                "      outLocal[0] = &jac[offset[i]];\n"
-                "      (*p[i])(" << argsLocal << ");\n"
-                "   }\n"
-                "\n";
+        _cache << "\n";
+        printLoopStartOpenMP(_cache, jacInfo.size());
+        _cache << "      outLocal[0] = &jac[offset[i]];\n"
+                "      (*p[i])(" << argsLocal << ");\n";
+        printLoopEndOpenMP(_cache);
+        _cache << "\n";
 
     } else {
         assert(multiThreadingType == MultiThreadingType::PTHREADS);

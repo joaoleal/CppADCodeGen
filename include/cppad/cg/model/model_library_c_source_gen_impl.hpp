@@ -300,10 +300,11 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";
+        _cache << "   cppadcg_openmp_set_verbose(v);\n";
         _cache << "}\n\n";
 
         _cache << "int " << FUNCTION_ISTHREADPOOLVERBOSE << "() {\n";
-        _cache << "   return 0;\n";
+        _cache << "   return cppadcg_openmp_is_verbose();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";

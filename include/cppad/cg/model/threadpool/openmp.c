@@ -14,8 +14,10 @@
  */
 
 #include <omp.h>
+#include <stdio.h>
 
 static volatile int cppadcg_openmp_enabled = 1; // false
+static volatile int cppadcg_openmp_verbose = 1; // false
 static volatile unsigned int cppadcg_openmp_n_threads = 2;
 
 void cppadcg_openmp_set_disabled(int disabled) {
@@ -24,6 +26,14 @@ void cppadcg_openmp_set_disabled(int disabled) {
 
 int cppadcg_openmp_is_disabled() {
     return !cppadcg_openmp_enabled;
+}
+
+void cppadcg_openmp_set_verbose(int v) {
+    cppadcg_openmp_verbose = v;
+}
+
+int cppadcg_openmp_is_verbose() {
+    return cppadcg_openmp_verbose;
 }
 
 void cppadcg_openmp_set_threads(unsigned int n) {

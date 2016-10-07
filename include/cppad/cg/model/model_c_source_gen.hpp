@@ -1204,8 +1204,16 @@ protected:
     static void printFunctionEndPThreads(std::ostringstream& cache,
                                          size_t size);
 
+    static void printFileStartOpenMP(std::ostringstream& cache);
+
     static void printFunctionStartOpenMP(std::ostringstream& cache,
                                          size_t size);
+
+    static void printLoopStartOpenMP(std::ostringstream& cache,
+                                     size_t size);
+
+    static void printLoopEndOpenMP(std::ostringstream& cache);
+
     /**
      * 
      */

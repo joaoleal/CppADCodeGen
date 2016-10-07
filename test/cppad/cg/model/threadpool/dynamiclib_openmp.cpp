@@ -25,8 +25,8 @@ protected:
     std::vector<double> x;
 public:
 
-    inline CppADCGOpenMPTest(bool verbose = false, bool printValues = false) :
-            CppADCGDynamicTest("pool_openmp", verbose, printValues),
+    inline CppADCGOpenMPTest(bool verbose = true) :
+            CppADCGDynamicTest("pool_openmp", verbose, false),
             u(9),
             x(u.size()) {
         this->_multithread = MultiThreadingType::OPENMP;
@@ -89,6 +89,18 @@ TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
 TEST_F(CppADCGOpenMPTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+
+    this->_reverseOne = true;
+    this->_reverseTwo = true;
+    this->_denseJacobian = false;
+    this->_denseHessian = false;
+
+    this->testDynamicFull(u, x, 1000);
+}
+
+TEST_F(CppADCGOpenMPTest, StaticFullVars) {
+    this->_multithreadDisabled = false;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::STATIC;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;

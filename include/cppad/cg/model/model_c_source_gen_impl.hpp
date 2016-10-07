@@ -647,12 +647,56 @@ void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
 }
 
 template<class Base>
+void ModelCSourceGen<Base>::printFileStartOpenMP(std::ostringstream& cache) {
+    cache << CPPADCG_OPENMP_H_FILE << "\n"
+            "#include <omp.h>\n"
+            "#include <stdio.h>\n"
+            "#include <time.h>\n";
+}
+
+template<class Base>
 void ModelCSourceGen<Base>::printFunctionStartOpenMP(std::ostringstream& cache,
                                                      size_t size) {
     cache << "   int enabled = cppadcg_openmp_is_disabled();\n"
+            "   int verbose = cppadcg_openmp_is_verbose();\n"
             "   unsigned int n_threads = cppadcg_openmp_get_threads();\n"
             "   if(n_threads > " << size << ")\n"
             "      n_threads = " << size << ";\n";
+}
+
+template<class Base>
+void ModelCSourceGen<Base>::printLoopStartOpenMP(std::ostringstream& cache,
+                                                 size_t size) {
+    cache <<"#pragma omp parallel for private(outLocal) if(enabled) num_threads(n_threads)\n"
+            "   for(i = 0; i < " << size << "; ++i) {\n"
+            "      int tid;\n"
+            "      int info;\n"
+            "      struct timespec start, end, diff;\n"
+            "      if(verbose) {\n"
+            "         tid = omp_get_thread_num();\n"
+            "         info = clock_gettime(CLOCK_MONOTONIC, &start);\n"
+            "      }\n";
+}
+
+template<class Base>
+void ModelCSourceGen<Base>::printLoopEndOpenMP(std::ostringstream& cache) {
+    cache <<"      if(verbose) {\n"
+            "         if(info == 0) {\n"
+            "            info = clock_gettime(CLOCK_MONOTONIC, &end);\n"
+            "         }\n"
+            "         if(info == 0) {\n"
+            "            if ((end.tv_nsec - start.tv_nsec) < 0) {\n"
+            "               diff.tv_sec = end.tv_sec - start.tv_sec - 1;\n"
+            "               diff.tv_nsec = end.tv_nsec - start.tv_nsec + 1000000000;\n"
+            "            } else {\n"
+            "               diff.tv_sec = end.tv_sec - start.tv_sec;\n"
+            "               diff.tv_nsec = end.tv_nsec - start.tv_nsec;\n"
+            "            }\n"
+            "            fprintf(stdout, \"## Thread %i, Job %li, started at %ld.%.9ld, ended at %ld.%.9ld, elapsed %ld.%.9ld\\n\",\n"
+            "                    tid, i, start.tv_sec, start.tv_nsec, end.tv_sec, end.tv_nsec, diff.tv_sec, diff.tv_nsec);\n"
+            "         }\n"
+            "      }\n"
+            "   }\n";
 }
 
 template<class Base>
