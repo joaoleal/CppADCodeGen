@@ -428,7 +428,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
         printLoopStartOpenMP(_cache, jacInfo.size());
         _cache << "      outLocal[0] = &jac[offset[i]];\n"
                 "      (*p[i])(" << argsLocal << ");\n";
-        printLoopEndOpenMP(_cache);
+        printLoopEndOpenMP(_cache, jacInfo.size());
         _cache << "\n";
 
     } else {

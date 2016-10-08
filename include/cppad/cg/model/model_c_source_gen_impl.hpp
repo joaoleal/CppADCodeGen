@@ -657,8 +657,12 @@ void ModelCSourceGen<Base>::printFileStartOpenMP(std::ostringstream& cache) {
 template<class Base>
 void ModelCSourceGen<Base>::printFunctionStartOpenMP(std::ostringstream& cache,
                                                      size_t size) {
-    cache << "   int enabled = !cppadcg_openmp_is_disabled();\n"
+    cache << "\n"
+            "   int enabled = !cppadcg_openmp_is_disabled();\n"
             "   int verbose = cppadcg_openmp_is_verbose();\n"
+            "   struct timespec start[" << size << "];\n"
+            "   struct timespec end[" << size << "];\n"
+            "   int thread_id[" << size << "];\n"
             "   unsigned int n_threads = cppadcg_openmp_get_threads();\n"
             "   if(n_threads > " << size << ")\n"
             "      n_threads = " << size << ";\n";
@@ -669,34 +673,50 @@ void ModelCSourceGen<Base>::printLoopStartOpenMP(std::ostringstream& cache,
                                                  size_t size) {
     cache <<"#pragma omp parallel for private(outLocal) if(enabled) num_threads(n_threads)\n"
             "   for(i = 0; i < " << size << "; ++i) {\n"
-            "      int tid;\n"
             "      int info;\n"
-            "      struct timespec start, end, diff;\n"
             "      if(verbose) {\n"
-            "         tid = omp_get_thread_num();\n"
-            "         info = clock_gettime(CLOCK_MONOTONIC, &start);\n"
-            "      }\n";
+            "         thread_id[i] = omp_get_thread_num();\n"
+            "         info = clock_gettime(CLOCK_MONOTONIC, &start[i]);\n"
+            "         if(info != 0) {\n"
+            "            start[i].tv_sec = 0;\n"
+            "            start[i].tv_nsec = 0;\n"
+            "            end[i].tv_sec = 0;\n"
+            "            end[i].tv_nsec = 0;\n"
+            "         }\n"
+            "      }\n"
+            "\n";
 }
 
 template<class Base>
-void ModelCSourceGen<Base>::printLoopEndOpenMP(std::ostringstream& cache) {
-    cache <<"      if(verbose) {\n"
+void ModelCSourceGen<Base>::printLoopEndOpenMP(std::ostringstream& cache,
+                                               size_t size) {
+    cache <<"\n"
+            "      if(verbose) {\n"
             "         if(info == 0) {\n"
-            "            info = clock_gettime(CLOCK_MONOTONIC, &end);\n"
-            "         }\n"
-            "         if(info == 0) {\n"
-            "            if ((end.tv_nsec - start.tv_nsec) < 0) {\n"
-            "               diff.tv_sec = end.tv_sec - start.tv_sec - 1;\n"
-            "               diff.tv_nsec = end.tv_nsec - start.tv_nsec + 1000000000;\n"
-            "            } else {\n"
-            "               diff.tv_sec = end.tv_sec - start.tv_sec;\n"
-            "               diff.tv_nsec = end.tv_nsec - start.tv_nsec;\n"
+            "            info = clock_gettime(CLOCK_MONOTONIC, &end[i]);\n"
+            "            if(info != 0) {\n"
+            "               end[i].tv_sec = 0;\n"
+            "               end[i].tv_nsec = 0;\n"
             "            }\n"
-            "            fprintf(stdout, \"## Thread %i, Job %li, started at %ld.%.9ld, ended at %ld.%.9ld, elapsed %ld.%.9ld\\n\",\n"
-            "                    tid, i, start.tv_sec, start.tv_nsec, end.tv_sec, end.tv_nsec, diff.tv_sec, diff.tv_nsec);\n"
             "         }\n"
             "      }\n"
+            "   }\n"
+            "\n"
+            "   if(verbose) {\n"
+            "      struct timespec diff;\n"
+            "      for (i = 0; i < " << size << "; ++i) {\n"
+            "         if ((end[i].tv_nsec - start[i].tv_nsec) < 0) {\n"
+            "            diff.tv_sec = end[i].tv_sec - start[i].tv_sec - 1;\n"
+            "            diff.tv_nsec = end[i].tv_nsec - start[i].tv_nsec + 1000000000;\n"
+            "         } else {\n"
+            "            diff.tv_sec = end[i].tv_sec - start[i].tv_sec;\n"
+            "            diff.tv_nsec = end[i].tv_nsec - start[i].tv_nsec;\n"
+            "         }\n"
+            "         fprintf(stdout, \"## Thread %i, Job %li, started at %ld.%.9ld, ended at %ld.%.9ld, elapsed %ld.%.9ld\\n\",\n"
+            "                 thread_id[i], i, start[i].tv_sec, start[i].tv_nsec, end[i].tv_sec, end[i].tv_nsec, diff.tv_sec, diff.tv_nsec);\n"
+            "      }\n"
             "   }\n";
+
 }
 
 template<class Base>

@@ -1212,7 +1212,8 @@ protected:
     static void printLoopStartOpenMP(std::ostringstream& cache,
                                      size_t size);
 
-    static void printLoopEndOpenMP(std::ostringstream& cache);
+    static void printLoopEndOpenMP(std::ostringstream& cache,
+                                   size_t size);
 
     /**
      * 

@@ -485,7 +485,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
         printLoopStartOpenMP(_cache, hessInfo.size());
         _cache << "      outLocal[0] = &hess[offset[i]];\n"
                 "      (*p[i])(" << argsLocal << ");\n";
-        printLoopEndOpenMP(_cache);
+        printLoopEndOpenMP(_cache, hessInfo.size());
         _cache << "\n";
 
     } else {
