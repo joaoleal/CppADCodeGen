@@ -18,12 +18,6 @@
 namespace CppAD {
 namespace cg {
 
-enum class ThreadPoolScheduleStrategy {
-    SINGLE_JOB, // each thread only executes a single job at a time
-    MULTI_JOB, // each thread can execute multiple jobs before returning to the pool
-    STATIC // all jobs are assigned to a thread at the beginning
-};
-
 /**
  * Abstract class used to load models
  * 

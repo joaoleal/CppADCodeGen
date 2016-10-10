@@ -191,6 +191,7 @@
 
 //
 #include <cppad/cg/model/threadpool/multi_threading_type.hpp>
+#include <cppad/cg/model/threadpool/thread_pool_schedule_strategy.hpp>
 #include <cppad/cg/model/external_function_wrapper.hpp>
 #include <cppad/cg/model/atomic_external_function_wrapper.hpp>
 #include <cppad/cg/model/generic_model_external_function_wrapper.hpp>

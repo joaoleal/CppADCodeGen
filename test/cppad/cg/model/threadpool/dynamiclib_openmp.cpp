@@ -75,7 +75,7 @@ TEST_F(CppADCGOpenMPTest, DisabledFullVars) {
 
 TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
     this->_multithreadDisabled = false;
-    this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::DYNAMIC;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -88,7 +88,7 @@ TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
 
 TEST_F(CppADCGOpenMPTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
-    this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -112,7 +112,7 @@ TEST_F(CppADCGOpenMPTest, StaticFullVars) {
 
 TEST_F(CppADCGOpenMPTest, FullVars) {
     this->_multithreadDisabled = false;
-    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -124,7 +124,7 @@ TEST_F(CppADCGOpenMPTest, FullVars) {
 
 TEST_F(CppADCGOpenMPTest, DynamicCustomElements) {
     this->_multithreadDisabled = false;
-    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+    //this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 
     std::vector<size_t> jacRow(3), jacCol(3); // all elements except 1
     jacRow[0] = 0;

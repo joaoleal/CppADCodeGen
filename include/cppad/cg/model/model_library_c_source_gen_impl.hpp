@@ -277,26 +277,11 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADSCHEDULERSTRAT << "(enum ScheduleStrategy s) {\n";
-        _cache << "   if(s == SCHED_SINGLE_JOB) {\n";
-        _cache << "       omp_set_schedule(omp_sched_dynamic, 1);\n";
-        _cache << "   } else if(s == SCHED_MULTI_JOB) {\n";
-        _cache << "       omp_set_schedule(omp_sched_guided, 0);\n";
-        _cache << "   } else {\n";
-        _cache << "       omp_set_schedule(omp_sched_static, 0);\n";
-        _cache << "   }\n";
+        _cache << "   cppadcg_openmp_set_scheduler_strategy(s);\n";
         _cache << "}\n\n";
 
         _cache << "enum ScheduleStrategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
-        _cache << "   enum omp_sched_t kind;\n";
-        _cache << "   int modifier;\n";
-        _cache << "   omp_get_schedule(&kind, &modifier);\n";
-        _cache << "   if(kind == omp_sched_dynamic) {\n";
-        _cache << "       return SCHED_SINGLE_JOB;\n";
-        _cache << "   } else if(kind == omp_sched_guided) {\n";
-        _cache << "       return SCHED_MULTI_JOB;\n";
-        _cache << "   } else {\n";
-        _cache << "       return SCHED_STATIC;\n";
-        _cache << "   }\n";
+        _cache << "   return cppadcg_openmp_get_scheduler_strategy();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";
@@ -325,7 +310,7 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
 
     } else {
         _cache.str("");
-        _cache << "enum ScheduleStrategy {SCHED_SINGLE_JOB, SCHED_MULTI_JOB, SCHED_STATIC};\n"
+        _cache << "enum ScheduleStrategy {SCHED_STATIC = 1, SCHED_DYNAMIC = 2, SCHED_GUIDED = 3};\n"
                 "\n";
         _cache << "void " << FUNCTION_SETTHREADPOOLDISABLED << "(int disabled) {\n";
         _cache << "}\n\n";
@@ -345,7 +330,7 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "enum ScheduleStrategy " << FUNCTION_GETTHREADSCHEDULERSTRAT << "() {\n";
-        _cache << "   return SCHED_SINGLE_JOB;\n";
+        _cache << "   return SCHED_STATIC;\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLVERBOSE << "(int v) {\n";

@@ -16,9 +16,17 @@
 #include <omp.h>
 #include <stdio.h>
 
+enum ScheduleStrategy {SCHED_STATIC = 1,
+                       SCHED_DYNAMIC = 2,
+                       SCHED_GUIDED = 3
+                      };
+
 static volatile int cppadcg_openmp_enabled = 1; // false
 static volatile int cppadcg_openmp_verbose = 1; // false
 static volatile unsigned int cppadcg_openmp_n_threads = 2;
+
+static enum ScheduleStrategy schedule_strategy = SCHED_DYNAMIC;
+
 
 void cppadcg_openmp_set_disabled(int disabled) {
     cppadcg_openmp_enabled = !disabled;
@@ -44,4 +52,22 @@ void cppadcg_openmp_set_threads(unsigned int n) {
 
 unsigned int cppadcg_openmp_get_threads() {
     return cppadcg_openmp_n_threads;
+}
+
+void cppadcg_openmp_set_scheduler_strategy(enum ScheduleStrategy s) {
+    schedule_strategy = s;
+}
+
+enum ScheduleStrategy cppadcg_openmp_get_scheduler_strategy() {
+    return schedule_strategy;
+}
+
+void cppadcg_openmp_apply_scheduler_strategy() {
+    if (schedule_strategy == SCHED_DYNAMIC) {
+        omp_set_schedule(omp_sched_dynamic, 1);
+    } else if (schedule_strategy == SCHED_GUIDED) {
+        omp_set_schedule(omp_sched_guided, 0);
+    } else {
+        omp_set_schedule(omp_sched_static, 0);
+    }
 }

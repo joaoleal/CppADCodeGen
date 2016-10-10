@@ -52,7 +52,7 @@ public:
         _reverseTwo(true),
         _multithread(MultiThreadingType::NONE),
         _multithreadDisabled(false),
-        _multithreadScheduler(ThreadPoolScheduleStrategy::SINGLE_JOB) {
+        _multithreadScheduler(ThreadPoolScheduleStrategy::DYNAMIC) {
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;

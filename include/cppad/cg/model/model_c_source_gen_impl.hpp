@@ -658,6 +658,8 @@ template<class Base>
 void ModelCSourceGen<Base>::printFunctionStartOpenMP(std::ostringstream& cache,
                                                      size_t size) {
     cache << "\n"
+            "   enum omp_sched_t old_kind;\n"
+            "   int old_modifier;\n"
             "   int enabled = !cppadcg_openmp_is_disabled();\n"
             "   int verbose = cppadcg_openmp_is_verbose();\n"
             "   struct timespec start[" << size << "];\n"
@@ -665,13 +667,16 @@ void ModelCSourceGen<Base>::printFunctionStartOpenMP(std::ostringstream& cache,
             "   int thread_id[" << size << "];\n"
             "   unsigned int n_threads = cppadcg_openmp_get_threads();\n"
             "   if(n_threads > " << size << ")\n"
-            "      n_threads = " << size << ";\n";
+            "      n_threads = " << size << ";\n"
+            "\n"
+            "   omp_get_schedule(&old_kind, &old_modifier);\n"
+            "   cppadcg_openmp_apply_scheduler_strategy();\n";
 }
 
 template<class Base>
 void ModelCSourceGen<Base>::printLoopStartOpenMP(std::ostringstream& cache,
                                                  size_t size) {
-    cache <<"#pragma omp parallel for private(outLocal) if(enabled) num_threads(n_threads)\n"
+    cache <<"#pragma omp parallel for private(outLocal) schedule(runtime) if(enabled) num_threads(n_threads)\n"
             "   for(i = 0; i < " << size << "; ++i) {\n"
             "      int info;\n"
             "      if(verbose) {\n"
@@ -701,6 +706,8 @@ void ModelCSourceGen<Base>::printLoopEndOpenMP(std::ostringstream& cache,
             "         }\n"
             "      }\n"
             "   }\n"
+            "\n"
+            "   omp_set_schedule(old_kind, old_modifier);\n"
             "\n"
             "   if(verbose) {\n"
             "      struct timespec diff;\n"

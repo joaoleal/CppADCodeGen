@@ -18,14 +18,22 @@
 extern "C" {
 #endif
 
-enum ScheduleStrategy {SCHED_SINGLE_JOB, // omp_sched_dynamic with chunk size 1
-                       SCHED_MULTI_JOB, // omp_sched_guided
-                       SCHED_STATIC}; // omp_sched_static
+enum ScheduleStrategy {SCHED_STATIC = 1, // omp_sched_static
+                       SCHED_DYNAMIC = 2, // omp_sched_dynamic with chunk size 1
+                       SCHED_GUIDED = 3 // omp_sched_guided
+                       };
 
 
-void cppadcg_openmp_set_disabled(int disabled);
+void cppadcg_openmp_set_threads(unsigned int n);
 
-int cppadcg_openmp_is_disabled();
+unsigned int cppadcg_openmp_get_threads();
+
+
+void cppadcg_openmp_set_scheduler_strategy(enum ScheduleStrategy s);
+
+enum ScheduleStrategy cppadcg_openmp_get_scheduler_strategy();
+
+void cppadcg_openmp_apply_scheduler_strategy();
 
 
 void cppadcg_openmp_set_verbose(int v);
@@ -33,9 +41,9 @@ void cppadcg_openmp_set_verbose(int v);
 int cppadcg_openmp_is_verbose();
 
 
-void cppadcg_openmp_set_threads(unsigned int n);
+void cppadcg_openmp_set_disabled(int disabled);
 
-unsigned int cppadcg_openmp_get_threads();
+int cppadcg_openmp_is_disabled();
 
 
 #ifdef __cplusplus

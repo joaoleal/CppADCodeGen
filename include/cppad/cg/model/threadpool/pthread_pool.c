@@ -32,9 +32,10 @@
 #include <sys/resource.h>
 #endif
 
-enum ScheduleStrategy {SCHED_SINGLE_JOB,
-                       SCHED_MULTI_JOB,
-                       SCHED_STATIC};
+enum ScheduleStrategy {SCHED_STATIC = 1,
+                       SCHED_DYNAMIC = 2,
+                       SCHED_GUIDED = 3
+                       };
 
 typedef struct ThPool ThPool;
 typedef void (* thpool_function_type)(void*);
@@ -46,7 +47,7 @@ static int cppadcg_pool_verbose = 0; // false
 static unsigned int cppadcg_pool_time_meas = 10; // default number of time measurements
 static float cppadcg_pool_multijob_maxgroupwork = 0.75;
 
-static enum ScheduleStrategy group_gen_strategy = SCHED_SINGLE_JOB;
+static enum ScheduleStrategy schedule_strategy = SCHED_DYNAMIC;
 
 /* ==================== INTERNAL HIGH LEVEL API  ====================== */
 
@@ -149,11 +150,11 @@ int cppadcg_thpool_get_threads() {
 void cppadcg_thpool_set_scheduler_strategy(enum ScheduleStrategy s) {
     if(cppadcg_pool != NULL) {
         pthread_mutex_lock(&cppadcg_pool->jobqueue->rwmutex);
-        group_gen_strategy = s;
+        schedule_strategy = s;
         pthread_mutex_unlock(&cppadcg_pool->jobqueue->rwmutex);
     } else {
         // pool not yet created
-        group_gen_strategy = s;
+        schedule_strategy = s;
     }
 }
 
@@ -161,12 +162,12 @@ enum ScheduleStrategy cppadcg_thpool_get_scheduler_strategy() {
     if(cppadcg_pool != NULL) {
         enum ScheduleStrategy e;
         pthread_mutex_lock(&cppadcg_pool->jobqueue->rwmutex);
-        e = group_gen_strategy;
+        e = schedule_strategy;
         pthread_mutex_unlock(&cppadcg_pool->jobqueue->rwmutex);
         return e;
     } else {
         // pool not yet created
-        return group_gen_strategy;
+        return schedule_strategy;
     }
 }
 
@@ -581,7 +582,7 @@ static int thpool_add_jobs(ThPool* thpool,
     }
 
     /* add jobs to queue */
-    if (group_gen_strategy == SCHED_STATIC && avgElapsed != NULL && order != NULL && nJobs > 0 && avgElapsed[0] > 0) {
+    if (schedule_strategy == SCHED_STATIC && avgElapsed != NULL && order != NULL && nJobs > 0 && avgElapsed[0] > 0) {
         return jobqueue_push_static_jobs(thpool, newjobs, avgElapsed, job2Thread, nJobs, lastElapsedChanged);
     } else {
         jobqueue_multipush(thpool->jobqueue, newjobs, nJobs);
@@ -1228,7 +1229,7 @@ static WorkGroup* jobqueue_pull(ThPool* thpool,
     int i;
     JobQueue* queue = thpool->jobqueue;
 
-    if (group_gen_strategy == SCHED_STATIC && queue->group_front != NULL) {
+    if (schedule_strategy == SCHED_STATIC && queue->group_front != NULL) {
         // STATIC
         group = queue->group_front;
 
@@ -1239,18 +1240,18 @@ static WorkGroup* jobqueue_pull(ThPool* thpool,
         // nothing to do
         group = NULL;
 
-    } else if (group_gen_strategy == SCHED_SINGLE_JOB || queue->len == 1 || queue->total_time <= 0) {
-        // SCHED_SINGLE_JOB
+    } else if (schedule_strategy == SCHED_DYNAMIC || queue->len == 1 || queue->total_time <= 0) {
+        // SCHED_DYNAMIC
         group = (WorkGroup*) malloc(sizeof(WorkGroup));
         group->prev = NULL;
 
         if (cppadcg_pool_verbose) {
-            if (group_gen_strategy == SCHED_MULTI_JOB) {
+            if (schedule_strategy == SCHED_GUIDED) {
                 if (queue->len == 1)
                     fprintf(stdout, "jobqueue_pull(): Thread %i given a work group with 1 job\n", id);
                 else if (queue->total_time <= 0)
                     fprintf(stdout, "jobqueue_pull(): Thread %i using single-job instead of multi-job (no timing information)\n", id);
-            } else if (group_gen_strategy == SCHED_STATIC && queue->len >= 1) {
+            } else if (schedule_strategy == SCHED_STATIC && queue->len >= 1) {
                 if (queue->total_time >= 0) {
                     // this should not happen but just in case the user messed up
                     fprintf(stderr, "jobqueue_pull(): Thread %i given a work group with 1 job\n", id);
@@ -1261,8 +1262,8 @@ static WorkGroup* jobqueue_pull(ThPool* thpool,
         }
 
         jobqueue_extract_single_group(thpool->jobqueue, group);
-    } else { // group_gen_strategy == SCHED_MULTI_JOB
-        // SCHED_MULTI_JOB
+    } else { // schedule_strategy == SCHED_GUIDED
+        // SCHED_GUIDED
         group = (WorkGroup*) malloc(sizeof(WorkGroup));
         group->prev = NULL;
 

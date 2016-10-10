@@ -222,7 +222,7 @@ public:
 using namespace CppAD::cg;
 
 TEST_F(PThreadPoolTest, SingleJobJac) {
-    cppadcg_thpool_set_scheduler_strategy(SCHED_SINGLE_JOB);
+    cppadcg_thpool_set_scheduler_strategy(SCHED_DYNAMIC);
 
     pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);
 
@@ -232,7 +232,7 @@ TEST_F(PThreadPoolTest, SingleJobJac) {
 }
 
 TEST_F(PThreadPoolTest, MultiJobJac) {
-    cppadcg_thpool_set_scheduler_strategy(SCHED_MULTI_JOB);
+    cppadcg_thpool_set_scheduler_strategy(SCHED_GUIDED);
 
     pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);
 

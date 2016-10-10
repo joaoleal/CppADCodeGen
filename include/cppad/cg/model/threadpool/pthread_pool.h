@@ -19,9 +19,10 @@
 extern "C" {
 #endif
 
-enum ScheduleStrategy {SCHED_SINGLE_JOB,
-                       SCHED_MULTI_JOB,
-                       SCHED_STATIC};
+enum ScheduleStrategy {SCHED_STATIC = 1,
+                       SCHED_DYNAMIC = 2,
+                       SCHED_GUIDED = 3
+                       };
 
 typedef void (*cppadcg_thpool_function_type)(void*);
 

@@ -75,7 +75,7 @@ TEST_F(CppADCGThreadPoolTest, DisabledFullVars) {
 
 TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
     this->_multithreadDisabled = false;
-    this->_multithreadScheduler = ThreadPoolScheduleStrategy::SINGLE_JOB;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::DYNAMIC;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;
@@ -87,7 +87,7 @@ TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
 
 TEST_F(CppADCGThreadPoolTest, MultiJobFullVars) {
     this->_multithreadDisabled = false;
-    this->_multithreadScheduler = ThreadPoolScheduleStrategy::MULTI_JOB;
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 
     this->_reverseOne = true;
     this->_reverseTwo = true;

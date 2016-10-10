@@ -113,7 +113,7 @@ public:
         if (_getSchedulerStrategy != nullptr) {
             return ThreadPoolScheduleStrategy((*_getSchedulerStrategy)());
         }
-        return ThreadPoolScheduleStrategy::SINGLE_JOB;
+        return ThreadPoolScheduleStrategy::DYNAMIC;
     }
 
     virtual void setThreadPoolSchedulerStrategy(ThreadPoolScheduleStrategy s) override {
