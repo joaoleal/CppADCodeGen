@@ -45,7 +45,7 @@ static int cppadcg_pool_n_threads = 2;
 static int cppadcg_pool_disabled = 0; // false
 static int cppadcg_pool_verbose = 0; // false
 static unsigned int cppadcg_pool_time_meas = 10; // default number of time measurements
-static float cppadcg_pool_multijob_maxgroupwork = 0.75;
+static float cppadcg_pool_guided_maxgroupwork = 0.75;
 
 static enum ScheduleStrategy schedule_strategy = SCHED_DYNAMIC;
 
@@ -179,27 +179,27 @@ int cppadcg_thpool_is_disabled() {
     return cppadcg_pool_disabled;
 }
 
-void cppadcg_thpool_set_multijob_maxgroupwork(float v) {
+void cppadcg_thpool_set_guided_maxgroupwork(float v) {
     if(cppadcg_pool != NULL) {
         pthread_mutex_lock(&cppadcg_pool->jobqueue->rwmutex);
-        cppadcg_pool_multijob_maxgroupwork = v;
+        cppadcg_pool_guided_maxgroupwork = v;
         pthread_mutex_unlock(&cppadcg_pool->jobqueue->rwmutex);
     } else {
         // pool not yet created
-        cppadcg_pool_multijob_maxgroupwork = v;
+        cppadcg_pool_guided_maxgroupwork = v;
     }
 }
 
-float cppadcg_thpool_get_multijob_maxgroupwork() {
+float cppadcg_thpool_get_guided_maxgroupwork() {
     if(cppadcg_pool != NULL) {
         float r;
         pthread_mutex_lock(&cppadcg_pool->jobqueue->rwmutex);
-        r = cppadcg_pool_multijob_maxgroupwork;
+        r = cppadcg_pool_guided_maxgroupwork;
         pthread_mutex_unlock(&cppadcg_pool->jobqueue->rwmutex);
         return r;
     } else {
         // pool not yet created
-        return cppadcg_pool_multijob_maxgroupwork;
+        return cppadcg_pool_guided_maxgroupwork;
     }
 }
 
@@ -1282,7 +1282,7 @@ static WorkGroup* jobqueue_pull(ThPool* thpool,
             duration = *job->avgElapsed;
             duration_next = duration;
             job = job->prev;
-            target_duration = queue->total_time * cppadcg_pool_multijob_maxgroupwork / thpool->num_threads; // always positive
+            target_duration = queue->total_time * cppadcg_pool_guided_maxgroupwork / thpool->num_threads; // always positive
             current_time = get_monotonic_time(&timeAux, &info);
 
             if (queue->highest_expected_return > 0 && info) {

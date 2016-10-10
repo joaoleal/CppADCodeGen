@@ -73,7 +73,7 @@ TEST_F(CppADCGOpenMPTest, DisabledFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
+TEST_F(CppADCGOpenMPTest, DynamicFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::DYNAMIC;
 
@@ -86,7 +86,7 @@ TEST_F(CppADCGOpenMPTest, SingleJobFullVars) {
 }
 
 
-TEST_F(CppADCGOpenMPTest, MultiJobFullVars) {
+TEST_F(CppADCGOpenMPTest, GuidedFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 

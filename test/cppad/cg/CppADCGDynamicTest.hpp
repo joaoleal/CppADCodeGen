@@ -146,7 +146,7 @@ public:
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
         dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
-        dynamicLib->setThreadPoolMultiJobMaxWork(0.75);
+        dynamicLib->setThreadPoolGuidedMaxWork(0.75);
 
         /**
          * test the library
@@ -222,7 +222,7 @@ public:
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
         dynamicLib->setThreadPoolSchedulerStrategy(_multithreadScheduler);
-        dynamicLib->setThreadPoolMultiJobMaxWork(0.75);
+        dynamicLib->setThreadPoolGuidedMaxWork(0.75);
 
         /**
          * test the library

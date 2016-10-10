@@ -73,7 +73,7 @@ TEST_F(CppADCGThreadPoolTest, DisabledFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
+TEST_F(CppADCGThreadPoolTest, DynamicFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::DYNAMIC;
 
@@ -85,7 +85,7 @@ TEST_F(CppADCGThreadPoolTest, SingleJobFullVars) {
     this->testDynamicFull(u, x, 1000);
 }
 
-TEST_F(CppADCGThreadPoolTest, MultiJobFullVars) {
+TEST_F(CppADCGThreadPoolTest, GuidedFullVars) {
     this->_multithreadDisabled = false;
     this->_multithreadScheduler = ThreadPoolScheduleStrategy::GUIDED;
 
@@ -110,6 +110,7 @@ TEST_F(CppADCGThreadPoolTest, StaticFullVars) {
 }
 
 TEST_F(CppADCGThreadPoolTest, DynamicCustomElements) {
+    this->_multithreadScheduler = ThreadPoolScheduleStrategy::DYNAMIC;
 
     std::vector<size_t> jacRow(3), jacCol(3); // all elements except 1
     jacRow[0] = 0;

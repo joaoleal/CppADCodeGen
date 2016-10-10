@@ -221,7 +221,7 @@ public:
 
 using namespace CppAD::cg;
 
-TEST_F(PThreadPoolTest, SingleJobJac) {
+TEST_F(PThreadPoolTest, DynamicJac) {
     cppadcg_thpool_set_scheduler_strategy(SCHED_DYNAMIC);
 
     pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);
@@ -231,7 +231,7 @@ TEST_F(PThreadPoolTest, SingleJobJac) {
     ASSERT_TRUE(compareValues(jac, out0));
 }
 
-TEST_F(PThreadPoolTest, MultiJobJac) {
+TEST_F(PThreadPoolTest, GuidedJac) {
     cppadcg_thpool_set_scheduler_strategy(SCHED_GUIDED);
 
     pooldynamic_sparse_jacobian(in.data(), out.data(), atomicFun);

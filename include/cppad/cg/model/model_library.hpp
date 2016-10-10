@@ -106,9 +106,9 @@ public:
 
     virtual bool isThreadPoolVerbose() const = 0;
 
-    virtual void setThreadPoolMultiJobMaxWork(float v) = 0;
+    virtual void setThreadPoolGuidedMaxWork(float v) = 0;
 
-    virtual float getThreadPoolMultiJobMaxWork() const = 0;
+    virtual float getThreadPoolGuidedMaxWork() const = 0;
 
     /**
      * Defines the number of time measurements taken by each computational

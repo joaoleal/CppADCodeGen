@@ -57,10 +57,10 @@ template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE = "cppad_cg_thpool_is_verbose";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_set_multijob_maxgroupwork";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLGUIDEDMAXGROUPWORK = "cppad_cg_thpool_set_guided_maxgroupwork";
 
 template<class Base>
-const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK = "cppad_cg_thpool_get_multijob_maxgroupwork";
+const std::string ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLGUIDEDMAXGROUPWORK = "cppad_cg_thpool_get_guided_maxgroupwork";
 
 template<class Base>
 const std::string ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS = "cppad_cg_thpool_set_number_of_time_meas";
@@ -237,12 +237,12 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return cppadcg_thpool_is_verbose();\n";
         _cache << "}\n\n";
 
-        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
-        _cache << "   cppadcg_thpool_set_multijob_maxgroupwork(v);\n";
+        _cache << "void " << FUNCTION_SETTHREADPOOLGUIDEDMAXGROUPWORK << "(float v) {\n";
+        _cache << "   cppadcg_thpool_set_guided_maxgroupwork(v);\n";
         _cache << "}\n\n";
 
-        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
-        _cache << "   return cppadcg_thpool_get_multijob_maxgroupwork();\n";
+        _cache << "float " << FUNCTION_GETTHREADPOOLGUIDEDMAXGROUPWORK << "() {\n";
+        _cache << "   return cppadcg_thpool_get_guided_maxgroupwork();\n";
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS << "(unsigned int n) {\n";
@@ -292,10 +292,10 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return cppadcg_openmp_is_verbose();\n";
         _cache << "}\n\n";
 
-        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
+        _cache << "void " << FUNCTION_SETTHREADPOOLGUIDEDMAXGROUPWORK << "(float v) {\n";
         _cache << "}\n\n";
 
-        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "float " << FUNCTION_GETTHREADPOOLGUIDEDMAXGROUPWORK << "() {\n";
         _cache << "   return 1.0;\n";
         _cache << "}\n\n";
 
@@ -340,10 +340,10 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "   return 0;\n";
         _cache << "}\n\n";
 
-        _cache << "void " << FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK << "(float v) {\n";
+        _cache << "void " << FUNCTION_SETTHREADPOOLGUIDEDMAXGROUPWORK << "(float v) {\n";
         _cache << "}\n\n";
 
-        _cache << "float " << FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK << "() {\n";
+        _cache << "float " << FUNCTION_GETTHREADPOOLGUIDEDMAXGROUPWORK << "() {\n";
         _cache << "   return 1.0;\n";
         _cache << "}\n\n";
 

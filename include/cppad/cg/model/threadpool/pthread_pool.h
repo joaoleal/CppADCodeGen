@@ -37,9 +37,9 @@ void cppadcg_thpool_set_scheduler_strategy(enum ScheduleStrategy s);
 enum ScheduleStrategy cppadcg_thpool_get_scheduler_strategy();
 
 
-void cppadcg_thpool_set_multijob_maxgroupwork(float v);
+void cppadcg_thpool_set_guided_maxgroupwork(float v);
 
-float cppadcg_thpool_get_multijob_maxgroupwork();
+float cppadcg_thpool_get_guided_maxgroupwork();
 
 
 unsigned int cppadcg_thpool_get_time_meas();

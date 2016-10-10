@@ -37,8 +37,8 @@ protected:
     int (*_getSchedulerStrategy)();
     void (*_setThreadPoolVerbose)(int v);
     int (*_isThreadPoolVerbose)();
-    void (*_setThreadPoolMultiJobMaxWork)(float v);
-    float (*_getThreadPoolMultiJobMaxWork)();
+    void (*_setThreadPoolGuidedMaxWork)(float v);
+    float (*_getThreadPoolGuidedMaxWork)();
     void (*_setThreadPoolNumberOfTimeMeas)(unsigned int n);
     unsigned int (*_getThreadPoolNumberOfTimeMeas)();
 public:
@@ -135,15 +135,15 @@ public:
         return false;
     }
 
-    virtual void setThreadPoolMultiJobMaxWork(float v) override {
-        if (_setThreadPoolMultiJobMaxWork != nullptr) {
-            (*_setThreadPoolMultiJobMaxWork)(v);
+    virtual void setThreadPoolGuidedMaxWork(float v) override {
+        if (_setThreadPoolGuidedMaxWork != nullptr) {
+            (*_setThreadPoolGuidedMaxWork)(v);
         }
     }
 
-    virtual float getThreadPoolMultiJobMaxWork() const override {
-        if (_getThreadPoolMultiJobMaxWork != nullptr) {
-            return (*_getThreadPoolMultiJobMaxWork)();
+    virtual float getThreadPoolGuidedMaxWork() const override {
+        if (_getThreadPoolGuidedMaxWork != nullptr) {
+            return (*_getThreadPoolGuidedMaxWork)();
         }
         return 1.0;
     }
@@ -176,8 +176,8 @@ protected:
             _getSchedulerStrategy(nullptr),
             _setThreadPoolVerbose(nullptr),
             _isThreadPoolVerbose(nullptr),
-            _setThreadPoolMultiJobMaxWork(nullptr),
-            _getThreadPoolMultiJobMaxWork(nullptr),
+            _setThreadPoolGuidedMaxWork(nullptr),
+            _getThreadPoolGuidedMaxWork(nullptr),
             _setThreadPoolNumberOfTimeMeas(nullptr),
             _getThreadPoolNumberOfTimeMeas(nullptr) {
     }
@@ -225,8 +225,8 @@ protected:
         _getSchedulerStrategy = reinterpret_cast<decltype(_getSchedulerStrategy)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADSCHEDULERSTRAT, false));
         _setThreadPoolVerbose = reinterpret_cast<decltype(_setThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLVERBOSE, false));
         _isThreadPoolVerbose = reinterpret_cast<decltype(_isThreadPoolVerbose)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_ISTHREADPOOLVERBOSE, false));
-        _setThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_setThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
-        _getThreadPoolMultiJobMaxWork = reinterpret_cast<decltype(_getThreadPoolMultiJobMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLMULTIJOBMAXGROUPWORK, false));
+        _setThreadPoolGuidedMaxWork = reinterpret_cast<decltype(_setThreadPoolGuidedMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLGUIDEDMAXGROUPWORK, false));
+        _getThreadPoolGuidedMaxWork = reinterpret_cast<decltype(_getThreadPoolGuidedMaxWork)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLGUIDEDMAXGROUPWORK, false));
         _setThreadPoolNumberOfTimeMeas = reinterpret_cast<decltype(_setThreadPoolNumberOfTimeMeas)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS, false));
         _getThreadPoolNumberOfTimeMeas = reinterpret_cast<decltype(_getThreadPoolNumberOfTimeMeas)> (this->loadFunction(ModelLibraryCSourceGen<Base>::FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS, false));
 
