@@ -98,8 +98,6 @@ public:
      */
     inline ArrayWrapper(const ArrayWrapper& x) = default;
 
-    inline ArrayWrapper& operator=(const ArrayWrapper& x) = default;
-
     /**
      * Desctructor
      */
@@ -237,6 +235,47 @@ public:
         CPPADCG_ASSERT_KNOWN(!empty(), "ArrayWrapper: cannot call back for an empty array");
         return _data[size() - 1];
     }
+
+public:
+    inline ArrayWrapper& operator=(const ArrayWrapper& x) {
+        if (&x == this)
+            return *this;
+
+        if (x.size() != size())
+            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+                              " while the right hand side array has the size ", x.size(), ".");
+
+        for(size_t i = 0; i < _length; ++i) {
+            _data[i] = x._data[i];
+        }
+
+        return *this;
+    }
+
+    inline ArrayWrapper& operator=(const std::vector<Type>& x) {
+        if (x.size() != size())
+            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+                              " while the right hand side array has the size ", x.size(), ".");
+
+        for(size_t i = 0; i < _length; ++i) {
+            _data[i] = x[i];
+        }
+
+        return *this;
+    }
+
+    inline ArrayWrapper& operator=(const CppAD::vector<Type>& x) {
+        if (x.size() != size())
+            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+                              " while the right hand side array has the size ", x.size(), ".");
+
+        for(size_t i = 0; i < _length; ++i) {
+            _data[i] = x[i];
+        }
+
+        return *this;
+    }
+
 };
 
 /**
