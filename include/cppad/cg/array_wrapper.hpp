@@ -93,6 +93,32 @@ public:
     }
 
     /**
+     * Creates a wrapper from a vector.
+     * It is expected that the vector is not resized while using this wrapper.
+     *
+     * @param vector the vector to wrap
+     */
+    template<class TT = Type>
+    inline ArrayWrapper(const std::vector<typename std::remove_const<value_type>::type>& vector,
+                        typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(vector.data()),
+            _length(vector.size()) {
+    }
+
+    /**
+     * Creates a wrapper from a vector.
+     * It is expected that the vector is not resized while using this wrapper.
+     *
+     * @param vector the vector to wrap
+     */
+    template<class TT = Type>
+    inline ArrayWrapper(const CppAD::vector<typename std::remove_const<value_type>::type>& vector,
+                        typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(vector.data()),
+            _length(vector.size()) {
+    }
+
+    /**
      * Copy constructor
      * @param x
      */
