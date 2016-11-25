@@ -1,6 +1,7 @@
 #
 # directories for compilation
 /build
+/cmake-build-debug
 /obj-x86_64-linux-gnu
 
 # log files
