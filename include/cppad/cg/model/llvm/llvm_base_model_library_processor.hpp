@@ -64,7 +64,7 @@ protected:
         if (clang.getVersion() != version) {
             auto expected = ClangCompiler<Base>::parseVersion(version);
             auto execVersion = ClangCompiler<Base>::parseVersion(clang.getVersion());
-            bool error = expected.size() <= execVersion.size();
+            bool error = expected.size() > execVersion.size();
             if (!error) {
                 for (size_t i = 0; i < expected.size(); ++i) {
                     if (expected[i] != execVersion[i]) {

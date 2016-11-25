@@ -137,7 +137,7 @@ public:
             auto vv2 = explode(vv[2], "-");
             if (vv2.size() > 1) {
                 vv.erase(vv.begin() + 2);
-                vv.insert(vv.begin(), vv2.begin(), vv2.end());
+                vv.insert(vv.begin() + 2, vv2.begin(), vv2.end());
             }
         }
         return vv;
