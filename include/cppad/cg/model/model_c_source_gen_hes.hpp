@@ -469,15 +469,12 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
         }
     }
     _cache << "};\n"
-            "   " << _baseTypeName << " const * inLocal[3];\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
+            "   " << _baseTypeName << " const * inLocal[3] = {in[0], &inLocal1, in[1]};\n"
             "   " << _baseTypeName << " * outLocal[1];\n";
     _cache << "   " << _baseTypeName << " * hess = out[0];\n"
             "   long i;\n"
-            "\n"
-            "   inLocal[0] = in[0];\n"
-            "   inLocal[1] = &inLocal1;\n"
-            "   inLocal[2] = in[1];\n";
+            "\n";
 
     if(multiThreadingType == MultiThreadingType::OPENMP) {
         printFunctionStartOpenMP(_cache, hessInfo.size());

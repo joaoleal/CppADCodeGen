@@ -37,6 +37,9 @@ enum ScheduleStrategy {SCHED_STATIC = 1,
                        SCHED_GUIDED = 3
                        };
 
+enum ElapsedTimeReference {ELAPSED_TIME_AVG,
+                           ELAPSED_TIME_MIN};
+
 typedef struct ThPool ThPool;
 typedef void (* thpool_function_type)(void*);
 
@@ -44,6 +47,7 @@ static ThPool* volatile cppadcg_pool = NULL;
 static int cppadcg_pool_n_threads = 2;
 static int cppadcg_pool_disabled = 0; // false
 static int cppadcg_pool_verbose = 0; // false
+static enum ElapsedTimeReference cppadcg_pool_time_update = ELAPSED_TIME_MIN;
 static unsigned int cppadcg_pool_time_meas = 10; // default number of time measurements
 static float cppadcg_pool_guided_maxgroupwork = 0.75;
 
@@ -203,16 +207,24 @@ float cppadcg_thpool_get_guided_maxgroupwork() {
     }
 }
 
-unsigned int cppadcg_thpool_get_time_meas() {
+unsigned int cppadcg_thpool_get_n_time_meas() {
     return cppadcg_pool_time_meas;
 }
 
-void cppadcg_thpool_set_time_meas(unsigned int n) {
+void cppadcg_thpool_set_n_time_meas(unsigned int n) {
     cppadcg_pool_time_meas = n;
 }
 
 void cppadcg_thpool_set_verbose(int v) {
     cppadcg_pool_verbose = v;
+}
+
+enum ElapsedTimeReference cppadcg_thpool_get_time_meas_ref() {
+    return cppadcg_pool_time_update;
+}
+
+void cppadcg_thpool_set_time_meas_ref(enum ElapsedTimeReference r) {
+    cppadcg_pool_time_update = r;
 }
 
 int cppadcg_thpool_is_verbose() {
@@ -283,15 +295,15 @@ static int comparePair(const void* a, const void* b) {
     return 1;
 }
 
-void cppadcg_thpool_update_order(float avgElapsed[],
-                                 unsigned int n_time_meas,
+void cppadcg_thpool_update_order(float refElapsed[],
+                                 unsigned int nTimeMeas,
                                  const float elapsed[],
                                  int order[],
                                  int nJobs) {
-    if(nJobs == 0 || avgElapsed == NULL || elapsed == NULL || order == NULL)
+    if(nJobs == 0 || refElapsed == NULL || elapsed == NULL || order == NULL)
         return;
 
-    struct pair_double_int elapsed2[nJobs];
+    struct pair_double_int elapsedOrder[nJobs];
     int i;
     int nonZero = 0; // false
 
@@ -309,22 +321,33 @@ void cppadcg_thpool_update_order(float avgElapsed[],
         return;
     }
 
-    for (i = 0; i < nJobs; ++i) {
-        avgElapsed[i] = (avgElapsed[i] * n_time_meas + elapsed[i]) / (n_time_meas + 1);
-        elapsed2[i].val = avgElapsed[i];
-        elapsed2[i].index = i;
+    if(cppadcg_pool_time_update == ELAPSED_TIME_AVG) {
+        for (i = 0; i < nJobs; ++i) {
+            refElapsed[i] = (refElapsed[i] * nTimeMeas + elapsed[i]) / (nTimeMeas + 1);
+            elapsedOrder[i].val = refElapsed[i];
+            elapsedOrder[i].index = i;
+        }
+    } else {
+        // cppadcg_pool_time_update == ELAPSED_TIME_MIN
+        for (i = 0; i < nJobs; ++i) {
+            if(nTimeMeas == 0 || elapsed[i] < refElapsed[i]) {
+                refElapsed[i] = elapsed[i];
+            }
+            elapsedOrder[i].val = refElapsed[i];
+            elapsedOrder[i].index = i;
+        }
     }
 
-    qsort(elapsed2, nJobs, sizeof(struct pair_double_int), comparePair);
+    qsort(elapsedOrder, nJobs, sizeof(struct pair_double_int), comparePair);
 
     for (i = 0; i < nJobs; ++i) {
-        order[elapsed2[i].index] = nJobs - i - 1; // descending order
+        order[elapsedOrder[i].index] = nJobs - i - 1; // descending order
     }
 
     if (cppadcg_pool_verbose) {
-        fprintf(stdout, "new order (%i values):\n", n_time_meas + 1);
+        fprintf(stdout, "new order (%i values):\n", nTimeMeas + 1);
         for (i = 0; i < nJobs; ++i) {
-            fprintf(stdout, " original: %i   new: %i   time: %e s\n", i, order[i], avgElapsed[i]);
+            fprintf(stdout, " job id: %i   order: %i   time: %e s\n", i, order[i], refElapsed[i]);
         }
     }
 

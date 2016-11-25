@@ -138,7 +138,7 @@ void pooldynamic_sparse_jacobian(double const* const* in, double* const* out, st
     static int order[6] = {0, 1, 2, 3, 4, 5};
     static int job2Thread[6] = {-1, -1, -1, -1, -1, -1};
     static int lastElapsedChanged = 1;
-    unsigned int nBench = cppadcg_thpool_get_time_meas();
+    unsigned int nBench = cppadcg_thpool_get_n_time_meas();
     static unsigned int meas = 0;
     int do_benchmark = (meas < nBench && !cppadcg_thpool_is_disabled());
     float* elapsed_p = do_benchmark ? elapsed : NULL;
@@ -192,7 +192,7 @@ public:
             out{out0.data()},
             jac(12) {
         cppadcg_thpool_set_verbose(1);
-        cppadcg_thpool_set_time_meas(5);
+        cppadcg_thpool_set_n_time_meas(5);
 
         jac[0] = -0.99749498660405445;
         jac[1] = 0.070737201667702906;

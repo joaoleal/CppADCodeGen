@@ -605,7 +605,7 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
     cache << "   static cppadcg_thpool_function_type execute_functions[" << size << "] = ";
     repeatFill("exec_func");
     cache << "\n";
-    cache << "   static float avgElapsed[" << size << "] = ";
+    cache << "   static float ref_elapsed[" << size << "] = ";
     repeatFill("0");
     cache << "\n";
     cache << "   static float elapsed[" << size << "] = ";
@@ -620,17 +620,17 @@ void ModelCSourceGen<Base>::printFunctionStartPThreads(std::ostringstream& cache
             "   static int job2Thread[" << size << "] = ";
     repeatFill("-1");
     cache << "\n"
-            "   static int lastElapsedChanged = 1;\n"
-            "   unsigned int nBench = cppadcg_thpool_get_time_meas();\n"
-            "   static unsigned int meas = 0;\n"
-            "   int do_benchmark = " << (size > 0 ? "(meas < nBench && !cppadcg_thpool_is_disabled())" : "0") << ";\n"
+            "   static int last_elapsed_changed = 1;\n"
+            "   unsigned int nBench = cppadcg_thpool_get_n_time_meas();\n"
+            "   static unsigned int n_meas = 0;\n"
+            "   int do_benchmark = " << (size > 0 ? "(n_meas < nBench && !cppadcg_thpool_is_disabled())" : "0") << ";\n"
             "   float* elapsed_p = do_benchmark ? elapsed : NULL;\n";
 }
 
 template<class Base>
 void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
                                                      size_t size) {
-    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**) args, avgElapsed, elapsed_p, order, job2Thread, " << size << ", lastElapsedChanged" << ");\n"
+    cache << "   cppadcg_thpool_add_jobs(execute_functions, (void**) args, ref_elapsed, elapsed_p, order, job2Thread, " << size << ", last_elapsed_changed" << ");\n"
             "\n"
             "   cppadcg_thpool_wait();\n"
             "\n"
@@ -639,11 +639,11 @@ void ModelCSourceGen<Base>::printFunctionEndPThreads(std::ostringstream& cache,
             "   }\n"
             "\n"
             "   if(do_benchmark) {\n"
-            "      cppadcg_thpool_update_order(avgElapsed, meas, elapsed, order, " << size << ");\n"
-            "      meas++;\n"
+            "      cppadcg_thpool_update_order(ref_elapsed, n_meas, elapsed, order, " << size << ");\n"
+            "      n_meas++;\n"
             "   } else {\n"
-            "        lastElapsedChanged = 0;\n"
-            "    }\n";
+            "      last_elapsed_changed = 0;\n"
+            "   }\n";
 }
 
 template<class Base>

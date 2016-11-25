@@ -246,11 +246,11 @@ void ModelLibraryCSourceGen<Base>::generateThreadPoolSources(std::map<std::strin
         _cache << "}\n\n";
 
         _cache << "void " << FUNCTION_SETTHREADPOOLNUMBEROFTIMEMEAS << "(unsigned int n) {\n";
-        _cache << "   cppadcg_thpool_set_time_meas(n);\n";
+        _cache << "   cppadcg_thpool_set_n_time_meas(n);\n";
         _cache << "}\n\n";
 
         _cache << "unsigned int " << FUNCTION_GETTHREADPOOLNUMBEROFTIMEMEAS << "() {\n";
-        _cache << "   return cppadcg_thpool_get_time_meas();\n";
+        _cache << "   return cppadcg_thpool_get_n_time_meas();\n";
         _cache << "}\n\n";
 
         sources["thread_pool_access.c"] = _cache.str();

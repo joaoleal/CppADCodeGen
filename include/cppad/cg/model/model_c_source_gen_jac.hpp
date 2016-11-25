@@ -412,14 +412,11 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
         }
     }
     _cache << "};\n"
-            "   " << _baseTypeName << " const * inLocal[2];\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
+            "   " << _baseTypeName << " const * inLocal[2] = {in[0], &inLocal1};\n"
             "   " << _baseTypeName << " * outLocal[1];\n"
             "   " << _baseTypeName << " * jac = out[0];\n"
             "   long i;\n"
-            "\n"
-            "   inLocal[0] = in[0];\n"
-            "   inLocal[1] = &inLocal1;\n"
             "\n";
 
     if(multiThreadingType == MultiThreadingType::OPENMP) {

@@ -24,6 +24,9 @@ enum ScheduleStrategy {SCHED_STATIC = 1,
                        SCHED_GUIDED = 3
                        };
 
+enum ElapsedTimeReference {ELAPSED_TIME_AVG,
+                           ELAPSED_TIME_MIN};
+
 typedef void (*cppadcg_thpool_function_type)(void*);
 
 
@@ -42,9 +45,14 @@ void cppadcg_thpool_set_guided_maxgroupwork(float v);
 float cppadcg_thpool_get_guided_maxgroupwork();
 
 
-unsigned int cppadcg_thpool_get_time_meas();
+unsigned int cppadcg_thpool_get_n_time_meas();
 
-void cppadcg_thpool_set_time_meas(unsigned int n);
+void cppadcg_thpool_set_n_time_meas(unsigned int n);
+
+
+enum ElapsedTimeReference cppadcg_thpool_get_time_meas_ref();
+
+void cppadcg_thpool_set_time_meas_ref(enum ElapsedTimeReference r);
 
 
 void cppadcg_thpool_set_verbose(int v);
@@ -66,7 +74,7 @@ void cppadcg_thpool_add_job(cppadcg_thpool_function_type function,
 
 void cppadcg_thpool_add_jobs(cppadcg_thpool_function_type functions[],
                              void* args[],
-                             const float avgElapsed[],
+                             const float refElapsed[],
                              float elapsed[],
                              const int order[],
                              int job2Thread[],
@@ -75,8 +83,8 @@ void cppadcg_thpool_add_jobs(cppadcg_thpool_function_type functions[],
 
 void cppadcg_thpool_wait();
 
-void cppadcg_thpool_update_order(float avgElapsed[],
-                                 unsigned int n_time_meas,
+void cppadcg_thpool_update_order(float refElapsed[],
+                                 unsigned int nTimeMeas,
                                  const float elapsed[],
                                  int order[],
                                  int nJobs);
