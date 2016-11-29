@@ -40,7 +40,7 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSources() {
     /**
      * Generate one function for each dependent variable
      */
-    startingJob("'model (reverse one)'", JobTimer::SOURCE_GENERATION);
+    startingJob("'model (forward one)'", JobTimer::SOURCE_GENERATION);
 
     if (isAtomicsUsed()) {
         generateSparseForwardOneSourcesWithAtomics(elements);
