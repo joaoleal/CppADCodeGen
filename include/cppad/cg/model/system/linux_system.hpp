@@ -135,6 +135,14 @@ inline std::string filenameFromPath(const std::string& path) {
     }
 }
 
+inline std::string directoryFromPath(const std::string& path) {
+    size_t found = path.find_last_of('/');
+    if (found != std::string::npos) {
+        return path.substr(0, found + 1);
+    }
+    return "./";
+}
+
 inline bool isAbsolutePath(const std::string& path) {
     if (path.empty())
         return false;

@@ -60,6 +60,8 @@ inline std::string escapePath(const std::string& path);
 
 inline std::string filenameFromPath(const std::string& path);
 
+inline std::string directoryFromPath(const std::string& path);
+
 /**
  * Determines if a path is absolute.
  *
