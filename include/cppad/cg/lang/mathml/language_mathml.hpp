@@ -1322,6 +1322,9 @@ protected:
             case CGOpCode::CondResult:
                 printCondResult(node);
                 break;
+            case CGOpCode::UserCustom:
+                printUserCustom(node);
+                break;
             default:
                 throw CGException("Unknown operation code '", op, "'.");
         }
@@ -1593,7 +1596,7 @@ protected:
     virtual void printConditionalAssignment(Node& node) {
         CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
 
-        const std::vector<Arg >& args = node.getArguments();
+        const std::vector<Arg>& args = node.getArguments();
         const Arg &left = args[0];
         const Arg &right = args[1];
         const Arg &trueCase = args[2];
@@ -1679,7 +1682,7 @@ protected:
         int q = atomicFor.getInfo()[1];
         int p = atomicFor.getInfo()[2];
         size_t p1 = p + 1;
-        const std::vector<Arg >& opArgs = atomicFor.getArguments();
+        const std::vector<Arg>& opArgs = atomicFor.getArguments();
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2, "Invalid number of arguments for atomic forward operation");
 
         size_t id = atomicFor.getInfo()[0];
@@ -1721,7 +1724,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(atomicRev.getInfo().size() == 2, "Invalid number of information elements for atomic reverse operation");
         int p = atomicRev.getInfo()[1];
         size_t p1 = p + 1;
-        const std::vector<Arg >& opArgs = atomicRev.getArguments();
+        const std::vector<Arg>& opArgs = atomicRev.getArguments();
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4, "Invalid number of arguments for atomic reverse operation");
 
         size_t id = atomicRev.getInfo()[0];
@@ -1772,7 +1775,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::DependentMultiAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments");
 
-        const std::vector<Arg >& args = node.getArguments();
+        const std::vector<Arg>& args = node.getArguments();
         for (size_t a = 0; a < args.size(); a++) {
             bool useArg = false;
             const Arg& arg = args[a];
@@ -1993,6 +1996,12 @@ protected:
         // just follow the argument
         Node& nodeArg = *node.getArguments()[1].getOperation();
         printAssignment(nodeArg);
+    }
+
+    virtual void printUserCustom(Node& node) {
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::UserCustom, "Invalid node type");
+
+        throw CGException("Unable to generate MathML for user custom operation nodes.");
     }
 
     inline bool isDependent(const Node& arg) const {
