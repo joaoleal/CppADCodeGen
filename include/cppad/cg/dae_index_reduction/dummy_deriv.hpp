@@ -93,6 +93,10 @@ protected:
      * 
      */
     bool avoidConvertAlg2DifVars_;
+    /**
+     * Avoid using these variables as dummy derivatives
+     */
+    std::set<std::string> avoidAsDummy_;
 public:
 
     /**
@@ -130,10 +134,27 @@ public:
         }
     }
 
+    inline virtual ~DummyDerivatives() {
+    }
+
+    /**
+     * Whether or not to avoid converting algebraic variables to differential
+     * variables.
+     * When algebraic variables should not be converted to differential
+     * variables, derivatives for variables which where initially algebraic
+     * are selected first as dummy derivatives.
+     */
     inline bool isAvoidConvertAlg2DifVars() const {
         return avoidConvertAlg2DifVars_;
     }
 
+    /**
+     * Defines whether or not to avoid converting algebraic variables to
+     * differential variables.
+     * When algebraic variables should not be converted to differential
+     * variables, derivatives for variables which where initially algebraic
+     * are selected first as dummy derivatives
+     */
     inline void setAvoidConvertAlg2DifVars(bool avoid) {
         avoidConvertAlg2DifVars_ = avoid;
     }
@@ -149,7 +170,8 @@ public:
     /**
      * Whether or not to attempt to generate a semi-explicit DAE by performing 
      * algebraic manipulations.
-     * Warning: The algebraic manipulations may fail to solve equations relative
+     *
+     * @warning: The algebraic manipulations may fail to solve equations relative
      * to the time derivatives.
      */
     inline void setGenerateSemiExplicitDae(bool generateSemiExplicitDae) {
@@ -188,6 +210,29 @@ public:
      */
     inline void setReorder(bool reorder) {
         reorder_ = reorder;
+    }
+
+    /**
+     * Define a set of variables which should not be selected as dummy
+     * derivatives (algebraic variables).
+     * These variables can still be selected as dummy derivatives when
+     * there is no other option.
+     *
+     * @param avoidAsDummy a set of variable names which should not be selected
+     *                     as dummy derivatives
+     */
+    inline void setAvoidVarsAsDummies(const std::set<std::string>& avoidAsDummy) {
+        avoidAsDummy_ = avoidAsDummy;
+    }
+
+    /**
+     * Which variables should not be selected as dummy derivatives (algebraic
+     * variables).
+     * These variables can still be selected as dummy derivatives when
+     * there is no other option.
+     */
+    inline const std::set<std::string>& getAvoidVarsAsDummies() const {
+        return avoidAsDummy_;
     }
 
     virtual inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
@@ -246,11 +291,8 @@ public:
         return std::unique_ptr<ADFun<CG<Base>>>(reducedFun_.release());
     }
 
-    inline virtual ~DummyDerivatives() {
-    }
-
 protected:
-    
+
     using DaeIndexReduction<Base>::log;
 
     virtual inline void addDummyDerivatives(const std::vector<DaeVarInfo>& varInfo,
@@ -1358,9 +1400,10 @@ protected:
         }
 
         /**
-         * Determine the columns that must be removed
+         * Determine the columns/variables that must be removed
          */
         std::set<size_t> excludeCols;
+        std::set<size_t> avoidCols;
         for (size_t j = 0; j < vars.size(); j++) {
             Vnode<Base>* jj = vars[j];
             bool notZero = false;
@@ -1375,66 +1418,103 @@ protected:
             if (!notZero) {
                 // all zeros: must not choose this column/variable
                 excludeCols.insert(j);
+            } else if (avoidAsDummy_.find(vars[j]->name()) != avoidAsDummy_.end()) {
+                // avoid using this column/variable if there are other alternatives
+                avoidCols.insert(j);
             }
+        }
+
+        if (eqs.size() <= vars.size() - (excludeCols.size() + avoidCols.size())) {
+            // there might be sufficient alternatives to avoid using the columns/variables disabled by the user
+            excludeCols.insert(avoidCols.begin(), avoidCols.end());
+        } else {
+            if (this->verbosity_ >= Verbosity::Low)
+                log() << "Must use variables defined to be avoided by the user!\n";
         }
 
         std::vector<Vnode<Base>* > varsLocal;
-        varsLocal.reserve(vars.size() - excludeCols.size());
-        for (size_t j = 0; j < vars.size(); j++) {
-            if (excludeCols.find(j) == excludeCols.end()) {
-                varsLocal.push_back(vars[j]);
-            }
-        }
 
+        Eigen::ColPivHouseholderQR<MatrixB> qr;
 
-        work.setZero(eqs.size(), varsLocal.size());
-
-        // determine the rows that only contain a single nonzero (a single column)
-        for (size_t i = 0; i < eqs.size(); i++) {
-            Enode<Base>* ii = eqs[i];
-            for (size_t j = 0; j < varsLocal.size(); j++) {
-                Vnode<Base>* jj = varsLocal[j];
-                Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
-                if (val != Base(0.0)) {
-                    work(i, j) = val;
+        auto orderColumns = [&]() {
+            varsLocal.reserve(vars.size() - excludeCols.size());
+            for (size_t j = 0; j < vars.size(); j++) {
+                if (excludeCols.find(j) == excludeCols.end()) {
+                    varsLocal.push_back(vars[j]);
                 }
             }
+
+
+            work.setZero(eqs.size(), varsLocal.size());
+
+            // determine the rows that only contain a single nonzero (a single column)
+            for (size_t i = 0; i < eqs.size(); i++) {
+                Enode<Base>* ii = eqs[i];
+                for (size_t j = 0; j < varsLocal.size(); j++) {
+                    const Vnode<Base>* jj = varsLocal[j];
+                    Base val = jacobian_.coeff(ii->index() - diffEqStart_, jj->index() - diffVarStart_);
+                    if (val != Base(0.0)) {
+                        work(i, j) = val;
+                    }
+                }
+            }
+
+            if (this->verbosity_ >= Verbosity::High)
+                log() << "subset Jac:\n" << work << "\n";
+
+            qr.compute(work);
+
+            if (qr.info() != Eigen::Success) {
+                throw CGException("Failed to select dummy derivatives! "
+                                  "QR decomposition of a submatrix of the Jacobian failed!");
+            } else if (qr.rank() < work.rows()) {
+                throw CGException("Failed to select dummy derivatives! "
+                                  "The resulting system is probably singular for the provided data.");
+            }
+
+            typedef typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType PermutationMatrix;
+            typedef typename PermutationMatrix::IndicesType Indices;
+
+            const PermutationMatrix& p = qr.colsPermutation();
+            const Indices& indices = p.indices();
+
+            if (this->verbosity_ >= Verbosity::High) {
+                log() << "## matrix Q:\n";
+                MatrixB q = qr.matrixQ();
+                log() << q << "\n";
+                log() << "## matrix R:\n";
+                MatrixB r = qr.matrixR().template triangularView<Eigen::Upper>();
+                log() << r << "\n";
+                log() << "## matrix P: " << indices.transpose() << "\n";
+            }
+
+            if (indices.size() < work.rows()) {
+                throw CGException("Failed to select dummy derivatives! "
+                                  "The resulting system is probably singular for the provided data.");
+            }
+        };
+
+        try {
+            orderColumns();
+        } catch (const CGException& ex) {
+            if (avoidCols.empty()) {
+                throw;
+            }
+
+            if (this->verbosity_ >= Verbosity::Low)
+                log() << "Failed to determine dummy derivatives without the variables defined to be avoided by the user\n";
+
+            // try again with the variables selected to be avoided by the user
+            for (size_t j : avoidCols)
+                excludeCols.erase(j);
+
+            varsLocal.clear();
+
+            orderColumns();
         }
 
-        if (this->verbosity_ >= Verbosity::High)
-            log() << "subset Jac:\n" << work << "\n";
-
-        Eigen::ColPivHouseholderQR<MatrixB> qr(work);
-        qr.compute(work);
-
-        if(qr.info() != Eigen::Success) {
-            throw CGException("Failed to select dummy derivatives! "
-                              "QR decomposition of a submatrix of the Jacobian failed!");
-        } else if (qr.rank() < work.rows()) {
-            throw CGException("Failed to select dummy derivatives! "
-                              "The resulting system is probably singular for the provided data.");
-        }
-        
-        typedef typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType PermutationMatrix;
-        typedef typename PermutationMatrix::IndicesType Indices;
-
-        const PermutationMatrix& p = qr.colsPermutation();
-        const Indices& indices = p.indices();
-        
-        if (this->verbosity_ >= Verbosity::High) {
-            log() << "## matrix Q:\n";
-            MatrixB q = qr.matrixQ();
-            log() << q << "\n";
-            log() << "## matrix R:\n";
-            MatrixB r = qr.matrixR().template triangularView<Eigen::Upper>();
-            log() << r << "\n";
-            log() << "## matrix P: " << indices.transpose() << "\n";
-        }
-        
-        if (indices.size() < work.rows()) {
-            throw CGException("Failed to select dummy derivatives! "
-                              "The resulting system is probably singular for the provided data.");
-        }
+        const auto& p = qr.colsPermutation();
+        const auto& indices = p.indices();
 
         std::vector<Vnode<Base>* > newDummies;
         if (avoidConvertAlg2DifVars_) {

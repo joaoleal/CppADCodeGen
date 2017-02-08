@@ -46,13 +46,14 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     x[8] = 0.0; // dydt
     x[9] = -1.0; // dvxdt
     x[10] = 9.80665; // dvydt
-    
+
     std::vector<std::string> eqName; // empty
 
     Pantelides<double> pantelides(*fun, daeVar, eqName, x);
     DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(false);
+    //dummyD.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;
@@ -62,6 +63,70 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
+
+    for (const DaeVarInfo& v : newDaeVar) {
+        if (v.getName() == "y") {
+            ASSERT_TRUE(v.getDerivative() < 0);
+        }
+        ASSERT_TRUE(v.getName() != "dydt");
+    }
+
+    delete fun;
+}
+
+/**
+ * @test explicitly avoid using a variable as dummy derivative
+ */
+TEST_F(IndexReductionTest, DummyDerivPendulum2D_avoidDummy) {
+    using namespace std;
+
+    std::vector<DaeVarInfo> daeVar;
+
+    // create f: U -> Z and vectors used for derivative calculations
+    ADFun<CGD>* fun = Pendulum2D<CGD> (daeVar);
+
+    std::vector<double> x(daeVar.size());
+    std::vector<double> normVar(daeVar.size(), 1.0);
+    std::vector<double> normEq(5, 1.0);
+
+    x[0] = -0.994987; // x
+    x[1] = 0.1; // y
+    x[2] = 0.0; // vx
+    x[3] = 0.0; // vy
+    x[4] = 1.0; // Tension
+    x[5] = 1.0; // length
+
+    x[6] = 0.0; // time
+
+    x[7] = 0.0; // dxdt
+    x[8] = 0.0; // dydt
+    x[9] = x[0]; // dvxdt
+    x[10] = 9.80665 - x[1]; // dvydt
+
+    std::vector<std::string> eqName; // empty
+
+    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    dummyD.setGenerateSemiExplicitDae(true);
+    dummyD.setReduceEquations(false);
+    //dummyD.setVerbosity(Verbosity::High);
+    dummyD.setAvoidVarsAsDummies({"dxdt"});
+
+    std::vector<DaeVarInfo> newDaeVar;
+    std::vector<DaeEquationInfo> newEqInfo;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
+    ASSERT_NO_THROW(reducedFun = dummyD.reduceIndex(newDaeVar, newEqInfo));
+
+    ASSERT_TRUE(reducedFun != nullptr);
+
+    ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
+
+    for (const DaeVarInfo& v : newDaeVar) {
+        if (v.getName() == "x") {
+            ASSERT_TRUE(v.getDerivative() < 0);
+        }
+        ASSERT_TRUE(v.getName() != "dxdt");
+    }
 
     delete fun;
 }
@@ -101,7 +166,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     daeVar[10] = 3;
     daeVar[11] = 4;
     daeVar[12] = 5;
-    
+
     std::vector<std::string> eqName; // empty
 
     Pantelides<double> pantelides(*fun, daeVar, eqName, x);
