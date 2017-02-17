@@ -428,6 +428,16 @@ inline CodeHandler<Base>* findHandler(const CppAD::vector<CG<Base> >& ty) {
 }
 
 template<class Base>
+inline CodeHandler<Base>* findHandler(const CppAD::cg::ArrayWrapper<CG<Base> >& ty) {
+    for (size_t i = 0; i < ty.size(); i++) {
+        if (ty[i].getCodeHandler() != nullptr) {
+            return ty[i].getCodeHandler();
+        }
+    }
+    return nullptr;
+}
+
+template<class Base>
 inline Argument<Base> asArgument(const CG<Base>& tx) {
     if (tx.isParameter()) {
         return Argument<Base>(tx.getValue());
