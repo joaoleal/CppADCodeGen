@@ -143,8 +143,8 @@ public:
         return s;
     }
 
-    virtual void JacobianSparsity(std::vector<size_t>& rows,
-                                  std::vector<size_t>& cols) override {
+    virtual void JacobianSparsity(std::vector<size_t>& equations,
+                                  std::vector<size_t>& variables) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_jacobianSparsity != nullptr, "No Jacobian sparsity function defined in the dynamic library");
 
@@ -152,11 +152,11 @@ public:
         unsigned long nnz;
         (*_jacobianSparsity)(&row, &col, &nnz);
 
-        rows.resize(nnz);
-        cols.resize(nnz);
+        equations.resize(nnz);
+        variables.resize(nnz);
 
-        std::copy(row, row + nnz, rows.begin());
-        std::copy(col, col + nnz, cols.begin());
+        std::copy(row, row + nnz, equations.begin());
+        std::copy(col, col + nnz, variables.begin());
     }
 
     // Hessian sparsity 

@@ -58,8 +58,8 @@ public:
     // Jacobian sparsity
     virtual std::vector<std::set<size_t> > JacobianSparsitySet() = 0;
     virtual std::vector<bool> JacobianSparsityBool() = 0;
-    virtual void JacobianSparsity(std::vector<size_t>& rows,
-                                  std::vector<size_t>& cols) = 0;
+    virtual void JacobianSparsity(std::vector<size_t>& equations,
+                                  std::vector<size_t>& variables) = 0;
 
     /**
      * Determines whether or not the sparsity pattern for the weighted sum of
