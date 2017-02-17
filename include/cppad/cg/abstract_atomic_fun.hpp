@@ -46,13 +46,15 @@ protected:
      */
     CGAbstractAtomicFun(const std::string& name, bool standAlone = false) :
         BaseAbstractAtomicFun<Base>(name),
-        id_(createNewId()),
+        id_(createNewAtomicFunctionID()),
         standAlone_(standAlone) {
         CPPADCG_ASSERT_KNOWN(!name.empty(), "The atomic function name cannot be empty");
         this->option(CppAD::atomic_base<CGB>::set_sparsity_enum);
     }
 
 public:
+    virtual ~CGAbstractAtomicFun() {
+    }
 
     template <class ADVector>
     void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
@@ -64,7 +66,7 @@ public:
      * 
      * @return a unique identifier ID
      */
-    size_t getId() const {
+    inline size_t getId() const {
         return id_;
     }
 
@@ -365,7 +367,14 @@ public:
         return true;
     }
 
-    virtual ~CGAbstractAtomicFun() {
+    /**
+     * Uses an internal counter to produce IDs for atomic functions.
+     */
+    static size_t createNewAtomicFunctionID() {
+        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
+        static size_t count = 0;
+        count++;
+        return count;
     }
 
 protected:
@@ -449,13 +458,6 @@ private:
         }
 
         return atomicReverse(p, txb, tyb, pxb, pyb);
-    }
-
-    static size_t createNewId() {
-        CPPAD_ASSERT_FIRST_CALL_NOT_PARALLEL;
-        static size_t count = 0;
-        count++;
-        return count;
     }
 
 };
