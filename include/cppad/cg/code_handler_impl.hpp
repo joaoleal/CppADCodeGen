@@ -1399,7 +1399,15 @@ inline bool CodeHandler<Base>::containsArgument(const Node& node,
 
 template<class Base>
 void CodeHandler<Base>::registerAtomicFunction(CGAbstractAtomicFun<Base>& atomic) {
-    _atomicFunctions[atomic.getId()] = &atomic;
+    size_t id = atomic.getId();
+    auto it = _atomicFunctions.lower_bound(id);
+    if (it == _atomicFunctions.end() || it->first != id) {
+        if (it != _atomicFunctions.end()) ++it;
+        _atomicFunctions.insert(it, std::pair<size_t, CGAbstractAtomicFun<Base>*>(atomic.getId(), &atomic));
+    } else if(it->second != &atomic) {
+        throw CGException("The same atomic function ID (", id, ") is being used for different atomic functions: '",
+                          atomic.afun_name(), "' (", &atomic, ") and '", it->second->afun_name(), "' (", it->second, ").");
+    }
 }
 
 template<class Base>
