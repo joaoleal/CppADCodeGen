@@ -15,7 +15,7 @@
  * Author: Joao Leal
  */
 #include "CppADCGTest.hpp"
-#include <cppad/cg/evaluator_adolc.hpp>
+#include <cppad/cg/evaluator/evaluator_adolc.hpp>
 #include <adolc/drivers/drivers.h>
 
 namespace CppAD {

@@ -143,10 +143,10 @@
 // ---------------------------------------------------------------------------
 // additional utilities
 #include <cppad/cg/util.hpp>
-#include <cppad/cg/evaluator.hpp>
-#include <cppad/cg/evaluator_ad.hpp>
-#include <cppad/cg/evaluator_adcg.hpp>
-#include <cppad/cg/evaluator_cg.hpp>
+#include <cppad/cg/evaluator/evaluator.hpp>
+#include <cppad/cg/evaluator/evaluator_ad.hpp>
+#include <cppad/cg/evaluator/evaluator_adcg.hpp>
+#include <cppad/cg/evaluator/evaluator_cg.hpp>
 #include <cppad/cg/operation_path_node.hpp>
 #include <cppad/cg/operation_path.hpp>
 #include <cppad/cg/solver.hpp>
