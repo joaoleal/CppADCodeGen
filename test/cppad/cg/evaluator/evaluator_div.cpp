@@ -17,7 +17,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGEvaluatorTest, SolveDiv) {
+TEST_F(CppADCGEvaluatorTest, Div) {
     ModelType model = [](const std::vector<CGD>& x) {
         std::vector<CGD> y(4);
 

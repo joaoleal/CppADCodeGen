@@ -19,7 +19,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGEvaluatorTest, SolveLog10) {
+TEST_F(CppADCGEvaluatorTest, Log10) {
     ModelType model = [](const std::vector<CGD>& x) {
         std::vector<CGD> y(2);
 

@@ -17,7 +17,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGEvaluatorTest, SolveAdd) {
+TEST_F(CppADCGEvaluatorTest, Add) {
     ModelType model = [](const std::vector<CGD>& x) {
         // dependent variable vector
         std::vector<CGD> y(3);

@@ -19,7 +19,7 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGEvaluatorTest, SolveUnaryMinus) {
+TEST_F(CppADCGEvaluatorTest, UnaryMinus) {
     ModelType model = [](const std::vector<CGD>& x) {
         std::vector<CGD> y(3);
 
