@@ -68,6 +68,7 @@ public:
                         size_type n) :
             _data(array),
             _length(n) {
+        CPPAD_ASSERT_KNOWN(array != nullptr || n == 0, "ArrayWrapper: null array with a non-zero size");
     }
 
     /**
