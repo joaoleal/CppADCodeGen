@@ -68,21 +68,7 @@ protected:
          * Test with active variables from CG
          */
         {
-            CodeHandler<double> handlerNew;
-
-            std::vector<CGD> xNew(xOrig.size());
-            handlerNew.makeVariables(xNew);
-            for (size_t j = 0; j < xOrig.size(); j++)
-                xNew[j].setValue(testValues[j]);
-
-            Evaluator<Base, Base, CGD> evaluator(handlerOrig);
-            std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
-
-            ASSERT_EQ(yNew.size(), yOrig.size());
-            for (size_t i = 0; i < yOrig.size(); i++) {
-                ASSERT_EQ(yNew[i].isVariable(), yOrig[i].isVariable());
-                ASSERT_EQ(yNew[i].getValue(), yOrig[i].getValue());
-            }
+            testCG(testValues, yOrig);
         }
 
         /**
@@ -154,6 +140,51 @@ protected:
                 ASSERT_EQ(yNew2[i].getValue(), yOrig[i].getValue());
             }
         }
+    }
+
+    inline void testCG(ModelType& model,
+                       const std::vector<double>& testValues) {
+        using std::vector;
+
+        CodeHandler<double> handlerOrig;
+
+        // independent variable vector
+        std::vector<CGD> xOrig(testValues.size());
+        handlerOrig.makeVariables(xOrig);
+        for (size_t j = 0; j < xOrig.size(); j++)
+            xOrig[j].setValue(testValues[j]);
+
+        const std::vector<CGD> yOrig = model(xOrig);
+
+        testCG(testValues, yOrig);
+    }
+
+
+    inline void testCG(const std::vector<double>& testValues,
+                       const std::vector<CGD>& yOrig) {
+        using std::vector;
+
+        assert(yOrig.size() > 0);
+        assert(yOrig[0].getOperationNode() != nullptr);
+        assert(yOrig[0].getOperationNode()->getCodeHandler() != nullptr);
+        CodeHandler<double>& handlerOrig = *yOrig[0].getOperationNode()->getCodeHandler();
+
+        CodeHandler<double> handlerNew;
+
+        std::vector<CGD> xNew(testValues.size());
+        handlerNew.makeVariables(xNew);
+        for (size_t j = 0; j < testValues.size(); j++)
+            xNew[j].setValue(testValues[j]);
+
+        Evaluator<Base, Base, CGD> evaluator(handlerOrig);
+        std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
+
+        ASSERT_EQ(yNew.size(), yOrig.size());
+        for (size_t i = 0; i < yOrig.size(); i++) {
+            ASSERT_EQ(yNew[i].isVariable(), yOrig[i].isVariable());
+            ASSERT_EQ(yNew[i].getValue(), yOrig[i].getValue());
+        }
+
     }
 
     inline void printModel(CodeHandler<double>& handler, CGD& dep) {

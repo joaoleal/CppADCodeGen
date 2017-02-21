@@ -17,7 +17,7 @@
 
 #include <gtest/gtest.h>
 
-#include <cppad/cg/cppadcg.hpp>
+#include <cppad/cg.hpp>
 #include <cppad/utility/memory_leak.hpp>
 #include <cppad/utility/near_equal.hpp>
 

@@ -29,29 +29,274 @@ class EvaluatorCG : public EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut
      * this type due to the curiously recurring template pattern (CRTP)
      */
     friend EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
+    friend EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
 public:
+    typedef CG<ScalarIn> ActiveIn;
     typedef CG<ScalarOut> ActiveOut;
+    typedef OperationNode<ScalarIn> NodeIn;
+    typedef OperationNode<ScalarOut> NodeOut;
+    typedef Argument<ScalarIn> ArgIn;
+    typedef Argument<ScalarOut> ArgOut;
 protected:
     typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType> Super;
+protected:
+    CodeHandler<ScalarOut>* outHandler_;
+    std::map<const NodeIn*, std::vector<ScalarOut*>> atomicEvalResults_;
+    using EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>::evals_;
 public:
 
     inline EvaluatorCG(CodeHandler<ScalarIn>& handler) :
-        Super(handler) {
+        Super(handler),
+        outHandler_(nullptr) {
     }
 
 protected:
 
     /**
+     * @note overrides the default analyzeOutIndeps() even though this method
+     *        is not virtual (hides a method in EvaluatorBase)
+     */
+    inline void analyzeOutIndeps(const ActiveOut* indep,
+                                 size_t n) {
+        outHandler_ = findHandler(ArrayWrapper<const ActiveOut>(indep, n));
+    }
+
+    /**
+     * @note overrides the default clear() even though this method
+     *        is not virtual (hides a method in EvaluatorBase)
+     */
+    inline void clear() {
+        EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>::clear();
+
+        for (const auto& it : atomicEvalResults_) {
+            for (const ScalarOut* e : it.second) {
+                delete e;
+            }
+        }
+        atomicEvalResults_.clear();
+    }
+
+
+    /**
      * @note overrides the default processActiveOut() even though this method
      *        is not virtual (hides a method in EvaluatorOperations)
      */
-    void processActiveOut(const OperationNode<ScalarIn>& node,
+    void processActiveOut(const NodeIn& node,
                           ActiveOut& a) {
         if (node.getName() != nullptr) {
             if (a.getOperationNode() != nullptr) {
                 a.getOperationNode()->setName(*node.getName());
             }
         }
+    }
+
+    /**
+     * @note overrides the default evalAtomicOperation() even though this method
+     *        is not virtual (hides a method in EvaluatorOperations)
+     */
+    void evalAtomicOperation(const NodeIn& node) {
+        CGOpCode op = node.getOperationType();
+        CPPADCG_ASSERT_KNOWN(op == CGOpCode::AtomicForward || op == CGOpCode::AtomicReverse,
+                             "Invalid operation type");
+
+        // check if this node was previously determined
+        if (evals_[node] != nullptr) {
+            return; // *evals_[node];
+        }
+
+        const std::vector<size_t>& info = node.getInfo();
+        const std::vector<Argument<ScalarIn> >& inArgs = node.getArguments();
+
+        CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic operation");
+        size_t p = info[2];
+        size_t p1 = p + 1;
+
+        CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1, "Invalid number of information data for atomic operation");
+
+        if (outHandler_ == nullptr) {
+            throw CGException("Evaluator is unable to determine the new CodeHandler for an atomic operation");
+        }
+
+        std::vector<Argument<ScalarOut> > outArgs(inArgs.size());
+
+        std::vector<std::vector<ScalarOut>> outVals(inArgs.size());
+        bool valuesDefined = true;
+        bool allParameters = true;
+
+        for (size_t i = 0; i < inArgs.size(); i++) {
+            auto* a = inArgs[i].getOperation();
+            CPPADCG_ASSERT_KNOWN(a != nullptr, "Invalid argument for atomic operation");
+
+            outArgs[i] = asArgument(makeArray(*a, outVals[i], valuesDefined, allParameters));
+        }
+
+        this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(op, info, outArgs)));
+
+        if (valuesDefined) {
+            const std::map<size_t, CGAbstractAtomicFun<ScalarIn>* >& afun = this->handler_.getAtomicFunctions();
+            size_t id = info[0];
+            size_t q = info[1];
+            if (op == CGOpCode::AtomicForward) {
+                CppAD::vector<bool> vx, vy;
+                CppAD::vector<ActiveOut> tx(outVals[0].size()), ty(outVals[1].size());
+                for (size_t i = 0; i < tx.size(); ++i)
+                    tx[i] = ActiveIn(outVals[0][i]);
+                for (size_t i = 0; i < ty.size(); ++i)
+                    ty[i] = ActiveIn(outVals[1][i]);
+
+                afun.at(id)->forward(q, p, vx, vy, tx, ty);
+
+                std::vector<ScalarOut*>& yOut = atomicEvalResults_[&node];
+                assert(yOut.empty());
+                yOut.resize(ty.size());
+                for(size_t i = 0; i < ty.size(); ++i) {
+                    if(ty[i].isValueDefined())
+                        yOut[i] = new ScalarOut(ty[i].getValue());
+                }
+            }
+        }
+
+    }
+
+    /**
+     * @note overrides the default evalArrayElement() even though this method
+     *        is not virtual (hides a method in EvaluatorOperations)
+     */
+    inline ActiveOut evalArrayElement(const NodeIn& node) {
+        // check if this node was previously determined
+        if (evals_[node] != nullptr) {
+            return *evals_[node];
+        }
+
+        const std::vector<ArgIn>& args = node.getArguments();
+        const std::vector<size_t>& info = node.getInfo();
+        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for array element");
+        CPPADCG_ASSERT_KNOWN(args[0].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(args[1].getOperation() != nullptr, "Invalid argument for array element");
+        CPPADCG_ASSERT_KNOWN(info.size() == 1, "Invalid number of information data for array element");
+        size_t index = info[0];
+
+        ArgOut arrayArg = asArgument(makeArray(*args[0].getOperation()));
+
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        const NodeIn& atomicNode = *args[1].getOperation();
+        thisOps.evalAtomicOperation(atomicNode); // atomic operation
+        ArgOut atomicArg = *evals_[atomicNode]->getOperationNode();
+
+        ActiveOut out(*outHandler_->makeNode(CGOpCode::ArrayElement, {index}, {arrayArg, atomicArg}));
+
+        auto it = atomicEvalResults_.find(&atomicNode);
+        if (it != atomicEvalResults_.end()) {
+            const std::vector<ScalarOut*>& yOut = it->second;
+            if (index < yOut.size() && yOut[index] != nullptr)
+                out.setValue(*yOut[index]);
+        }
+
+        return out;
+    }
+
+    inline ActiveOut makeArray(const NodeIn& node) {
+        if (node.getOperationType() == CGOpCode::ArrayCreation) {
+            return makeDenseArray(node);
+        } else {
+            return makeSparseArray(node);
+        }
+    }
+
+    inline ActiveOut makeArray(const NodeIn& node,
+                               std::vector<ScalarOut>& values,
+                               bool& valuesDefined,
+                               bool& allParameters) {
+        const std::vector<ActiveOut>* arrayActiveOut;
+        ActiveOut result;
+
+        if (node.getOperationType() == CGOpCode::ArrayCreation) {
+            result = makeDenseArray(node);
+            arrayActiveOut = this->evalsArrays_[node.getHandlerPosition()];
+        } else {
+            result = makeSparseArray(node);
+            arrayActiveOut = this->evalsSparseArrays_[node.getHandlerPosition()];
+        }
+
+        processArray(*arrayActiveOut, values, valuesDefined, allParameters);
+
+        return result;
+    }
+
+    inline ActiveOut makeDenseArray(const NodeIn& node) {
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+
+        // check if this node was previously determined
+        if (evals_[node] != nullptr) {
+            return *evals_[node];
+        }
+
+        if (outHandler_ == nullptr) {
+            throw CGException("Evaluator is unable to determine the new CodeHandler for an array creation operation");
+        }
+
+        // values
+        const std::vector<ActiveOut>& array = this->evalArrayCreationOperation(node);
+
+        // makeDenseArray() never called directly by EvaluatorOperations
+        return *this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(CGOpCode::ArrayCreation, {}, asArguments(array))));
+    }
+
+    inline ActiveOut makeSparseArray(const NodeIn& node) {
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid sparse array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < this->handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+
+        // check if this node was previously determined
+        if (evals_[node] != nullptr) {
+            return *evals_[node];
+        }
+
+        if (outHandler_ == nullptr) {
+            throw CGException("Evaluator is unable to determine the new CodeHandler for a sparse array creation operation");
+        }
+
+        // values
+        const std::vector<ActiveOut>& array = this->evalSparseArrayCreationOperation(node);
+
+        // makeSparseArray() never called directly by EvaluatorOperations
+        return *this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(CGOpCode::SparseArrayCreation, node.getInfo(), asArguments(array))));
+    }
+
+    static inline void processArray(const std::vector<ActiveOut>& array,
+                                    std::vector<ScalarOut>& values,
+                                    bool& valuesDefined,
+                                    bool& allParameters) {
+        values.resize(array.size());
+        for (size_t i = 0; i < array.size(); i++) {
+            if (!array[i].isValueDefined()) {
+                valuesDefined = false;
+                allParameters = false;
+                break;
+            } else {
+                values[i] = array[i].getValue();
+                if (!array[i].isParameter())
+                    allParameters = false;
+            }
+        }
+    }
+
+    static inline bool isParameters(const CppAD::vector<ActiveOut>& tx) {
+        for (size_t i = 0; i < tx.size(); i++) {
+            if (!tx[i].isParameter()) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    static inline bool isValuesDefined(const std::vector<ArgOut>& tx) {
+        for (size_t i = 0; i < tx.size(); i++) {
+            if (tx[i].getOperationNode() != nullptr) {
+                return false;
+            }
+        }
+        return true;
     }
 
 };
@@ -64,7 +309,7 @@ class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorCG<Scalar
 protected:
     typedef EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
 public:
-    
+
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
         Super(handler) {
     }

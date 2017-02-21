@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2014 Ciengis
+#    Copyright (C) 2017 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -16,22 +16,4 @@
 # ----------------------------------------------------------------------------
 SET(CMAKE_BUILD_TYPE DEBUG)
 
-add_cppadcg_test(evaluator_add.cpp)
-add_cppadcg_test(evaluator_cosh.cpp)
-add_cppadcg_test(evaluator_div.cpp)
-add_cppadcg_test(evaluator_exp.cpp)
-add_cppadcg_test(evaluator_log.cpp)
-add_cppadcg_test(evaluator_log_10.cpp)
-add_cppadcg_test(evaluator_mul.cpp)
-add_cppadcg_test(evaluator_pow.cpp)
-add_cppadcg_test(evaluator_sinh.cpp)
-add_cppadcg_test(evaluator_sqrt.cpp)
-add_cppadcg_test(evaluator_sub.cpp)
-add_cppadcg_test(evaluator_tanh.cpp)
-add_cppadcg_test(evaluator_unary.cpp)
-
-IF(ADOLC_FOUND)
-    ADD_SUBDIRECTORY(adolc)
-ENDIF()
-ADD_SUBDIRECTORY(adcg)
-ADD_SUBDIRECTORY(cg)
+add_cppadcg_test(evaluator_atomic.cpp)

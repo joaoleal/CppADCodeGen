@@ -49,13 +49,14 @@ protected:
     const ActiveOut* indep_;
     CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
     std::map<size_t, std::vector<ActiveOut>* > evalsArrays_;
+    std::map<size_t, std::vector<ActiveOut>* > evalsSparseArrays_;
     bool underEval_;
     size_t depth_;
     SourceCodePath path_;
 public:
 
     /**
-     * @param handler The source code handler
+     * @param handler The original source code handler
      */
     inline EvaluatorBase(CodeHandler<ScalarIn>& handler) :
         handler_(handler),
@@ -63,6 +64,10 @@ public:
         evals_(handler),
         underEval_(false),
         depth_(0) { // not really required (but it avoids warnings)
+    }
+
+    inline virtual ~EvaluatorBase() {
+        clear();
     }
 
     /**
@@ -73,9 +78,9 @@ public:
     }
 
     /**
-     * Performs all the operations required to calculate the dependent 
+     * Performs all the operations required to calculate the dependent
      * variables with a (potentially) new data type
-     * 
+     *
      * @param indepNew The new independent variables.
      * @param depOld Dependent variable vector (all variables must belong to
      *               the same code handler)
@@ -132,16 +137,19 @@ public:
             path_.reserve(30);
         }
 
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+
         try {
 
             indep_ = indepNew;
+            thisOps.analyzeOutIndeps(indep_, indepSize);
 
             for (size_t i = 0; i < depSize; i++) {
                 CPPADCG_ASSERT_UNKNOWN(depth_ == 0);
                 depNew[i] = evalCG(depOld[i]);
             }
 
-            clear(); // clean-up
+            thisOps.clear(); // clean-up
 
         } catch (...) {
             underEval_ = false;
@@ -149,10 +157,6 @@ public:
         }
 
         underEval_ = false;
-    }
-
-    inline virtual ~EvaluatorBase() {
-        clear();
     }
 
 protected:
@@ -170,6 +174,16 @@ protected:
             delete p.second;
         }
         evalsArrays_.clear();
+
+        for (const auto& p : evalsSparseArrays_) {
+            delete p.second;
+        }
+        evalsSparseArrays_.clear();
+    }
+
+    inline void analyzeOutIndeps(const ActiveOut* indep,
+                                 size_t n) {
+        // empty
     }
 
     inline ActiveOut evalCG(const CG<ScalarIn>& dep) {
@@ -216,10 +230,7 @@ protected:
 
         // save it for reuse
         CPPADCG_ASSERT_UNKNOWN(evals_[node] == nullptr);
-        ActiveOut* resultPtr = new ActiveOut(result);
-        evals_[node] = resultPtr;
-
-        thisOps.processActiveOut(node, *resultPtr);
+        ActiveOut* resultPtr = saveEvaluation(node, new ActiveOut(result));
 
         depth_--;
         path_.pop_back();
@@ -227,7 +238,17 @@ protected:
         return *resultPtr;
     }
 
-    inline std::vector<ActiveOut>& evalArrayCreationOperation(OperationNode<ScalarIn>& node) {
+    inline ActiveOut* saveEvaluation(const OperationNode<ScalarIn>& node,
+                                     ActiveOut* resultPtr) {
+        evals_[node] = resultPtr;
+
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        thisOps.processActiveOut(node, *resultPtr);
+
+        return resultPtr;
+    }
+
+    inline std::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {
 
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ArrayCreation, "Invalid array creation operation");
         CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
@@ -243,6 +264,31 @@ protected:
 
         // save it for reuse
         evalsArrays_[node.getHandlerPosition()] = resultArray;
+
+        // define its elements
+        for (size_t a = 0; a < args.size(); a++) {
+            (*resultArray)[a] = evalArg(args, a);
+        }
+
+        return *resultArray;
+    }
+
+    inline std::vector<ActiveOut>& evalSparseArrayCreationOperation(const OperationNode<ScalarIn>& node) {
+
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array creation operation");
+        CPPADCG_ASSERT_KNOWN(node.getHandlerPosition() < handler_.getManagedNodesCount(), "this node is not managed by the code handler");
+
+        // check if this node was previously determined
+        auto it = evalsSparseArrays_.find(node.getHandlerPosition());
+        if (it != evalsSparseArrays_.end()) {
+            return *it->second;
+        }
+
+        const std::vector<Argument<ScalarIn> >& args = node.getArguments();
+        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
+
+        // save it for reuse
+        evalsSparseArrays_[node.getHandlerPosition()] = resultArray;
 
         // define its elements
         for (size_t a = 0; a < args.size(); a++) {
