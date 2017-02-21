@@ -240,6 +240,8 @@ protected:
 
     inline ActiveOut* saveEvaluation(const OperationNode<ScalarIn>& node,
                                      ActiveOut* resultPtr) {
+        assert(evals_[node] == nullptr); // must not override existing result (otherwise there will be a memory leak)
+
         evals_[node] = resultPtr;
 
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
