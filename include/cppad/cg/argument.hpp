@@ -54,6 +54,12 @@ public:
         parameter_(orig.parameter_ != nullptr ? new Base(*orig.parameter_) : nullptr) {
     }
 
+    inline Argument(Argument&& orig) :
+            operation_(orig.operation_),
+            parameter_(orig.parameter_) {
+        orig.parameter_ = nullptr;
+    }
+
     inline Argument& operator=(const Argument& rhs) {
         if (&rhs == this) {
             return *this;
@@ -73,6 +79,10 @@ public:
         return *this;
     }
 
+    virtual ~Argument() {
+        delete parameter_;
+    }
+
     inline OperationNode<Base>* getOperation() const {
         return operation_;
     }
@@ -81,9 +91,6 @@ public:
         return parameter_;
     }
 
-    virtual ~Argument() {
-        delete parameter_;
-    }
 };
 
 } // END cg namespace
