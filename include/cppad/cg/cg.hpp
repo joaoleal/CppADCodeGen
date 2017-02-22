@@ -58,6 +58,11 @@ public:
     inline CG(const CG<Base>& orig);
 
     /**
+     * Move constructor
+     */
+    inline CG(CG<Base>&& orig);
+
+    /**
      * Assignment operator
      */
     inline CG& operator=(const CG<Base>& rhs);
@@ -75,6 +80,9 @@ public:
      * @param rhs The parameter value
      */
     inline CG& operator=(const Base& rhs);
+
+    // destructor
+    virtual ~CG();
 
     /**
      * @return The code handler that owns the OperationNode when it is a 
@@ -150,9 +158,6 @@ public:
     // unary operators
     inline CG<Base> operator+() const;
     inline CG<Base> operator-() const;
-
-    // destructor
-    virtual ~CG();
 protected:
     /**
      * Creates a variable/parameter from an existing argument 

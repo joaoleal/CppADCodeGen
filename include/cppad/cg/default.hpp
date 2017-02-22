@@ -59,6 +59,16 @@ inline CG<Base>::CG(const CG<Base>& orig) :
 }
 
 /**
+ * Move constructor
+ */
+template <class Base>
+inline CG<Base>::CG(CG<Base>&& orig):
+        node_(orig.node_),
+        value_(orig.value_) {
+    orig.value_ = nullptr;
+}
+
+/**
  * Creates a parameter with the given value
  */
 template <class Base>
