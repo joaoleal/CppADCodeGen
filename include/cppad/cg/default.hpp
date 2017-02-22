@@ -103,6 +103,20 @@ inline CG<Base>& CG<Base>::operator=(const CG<Base> &rhs) {
 }
 
 template <class Base>
+inline CG<Base>& CG<Base>::operator=(CG<Base>&& rhs) {
+    assert(this != &rhs);
+
+    node_ = rhs.node_;
+
+    // steal the value
+    delete value_;
+    value_ = rhs.value_;
+    rhs.value_ = nullptr;
+
+    return *this;
+}
+
+template <class Base>
 CG<Base>::~CG() {
     delete value_;
 }

@@ -79,6 +79,19 @@ public:
         return *this;
     }
 
+    inline Argument& operator=(Argument&& rhs) {
+        assert(this != &rhs);
+
+        operation_ = rhs.operation_;
+
+        // steal the parameter
+        delete parameter_;
+        parameter_ = rhs.parameter_;
+        rhs.parameter_ = nullptr;
+
+        return *this;
+    }
+
     virtual ~Argument() {
         delete parameter_;
     }

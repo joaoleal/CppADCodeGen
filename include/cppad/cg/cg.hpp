@@ -63,9 +63,14 @@ public:
     inline CG(CG<Base>&& orig);
 
     /**
-     * Assignment operator
+     * Copy assignment operator
      */
     inline CG& operator=(const CG<Base>& rhs);
+
+    /**
+     * Move assignment operator
+     */
+    inline CG& operator=(CG<Base>&& rhs);
 
     /**
      * Creates a parameter with the provided value
