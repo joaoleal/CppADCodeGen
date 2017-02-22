@@ -47,7 +47,7 @@ protected:
 protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
-    CodeHandlerVector<ScalarIn, ActiveOut*> evals_;
+    CodeHandlerVector<ScalarIn, std::unique_ptr<ActiveOut>> evals_;
     std::map<size_t, std::vector<ActiveOut>* > evalsArrays_;
     std::map<size_t, std::vector<ActiveOut>* > evalsSparseArrays_;
     bool underEval_;
@@ -127,7 +127,6 @@ public:
         underEval_ = true;
 
         clear(); // clean-up from any previous call that might have failed
-        evals_.fill(nullptr);
         evals_.adjustSize();
 
         depth_ = 0;
@@ -165,9 +164,6 @@ protected:
      * clean-up
      */
     inline void clear() {
-        for (const ActiveOut* it : evals_) {
-            delete it;
-        }
         evals_.clear();
 
         for (const auto& p : evalsArrays_) {
@@ -239,14 +235,14 @@ protected:
 
     inline ActiveOut* saveEvaluation(const OperationNode<ScalarIn>& node,
                                      ActiveOut&& result) {
-        ActiveOut*& resultPtr = evals_[node];
-        CPPADCG_ASSERT_UNKNOWN(resultPtr == nullptr); // must not override existing result (otherwise there will be a memory leak)
-        resultPtr = new ActiveOut(std::move(result));
+        std::unique_ptr<ActiveOut>& resultPtr = evals_[node];
+        CPPADCG_ASSERT_UNKNOWN(resultPtr == nullptr); // not supposed to override existing result
+        resultPtr.reset(new ActiveOut(std::move(result)));
 
-        ActiveOut* resultPtr2 = resultPtr; // do not use a reference (just in case evals_ is resized)
+        ActiveOut* resultPtr2 = resultPtr.get(); // do not use a reference (just in case evals_ is resized)
 
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
-        thisOps.processActiveOut(node, *resultPtr);
+        thisOps.processActiveOut(node, *resultPtr2);
 
         return resultPtr2;
     }
