@@ -229,8 +229,7 @@ protected:
         ActiveOut result = thisOps.evalOperation(node);
 
         // save it for reuse
-        CPPADCG_ASSERT_UNKNOWN(evals_[node] == nullptr);
-        ActiveOut* resultPtr = saveEvaluation(node, new ActiveOut(result));
+        ActiveOut* resultPtr = saveEvaluation(node, ActiveOut(result));
 
         depth_--;
         path_.pop_back();
@@ -239,15 +238,17 @@ protected:
     }
 
     inline ActiveOut* saveEvaluation(const OperationNode<ScalarIn>& node,
-                                     ActiveOut* resultPtr) {
-        assert(evals_[node] == nullptr); // must not override existing result (otherwise there will be a memory leak)
+                                     ActiveOut&& result) {
+        ActiveOut*& resultPtr = evals_[node];
+        CPPADCG_ASSERT_UNKNOWN(resultPtr == nullptr); // must not override existing result (otherwise there will be a memory leak)
+        resultPtr = new ActiveOut(std::move(result));
 
-        evals_[node] = resultPtr;
+        ActiveOut* resultPtr2 = resultPtr; // do not use a reference (just in case evals_ is resized)
 
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
         thisOps.processActiveOut(node, *resultPtr);
 
-        return resultPtr;
+        return resultPtr2;
     }
 
     inline std::vector<ActiveOut>& evalArrayCreationOperation(const OperationNode<ScalarIn>& node) {

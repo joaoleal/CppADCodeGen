@@ -131,7 +131,7 @@ protected:
             outArgs[i] = asArgument(makeArray(*a, outVals[i], valuesDefined, allParameters));
         }
 
-        this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(op, info, outArgs)));
+        this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(op, info, outArgs)));
 
         if (valuesDefined) {
             const std::map<size_t, CGAbstractAtomicFun<ScalarIn>* >& afun = this->handler_.getAtomicFunctions();
@@ -241,7 +241,7 @@ protected:
         const std::vector<ActiveOut>& array = this->evalArrayCreationOperation(node);
 
         // makeDenseArray() never called directly by EvaluatorOperations
-        return *this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(CGOpCode::ArrayCreation, {}, asArguments(array))));
+        return *this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(CGOpCode::ArrayCreation, {}, asArguments(array))));
     }
 
     inline ActiveOut makeSparseArray(const NodeIn& node) {
@@ -261,7 +261,7 @@ protected:
         const std::vector<ActiveOut>& array = this->evalSparseArrayCreationOperation(node);
 
         // makeSparseArray() never called directly by EvaluatorOperations
-        return *this->saveEvaluation(node, new ActiveOut(*outHandler_->makeNode(CGOpCode::SparseArrayCreation, node.getInfo(), asArguments(array))));
+        return *this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(CGOpCode::SparseArrayCreation, node.getInfo(), asArguments(array))));
     }
 
     static inline void processArray(const std::vector<ActiveOut>& array,
