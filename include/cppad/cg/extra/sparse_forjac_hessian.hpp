@@ -210,23 +210,24 @@ public:
     }
 };
 
-template<class VectorSet>
-inline void computeNotUsed(VectorSet& not_used,
-                           VectorSet& sparsity,
-                           VectorSet& r_used,
+template<class SparsityPattern>
+inline void computeNotUsed(SparsityPattern& not_used,
+                           const SparsityPattern& sparsity,
+                           const SparsityPattern& r_used,
                            size_t m,
                            size_t n) {
+    typedef typename SparsityPattern::const_iterator SparIter;
 
     assert(not_used.n_set() == 0);
     not_used.resize(m, n);
     
     for (size_t i = 0; i < n; i++) {
-        sparsity.begin(i);
-        size_t j = sparsity.next_element();
+        SparIter j_itr(sparsity, i);
+        size_t j = *j_itr;
         while (j != sparsity.end()) {
             if (!r_used.is_element(j, i))
                 not_used.add_element(j, i);
-            j = sparsity.next_element();
+            j = *(++j_itr);
         }
     }
 }
@@ -241,6 +242,10 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
      */
 
     size_t i, j1, j11, j2, c, k;
+
+    typedef typename VectorSet::value_type Set_type;
+    typedef typename local::internal_sparsity<Set_type>::pattern_type SparsityPattern;
+    typedef typename SparsityPattern::const_iterator SparIter;
 
     size_t n = fun.Domain();
     size_t m = fun.Range();
@@ -260,12 +265,9 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
          * Jacobian
          */
         // transpose sparsity pattern
-        typedef typename VectorSet::value_type Set_type;
-        typedef typename internal_sparsity<Set_type>::pattern_type Pattern_type;
-        Pattern_type p_transpose;
+        SparsityPattern p_transpose;
         bool transpose = true;
-        sparsity_user2internal(p_transpose, jac_p, m, n, transpose);
-        //sparsity_user2internal(p_transpose, jac_p, n, m, transpose, "Invalid sparsity pattern");
+        sparsity_user2internal(p_transpose, jac_p, n, m, transpose, "Invalid sparsity pattern");
 
 
         size_t jac_K = work.jac.K;
@@ -277,7 +279,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         CPPAD_ASSERT_UNKNOWN(p_transpose.end() == m);
 
         // rows and columns that are in the returned jacobian
-        Pattern_type jac_r_used, jac_c_used;
+        SparsityPattern jac_r_used, jac_c_used;
         jac_r_used.resize(n, m);
         jac_c_used.resize(m, n);
 
@@ -292,16 +294,15 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         }
 
         // given a row index, which columns are non-zero and not used
-        Pattern_type jac_not_used;
+        SparsityPattern jac_not_used;
         computeNotUsed(jac_not_used, p_transpose, jac_c_used, m, n);
 
         /**
          * Hessian
          */
-        Pattern_type hes_sparsity;
+        SparsityPattern hes_sparsity;
         transpose = false;
-        sparsity_user2internal(hes_sparsity, hes_p, n, n, transpose);
-        //sparsity_user2internal(hes_sparsity, hes_p, n, n, transpose, "Invalid sparsity pattern");
+        sparsity_user2internal(hes_sparsity, hes_p, n, n, transpose, "Invalid sparsity pattern");
 
         size_t hes_K = work.hes.K;
         std::vector<size_t>& hes_row(work.hes.r_sort);
@@ -311,7 +312,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         CPPAD_ASSERT_UNKNOWN(hes_sparsity.end() == n);
 
         // rows and columns that are in the returned hessian
-        Pattern_type hes_r_used, hes_c_used;
+        SparsityPattern hes_r_used, hes_c_used;
         hes_r_used.resize(n, n);
         hes_c_used.resize(n, n);
 
@@ -325,7 +326,7 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
         }
 
         // given a column index, which rows are non-zero and not used
-        Pattern_type hes_not_used;
+        SparsityPattern hes_not_used;
         computeNotUsed(hes_not_used, hes_sparsity, hes_r_used, n, n);
 
         // initial coloring
@@ -347,36 +348,37 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
              * Jacobian
              */
             // for each row that is non-zero for this column
-            p_transpose.begin(j1);
-            i = p_transpose.next_element();
+            SparIter p_itr(p_transpose, j1);
+            i = *p_itr;
             while (i != p_transpose.end()) {
                 // for each column that this row uses
-                jac_c_used.begin(i);
-                j11 = jac_c_used.next_element();
+                SparIter jac_c_used_itr(jac_c_used, i);
+                j11 = *jac_c_used_itr;
                 while (j11 != jac_c_used.end()) {
                     // if this is not the same column, forbid its color
                     if (j11 < j1)
                         forbidden[ color[j11] ] = true;
-                    j11 = jac_c_used.next_element();
+                    j11 = *(++jac_c_used_itr);
                 }
-                i = p_transpose.next_element();
+                i = *(++p_itr);
             }
 
             // for each row that this column uses
-            jac_r_used.begin(j1);
-            i = jac_r_used.next_element();
+            SparIter jac_r_used_itr(jac_r_used, j1);
+            i = *jac_r_used_itr;
+
             while (i != jac_r_used.end()) {
                 // For each column that is non-zero for this row
                 // (the used columns have already been checked above).
-                jac_not_used.begin(i);
-                j11 = jac_not_used.next_element();
+                SparIter jac_not_used_itr(jac_not_used, i);
+                j11 = *jac_not_used_itr;
                 while (j11 != jac_not_used.end()) {
                     // if this is not the same column, forbid its color
                     if (j11 < j1)
                         forbidden[ color[j11] ] = true;
-                    j11 = jac_not_used.next_element();
+                    j11 = *(++jac_not_used_itr);
                 }
-                i = jac_r_used.next_element();
+                i = *(++jac_r_used_itr);
             }
 
             /**
@@ -385,38 +387,38 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
             // -----------------------------------------------------
             // Forbid colors that this row would destroy results for.
             // for each column that is non-zero for this row
-            hes_sparsity.begin(j1);
-            j2 = hes_sparsity.next_element();
+            SparIter hes_itr(hes_sparsity, j1);
+            j2 = *hes_itr;
             while (j2 != hes_sparsity.end()) {
                 // for each row that this column uses
-                hes_r_used.begin(j2);
-                j11 = hes_r_used.next_element();
+                SparIter hes_r_used_itr(hes_r_used, j2);
+                j11 = *hes_r_used_itr;
                 while (j11 != hes_r_used.end()) {
                     // if this is not the same row, forbid its color
                     if (j11 < j1)
                         forbidden[ color[j11] ] = true;
-                    j11 = hes_r_used.next_element();
+                    j11 = *(++hes_r_used_itr);
                 }
-                j2 = hes_sparsity.next_element();
+                j2 = *(++hes_itr);
             }
 
             // -------------------------------------------------------
             // Forbid colors that would destroy the results for this row.
             // for each column that this row used
-            hes_c_used.begin(j1);
-            j2 = hes_c_used.next_element();
+            SparIter hes_c_used_itr(hes_c_used, j1);
+            j2 = *hes_c_used_itr;
             while (j2 != hes_c_used.end()) {
                 // For each row that is non-zero for this column
                 // (the used rows have already been checked above).
-                hes_not_used.begin(j2);
-                j11 = hes_not_used.next_element();
+                SparIter hes_not_used_itr(hes_not_used, j2);
+                j11 = *hes_not_used_itr;
                 while (j11 != hes_not_used.end()) {
                     // if this is not the same row, forbid its color
                     if (j11 < j1)
                         forbidden[ color[j11] ] = true;
-                    j11 = hes_not_used.next_element();
+                    j11 = *(++hes_not_used_itr);
                 }
-                j2 = hes_c_used.next_element();
+                j2 = *(++hes_c_used_itr);
             }
 
 

@@ -78,7 +78,7 @@ public:
         std::vector<ADCG> Z(m);
 
         _atomicFun = new checkpoint<double>("func", testModel, ax, ay); // the normal atomic function
-        _cgAtomicFun = new CGAtomicFun<double>(*_atomicFun, true); // a wrapper used to tape with CG<Base>
+        _cgAtomicFun = new CGAtomicFun<double>(*_atomicFun, x, true); // a wrapper used to tape with CG<Base>
 
         (*_cgAtomicFun)(u, Z);
 

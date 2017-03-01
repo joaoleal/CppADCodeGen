@@ -44,7 +44,8 @@ protected:
      *                   dependent variables (ty) and any previous
      *                   evaluation of other forward/reverse modes. 
      */
-    CGAbstractAtomicFun(const std::string& name, bool standAlone = false) :
+    CGAbstractAtomicFun(const std::string& name,
+                        bool standAlone = false) :
         BaseAbstractAtomicFun<Base>(name),
         id_(createNewAtomicFunctionID()),
         standAlone_(standAlone) {
@@ -57,7 +58,9 @@ public:
     }
 
     template <class ADVector>
-    void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
+    void operator()(const ADVector& ax,
+                    ADVector& ay,
+                    size_t id = 0) {
         this->BaseAbstractAtomicFun<Base>::operator()(ax, ay, id);
     }
 
@@ -78,9 +81,18 @@ public:
                          CppAD::vector<CGB>& ty) override {
         using CppAD::vector;
 
+        CppAD::vector<CGB> x;
+
         bool valuesDefined = BaseAbstractAtomicFun<Base>::isValuesDefined(tx);
-        if (vx.size() > 0)
-            zeroOrderDependency(vx, vy);
+        if (vx.size() > 0) {
+            size_t n = vx.size();
+            x.resize(n);
+            for (size_t j = 0; j < n; j++) {
+                x[j] = tx[j * (p + 1)];
+            }
+
+            zeroOrderDependency(vx, vy, x);
+        }
 
         bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);
         if (allParameters) {
@@ -114,7 +126,15 @@ public:
                     r[j].insert(0);
             }
             vector<std::set<size_t> > s(m);
-            this->for_sparse_jac(1, r, s);
+
+            if(x.size() == 0) {
+                x.resize(n);
+                for (size_t j = 0; j < n; j++) {
+                    x[j] = tx[j * (p + 1)];
+                }
+            }
+
+            this->for_sparse_jac(1, r, s, x);
 
             vyLocal.resize(ty.size());
             for (size_t i = 0; i < vyLocal.size(); i++) {
@@ -233,14 +253,20 @@ public:
         size_t m = ty.size() / p1;
         size_t n = tx.size() / p1;
 
-        vector< std::set<size_t> > rt(m);
+        vector<std::set<size_t> > rt(m);
         for (size_t i = 0; i < m; i++) {
             if (!py[i * p1].isIdenticalZero()) {
                 rt[i].insert(0);
             }
         }
-        vector< std::set<size_t> > st(n);
-        this->rev_sparse_jac(1, rt, st);
+
+        CppAD::vector<CGB> x(n);
+        for (size_t j = 0; j < n; j++) {
+            x[j] = tx[j * p1];
+        }
+
+        vector<std::set<size_t> > st(n);
+        this->rev_sparse_jac(1, rt, st, x);
 
         for (size_t j = 0; j < n; j++) {
             vxLocal[j * p1 + p] = st[j].size() > 0;
@@ -268,7 +294,7 @@ public:
                 s[i] = !py[i * p1 + 1].isIdenticalZero();
             }
 
-            this->rev_sparse_hes(vx, s, t, 1, r, u, v);
+            this->rev_sparse_hes(vx, s, t, 1, r, u, v, x);
 
             for (size_t j = 0; j < n; j++) {
                 vxLocal[j * p1 + p - 1] = v[j].size() > 0;
@@ -380,7 +406,8 @@ public:
 protected:
 
     virtual void zeroOrderDependency(const CppAD::vector<bool>& vx,
-                                     CppAD::vector<bool>& vy) = 0;
+                                     CppAD::vector<bool>& vy,
+                                     const CppAD::vector<CGB>& x) = 0;
 
     /**
      * Used to evaluate function values and forward mode function values and

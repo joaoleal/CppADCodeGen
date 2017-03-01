@@ -41,6 +41,9 @@ public:
         this->option(CppAD::atomic_base<Base>::set_sparsity_enum);
     }
 
+    virtual ~CGAtomicGenericModel() {
+    }
+
     template <class ADVector>
     void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
         this->atomic_base<Base>::operator()(ax, ay, id);
@@ -81,6 +84,13 @@ public:
 
     virtual bool for_sparse_jac(size_t q,
                                 const CppAD::vector<std::set<size_t> >& r,
+                                CppAD::vector<std::set<size_t> >& s,
+                                const CppAD::vector<Base>& x) override {
+        return for_sparse_jac(q, r, s);
+    }
+
+    virtual bool for_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
                                 CppAD::vector<std::set<size_t> >& s) override {
         size_t n = model_.Domain();
         size_t m = model_.Range();
@@ -92,6 +102,13 @@ public:
         CppAD::cg::multMatrixMatrixSparsity(jacSparsity, r, s, m, n, q);
 
         return true;
+    }
+
+    virtual bool rev_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& rT,
+                                CppAD::vector<std::set<size_t> >& sT,
+                                const CppAD::vector<Base>& x) override {
+        return rev_sparse_jac(q, rT, sT);
     }
 
     virtual bool rev_sparse_jac(size_t q,
@@ -108,6 +125,17 @@ public:
         CppAD::cg::multMatrixMatrixSparsityTrans(rT, jacSparsity, sT, m, n, q);
 
         return true;
+    }
+
+    virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
+                                const CppAD::vector<bool>& s,
+                                CppAD::vector<bool>& t,
+                                size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
+                                const CppAD::vector<std::set<size_t> >& u,
+                                CppAD::vector<std::set<size_t> >& v,
+                                const CppAD::vector<Base>& x) override {
+        return rev_sparse_hes(vx, s, t, q, r, u, v);
     }
 
     virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
@@ -168,9 +196,6 @@ public:
         }
 
         return true;
-    }
-
-    virtual ~CGAtomicGenericModel() {
     }
 
 };

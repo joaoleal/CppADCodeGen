@@ -35,7 +35,7 @@ TEST_F(CppADCGEvaluatorTest, Atomic) {
     }
 
     checkpoint<double> atomicFun("func", testModel, ax, ay); // the normal atomic function
-    CGAtomicFun<double> atomic(atomicFun); // a wrapper used to tape with CG<Base>
+    CGAtomicFun<double> atomic(atomicFun, ax); // a wrapper used to tape with CG<Base>
 
     ModelType model = [&](const std::vector<CGD>& x) {
         // independent variables

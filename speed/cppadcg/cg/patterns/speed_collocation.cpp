@@ -44,8 +44,14 @@ public:
 protected:
 
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
-                                std::vector<AD<CG<double> > >& y) {
+                                std::vector<AD<CG<double> > >& y) override {
         PlugFlowModel<CG<double> > m;
+        y = m.model(x, nEls_);
+    }
+
+    virtual void atomicFunction(const std::vector<AD<double> >& x,
+                                std::vector<AD<double> >& y) override {
+        PlugFlowModel<double> m;
         y = m.model(x, nEls_);
     }
 

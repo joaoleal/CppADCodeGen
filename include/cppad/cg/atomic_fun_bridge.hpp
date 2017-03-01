@@ -64,6 +64,9 @@ public:
     CGAtomicFunBridge(const CGAtomicFunBridge& orig) = delete;
     CGAtomicFunBridge& operator=(const CGAtomicFunBridge& rhs) = delete;
 
+    virtual ~CGAtomicFunBridge() {
+    }
+
     template <class ADVector>
     void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
         this->CGAbstractAtomicFun<Base>::operator()(ax, ay, id);
@@ -95,7 +98,8 @@ public:
 
     virtual bool for_sparse_jac(size_t q,
                                 const CppAD::vector<std::set<size_t> >& r,
-                                CppAD::vector<std::set<size_t> >& s) {
+                                CppAD::vector<std::set<size_t> >& s,
+                                const CppAD::vector<Base>& x) {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined()) {
@@ -120,7 +124,8 @@ public:
 
     virtual bool rev_sparse_jac(size_t q,
                                 const CppAD::vector<std::set<size_t> >& rt,
-                                CppAD::vector<std::set<size_t> >& st) {
+                                CppAD::vector<std::set<size_t> >& st,
+                                const CppAD::vector<CGB>& x) {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined()) {
@@ -147,7 +152,8 @@ public:
                                 size_t q,
                                 const CppAD::vector<std::set<size_t> >& r,
                                 const CppAD::vector<std::set<size_t> >& u,
-                                CppAD::vector<std::set<size_t> >& v) {
+                                CppAD::vector<std::set<size_t> >& v,
+                                const CppAD::vector<CGB>& x) {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined() || custom_hess_.isFilterDefined()) {
@@ -243,13 +249,11 @@ public:
         return true;
     }
 
-    virtual ~CGAtomicFunBridge() {
-    }
-
 protected:
 
     virtual void zeroOrderDependency(const CppAD::vector<bool>& vx,
-                                     CppAD::vector<bool>& vy) {
+                                     CppAD::vector<bool>& vy,
+                                     const CppAD::vector<CGB>& x) {
         CppAD::cg::zeroOrderDependency(fun_, vx, vy);
     }
 

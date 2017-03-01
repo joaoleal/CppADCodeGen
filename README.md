@@ -32,7 +32,7 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 CppADCodeGen is a C++11 header only library so there aren't many dependencies:
 
- - **CppAD** (2016),
+ - **CppAD** (2017),
  - A **C++11** compiler (such as GCC and Clang),
  - Clang/LLVM 3.2, 3.4, 3.6, or 3.8 (only for JIT compilation), and
  - Eigen 3 (only for DAE differentiation index reduction).

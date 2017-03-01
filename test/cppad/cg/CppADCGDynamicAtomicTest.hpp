@@ -769,7 +769,7 @@ private:
         CppAD::Independent(u2);
 
         CGAtomicGenericModel<Base>& innerAtomicFun = _modelLib->asAtomic();
-        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, true); // required for taping
+        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(_modelLib->Range()), true); // required for taping
 
         std::vector<ADCGD> ZZ(Z.size());
         cgInnerAtomicFun(u2, ZZ);

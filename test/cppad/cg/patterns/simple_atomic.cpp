@@ -46,7 +46,8 @@ std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x, size_t repeat, atomi
     return y;
 }
 
-void atomicFunction(const std::vector<AD<double> >& x, std::vector<AD<double> >& y) {
+void atomicFunction(const std::vector<AD<double> >& x,
+                    std::vector<AD<double> >& y) {
     y[0] = 1 * x[0] * x[0];
     y[1] = 2 * x[0] * x[1];
     y[2] = 3 * x[1] * x[1];
@@ -66,7 +67,7 @@ TEST_F(CppADCGPatternTest, SimpleAtomic) {
     // create atomic function
     std::vector<AD<double> > y(3), x(2);
     checkpoint<double> atomicfun("atomicFunc", atomicFunction, x, y);
-    CGAtomicFun<double> cgatomicfun(atomicfun, true);
+    CGAtomicFun<double> cgatomicfun(atomicfun, x, true);
     PatternTestModelWithAtom<CGD> model(modelAtomic, cgatomicfun);
     setModel(model);
     this->atoms_.push_back(&atomicfun);

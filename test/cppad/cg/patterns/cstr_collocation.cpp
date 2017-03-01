@@ -34,14 +34,19 @@ public:
     {
     }
 
-protected:
+public:
 
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
-                                std::vector<AD<CG<double> > >& y) {
+                                std::vector<AD<CG<double> > >& y) override {
         y = CstrFunc(x);
     }
 
-    virtual std::string getAtomicLibName() {
+    virtual void atomicFunction(const std::vector<AD<double> >& x,
+                                std::vector<AD<double> >& y) override {
+        y = CstrFunc(x);
+    }
+
+    virtual std::string getAtomicLibName() override {
         return "cstrAtom";
     }
 };
@@ -172,6 +177,60 @@ const size_t CppADCGPatternCstrTest::repeat = 6;
 
 using namespace CppAD;
 using namespace CppAD::cg;
+
+/**
+ * @test test atomic functions in CppAD
+ */
+TEST_F(CppADCGPatternCstrTest, AtomicAllVarsCppAD) {
+    using namespace CppAD;
+
+    /**
+     * create atomic function for the ODE
+     */
+    colModel_->setIgnoreParameters(false);
+
+    auto atomicFunction = [this](const std::vector<AD<double> >& x,
+                                 std::vector<AD<double> >& y) {
+        colModel_->atomicFunction(x, y);
+    };
+
+    // create atomic function
+    size_t na = colModel_->getAtomicIndepCount();
+    size_t ns = colModel_->getAtomicDepCount();
+    std::vector<AD<double> > ay(ns), ax(na);
+    std::vector<double> axTypical = colModel_->getTypicalAtomicValues();
+    for(size_t i = 0; i < na; ++i) {
+        ax[i] = axTypical[i];
+    }
+
+    checkpoint<double> atomic("cstr",
+                              atomicFunction,
+                              ax,
+                              ay,
+                              atomic_base<double>::set_sparsity_enum);
+
+    std::vector<double> xTypical = colModel_->getTypicalValues(repeat);
+    size_t n = xTypical.size();
+    std::vector<AD<double>> u(n);
+    for (size_t j = 0; j < n; j++)
+        u[j] = xTypical[j];
+
+    CppAD::Independent(u);
+
+    std::vector<AD<double>> v = colModel_->evaluateModel(u, repeat, atomic);
+
+    ADFun<double> fun;
+    fun.Dependent(v);
+
+    auto sparsity = jacobianSparsitySet<std::vector<std::set<size_t> >, double> (fun);
+
+    size_t nnz = 0;
+    for(const auto& s: sparsity) {
+        nnz += s.size();
+    }
+
+    ASSERT_EQ(nnz, 1260);
+}
 
 /**
  * @test test the usage of loops for the generation of a orthogonal collocation

@@ -26,10 +26,10 @@ class CollocationModel : public PatternTestModel<T> {
 protected:
     const size_t K_; // order of collocation
 
-    const size_t ns_; // number of states
-    const size_t nm_; // number of controls
-    const size_t npar_; // number of parameters
-    const size_t na_; // number of independent variables
+    const size_t ns_; // number of states of the atomic function
+    const size_t nm_; // number of controls of the atomic function
+    const size_t npar_; // number of parameters of the atomic function
+    const size_t na_; // number of independent variables of the atomic function
 
     std::vector<double> xa_; // default atomic model values
 
@@ -54,6 +54,14 @@ public:
         verbose_(false) {
     }
 
+    inline size_t getAtomicIndepCount() const {
+        return na_;
+    }
+
+    inline size_t getAtomicDepCount() const {
+        return ns_;
+    }
+
     inline void setTypicalAtomModelValues(const std::vector<double>& xxx) {
         assert(xxx.size() == na_);
         xa_ = xxx;
@@ -61,6 +69,10 @@ public:
 
     inline void setIgnoreParameters(bool ignoreParameters) {
         ignoreParameters_ = ignoreParameters;
+    }
+
+    inline std::vector<double> getTypicalAtomicValues() {
+        return xa_;
     }
 
     inline std::vector<double> getTypicalValues(size_t repeat) {
@@ -118,16 +130,24 @@ public:
         return npar_ + repeat * (nm_ + K_ * ns_);
     }
 
-    std::vector<AD<T> > evaluateModel(const std::vector<AD<T> >& x, size_t repeat) {
+    std::vector<AD<T> > evaluateModel(const std::vector<AD<T> >& x,
+                                      size_t repeat) {
         atomic_base<T>& atomModel = createAtomic();
+        return evaluateModel<T>(x, repeat, atomModel);
+    }
+
+    template<class T2>
+    std::vector<AD<T2> > evaluateModel(const std::vector<AD<T2> >& x,
+                                       size_t repeat,
+                                       atomic_base<T2>& atomModel) {
 
         size_t m2 = repeat * K_ * ns_;
 
         // dependent variable vector 
-        std::vector<AD<T> > dep(m2);
+        std::vector<AD<T2> > dep(m2);
 
-        std::vector<AD<T> > dxikdt(ns_);
-        std::vector<AD<T> > xik(na_);
+        std::vector<AD<T2> > dxikdt(ns_);
+        std::vector<AD<T2> > xik(na_);
 
         // parameters
         for (size_t j = 0; j < npar_; j++)
@@ -282,6 +302,9 @@ protected:
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
                                 std::vector<AD<CG<double> > >& y) = 0;
 
+    virtual void atomicFunction(const std::vector<AD<double> >& x,
+                                std::vector<AD<double> >& y) = 0;
+
     virtual std::string getAtomicLibName() = 0;
 
     atomic_base<T>& createAtomic();
@@ -289,7 +312,8 @@ protected:
 
 template<>
 atomic_base<CG<double> >& CollocationModel<CG<double> >::createAtomic() {
-    atomModel_.reset(new CGAtomicFun<double>(atomicModel_->asAtomic(), true));
+    size_t n = atomicModel_->Domain();
+    atomModel_.reset(new CGAtomicFun<double>(atomicModel_->asAtomic(), std::vector<double>(n), true));
     return *atomModel_.get();
 }
 

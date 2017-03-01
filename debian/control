@@ -8,9 +8,8 @@ Build-Depends: debhelper (>= 5),
                libattr1 (>= 1 ),
                cmake (>= 2.8),
                doxygen,
-               cppad-dev (>= 20160000.1)|cppad (>= 20160000.1),
+               cppad-dev (>= 20170000.2)|cppad (>= 20170000.2),
                libclang-dev (>= 3.2),
-               llvm-3.2-dev|llvm-3.4-dev|llvm-3.6-dev,
                libeigen3-dev
 Standards-Version: 3.7.2
 
@@ -18,9 +17,9 @@ Package: cppadcodegen-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         cppad-dev (>= 20160000.1)|cppad (>= 20160000.1)
+         cppad-dev (>= 20170000.2)|cppad (>= 20170000.2)
 Suggests: libclang-dev (>= 3.2),
-          llvm-3.2-dev,
+          llvm-3.8-dev,
           libeigen3-dev
 Description: A Package for Differentiation of C++ Algorithms that performs source code generation
 
