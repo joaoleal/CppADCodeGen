@@ -174,9 +174,9 @@ protected:
 
     //
     inline void makeParameter(const Base& b);
-    
+
     inline void makeVariable(OperationNode<Base>& operation);
-    
+
     inline void makeVariable(OperationNode<Base>& operation,
                              std::unique_ptr<Base>& value);
 
@@ -245,6 +245,7 @@ protected:
      */
     friend CG<Base> pow<Base>(const CG<Base> &x, const CG<Base> &y);
     friend CG<Base> abs<Base>(const CG<Base>& var);
+    friend CG<Base> fabs<Base>(const CG<Base>& var);
     friend CG<Base> acos<Base>(const CG<Base>& var);
     friend CG<Base> asin<Base>(const CG<Base>& var);
     friend CG<Base> atan<Base>(const CG<Base>& var);
