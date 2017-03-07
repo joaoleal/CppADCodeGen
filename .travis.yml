@@ -32,7 +32,7 @@ addons:
 env:
   global:
     #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
-    - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20160000.1/install/include
+    - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
