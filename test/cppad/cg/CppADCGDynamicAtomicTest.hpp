@@ -736,11 +736,11 @@ private:
         /**
          * Create the dynamic library model
          */
-        ModelCSourceGen<double> compHelp1(*_fun, _modelName);
-        compHelp1.setCreateForwardZero(true);
-        compHelp1.setCreateForwardOne(true);
-        compHelp1.setCreateReverseOne(true);
-        compHelp1.setCreateReverseTwo(true);
+        ModelCSourceGen<double> cSourceInner(*_fun, _modelName);
+        cSourceInner.setCreateForwardZero(true);
+        cSourceInner.setCreateForwardOne(true);
+        cSourceInner.setCreateReverseOne(true);
+        cSourceInner.setCreateReverseTwo(true);
 
         /**
          * Create the dynamic library
@@ -749,7 +749,7 @@ private:
         GccCompiler<double> compiler1;
         prepareTestCompilerFlags(compiler1);
 
-        ModelLibraryCSourceGen<double> compDynHelp(compHelp1);
+        ModelLibraryCSourceGen<double> compDynHelp(cSourceInner);
         compDynHelp.setVerbose(this->verbose_);
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_atomiclibatomiclib_" + _modelName);
@@ -769,7 +769,7 @@ private:
         CppAD::Independent(u2);
 
         CGAtomicGenericModel<Base>& innerAtomicFun = _modelLib->asAtomic();
-        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(_modelLib->Range()), true); // required for taping
+        CGAtomicFun<Base> cgInnerAtomicFun(innerAtomicFun, std::vector<double>(_modelLib->Domain()), true); // required for taping
 
         std::vector<ADCGD> ZZ(Z.size());
         cgInnerAtomicFun(u2, ZZ);
@@ -779,33 +779,33 @@ private:
         ADFun<CGD> fun2;
         fun2.Dependent(Z2);
 
-        ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
-        compHelp2.setCreateForwardZero(true);
-        compHelp2.setCreateForwardOne(true);
-        compHelp2.setCreateReverseOne(true);
-        compHelp2.setCreateReverseTwo(true);
-        compHelp2.setCreateJacobian(true);
-        compHelp2.setCreateHessian(true);
-        compHelp2.setCreateSparseJacobian(true);
-        compHelp2.setCreateSparseHessian(true);
-        //compHelp2.setMaxAssignmentsPerFunc(20);
+        ModelCSourceGen<double> cSourceOuter(fun2, _modelName + "_outer");
+        cSourceOuter.setCreateForwardZero(true);
+        cSourceOuter.setCreateForwardOne(true);
+        cSourceOuter.setCreateReverseOne(true);
+        cSourceOuter.setCreateReverseTwo(true);
+        cSourceOuter.setCreateJacobian(true);
+        cSourceOuter.setCreateHessian(true);
+        cSourceOuter.setCreateSparseJacobian(true);
+        cSourceOuter.setCreateSparseHessian(true);
+        //cSourceOuter.setMaxAssignmentsPerFunc(20);
 
         /**
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelLibraryCSourceGen<double> compDynHelp2(compHelp2);
+        ModelLibraryCSourceGen<double> compDynHelp2(cSourceOuter);
         compDynHelp2.setVerbose(this->verbose_);
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp2, "sources_atomiclibatomiclib_" + _modelName);
 
-        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outterModel");
+        DynamicModelLibraryProcessor<double> p2(compDynHelp2, "outerModel");
         GccCompiler<double> compiler2;
         prepareTestCompilerFlags(compiler2);
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
         /**
-         * 
+         * tape the model without atomics
          */
         tapeOuterModel(x, xNorm, eqNorm);
     }
@@ -858,12 +858,12 @@ private:
         /**
          * Create the dynamic library model
          */
-        ModelCSourceGen<double> compHelp1(*_fun, _modelName);
+        ModelCSourceGen<double> cSourceInner(*_fun, _modelName);
         if (jacInner.size() > 0) {
-            compHelp1.setCustomSparseJacobianElements(jacInner);
+            cSourceInner.setCustomSparseJacobianElements(jacInner);
         }
         if (hessInner.size() > 0) {
-            compHelp1.setCustomSparseHessianElements(hessInner);
+            cSourceInner.setCustomSparseHessianElements(hessInner);
         }
 
         /**
@@ -892,34 +892,34 @@ private:
         ADFun<CGD> fun2;
         fun2.Dependent(Z2);
 
-        ModelCSourceGen<double> compHelp2(fun2, _modelName + "_outer");
+        ModelCSourceGen<double> cSourceOuter(fun2, _modelName + "_outer");
 
-        compHelp1.setCreateForwardZero(true);
-        compHelp1.setCreateForwardOne(true);
-        compHelp1.setCreateReverseOne(true);
-        compHelp1.setCreateReverseTwo(true);
-        //compHelp1.setCreateSparseHessian(true); //not really required
+        cSourceInner.setCreateForwardZero(true);
+        cSourceInner.setCreateForwardOne(true);
+        cSourceInner.setCreateReverseOne(true);
+        cSourceInner.setCreateReverseTwo(true);
+        //cSourceInner.setCreateSparseHessian(true); //not really required
 
-        compHelp2.setCreateForwardZero(true);
-        compHelp2.setCreateForwardOne(true);
-        compHelp2.setCreateReverseOne(true);
-        compHelp2.setCreateReverseTwo(createOuterReverse2);
-        compHelp2.setCreateJacobian(true);
-        compHelp2.setCreateHessian(true);
-        compHelp2.setCreateSparseJacobian(true);
-        compHelp2.setCreateSparseHessian(true);
+        cSourceOuter.setCreateForwardZero(true);
+        cSourceOuter.setCreateForwardOne(true);
+        cSourceOuter.setCreateReverseOne(true);
+        cSourceOuter.setCreateReverseTwo(createOuterReverse2);
+        cSourceOuter.setCreateJacobian(true);
+        cSourceOuter.setCreateHessian(true);
+        cSourceOuter.setCreateSparseJacobian(true);
+        cSourceOuter.setCreateSparseHessian(true);
         if (jacOuter.size() > 0) {
-            compHelp2.setCustomSparseJacobianElements(jacOuter);
+            cSourceOuter.setCustomSparseJacobianElements(jacOuter);
         }
         if (hessOuter.size() > 0) {
-            compHelp2.setCustomSparseHessianElements(hessOuter);
+            cSourceOuter.setCustomSparseHessianElements(hessOuter);
         }
 
         /**
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelLibraryCSourceGen<double> compDynHelp(compHelp1, compHelp2);
+        ModelLibraryCSourceGen<double> compDynHelp(cSourceInner, cSourceOuter);
         compDynHelp.setVerbose(this->verbose_);
 
         std::string folder = std::string("sources_atomiclibmodelbridge_") + (createOuterReverse2 ? "rev2_" : "dir_") + _modelName;
@@ -932,7 +932,7 @@ private:
         _dynamicLib = p.createDynamicLibrary(compiler);
 
         /**
-         * 
+         * tape the model without atomics
          */
         tapeOuterModel(x, xNorm, eqNorm);
     }
