@@ -745,7 +745,7 @@ protected:
                     continue;
                 }
 
-                assignCount += printAssigment(node);
+                assignCount += printAssignment(node);
             }
 
             if (localFuncNames.size() > 0 && assignCount > 0) {
@@ -857,31 +857,31 @@ protected:
         return _info->varId[node];
     }
 
-    inline unsigned printAssigment(Node& node) {
-        return printAssigment(node, node);
+    inline unsigned printAssignment(Node& node) {
+        return printAssignment(node, node);
     }
 
-    inline unsigned printAssigment(Node& nodeName,
-                                   const Arg& nodeRhs) {
+    inline unsigned printAssignment(Node& nodeName,
+                                    const Arg& nodeRhs) {
         if (nodeRhs.getOperation() != nullptr) {
-            return printAssigment(nodeName, *nodeRhs.getOperation());
+            return printAssignment(nodeName, *nodeRhs.getOperation());
         } else {
-            printAssigmentStart(nodeName);
+            printAssignmentStart(nodeName);
             printParameter(*nodeRhs.getParameter());
-            printAssigmentEnd(nodeName);
+            printAssignmentEnd(nodeName);
             return 1;
         }
     }
 
-    inline unsigned printAssigment(Node& nodeName,
+    inline unsigned printAssignment(Node& nodeName,
                                    Node& nodeRhs) {
         bool createsVar = directlyAssignsVariable(nodeRhs); // do we need to do the assignment here?
         if (!createsVar) {
-            printAssigmentStart(nodeName);
+            printAssignmentStart(nodeName);
         }
         unsigned lines = printExpressionNoVarCheck(nodeRhs);
         if (!createsVar) {
-            printAssigmentEnd(nodeRhs);
+            printAssignmentEnd(nodeRhs);
         }
 
         if (nodeRhs.getOperationType() == CGOpCode::ArrayElement) {
@@ -897,11 +897,13 @@ protected:
         return lines;
     }
 
-    inline virtual void printAssigmentStart(Node& op) {
-        printAssigmentStart(op, createVariableName(op), isDependent(op));
+    inline virtual void printAssignmentStart(Node& op) {
+        printAssignmentStart(op, createVariableName(op), isDependent(op));
     }
 
-    inline virtual void printAssigmentStart(Node& node, const std::string& varName, bool isDep) {
+    inline virtual void printAssignmentStart(Node& node,
+                                             const std::string& varName,
+                                             bool isDep) {
         if (!isDep) {
             _temporary[getVariableID(node)] = &node;
         }
@@ -920,7 +922,7 @@ protected:
         _code << " ";
     }
 
-    inline virtual void printAssigmentEnd(Node& op) {
+    inline virtual void printAssignmentEnd(Node& op) {
         _code << ";\n";
     }
 
@@ -1583,9 +1585,9 @@ protected:
         if ((trueCase.getParameter() != nullptr && falseCase.getParameter() != nullptr && *trueCase.getParameter() == *falseCase.getParameter()) ||
                 (trueCase.getOperation() != nullptr && falseCase.getOperation() != nullptr && trueCase.getOperation() == falseCase.getOperation())) {
             // true and false cases are the same
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(trueCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
         } else {
             _code << _indentation << "if( ";
             print(left);
@@ -1593,14 +1595,14 @@ protected:
             print(right);
             _code << " ) {\n";
             _code << _spaces;
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(trueCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
             _code << _indentation << "} else {\n";
             _code << _spaces;
-            printAssigmentStart(node, varName, isDep);
+            printAssignmentStart(node, varName, isDep);
             print(falseCase);
-            printAssigmentEnd(node);
+            printAssignmentEnd(node);
             _code << _indentation << "}\n";
         }
     }
@@ -1748,7 +1750,7 @@ protected:
             }
 
             if (useArg) {
-                printAssigment(node, arg); // ignore other arguments!
+                printAssignment(node, arg); // ignore other arguments!
                 return 1;
             }
         }
@@ -1917,7 +1919,7 @@ protected:
 
         // just follow the argument
         Node& nodeArg = *node.getArguments()[1].getOperation();
-        printAssigment(nodeArg);
+        printAssignment(nodeArg);
     }
 
     virtual void printUserCustom(Node& node) {

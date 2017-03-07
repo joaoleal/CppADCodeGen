@@ -44,7 +44,7 @@ size_t LanguageC<Base>::printLoopIndexDeps(const std::vector<OperationNode<Base>
 
         if (newI == i) {
             // individual element assignment
-            printAssigment(*variableOrder[i]);
+            printAssignment(*variableOrder[i]);
         } else {
             i = newI;
         }
