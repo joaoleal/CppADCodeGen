@@ -90,10 +90,22 @@ public:
     }
 
     virtual bool for_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
+                                CppAD::vector<std::set<size_t> >& s) override {
+        return atomicFun_.for_sparse_jac(q, r, s);
+    }
+
+    virtual bool for_sparse_jac(size_t q,
                                 const CppAD::vector<bool>& r,
                                 CppAD::vector<bool>& s,
                                 const CppAD::vector<CGB>& x) override {
         return atomicFun_.for_sparse_jac(q, r, s, sparsityIndeps(x));
+    }
+
+    virtual bool for_sparse_jac(size_t q,
+                                const CppAD::vector<bool>& r,
+                                CppAD::vector<bool>& s) override {
+        return atomicFun_.for_sparse_jac(q, r, s);
     }
 
     virtual bool rev_sparse_jac(size_t q,
@@ -104,10 +116,22 @@ public:
     }
 
     virtual bool rev_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& rt,
+                                CppAD::vector<std::set<size_t> >& st) override {
+        return atomicFun_.rev_sparse_jac(q, rt, st);
+    }
+
+    virtual bool rev_sparse_jac(size_t q,
                                 const CppAD::vector<bool>& rt,
                                 CppAD::vector<bool>& st,
                                 const CppAD::vector<CGB>& x) override {
         return atomicFun_.rev_sparse_jac(q, rt, st, sparsityIndeps(x));
+    }
+
+    virtual bool rev_sparse_jac(size_t q,
+                                const CppAD::vector<bool>& rt,
+                                CppAD::vector<bool>& st) override {
+        return atomicFun_.rev_sparse_jac(q, rt, st);
     }
 
     virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
@@ -116,9 +140,19 @@ public:
                                 size_t q,
                                 const CppAD::vector<std::set<size_t> >& r,
                                 const CppAD::vector<std::set<size_t> >& u,
-                                CppAD::vector< std::set<size_t> >& v,
+                                CppAD::vector<std::set<size_t> >& v,
                                 const CppAD::vector<CGB>& x) override {
         return atomicFun_.rev_sparse_hes(vx, s, t, q, r, u, v, sparsityIndeps(x));
+    }
+
+    virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
+                                const CppAD::vector<bool>& s,
+                                CppAD::vector<bool>& t,
+                                size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
+                                const CppAD::vector<std::set<size_t> >& u,
+                                CppAD::vector<std::set<size_t> >& v) override {
+        return atomicFun_.rev_sparse_hes(vx, s, t, q, r, u, v);
     }
 
     virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
@@ -130,6 +164,16 @@ public:
                                 CppAD::vector<bool>& v,
                                 const CppAD::vector<CGB>& x) override {
         return atomicFun_.rev_sparse_hes(vx, s, t, q, r, u, v, sparsityIndeps(x));
+    }
+
+    virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
+                                const CppAD::vector<bool>& s,
+                                CppAD::vector<bool>& t,
+                                size_t q,
+                                const CppAD::vector<bool>& r,
+                                const CppAD::vector<bool>& u,
+                                CppAD::vector<bool>& v) override {
+        return atomicFun_.rev_sparse_hes(vx, s, t, q, r, u, v);
     }
 
 protected:

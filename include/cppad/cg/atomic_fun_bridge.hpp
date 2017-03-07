@@ -99,7 +99,13 @@ public:
     virtual bool for_sparse_jac(size_t q,
                                 const CppAD::vector<std::set<size_t> >& r,
                                 CppAD::vector<std::set<size_t> >& s,
-                                const CppAD::vector<Base>& x) {
+                                const CppAD::vector<CGB>& x) override {
+        return for_sparse_jac(q, r, s);
+    }
+
+    virtual bool for_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
+                                CppAD::vector<std::set<size_t> >& s) override {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined()) {
@@ -125,7 +131,13 @@ public:
     virtual bool rev_sparse_jac(size_t q,
                                 const CppAD::vector<std::set<size_t> >& rt,
                                 CppAD::vector<std::set<size_t> >& st,
-                                const CppAD::vector<CGB>& x) {
+                                const CppAD::vector<CGB>& x) override {
+        return rev_sparse_jac(q, rt, st);
+    }
+
+    virtual bool rev_sparse_jac(size_t q,
+                                const CppAD::vector<std::set<size_t> >& rt,
+                                CppAD::vector<std::set<size_t> >& st) override {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined()) {
@@ -153,7 +165,17 @@ public:
                                 const CppAD::vector<std::set<size_t> >& r,
                                 const CppAD::vector<std::set<size_t> >& u,
                                 CppAD::vector<std::set<size_t> >& v,
-                                const CppAD::vector<CGB>& x) {
+                                const CppAD::vector<CGB>& x) override {
+        return rev_sparse_hes(vx, s, t, q, r, u, v);
+    }
+
+    virtual bool rev_sparse_hes(const CppAD::vector<bool>& vx,
+                                const CppAD::vector<bool>& s,
+                                CppAD::vector<bool>& t,
+                                size_t q,
+                                const CppAD::vector<std::set<size_t> >& r,
+                                const CppAD::vector<std::set<size_t> >& u,
+                                CppAD::vector<std::set<size_t> >& v) override {
         using CppAD::vector;
 
         if (cacheSparsities_ || custom_jac_.isFilterDefined() || custom_hess_.isFilterDefined()) {
@@ -253,14 +275,14 @@ protected:
 
     virtual void zeroOrderDependency(const CppAD::vector<bool>& vx,
                                      CppAD::vector<bool>& vy,
-                                     const CppAD::vector<CGB>& x) {
+                                     const CppAD::vector<CGB>& x) override {
         CppAD::cg::zeroOrderDependency(fun_, vx, vy);
     }
 
     virtual bool atomicForward(size_t q,
                                size_t p,
                                const CppAD::vector<Base>& tx,
-                               CppAD::vector<Base>& ty) {
+                               CppAD::vector<Base>& ty) override {
         using CppAD::vector;
 
         vector<CGB> txcg(tx.size());
@@ -278,7 +300,7 @@ protected:
                                const CppAD::vector<Base>& tx,
                                const CppAD::vector<Base>& ty,
                                CppAD::vector<Base>& px,
-                               const CppAD::vector<Base>& py) {
+                               const CppAD::vector<Base>& py) override {
         using CppAD::vector;
 
         vector<CGB> txcg(tx.size());
