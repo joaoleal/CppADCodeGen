@@ -134,7 +134,9 @@ public:
                 }
             }
 
-            this->for_sparse_jac(1, r, s, x);
+            bool good = this->for_sparse_jac(1, r, s, x);
+            if (!good)
+                return false;
 
             vyLocal.resize(ty.size());
             for (size_t i = 0; i < vyLocal.size(); i++) {
@@ -266,7 +268,10 @@ public:
         }
 
         vector<std::set<size_t> > st(n);
-        this->rev_sparse_jac(1, rt, st, x);
+        bool good = this->rev_sparse_jac(1, rt, st, x);
+        if (!good) {
+            return false;
+        }
 
         for (size_t j = 0; j < n; j++) {
             vxLocal[j * p1 + p] = st[j].size() > 0;
@@ -280,9 +285,9 @@ public:
             vector<bool> vx(n);
             vector<bool> s(m);
             vector<bool> t(n);
-            vector< std::set<size_t> > r(n);
-            vector< std::set<size_t> > u(m);
-            vector< std::set<size_t> > v(n);
+            vector<std::set<size_t> > r(n);
+            vector<std::set<size_t> > u(m);
+            vector<std::set<size_t> > v(n);
 
             for (size_t j = 0; j < n; j++) {
                 vx[j] = !tx[j * p1].isParameter();
@@ -378,7 +383,7 @@ public:
             for (size_t j = 0; j < n; j++) {
                 size_t pos = j * p1 + k;
                 if (vxLocal[pos]) {
-                    px[pos] = CGB(*handler->makeNode(CGOpCode::ArrayElement,{j}, {*pxArray[k], *atomicOp}));
+                    px[pos] = CGB(*handler->makeNode(CGOpCode::ArrayElement, {j}, {*pxArray[k], *atomicOp}));
                     if (valuesDefined) {
                         px[pos].setValue(pxb[pos]);
                     }
