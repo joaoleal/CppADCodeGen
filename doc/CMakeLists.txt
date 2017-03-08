@@ -9,7 +9,7 @@ IF(DOXYGEN_FOUND)
     ELSE()
         SET(DOC_TARGET_ALL "")
     ENDIF()
-       
+
     ADD_CUSTOM_TARGET(doc ${DOC_TARGET_ALL} 
                       ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doxyfile
                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
