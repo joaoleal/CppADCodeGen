@@ -52,7 +52,7 @@ protected:
     // the independent variables
     std::vector<Node *> _independentVariables;
     // the current dependent variables
-    ArrayWrapper<CGB>* _dependents;
+    ArrayView<CGB>* _dependents;
     /**
      * nodes managed by this code handler which include all
      * all OperationNodes created by CG<Base> objects
@@ -358,7 +358,7 @@ public:
 
     virtual void generateCode(std::ostream& out,
                               Language<Base>& lang,
-                              ArrayWrapper<CGB>& dependent,
+                              ArrayView<CGB>& dependent,
                               VariableNameGenerator<Base>& nameGen,
                               const std::string& jobName = "source");
 
@@ -390,7 +390,7 @@ public:
 
     virtual void generateCode(std::ostream& out,
                               Language<Base>& lang,
-                              ArrayWrapper<CGB>& dependent,
+                              ArrayView<CGB>& dependent,
                               VariableNameGenerator<Base>& nameGen,
                               std::vector<std::string>& atomicFunctions,
                               const std::string& jobName = "source");
@@ -673,14 +673,14 @@ protected:
 
     inline void addToEvaluationQueue(Node& arg);
 
-    inline void reduceTemporaryVariables(ArrayWrapper<CGB>& dependent);
+    inline void reduceTemporaryVariables(ArrayView<CGB>& dependent);
 
     /**
      * Change operation order so that the total number of temporary variables is
      * reduced.
      * @param dependent The vector of dependent variable values
      */
-    inline void reorderOperations(ArrayWrapper<CGB>& dependent);
+    inline void reorderOperations(ArrayView<CGB>& dependent);
 
     inline void reorderOperation(Node& node);
 

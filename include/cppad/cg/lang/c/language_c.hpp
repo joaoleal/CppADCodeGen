@@ -81,7 +81,7 @@ protected:
     // (some IDs may be the same as the independent variables when dep = indep)
     std::map<size_t, size_t> _dependentIDs;
     // the dependent variable vector
-    const ArrayWrapper<CG<Base> >* _dependent;
+    const ArrayView<CG<Base> >* _dependent;
     // the temporary variables that may require a declaration
     std::map<size_t, Node*> _temporary;
     // the operator used for assignment of dependent variables
@@ -587,7 +587,7 @@ protected:
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
         _minTemporaryVarID = info->minTemporaryVarID;
-        const ArrayWrapper<CG<Base> >& dependent = info->dependent;
+        const ArrayView<CG<Base> >& dependent = info->dependent;
         const std::vector<Node*>& variableOrder = info->variableOrder;
 
         _tmpArrayValues.resize(_nameGen->getMaxTemporaryArrayVariableID());

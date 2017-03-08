@@ -59,7 +59,7 @@ protected:
     inline void analyzeOutIndeps(const ActiveOut* indep,
                                  size_t n) {
         CPPAD_ASSERT_KNOWN(indep != nullptr || n == 0, "null array with a non-zero size");
-        outHandler_ = findHandler(ArrayWrapper<const ActiveOut>(indep, n));
+        outHandler_ = findHandler(ArrayView<const ActiveOut>(indep, n));
     }
 
     /**

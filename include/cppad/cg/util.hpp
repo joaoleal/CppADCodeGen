@@ -428,7 +428,7 @@ inline CodeHandler<Base>* findHandler(const CppAD::vector<CG<Base> >& ty) {
 }
 
 template<class Base>
-inline CodeHandler<Base>* findHandler(CppAD::cg::ArrayWrapper<const CG<Base> > ty) {
+inline CodeHandler<Base>* findHandler(CppAD::cg::ArrayView<const CG<Base> > ty) {
     for (size_t i = 0; i < ty.size(); i++) {
         if (ty[i].getCodeHandler() != nullptr) {
             return ty[i].getCodeHandler();

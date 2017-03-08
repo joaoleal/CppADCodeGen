@@ -215,7 +215,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                                      CppAD::vector<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      const std::string& jobName) {
-    ArrayWrapper<CGB> deps(dependent);
+    ArrayView<CGB> deps(dependent);
     generateCode(out, lang, deps, nameGen, jobName);
 }
 
@@ -225,14 +225,14 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                                      std::vector<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      const std::string& jobName) {
-    ArrayWrapper<CGB> deps(dependent);
+    ArrayView<CGB> deps(dependent);
     generateCode(out, lang, deps, nameGen, jobName);
 }
 
 template<class Base>
 void CodeHandler<Base>::generateCode(std::ostream& out,
                                      Language<Base>& lang,
-                                     ArrayWrapper<CGB>& dependent,
+                                     ArrayView<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      const std::string& jobName) {
     std::vector<std::string> atomicFunctions;
@@ -246,7 +246,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                                      VariableNameGenerator<Base>& nameGen,
                                      std::vector<std::string>& atomicFunctions,
                                      const std::string& jobName) {
-    ArrayWrapper<CGB> deps(dependent);
+    ArrayView<CGB> deps(dependent);
     generateCode(out, lang, deps, nameGen, atomicFunctions, jobName);
 }
 
@@ -257,14 +257,14 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                                      VariableNameGenerator<Base>& nameGen,
                                      std::vector<std::string>& atomicFunctions,
                                      const std::string& jobName) {
-    ArrayWrapper<CGB> deps(dependent);
+    ArrayView<CGB> deps(dependent);
     generateCode(out, lang, deps, nameGen, atomicFunctions, jobName);
 }
 
 template<class Base>
 void CodeHandler<Base>::generateCode(std::ostream& out,
                                      Language<Base>& lang,
-                                     ArrayWrapper<CGB>& dependent,
+                                     ArrayView<CGB>& dependent,
                                      VariableNameGenerator<Base>& nameGen,
                                      std::vector<std::string>& atomicFunctions,
                                      const std::string& jobName) {
@@ -1568,7 +1568,7 @@ inline void CodeHandler<Base>::addToEvaluationQueue(Node& arg) {
 }
 
 template<class Base>
-inline void CodeHandler<Base>::reduceTemporaryVariables(ArrayWrapper<CGB>& dependent) {
+inline void CodeHandler<Base>::reduceTemporaryVariables(ArrayView<CGB>& dependent) {
 
     reorderOperations(dependent);
 
@@ -1648,7 +1648,7 @@ inline void CodeHandler<Base>::reduceTemporaryVariables(ArrayWrapper<CGB>& depen
 }
 
 template<class Base>
-inline void CodeHandler<Base>::reorderOperations(ArrayWrapper<CGB>& dependent) {
+inline void CodeHandler<Base>::reorderOperations(ArrayView<CGB>& dependent) {
     // determine the location of the last temporary variable used for each dependent
     startNewOperationTreeVisit();
 

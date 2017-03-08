@@ -1,5 +1,5 @@
-#ifndef CPPAD_CG_ARRAY_WRAPPER_INCLUDED
-#define CPPAD_CG_ARRAY_WRAPPER_INCLUDED
+#ifndef CPPAD_CG_ARRAY_VIEW_INCLUDED
+#define CPPAD_CG_ARRAY_VIEW_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
@@ -27,7 +27,7 @@ namespace cg {
  * It does not own the data array.
  */
 template<class Type>
-class ArrayWrapper {
+class ArrayView {
 public:
     typedef Type value_type;
     typedef value_type* pointer;
@@ -53,7 +53,7 @@ public:
     /**
      * Default empty constructor for arrays with no elements
      */
-    inline ArrayWrapper() :
+    inline ArrayView() :
             _data(nullptr),
             _length(0) {
     }
@@ -64,11 +64,11 @@ public:
      * @param array pointer to the first element of the array
      * @param n  size of the array
      */
-    inline ArrayWrapper(pointer array,
-                        size_type n) :
+    inline ArrayView(pointer array,
+                     size_type n) :
             _data(array),
             _length(n) {
-        CPPAD_ASSERT_KNOWN(array != nullptr || n == 0, "ArrayWrapper: null array with a non-zero size");
+        CPPAD_ASSERT_KNOWN(array != nullptr || n == 0, "ArrayView: null array with a non-zero size");
     }
 
     /**
@@ -77,7 +77,7 @@ public:
      *
      * @param vector the vector to wrap
      */
-    inline ArrayWrapper(std::vector<value_type>& vector) :
+    inline ArrayView(std::vector<value_type>& vector) :
             _data(vector.data()),
             _length(vector.size()) {
     }
@@ -88,20 +88,7 @@ public:
      *
      * @param vector the vector to wrap
      */
-    inline ArrayWrapper(CppAD::vector<value_type>& vector) :
-            _data(vector.data()),
-            _length(vector.size()) {
-    }
-
-    /**
-     * Creates a wrapper from a vector.
-     * It is expected that the vector is not resized while using this wrapper.
-     *
-     * @param vector the vector to wrap
-     */
-    template<class TT = Type>
-    inline ArrayWrapper(const std::vector<typename std::remove_const<value_type>::type>& vector,
-                        typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+    inline ArrayView(CppAD::vector<value_type>& vector) :
             _data(vector.data()),
             _length(vector.size()) {
     }
@@ -113,8 +100,21 @@ public:
      * @param vector the vector to wrap
      */
     template<class TT = Type>
-    inline ArrayWrapper(const CppAD::vector<typename std::remove_const<value_type>::type>& vector,
-                        typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+    inline ArrayView(const std::vector<typename std::remove_const<value_type>::type>& vector,
+                     typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(vector.data()),
+            _length(vector.size()) {
+    }
+
+    /**
+     * Creates a wrapper from a vector.
+     * It is expected that the vector is not resized while using this wrapper.
+     *
+     * @param vector the vector to wrap
+     */
+    template<class TT = Type>
+    inline ArrayView(const CppAD::vector<typename std::remove_const<value_type>::type>& vector,
+                     typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
             _data(vector.data()),
             _length(vector.size()) {
     }
@@ -123,12 +123,12 @@ public:
      * Copy constructor
      * @param x
      */
-    inline ArrayWrapper(const ArrayWrapper& x) = default;
+    inline ArrayView(const ArrayView& x) = default;
 
     /**
      * Desctructor
      */
-    virtual ~ArrayWrapper() = default;
+    virtual ~ArrayView() = default;
 
     /**
      * @return number of elements in the array.
@@ -166,7 +166,7 @@ public:
         std::fill_n(begin(), size(), u);
     }
 
-    inline void swap(ArrayWrapper& other) noexcept {
+    inline void swap(ArrayView& other) noexcept {
         std::swap(other._data, _data);
         std::swap(other._length, _length);
     }
@@ -222,54 +222,54 @@ public:
 
     // Element access.
     inline reference operator[](size_type i) {
-        CPPAD_ASSERT_KNOWN(i < size(), "ArrayWrapper: index greater than or equal array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView: index greater than or equal array size");
         return _data[i];
     }
 
     inline const_reference operator[](size_type i) const {
-        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayWrapper: index greater than or equal array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView: index greater than or equal array size");
         return _data[i];
     }
 
     inline reference at(size_type i) {
         if (i >= size())
-            throw CGException("ArrayWrapper::at() index ", i, " is greater than or equal array size ", size());
+            throw CGException("ArrayView::at() index ", i, " is greater than or equal array size ", size());
         return _data[i];
     }
 
     inline const_reference at(size_type i) const {
         if (i >= size())
-            throw CGException("ArrayWrapper::at() index ", i, " is greater than or equal array size ", size());
+            throw CGException("ArrayView::at() index ", i, " is greater than or equal array size ", size());
         return _data[i];
     }
 
     inline reference front() {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayWrapper: cannot call front for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array");
         return *begin();
     }
 
     inline const_reference front() const {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayWrapper: cannot call front for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call front for an empty array");
         return _data[0];
     }
 
     inline reference back() {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayWrapper: cannot call back for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array");
         return *(end() - 1);
     }
 
     inline const_reference back() const {
-        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayWrapper: cannot call back for an empty array");
+        CPPADCG_ASSERT_KNOWN(!empty(), "ArrayView: cannot call back for an empty array");
         return _data[size() - 1];
     }
 
 public:
-    inline ArrayWrapper& operator=(const ArrayWrapper& x) {
+    inline ArrayView& operator=(const ArrayView& x) {
         if (&x == this)
             return *this;
 
         if (x.size() != size())
-            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+            throw CGException("ArrayView: assigning an array with different size: the left hand side array has the size ", size(),
                               " while the right hand side array has the size ", x.size(), ".");
 
         for(size_t i = 0; i < _length; ++i) {
@@ -279,9 +279,9 @@ public:
         return *this;
     }
 
-    inline ArrayWrapper& operator=(const std::vector<Type>& x) {
+    inline ArrayView& operator=(const std::vector<Type>& x) {
         if (x.size() != size())
-            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+            throw CGException("ArrayView: assigning an array with different size: the left hand side array has the size ", size(),
                               " while the right hand side array has the size ", x.size(), ".");
 
         for(size_t i = 0; i < _length; ++i) {
@@ -291,9 +291,9 @@ public:
         return *this;
     }
 
-    inline ArrayWrapper& operator=(const CppAD::vector<Type>& x) {
+    inline ArrayView& operator=(const CppAD::vector<Type>& x) {
         if (x.size() != size())
-            throw CGException("ArrayWrapper: assigning an array with different size: the left hand side array has the size ", size(),
+            throw CGException("ArrayView: assigning an array with different size: the left hand side array has the size ", size(),
                               " while the right hand side array has the size ", x.size(), ".");
 
         for(size_t i = 0; i < _length; ++i) {
@@ -306,7 +306,7 @@ public:
 };
 
 /**
- * ArrayWrapper output.
+ * ArrayView output.
  *
  * @param os  stream to write the vector to
  * @param array  array that is output
@@ -314,7 +314,7 @@ public:
  */
 template<class Type>
 inline std::ostream& operator<<(std::ostream& os,
-                                const ArrayWrapper<Type>& array) {
+                                const ArrayView<Type>& array) {
     size_t i = 0;
     size_t n = array.size();
 

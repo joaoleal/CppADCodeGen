@@ -191,7 +191,7 @@ template<class Key, class Value>
 class SmartMapValuePointer;
 
 template<class Type>
-class ArrayWrapper;
+class ArrayView;
 
 template<class Base>
 inline void print(const Base& v);
