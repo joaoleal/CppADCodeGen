@@ -82,13 +82,14 @@ public:
      * variables with a (potentially) new data type
      *
      * @param indepNew The new independent variables.
-     * @param depOld Dependent variable vector (all variables must belong to
-     *               the same code handler)
+     * @param depOld Dependent variable vector representing the operations that
+     *               are going to be executed to determine the new variables
+     *               (all variables must belong to the same code handler)
      * @return The dependent variable values
      * @throws CGException on error (such as an unhandled operation type)
      */
-    inline std::vector<ActiveOut> evaluate(const std::vector<ActiveOut>& indepNew,
-                                           const std::vector<CG<ScalarIn> >& depOld) {
+    inline std::vector<ActiveOut> evaluate(ArrayView<const ActiveOut> indepNew,
+                                           ArrayView<const CG<ScalarIn> > depOld) {
         std::vector<ActiveOut> depNew(depOld.size());
 
         evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
@@ -103,8 +104,9 @@ public:
      * @param indepNew The new independent variables.
      * @param indepSize The size of the array of independent variables.
      * @param depNew The new dependent variable vector that will be created.
-     * @param depOld Dependent variable vector (all variables must belong to
-     *               the same code handler)
+     * @param depOld Dependent variable vector representing the operations that
+     *               are going to be executed to determine the new variables
+     *               (all variables must belong to the same code handler)
      * @param depSize The size of the array of dependent variables.
      * @throws CGException on error (such as an unhandled operation type)
      */
