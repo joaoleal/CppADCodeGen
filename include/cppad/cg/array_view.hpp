@@ -94,10 +94,23 @@ public:
     }
 
     /**
-     * Creates a wrapper from a vector.
+     * Creates an ArrayView for a const data type from another ArrayView with
+     * a non-const data type.
+     *
+     * @param array the other ArrayView with a non-const data type
+     */
+    template<class TT = Type>
+    inline ArrayView(const ArrayView<typename std::remove_const<value_type>::type>& array,
+                     typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(array.data()),
+            _length(array.size()) {
+    }
+
+    /**
+     * Creates a wrapper from a vector with a non-const datd type.
      * It is expected that the vector is not resized while using this wrapper.
      *
-     * @param vector the vector to wrap
+     * @param vector the vector to wrap with a non-const data type
      */
     template<class TT = Type>
     inline ArrayView(const std::vector<typename std::remove_const<value_type>::type>& vector,
@@ -107,10 +120,10 @@ public:
     }
 
     /**
-     * Creates a wrapper from a vector.
+     * Creates a wrapper from a vector with a non-const data type.
      * It is expected that the vector is not resized while using this wrapper.
      *
-     * @param vector the vector to wrap
+     * @param vector the vector to wrap with a non-const data type
      */
     template<class TT = Type>
     inline ArrayView(const CppAD::vector<typename std::remove_const<value_type>::type>& vector,
