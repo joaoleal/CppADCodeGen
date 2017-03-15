@@ -55,19 +55,13 @@ public:
     }
 
     CGAtomicFun(atomic_base<Base>& atomicFun,
-                const std::vector<Base>& xSparsity,
+                ArrayView<const Base> xSparsity,
                 bool standAlone = false) :
             CGAtomicFun(atomicFun, values(xSparsity), standAlone) {
     }
 
     CGAtomicFun(atomic_base<Base>& atomicFun,
-                const CppAD::vector<CppAD::AD<Base>>& xSparsity,
-                bool standAlone = false) :
-            CGAtomicFun(atomicFun, values(xSparsity), standAlone) {
-    }
-
-    CGAtomicFun(atomic_base<Base>& atomicFun,
-                const std::vector<CppAD::AD<Base>>& xSparsity,
+                ArrayView<const CppAD::AD<Base>> xSparsity,
                 bool standAlone = false) :
             CGAtomicFun(atomicFun, values(xSparsity), standAlone) {
     }
@@ -237,8 +231,7 @@ private:
         return out;
     }
 
-    template<class VectorAD>
-    inline static CppAD::vector<Base> values(const VectorAD& x) {
+    inline static CppAD::vector<Base> values(ArrayView<const CppAD::AD<Base>> x) {
         CppAD::vector<Base> out(x.size());
         for (size_t i = 0; i < out.size(); ++i) {
             out[i] = CppAD::Value(CppAD::Var2Par(x[i]));
@@ -246,7 +239,7 @@ private:
         return out;
     }
 
-    inline static CppAD::vector<Base> values(const std::vector<Base>& x) {
+    inline static CppAD::vector<Base> values(ArrayView<const Base> x) {
         CppAD::vector<Base> out(x.size());
         for (size_t i = 0; i < out.size(); ++i) {
             out[i] = x[i];
