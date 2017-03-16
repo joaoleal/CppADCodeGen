@@ -41,6 +41,7 @@ protected:
     std::vector<const Base*> _inHess;
     std::vector<Base*> _out;
     LangCAtomicFun _atomicFuncArg;
+    std::vector<std::string> _atomicNames; // names of the atomic/external functions required by this model
     std::vector<ExternalFunctionWrapper<Base>* > _atomic;
     size_t _missingAtomicFunctions;
     CppAD::vector<Base> _tx, _ty, _px, _py;
@@ -94,6 +95,10 @@ public:
 
     virtual const std::string& getName() const override {
         return _name;
+    }
+
+    virtual const std::vector<std::string>& getAtomicFunctionNames() override {
+        return _atomicNames;
     }
 
     virtual bool addAtomicFunction(atomic_base<Base>& atomic) override {
@@ -948,6 +953,10 @@ protected:
         unsigned long n;
         (*_atomicFunctions)(&names, &n);
         _atomic.resize(n);
+        _atomicNames.resize(n);
+        for (unsigned long i = 0; i < n; ++i) {
+            _atomicNames[i] = std::string(names[i]);
+        }
 
         _atomicFuncArg.libModel = this;
         _atomicFuncArg.forward = &atomicForward;
@@ -1023,14 +1032,9 @@ private:
     template<class ExtFunc, class Wrapper>
     inline bool addExternalFunction(ExtFunc& atomic,
                                     const std::string& name) {
-        const char** names;
-        unsigned long n;
-        (*_atomicFunctions)(&names, &n);
-
-        CPPADCG_ASSERT_UNKNOWN(_atomic.size() == n);
-
-        for (unsigned long i = 0; i < n; i++) {
-            if (name == names[i]) {
+        size_t n = _atomicNames.size();
+        for (size_t i = 0; i < n; i++) {
+            if (name == _atomicNames[i]) {
                 if (_atomic[i] == nullptr) {
                     _missingAtomicFunctions--;
                 } else {

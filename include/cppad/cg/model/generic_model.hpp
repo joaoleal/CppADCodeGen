@@ -117,6 +117,15 @@ public:
     virtual size_t Range() const = 0;
 
     /**
+     * The names of the atomic functions required by this model.
+     * All external/atomic functions must be provided before using
+     * this model to compute numerical values.
+     *
+     * @return the names of the atomic functions used by this model
+     */
+    virtual const std::vector<std::string>& getAtomicFunctionNames() = 0;
+
+    /**
      * Defines a CppAD atomic function to be used as an external function 
      * by the compiled code.
      * It should match an external function name previously provided to
