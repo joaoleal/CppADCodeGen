@@ -41,6 +41,9 @@ class CGAbstractAtomicFun;
 template<class Base>
 class CGAtomicFun;
 
+template<class Base>
+class AtomicUseInfo;
+
 /***************************************************************************
  * Core
  **************************************************************************/

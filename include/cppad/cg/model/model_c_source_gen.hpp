@@ -222,10 +222,9 @@ protected:
      */
     std::vector<std::string> _atomicFunctions;
     /**
-     * Maps each atomic function ID to the independent variable indexes 
-     * which affect a call of that atomic function
+     * Maps each atomic function ID to information regarding how the atomic function is used
      */
-    std::map<size_t, std::set<size_t> >* _atomicsIndeps;
+    std::map<size_t, AtomicUseInfo<Base> >* _atomicsInfo;
     /**
      * A string cache for code generation
      */
@@ -306,7 +305,7 @@ public:
         _sparseJacobianReusesOne(true),
         _sparseHessianReusesRev2(true),
         _jacMode(JacobianADMode::Automatic),
-        _atomicsIndeps(nullptr),
+        _atomicsInfo(nullptr),
         _maxAssignPerFunc(20000),
         _jobTimer(nullptr) {
 
@@ -814,7 +813,7 @@ public:
 
     inline virtual ~ModelCSourceGen() {
         delete _funNoLoops;
-        delete _atomicsIndeps;
+        delete _atomicsInfo;
 
         for (LoopModel<Base>* it : _loopTapes) {
             delete it;
@@ -852,7 +851,7 @@ protected:
 
     virtual bool isAtomicsUsed();
 
-    virtual const std::map<size_t, std::set<size_t> >& getAtomicsIndeps();
+    virtual const std::map<size_t, AtomicUseInfo<Base> >& getAtomicsInfo();
 
     /***********************************************************************
      * zero order (the original model)

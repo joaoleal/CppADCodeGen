@@ -233,17 +233,17 @@ bool ModelCSourceGen<Base>::isAtomicsUsed() {
     if (_zeroEvaluated) {
         return _atomicFunctions.size() > 0;
     } else {
-        return !getAtomicsIndeps().empty();
+        return !getAtomicsInfo().empty();
     }
 }
 
 template<class Base>
-const std::map<size_t, std::set<size_t> >& ModelCSourceGen<Base>::getAtomicsIndeps() {
-    if (_atomicsIndeps == nullptr) {
+const std::map<size_t, AtomicUseInfo<Base> >& ModelCSourceGen<Base>::getAtomicsInfo() {
+    if (_atomicsInfo == nullptr) {
         AtomicDependencyLocator<Base> adl(_fun);
-        _atomicsIndeps = new std::map<size_t, std::set<size_t> >(adl.findAtomicsUsage());
+        _atomicsInfo = new std::map<size_t, AtomicUseInfo<Base> >(adl.findAtomicsUsage());
     }
-    return *_atomicsIndeps;
+    return *_atomicsInfo;
 }
 
 template<class Base>
@@ -580,17 +580,17 @@ inline std::vector<std::set<size_t> > ModelCSourceGen<Base>::determineOrderByCol
                                                                                  const std::vector<size_t>& colElements,
                                                                                  const std::vector<size_t>& userRows,
                                                                                  const std::vector<size_t>& userCols) {
-        std::vector<std::set<size_t> > userLocationCol(colElements.size());
+    std::vector<std::set<size_t> > userLocationCol(colElements.size());
 
-        for (size_t er = 0; er < colElements.size(); er++) {
-            size_t row = colElements[er];
-            for (size_t e = 0; e < userRows.size(); e++) {
-                if (userRows[e] == row && userCols[e] == col) {
-                    userLocationCol[er].insert(e);
-                    break;
-                }
+    for (size_t er = 0; er < colElements.size(); er++) {
+        size_t row = colElements[er];
+        for (size_t e = 0; e < userRows.size(); e++) {
+            if (userRows[e] == row && userCols[e] == col) {
+                userLocationCol[er].insert(e);
+                break;
             }
         }
+    }
 
     return userLocationCol;
 }
