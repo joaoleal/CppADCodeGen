@@ -217,7 +217,7 @@ void ModelCSourceGen<Base>::generateAtomicFuncNames() {
     _cache << "void " << funcName << "(const char*** names, unsigned long* n) {\n"
             "   static const char* atomic[" << n << "] = {";
     for (size_t i = 0; i < n; i++) {
-        if (i > 0)_cache << ", ";
+        if (i > 0) _cache << ", ";
         _cache << "\"" << _atomicFunctions[i] << "\"";
     }
     _cache << "};\n"
@@ -415,10 +415,17 @@ void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& functio
 
     std::ostringstream os;
 
+    std::vector<size_t> nnzs(sparsities.size());
+
+    long long int maxNnzIndex = -1;
+
     for (size_t i = 0; i < sparsities.size(); i++) {
         const std::vector<size_t>& rows = sparsities[i].rows;
         const std::vector<size_t>& cols = sparsities[i].cols;
         CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
+
+        nnzs[i] = rows.size();
+
         if (!rows.empty()) {
             os.str("");
             os << "rows" << i;
@@ -429,28 +436,55 @@ void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& functio
             os << "cols" << i;
             _cache << "   ";
             LanguageC<Base>::printStaticIndexArray(_cache, os.str(), cols);
+
+            maxNnzIndex = i;
         }
     }
 
-    _cache << "   switch(i) {\n";
-    for (size_t i = 0; i < sparsities.size(); i++) {
-        // the size of each sparsity
-        if (!sparsities[i].rows.empty()) {
-            _cache << "   case " << i << ":\n"
-                    "      *row = rows" << i << ";\n"
-                    "      *col = cols" << i << ";\n"
-                    "      *nnz = " << sparsities[i].rows.size() << ";\n"
-                    "      break;\n";
+    maxNnzIndex++;
+    nnzs.resize(maxNnzIndex);
+
+    auto makeArrayOfArrays = [&, this](const std::string& name) {
+        _cache << "   static " << LanguageC<Base>::U_INDEX_TYPE << " const * const " << name << "[" << maxNnzIndex
+               << "] = {";
+        for (size_t i = 0; i < size_t(maxNnzIndex); i++) {
+            if (i > 0) {
+                _cache << ", ";
+            }
+            if (sparsities[i].rows.empty()) {
+                _cache << "0";
+            } else {
+                _cache << name << i;
+            }
         }
+        _cache << "};\n";
+    };
+
+    if (maxNnzIndex > 0) {
+        makeArrayOfArrays("rows");
+        makeArrayOfArrays("cols");
+
+        _cache << "   ";
+        LanguageC<Base>::printStaticIndexArray(_cache, "nnzs", nnzs);
+
+        _cache << "\n";
+
+        _cache << "   if(i < " << maxNnzIndex << ") {\n"
+                "      *row = rows[i];\n"
+                "      *col = cols[i];\n"
+                "      *nnz = nnzs[i];\n"
+                "   } else {\n"
+                "      *row = 0;\n"
+                "      *col = 0;\n"
+                "      *nnz = 0;\n"
+                "   }\n";
+    } else {
+        _cache << "   *row = 0;\n"
+                "   *col = 0;\n"
+                "   *nnz = 0;\n";
     }
 
-    _cache << "   default:\n"
-            "      *row = 0;\n"
-            "      *col = 0;\n"
-            "      *nnz = 0;\n"
-            "   break;\n"
-            "   };\n"
-            "}\n";
+    _cache << "}\n";
 }
 
 template<class Base>
@@ -462,29 +496,61 @@ void ModelCSourceGen<Base>::generateSparsity1DSource2(const std::string& functio
             " unsigned long const** elements,"
             " unsigned long* nnz) {\n";
 
+    std::vector<size_t> nnzs(elements.empty()? 0: elements.rbegin()->first + 1);
+
+    long long int maxNnzIndex = -1;
+
     for (const auto& it : elements) {
         // the size of each sparsity row
         const std::vector<size_t>& els = it.second;
-        _cache << "   ";
-        std::ostringstream os;
-        os << "elements" << it.first;
-        LanguageC<Base>::printStaticIndexArray(_cache, os.str(), els);
+        if (!els.empty()) {
+            _cache << "   ";
+            std::ostringstream os;
+            os << "els" << it.first;
+            LanguageC<Base>::printStaticIndexArray(_cache, os.str(), els);
+
+            maxNnzIndex = it.first;
+            nnzs[it.first] = els.size();
+        }
     }
 
-    _cache << "   switch(pos) {\n";
-    for (const auto& it : elements) {
-        // the size of each sparsity row
-        _cache << "   case " << it.first << ":\n"
-                "      *elements = elements" << it.first << ";\n"
-                "      *nnz = " << it.second.size() << ";\n"
-                "      break;\n";
+    maxNnzIndex++;
+    nnzs.resize(maxNnzIndex);
+
+    if (maxNnzIndex > 0) {
+        _cache << "   static " << LanguageC<Base>::U_INDEX_TYPE << " const * const els[" << maxNnzIndex << "] = {";
+        auto it = elements.begin();
+        for (size_t i = 0; i < size_t(maxNnzIndex); i++) {
+            if (i > 0) {
+                _cache << ", ";
+            }
+            if (it == elements.end() || i != it->first) {
+                _cache << "0";
+            } else {
+                _cache << "els" << i;
+                ++it;
+            }
+        }
+        _cache << "};\n";
+
+        _cache << "   ";
+        LanguageC<Base>::printStaticIndexArray(_cache, "nnzs", nnzs);
+
+        _cache << "\n";
+
+        _cache << "   if(pos < " << maxNnzIndex << ") {\n"
+                "      *elements = els[pos];\n"
+                "      *nnz = nnzs[pos];\n"
+                "   } else {\n"
+                "      *elements = 0;\n"
+                "      *nnz = 0;\n"
+                "   }\n";
+    } else {
+        _cache << "   *elements = 0;\n"
+                "   *nnz = 0;\n";
     }
-    _cache << "   default:\n"
-            "      *elements = 0;\n"
-            "      *nnz = 0;\n"
-            "   break;\n"
-            "   };\n"
-            "}\n";
+
+    _cache << "}\n";
 }
 
 template<class Base>
