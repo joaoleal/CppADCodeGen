@@ -879,7 +879,7 @@ std::map<size_t, std::map<size_t, CG<Base> > > ModelCSourceGen<Base>::generateLo
     } else {
         //transpose
         std::vector<set<size_t> > evalSparsityT(n);
-        transposePattern(evalSparsity, evalSparsityT);
+        addTransMatrixSparsity(evalSparsity, evalSparsityT);
 
         std::vector<CGBase> dx(n);
 

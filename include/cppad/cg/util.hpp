@@ -68,29 +68,70 @@ inline VectorSet transposePattern(const VectorSet& pattern,
     return transpose;
 }
 
+/**
+ * Computes the resulting sparsity from adding a transpose of a matrix
+ * to another matrix:
+ * R += A^T
+ *
+ * @param a The matrix to be added to the result
+ * @param mRows number of rows of A to use
+ * @param result the resulting sparsity matrix
+ */
 template<class VectorSet, class VectorSet2>
-inline void transposePattern(const VectorSet& pattern,
-                             size_t mRows,
-                             VectorSet2& transpose) {
-    CPPADCG_ASSERT_UNKNOWN(pattern.size() >= mRows);
+inline void addTransMatrixSparsity(const VectorSet& a,
+                                   size_t mRows,
+                                   VectorSet2& result) {
+    CPPADCG_ASSERT_UNKNOWN(a.size() >= mRows);
 
     for (size_t i = 0; i < mRows; i++) {
-        for (size_t it : pattern[i]) {
-            transpose[it].insert(i);
+        for (size_t j : a[i]) {
+            result[j].insert(i);
         }
     }
 }
 
+/**
+ * Computes the resulting sparsity from adding a transpose of a matrix
+ * to another matrix:
+ * R += A^T
+ *
+ * @param a The matrix to be added to the result
+ * @param result the resulting sparsity matrix
+ */
 template<class VectorSet, class VectorSet2>
-inline void transposePattern(const VectorSet& pattern,
-                             VectorSet2& transpose) {
-    transposePattern<VectorSet, VectorSet2>(pattern, pattern.size(), transpose);
+inline void addTransMatrixSparsity(const VectorSet& a,
+                                   VectorSet2& result) {
+    addTransMatrixSparsity<VectorSet, VectorSet2>(a, a.size(), result);
 }
 
 /**
  * Computes the resulting sparsity from adding one matrix to another:
  * R += A
  * 
+ * @param a The matrix to be added to the result
+ * @param mRows number of rows of A to use
+ * @param result the resulting sparsity matrix
+ */
+template<class VectorSet, class VectorSet2>
+inline void addMatrixSparsity(const VectorSet& a,
+                              size_t mRows,
+                              VectorSet2& result) {
+    CPPADCG_ASSERT_UNKNOWN(result.size() >= mRows);
+    CPPADCG_ASSERT_UNKNOWN(a.size() <= mRows);
+
+    for (size_t i = 0; i < mRows; i++) {
+        if (result[i].empty()) {
+            result[i] = a[i];
+        } else {
+            result[i].insert(a[i].begin(), a[i].end());
+        }
+    }
+}
+
+/**
+ * Computes the resulting sparsity from adding one matrix to another:
+ * R += A
+ *
  * @param a The matrix to be added to the result
  * @param result the resulting sparsity matrix
  */
@@ -99,9 +140,7 @@ inline void addMatrixSparsity(const VectorSet& a,
                               VectorSet2& result) {
     CPPADCG_ASSERT_UNKNOWN(result.size() == a.size());
 
-    for (size_t i = 0; i < a.size(); i++) {
-        result[i].insert(a[i].begin(), a[i].end());
-    }
+    addMatrixSparsity<VectorSet, VectorSet2>(a, a.size(), result);
 }
 
 /**
@@ -148,9 +187,7 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
     //check if b is identity
     if (n == q) {
         if (isIdentityPattern(b, n)) {
-            for (size_t i = 0; i < m; i++) {
-                result[i] = a[i];
-            }
+            addMatrixSparsity(a, m, result); // R += A
             return;
         }
     }
@@ -206,20 +243,18 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
         }
     }
     if (empty) {
-        return; //nothing to do
+        return; //nothing to do: R += 0
     }
 
     //check if A is identity
     if (m == n && isIdentityPattern(a, m)) {
-        for (size_t i = 0; i < n; i++) {
-            result[i] = b[i];
-        }
+        addMatrixSparsity(b, n, result); // R += B
         return;
     }
 
     //check if B is identity
     if (m == q && isIdentityPattern(b, m)) {
-        transposePattern(a, m, result);
+        addTransMatrixSparsity(a, m, result); // R += A^T
         return;
     }
 
@@ -276,12 +311,12 @@ inline void multMatrixMatrixSparsityTrans(const VectorSet& aT,
         }
     }
     if (empty) {
-        return; //nothing to do
+        return; //nothing to do:  R^T += 0
     }
 
     //check if a is identity
     if (m == q && isIdentityPattern(aT, m)) {
-        transposePattern(b, m, rT);
+        addTransMatrixSparsity(b, m, rT); // R^T += B^T
         return;
     }
 

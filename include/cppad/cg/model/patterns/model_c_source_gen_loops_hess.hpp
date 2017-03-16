@@ -1163,7 +1163,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
 
         //transpose
         std::vector<set<size_t> > jacEvalSparsityT(n);
-        transposePattern(jacEvalSparsity, jacEvalSparsityT);
+        addTransMatrixSparsity(jacEvalSparsity, jacEvalSparsityT);
 
         std::vector<CGB> tx1v(n);
 
