@@ -30,17 +30,17 @@ public:
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
-        std::vector<ADCGD> Z(m);
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+        std::vector<ADCGD> y(m);
 #ifdef MODEL1
-        Z[0] = cos(u[0]);
-        Z[1] = u[1] * u[2] + sin(u[0]);
-        Z[2] = u[2] * u[2] + sin(u[1]);
-        Z[3] = u[0] / u[2] + u[1] * u[2] + 5.0;
+        y[0] = cos(x[0]);
+        y[1] = x[1] * x[2] + sin(x[0]);
+        y[2] = x[2] * x[2] + sin(x[1]);
+        y[3] = x[0] / x[2] + x[1] * x[2] + 5.0;
 #else
-        Z[0] = 1.0 / u[0];
+        y[0] = 1.0 / x[0];
 #endif
-        return Z;
+        return y;
     }
 
 };
@@ -73,4 +73,6 @@ TEST_F(CppADCGDynamicAtomicModel1Test, DynamicForRev) {
 #endif
 
     this->testADFunAtomicLib(x);
+    
+    this->testAtomicSparsities(x);
 }

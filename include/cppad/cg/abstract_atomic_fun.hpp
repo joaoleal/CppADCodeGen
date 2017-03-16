@@ -29,7 +29,15 @@ public:
     typedef CppAD::cg::CG<Base> CGB;
     typedef Argument<Base> Arg;
 protected:
+    /**
+     * A unique identifier for this atomic function type
+     */
     const size_t id_;
+    /**
+     * Whether or not forward and reverse function calls do not require the
+     * Taylor coefficients for the dependent variables (ty) and any previous
+     * evaluation of other forward/reverse modes.
+     */
     bool standAlone_;
 
 protected:
@@ -71,6 +79,15 @@ public:
      */
     inline size_t getId() const {
         return id_;
+    }
+
+    /**
+     * Whether or not forward and reverse function calls do not require the
+     * Taylor coefficients for the dependent variables (ty) and any previous
+     * evaluation of other forward/reverse modes.
+     */
+    inline bool isStandAlone() const {
+        return standAlone_;
     }
 
     virtual bool forward(size_t q,
@@ -396,6 +413,79 @@ public:
         }
 
         return true;
+    }
+
+    inline virtual CppAD::vector<std::set<size_t>> jacobianForwardSparsitySet(size_t m,
+                                                                              const CppAD::vector<CGB>& x) {
+        size_t n = x.size();
+
+        CppAD::vector<std::set<size_t>> r(n); // identity matrix
+        for (size_t i = 0; i < n; i++)
+            r[i].insert(i);
+
+        CppAD::vector<std::set<size_t> > s(m);
+        bool good = this->for_sparse_jac(n, r, s, x);
+        if (!good)
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+
+        return s;
+    }
+
+    inline virtual CppAD::vector<std::set<size_t>> jacobianReverseSparsitySet(size_t m,
+                                                                              const CppAD::vector<CGB>& x) {
+        size_t n = x.size();
+
+        CppAD::vector<std::set<size_t> > rt(m);  // identity matrix
+        for (size_t i = 0; i < m; i++)
+            rt[i].insert(i);
+
+        CppAD::vector<std::set<size_t> > st(n);
+        bool good = this->rev_sparse_jac(m, rt, st, x);
+        if (!good)
+            throw CGException("Failed to compute jacobian sparsity pattern for atomic function '", this->afun_name(), "'");
+
+        CppAD::vector<std::set<size_t>> s = transposePattern(st, n, m);
+
+        return s;
+    }
+
+    inline virtual CppAD::vector<std::set<size_t>> hessianSparsitySet(size_t m,
+                                                                      const CppAD::vector<CGB>& x) {
+        CppAD::vector<bool> s(m);
+        for (size_t i = 0; i < m; ++i)
+            s[i] = true;
+
+        return hessianSparsitySet(s, x);
+    }
+
+    inline virtual CppAD::vector<std::set<size_t>> hessianSparsitySet(const CppAD::vector<bool>& s,
+                                                                      const CppAD::vector<CGB>& x) {
+        size_t n = x.size();
+        size_t m = s.size();
+
+        /**
+         * Determine the sparsity pattern p for Hessian of w^T F
+         */
+        CppAD::vector<std::set<size_t>> r(n); // identity matrix
+        for (size_t j = 0; j < n; j++)
+            r[j].insert(j);
+
+        CppAD::vector<bool> vx(n); // which x's are variables
+        for (size_t i = 0; i < n; ++i)
+            vx[i] = true;
+
+        CppAD::vector<bool> t(n);
+        for (size_t i = 0; i < n; ++i)
+            t[i] = false;
+
+        const CppAD::vector<std::set<size_t> > u(m); // empty
+        CppAD::vector<std::set<size_t> > v(n);
+
+        bool good = this->rev_sparse_hes(vx, s, t, n, r, u, v, x);
+        if (!good)
+            throw CGException("Failed to compute Hessian sparsity pattern for atomic function '", this->afun_name(), "'");
+
+        return v;
     }
 
     /**
