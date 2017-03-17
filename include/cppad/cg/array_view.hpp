@@ -73,7 +73,8 @@ public:
 
     /**
      * Creates a wrapper from a vector.
-     * It is expected that the vector is not resized while using this wrapper.
+     * It is expected that the vector is not resized nor deleted while using
+     * this wrapper.
      *
      * @param vector the vector to wrap
      */
@@ -84,13 +85,37 @@ public:
 
     /**
      * Creates a wrapper from a vector.
-     * It is expected that the vector is not resized while using this wrapper.
+     * It is expected that the vector is not resized nor deleted while using
+     * this wrapper.
      *
      * @param vector the vector to wrap
      */
     inline ArrayView(CppAD::vector<value_type>& vector) :
             _data(vector.data()),
             _length(vector.size()) {
+    }
+
+    /**
+     * Creates a wrapper from an std::array.
+     * It is expected that std::array is not deleted while using this wrapper.
+     *
+     * @param array the std::array to wrap
+     */
+    template<std::size_t S>
+    inline ArrayView(std::array<value_type, S>& array) :
+            _data(array.data()),
+            _length(S) {
+    }
+
+    /**
+     * Creates a wrapper from an std::valarray.
+     * It is expected that std::valarray is not deleted while using this wrapper.
+     *
+     * @param array the valarray to wrap
+     */
+    inline ArrayView(std::valarray<value_type>& array) :
+            _data(array.size() > 0 ? &array[0] : nullptr),
+            _length(array.size()) {
     }
 
     /**
@@ -108,7 +133,8 @@ public:
 
     /**
      * Creates a wrapper from a vector with a non-const datd type.
-     * It is expected that the vector is not resized while using this wrapper.
+     * It is expected that the vector is not resized nor deleted while using
+     * this wrapper.
      *
      * @param vector the vector to wrap with a non-const data type
      */
@@ -121,7 +147,8 @@ public:
 
     /**
      * Creates a wrapper from a vector with a non-const data type.
-     * It is expected that the vector is not resized while using this wrapper.
+     * It is expected that the vector is not resized nor deleted while using
+     * this wrapper.
      *
      * @param vector the vector to wrap with a non-const data type
      */
@@ -130,6 +157,32 @@ public:
                      typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
             _data(vector.data()),
             _length(vector.size()) {
+    }
+
+    /**
+     * Creates a wrapper from a std::array with a non-const data type.
+     * It is expected that std::array is not deleted while using this wrapper.
+     *
+     * @param array the std::array to wrap with a non-const data type
+     */
+    template<std::size_t S, class TT = Type>
+    inline ArrayView(const std::array<typename std::remove_const<value_type>::type, S>& array,
+                     typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(array.data()),
+            _length(S) {
+    }
+
+    /**
+     * Creates a wrapper from an std::valarray with a non-const data type.
+     * It is expected that std::valarray is not deleted while using this wrapper.
+     *
+     * @param array the valarray to wrap with a non-const data type
+     */
+    template<class TT = Type>
+    inline ArrayView(const std::valarray<typename std::remove_const<value_type>::type>& array,
+                     typename std::enable_if<std::is_const<TT>::value>::type* = 0) :
+            _data(array.size() > 0 ? &array[0] : nullptr),
+            _length(array.size()) {
     }
 
     /**
