@@ -93,6 +93,12 @@ public:
     FunctorGenericModel(const FunctorGenericModel&) = delete;
     FunctorGenericModel& operator=(const FunctorGenericModel&) = delete;
 
+    virtual ~FunctorGenericModel() {
+        for (size_t i = 0; i < _atomic.size(); i++) {
+            delete _atomic[i];
+        }
+    }
+
     virtual const std::string& getName() const override {
         return _name;
     }
@@ -286,39 +292,39 @@ public:
     }
 
     /// calculate the dependent values (zero order)
-    virtual void ForwardZero(const Base* x, size_t x_size, Base* dep, size_t dep_size) override {
+    virtual void ForwardZero(ArrayView<const Base> x,
+                             ArrayView<Base> dep) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(dep.size() == _m, "Invalid dependent array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-
-        _in[0] = x;
-        _out[0] = dep;
+        _in[0] = x.data();
+        _out[0] = dep.data();
 
         (*_zero)(&_in[0], &_out[0], _atomicFuncArg);
     }
 
     virtual void ForwardZero(const std::vector<const Base*> &x,
-                             Base* dep, size_t dep_size) override {
+                             ArrayView<Base> dep) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
-        CPPADCG_ASSERT_KNOWN(dep_size == _m, "Invalid dependent array size");
+        CPPADCG_ASSERT_KNOWN(dep.size() == _m, "Invalid dependent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        _out[0] = dep;
+        _out[0] = dep.data();
 
         (*_zero)(&x[0], &_out[0], _atomicFuncArg);
     }
 
     virtual void ForwardZero(const CppAD::vector<bool>& vx,
                              CppAD::vector<bool>& vy,
-                             const CppAD::vector<Base> &tx,
-                             CppAD::vector<Base>& ty) override {
+                             ArrayView<const Base> tx,
+                             ArrayView<Base> ty) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
@@ -327,8 +333,8 @@ public:
         CPPADCG_ASSERT_KNOWN(ty.size() == _m, "Invalid dependent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        _in[0] = &tx[0];
-        _out[0] = &ty[0];
+        _in[0] = tx.data();
+        _out[0] = ty.data();
 
         (*_zero)(&_in[0], &_out[0], _atomicFuncArg);
 
@@ -352,19 +358,19 @@ public:
     }
 
     /// calculate entire Jacobian
-    virtual void Jacobian(const Base* x, size_t x_size,
-                          Base* jac, size_t jac_size) override {
+    virtual void Jacobian(ArrayView<const Base> x,
+                          ArrayView<Base> jac) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_jacobian != nullptr, "No Jacobian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-        CPPADCG_ASSERT_KNOWN(jac_size == _m * _n, "Invalid Jacobian array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(jac.size() == _m * _n, "Invalid Jacobian array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
 
-        _in[0] = x;
-        _out[0] = jac;
+        _in[0] = x.data();
+        _out[0] = jac.data();
 
         (*_jacobian)(&_in[0], &_out[0], _atomicFuncArg);
     }
@@ -374,20 +380,21 @@ public:
     }
 
     /// calculate Hessian for one component of f
-    virtual void Hessian(const Base* x, size_t x_size,
-                         const Base* w, size_t w_size,
-                         Base* hess) override {
+    virtual void Hessian(ArrayView<const Base> x,
+                         ArrayView<const Base> w,
+                         ArrayView<Base> hess) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_hessian != nullptr, "No Hessian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-        CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
+        CPPADCG_ASSERT_KNOWN(hess.size() == _n * _n, "Invalid Hessian size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        _inHess[0] = x;
-        _inHess[1] = w;
-        _out[0] = hess;
+        _inHess[0] = x.data();
+        _inHess[1] = w.data();
+        _out[0] = hess.data();
 
         (*_hessian)(&_inHess[0], &_out[0], _atomicFuncArg);
     }
@@ -396,17 +403,17 @@ public:
         return _forwardOne != nullptr;
     }
 
-    virtual void ForwardOne(const Base tx[], size_t tx_size,
-                            Base ty[], size_t ty_size) override {
+    virtual void ForwardOne(ArrayView<const Base> tx,
+                            ArrayView<Base> ty) override {
         const size_t k = 1;
 
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_forwardOne != nullptr, "No forward one function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(tx_size >= (k + 1) * _n, "Invalid tx size");
-        CPPADCG_ASSERT_KNOWN(ty_size >= (k + 1) * _m, "Invalid ty size");
+        CPPADCG_ASSERT_KNOWN(tx.size() >= (k + 1) * _n, "Invalid tx size");
+        CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_forwardOne)(tx, ty, _atomicFuncArg);
+        int ret = (*_forwardOne)(tx.data(), ty.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
     }
@@ -415,28 +422,27 @@ public:
         return _forwardOneSparsity != nullptr && _sparseForwardOne != nullptr;
     }
 
-    virtual void ForwardOne(const Base x[], size_t x_size,
+    virtual void ForwardOne(ArrayView<const Base> x,
                             size_t tx1Nnz, const size_t idx[], const Base tx1[],
-                            Base ty1[], size_t ty1_size) override {
+                            ArrayView<Base> ty1) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseForwardOne != nullptr, "No sparse forward one function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_forwardOneSparsity != nullptr, "No forward one sparsity function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
-        CPPADCG_ASSERT_KNOWN(ty1_size >= _m, "Invalid ty1 size");
+        CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size");
+        CPPADCG_ASSERT_KNOWN(ty1.size() >= _m, "Invalid ty1 size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        std::fill(ty1, ty1 + _m, Base(0));
+        std::fill(ty1.data(), ty1.data() + _m, Base(0));
         if (tx1Nnz == 0)
             return; //nothing to do
 
         unsigned long const* pos;
         size_t nnz = 0;
 
-        if (_ty.size() < _m)
-            _ty.resize(_m);
+        _ty.resize(_m);
         Base* compressed = &_ty[0];
 
-        _inHess[0] = x;
+        _inHess[0] = x.data();
         _out[0] = compressed;
 
         for (size_t ej = 0; ej < tx1Nnz; ej++) {
@@ -456,22 +462,22 @@ public:
         return _reverseOne != nullptr;
     }
 
-    virtual void ReverseOne(const Base tx[], size_t tx_size,
-                            const Base ty[], size_t ty_size,
-                            Base px[], size_t px_size,
-                            const Base py[], size_t py_size) override {
+    virtual void ReverseOne(ArrayView<const Base> tx,
+                            ArrayView<const Base> ty,
+                            ArrayView<Base> px,
+                            ArrayView<const Base> py) override {
         const size_t k = 0;
         const size_t k1 = k + 1;
 
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_reverseOne != nullptr, "No reverse one function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(tx_size >= k1 * _n, "Invalid tx size");
-        CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
-        CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
-        CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
+        CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
+        CPPADCG_ASSERT_KNOWN(ty.size() >= k1 * _m, "Invalid ty size");
+        CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
+        CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_reverseOne)(tx, ty, px, py, _atomicFuncArg);
+        int ret = (*_reverseOne)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
     }
@@ -480,28 +486,27 @@ public:
         return _reverseOneSparsity != nullptr && _sparseReverseOne != nullptr;
     }
 
-    virtual void ReverseOne(const Base x[], size_t x_size,
-                            Base px[], size_t px_size,
+    virtual void ReverseOne(ArrayView<const Base> x,
+                            ArrayView<Base> px,
                             size_t pyNnz, const size_t idx[], const Base py[]) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseReverseOne != nullptr, "No sparse reverse one function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_reverseOneSparsity != nullptr, "No reverse one sparsity function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
-        CPPADCG_ASSERT_KNOWN(px_size >= _n, "Invalid px size");
+        CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size");
+        CPPADCG_ASSERT_KNOWN(px.size() >= _n, "Invalid px size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        std::fill(px, px + _n, Base(0));
+        std::fill(px.data(), px.data() + _n, Base(0));
         if (pyNnz == 0)
             return; //nothing to do
 
         unsigned long const* pos;
         size_t nnz = 0;
 
-        if (_px.size() < _n)
-            _px.resize(_n);
+        _px.resize(_n);
         Base* compressed = &_px[0];
 
-        _inHess[0] = x;
+        _inHess[0] = x.data();
         _out[0] = compressed;
 
         for (size_t ei = 0; ei < pyNnz; ei++) {
@@ -521,23 +526,23 @@ public:
         return _reverseTwo != nullptr;
     }
 
-    virtual void ReverseTwo(const Base tx[], size_t tx_size,
-                            const Base ty[], size_t ty_size,
-                            Base px[], size_t px_size,
-                            const Base py[], size_t py_size) override {
+    virtual void ReverseTwo(ArrayView<const Base> tx,
+                            ArrayView<const Base> ty,
+                            ArrayView<Base> px,
+                            ArrayView<const Base> py) override {
         const size_t k = 1;
         const size_t k1 = k + 1;
 
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_reverseTwo != nullptr, "No sparse reverse two function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
-        CPPADCG_ASSERT_KNOWN(tx_size >= k1 * _n, "Invalid tx size");
-        CPPADCG_ASSERT_KNOWN(ty_size >= k1 * _m, "Invalid ty size");
-        CPPADCG_ASSERT_KNOWN(px_size >= k1 * _n, "Invalid px size");
-        CPPADCG_ASSERT_KNOWN(py_size >= k1 * _m, "Invalid py size");
+        CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
+        CPPADCG_ASSERT_KNOWN(ty.size() >= k1 * _m, "Invalid ty size");
+        CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
+        CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_reverseTwo)(tx, ty, px, py, _atomicFuncArg);
+        int ret = (*_reverseTwo)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
         CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
@@ -547,32 +552,31 @@ public:
         return _sparseReverseTwo != nullptr;
     }
 
-    virtual void ReverseTwo(const Base x[], size_t x_size,
+    virtual void ReverseTwo(ArrayView<const Base> x,
                             size_t tx1Nnz, const size_t idx[], const Base tx1[],
-                            Base px2[], size_t px2_size,
-                            const Base py2[], size_t py2_size) override {
+                            ArrayView<Base> px2,
+                            ArrayView<const Base> py2) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseReverseTwo != nullptr, "No sparse reverse two function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_reverseTwoSparsity != nullptr, "No reverse two sparsity function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(x_size >= _n, "Invalid x size");
-        CPPADCG_ASSERT_KNOWN(px2_size >= _n, "Invalid px2 size");
-        CPPADCG_ASSERT_KNOWN(py2_size >= _m, "Invalid py2 size");
+        CPPADCG_ASSERT_KNOWN(x.size() >= _n, "Invalid x size");
+        CPPADCG_ASSERT_KNOWN(px2.size() >= _n, "Invalid px2 size");
+        CPPADCG_ASSERT_KNOWN(py2.size() >= _m, "Invalid py2 size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        std::fill(px2, px2 + _n, Base(0));
+        std::fill(px2.data(), px2.data() + _n, Base(0));
         if (tx1Nnz == 0)
             return; //nothing to do
 
         unsigned long const* pos;
         size_t nnz = 0;
 
-        if (_px.size() < _n)
-            _px.resize(_n);
+        _px.resize(_n);
         Base* compressed = &_px[0];
 
         const Base * in[3];
-        in[0] = x;
-        in[2] = py2;
+        in[0] = x.data();
+        in[2] = py2.data();
         _out[0] = compressed;
 
         for (size_t ej = 0; ej < tx1Nnz; ej++) {
@@ -594,13 +598,14 @@ public:
 
     /// calculate sparse Jacobians
 
-    virtual void SparseJacobian(const Base* x, size_t x_size,
-                                Base* jac, size_t jac_size) override {
+    virtual void SparseJacobian(ArrayView<const Base> x,
+                                ArrayView<Base> jac) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse jacobian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(jac.size() == _m * _n, "Invalid Jacobian size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
         unsigned long const* row;
@@ -611,7 +616,7 @@ public:
         CppAD::vector<Base> compressed(nnz);
 
         if (nnz > 0) {
-            _in[0] = x;
+            _in[0] = x.data();
             _out[0] = &compressed[0];
 
             (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
@@ -621,7 +626,7 @@ public:
                               _m, _n,
                               row, col,
                               nnz,
-                              jac, jac_size);
+                              jac);
     }
 
     virtual void SparseJacobian(const std::vector<Base> &x,
@@ -653,39 +658,37 @@ public:
         }
     }
 
-    virtual void SparseJacobian(const Base* x, size_t x_size,
-                                Base* jac,
+    virtual void SparseJacobian(ArrayView<const Base> x,
+                                ArrayView<Base> jac,
                                 size_t const** row,
-                                size_t const** col,
-                                size_t nnz) override {
+                                size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
         unsigned long const* drow;
         unsigned long const* dcol;
-        unsigned long K;
-        (*_jacobianSparsity)(&drow, &dcol, &K);
-        CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Jacobian");
+        unsigned long nnz;
+        (*_jacobianSparsity)(&drow, &dcol, &nnz);
+        CPPADCG_ASSERT_KNOWN(nnz == jac.size(), "Invalid number of non-zero elements in Jacobian");
         *row = drow;
         *col = dcol;
 
         if (nnz > 0) {
-            _in[0] = x;
-            _out[0] = jac;
+            _in[0] = x.data();
+            _out[0] = jac.data();
 
             (*_sparseJacobian)(&_in[0], &_out[0], _atomicFuncArg);
         }
     }
 
     virtual void SparseJacobian(const std::vector<const Base*>& x,
-                                Base* jac,
+                                ArrayView<Base> jac,
                                 size_t const** row,
-                                size_t const** col,
-                                size_t nnz) override {
+                                size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
@@ -693,14 +696,14 @@ public:
 
         unsigned long const* drow;
         unsigned long const* dcol;
-        unsigned long K;
-        (*_jacobianSparsity)(&drow, &dcol, &K);
-        CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Jacobian");
+        unsigned long nnz;
+        (*_jacobianSparsity)(&drow, &dcol, &nnz);
+        CPPADCG_ASSERT_KNOWN(nnz == jac.size(), "Invalid number of non-zero elements in Jacobian");
         *row = drow;
         *col = dcol;
 
         if (nnz > 0) {
-            _out[0] = jac;
+            _out[0] = jac.data();
 
             (*_sparseJacobian)(&x[0], &_out[0], _atomicFuncArg);
         }
@@ -712,13 +715,14 @@ public:
 
     /// calculate sparse Hessians 
 
-    virtual void SparseHessian(const Base* x, size_t x_size,
-                               const Base* w, size_t w_size,
-                               Base* hess, size_t hess_size) override {
+    virtual void SparseHessian(ArrayView<const Base> x,
+                               ArrayView<const Base> w,
+                               ArrayView<Base> hess) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-        CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
+        // CPPADCG_ASSERT_KNOWN(hess.size() == _n * _n, "Invalid Hessian size");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
@@ -729,8 +733,8 @@ public:
 
         CppAD::vector<Base> compressed(nnz);
         if (nnz > 0) {
-            _inHess[0] = x;
-            _inHess[1] = w;
+            _inHess[0] = x.data();
+            _inHess[1] = w.data();
             _out[0] = &compressed[0];
 
             (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
@@ -740,7 +744,7 @@ public:
                               _n, _n,
                               row, col,
                               nnz,
-                              hess, hess_size);
+                              hess);
     }
 
     virtual void SparseHessian(const std::vector<Base> &x,
@@ -776,67 +780,59 @@ public:
         }
     }
 
-    virtual void SparseHessian(const Base* x, size_t x_size,
-                               const Base* w, size_t w_size,
-                               Base* hess,
+    virtual void SparseHessian(ArrayView<const Base> x,
+                               ArrayView<const Base> w,
+                               ArrayView<Base> hess,
                                size_t const** row,
-                               size_t const** col,
-                               size_t nnz) override {
+                               size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
                              " please use the variable size methods");
-        CPPADCG_ASSERT_KNOWN(x_size == _n, "Invalid independent array size");
-        CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+        CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
         unsigned long const* drow, *dcol;
-        unsigned long K;
-        (*_hessianSparsity)(&drow, &dcol, &K);
-        CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Hessian");
+        unsigned long nnz;
+        (*_hessianSparsity)(&drow, &dcol, &nnz);
+        CPPADCG_ASSERT_KNOWN(nnz == hess.size(), "Invalid number of non-zero elements in Hessian");
         *row = drow;
         *col = dcol;
 
         if (nnz > 0) {
-            _inHess[0] = x;
-            _inHess[1] = w;
-            _out[0] = hess;
+            _inHess[0] = x.data();
+            _inHess[1] = w.data();
+            _out[0] = hess.data();
 
             (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
         }
     }
 
     virtual void SparseHessian(const std::vector<const Base*>& x,
-                               const Base* w, size_t w_size,
-                               Base* hess,
+                               ArrayView<const Base> w,
+                               ArrayView<Base> hess,
                                size_t const** row,
-                               size_t const** col,
-                               size_t nnz) override {
+                               size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
-        CPPADCG_ASSERT_KNOWN(w_size == _m, "Invalid multiplier array size");
+        CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
         unsigned long const* drow, *dcol;
-        unsigned long K;
-        (*_hessianSparsity)(&drow, &dcol, &K);
-        CPPADCG_ASSERT_KNOWN(K == nnz, "Invalid number of non-zero elements in Hessian");
+        unsigned long nnz;
+        (*_hessianSparsity)(&drow, &dcol, &nnz);
+        CPPADCG_ASSERT_KNOWN(nnz == hess.size(), "Invalid number of non-zero elements in Hessian");
         *row = drow;
         *col = dcol;
 
         if (nnz > 0) {
             std::copy(x.begin(), x.end(), _inHess.begin());
-            _inHess.back() = w; // the index might not be 1
-            _out[0] = hess;
+            _inHess.back() = w.data(); // the index might not be 1
+            _out[0] = hess.data();
 
             (*_sparseHessian)(&_inHess[0], &_out[0], _atomicFuncArg);
-        }
-    }
-
-    virtual ~FunctorGenericModel() {
-        for (size_t i = 0; i < _atomic.size(); i++) {
-            delete _atomic[i];
         }
     }
 
@@ -997,9 +993,9 @@ protected:
                                       unsigned long nrows, unsigned long ncols,
                                       unsigned long const* rows, unsigned long const* cols,
                                       unsigned long nnz,
-                                      Base* mat, size_t mat_size) const {
-        CPPADCG_ASSERT_KNOWN(mat_size == nrows * ncols, "Invalid matrix size");
-        std::fill(mat, mat + mat_size, 0);
+                                      ArrayView<Base> mat) const {
+        CPPADCG_ASSERT_KNOWN(mat.size() == nrows * ncols, "Invalid matrix size");
+        mat.fill(Base(0));
 
         for (size_t i = 0; i < nnz; i++) {
             mat[rows[i] * ncols + cols[i]] = compressed[i];

@@ -395,14 +395,14 @@ private:
 
         std::vector<double> jacOuter(jacOuterRows.size());
         size_t const* rows, *cols;
-        modelLibOuter->SparseJacobian(&xOuter[0], xOuter.size(), &jacOuter[0], &rows, &cols, jacOuter.size());
+        modelLibOuter->SparseJacobian(xOuter, jacOuter, &rows, &cols);
 
         ASSERT_TRUE(compareValues(jacOuter, jacOrig, epsilonR, epsilonA));
 
         /**
          * Hessian sparsity
          */
-        const std::vector<bool> hessSparsityOrig = hessianSparsity < std::vector<bool>, CGD > (*_fun2);
+        const std::vector<bool> hessSparsityOrig = hessianSparsity<std::vector<bool>, CGD> (*_fun2);
 
         /**
          * Sparse Hessian
@@ -421,8 +421,8 @@ private:
                              hessOuterRows, hessOuterCols, hessOrig, hessWork);
 
         vector<double> hessOuter(hessOuterRows.size());
-        modelLibOuter->SparseHessian(&xOuter[0], xOuter.size(), &w[0], w.size(),
-                                     &hessOuter[0], &rows, &cols, hessOuter.size());
+        modelLibOuter->SparseHessian(xOuter, w,
+                                     hessOuter, &rows, &cols);
 
         ASSERT_TRUE(compareValues(hessOuter, hessOrig, epsilonR, epsilonA));
     }
