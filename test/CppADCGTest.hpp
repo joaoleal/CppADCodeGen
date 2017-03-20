@@ -70,33 +70,39 @@ protected:
         return ::testing::AssertionSuccess();
     }
 
-    template<class T>
+    template<class T, class T2>
     static inline ::testing::AssertionResult compareValues(const std::vector<T>& cgen,
-                                                           const std::vector<T>& orig,
+                                                           const std::vector<T2>& orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-        return compareValues<std::vector<T>, std::vector<T>, T>(cgen, orig, epsilonR, epsilonA);
+        return compareValues(ArrayView<const T>(cgen),
+                             ArrayView<const T2>(orig),
+                             epsilonR, epsilonA);
     }
 
-    template<class T>
+    template<class T, class T2>
     static inline ::testing::AssertionResult compareValues(const CppAD::vector<T>& cgen,
-                                                           const CppAD::vector<T>& orig,
+                                                           const CppAD::vector<T2>& orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-        return compareValues<CppAD::vector<T>, CppAD::vector<T>, T>(cgen, orig, epsilonR, epsilonA);
+        return compareValues(ArrayView<const T>(cgen),
+                             ArrayView<const T2>(orig),
+                             epsilonR, epsilonA);
     }
 
-    template<class T>
+    template<class T, class T2>
     static inline ::testing::AssertionResult compareValues(const std::valarray<T>& cgen,
-                                                           const std::valarray<T>& orig,
+                                                           const std::valarray<T2>& orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-        return compareValues<std::valarray<T>, std::valarray<T>, T>(cgen, orig, epsilonR, epsilonA);
+        return compareValues(ArrayView<const T>(cgen),
+                             ArrayView<const T2>(orig),
+                             epsilonR, epsilonA);
     }
 
-    template<class VectorT, class VectorT2, class T>
-    static inline ::testing::AssertionResult compareValues(const VectorT& cgen,
-                                                           const VectorT2& orig,
+    template<class T, class T2>
+    static inline ::testing::AssertionResult compareValues(ArrayView<const T> cgen,
+                                                           ArrayView<const T2> orig,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
         std::ostringstream ss;
@@ -113,24 +119,39 @@ protected:
             return ::testing::AssertionFailure() << ss.str();
     }
 
-    template<class VectorBase, class T>
-    static inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
+    template<class T>
+    static inline ::testing::AssertionResult compareValues(const CppAD::vector<T>& depCGen,
                                                            const CppAD::vector<CppAD::cg::CG<T> >& dep,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
-
-        std::vector<T> depd(dep.size());
-
-        for (size_t i = 0; i < depd.size(); i++) {
-            depd[i] = dep[i].getValue();
-        }
-
-        return compareValues(depCGen, &depd[0], epsilonR, epsilonA);
+        return compareValues(ArrayView<const T>(depCGen),
+                             ArrayView<const CppAD::cg::CG<T> >(dep),
+                             epsilonR, epsilonA);
     }
 
-    template<class VectorBase, class T>
-    static inline ::testing::AssertionResult compareValues(const VectorBase& depCGen,
+    template<class T>
+    static inline ::testing::AssertionResult compareValues(const std::vector<T>& depCGen,
                                                            const std::vector<CppAD::cg::CG<T> >& dep,
+                                                           T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                           T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        return compareValues(ArrayView<const T>(depCGen),
+                             ArrayView<const CppAD::cg::CG<T> >(dep),
+                             epsilonR, epsilonA);
+    }
+
+    template<class T>
+    static inline ::testing::AssertionResult compareValues(const std::vector<T>& depCGen,
+                                                           const CppAD::vector<CppAD::cg::CG<T> >& dep,
+                                                           T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                           T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+        return compareValues(ArrayView<const T>(depCGen),
+                             ArrayView<const CppAD::cg::CG<T> >(dep),
+                             epsilonR, epsilonA);
+    }
+
+    template<class T>
+    static inline ::testing::AssertionResult compareValues(ArrayView<const T> depCGen,
+                                                           ArrayView<const CppAD::cg::CG<T> > dep,
                                                            T epsilonR = std::numeric_limits<T>::epsilon() * 100,
                                                            T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
 
@@ -140,11 +161,34 @@ protected:
             depd[i] = dep[i].getValue();
         }
 
-        return compareValues(depCGen, &depd[0], epsilonR, epsilonA);
+        return compareValues<T>(depCGen, ArrayView<const T>(depd), epsilonR, epsilonA);
     }
 
+    template<class T>
+    static inline ::testing::AssertionResult compareValues(ArrayView<const CppAD::cg::CG<T> > dep1,
+                                                           ArrayView<const CppAD::cg::CG<T> > dep2,
+                                                           T epsilonR = std::numeric_limits<T>::epsilon() * 100,
+                                                           T epsilonA = std::numeric_limits<T>::epsilon() * 100) {
+
+        std::vector<T> dep1d(dep1.size());
+
+        for (size_t i = 0; i < dep1d.size(); i++) {
+            dep1d[i] = dep1[i].getValue();
+        }
+
+        std::vector<T> dep2d(dep2.size());
+
+        for (size_t i = 0; i < dep2d.size(); i++) {
+            dep2d[i] = dep2[i].getValue();
+        }
+
+        return compareValues<T>(ArrayView<const T>(dep2d), ArrayView<const T>(dep1d), epsilonR, epsilonA);
+    }
+
+
     template<class VectorBool>
-    static inline void compareBoolValues(const VectorBool& expected, const VectorBool& value) {
+    static inline void compareBoolValues(const VectorBool& expected,
+                                         const VectorBool& value) {
         ASSERT_EQ(expected.size(), value.size());
         for (size_t i = 0; i < expected.size(); i++) {
             ASSERT_EQ(expected[i], value[i]);
@@ -152,7 +196,8 @@ protected:
     }
 
     template<class VectorSet>
-    static inline void compareVectorSetValues(const VectorSet& expected, const VectorSet& value) {
+    static inline void compareVectorSetValues(const VectorSet& expected,
+                                              const VectorSet& value) {
         ASSERT_EQ(expected.size(), value.size());
         for (size_t i = 0; i < expected.size(); i++) {
             ASSERT_EQ(expected[i].size(), value[i].size());

@@ -17,41 +17,142 @@
 namespace CppAD {
 namespace cg {
 
-#define MODEL1
-
+/**
+ * Nonlinear inner model with a single equation and an outer model which
+ * performs linear operations with the result of the inner model
+ */
 class CppADCGDynamicAtomicModel1Test : public CppADCGDynamicAtomicTest {
 protected:
-    static const size_t n;
-    static const size_t m;
+    static const size_t n = 1;
+    static const size_t m = 1;
 public:
 
-    inline CppADCGDynamicAtomicModel1Test(bool verbose = false, bool printValues = false) :
-        CppADCGDynamicAtomicTest("dynamicAtomic", verbose, printValues) {
+    inline CppADCGDynamicAtomicModel1Test(bool verbose = false,
+                                          bool printValues = false) :
+            CppADCGDynamicAtomicTest("dynamicAtomic1", verbose, printValues) {
         this->verbose_ = false;
     }
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
         std::vector<ADCGD> y(m);
-#ifdef MODEL1
+
+        y[0] = 1.0 / x[0];
+
+        return y;
+    }
+
+    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+        std::vector<ADCGD> z(1);
+
+        z[0] = y[0];
+
+        return z;
+    }
+
+};
+
+/**
+ * Nonlinear inner model and an outer model which performs linear
+ * operations with the result of the inner model
+ */
+class CppADCGDynamicAtomicModel2Test : public CppADCGDynamicAtomicTest {
+protected:
+    static const size_t n = 3;
+    static const size_t m = 4;
+public:
+
+    inline CppADCGDynamicAtomicModel2Test(bool verbose = false,
+                                          bool printValues = false) :
+        CppADCGDynamicAtomicTest("dynamicAtomic2", verbose, printValues) {
+        this->verbose_ = false;
+    }
+
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+        std::vector<ADCGD> y(m);
+
         y[0] = cos(x[0]);
         y[1] = x[1] * x[2] + sin(x[0]);
         y[2] = x[2] * x[2] + sin(x[1]);
         y[3] = x[0] / x[2] + x[1] * x[2] + 5.0;
-#else
-        y[0] = 1.0 / x[0];
-#endif
+
         return y;
     }
 
 };
 
-#ifdef MODEL1
-const size_t CppADCGDynamicAtomicModel1Test::n = 3;
-const size_t CppADCGDynamicAtomicModel1Test::m = 4;
-#else
-const size_t CppADCGDynamicAtomicModel1Test::n = 1;
-const size_t CppADCGDynamicAtomicModel1Test::m = 1;
-#endif
+
+/**
+ * Linear inner model and an outer model which performs a nonlinear
+ * operation with the result of the inner model
+ */
+class CppADCGDynamicAtomicModel3Test : public CppADCGDynamicAtomicTest {
+protected:
+    static const size_t n = 2;
+    static const size_t m = 1;
+public:
+
+    inline CppADCGDynamicAtomicModel3Test(bool verbose = false,
+                                          bool printValues = false) :
+            CppADCGDynamicAtomicTest("dynamicAtomic3", verbose, printValues) {
+        this->verbose_ = false;
+    }
+
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+        std::vector<ADCGD> y(m);
+
+        y[0] = x[0] * 2 + x[1] * 3;
+
+        return y;
+    }
+
+    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+        std::vector<ADCGD> z(m);
+
+        z[0] = 2 * y[0] * y[0];
+
+        return z;
+    }
+
+};
+
+/**
+ * Nonlinear inner model and an outer model which performs nonlinear
+ * operations with the result of the inner model
+ */
+class CppADCGDynamicAtomicModel4Test : public CppADCGDynamicAtomicTest {
+protected:
+    static const size_t n = 3;
+    static const size_t m = 4;
+public:
+
+    inline CppADCGDynamicAtomicModel4Test(bool verbose = false,
+                                          bool printValues = false) :
+        CppADCGDynamicAtomicTest("dynamicAtomic4", verbose, printValues) {
+        this->verbose_ = false;
+    }
+
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+        std::vector<ADCGD> y(m);
+
+        y[0] = cos(x[0]);
+        y[1] = x[1] * x[2] + sin(x[0]);
+        y[2] = x[2] * x[2] + sin(x[1]);
+        y[3] = x[0] / x[2] + x[1] * x[2] + 5.0;
+
+        return y;
+    }
+
+    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+        std::vector<ADCGD> z(m - 1);
+
+        z[0] = 2 * y[0];
+        z[1] = 2 * y[1] * y[0];
+        z[2] = 2 * y[2] + y[3];
+
+        return z;
+    }
+
+};
 
 } // END cg namespace
 } // END CppAD namespace
@@ -60,19 +161,95 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-TEST_F(CppADCGDynamicAtomicModel1Test, DynamicForRev) {
+/**
+ * @test nonlinear inner model and an outer model which performs linear
+ *       operations with the result of the inner model
+ */
+TEST_F(CppADCGDynamicAtomicModel1Test, DynamicForRevNonlinearLinear) {
     using namespace std;
     using CppAD::vector;
 
     vector<Base> x(n);
-#ifdef MODEL1
+    x[0] = 0.5;
+
+    // simple wrap (no outer model used)
+    this->testADFunAtomicLibSimple(x); // one compiled model used as an atomic function by an ADFun
+
+    this->testAtomicSparsities(x);
+
+    // use outer model
+    this->testADFunAtomicLib(x); // 1 compiled inner model used by CppAD
+
+    this->testAtomicLibAtomicLib(x); // 2 models in 2 dynamic libraries
+}
+
+/**
+ * @test nonlinear inner model and an outer model which performs linear
+ *       operations with the result of the inner model
+ */
+TEST_F(CppADCGDynamicAtomicModel2Test, DynamicForRevNonlinearLinear) {
+    using namespace std;
+    using CppAD::vector;
+
+    vector<Base> x(n);
     for (size_t j = 0; j < n; j++)
         x[j] = j + 2;
-#else
-    x[0] = 0.5;
-#endif
 
-    this->testADFunAtomicLib(x);
-    
+    // simple wrap (no outer model used)
+    this->testADFunAtomicLibSimple(x); // one compiled model used as an atomic function by an ADFun
+
     this->testAtomicSparsities(x);
+
+    // use outer model
+    this->testADFunAtomicLib(x); // 1 compiled inner model used by CppAD
+
+    this->testAtomicLibAtomicLib(x); // 2 models in 2 dynamic libraries
 }
+
+#if 0 // TODO: make this work
+/**
+ * @test linear inner model and an outer model which performs nonlinear
+ *       operations with the result of the inner model
+ */
+TEST_F(CppADCGDynamicAtomicModel3Test, DynamicForRevLinearNonlinear) {
+    using namespace std;
+    using CppAD::vector;
+
+    vector<Base> x(n);
+    for (size_t j = 0; j < n; j++)
+        x[j] = j + 2;
+
+    // simple wrap (no outer model used)
+    this->testADFunAtomicLibSimple(x); // one compiled model used as an atomic function by an ADFun
+
+    this->testAtomicSparsities(x);
+
+    // use outer model
+    this->testADFunAtomicLib(x); // 1 compiled inner model used by CppAD
+
+    this->testAtomicLibAtomicLib(x); // 2 models in 2 dynamic libraries
+}
+
+/**
+ * @test nonlinear inner model and an outer model which performs linear
+ *       operations with the result of the inner model
+ */
+TEST_F(CppADCGDynamicAtomicModel4Test, DynamicForRevNonlinearNonlinear) {
+    using namespace std;
+    using CppAD::vector;
+
+    vector<Base> x(n);
+    for (size_t j = 0; j < n; j++)
+        x[j] = j + 2;
+
+    // simple wrap (no outer model used)
+    this->testADFunAtomicLibSimple(x); // one compiled model used as an atomic function by an ADFun
+
+    this->testAtomicSparsities(x);
+
+    // use outer model
+    this->testADFunAtomicLib(x); // 1 compiled inner model used by CppAD
+
+    this->testAtomicLibAtomicLib(x); // 2 models in 2 dynamic libraries
+}
+#endif

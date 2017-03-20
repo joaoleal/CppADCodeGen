@@ -162,9 +162,9 @@ public:
                     << "  n_sweep = " << n_sweep << std::endl;
         }
 
-        ASSERT_TRUE(compareValues(y, check_y));
-        ASSERT_TRUE(compareValues(jac, check_jac));
-        ASSERT_TRUE(compareValues(hes, check_hes));
+        ASSERT_TRUE(compareValues<double>(y, check_y));
+        ASSERT_TRUE(compareValues<double>(jac, check_jac));
+        ASSERT_TRUE(compareValues<double>(hes, check_hes));
 
     }
 
