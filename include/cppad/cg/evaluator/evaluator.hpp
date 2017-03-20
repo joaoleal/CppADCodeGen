@@ -111,7 +111,7 @@ public:
      *         depOld or an unhandled operation type)
      */
     inline void evaluate(ArrayView<const ActiveOut> indepNew,
-                         ArrayView<CG<ScalarIn> > depNew,
+                         ArrayView<ActiveOut> depNew,
                          ArrayView<const CG<ScalarIn> > depOld) {
         if (depNew.size() != depOld.size()) {
             throw CGException("Dependent array sizes are different.");
