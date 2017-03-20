@@ -40,4 +40,10 @@
 }
 #endif
 
+#ifndef NDEBUG
+#define CPPADCG_IF_DEBUG(arg) arg
+#else
+#define CPPADCG_IF_DEBUG(arg)
+#endif
+
 #endif
