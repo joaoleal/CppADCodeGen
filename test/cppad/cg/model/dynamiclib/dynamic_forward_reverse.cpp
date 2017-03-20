@@ -128,7 +128,7 @@ TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
     for (size_t i = 0; i < n; i++)
         xOrig[i] = x[i];
 
-    const std::vector<bool> p = jacobianSparsity < std::vector<bool>, CGD > (*_fun);
+    const std::vector<bool> p = jacobianSparsity<std::vector<bool>, CGD> (*_fun);
 
     vector<CGD> jacOrig = _fun->SparseJacobian(xOrig, p);
     vector<double> jacCG = CppADCGDynamicForRevTest2::_model->SparseJacobian(x);

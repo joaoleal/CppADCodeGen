@@ -28,6 +28,9 @@ public:
         atomic_(&atomic) {
     }
 
+    inline virtual ~AtomicExternalFunctionWrapper() {
+    }
+
     virtual bool forward(FunctorGenericModel<Base>& libModel,
                          int q,
                          int p,
@@ -88,8 +91,6 @@ public:
         return ret;
     }
 
-    inline virtual ~AtomicExternalFunctionWrapper() {
-    }
 private:
 
     inline void convert(const Array from[],

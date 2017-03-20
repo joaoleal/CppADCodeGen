@@ -29,7 +29,7 @@ class AbstractCCompiler : public CCompiler<Base> {
 protected:
     std::string _path; // the path to the gcc executable
     std::string _tmpFolder;
-    std::string _sourcesFolder; //  path where source files are save
+    std::string _sourcesFolder; // path where source files are saved
     std::set<std::string> _ofiles; // compiled object files
     std::set<std::string> _sfiles; // compiled source files
     std::vector<std::string> _compileFlags;
