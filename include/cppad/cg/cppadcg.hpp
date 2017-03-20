@@ -19,6 +19,7 @@
 // System routines that can be used by rest of CppAD with out including 
 
 #include <algorithm>
+#include <array>
 #include <assert.h>
 #include <cstddef>
 #include <errno.h>
@@ -29,6 +30,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <valarray>
 #include <vector>
 #include <deque>
 #include <forward_list>
