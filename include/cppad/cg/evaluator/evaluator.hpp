@@ -27,14 +27,15 @@ class EvaluatorBase;
 
 /**
  * A base class for evaluators.
+ * Evaluators allow to reprocess operations defined in an operation graph
+ * for a different set of independent variables and (possibly) data types.
+ *
  * Operation implementations (sin(), cos(), ...) should be implemented in a
  * subclass of type FinalEvaluatorType.
  * This allows static polymorphism through curiously recurring template
  * pattern (CRTP). Therefore the default behaviour can be overridden without
  * the use of virtual methods.
  *
- * Evaluators allow to reprocess operations defined in an operation graph
- * for a different set of independent variables and (possibly) data types.
  * This class should not be instantiated directly.
  *
  * @todo implement nonrecursive algorithm (so that there will never be any stack limit issues)
@@ -95,6 +96,28 @@ public:
         evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
 
         return depNew;
+    }
+
+    /**
+     * Performs all the operations required to calculate the dependent
+     * variables with a (potentially) new data type
+     *
+     * @param indepNew The new independent variables.
+     * @param depNew The new dependent variable vector to be computed.
+     * @param depOld Dependent variable vector representing the operations that
+     *               are going to be executed to determine the new variables
+     *               (all variables must belong to the same code handler)
+     * @throws CGException on error (such as an different sizes of depNew and
+     *         depOld or an unhandled operation type)
+     */
+    inline void evaluate(ArrayView<const ActiveOut> indepNew,
+                         ArrayView<CG<ScalarIn> > depNew,
+                         ArrayView<const CG<ScalarIn> > depOld) {
+        if (depNew.size() != depOld.size()) {
+            throw CGException("Dependent array sizes are different.");
+        }
+
+        evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
     }
 
     /**
