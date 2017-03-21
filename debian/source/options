@@ -1,4 +1,5 @@
 tar-ignore = "build"
+tar-ignore = "cmake-build-debug"
 tar-ignore = ".git"
 tar-ignore = ".gitignore"
 tar-ignore = ".directory"
