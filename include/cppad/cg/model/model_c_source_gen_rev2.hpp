@@ -262,13 +262,13 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
             "\n"
             "int " << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "(unsigned long pos, " << argsDcl << ");\n"
             "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
-            "\n"
-            "int " << model_function << "("
-            << _baseTypeName << " const tx[], "
-            << _baseTypeName << " const ty[], "
-            << _baseTypeName << " px[], "
-            << _baseTypeName << " const py[], "
-            << langC.generateArgumentAtomicDcl() << ") {\n"
+            "\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const tx[]",
+                                                                              _baseTypeName + " const ty[]",
+                                                                              _baseTypeName + " px[]",
+                                                                              _baseTypeName + " const py[]",
+                                                                              langC.generateArgumentAtomicDcl()});
+    _cache << " {\n"
             "    unsigned long ej, ePos, i, j, nnz, nnzMax;\n"
             "    unsigned long const* pos;\n"
             "    unsigned long* txPos;\n"

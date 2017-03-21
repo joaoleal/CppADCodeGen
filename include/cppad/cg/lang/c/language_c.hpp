@@ -108,8 +108,8 @@ protected:
     // the maximum precision used to print values
     size_t _parameterPrecision;
 private:
-    std::string funcArgDcl_;
-    std::string localFuncArgDcl_;
+    std::vector<std::string> funcArgDcl_;
+    std::vector<std::string> localFuncArgDcl_;
     std::string localFuncArgs_;
     std::string auxArrayName_;
 
@@ -138,6 +138,9 @@ public:
         _maxAssigmentsPerFunction(0),
         _sources(nullptr),
         _parameterPrecision(std::numeric_limits<Base>::digits10) {
+    }
+
+    inline virtual ~LanguageC() {
     }
 
     inline const std::string& getArgumentIn() const {
@@ -406,17 +409,31 @@ public:
         return args;
     }
 
+    virtual std::vector<std::string> generateFunctionArgumentsDcl2() const {
+        std::vector<std::string> args = generateFunctionIndexArgumentsDcl2();
+        std::vector<std::string> dArgs = generateDefaultFunctionArgumentsDcl2();
+        args.insert(args.end(), dArgs.begin(), dArgs.end());
+        return args;
+    }
+
     virtual std::string generateDefaultFunctionArgumentsDcl() const {
-        return _baseTypeName + " const *const * " + _inArgName +
-                ", " + _baseTypeName + "*const * " + _outArgName +
-                ", " + generateArgumentAtomicDcl();
+        return implode(generateDefaultFunctionArgumentsDcl2(), ", ");
+    }
+
+    virtual std::vector<std::string> generateDefaultFunctionArgumentsDcl2() const {
+        return std::vector<std::string> {_baseTypeName + " const *const * " + _inArgName,
+                                         _baseTypeName + "*const * " + _outArgName,
+                                         generateArgumentAtomicDcl()};
     }
 
     virtual std::string generateFunctionIndexArgumentsDcl() const {
-        std::string argtxt;
+        return implode(generateFunctionIndexArgumentsDcl2(), ", ");
+    }
+
+    virtual std::vector<std::string> generateFunctionIndexArgumentsDcl2() const {
+        std::vector<std::string> argtxt(_funcArgIndexes.size());
         for (size_t a = 0; a < _funcArgIndexes.size(); a++) {
-            if (a > 0) argtxt += ", ";
-            argtxt += U_INDEX_TYPE + " " + *_funcArgIndexes[a]->getName();
+            argtxt[a] = U_INDEX_TYPE + " " + *_funcArgIndexes[a]->getName();
         }
         return argtxt;
     }
@@ -460,7 +477,38 @@ public:
     CPPAD_CG_C_LANG_FUNCNAME(log1p)
 #endif
 
-    inline virtual ~LanguageC() {
+    /**
+     * Prints a function declaration where each argument is in a different line.
+     *
+     * @param out the stream where the declaration is printed
+     * @param returnType the function return type
+     * @param functionName the function name
+     * @param arguments function arguments
+     * @param arguments2 additional function arguments
+     */
+    static inline void printFunctionDeclaration(std::ostringstream& out,
+                                                const std::string& returnType,
+                                                const std::string& functionName,
+                                                const std::vector<std::string>& arguments,
+                                                const std::vector<std::string>& arguments2 = {}) {
+        out << returnType << " " << functionName << "(";
+        size_t i = 0;
+        size_t offset = returnType.size() + 1 + functionName.size() + 1;
+        for (const std::string& a : arguments) {
+            if (i > 0) {
+                out << ",\n" << std::setw(offset) << " ";
+            }
+            out << a;
+            ++i;
+        }
+        for (const std::string& a : arguments2) {
+            if (i > 0) {
+                out << ",\n" << std::setw(offset) << " ";
+            }
+            out << a;
+            ++i;
+        }
+        out << ")";
     }
 
     static inline void printIndexCondExpr(std::ostringstream& out,
@@ -574,8 +622,8 @@ protected:
         _ss.str("");
         _temporary.clear();
         _indentation = _spaces;
-        funcArgDcl_ = "";
-        localFuncArgDcl_ = "";
+        funcArgDcl_.clear();
+        localFuncArgDcl_.clear();
         localFuncArgs_ = "";
         auxArrayName_ = "";
         _currentLoops.clear();
@@ -638,12 +686,15 @@ protected:
                              "There must be three temporary variables");
 
         if (createFunction) {
-            funcArgDcl_ = generateFunctionArgumentsDcl();
-            localFuncArgDcl_ = funcArgDcl_ + ", "
-                    + argumentDeclaration(tmpArg[0]) + ", "
-                    + argumentDeclaration(tmpArg[1]) + ", "
-                    + argumentDeclaration(tmpArg[2]) + ", "
-                    + U_INDEX_TYPE + "* " + _C_SPARSE_INDEX_ARRAY;
+            funcArgDcl_ = generateFunctionArgumentsDcl2();
+
+            localFuncArgDcl_.reserve(funcArgDcl_.size() + 4);
+            localFuncArgDcl_ = funcArgDcl_;
+            localFuncArgDcl_.push_back(argumentDeclaration(tmpArg[0]));
+            localFuncArgDcl_.push_back(argumentDeclaration(tmpArg[1]));
+            localFuncArgDcl_.push_back(argumentDeclaration(tmpArg[2]));
+            localFuncArgDcl_.push_back(U_INDEX_TYPE + "* " + _C_SPARSE_INDEX_ARRAY);
+
             localFuncArgs_ = generateDefaultFunctionArguments() + ", "
                     + tmpArg[0].name + ", "
                     + tmpArg[1].name + ", "
@@ -763,11 +814,13 @@ protected:
 
             _code << ATOMICFUN_STRUCT_DEFINITION << "\n\n";
             // forward declarations
+            std::string localFuncArgDcl2 = implode(localFuncArgDcl_, ", ");
             for (size_t i = 0; i < localFuncNames.size(); i++) {
-                _code << "void " << localFuncNames[i] << "(" << localFuncArgDcl_ << ");\n";
+                _code << "void " << localFuncNames[i] << "(" << localFuncArgDcl2 << ");\n";
             }
-            _code << "\n"
-                    << "void " << _functionName << "(" << funcArgDcl_ << ") {\n";
+            _code << "\n";
+            printFunctionDeclaration(_code, "void", _functionName, funcArgDcl_);
+            _code  << " {\n";
             _nameGen->customFunctionVariableDeclarations(_code);
             _code << generateIndependentVariableDeclaration() << "\n";
             _code << generateDependentVariableDeclaration() << "\n";
@@ -824,8 +877,9 @@ protected:
             if (localFuncNames.empty()) {
                 _ss << "#include <math.h>\n"
                         "#include <stdio.h>\n\n"
-                        << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
-                        << "void " << _functionName << "(" << funcArgDcl_ << ") {\n";
+                    << ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+                printFunctionDeclaration(_ss, "void", _functionName, funcArgDcl_);
+                _ss << " {\n";
                 _nameGen->customFunctionVariableDeclarations(_ss);
                 _ss << generateIndependentVariableDeclaration() << "\n";
                 _ss << generateDependentVariableDeclaration() << "\n";
@@ -942,8 +996,9 @@ protected:
 
         _ss << "#include <math.h>\n"
                 "#include <stdio.h>\n\n"
-                << ATOMICFUN_STRUCT_DEFINITION << "\n\n"
-                << "void " << funcName << "(" << localFuncArgDcl_ << ") {\n";
+                << ATOMICFUN_STRUCT_DEFINITION << "\n\n";
+        printFunctionDeclaration(_ss, "void", funcName, localFuncArgDcl_);
+        _ss << " {\n";
         _nameGen->customFunctionVariableDeclarations(_ss);
         _ss << generateIndependentVariableDeclaration() << "\n";
         _ss << generateDependentVariableDeclaration() << "\n";

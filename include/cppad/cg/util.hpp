@@ -716,6 +716,27 @@ inline std::vector<std::string> explode(const std::string& text,
     return matches;
 }
 
+inline std::string implode(const std::vector<std::string>& text,
+                           const std::string& delimiter) {
+    if (text.empty()) {
+        return "";
+    } else if (text.size() == 1) {
+        return text[0];
+    } else {
+        std::string out;
+        size_t n = 0;
+        for (const auto& s: text)
+            n += s.size();
+        out.reserve(n + (text.size() - 1) * delimiter.size());
+        out = text[0];
+        for (size_t i = 1; i < text.size(); ++i) {
+            out += delimiter;
+            out += text[i];
+        }
+        return out;
+    }
+}
+
 } // END cg namespace
 } // END CppAD namespace
 

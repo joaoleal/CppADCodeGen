@@ -239,13 +239,13 @@ void ModelCSourceGen<Base>::generateReverseOneSources() {
             "\n"
             "int " << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "(unsigned long pos, " << argsDcl << ");\n"
             "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
-            "\n"
-            "int " << model_function << "("
-            << _baseTypeName << " const x[], "
-            << _baseTypeName << " const ty[],"
-            << _baseTypeName << "  px[], "
-            << _baseTypeName << " const py[], "
-            << langC.generateArgumentAtomicDcl() << ") {\n"
+            "\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const x[]",
+                                                                              _baseTypeName + " const ty[]",
+                                                                              _baseTypeName + " px[]",
+                                                                              _baseTypeName + " const py[]",
+                                                                              langC.generateArgumentAtomicDcl()});
+    _cache << " {\n"
             "   unsigned long ei, ePos, i, j, nnz, nnzMax;\n"
             "   unsigned long const* pos;\n"
             "   unsigned long* pyPos;\n"

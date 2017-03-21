@@ -307,13 +307,15 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
                                                                                const std::string& rev2Suffix) {
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+    std::vector<std::string> argsDcl2 = langC.generateDefaultFunctionArgumentsDcl2();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
             << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, functionRev2, rev2Suffix, hessInfo, argsDcl);
-    _cache << "\n"
-            "void " << functionName << "(" << argsDcl << ") {\n"
+    _cache << "\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionName, argsDcl2);
+    _cache << " {\n"
             "   " << _baseTypeName << " const * inLocal[3];\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
             "   " << _baseTypeName << " * outLocal[1];\n";
@@ -378,6 +380,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
 
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+    std::vector<std::string> argsDcl2 = langC.generateDefaultFunctionArgumentsDcl2();
 
     _cache.str("");
     _cache << "#include <stdlib.h>\n"
@@ -403,7 +406,9 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
             continue;
         }
 
-        _cache << "void " << functionRev2 << "_" << rev2Suffix << index << "_wrap(" << argsDcl << ") {\n"
+        std::string functionNameWrap = functionRev2 + "_" + rev2Suffix + std::to_string(index) + "_wrap";
+        LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionNameWrap, argsDcl2);
+        _cache << " {\n"
                 "   " << _baseTypeName << " const * inLocal[3];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
                 "   " << _baseTypeName << " * outLocal[1];\n"

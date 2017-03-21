@@ -234,11 +234,11 @@ void ModelCSourceGen<Base>::generateForwardOneSources() {
             "\n"
             "int " << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "(unsigned long pos, " << argsDcl << ");\n"
             "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
-            "\n"
-            "int " << model_function << "("
-            << _baseTypeName << " const tx[], "
-            << _baseTypeName << " ty[], "
-            << langC.generateArgumentAtomicDcl() << ") {\n"
+            "\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const tx[]",
+                                                                              _baseTypeName + " ty[]",
+                                                                              langC.generateArgumentAtomicDcl()});
+    _cache << " {\n"
             "   unsigned long ePos, ej, i, j, nnz, nnzMax;\n"
             "   unsigned long const* pos;\n"
             "   unsigned long* txPos;\n"

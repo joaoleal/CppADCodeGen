@@ -198,7 +198,12 @@ void ModelCSourceGen<Base>::generateInfoSource() {
     std::unique_ptr<VariableNameGenerator<Base> > nameGen(createVariableNameGenerator());
 
     _cache.str("");
-    _cache << "void " << funcName << "(const char** baseName, unsigned long* m, unsigned long* n, unsigned int* indCount, unsigned int* depCount) {\n"
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", funcName, {"const char** baseName",
+                                                                         "unsigned long* m",
+                                                                         "unsigned long* n",
+                                                                         "unsigned int* indCount",
+                                                                         "unsigned int* depCount"});
+    _cache << " {\n"
             "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
             "   *m = " << _fun.Range() << ";\n"
             "   *n = " << _fun.Domain() << ";\n"
@@ -214,7 +219,9 @@ void ModelCSourceGen<Base>::generateAtomicFuncNames() {
     std::string funcName = _name + "_" + FUNCTION_ATOMIC_FUNC_NAMES;
     size_t n = _atomicFunctions.size();
     _cache.str("");
-    _cache << "void " << funcName << "(const char*** names, unsigned long* n) {\n"
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", funcName, {"const char*** names",
+                                                                         "unsigned long* n"});
+    _cache << " {\n"
             "   static const char* atomic[" << n << "] = {";
     for (size_t i = 0; i < n; i++) {
         if (i > 0) _cache << ", ";
@@ -314,6 +321,7 @@ void ModelCSourceGen<Base>::generateGlobalDirectionalFunctionSource(const std::s
      */
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
+    std::vector<std::string> argsDcl2 = langC.generateDefaultFunctionArgumentsDcl2();
     std::string args = langC.generateDefaultFunctionArguments();
 
     _cache.str("");
@@ -324,8 +332,8 @@ void ModelCSourceGen<Base>::generateGlobalDirectionalFunctionSource(const std::s
     _cache << LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION << "\n\n";
     generateFunctionDeclarationSource(_cache, model_function, suffix, elements, argsDcl);
     _cache << "\n";
-    _cache << "int " << model_function << "("
-            "unsigned long pos, " << argsDcl << ") {\n"
+    LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {"unsigned long pos"}, argsDcl2);
+    _cache << " {\n"
             "   switch(pos) {\n";
     for (const auto& it : elements) {
         // the size of each sparsity row
@@ -365,9 +373,9 @@ void ModelCSourceGen<Base>::generateFunctionDeclarationSource(std::ostringstream
 template<class Base>
 void ModelCSourceGen<Base>::generateSparsity1DSource(const std::string& function,
                                                      const std::vector<size_t>& sparsity) {
-    _cache << "void " << function << "("
-            "unsigned long const** sparsity,"
-            " unsigned long* nnz) {\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", function, {"unsigned long const** sparsity",
+                                                                         "unsigned long* nnz"});
+    _cache << " {\n";
 
     // the size of each sparsity row
     _cache << "   ";
@@ -386,10 +394,10 @@ void ModelCSourceGen<Base>::generateSparsity2DSource(const std::string& function
 
     CPPADCG_ASSERT_UNKNOWN(rows.size() == cols.size());
 
-    _cache << "void " << function << "("
-            "unsigned long const** row,"
-            " unsigned long const** col,"
-            " unsigned long* nnz) {\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", function, {"unsigned long const** row",
+                                                                         "unsigned long const** col",
+                                                                         "unsigned long* nnz"});
+    _cache << " {\n";
 
     // the size of each sparsity row
     _cache << "   ";
@@ -407,11 +415,11 @@ void ModelCSourceGen<Base>::generateSparsity2DSource(const std::string& function
 template<class Base>
 void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& function,
                                                       const std::vector<LocalSparsityInfo>& sparsities) {
-    _cache << "void " << function << "("
-            "unsigned long i,"
-            "unsigned long const** row,"
-            " unsigned long const** col,"
-            " unsigned long* nnz) {\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", function, {"unsigned long i",
+                                                                         "unsigned long const** row",
+                                                                         "unsigned long const** col",
+                                                                         "unsigned long* nnz"});
+    _cache << " {\n";
 
     std::ostringstream os;
 
@@ -490,11 +498,10 @@ void ModelCSourceGen<Base>::generateSparsity2DSource2(const std::string& functio
 template<class Base>
 void ModelCSourceGen<Base>::generateSparsity1DSource2(const std::string& function,
                                                       const std::map<size_t, std::vector<size_t> >& elements) {
-
-    _cache << "void " << function << "("
-            "unsigned long pos,"
-            " unsigned long const** elements,"
-            " unsigned long* nnz) {\n";
+    LanguageC<Base>::printFunctionDeclaration(_cache, "void", function, {"unsigned long pos",
+                                                                         "unsigned long const** elements",
+                                                                         "unsigned long* nnz"});
+    _cache << " {\n";
 
     std::vector<size_t> nnzs(elements.empty()? 0: elements.rbegin()->first + 1);
 
