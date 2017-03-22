@@ -413,7 +413,7 @@ public:
         CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        CPPADCG_IF_DEBUG(int ret =) (*_forwardOne)(tx.data(), ty.data(), _atomicFuncArg);
+        int ret = (*_forwardOne)(tx.data(), ty.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
     }
@@ -450,7 +450,7 @@ public:
             (*_forwardOneSparsity)(j, &pos, &nnz);
 
             _inHess[1] = &tx1[ej];
-            CPPADCG_IF_DEBUG(int ret =) (*_sparseForwardOne)(j, &_inHess[0], &_out[0], _atomicFuncArg);
+            int ret = (*_sparseForwardOne)(j, &_inHess[0], &_out[0], _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
 
@@ -479,7 +479,7 @@ public:
         CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        CPPADCG_IF_DEBUG(int ret =) (*_reverseOne)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
+        int ret = (*_reverseOne)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
     }
@@ -516,7 +516,7 @@ public:
             (*_reverseOneSparsity)(i, &pos, &nnz);
 
             _inHess[1] = &py[ei];
-            CPPADCG_IF_DEBUG(int ret =) (*_sparseReverseOne)(i, &_inHess[0], &_out[0], _atomicFuncArg);
+            int ret = (*_sparseReverseOne)(i, &_inHess[0], &_out[0], _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
 
@@ -546,7 +546,7 @@ public:
         CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        CPPADCG_IF_DEBUG(int ret =) (*_reverseTwo)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
+        int ret = (*_reverseTwo)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
         CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
@@ -588,7 +588,7 @@ public:
             (*_reverseTwoSparsity)(j, &pos, &nnz);
 
             in[1] = &tx1[ej];
-            CPPADCG_IF_DEBUG(int ret =) (*_sparseReverseTwo)(j, &in[0], &_out[0], _atomicFuncArg);
+            int ret = (*_sparseReverseTwo)(j, &in[0], &_out[0], _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed."); // generic failure
 
