@@ -134,10 +134,19 @@ protected:
         this->saveEvaluation(node, ActiveOut(*outHandler_->makeNode(op, info, outArgs)));
 
         if (valuesDefined) {
-            const std::map<size_t, CGAbstractAtomicFun<ScalarIn>* >& afun = this->handler_.getAtomicFunctions();
+            const std::map<size_t, CGAbstractAtomicFun<ScalarIn>*>& afun = this->handler_.getAtomicFunctions();
             size_t id = info[0];
             size_t q = info[1];
             if (op == CGOpCode::AtomicForward) {
+                auto itAFun = afun.find(id);
+                if (itAFun == afun.end()) {
+                    if (allParameters)
+                        throw CGException("Atomic function for ID ", id, " is not defined in evaluator");
+                    else
+                        return; // the atomic function is not available but it is not essential
+                }
+                auto& atomic = *itAFun->second;
+
                 CppAD::vector<bool> vx, vy;
                 CppAD::vector<ActiveOut> tx(outVals[0].size()), ty(outVals[1].size());
                 for (size_t i = 0; i < tx.size(); ++i)
@@ -145,13 +154,13 @@ protected:
                 for (size_t i = 0; i < ty.size(); ++i)
                     ty[i] = ActiveIn(outVals[1][i]);
 
-                afun.at(id)->forward(q, p, vx, vy, tx, ty);
+                atomic.forward(q, p, vx, vy, tx, ty);
 
                 std::vector<ScalarOut*>& yOut = atomicEvalResults_[&node];
                 assert(yOut.empty());
                 yOut.resize(ty.size());
-                for(size_t i = 0; i < ty.size(); ++i) {
-                    if(ty[i].isValueDefined())
+                for (size_t i = 0; i < ty.size(); ++i) {
+                    if (ty[i].isValueDefined())
                         yOut[i] = new ScalarOut(ty[i].getValue());
                 }
             }
