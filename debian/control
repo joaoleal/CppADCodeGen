@@ -3,14 +3,17 @@ Section: Development/Libraries
 Priority: extra
 Maintainer: Joao Leal <development@ciengis.com>
 Build-Depends: debhelper (>= 5),
+               cdbs,
                binutils (>= 2.18.1 ),
                libacl1 (>= 2.2.45-1 ),
                libattr1 (>= 1 ),
                cmake (>= 2.8),
                doxygen,
                cppad-dev (>= 20170000.3)|cppad (>= 20170000.3),
+               libadolc-dev,
                libclang-dev (>= 3.2),
-               libeigen3-dev
+               libeigen3-dev,
+               libgtest-dev
 Standards-Version: 3.7.2
 
 Package: cppadcodegen-dev

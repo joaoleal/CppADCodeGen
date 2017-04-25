@@ -1,7 +1,7 @@
 cppadcodegen (2.2.0-1) unstable; urgency=low
 
    * initial work for multithreaded evaluation of Jacobians and Hessians
-   * added support for Clang/LLVM 3.8
+   * added support for Clang/LLVM 3.8 and 4.0
 
  -- Joao Leal <development@ciengis.com>  Thu, 02 Mar 2017 13:00:00 +0000
 
@@ -13,9 +13,9 @@ cppadcodegen (2.1.0-1) unstable; urgency=low
    * improved MathML and Latex outputs
    * improved Evaluator
    * improved symbolic solution of the model relative to a single variable
- 
+
  -- Joao Leal <development@ciengis.com>  Mon, 09 May 2016 13:00:00 +0000
- 
+
 cppadcodegen (2.0.0-1) unstable; urgency=low
 
    * upgraded sources to C++11
