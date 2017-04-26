@@ -2,7 +2,7 @@ language: cpp
 
 compiler:
 # Clang compiler is disabled until it is compatible with GCC ABI for C++11.
-# It would retquire ifdef in sources otherwise
+# It would require ifdef in sources otherwise
 # (e.g. in c++11 we have vector.erase(const_iterator) but in GCC4.8 it was still vector.erase(iterator) and GCC5 is ABI incompatible with clang)
 #  - clang
   - gcc

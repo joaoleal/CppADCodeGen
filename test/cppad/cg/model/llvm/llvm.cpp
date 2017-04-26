@@ -17,6 +17,9 @@
 
 #include "CppADCGModelTest.hpp"
 
+#define STRINGIFY(X) STRINGIFY2(X)
+#define STRINGIFY2(X) #X
+
 using namespace CppAD;
 using namespace CppAD::cg;
 
@@ -118,7 +121,7 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
 
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
-    ClangCompiler<double> clang;
+    ClangCompiler<double> clang("/usr/bin/clang-" STRINGIFY(LLVM_VERSION_MAJOR) "." STRINGIFY(LLVM_VERSION_MINOR));
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create(clang));
     std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
