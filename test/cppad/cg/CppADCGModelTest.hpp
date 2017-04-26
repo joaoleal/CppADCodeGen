@@ -25,7 +25,8 @@ public:
     typedef AD<CGD> ADCG;
 public:
 
-    inline CppADCGModelTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGModelTest(bool verbose = false,
+                            bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
