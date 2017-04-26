@@ -29,21 +29,20 @@ template<class Base>
 class LlvmModelLibrary3_6 : public LlvmModelLibrary<Base> {
 protected:
     llvm::Module* _module; // owned by _executionEngine
-    std::unique_ptr<llvm::LLVMContext> _context;
+    std::shared_ptr<llvm::LLVMContext> _context;
     std::unique_ptr<llvm::ExecutionEngine> _executionEngine;
     std::unique_ptr<llvm::FunctionPassManager> _fpm;
 public:
 
-    LlvmModelLibrary3_6(llvm::Module* module,
-                        llvm::LLVMContext* context) :
-        _module(module),
+    LlvmModelLibrary3_6(std::unique_ptr<llvm::Module> module,
+                        std::shared_ptr<llvm::LLVMContext> context) :
+        _module(module.get()),
         _context(context) {
         using namespace llvm;
 
         // Create the JIT.  This takes ownership of the module.
-        std::unique_ptr<llvm::Module> m(_module);
         std::string errStr;
-        _executionEngine.reset(EngineBuilder(std::move(m))
+        _executionEngine.reset(EngineBuilder(std::move(module))
                                .setErrorStr(&errStr)
                                .setEngineKind(EngineKind::JIT)
 #ifndef NDEBUG
