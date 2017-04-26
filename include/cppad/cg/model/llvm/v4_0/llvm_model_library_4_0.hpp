@@ -35,9 +35,9 @@ protected:
 public:
 
     LlvmModelLibrary4_0(std::unique_ptr<llvm::Module> module,
-                                           std::shared_ptr<llvm::LLVMContext> context) :
+                        std::shared_ptr<llvm::LLVMContext> context) :
         _module(module.get()),
-        _context(std::move(context)) {
+        _context(context) {
         using namespace llvm;
 
         // Create the JIT.  This takes ownership of the module.

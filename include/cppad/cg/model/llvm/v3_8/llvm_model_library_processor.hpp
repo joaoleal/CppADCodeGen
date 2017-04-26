@@ -29,26 +29,33 @@ template<class Base>
 class LlvmModelLibraryProcessor : public LlvmBaseModelLibraryProcessor<Base> {
 protected:
     std::vector<std::string> _includePaths;
+    std::shared_ptr<llvm::LLVMContext> _context; // should be deleted after _linker and _module (it must come first)
     std::unique_ptr<llvm::Linker> _linker;
-    std::unique_ptr<llvm::LLVMContext> _context;
     std::unique_ptr<llvm::Module> _module;
 public:
 
     /**
-     * 
-     * @param modelLibraryHelper
+     * Creates a LLVM model library processor.
+     *
+     * @param librarySourceGen
      */
-    LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& modelLibraryHelper) :
-            LlvmBaseModelLibraryProcessor<Base>(modelLibraryHelper) {
+    LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& librarySourceGen) :
+            LlvmBaseModelLibraryProcessor<Base>(librarySourceGen) {
     }
 
     virtual ~LlvmModelLibraryProcessor() {
     }
 
+    /**
+     * Define additional header paths.
+     */
     inline void setIncludePaths(const std::vector<std::string>& includePaths) {
         _includePaths = includePaths;
     }
 
+    /**
+     * User defined header paths.
+     */
     inline const std::vector<std::string>& getIncludePaths() const {
         return _includePaths;
     }
@@ -84,6 +91,7 @@ public:
 
         this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
 
+        llvm::InitializeAllTargetMCs();
         llvm::InitializeAllTargets();
         llvm::InitializeAllAsmPrinters();
 
@@ -103,7 +111,7 @@ public:
 
         llvm::InitializeNativeTarget();
 
-        LlvmModelLibrary3_8<Base>* lib = new LlvmModelLibrary3_8<Base>(_module.release(), _context.release());
+        LlvmModelLibrary3_8<Base>* lib = new LlvmModelLibrary3_8<Base>(std::move(_module), _context);
 
         this->modelLibraryHelper_->finishedJob();
 
@@ -171,7 +179,7 @@ public:
             llvm::InitializeNativeTarget();
 
             // voila
-            lib = new LlvmModelLibrary3_8<Base>(linkerModule.release(), _context.release());
+            lib = new LlvmModelLibrary3_8<Base>(std::move(linkerModule), _context);
 
         } catch (...) {
             clang.cleanup();

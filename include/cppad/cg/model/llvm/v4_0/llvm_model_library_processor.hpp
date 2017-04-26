@@ -35,7 +35,7 @@ protected:
 public:
 
     /**
-     * Creates a LLVM model librart processor.
+     * Creates a LLVM model library processor.
      * 
      * @param librarySourceGen
      */
