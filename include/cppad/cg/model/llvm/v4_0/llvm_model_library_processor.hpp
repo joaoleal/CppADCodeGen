@@ -141,17 +141,24 @@ public:
                 }
 
                 // create the module
-                ErrorOr<std::unique_ptr<Module>> module = llvm::parseBitcodeFile(buffer.get()->getMemBufferRef(), *_context.get());
-                if(module.get() == nullptr) {
-                    throw CGException(module.getError().message());
+                Expected<std::unique_ptr<Module>> moduleOrError = llvm::parseBitcodeFile(buffer.get()->getMemBufferRef(), *_context.get());
+                if (!moduleOrError) {
+                    std::ostringstream error;
+                    size_t nError = 0;
+                    handleAllErrors(moduleOrError.takeError(), [&](ErrorInfoBase& eib) {
+                        if (nError > 0) error << "; ";
+                        error << eib.message();
+                        nError++;
+                    });
+                    throw CGException(error.str());
                 }
 
                 // link modules together
                 if (_linker.get() == nullptr) {
-                    linkerModule.reset(module.get().release());
+                    linkerModule = std::move(moduleOrError.get());
                     _linker.reset(new llvm::Linker(*linkerModule)); // module not destroyed
                 } else {
-                    if (_linker->linkInModule(std::move(module.get()))) { // module destroyed
+                    if (_linker->linkInModule(std::move(moduleOrError.get()))) { // module destroyed
                         throw CGException("Failed to link");
                     }
                 }
@@ -160,7 +167,7 @@ public:
             llvm::InitializeNativeTarget();
 
             // voila
-            lib = new LlvmModelLibrary4_0<Base>(linkerModule.release(), _context);
+            lib = new LlvmModelLibrary4_0<Base>(std::move(linkerModule), _context);
 
         } catch (...) {
             clang.cleanup();
