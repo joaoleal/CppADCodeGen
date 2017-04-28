@@ -27,17 +27,15 @@ protected:
     const static size_t m;
     std::vector<double> x;
     ADFun<CGD>* _fun;
-    DynamicLib<double>* _dynamicLib;
-    GenericModel<double>* _model;
+    std::unique_ptr<DynamicLib<double>> _dynamicLib;
+    std::unique_ptr<GenericModel<double>> _model;
 public:
 
     inline CppADCGDynamicForRevTest2(bool verbose = false, bool printValues = false) :
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),
-        _fun(nullptr),
-        _dynamicLib(nullptr),
-        _model(nullptr) {
+        _fun(nullptr) {
     }
 
     virtual void SetUp() {
@@ -97,10 +95,8 @@ public:
     }
 
     virtual void TearDown() {
-        delete _dynamicLib;
-        _dynamicLib = nullptr;
-        delete _model;
-        _model = nullptr;
+        _dynamicLib.reset(nullptr);
+        _model.reset(nullptr);
         delete _fun;
         _fun = nullptr;
     }

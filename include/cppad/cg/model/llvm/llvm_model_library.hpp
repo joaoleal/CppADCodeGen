@@ -31,19 +31,24 @@ class LlvmModelLibrary : public FunctorModelLibrary<Base> {
 protected:
     std::set<LlvmModel<Base>*> _models;
 public:
-    virtual LlvmModel<Base>* model(const std::string& modelName) override {
-        typename std::set<std::string>::const_iterator it = this->_modelNames.find(modelName);
-        if (it == this->_modelNames.end()) {
-            return nullptr;
-        }
-        LlvmModel<Base>* m = new LlvmModel<Base> (this, modelName);
-        _models.insert(m);
-        return m;
-    }
-
     inline virtual ~LlvmModelLibrary() {
         // do not call clean-up here
         // cleanUp() must be called by the subclass (before destruction of the execution engine...)
+    }
+
+    virtual std::unique_ptr<LlvmModel<Base>> modelLlvm(const std::string& modelName) {
+        std::unique_ptr<LlvmModel<Base>> m;
+        typename std::set<std::string>::const_iterator it = this->_modelNames.find(modelName);
+        if (it == this->_modelNames.end()) {
+            return m;
+        }
+        m.reset(new LlvmModel<Base> (this, modelName));
+        _models.insert(m.get());
+        return m;
+    }
+
+    virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
+        return std::unique_ptr<FunctorGenericModel<Base>>(modelLlvm(modelName).release());
     }
 
 protected:

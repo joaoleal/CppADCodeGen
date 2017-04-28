@@ -117,7 +117,7 @@ public:
         vector<AD<double> > ay(m);
 
         // call user function and store CGAtomicLibModel(x) in au[0] 
-        unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
+        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
         CGAtomicGenericModel<double>& atomicfun = modelLib->asAtomic();
 
         atomicfun(ax, ay);
@@ -370,7 +370,7 @@ public:
         prepareAtomicLibAtomicLib(x, xNorm, eqNorm);
         ASSERT_TRUE(_modelLib != nullptr);
 
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLibOuter->model(_modelName + "_outer"));
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLibOuter->model(_modelName + "_outer");
         ASSERT_TRUE(modelLibOuter.get() != nullptr);
 
         test2LevelAtomicLibModel(_modelLib.get(), modelLibOuter.get(),
@@ -388,8 +388,8 @@ public:
 
         prepareAtomicLibModelBridge(x, xNorm, eqNorm);
 
-        unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLib->model(_modelName + "_outer");
 
         test2LevelAtomicLibModel(modelLib.get(), modelLibOuter.get(),
                                  x, xNorm, eqNorm, epsilonR, epsilonA);
@@ -414,8 +414,8 @@ public:
                                     jacOuter, hessOuter,
                                     createOuterReverse2);
 
-        unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLib->model(_modelName + "_outer");
 
         test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
                                           x, xNorm, eqNorm,
@@ -854,7 +854,7 @@ private:
         modelLibOuter->HessianSparsity(hessOuterRows2, hessOuterCols2);
         printSparsityPattern(hessOuterRows2, hessOuterCols2, "outer", n);
         */
-        
+
         /**
          * Sparse Hessian
          */
@@ -927,7 +927,7 @@ private:
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder("sources_atomiclib_" + _modelName);
         compiler.setSaveToDiskFirst(true);
-        _dynamicLib.reset(p.createDynamicLibrary(compiler));
+        _dynamicLib = p.createDynamicLibrary(compiler);
     }
 
     virtual void prepareAtomicLibAtomicLib(const CppAD::vector<Base>& x,
@@ -983,8 +983,8 @@ private:
         compDynHelp.setVerbose(this->verbose_);
 
         DynamicModelLibraryProcessor<double> p(compDynHelp, "innerModel");
-        _dynamicLib.reset(p.createDynamicLibrary(compiler1));
-        _modelLib.reset(_dynamicLib->model(_modelName));
+        _dynamicLib = p.createDynamicLibrary(compiler1);
+        _modelLib = _dynamicLib->model(_modelName);
 
         /**
          * Second compiled model
@@ -1030,7 +1030,7 @@ private:
         prepareTestCompilerFlags(compiler2);
         compiler2.setSourcesFolder("sources_atomiclibatomiclib_" + _modelName);
         compiler2.setSaveToDiskFirst(true);
-        _dynamicLibOuter.reset(p2.createDynamicLibrary(compiler2));
+        _dynamicLibOuter = p2.createDynamicLibrary(compiler2);
 
         /**
          * tape the model without atomics
@@ -1158,7 +1158,7 @@ private:
         prepareTestCompilerFlags(compiler);
         compiler.setSourcesFolder(folder);
         compiler.setSaveToDiskFirst(true);
-        _dynamicLib.reset(p.createDynamicLibrary(compiler));
+        _dynamicLib = p.createDynamicLibrary(compiler);
 
         /**
          * tape the model without atomics

@@ -282,12 +282,12 @@ public:
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
 
-        atomicDynamicLib_.reset(p.createDynamicLibrary(compiler));
+        atomicDynamicLib_ = p.createDynamicLibrary(compiler);
 
         /**
          * load the model
          */
-        atomicModel_.reset(atomicDynamicLib_->model(lName));
+        atomicModel_ = atomicDynamicLib_->model(lName);
     }
 
     GenericModel<double>* getGenericModel() {

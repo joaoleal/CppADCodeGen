@@ -81,8 +81,8 @@ TEST_F(LlvmModelTest, llvm) {
 
     LlvmModelLibraryProcessor<double> p(compDynHelp);
 
-    std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create());
-    std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
+    std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create();
+    std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
     ASSERT_TRUE(model.get() != nullptr);
 
     this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
@@ -123,8 +123,8 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
 
     ClangCompiler<double> clang("/usr/bin/clang-" STRINGIFY(LLVM_VERSION_MAJOR) "." STRINGIFY(LLVM_VERSION_MINOR));
 
-    std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib(p.create(clang));
-    std::unique_ptr<GenericModel<Base> > model(llvmModelLib->model("mySmallModel"));
+    std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create(clang);
+    std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
     ASSERT_TRUE(model.get() != nullptr);
 
     this->testModelResults(*llvmModelLib, *model, *fun.get(), x);

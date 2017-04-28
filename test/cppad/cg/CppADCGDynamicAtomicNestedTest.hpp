@@ -31,9 +31,9 @@ protected:
     ADFun<CGD>* _fun;
     ADFun<CGD>* _fun2;
     checkpoint<CGD>* _atomicInnerModel;
-    DynamicLib<Base>* _dynamicLib;
-    DynamicLib<Base>* _dynamicLib2;
-    GenericModel<Base>* _modelLib;
+    std::unique_ptr<DynamicLib<Base>> _dynamicLib;
+    std::unique_ptr<DynamicLib<Base>> _dynamicLib2;
+    std::unique_ptr<GenericModel<Base>> _modelLib;
     bool forwardOne = true;
     bool reverseOne = true;
     bool reverseTwo = true;
@@ -74,12 +74,9 @@ public:
     }
 
     virtual void TearDown() {
-        delete _dynamicLib;
-        _dynamicLib = nullptr;
-        delete _dynamicLib2;
-        _dynamicLib2 = nullptr;
-        delete _modelLib;
-        _modelLib = nullptr;
+        _dynamicLib.reset(nullptr);
+        _dynamicLib2.reset(nullptr);
+        _modelLib.reset(nullptr);
         delete _atomicInnerModel;
         _atomicInnerModel = nullptr;
         delete _fun;
@@ -89,9 +86,6 @@ public:
     }
 
     virtual ~CppADCGDynamicAtomicNestedTest() {
-        delete _dynamicLib;
-        delete _dynamicLib2;
-        delete _modelLib;
         delete _atomicInnerModel;
         delete _fun;
         delete _fun2;
@@ -110,10 +104,10 @@ public:
         prepareAtomicLibAtomicLib(xOuter, xInner, xInnerNorm, eqInnerNorm);
         ASSERT_TRUE(_modelLib != nullptr);
 
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib2->model(_modelName + "_outer"));
-        ASSERT_TRUE(modelLibOuter.get() != nullptr);
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLib2->model(_modelName + "_outer");
+        ASSERT_TRUE(modelLibOuter != nullptr);
 
-        test2LevelAtomicLibModel(_modelLib, modelLibOuter.get(),
+        test2LevelAtomicLibModel(_modelLib.get(), modelLibOuter.get(),
                                  xOuter, xInner, epsilonR, epsilonA);
     }
 
@@ -129,8 +123,8 @@ public:
 
         prepareAtomicLibModelBridge(xOuter, xInner, xNorm, eqNorm);
 
-        unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLib->model(_modelName + "_outer");
 
         test2LevelAtomicLibModel(modelLib.get(), modelLibOuter.get(),
                                  xOuter,
@@ -158,8 +152,8 @@ public:
                                     jacOuter, hessOuter,
                                     createOuterReverse2);
 
-        unique_ptr<GenericModel<Base> > modelLib(_dynamicLib->model(_modelName));
-        unique_ptr<GenericModel<Base> > modelLibOuter(_dynamicLib->model(_modelName + "_outer"));
+        unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
+        unique_ptr<GenericModel<Base> > modelLibOuter = _dynamicLib->model(_modelName + "_outer");
 
         test2LevelAtomicLibModelCustomEls(modelLib.get(), modelLibOuter.get(),
                                           xOuter,

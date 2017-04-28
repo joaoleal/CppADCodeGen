@@ -52,7 +52,7 @@ public:
         return _includePaths;
     }
 
-    LlvmModelLibrary<Base>* create() {
+    std::unique_ptr<LlvmModelLibrary<Base>> create() {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
@@ -79,14 +79,14 @@ public:
 
         llvm::InitializeNativeTarget();
 
-        LlvmModelLibrary3_2<Base>* lib = new LlvmModelLibrary3_2<Base>(_linker->releaseModule(), _context.release());
+        std::unique_ptr<LlvmModelLibrary<Base>> lib (new LlvmModelLibrary3_2<Base>(_linker->releaseModule(), _context.release()));
 
         this->modelLibraryHelper_->finishedJob();
 
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
+    static inline std::unique_ptr<LlvmModelLibrary<Base>> create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }

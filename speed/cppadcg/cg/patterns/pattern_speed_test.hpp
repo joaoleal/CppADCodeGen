@@ -575,9 +575,9 @@ protected:
         GccCompiler<double> compiler;
         if (!compileFlags_.empty())
             compiler.setCompileFlags(compileFlags_);
-        dynamicLib_.reset(p.createDynamicLibrary(compiler, loadLib));
+        dynamicLib_ = p.createDynamicLibrary(compiler, loadLib);
         if (loadLib) {
-            model_.reset(dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")));
+            model_ = dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"));
             assert(model_.get() != nullptr);
             for (size_t i = 0; i < externalModels_.size(); i++)
                 model_->addExternalModel(*externalModels_[i]);
@@ -614,8 +614,8 @@ protected:
         /**
          * Prepare JITed library
          */
-        llvmLib_.reset(LlvmModelLibraryProcessor<Base>::create(*libSourceGen_.get()));
-        model_.reset(llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"))); //must request model
+        llvmLib_ = LlvmModelLibraryProcessor<Base>::create(*libSourceGen_);
+        model_ = llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")); //must request model
         assert(model_.get() != nullptr);
         for (size_t i = 0; i < externalModels_.size(); i++)
             model_->addExternalModel(*externalModels_[i]);

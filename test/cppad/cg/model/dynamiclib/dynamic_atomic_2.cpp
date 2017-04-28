@@ -37,8 +37,8 @@ protected:
     checkpoint<double>* _atomicFun;
     CGAtomicFun<double>* _cgAtomicFun;
     ADFun<CGD>* _fun;
-    DynamicLib<double>* _dynamicLib;
-    GenericModel<double>* _model;
+    std::unique_ptr<DynamicLib<double>> _dynamicLib;
+    std::unique_ptr<GenericModel<double>> _model;
 public:
 
     inline CppADCGDynamicAtomic2Test(bool verbose = false, bool printValues = false) :
@@ -46,9 +46,7 @@ public:
         x(n),
         _atomicFun(nullptr),
         _cgAtomicFun(nullptr),
-        _fun(nullptr),
-        _dynamicLib(nullptr),
-        _model(nullptr) {
+        _fun(nullptr) {
     }
 
     virtual void SetUp() {
@@ -118,10 +116,8 @@ public:
         _cgAtomicFun = nullptr;
         delete _atomicFun;
         _atomicFun = nullptr;
-        delete _model;
-        _model = nullptr;
-        delete _dynamicLib;
-        _dynamicLib = nullptr;
+        _model.reset(nullptr);
+        _dynamicLib.reset(nullptr);
         delete _fun;
         _fun = nullptr;
     }

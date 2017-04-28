@@ -141,7 +141,7 @@ public:
             compiler.addCompileFlag("-pthread");
         }
 
-        DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+        std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
         dynamicLib->setThreadPoolVerbose(this->verbose_);
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
@@ -151,13 +151,10 @@ public:
         /**
          * test the library
          */
-        GenericModel<double>* model = dynamicLib->model(_name + "dynamic");
+        std::unique_ptr<GenericModel<double>> model = dynamicLib->model(_name + "dynamic");
         ASSERT_TRUE(model != nullptr);
 
         testModelResults(*dynamicLib, *model, fun, x, epsilonR, epsilonA, _denseJacobian, _denseHessian);
-
-        delete model;
-        delete dynamicLib;
     }
 
     void testDynamicCustomElements(std::vector<ADCG>& u,
@@ -217,7 +214,7 @@ public:
             compiler.addCompileFlag("-pthread");
         }
 
-        DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+        std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
         dynamicLib->setThreadPoolVerbose(this->verbose_);
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
@@ -227,7 +224,7 @@ public:
         /**
          * test the library
          */
-        GenericModel<double>* model = dynamicLib->model(_name + "dynamic2");
+        std::unique_ptr<GenericModel<double>> model = dynamicLib->model(_name + "dynamic2");
         ASSERT_TRUE(model != nullptr);
 
         // dimensions
@@ -268,9 +265,6 @@ public:
         }
 
         ASSERT_TRUE(compareValues(hessCGen, hessSparse));
-
-        delete model;
-        delete dynamicLib;
     }
 
 };

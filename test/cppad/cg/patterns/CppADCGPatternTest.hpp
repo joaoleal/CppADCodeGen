@@ -418,10 +418,10 @@ public:
         //SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + libBaseName);
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, libBaseName + "Loops");
-        std::unique_ptr<DynamicLib<double> > dynamicLibL(p.createDynamicLibrary(compiler));
+        std::unique_ptr<DynamicLib<double> > dynamicLibL = p.createDynamicLibrary(compiler);
         std::unique_ptr<GenericModel<double> > modelL;
         if (loadModels) {
-            modelL.reset(dynamicLibL->model(libBaseName + "Loops"));
+            modelL = dynamicLibL->model(libBaseName + "Loops");
             ASSERT_TRUE(modelL.get() != nullptr);
             for (size_t i = 0; i < atoms_.size(); i++)
                 modelL->addAtomicFunction(*atoms_[i]);
@@ -455,14 +455,14 @@ public:
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + libBaseName);
 
         DynamicModelLibraryProcessor<double> p2(compDynHelp, libBaseName + "NoLoops");
-        std::unique_ptr<DynamicLib<double> > dynamicLib(p2.createDynamicLibrary(compiler));
+        std::unique_ptr<DynamicLib<double> > dynamicLib = p2.createDynamicLibrary(compiler);
 
         /**
          * reference library
          */
         std::unique_ptr<GenericModel<double> > model;
         if (loadModels) {
-            model.reset(dynamicLib->model(libBaseName + "NoLoops"));
+            model = dynamicLib->model(libBaseName + "NoLoops");
             for (size_t i = 0; i < atoms_.size(); i++)
                 model->addAtomicFunction(*atoms_[i]);
         }

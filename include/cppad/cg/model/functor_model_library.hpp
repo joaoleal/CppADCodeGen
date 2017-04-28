@@ -51,12 +51,16 @@ public:
      * Creates a new FunctorGenericModel object that can be used to evaluate
      * the model.
      * This object must be released by the user!
-     * 
+     *
      * @param modelName The model name.
-     * @return The model object (must be released by the user) or nullptr if 
-     *         no model exists with the provided name 
+     * @return The model object or nullptr if no model exists with the provided
+     *         name.
      */
-    virtual FunctorGenericModel<Base>* model(const std::string& modelName) = 0;
+    virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) = 0;
+
+    virtual std::unique_ptr<GenericModel<Base>> model(const std::string& modelName) override final {
+        return std::unique_ptr<GenericModel<Base>> (modelFunctor(modelName).release());
+    }
 
     /**
      * Provides the API version used to create the model library.

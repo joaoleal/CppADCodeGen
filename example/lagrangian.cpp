@@ -91,7 +91,7 @@ int main(void) {
     DynamicModelLibraryProcessor<double> p(libgen);
 
     GccCompiler<double> compiler;
-    DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+    std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
 
     // save to files (not really required)
     SaveFilesModelLibraryProcessor<double> p2(libgen);
@@ -100,7 +100,7 @@ int main(void) {
     /***************************************************************************
      *                       Use the dynamic library
      **************************************************************************/
-    GenericModel<double>* model = dynamicLib->model("Lagrangian");
+    std::unique_ptr<GenericModel<double>> model = dynamicLib->model("Lagrangian");
     std::vector<double> V(v.size());
     V[0] = 2.5;
     V[1] = 3.5;
@@ -117,6 +117,4 @@ int main(void) {
     for (size_t i = 0; i < hess.size(); ++i)
         std::cout << "(" << row[i] << "," << col[i] << ") " << hess[i] << std::endl;
 
-    delete model;
-    delete dynamicLib;
 }

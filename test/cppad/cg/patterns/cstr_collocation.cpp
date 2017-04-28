@@ -229,7 +229,7 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVarsCppAD) {
         nnz += s.size();
     }
 
-    ASSERT_EQ(nnz, 1260);
+    ASSERT_EQ(nnz, size_t(1260));
 }
 
 /**

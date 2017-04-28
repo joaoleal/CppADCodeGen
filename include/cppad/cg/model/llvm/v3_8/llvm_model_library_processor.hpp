@@ -64,7 +64,7 @@ public:
      *
      * @return a model library
      */
-    LlvmModelLibrary<Base>* create() {
+    std::unique_ptr<LlvmModelLibrary<Base>> create() {
 #if 0
         llvm::sys::Path clangPath = llvm::sys::Program::FindProgramByName("clang");
         // Arguments to pass to the clang driver:
@@ -111,7 +111,7 @@ public:
 
         llvm::InitializeNativeTarget();
 
-        LlvmModelLibrary3_8<Base>* lib = new LlvmModelLibrary3_8<Base>(std::move(_module), _context);
+        std::unique_ptr<LlvmModelLibrary<Base>> lib(new LlvmModelLibrary3_8<Base>(std::move(_module), _context));
 
         this->modelLibraryHelper_->finishedJob();
 
@@ -123,7 +123,7 @@ public:
      * @param clang  the external compiler
      * @return  a model library
      */
-    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) {
+    std::unique_ptr<LlvmModelLibrary<Base>> create(ClangCompiler<Base>& clang) {
         using namespace llvm;
 
         // backup output format so that it can be restored
@@ -131,7 +131,7 @@ public:
 
         _linker.release();
 
-        LlvmModelLibrary3_8<Base>* lib = nullptr;
+        std::unique_ptr<LlvmModelLibrary<Base>> lib;
 
         this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
 
@@ -179,7 +179,7 @@ public:
             llvm::InitializeNativeTarget();
 
             // voila
-            lib = new LlvmModelLibrary3_8<Base>(std::move(linkerModule), _context);
+            lib.reset(new LlvmModelLibrary3_8<Base>(std::move(linkerModule), _context));
 
         } catch (...) {
             clang.cleanup();
@@ -192,7 +192,7 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
+    static inline std::unique_ptr<LlvmModelLibrary<Base>> create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }

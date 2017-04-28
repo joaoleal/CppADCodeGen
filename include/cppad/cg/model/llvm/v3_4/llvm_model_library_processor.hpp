@@ -52,12 +52,12 @@ public:
         return _includePaths;
     }
 
-    LlvmModelLibrary<Base>* create() {
+    std::unique_ptr<LlvmModelLibrary<Base>> create() {
         ClangCompiler<Base> clang;
         return create(clang);
     }
 
-    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) {
+    std::unique_ptr<LlvmModelLibrary<Base>> create(ClangCompiler<Base>& clang) {
         using namespace llvm;
 
         // backup output format so that it can be restored
@@ -65,7 +65,7 @@ public:
 
         _linker.release();
 
-        LlvmModelLibrary3_4<Base>* lib = nullptr;
+        std::unique_ptr<LlvmModelLibrary<Base>> lib;
 
         this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
 
@@ -110,7 +110,7 @@ public:
             llvm::InitializeNativeTarget();
 
             // voila
-            lib = new LlvmModelLibrary3_4<Base>(_linker->getModule(), _context.release());
+            lib.reset(new LlvmModelLibrary3_4<Base>(_linker->getModule(), _context.release()));
 
         } catch (...) {
             clang.cleanup();
@@ -123,7 +123,7 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
+    static inline std::unique_ptr<LlvmModelLibrary<Base>> create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }

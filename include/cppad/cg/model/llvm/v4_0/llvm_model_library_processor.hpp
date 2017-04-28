@@ -64,7 +64,7 @@ public:
      *
      * @return a model library
      */
-    LlvmModelLibrary<Base>* create() {
+    std::unique_ptr<LlvmModelLibrary<Base>> create() {
         // backup output format so that it can be restored
         OStreamConfigRestore coutb(std::cout);
 
@@ -92,7 +92,7 @@ public:
 
         llvm::InitializeNativeTarget();
 
-        LlvmModelLibrary4_0<Base>* lib = new LlvmModelLibrary4_0<Base>(std::move(_module), _context);
+        std::unique_ptr<LlvmModelLibrary<Base>> lib(new LlvmModelLibrary4_0<Base>(std::move(_module), _context));
 
         this->modelLibraryHelper_->finishedJob();
 
@@ -100,11 +100,13 @@ public:
     }
 
     /**
+     * Creates a LLVM model library using an external Clang compiler to
+     * generate the bitcode.
      *
      * @param clang  the external compiler
      * @return  a model library
      */
-    LlvmModelLibrary<Base>* create(ClangCompiler<Base>& clang) {
+    std::unique_ptr<LlvmModelLibrary<Base>> create(ClangCompiler<Base>& clang) {
         using namespace llvm;
 
         // backup output format so that it can be restored
@@ -112,7 +114,7 @@ public:
 
         _linker.release();
 
-        LlvmModelLibrary4_0<Base>* lib = nullptr;
+        std::unique_ptr<LlvmModelLibrary<Base>> lib;
 
         this->modelLibraryHelper_->startingJob("", JobTimer::JIT_MODEL_LIBRARY);
 
@@ -167,7 +169,7 @@ public:
             llvm::InitializeNativeTarget();
 
             // voila
-            lib = new LlvmModelLibrary4_0<Base>(std::move(linkerModule), _context);
+            lib.reset(new LlvmModelLibrary4_0<Base>(std::move(linkerModule), _context));
 
         } catch (...) {
             clang.cleanup();
@@ -180,7 +182,7 @@ public:
         return lib;
     }
 
-    static inline LlvmModelLibrary<Base>* create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
+    static inline std::unique_ptr<LlvmModelLibrary<Base>> create(ModelLibraryCSourceGen<Base>& modelLibraryHelper) {
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }
@@ -194,23 +196,19 @@ protected:
     }
 
     virtual void createLlvmModule(const std::string& filename,
-                                                          const std::string& source) {
+                                  const std::string& source) {
         using namespace llvm;
         using namespace clang;
 
         ArrayRef<StringRef> paths;
         llvm::sys::findProgramByName("clang", paths);
 
-        static const char* argv [] = {"program", "-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
-        static const int argc = sizeof (argv) / sizeof (argv[0]);
-
         IntrusiveRefCntPtr<DiagnosticOptions> diagOpts = new DiagnosticOptions();
         TextDiagnosticPrinter* diagClient = new TextDiagnosticPrinter(llvm::errs(), &*diagOpts); // will be owned by diags
         IntrusiveRefCntPtr<DiagnosticIDs> diagID(new DiagnosticIDs());
         IntrusiveRefCntPtr<DiagnosticsEngine> diags(new DiagnosticsEngine(diagID, &*diagOpts, diagClient));
 
-        ArrayRef<const char*> args(argv + 1, // skip program name
-                                   argc - 1);
+        ArrayRef<const char*> args {"-Wall", "-x", "c", "string-input"}; // -Wall or -v flag is required to avoid an error inside createInvocationFromCommandLine()
         std::shared_ptr<CompilerInvocation> invocation(createInvocationFromCommandLine(args, diags));
         if (invocation.get() == nullptr)
             throw CGException("Failed to create compiler invocation");

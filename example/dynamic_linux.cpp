@@ -58,7 +58,7 @@ int main(void) {
     DynamicModelLibraryProcessor<double> p(libcgen);
 
     GccCompiler<double> compiler;
-    DynamicLib<double>* dynamicLib = p.createDynamicLibrary(compiler);
+    std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
 
     // save to files (not really required)
     SaveFilesModelLibraryProcessor<double> p2(libcgen);
@@ -68,7 +68,7 @@ int main(void) {
      *                       Use the dynamic library
      **************************************************************************/
 
-    GenericModel<double>* model = dynamicLib->model("model");
+    std::unique_ptr<GenericModel<double>> model = dynamicLib->model("model");
     std::vector<double> xv(x.size());
     xv[0] = 2.5;
     xv[1] = 3.5;
@@ -76,7 +76,4 @@ int main(void) {
 
     // print out the result
     std::cout << jac[0] << " " << jac[1] << std::endl;
-
-    delete model;
-    delete dynamicLib;
 }

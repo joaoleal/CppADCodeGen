@@ -63,14 +63,19 @@ public:
     LinuxDynamicLib(const LinuxDynamicLib&) = delete;
     LinuxDynamicLib& operator=(const LinuxDynamicLib&) = delete;
 
-    virtual LinuxDynamicLibModel<Base>* model(const std::string& modelName) override {
+    virtual std::unique_ptr<LinuxDynamicLibModel<Base>> modelLinuxDyn(const std::string& modelName) {
+        std::unique_ptr<LinuxDynamicLibModel<Base>> m;
         std::set<std::string>::const_iterator it = this->_modelNames.find(modelName);
         if (it == this->_modelNames.end()) {
-            return nullptr;
+            return m;
         }
-        LinuxDynamicLibModel<Base>* m = new LinuxDynamicLibModel<Base> (this, modelName);
-        _models.insert(m);
+        m.reset(new LinuxDynamicLibModel<Base> (this, modelName));
+        _models.insert(m.get());
         return m;
+    }
+
+    virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
+        return std::unique_ptr<FunctorGenericModel<Base>>(modelLinuxDyn(modelName).release());
     }
 
     virtual void* loadFunction(const std::string& functionName, bool required = true) override {
