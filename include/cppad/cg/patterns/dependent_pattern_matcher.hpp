@@ -70,7 +70,7 @@ private:
     CodeHandlerVector<Base, bool> varIndexed_; // which nodes depend on indexed independent variables
     const std::vector<std::set<size_t> >& relatedDepCandidates_;
     std::vector<CGBase> dependents_; // a copy
-    std::vector<CGBase>& independents_;
+    const std::vector<CGBase>& independents_;
     std::vector<EquationPattern<Base>*> equations_;
     EquationPattern<Base>* eqCurr_;
     std::map<size_t, EquationPattern<Base>*> dep2Equation_;
@@ -111,7 +111,7 @@ public:
      */
     DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
                             const std::vector<CGBase>& dependents,
-                            std::vector<CGBase>& independents) :
+                            const std::vector<CGBase>& independents) :
         handler_(independents[0].getCodeHandler()),
         varId_(*handler_),
         varIndexed_(*handler_),
