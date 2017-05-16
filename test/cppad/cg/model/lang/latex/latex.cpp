@@ -71,7 +71,7 @@ TEST(CppADCGLatexTest, latex) {
 
     std::string dir = system::getWorkingDirectory();
 
-    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER,{"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
 
 }
 
@@ -118,6 +118,6 @@ TEST(CppADCGLatexTest, latexJac) {
 
     std::string dir = system::getWorkingDirectory();
 
-    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
+    ASSERT_NO_THROW(system::callExecutable(PDFLATEX_COMPILER, {"-halt-on-error", "-interaction=nonstopmode", "-shell-escape", system::createPath(dir, "latexTemplate.tex")}));
 
 }
