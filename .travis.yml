@@ -30,6 +30,7 @@ addons:
     - gdb
     - texlive-extra-utils
     - texlive-fonts-extra
+    - texlive-latex-recommended
 #    - cppad
 
 env:
