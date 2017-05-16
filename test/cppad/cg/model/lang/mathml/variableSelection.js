@@ -44,6 +44,8 @@ function showEquations(eqId, level) {
                 eq.classList.add('depEq');
                 if (level > 1)
                     eq.classList.add('faded2');
+            } else {
+                return; // been here already
             }
         }
     }

@@ -177,8 +177,10 @@ public:
         _ss.str("");
 
         _ss << "<msub>"
-                "<mi>" << _depName << "</mi>";
+                "<mi>" << _depName << "</mi>"
+            << "<mrow>";
         LanguageMathML<Base>::indexPattern2String(_ss, ip, getIndexes(var, 1));
+        _ss << "</mrow>";
         _ss << "</msub>";
 
         return _ss.str();
@@ -195,8 +197,10 @@ public:
 
 
         _ss << "<msub>"
-                "<mi>" << _indepName << "</mi>";
+                "<mi>" << _indepName << "</mi>"
+            << "<mrow>";
         LanguageMathML<Base>::indexPattern2String(_ss, ip, getIndexes(independent));
+        _ss << "</mrow>";
         _ss << "</msub>";
 
         return _ss.str();

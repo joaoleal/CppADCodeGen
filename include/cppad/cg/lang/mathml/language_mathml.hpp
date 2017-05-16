@@ -83,8 +83,6 @@ protected:
     std::map<size_t, size_t> _dependentIDs;
     // the dependent variable vector
     const ArrayView<CG<Base> >* _dependent;
-    // the temporary variables that may require a declaration
-    std::map<size_t, Node*> _temporary;
     // whether or not to ignore assignment of constant zero values to dependent variables
     bool _ignoreZeroDepAssign;
     // the name of the file to be created without the extension
@@ -126,7 +124,8 @@ public:
                ".condBody{padding-left: 2em;}\n"
                ".dep{color:#600;}\n"
                ".indep{color:#060;}\n"
-               ".tmp{color:#006;}\n"),
+               ".tmp{color:#006;}\n"
+               ".index{color:#00f;}\n"),
         _startEq("<math display=\"block\" class=\"equation\">"),
         _endEq("</math>"),
         _forStart("<div class='loop'>"),
@@ -475,19 +474,19 @@ public:
             size_t min = info[e];
             size_t max = info[e + 1];
             if (min == max) {
-                out << "<mi>" << index << "</mi><mo>==</mo><mn>" << min << "</nm>";
+                out << "<mi class='index'>" << index << "</mi><mo>==</mo><mn>" << min << "</nm>";
             } else if (min == 0) {
-                out << "<mi>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn>";
+                out << "<mi class='index'>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn>";
             } else if (max == std::numeric_limits<size_t>::max()) {
-                out << "<mn>" << min << "</mn><mo>&le;</mo><mi>" << index << "</mi>";
+                out << "<mn>" << min << "</mn><mo>&le;</mo><mi class='index'>" << index << "</mi>";
             } else {
                 if (infoSize != 2)
                     out << "<mfenced><mrow>";
 
                 if (max - min == 1)
-                    out << "<mn>" << min << "</mn><mo>==</mo><mi>" << index << "</mi><mo>&or;</mo><mi>" << index << "</mi><mo>==</mo><mn>" << max << "</mn>";
+                    out << "<mn>" << min << "</mn><mo>==</mo><mi class='index'>" << index << "</mi><mo>&or;</mo><mi class='index'>" << index << "</mi><mo>==</mo><mn>" << max << "</mn>";
                 else
-                    out << "<mn>" << min << "</mn><mo>&le;</mo><mi>" << index << "</mi><mo>&and;</mo><mi>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn";
+                    out << "<mn>" << min << "</mn><mo>&le;</mo><mi class='index'>" << index << "</mi><mo>&and;</mo><mi class='index'>" << index << "</mi><mo>&le;</mo><mn>" << max << "</mn";
 
                 if (infoSize != 2)
                     out << "</mrow></mfenced>";
@@ -542,7 +541,6 @@ protected:
         _code.str("");
         _ss.str("");
         _indentationLevel = 0;
-        _temporary.clear();
         auxArrayName_ = "";
         _currentLoops.clear();
         depConstIds_.clear();
@@ -672,7 +670,7 @@ protected:
                     if (a.array) {
                         _code << a.name;
                     } else {
-                        _code << "<mrow id='" << createID(*(*_dependent)[i].getOperationNode()) << "' class='dep'>" << _nameGen->generateDependent(i) << "</mrow>";
+                        _code << "<mrow id='" << createHtmlID(*(*_dependent)[i].getOperationNode()) << "' class='dep'>" << _nameGen->generateDependent(i) << "</mrow>";
                     }
                     _code << _assignStr;
                     printParameter(Base(0.0));
@@ -730,9 +728,9 @@ protected:
                 const std::string& origVarName = *depNode->getName();
 
                 _code << _startEq
-                        << "<mrow id='" << createID(depNode) << "' class='dep'>" << varName << "</mrow>"
+                        << "<mrow id='" << createHtmlID(depNode) << "' class='dep'>" << varName << "</mrow>"
                         << _assignStr
-                        << "<mrow id='" << createID(depNode) << "' class='dep'>" << origVarName << "</mrow>";
+                        << "<mrow id='" << createHtmlID(depNode) << "' class='dep'>" << origVarName << "</mrow>";
                 printAssignmentEnd();
             }
         }
@@ -748,7 +746,7 @@ protected:
                     }
 
                     std::string depId = "d" + std::to_string(i);
-                    if(_saveVariableRelations) {
+                    if (_saveVariableRelations) {
                         depConstIds_.push_back(depId);
                     }
 
@@ -766,14 +764,14 @@ protected:
 
                 std::string varName = _nameGen->generateDependent(i);
                 const std::string& indepName = *dependent[i].getOperationNode()->getName();
-                std::string depId = createID(dependent[i].getOperationNode());
-                if(_saveVariableRelations) {
+                std::string depId = createHtmlID(dependent[i].getOperationNode());
+                if (_saveVariableRelations) {
                     depIsIndepIds_.push_back(depId);
                 }
                 _code << _startEq
                         << "<mrow id='" << depId << "' class='dep'>" << varName << "</mrow>"
                         << _assignStr
-                        << "<mrow id='" << createID(dependent[i].getOperationNode()) << "' class='indep'>" << indepName << "</mrow>";
+                        << "<mrow id='" << createHtmlID(dependent[i].getOperationNode()) << "' class='indep'>" << indepName << "</mrow>";
                 printAssignmentEnd(*dependent[i].getOperationNode());
             }
         }
@@ -800,7 +798,7 @@ protected:
     }
 
     inline size_t getVariableID(const Node& node) const {
-        return _info->varId[node];
+        return _info->varId[node]; // some of these values are 0 and std::numeric_limits<size_t>::max()
     }
 
     inline virtual void printAlgorithmFileStart(std::ostream& out) {
@@ -820,7 +818,7 @@ protected:
                     << "</style>" << _endline;
         }
 
-        if(_saveVariableRelations) {
+        if (_saveVariableRelations) {
             CPPADCG_ASSERT_UNKNOWN(_info->variableDependencies.size() == _info->variableOrder.size());
 
             out << "<script type=\"text/javascript\">" << _endline;
@@ -838,10 +836,10 @@ protected:
                     } else {
                         out << "," << _endline;
                     }
-                    out << "        \"" << getVariableID(*varOrder[i]) << "\": [";
+                    out << "        \"" << getHtmlID(*varOrder[i]) << "\": [";
                     for (const auto* n: varDeps[i]) {
                         if (n != *varDeps[i].begin()) out << ", ";
-                        out << getVariableID(*n);
+                        out << getHtmlID(*n);
                     }
                     out << "]";
                 }
@@ -853,9 +851,9 @@ protected:
 
             std::map<size_t, std::set<size_t> > deps2Var;
             for (size_t i = 0; i < varDeps.size(); ++i) {
-                size_t idi = getVariableID(*varOrder[i]);
+                size_t idi = getHtmlID(*varOrder[i]);
                 for (const auto* n: varDeps[i]) {
-                    size_t idj = getVariableID(*n);
+                    size_t idj = getHtmlID(*n);
                     deps2Var[idj].insert(idi);
                 }
             }
@@ -966,12 +964,8 @@ protected:
     }
 
     inline virtual void printAssignmentStart(Node& node, const std::string& varName, bool isDep) {
-        if (!isDep) {
-            _temporary[getVariableID(node)] = &node;
-        }
-
         _code << _startEq;
-        _code << "<mrow id='" << createID(node) << "' class='" << (isDep ? "dep" : "tmp") << "'>" << varName << "</mrow>";
+        _code << "<mrow id='" << createHtmlID(node) << "' class='" << (isDep ? "dep" : "tmp") << "'>" << varName << "</mrow>";
 
         CGOpCode op = node.getOperationType();
         if (op == CGOpCode::DependentMultiAssign || (op == CGOpCode::LoopIndexedDep && node.getInfo()[1] == 1)) {
@@ -1135,12 +1129,25 @@ protected:
         return *var.getName();
     }
 
-    inline std::string createID(const Node* var) {
-        return createID(*var);
+    /**
+     * The base HTML ID for a node
+     */
+    inline size_t getHtmlID(const Node& var) const {
+        return var.getHandlerPosition(); // always unique and higher than zero
     }
 
-    virtual std::string createID(const Node& var) {
-        size_t id = getVariableID(var);
+    /**
+     * Creates an HTML ID for the usage of a variable in particular place in the HTML
+     */
+    inline std::string createHtmlID(const Node* var) {
+        return createHtmlID(*var);
+    }
+
+    /**
+     * Creates an HTML ID for the usage of a variable in particular place in the HTML
+     */
+    virtual std::string createHtmlID(const Node& var) {
+        size_t id = getHtmlID(var);
         if (varIds_.size() <= id) {
             varIds_.resize(id + 1 + varIds_.size() * 3 / 2, 0);
         }
@@ -1156,8 +1163,7 @@ protected:
 
     virtual void printIndependentVariableName(Node& op) {
         CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent variable");
-        //size_t id = getVariableID(op);
-        _code << "<mrow id='" << createID(op) << "' class='indep'>" << _nameGen->generateIndependent(op, getVariableID(op)) << "</mrow>";
+        _code << "<mrow id='" << createHtmlID(op) << "' class='indep'>" << _nameGen->generateIndependent(op, getVariableID(op)) << "</mrow>";
     }
 
     virtual unsigned print(const Arg& arg) {
@@ -1174,20 +1180,19 @@ protected:
     virtual unsigned printExpression(Node& node) {
         if (getVariableID(node) > 0) {
             const std::string& name = createVariableName(node); // use variable name
-            //size_t id = getVariableID(node);
 
             CGOpCode op = node.getOperationType();
             if (getVariableID(node) >= _minTemporaryVarID || op == CGOpCode::ArrayCreation || op == CGOpCode::SparseArrayCreation || op == CGOpCode::LoopIndexedDep || op == CGOpCode::LoopIndexedIndep) {
 
-                _code << "<mrow id='" << createID(node) << "' class='tmp'>" << name << "</mrow>"; // TODO!!!!!!!!!!!!!!!!!!!!!!!
+                _code << "<mrow id='" << createHtmlID(node) << "' class='tmp'>" << name << "</mrow>"; // TODO!!!!!!!!!!!!!!!!!!!!!!!
 
             } else if (getVariableID(node) <= _independentSize) {
                 // independent variable
-                _code << "<mrow id='" << createID(node) << "' class='indep'>" << name << "</mrow>";
+                _code << "<mrow id='" << createHtmlID(node) << "' class='indep'>" << name << "</mrow>";
 
             } else {
                 // dependent variable
-                _code << "<mrow id='" << createID(node) << "' class='dep'>" << name << "</mrow>";
+                _code << "<mrow id='" << createHtmlID(node) << "' class='dep'>" << name << "</mrow>";
 
             }
 
@@ -1536,7 +1541,7 @@ protected:
 
         auto isNumber = [this](const Node* node, int pos) -> bool {
             while (node != nullptr) {
-                if(getVariableID(*node) != 0) {
+                if (getVariableID(*node) != 0) {
                     return false;
                 }
                 CGOpCode op = node->getOperationType();
@@ -1809,8 +1814,8 @@ protected:
         }
 
         _code << _forStart << _startEq << "<mi>for</mi>"
-                "<mfenced><mrow>"
-                << jj << "<mo>&isin;</mo>"
+                "<mfenced><mrow><mi class='index'>"
+                << jj << "</mi><mo>&isin;</mo>"
                 "<mfenced open='[' close='[' separators=';'>"
                 "<mn>0</mn>" << lastIt <<
                 "</mfenced>"
@@ -1861,7 +1866,7 @@ protected:
         Node* tmpVar = node.getArguments()[0].getOperation();
         CPPADCG_ASSERT_KNOWN(tmpVar != nullptr && tmpVar->getOperationType() == CGOpCode::TmpDcl, "Invalid arguments for loop indexed temporary operation");
 
-        _code << "<mrow id='" << createID(tmpVar) << "' class='tmp'>" << *tmpVar->getName() << "</mrow>";
+        _code << "<mrow id='" << createHtmlID(tmpVar) << "' class='tmp'>" << *tmpVar->getName() << "</mrow>";
     }
 
     virtual void printIndexAssign(Node& node) {
@@ -1872,7 +1877,7 @@ protected:
 
         const IndexPattern& ip = inode.getIndexPattern();
         _code << _startEq
-                << (*inode.getIndex().getName())
+                << "<mi class='index'>"<< (*inode.getIndex().getName()) << "</mi>"
                 << _assignStr;
         indexPattern2String(_code, ip, inode.getIndexPatternIndexes());
         _code << _endEq << _endline;

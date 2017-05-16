@@ -180,7 +180,7 @@ inline void LanguageMathML<Base>::indexPattern2String(std::ostream& os,
                 ++its;
                 size_t xStart = its->first;
 
-                os << "<mfenced><mrow><mi>" << (*indexes[0]->getName()) << "</mi> <mo>&lt;</mo> <mn>" << xStart << "</mn></mrow></mfenced><mo>?</mo> ";
+                os << "<mfenced><mrow><mi class='index'>" << (*indexes[0]->getName()) << "</mi> <mo>&lt;</mo> <mn>" << xStart << "</mn></mrow></mfenced><mo>?</mo> ";
                 indexPattern2String(os, *lp, *indexes[0]);
                 os << "<mo>:</mo> ";
             }
@@ -246,7 +246,7 @@ inline void LanguageMathML<Base>::linearIndexPattern2String(std::ostream& os,
         if (xOffset != 0) {
             os << "<mfenced><mrow>";
         }
-        os << "<mi>" << (*index.getName()) << "</mi>";
+        os << "<mi class='index'>" << (*index.getName()) << "</mi>";
         if (xOffset != 0) {
             os << " <mo>-</mo><mn>" << xOffset << "</mn></mrow></mfenced>";
         }
@@ -255,7 +255,7 @@ inline void LanguageMathML<Base>::linearIndexPattern2String(std::ostream& os,
             os << "<mo>/</mo><mn>" << dx << "</mn>";
         }
         if (dy != 1) {
-            os << "<mo>\\times</mo><mn>" << dy << "</mn>";
+            os << "<mo>&sdot;</mo><mn>" << dy << "</mn>"; // TODO: use _multOpStr
         }
     } else if (b == 0) {
         os << "<mn>0</mn>"; // when dy == 0 and b == 0
