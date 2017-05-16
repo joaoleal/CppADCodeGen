@@ -260,7 +260,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
     /**
      * print the loop
      */
-    _code << _forStart << "{$i " << _assignStr << starti << "$ to $" << (i - 1) << "$}" << _endline;
+    _code << _forStart << "{$i \\in \\left[" <<  starti << ", " << (i - 1) << "\\right]$}" << _endline;
     _indentationLevel++;
     _code << _startAlgLine << _startEq
             << auxArrayName_ << "[i]" << _assignStr << arrayAssign.str()

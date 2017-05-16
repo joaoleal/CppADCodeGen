@@ -1828,7 +1828,7 @@ protected:
 
         checkEquationEnvEnd();
 
-        _code << _forStart << "{$" << jj << _assignStr << "0$ to $" << lastIt << "$}" << _endline;
+        _code << _forStart << "{$" << jj << "\\in \\left[0, " << lastIt << "\\right]$}" << _endline;
         _indentationLevel++;
     }
 

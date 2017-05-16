@@ -158,7 +158,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(var, 1));
+        std::string index = LanguageLatex<Base>::indexPattern2String(ip, getIndexes(var, 1));
         _ss << _depName << "_";
         if (index.size() > 1)
             _ss << "{" << index << "}";
@@ -177,7 +177,7 @@ public:
         _ss.clear();
         _ss.str("");
 
-        std::string index = LanguageC<Base>::indexPattern2String(ip, getIndexes(independent));
+        std::string index = LanguageLatex<Base>::indexPattern2String(ip, getIndexes(independent));
         _ss << _indepName << "_";
         if (index.size() > 1)
             _ss << "{" << index << "}";

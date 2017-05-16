@@ -85,26 +85,20 @@ template<class Base>
 void LanguageLatex<Base>::printStaticIndexArray(std::ostringstream& os,
                                                 const std::string& name,
                                                 const std::vector<size_t>& values) {
-    /**
-     * TODO
-     */
-    os << name << " = \\{[";
+    os << name << " = \\left\\{";
     if (!values.empty()) {
         os << values[0];
         for (size_t i = 1; i < values.size(); i++) {
-            os << " " << values[i];
+            os << ", " << values[i];
         }
     }
-    os << "]\\}" << _endEq << " % size: " << values.size() << _endline;
+    os << "\\right\\}" << _endEq << " % size: " << values.size() << _endline;
 }
 
 template<class Base>
 void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
                                                  const std::string& name,
                                                  const std::map<size_t, std::map<size_t, size_t> >& values) {
-    /**
-     * TODO
-     */
     size_t m = 0;
     size_t n = 0;
 
@@ -120,7 +114,7 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
         }
     }
 
-    os << name << " = \\{";
+    os << name << " = \\left\\{";
     size_t x = 0;
     for (it = values.begin(); it != values.end(); ++it) {
         if (it->first != x) {
@@ -152,7 +146,7 @@ void LanguageLatex<Base>::printStaticIndexMatrix(std::ostringstream& os,
 
         x++;
     }
-    os << "\\}" << _endEq << "% size: " << m << " x " << n << _endline;
+    os << "\\right\\}" << _endEq << "% size: " << m << " x " << n << _endline;
 }
 
 template<class Base>
@@ -186,7 +180,7 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
                 ++its;
                 size_t xStart = its->first;
 
-                ss << "(" << (*indexes[0]->getName()) << "<" << xStart << ")? "
+                ss << "\\left(" << (*indexes[0]->getName()) << "<" << xStart << "\\right)? "
                         << indexPattern2String(*lp, *indexes[0]) << ": ";
             }
             ss << indexPattern2String(*its->second, *indexes[0]);
@@ -201,17 +195,17 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
             const Plane2DIndexPattern& pip = static_cast<const Plane2DIndexPattern&> (ip);
             bool useParens = pip.getPattern1() != nullptr && pip.getPattern2() != nullptr;
 
-            if (useParens) indexExpr += "(";
+            if (useParens) indexExpr += "\\left(";
 
             if (pip.getPattern1() != nullptr)
                 indexExpr += indexPattern2String(*pip.getPattern1(), *indexes[0]);
 
-            if (useParens) indexExpr += ") + (";
+            if (useParens) indexExpr += "\\right) + \\left(";
 
             if (pip.getPattern2() != nullptr)
                 indexExpr += indexPattern2String(*pip.getPattern2(), *indexes.back());
 
-            if (useParens) indexExpr += ")";
+            if (useParens) indexExpr += "\\right)";
 
             return indexExpr;
         }
@@ -220,14 +214,14 @@ inline std::string LanguageLatex<Base>::indexPattern2String(const IndexPattern& 
             CPPADCG_ASSERT_KNOWN(indexes.size() == 1, "Invalid number of indexes");
             const Random1DIndexPattern& rip = static_cast<const Random1DIndexPattern&> (ip);
             CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
-            return rip.getName() + "[" + (*indexes[0]->getName()) + "]";
+            return rip.getName() + "\\left[" + (*indexes[0]->getName()) + "\\right]";
         }
         case IndexPatternType::Random2D:
         {
             CPPADCG_ASSERT_KNOWN(indexes.size() == 2, "Invalid number of indexes");
             const Random2DIndexPattern& rip = static_cast<const Random2DIndexPattern&> (ip);
             CPPADCG_ASSERT_KNOWN(!rip.getName().empty(), "Invalid name for array");
-            return rip.getName() + "[" + (*indexes[0]->getName()) + "][" + (*indexes[1]->getName()) + "]";
+            return rip.getName() + "\\left[" + (*indexes[0]->getName()) + "\\right]\\left[" + (*indexes[1]->getName()) + "\\right]";
         }
         default:
             CPPADCG_ASSERT_UNKNOWN(false); // should never reach this
@@ -246,18 +240,18 @@ inline std::string LanguageLatex<Base>::linearIndexPattern2String(const LinearIn
     std::stringstream ss;
     if (dy != 0) {
         if (xOffset != 0) {
-            ss << "(";
+            ss << "\\left(";
         }
         ss << (*index.getName());
         if (xOffset != 0) {
-            ss << " - " << xOffset << ")";
+            ss << " - " << xOffset << "\\right)";
         }
 
         if (dx != 1) {
             ss << " / " << dx;
         }
         if (dy != 1) {
-            ss << " * " << dy;
+            ss << " \\cdot " << dy;
         }
     } else if (b == 0) {
         ss << "0"; // when dy == 0 and b == 0
