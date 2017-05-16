@@ -60,7 +60,7 @@ script:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=3.6 ..
   - cd test
-  - make
+  - make -j2
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
 
 os:
