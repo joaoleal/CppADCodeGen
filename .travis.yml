@@ -29,6 +29,7 @@ addons:
     - libgtest-dev
     - gdb
     - texlive-extra-utils
+    - texlive-fonts-extra
 #    - cppad
 
 env:
