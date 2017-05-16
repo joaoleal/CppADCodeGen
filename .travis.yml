@@ -31,6 +31,7 @@ addons:
     - texlive-extra-utils
     - texlive-fonts-extra
     - texlive-latex-recommended
+    - latex-xcolor
 #    - cppad
 
 env:
