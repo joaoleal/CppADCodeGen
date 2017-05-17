@@ -14,8 +14,8 @@
  */
 
 #include "pattern_speed_test.hpp"
-#include "../../../test/cppad/cg/models/collocation.hpp"
-#include "../../../test/cppad/cg/models/plug_flow.hpp"
+#include "../../../../test/cppad/cg/models/collocation.hpp"
+#include "../../../../test/cppad/cg/models/plug_flow.hpp"
 
 namespace CppAD {
 namespace cg {

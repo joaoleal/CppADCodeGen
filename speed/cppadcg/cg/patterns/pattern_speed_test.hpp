@@ -219,6 +219,9 @@ protected:
                 "********************************************************************************\n";
         std::cout << head << std::endl;
         std::cerr << head << std::endl;
+
+        printStatHeader();
+
         ModelCppADCG model(*this);
 
         std::unique_ptr<ADFun<CGD> > fun;
@@ -234,7 +237,7 @@ protected:
             dt[i] = steady_clock::now() - t0;
 
             // create dynamic lib
-            createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
+            createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
         }
         printStat("model tape", dt);
         printCGResults();
@@ -258,6 +261,9 @@ protected:
                 "********************************************************************************\n";
         std::cout << head << std::endl;
         std::cerr << head << std::endl;
+
+        printStatHeader();
+
         ModelCppADCG model(*this);
 
         std::unique_ptr<ADFun<CGD> > fun;
@@ -273,7 +279,7 @@ protected:
             dt[i] = steady_clock::now() - t0;
 
             // create dynamic lib
-            createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == dt.size() - 1, REVERSE, testJacobian_, testHessian_);
+            createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
         }
         printStat("model tape", dt);
 
@@ -298,7 +304,9 @@ protected:
         std::cout << head << std::endl;
         std::cerr << head << std::endl;
 
-        JacobianADMode jacMode = REVERSE;
+        printStatHeader();
+
+        JacobianADMode jacMode = JacobianADMode::Reverse;
         bool forReverseOne = false;
         bool reverseTwo = false;
 
@@ -370,6 +378,18 @@ protected:
         std::cerr << std::endl;
     }
 
+    static void printStatHeader() {
+        std::cout << std::setw(30) << "" << "  "
+                  << std::setw(12) << "mean" << " +- " << std::setw(12) << "stdDev"
+                  << "      "
+                  << std::setw(12) << "min" << "|--["
+                  << std::setw(12) << "q25" << ", "
+                  << std::setw(12) << "median" << ", "
+                  << std::setw(12) << "q75" << "]--|"
+                  << std::setw(12) << "max"
+                  << std::endl;
+    }
+
     static void printStat(const std::vector<duration>& dtimes) {
         std::vector<double> times(dtimes.size());
         for (size_t i = 0; i < times.size(); i++)
@@ -430,6 +450,8 @@ protected:
                 "********************************************************************************\n";
         std::cout << head << std::endl;
         std::cerr << head << std::endl;
+
+        printStatHeader();
 
         ModelCppAD model(*this);
 
@@ -510,8 +532,8 @@ protected:
         std::string libBaseName = libName_;
         if (jacobian) {
             if (!forReverseOne) libBaseName += "d";
-            if (jacMode == FORWARD) libBaseName += "F";
-            else if (jacMode == REVERSE) libBaseName += "R";
+            if (jacMode == JacobianADMode::Forward) libBaseName += "F";
+            else if (jacMode == JacobianADMode::Reverse) libBaseName += "R";
         }
         if (hessian && reverseTwo)
             libBaseName += "rev2";
@@ -539,8 +561,8 @@ protected:
         modelSourceGen_->setJacobianADMode(jacMode);
         modelSourceGen_->setCreateSparseJacobian(jacobian);
         modelSourceGen_->setCreateSparseHessian(hessian);
-        modelSourceGen_->setCreateForwardOne(forReverseOne && jacMode == FORWARD);
-        modelSourceGen_->setCreateReverseOne(forReverseOne && jacMode == REVERSE);
+        modelSourceGen_->setCreateForwardOne(forReverseOne && jacMode == JacobianADMode::Forward);
+        modelSourceGen_->setCreateReverseOne(forReverseOne && jacMode == JacobianADMode::Reverse);
         modelSourceGen_->setCreateReverseTwo(reverseTwo);
         modelSourceGen_->setRelatedDependents(relatedDepCandidates);
         modelSourceGen_->setTypicalIndependentValues(xTypical);

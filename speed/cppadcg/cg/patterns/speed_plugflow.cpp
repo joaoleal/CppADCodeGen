@@ -14,7 +14,7 @@
  */
 
 #include "pattern_speed_test.hpp"
-#include "../../../test/cppad/cg/models/plug_flow.hpp"
+#include "../../../../test/cppad/cg/models/plug_flow.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;
