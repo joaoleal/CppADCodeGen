@@ -122,9 +122,11 @@ private:
             CPPADCG_ASSERT_UNKNOWN(node->getInfo().size() > 1);
             CPPADCG_ASSERT_UNKNOWN(node->getArguments().size() > 1);
             size_t id = node->getInfo()[0];
-            size_t p = node->getInfo()[2];
 
+#ifndef NDEBUG
+            size_t p = node->getInfo()[2];
             CPPADCG_ASSERT_UNKNOWN(p == 0);
+#endif
 
             OperationNode<Base>* tx = node->getArguments()[0].getOperation();
             OperationNode<Base>* ty = node->getArguments()[1].getOperation();
