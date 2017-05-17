@@ -69,6 +69,9 @@ inline CG<Base> CodeHandler<Base>::solveFor(OperationNode<Base>& expression,
 
             CG<Base> expression2 = collectVariable(*root, paths[0], paths[1], bifPos);
             root = expression2.getOperationNode();
+            if (root == nullptr) {
+                throw CGException("It is not possible to solve the expression for the requested variable: the variable disappears after symbolic manipulations (e.g., y=x-x).");
+            }
         }
     }
 

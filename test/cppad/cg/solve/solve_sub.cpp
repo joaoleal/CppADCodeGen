@@ -37,3 +37,21 @@ TEST_F(CppADCGSolveTest, SolveSub) {
 
     test_solve(fun, 2, 1, u);
 }
+
+TEST_F(CppADCGSolveTest, SolveSubInvalid) {
+    // independent variable vector
+    std::vector<ADCGD> u(1);
+    u[0] = 4.5;
+    Independent(u);
+
+    // dependent variable vector
+    std::vector<ADCGD> Z(1);
+
+    // model
+    Z[0] = u[0] - u[0]; // u[0] disappears
+
+    // create f: U -> Z
+    ADFun<CGD> fun(u, Z);
+
+    ASSERT_THROW(test_solve(fun, 0, 0, u), CGException);
+}
