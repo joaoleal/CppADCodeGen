@@ -109,7 +109,8 @@ public:
         return x;
     }
 
-    std::vector<CppAD::AD<Base> > model(const std::vector<CppAD::AD<Base> >& x, size_t nEls = 6) {
+    std::vector<CppAD::AD<Base> > model(const std::vector<CppAD::AD<Base> >& x,
+                                        size_t nEls = 6) {
         using namespace CppAD;
         typedef AD<Base> ADB;
 
@@ -163,6 +164,80 @@ public:
 
             y[j + 4 * nEls] = (Cpcool * rhoCool * Fcool * (TcoolIn - Tcool) + dQ) /
                     (rhoCool * Vout * Cpcool); // dTcool / dt
+        }
+
+        return y;
+    }
+
+    /**
+     * Constant mixture heat capacity and rho
+     */
+    std::vector<CppAD::AD<Base> > model2(const std::vector<CppAD::AD<Base> >& x,
+                                         size_t nEls = 6) {
+        using namespace CppAD;
+        typedef AD<Base> ADB;
+
+        // dependent variable vector
+        std::vector<ADB> y(nEls * 5);
+
+        size_t ns = 5 * nEls;
+        size_t nm = 2;
+        size_t pars = ns + nm;
+
+        double dHr = -33488.;
+
+        ADB F = (1e-3 / 60.) * x[ns]; // convert from l/min
+        ADB Fcool = (1e-3 / 60.) * x[ns + 1]; // convert from l/min
+        ADB Vin = L * 3.14159265358979 * r0 * r0;
+        ADB Vout = L * 3.14159265358979 * r2 * r2 - L * 3.14159265358979 * r1 * r1;
+        ADB area = L * 6.28318530717959 * r0;
+
+        ADB FMcool = Fcool * rhoCool;
+        ADB FMfeed = F * rho;
+
+        for (size_t j = 0; j < nEls; j++) {
+
+            ADB Ca0 = 1000. * x[(j == 0) ? pars : j + -1]; // covert from mol/l
+            ADB Cb0 = 1000. * x[(j == 0) ? pars + 1 : j + nEls - 1]; // covert from mol/l
+            ADB Cc0 = 1000. * x[(j == 0) ? pars + 2 : j + 2 * nEls - 1]; // covert from mol/l
+
+            ADB Ca1 = 1000. * x[j]; // covert from mol/l
+            ADB Cb1 = 1000. * x[j + nEls]; // covert from mol/l
+            ADB Cc1 = 1000. * x[j + 2 * nEls]; // covert from mol/l
+
+            ADB FinA = Ca0 * F;
+            ADB FinB = Cb0 * F;
+            ADB FinC = Cc0 * F;
+
+            ADB FA = Ca1 * F;
+            ADB FB = Cb1 * F;
+            ADB FC = Cc1 * F;
+
+            ADB Tin = x[(j == 0) ? pars + 3 : j + 3 * nEls - 1] - -273.15; // convert from C
+            ADB T = x[j + 3 * nEls] - -273.15; // convert from C
+            ADB Tcool = x[j + 4 * nEls] - -273.15; // convert from C
+            ADB TcoolIn = x[(j == nEls - 1) ? pars + 4 : j + 4 * nEls + 1] - -273.15; // convert from C
+            ADB react = exp(logAk0 - Ea / (R * T)) * Ca1 * Cb1;
+
+            y[j] = 0.001 * (FinA - FA - react * Vin) / Vin; // d CA / dt
+            y[j + nEls] = 0.001 * (FinB - FB - react * Vin) / Vin; // d CB / dt
+            y[j + 2 * nEls] = 0.001 * (FinC - FC + react * Vin) / Vin; // d CC / dt
+
+            ADB FMin = FMfeed;
+            ADB Qinner0 = FMin * CpW * (Tin - T);
+
+            ADB CpMix1 = CpW;
+
+            ADB dQ = U * area * (T - Tcool);
+
+            ADB mInner = rho * Vin;
+            y[j + 3 * nEls] = (Qinner0 - dQ - dHr * react * Vin) /
+                              (mInner * CpMix1); // dT / dt
+
+            ADB Qouter = FMcool * Cpcool * (TcoolIn - Tcool);
+            ADB mCool = rhoCool * Vout;
+            y[j + 4 * nEls] = (Qouter + dQ) /
+                              (mCool * Cpcool); // dTcool / dt
         }
 
         return y;
