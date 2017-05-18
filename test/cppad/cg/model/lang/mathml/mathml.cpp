@@ -92,7 +92,7 @@ TEST(CppADCGLatexTest, latex) {
                                   "    displayAlign: \"left\"\n"
                                   "});\n"
                                   "</script>\n"
-                                  "<script type=\"text/javascript\" src=\"https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
+                                  "<script type=\"text/javascript\" src=\"https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.1/MathJax.js?config=TeX-AMS-MML_HTMLorMML\"></script>");
 
     std::ifstream jsFile;
     jsFile.open("variableSelection.js");
