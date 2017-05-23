@@ -323,7 +323,7 @@ bool LanguageC<Base>::isOffsetBy(const IndexPattern* ip,
         const LinearIndexPattern* lIp = dynamic_cast<const LinearIndexPattern*> (ip);
         assert(lIp != nullptr);
 
-        if (refIp->getType() == IndexPatternType::Linear)
+        if (refIp->getType() != IndexPatternType::Linear)
             return false;
         const LinearIndexPattern* refLIp = dynamic_cast<const LinearIndexPattern*> (refIp);
         assert(refLIp != nullptr);
