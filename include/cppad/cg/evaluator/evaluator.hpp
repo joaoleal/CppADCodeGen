@@ -164,6 +164,7 @@ public:
         FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
 
         try {
+            thisOps.prepareNewEvaluation();
 
             indep_ = indepNew;
             thisOps.analyzeOutIndeps(indep_, indepSize);
@@ -184,6 +185,10 @@ public:
     }
 
 protected:
+
+    inline void prepareNewEvaluation() {
+        // empty
+    }
 
     /**
      * clean-up

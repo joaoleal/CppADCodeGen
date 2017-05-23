@@ -29,6 +29,7 @@ class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<Sc
      * this type due to the curiously recurring template pattern (CRTP)
      */
     friend EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
+    friend EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
 public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
     typedef EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType> Super;
@@ -83,11 +84,16 @@ public:
 protected:
 
     /**
-     * @note overrides the default clear() even though this method
+     * @note overrides the default prepareNewEvaluation() even though this method
      *        is not virtual (hides a method in EvaluatorBase)
      */
-    inline void clear() {
-        Super::clear();
+    inline void prepareNewEvaluation() {
+        /**
+         * Do not place this in clear() so that it is possible to determine
+         * the number of atomic function evaluations after the evaluation has
+         * ended.
+         */
+        Super::prepareNewEvaluation();
 
         evalsAtomic_.clear();
     }
