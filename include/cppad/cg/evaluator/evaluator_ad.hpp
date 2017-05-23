@@ -19,11 +19,11 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Helper class for the specialization of Evaluator for an output active type of AD<>
+ * Specialization of class Evaluator for an output active type of AD<>
  * This class should not be instantiated directly.
  */
 template<class ScalarIn, class ScalarOut, class FinalEvaluatorType>
-class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType > {
+class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType> {
     /**
      * must be friends with one of its super classes since there is a cast to
      * this type due to the curiously recurring template pattern (CRTP)
@@ -70,7 +70,27 @@ public:
         }
     }
 
+    /**
+     * Provides the number of atomic function evaluations.
+     * The same function can be considered more than once.
+     *
+     * @return the number of atomic functions evaluations.
+     */
+    size_t getNumberOfEvaluatedAtomics() const {
+        return evalsAtomic_.size();
+    }
+
 protected:
+
+    /**
+     * @note overrides the default clear() even though this method
+     *        is not virtual (hides a method in EvaluatorBase)
+     */
+    inline void clear() {
+        Super::clear();
+
+        evalsAtomic_.clear();
+    }
 
     /**
      * @throws CGException on an internal evaluation error
@@ -134,11 +154,11 @@ public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
     typedef EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > Super;
 public:
-    
+
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
         Super(handler) {
     }
-    
+
 };
 
 } // END cg namespace

@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Specialization for an output active type of AD<CG<Base>>
+ * Specialization of class Evaluator for an output active type of AD<CG<Base>>
  */
 template<class ScalarIn, class BaseOut>
 class Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > : public EvaluatorAD<ScalarIn, CG<BaseOut>, Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > > {

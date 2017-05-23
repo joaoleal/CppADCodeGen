@@ -92,7 +92,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Evaluator specialization for Adol-C
+ * Specialization of class Evaluator for Adol-C
  */
 template<class ScalarIn>
 class Evaluator<ScalarIn, double, adouble> : public EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> > {

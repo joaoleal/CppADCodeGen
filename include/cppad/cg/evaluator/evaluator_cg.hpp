@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Used for the specialization of Evaluator for an output active type of CG<Base>.
+ * Specialization of class Evaluator for an output active type of CG<Base>.
  * This class should not be instantiated directly.
  */
 template<class ScalarIn, class ScalarOut, class FinalEvaluatorType>
@@ -67,7 +67,7 @@ protected:
      *        is not virtual (hides a method in EvaluatorBase)
      */
     inline void clear() {
-        EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>::clear();
+        Super::clear();
 
         for (const auto& it : atomicEvalResults_) {
             for (const ScalarOut* e : it.second) {
