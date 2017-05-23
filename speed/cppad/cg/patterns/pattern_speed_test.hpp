@@ -183,9 +183,9 @@ public:
         /*******************************************************************
          * CppADCG (Loops)
          ******************************************************************/
-        measureSpeedCppADWithLoops(relatedDepCandidates, repeat, xb);
+        measureSpeedCppADCGWithLoops(relatedDepCandidates, repeat, xb);
 
-        measureSpeedCppADWithLoopsLlvm(relatedDepCandidates, repeat, xb);
+        measureSpeedCppADCGWithLoopsLlvm(relatedDepCandidates, repeat, xb);
 
         /*******************************************************************
          * CppAD
@@ -249,9 +249,9 @@ protected:
         executionSpeedCppADCG(xb, cppADCG);
     }
 
-    inline void measureSpeedCppADWithLoops(const std::vector<std::set<size_t> >& relatedDepCandidates,
-                                           size_t repeat,
-                                           const std::vector<Base>& xb) {
+    inline void measureSpeedCppADCGWithLoops(const std::vector<std::set<size_t> >& relatedDepCandidates,
+                                             size_t repeat,
+                                             const std::vector<Base>& xb) {
         using namespace CppAD;
         using namespace std::chrono;
 
@@ -292,9 +292,9 @@ protected:
         executionSpeedCppADCG(xb, cppADCGLoops);
     }
 
-    inline void measureSpeedCppADWithLoopsLlvm(const std::vector<std::set<size_t> >& relatedDepCandidates,
-                                               size_t repeat,
-                                               const std::vector<Base>& xb) {
+    inline void measureSpeedCppADCGWithLoopsLlvm(const std::vector<std::set<size_t> >& relatedDepCandidates,
+                                                 size_t repeat,
+                                                 const std::vector<Base>& xb) {
         using namespace CppAD;
 
         std::string head = "\n"
@@ -597,6 +597,10 @@ protected:
         GccCompiler<double> compiler;
         if (!compileFlags_.empty())
             compiler.setCompileFlags(compileFlags_);
+#ifndef NDEBUG
+        compiler.setSourcesFolder("sources_" + libBaseName);
+        compiler.setSaveToDiskFirst(true);
+#endif
         dynamicLib_ = p.createDynamicLibrary(compiler, loadLib);
         if (loadLib) {
             model_ = dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"));

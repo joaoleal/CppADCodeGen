@@ -35,9 +35,9 @@ protected:
 public:
 
     PlugFlowCollocationModel(size_t nEls) :
-        CollocationModel<T>(5 * nEls, // ns
-        2, // nm
-        5), // npar
+        CollocationModel<T>(PlugFlowModel<AD<double>>::N_EL_STATES * nEls, // ns
+                            PlugFlowModel<AD<double>>::N_CONTROLS, // nm
+                            PlugFlowModel<AD<double>>::N_PAR), // npar
         nEls_(nEls) {
     }
 
@@ -46,16 +46,16 @@ protected:
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
                                 std::vector<AD<CG<double> > >& y) override {
         PlugFlowModel<CG<double> > m;
-        y = m.model(x, nEls_);
+        y = m.model2(x, nEls_);
     }
 
     virtual void atomicFunction(const std::vector<AD<double> >& x,
                                 std::vector<AD<double> >& y) override {
         PlugFlowModel<double> m;
-        y = m.model(x, nEls_);
+        y = m.model2(x, nEls_);
     }
 
-    virtual std::string getAtomicLibName() {
+    virtual std::string getAtomicLibName() override {
         return "plugflow";
     }
 };
@@ -108,16 +108,19 @@ public:
 } // END cg namespace
 } // END CppAD namespace
 
+using namespace CppAD;
 using namespace CppAD::cg;
 
 int main(int argc, char **argv) {
     size_t repeat = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10); // time intervals
     size_t nEls = PatternSpeedTest::parseProgramArguments(2, argc, argv, 10); // number of CSTR elements
+    size_t nExec = PatternSpeedTest::parseProgramArguments(3, argc, argv, 30); // number of executions
+
 
     size_t K = 3;
-    size_t ns = 5;
+    size_t ns = PlugFlowModel<AD<double>>::N_EL_STATES;
     CollocationPatternSpeedTest speed(nEls);
-    speed.setNumberOfExecutions(30);
+    speed.setNumberOfExecutions(nExec);
 #if 0
     speed.preparation = false;
     speed.zeroOrder = false;

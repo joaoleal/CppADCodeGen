@@ -22,6 +22,10 @@ namespace CppAD {
 template<class Base>
 class PlugFlowModel {
 public:
+    static const size_t N_EL_STATES = 5; // number of states per element
+    static const size_t N_CONTROLS = 2; // number of controls
+    static const size_t N_PAR = 5; // number of parameters
+public:
     const Base logAk0;
     const Base Ea; // activation energy
     const Base R;
@@ -68,7 +72,7 @@ public:
     }
 
     static std::vector<std::set<size_t> > getRelatedCandidates(size_t nEls = 6) {
-        std::vector<std::set<size_t> > relatedDepCandidates(5);
+        std::vector<std::set<size_t> > relatedDepCandidates(N_EL_STATES);
         for (size_t i = 0; i < nEls; i++) {
             relatedDepCandidates[0].insert(0 * nEls + i);
             relatedDepCandidates[1].insert(1 * nEls + i);
@@ -80,10 +84,10 @@ public:
     }
 
     static std::vector<double> getTypicalValues(size_t nEls = 6) {
-        size_t ns = 5;
-        size_t nm = 2;
+        size_t ns = N_EL_STATES;
+        size_t nm = N_CONTROLS;
 
-        std::vector<double> x(ns * nEls + nm + 5);
+        std::vector<double> x(ns * nEls + nm + N_PAR);
 
         // states
         for (size_t j = 0; j < nEls; j++) x[j] = std::sqrt(14 / 1000.) - j * 0.01; // Ca (mol/l)
@@ -115,11 +119,11 @@ public:
         typedef AD<Base> ADB;
 
         // dependent variable vector 
-        std::vector<ADB> y(nEls * 5);
+        std::vector<ADB> y(N_EL_STATES * nEls);
 
-        size_t ns = 5 * nEls;
-        size_t nm = 2;
-        size_t pars = ns + nm;
+        size_t ns = N_EL_STATES * nEls;
+        size_t nm = N_CONTROLS;
+        size_t pars = ns + nm; // initial index of parameters in independent variables
 
         ADB F = (1e-3 / 60.) * x[ns]; // convert from l/min
         ADB Fcool = (1e-3 / 60.) * x[ns + 1]; // convert from l/min
@@ -145,6 +149,7 @@ public:
             ADB T = x[j + 3 * nEls] - -273.15; // convert from C
             ADB Tcool = x[j + 4 * nEls] - -273.15; // convert from C
             ADB TcoolIn = x[(j == nEls - 1) ? pars + 4 : j + 4 * nEls + 1] - -273.15; // convert from C
+
             ADB react = exp(logAk0 - Ea / (R * T)) * Ca1 * Cb1;
 
             y[j] = 0.001 * (Fina - Ca1 * F - react * Vin) / Vin; // d CA / dt
@@ -178,11 +183,11 @@ public:
         typedef AD<Base> ADB;
 
         // dependent variable vector
-        std::vector<ADB> y(nEls * 5);
+        std::vector<ADB> y(N_EL_STATES * nEls);
 
-        size_t ns = 5 * nEls;
-        size_t nm = 2;
-        size_t pars = ns + nm;
+        size_t ns = N_EL_STATES * nEls;
+        size_t nm = N_CONTROLS;
+        size_t pars = ns + nm; // initial index of parameters in independent variables
 
         double dHr = -33488.;
 

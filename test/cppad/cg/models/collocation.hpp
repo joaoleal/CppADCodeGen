@@ -276,11 +276,13 @@ public:
         ModelLibraryCSourceGen<double> compDynHelpL(compHelpL);
         compDynHelpL.setVerbose(verbose_);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + lName);
+        //SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelpL, "sources_" + lName);
 
         DynamicModelLibraryProcessor<double> p(compDynHelpL, lName);
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
+        compiler.setSourcesFolder("sources_" + lName);
+        compiler.setSaveToDiskFirst(true);
 
         atomicDynamicLib_ = p.createDynamicLibrary(compiler);
 
