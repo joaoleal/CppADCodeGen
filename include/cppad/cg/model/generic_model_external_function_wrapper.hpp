@@ -97,7 +97,7 @@ public:
 
         return false;
     }
-    
+
 };
 
 } // END cg namespace

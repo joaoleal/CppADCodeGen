@@ -19,8 +19,8 @@ namespace CppAD {
 namespace cg {
 
 /**
- * An atomic function for source code generation within loops
- * 
+ * A model representing a loop body for source code generation
+ *
  * @author Joao Leal
  */
 template <class Base>
@@ -38,7 +38,11 @@ private:
     /**
      * The tape for a single loop iteration
      */
-    ADFun<CGB> * const fun_;
+    ADFun<CGB>* const fun_;
+    /**
+     * Whether or not it calls atomic functions
+     */
+    const bool containsAtoms_;
     /**
      * Number of loop iterations
      */
@@ -110,8 +114,8 @@ public:
      * Creates a new atomic function that is responsible for defining the
      * dependencies to calls of a user atomic function.
      * 
-     * @param name The atomic function name.
      * @param fun The tape for a single loop iteration (loop model)
+     * @param containsAtoms Whether or not fun calls atomic functions
      * @param iterationCount Number of loop iterations
      * @param dependentOrigIndexes
      * @param indexedIndepOrigIndexes
@@ -119,6 +123,7 @@ public:
      * @param temporaryIndependents
      */
     LoopModel(ADFun<CGB>* fun,
+              bool containsAtoms,
               size_t iterationCount,
               const std::vector<std::vector<size_t> >& dependentOrigIndexes,
               const std::vector<std::vector<size_t> >& indexedIndepOrigIndexes,
@@ -126,6 +131,7 @@ public:
               const std::vector<size_t>& temporaryIndependents) :
         loopId_(createNewLoopId()),
         fun_(fun),
+        containsAtoms_(containsAtoms),
         iterationCount_(iterationCount),
         m_(dependentOrigIndexes.size()),
         dependentIndexes_(m_, std::vector<LoopPosition>(iterationCount)),
@@ -229,6 +235,15 @@ public:
      */
     inline size_t getLoopId() const {
         return loopId_;
+    }
+
+    /**
+     * Whether or not the tape for the loop calls atomic functions.
+     *
+     * @return Whether or not it calls atomic functions.
+     */
+    inline bool isContainsAtomics() const {
+        return containsAtoms_;
     }
 
     /**

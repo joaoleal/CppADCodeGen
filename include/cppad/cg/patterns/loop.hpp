@@ -864,6 +864,8 @@ private:
 
         std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps, deps);
 
+        bool containsAtoms = evaluator1stIt.getNumberOfEvaluatedAtomics() > 0;
+
         std::unique_ptr<ADFun<CGB> >funIndexed(new ADFun<CGB>());
         funIndexed->Dependent(newDeps);
 
@@ -925,11 +927,12 @@ private:
         }
 
         loopModel_ = new LoopModel<Base>(funIndexed.release(),
-                iterationCount_,
-                dependentOrigIndexes,
-                indexedIndependents,
-                nonIndexedIndependents,
-                temporaryIndependents);
+                                         containsAtoms,
+                                         iterationCount_,
+                                         dependentOrigIndexes,
+                                         indexedIndependents,
+                                         nonIndexedIndependents,
+                                         temporaryIndependents);
 
         loopModel_->detectIndexPatterns();
     }
