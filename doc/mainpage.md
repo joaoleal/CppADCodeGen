@@ -30,11 +30,11 @@ See epl-v10.txt and gpl3.txt for a copy of the licenses.
 
 ## Requirements ##
 
-CppADCodeGen is a C++11 header only library so there aren't many dependencies:
+CppADCodeGen is a C++11 header only library, therefore there aren't many dependencies:
 
  - **CppAD** (2017),
  - A **C++11** compiler (such as GCC and Clang),
- - Clang/LLVM 3.2, 3.4, 3.6, or 3.8 (only for JIT compilation), and
+ - Clang/LLVM (only for JIT compilation), and
  - Eigen 3 (only for DAE differentiation index reduction).
 
 Runtime compilation and dynamic linking:
@@ -44,8 +44,17 @@ Runtime compilation and dynamic linking:
 
 ### General installation ###
 
-Just copy the contents of the folder include to anywhere you would like to 
-include from.
+Get the sources from GitHub:
+    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+Create a new folder to build the project:
+    mkdir cppadcg-build
+Build the project (no compilation of C/C++ occurs, just generation of header files):
+    cd cppadcg-build
+    cmake ../CppADCodeGen
+Either install the project in your system:
+    make install
+or to some other folder:
+    make DESTDIR=someotherfolder install
 
 ### Debian/Ubuntu ###
 

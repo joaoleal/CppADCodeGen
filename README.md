@@ -1,4 +1,4 @@
-# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen)[![Documentation](https://codedocs.xyz/joaoleal/CppADCodeGen.svg)](https://codedocs.xyz/joaoleal/CppADCodeGen/)
+# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen) [![Documentation](https://codedocs.xyz/joaoleal/CppADCodeGen.svg)](https://codedocs.xyz/joaoleal/CppADCodeGen/)
 
 CppADCodeGen performs **hybrid Automatic Differentiation** (AD), that is, uses 
 operator-overloading and produces source-code. Such source-code can be 
@@ -44,8 +44,17 @@ Runtime compilation and dynamic linking:
 
 ### General installation ###
 
-Just copy the contents of the folder include to anywhere you would like to 
-include from.
+Get the sources from GitHub:
+    git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+Create a new folder to build the project:
+    mkdir cppadcg-build
+Build the project (no compilation of C/C++ occurs, just generation of header files):
+    cd cppadcg-build
+    cmake ../CppADCodeGen
+Either install the project in your system:
+    make install
+or to some other folder:
+    make DESTDIR=someotherfolder install
 
 ### Debian/Ubuntu ###
 
