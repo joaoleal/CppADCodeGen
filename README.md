@@ -45,24 +45,34 @@ Runtime compilation and dynamic linking:
 ### General installation ###
 
 Get the sources from GitHub:
+```
     git clone https://github.com/joaoleal/CppADCodeGen.git CppADCodeGen
+```
 Create a new folder to build the project:
+```
     mkdir cppadcg-build
+```
 Build the project (no compilation of C/C++ occurs, just generation of header files):
+```
     cd cppadcg-build
     cmake ../CppADCodeGen
+```
 Either install the project in your system:
+```
     make install
+```
 or to some other folder:
+```
     make DESTDIR=someotherfolder install
+```
 
 ### Debian/Ubuntu ###
 
 A debian installation package can be created at the root of the project.
 Typically you can create the installer by just typing:
-
+```
     dpkg-buildpackage
-
+```
 It will create a debian package outside the project's folder.
 
 ## Using CppADCodeGen ##
