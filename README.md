@@ -1,4 +1,4 @@
-# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen) [![Documentation](https://codedocs.xyz/joaoleal/CppADCodeGen.svg)](https://codedocs.xyz/joaoleal/CppADCodeGen/)
+# CppADCodeGen [![Build Status](https://travis-ci.org/joaoleal/CppADCodeGen.svg?branch=master)](https://travis-ci.org/joaoleal/CppADCodeGen) [![DOI](https://zenodo.org/badge/20828/joaoleal/CppADCodeGen.svg)](https://zenodo.org/badge/latestdoi/20828/joaoleal/CppADCodeGen) [![Documentation](https://codedocs.xyz/joaoleal/CppADCodeGen.svg)](https://codedocs.xyz/joaoleal/CppADCodeGen/) [![License](https://img.shields.io/badge/License-EPL%201.0-blue.svg)](https://opensource.org/licenses/EPL-1.0) [![License: GPL v3](https://img.shields.io/badge/License-GPL%20v3-blue.svg)](http://www.gnu.org/licenses/gpl-3.0)
 
 CppADCodeGen performs **hybrid Automatic Differentiation** (AD), that is, uses 
 operator-overloading and produces source-code. Such source-code can be 
