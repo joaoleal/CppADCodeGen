@@ -38,7 +38,7 @@ env:
   global:
     #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
     - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
-    - EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include/eigen3
+    - EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
