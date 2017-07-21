@@ -1,5 +1,5 @@
-#ifndef CPPAD_EXTRA_SPARSE_FORJAC_HESSIAN_INCLUDED
-#define CPPAD_EXTRA_SPARSE_FORJAC_HESSIAN_INCLUDED
+#ifndef CPPAD_CG_SPARSE_FORJAC_HESSIAN_INCLUDED
+#define CPPAD_CG_SPARSE_FORJAC_HESSIAN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
@@ -220,7 +220,7 @@ inline void computeNotUsed(SparsityPattern& not_used,
 
     assert(not_used.n_set() == 0);
     not_used.resize(m, n);
-    
+
     for (size_t i = 0; i < n; i++) {
         SparIter j_itr(sparsity, i);
         size_t j = *j_itr;
