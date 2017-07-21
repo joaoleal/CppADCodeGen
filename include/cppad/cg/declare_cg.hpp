@@ -250,6 +250,18 @@ bool operator>=(const CG<Base>& left, const CG<Base>& right);
 template<class Base>
 bool operator!=(const CG<Base>& left, double right);
 
+template<class Base>
+bool operator==(const CG<Base>& left, const Base& right);
+
+template<class Base>
+bool operator==(const Base& left, const CG<Base>& right);
+
+template<class Base>
+bool operator!=(const CG<Base>& left, Base right);
+
+template<class Base>
+bool operator!=(const Base& left, const CG<Base>& right);
+
 /***************************************************************************
  * Index reduction functions
  **************************************************************************/

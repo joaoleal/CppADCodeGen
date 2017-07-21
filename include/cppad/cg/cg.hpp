@@ -201,19 +201,6 @@ protected:
     friend CG<Base> CppAD::cg::operator/ <Base>(const CG<Base>& left, const CG<Base>& right);
 
     /**
-     * comparison operators are not used to create code
-     */
-    friend bool operator< <Base> (const CG<Base>& left, const CG<Base>& right);
-    friend bool operator<= <Base> (const CG<Base>& left, const CG<Base>& right);
-    friend bool operator> <Base> (const CG<Base>& left, const CG<Base>& right);
-    friend bool operator>= <Base> (const CG<Base>& left, const CG<Base>& right);
-    friend bool operator== <Base> (const CG<Base>& left, const CG<Base>& right);
-    friend bool operator!= <Base> (const CG<Base>& left, const CG<Base>& right);
-
-    // comparison with double (required by CppAD SparseHessian)
-    friend bool operator!= <Base>(const CG<Base>& left, double right);
-
-    /**
      * order determining functions
      */
     friend bool GreaterThanZero <Base> (const CG<Base>& x);
