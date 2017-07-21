@@ -2132,7 +2132,8 @@ template<class Base>
 const std::string LanguageC<Base>::_ATOMIC_PY = "apy";
 
 template<class Base>
-const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct Array {\n"
+const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION =
+"typedef struct Array {\n"
 "    void* data;\n"
 "    " + U_INDEX_TYPE + " size;\n"
 "    int sparse;\n"
@@ -2142,8 +2143,18 @@ const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION = "typedef struct
 "\n"
 "struct LangCAtomicFun {\n"
 "    void* libModel;\n"
-"    int (*forward)(void* libModel, int atomicIndex, int q, int p, const Array tx[], Array* ty);\n"
-"    int (*reverse)(void* libModel, int atomicIndex, int p, const Array tx[], Array* px, const Array py[]);\n"
+"    int (*forward)(void* libModel,\n"
+"                   int atomicIndex,\n"
+"                   int q,\n"
+"                   int p,\n"
+"                   const Array tx[],\n"
+"                   Array* ty);\n"
+"    int (*reverse)(void* libModel,\n"
+"                   int atomicIndex,\n"
+"                   int p,\n"
+"                   const Array tx[],\n"
+"                   Array* px,\n"
+"                   const Array py[]);\n"
 "};";
 
 } // END cg namespace

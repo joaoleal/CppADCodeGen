@@ -664,7 +664,7 @@ public:
      * Defines whether or not to generate source-code for a function
      * that evaluates the original model.
      * 
-     * @return create true if source-code for the original model should be
+     * @param create true if source-code for the original model should be
      *                created, false otherwise
      */
     inline void setCreateForwardZero(bool create) {
@@ -733,11 +733,11 @@ public:
      * Enabling the generation of individuals functions for reverse-mode
      * might have a small negative impact on the performance of the evaluation
      * of the sparse Jacobian (if reverse-mode is selected).
-     * 
+     *
      * @see setCreateSparseJacobian()
-     * 
-     * @return true if the generation of the source for first-order reverse
-     *         mode is enabled, false otherwise.
+     *
+     * @param create true if the source for first-order reverse mode functions
+     *               should be generated, false otherwise.
      */
     inline void setCreateReverseOne(bool create) {
         _reverseOne = create;

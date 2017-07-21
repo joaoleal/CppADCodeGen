@@ -33,7 +33,7 @@ int main(void) {
     std::vector<ADCG> x(2);
     Independent(x);
 
-    // dependent variable vector 
+    // dependent variable vector
     std::vector<ADCG> y(1);
 
     // the model equation
