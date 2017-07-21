@@ -31,7 +31,7 @@ namespace Eigen {
 template<typename Base>
 struct NumTraits<CppAD::cg::CG<Base> > {
     // the real part of an CG<Base> value
-    typedef CppAD::cg::CG<Base>   Real;
+    typedef CppAD::cg::CG<Base>  Real;
     // type for CG<Base> operations producing non-integer values
     typedef CppAD::cg::CG<Base>  NonInteger;
     // type for nested value inside an CG<Base> expression tree
@@ -100,7 +100,7 @@ struct NumTraits<CppAD::cg::CG<Base> > {
  */
 template <typename Base>
 struct NumTraits<CppAD::AD<CppAD::cg::CG<Base> > > {
-    typedef CppAD::cg::CG<Base>   CGBase;
+    typedef CppAD::cg::CG<Base> CGBase;
     // the real part of an AD<CGBase> value
     typedef CppAD::AD<CGBase>   Real;
     // type for AD<CGBase> operations producing non-integer values

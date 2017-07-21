@@ -1,6 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
-#    Copyright (C) 2013 Ciengis
+#    Copyright (C) 2017 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
 #
@@ -15,18 +15,6 @@
 #
 # ----------------------------------------------------------------------------
 
-INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
-
-add_cppadcg_test(inputstream.cpp)
-add_cppadcg_test(temporary.cpp)
-add_cppadcg_test(mult_sparsity_pattern.cpp)
-
-ADD_SUBDIRECTORY(extra)
-ADD_SUBDIRECTORY(operations)
-ADD_SUBDIRECTORY(models)
-ADD_SUBDIRECTORY(model)
-ADD_SUBDIRECTORY(patterns)
-ADD_SUBDIRECTORY(evaluator)
-ADD_SUBDIRECTORY(solve)
-ADD_SUBDIRECTORY(dae_index_reduction)
-ADD_SUBDIRECTORY(support)
+IF(EIGEN3_FOUND)
+    add_cppadcg_test(cppadcg_eigen.cpp)
+ENDIF()
