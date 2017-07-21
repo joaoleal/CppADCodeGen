@@ -19,7 +19,7 @@ addons:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.6
     packages:
-    - libeigen3-dev
+    #- libeigen3-dev # <<< too old
     - libclang-3.6-dev
     - llvm-3.6-dev
     - clang-3.6
@@ -38,14 +38,16 @@ env:
   global:
     #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
     - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
+    - EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include/eigen3
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
 #  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.8)" CXX="$(which clang++-3.8)"; fi
-    
+
 install:
   - mkdir cppadcg_deps
   - cd cppadcg_deps
+# get CppAD:
 #  - git clone https://github.com/coin-or/CppAD.git cppad
 #  - cd cppad
   - wget http://github.com/coin-or/CppAD/archive/20170000.3.tar.gz
@@ -56,8 +58,19 @@ install:
   - cd build
   - cmake -Dcppad_prefix:PATH=../install -Dcppad_cxx_flags="-Wall -std=c++11 -Wshadow" ..
   - make install
+  - cd ../..
+# get Eigen:
+  - wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
+  - tar -jxf 3.3.4.tar.bz2
+  - cd eigen-eigen-5a0156e40feb
+  - mkdir build
+  - mkdir install
+   - cd build
+  - cmake -DCMAKE_INSTALL_PREFIX=../install ..
+  - make install
+#
   - cd ../../..
-    
+
 script:
   - mkdir build
   - cd build
