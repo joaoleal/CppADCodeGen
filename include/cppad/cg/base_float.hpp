@@ -39,6 +39,10 @@ public:
     static cg::CG<float> quiet_NaN() {
         return std::numeric_limits<float>::quiet_NaN();
     }
+
+    static const int digits10() {
+        return std::numeric_limits<float>::digits10;
+    }
 };
 
 /**
