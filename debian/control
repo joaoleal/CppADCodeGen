@@ -11,7 +11,7 @@ Build-Depends: debhelper (>= 5),
                doxygen,
                cppad-dev (>= 20170000.3)|cppad (>= 20170000.3),
                libadolc-dev,
-               libclang-dev (>= 3.2),
+               libclang-dev (>= 3.2) | libclang-3.6-dev | libclang-3.8-dev | libclang-4.0-dev,
                libeigen3-dev,
                libgtest-dev
 Standards-Version: 3.7.2
@@ -22,7 +22,7 @@ Architecture: any
 Depends: ${misc:Depends},
          cppad-dev (>= 20170000.3)|cppad (>= 20170000.3)
 Suggests: libclang-dev (>= 3.2),
-          llvm-3.8-dev,
+          llvm-4.0-dev,
           libeigen3-dev
 Description: A Package for Differentiation of C++ Algorithms that performs source code generation
 
