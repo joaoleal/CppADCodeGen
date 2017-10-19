@@ -18,46 +18,62 @@
 #  CPPAD_LIBRARY_DIRS - The library directories needed to use CppAD
 #  CPPAD_LIBRARIES    - The libraries needed to use CppAD
 
-if (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
-  set(CPPAD_FIND_QUIETLY TRUE)
-endif (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
+IF (CPPAD_INCLUDES AND CPPAD_LIBRARIES)
+  SET(CPPAD_FIND_QUIETLY TRUE)
+ENDIF ()
 
 
-FIND_PACKAGE(PkgConfig)
-IF( PKG_CONFIG_FOUND )
+IF(DEFINED CPPAD_HOME)
 
-  pkg_check_modules( CPPAD QUIET cppad)
+  FIND_PATH(CPPAD_INCLUDE_DIR NAMES cppad/cppad.hpp
+            PATHS  "${CPPAD_HOME}"
+            NO_DEFAULT_PATH)
 
-ENDIF( PKG_CONFIG_FOUND )
-
-
-IF( CPPAD_FOUND )
-  IF(NOT CPPAD_FIND_QUIETLY)
-    MESSAGE(STATUS "package cppad found")
-  ENDIF()
-ELSE( CPPAD_FOUND )
-  FIND_PATH(CPPAD_INCLUDE_DIRS NAMES cppad/cppad.hpp
-            HINTS  $ENV{CPPAD_HOME}
-                   "/usr/include" )
-           
-  FIND_LIBRARY(CPPAD_IPOPT_LIBRARY 
-                cppad_ipopt
-                HINTS "$ENV{CPPAD_HOME}/lib"
-                      "/usr/lib" )
+  FIND_LIBRARY(CPPAD_IPOPT_LIBRARY
+               cppad_ipopt
+               PATHS  "${CPPAD_HOME}/lib"
+               NO_DEFAULT_PATH)
 
   SET(CPPAD_INCLUDE_DIRS ${CPPAD_INCLUDE_DIR})
   SET(CPPAD_LIBRARIES ${CPPAD_IPOPT_LIBRARY})
 
-  INCLUDE(FindPackageHandleStandardArgs)
-  # handle the QUIETLY and REQUIRED arguments and set CPPAD_FOUND to TRUE
-  # if all listed variables are TRUE
-  find_package_handle_standard_args(CppAD  DEFAULT_MSG
-                                    CPPAD_INCLUDE_DIRS)
+ELSE()
 
-  MARK_AS_ADVANCED(CPPAD_INCLUDE_DIRS CPPAD_LIBRARIES)
+  FIND_PACKAGE(PkgConfig)
   
-  IF( CPPAD_FOUND AND NOT CPPAD_FIND_QUIETLY )
-    MESSAGE(STATUS "package CppAD found")
+  IF( PKG_CONFIG_FOUND )
+    pkg_check_modules( CPPAD QUIET cppad)
   ENDIF()
-ENDIF( CPPAD_FOUND )
+  
+    
+  IF( NOT CPPAD_FOUND )
+    FIND_PATH(CPPAD_INCLUDE_DIR NAMES cppad/cppad.hpp
+              HINTS  $ENV{CPPAD_HOME}
+                     "/usr/include" )
+            
+    FIND_LIBRARY(CPPAD_IPOPT_LIBRARY 
+                 cppad_ipopt
+                 HINTS "$ENV{CPPAD_HOME}/lib"
+                       "/usr/lib" )
+ 
+    IF( CPPAD_FOUND )
+      SET(CPPAD_INCLUDE_DIRS ${CPPAD_INCLUDE_DIR})
+      SET(CPPAD_LIBRARIES ${CPPAD_IPOPT_LIBRARY})
+    ENDIF()
+
+    INCLUDE(FindPackageHandleStandardArgs)
+    # handle the QUIETLY and REQUIRED arguments and set CPPAD_FOUND to TRUE
+    # if all listed variables are TRUE
+    find_package_handle_standard_args(CppAD  DEFAULT_MSG
+                                      CPPAD_INCLUDE_DIRS)
+
+    MARK_AS_ADVANCED(CPPAD_INCLUDE_DIRS CPPAD_LIBRARIES)
+
+  ENDIF()
+ENDIF()
+
+    
+IF( CPPAD_FOUND AND NOT CPPAD_FIND_QUIETLY )
+  MESSAGE(STATUS "package CppAD found")
+ENDIF()
 
