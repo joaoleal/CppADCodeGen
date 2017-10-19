@@ -37,8 +37,8 @@ addons:
 env:
   global:
     #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
-    - CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
-    - EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
+    #- CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
+    #- EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
 
 before_install:
   - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
@@ -50,6 +50,7 @@ install:
 # get CppAD:
 #  - git clone https://github.com/coin-or/CppAD.git cppad
 #  - cd cppad
+  - export CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
   - wget http://github.com/coin-or/CppAD/archive/20170000.3.tar.gz
   - tar -xzf 20170000.3.tar.gz
   - cd CppAD-20170000.3
@@ -60,6 +61,7 @@ install:
   - make install
   - cd ../..
 # get Eigen:
+  - export EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
   - wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
   - tar -jxf 3.3.4.tar.bz2
   - cd eigen-eigen-5a0156e40feb
