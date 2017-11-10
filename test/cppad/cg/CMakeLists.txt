@@ -17,6 +17,7 @@
 
 INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
+add_cppadcg_test(array_view.cpp)
 add_cppadcg_test(inputstream.cpp)
 add_cppadcg_test(temporary.cpp)
 add_cppadcg_test(mult_sparsity_pattern.cpp)

@@ -232,6 +232,58 @@ public:
         std::fill_n(begin(), size(), u);
     }
 
+    /**
+     * @return an ArrayView encapsulating the first n elements
+     */
+    inline ArrayView<value_type> head(size_t n) {
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size");
+        return ArrayView<value_type> (_data, n);
+    }
+
+    /**
+     * @return an ArrayView encapsulating the first n elements
+     */
+    inline ArrayView<const value_type> head(size_t n) const {
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::head() size must be equal to or greater than the array size");
+        return ArrayView<const value_type> (_data, n);
+    }
+
+    /**
+     * @return an ArrayView encapsulating the last n elements
+     */
+    inline ArrayView<value_type> tail(size_t n) {
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size");
+        return ArrayView<value_type> (_data + (size() - n), n);
+    }
+
+    /**
+     * @return an ArrayView encapsulating the last n elements
+     */
+    inline ArrayView<const value_type> tail(size_t n) const {
+        CPPADCG_ASSERT_KNOWN(n <= size(), "ArrayView::tail() size must be equal to or greater than the array size");
+        return ArrayView<const value_type> (_data + (size() - n), n);
+    }
+
+    /**
+     * @return an ArrayView encapsulating n elements starting at position start
+     */
+    inline ArrayView<value_type> segment(size_t start,
+                                         size_t n) {
+        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size");
+        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array");
+        return ArrayView<value_type> (_data + start, n);
+    }
+
+    /**
+     * @return an ArrayView encapsulating n elements starting at position start
+     */
+    inline ArrayView<const value_type> segment(size_t start,
+                                               size_t n) const {
+        CPPADCG_ASSERT_KNOWN(start < size(), "ArrayView::segment() start index must be lower than the array size");
+        CPPADCG_ASSERT_KNOWN(start + n <= size(), "ArrayView::segment() the new segment will end after the end of this array");
+        return ArrayView<const value_type> (_data + start, n);
+    }
+
     inline void swap(ArrayView& other) noexcept {
         std::swap(other._data, _data);
         std::swap(other._length, _length);
@@ -288,24 +340,24 @@ public:
 
     // Element access.
     inline reference operator[](size_type i) {
-        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView: index greater than or equal array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size");
         return _data[i];
     }
 
     inline const_reference operator[](size_type i) const {
-        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView: index greater than or equal array size");
+        CPPADCG_ASSERT_KNOWN(i < size(), "ArrayView::operator[] index is equal to or greater than the array size");
         return _data[i];
     }
 
     inline reference at(size_type i) {
         if (i >= size())
-            throw CGException("ArrayView::at() index ", i, " is greater than or equal array size ", size());
+            throw CGException("ArrayView::at() index ", i, " is equal to or greater than the array size ", size());
         return _data[i];
     }
 
     inline const_reference at(size_type i) const {
         if (i >= size())
-            throw CGException("ArrayView::at() index ", i, " is greater than or equal array size ", size());
+            throw CGException("ArrayView::at() index ", i, " is equal to or greater than the array size ", size());
         return _data[i];
     }
 
@@ -340,6 +392,21 @@ public:
 
         for(size_t i = 0; i < _length; ++i) {
             _data[i] = x._data[i];
+        }
+
+        return *this;
+    }
+
+    template < typename TT = const Type,
+               typename = typename std::enable_if<!std::is_same<Type, TT>::value && std::is_assignable<Type&, TT&>::value>::type >
+    inline ArrayView& operator=(const ArrayView<TT>& x) {
+        if (x.size() != size())
+            throw CGException("ArrayView: assigning an array with different size: the left hand side array has the size ", size(),
+                              " while the right hand side array has the size ", x.size(), ".");
+
+        const auto* dd = x.data();
+        for (size_t i = 0; i < _length; ++i) {
+            _data[i] = dd[i];
         }
 
         return *this;
