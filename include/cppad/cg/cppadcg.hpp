@@ -16,7 +16,7 @@
  */
 
 // --------------------------------------------------------------------------
-// System routines that can be used by rest of CppAD with out including 
+// System routines that can be used by rest of CppAD with out including
 
 #include <algorithm>
 #include <array>
@@ -44,6 +44,7 @@
 #include <string.h>
 #include <chrono>
 #include <thread>
+#include <functional>
 
 // ---------------------------------------------------------------------------
 // operating system detection
