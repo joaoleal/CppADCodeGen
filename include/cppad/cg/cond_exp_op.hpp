@@ -33,14 +33,16 @@ inline bool isSameExpression(const cg::CG<Base>& trueCase,
 
 /**
  * Get the code handler out of some CG objects
+ *
+ * @throws cg::CGException
  */
 template<class Base>
 inline cg::CodeHandler<Base>* findCodeHandler(const cg::CG<Base>& left,
                                               const cg::CG<Base>& right,
                                               const cg::CG<Base>& trueCase,
-                                              const cg::CG<Base>& falseCase) throw (cg::CGException) {
+                                              const cg::CG<Base>& falseCase) {
     cg::CodeHandler<Base>* handler;
-    
+
     cg::CodeHandler<Base>* lh = left.getCodeHandler();
     cg::CodeHandler<Base>* rh = right.getCodeHandler();
     cg::CodeHandler<Base>* th = trueCase.getCodeHandler();

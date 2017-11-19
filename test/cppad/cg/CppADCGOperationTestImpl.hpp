@@ -29,7 +29,7 @@ namespace cg {
 
 using namespace CppAD;
 
-void* CppADCGOperationTest::loadLibrary(const std::string& library) throw (TestException) {
+void* CppADCGOperationTest::loadLibrary(const std::string& library) {
     void * libHandle = dlopen(library.c_str(), RTLD_NOW);
     if (!libHandle) {
         throw TestException("Failed to dynamically load library");
@@ -41,7 +41,7 @@ void CppADCGOperationTest::closeLibrary(void* libHandle) {
     dlclose(libHandle);
 }
 
-void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& functionName) throw (TestException) {
+void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& functionName) {
     void* functor = dlsym(libHandle, functionName.c_str());
     char *error;
     if ((error = dlerror()) != nullptr) {
@@ -50,7 +50,7 @@ void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& fun
     return functor;
 }
 
-void CppADCGOperationTest::compile(const std::string& source, const std::string& library) throw (TestException) {
+void CppADCGOperationTest::compile(const std::string& source, const std::string& library) {
     int fd[2];
     //Create pipe for piping source to gcc
     if (pipe(fd) < 0) {
@@ -72,14 +72,14 @@ void CppADCGOperationTest::compile(const std::string& source, const std::string&
         dup2(fd[0], STDIN_FILENO);
         /**
          * Call gcc
-         * 
+         *
          * Arguments:
          *   -O0                   Optimization level
          *   -x c                  C source
          *   -pipe                 Use pipes between gcc stages
          *   -fPIC -shared         Make shared object
          *   -Wl,-soname, library  Pass suitable options to linker
-         * 
+         *
          */
         std::string linker = "-Wl,-soname," + library;
         execl("/usr/bin/gcc", "gcc", "-x", "c", "-O0", "-pipe", "-", "-fPIC", "-shared",

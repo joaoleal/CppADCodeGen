@@ -28,7 +28,8 @@ namespace cg {
 class CppADCGOperationTest : public CppADCGTest {
 public:
 
-    inline CppADCGOperationTest(bool verbose = false, bool printValues = false) :
+    inline CppADCGOperationTest(bool verbose = false,
+                                bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
@@ -37,13 +38,25 @@ public:
     }
 
 protected:
-    void* loadLibrary(const std::string& library) throw (TestException);
+    /**
+     *
+     * @throws TestException
+     */
+    void* loadLibrary(const std::string& library);
 
-    void* getFunction(void * libHandle, const std::string& functionName) throw (TestException);
+    /**
+     *
+     * @throws TestException
+     */
+    void* getFunction(void * libHandle, const std::string& functionName);
 
     void closeLibrary(void* libHandle);
 
-    void compile(const std::string& source, const std::string& library) throw (TestException);
+    /**
+     *
+     * @throws TestException
+     */
+    void compile(const std::string& source, const std::string& library);
 
     std::vector<std::vector<double> > runDefault0(CppAD::ADFun<double>& f,
                                                   const std::vector<std::vector<double> >& ind);

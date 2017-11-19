@@ -304,7 +304,7 @@ enum class IndexPatternType {
 } // END cg namespace
 
 /***************************************************************************
- * 
+ *
  **************************************************************************/
 // order determining functions, see ordered.hpp
 template<class Base>
@@ -323,14 +323,23 @@ template<class Base>
 bool abs_geq(const cg::CG<Base>& x, const cg::CG<Base>& y);
 
 // The identical property functions, see identical.hpp
+/**
+ * @throws CppAD::cg::CGException
+ */
 template<class Base>
-inline bool IdenticalPar(const cg::CG<Base>& x) throw (cg::CGException);
+inline bool IdenticalPar(const cg::CG<Base>& x);
 
+/**
+ * @throws CppAD::cg::CGException
+ */
 template<class Base>
-bool IdenticalZero(const cg::CG<Base>& x) throw (cg::CGException);
+bool IdenticalZero(const cg::CG<Base>& x);
 
+/**
+ * @throws CppAD::cg::CGException
+ */
 template<class Base>
-bool IdenticalOne(const cg::CG<Base>& x) throw (cg::CGException);
+bool IdenticalOne(const cg::CG<Base>& x);
 
 template<class Base>
 bool IdenticalEqualPar(const cg::CG<Base>& x, const cg::CG<Base>& y);
@@ -426,7 +435,7 @@ inline cg::CG<Base> sqrt(const cg::CG<Base>& x);
 template<class Base>
 inline cg::CG<Base> tan(const cg::CG<Base>& x);
 
-// hyperbolic tangent 
+// hyperbolic tangent
 template<class Base>
 inline cg::CG<Base> tanh(const cg::CG<Base>& x);
 
