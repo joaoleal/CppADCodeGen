@@ -124,7 +124,7 @@ ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
     SET(warning_flags "-Wall") # enable as many warnings as possible
-    #SET(warning_flags "${warning_flags} -Wextra") 
+    #SET(warning_flags "${warning_flags} -Wextra")
     #SET(warning_flags "${warning_flags} -Wshadow") # definition shadows another
     SET(warning_flags "${warning_flags} -Wno-system-headers") # do not issue warnings for system headers
     #SET(warning_flags "${warning_flags} -Woverloaded-virtual") # overloaded virtual function has a different signature

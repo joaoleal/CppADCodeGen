@@ -25,7 +25,7 @@ TARGET_LINK_LIBRARIES(llvm
                       ${LLVM_MODULE_LIBS}
                       ${LLVM_LDFLAGS})
 
-IF("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.2|3.6|3.8|4.0)$")
+IF("${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR}" MATCHES "^(3.2|3.6|3.8|4.0|5.0)$")
   TARGET_LINK_LIBRARIES(llvm
                         ${CLANG_LIBS})
 ENDIF()

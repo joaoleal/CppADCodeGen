@@ -18,7 +18,7 @@
 #  LLVM_INCLUDE_DIRS     - where to find llvm include files
 #  LLVM_LIBRARY_DIRS     - where to find llvm libs
 #  LLVM_CFLAGS           - llvm compiler flags
-#  LLVM_CFLAGS_NO_NDEBUG - llvm compiler flags without NDEBUG 
+#  LLVM_CFLAGS_NO_NDEBUG - llvm compiler flags without NDEBUG
 #  LLVM_WITH_NDEBUG      - 1 if LLVM_CFLAGS contains NDEBUG, 0 otherwise
 #  LLVM_LDFLAGS          - llvm linker flags
 #  LLVM_MODULE_LIBS      - list of llvm libs for working with modules.
@@ -40,7 +40,7 @@ UNSET(LLVM_MODULE_LIBS CACHE)
 
 MACRO(find_llvm_iteratively)
     IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)
-        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
+        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
 
         # Select acceptable versions.
         FOREACH(version ${_LLVM_KNOWN_VERSIONS})
@@ -60,20 +60,20 @@ ENDMACRO()
 
 IF(LLVM_FIND_VERSION)
     FIND_PROGRAM(LLVM_CONFIG "llvm-config-${LLVM_VERSION}")
-    
+
     IF(NOT LLVM_CONFIG) # LLVM_FIND_VERSION_EXACT or failed to find using previous search
         # Lets try to find the exact specified version
         FIND_PROGRAM(LLVM_CONFIG "llvm-config-${LLVM_FIND_VERSION_MAJOR}.${LLVM_FIND_VERSION_MINOR}")
-        
-        IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)            
-            find_llvm_iteratively()    
+
+        IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)
+            find_llvm_iteratively()
         ENDIF()
     ENDIF()
 ELSE()
     FIND_PROGRAM(LLVM_CONFIG llvm-config)
-    
+
     IF(NOT LLVM_CONFIG)
-        find_llvm_iteratively()    
+        find_llvm_iteratively()
     ENDIF()
 ENDIF()
 

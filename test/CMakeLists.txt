@@ -98,7 +98,7 @@ FUNCTION(add_gest_link_libraries test_target_name use_main)
                                   optimized ${GTEST_LIBS_DIR}/ReleaseLibs/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main${CMAKE_FIND_LIBRARY_SUFFIXES})
         ENDIF()
   ENDIF()
-  
+
   # Create dependency of test on googletest
   ADD_DEPENDENCIES(${test_target_name} googletest)
 ENDFUNCTION()
@@ -154,7 +154,7 @@ FUNCTION(add_cppadcg_test source_file)
 
     IF(VALGRIND_FOUND)
         ADD_TEST(NAME ${test_target_name}_memcheck
-                 COMMAND ${GTEST_MEMORYCHECK_COMMAND} 
+                 COMMAND ${GTEST_MEMORYCHECK_COMMAND}
                          --read-var-info=yes
                          --leak-check=full
                          --track-origins=yes
