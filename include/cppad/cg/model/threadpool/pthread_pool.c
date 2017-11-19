@@ -643,6 +643,7 @@ static int jobqueue_push_static_jobs(ThPool* thpool,
     groups = (WorkGroup**) malloc(num_threads * sizeof(WorkGroup*));
     if (groups == NULL) {
         fprintf(stderr, "jobqueue_push_static_jobs(): Could not allocate memory\n");
+        free(n_jobs);
         return -1;
     }
 
@@ -660,6 +661,8 @@ static int jobqueue_push_static_jobs(ThPool* thpool,
         durations = (float*) malloc(num_threads * sizeof(float));
         if (durations == NULL) {
             fprintf(stderr, "jobqueue_push_static_jobs(): Could not allocate memory\n");
+            free(n_jobs);
+            free(groups);
             return -1;
         }
 
