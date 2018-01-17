@@ -26,12 +26,12 @@ JobSpeedListener::JobSpeedListener() :
     totalLibrary(0) {
 }
 
-void JobSpeedListener::jobStarted(const std::vector<Job>& job) throw (CGException) {
+void JobSpeedListener::jobStarted(const std::vector<Job>& job) {
     // do nothing
 }
 
 void JobSpeedListener::jobEndended(const std::vector<Job>& job,
-                                   std::chrono::steady_clock::duration elapsed) throw (CGException) {
+                                   std::chrono::steady_clock::duration elapsed) {
     const Job& j = job.back();
 
     if (&j.getType() == &JobTimer::LOOP_DETECTION) {

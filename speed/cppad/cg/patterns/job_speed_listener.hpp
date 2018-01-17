@@ -50,10 +50,10 @@ public:
         totalLibrary = duration(0);
     }
 
-    virtual void jobStarted(const std::vector<Job>& job) throw (CGException) override;
+    void jobStarted(const std::vector<Job>& job) override;
 
-    virtual void jobEndended(const std::vector<Job>& job,
-                             duration elapsed) throw (CGException) override;
+    void jobEndended(const std::vector<Job>& job,
+                     duration elapsed) override;
 };
 
 } // END cg namespace
