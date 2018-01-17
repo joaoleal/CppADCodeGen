@@ -17,8 +17,13 @@
 # CLANG_INCLUDE_DIRS - where to find Clang include files
 # CLANG_LIBS         - list of clang libs
 
+UNSET(CLANG_INCLUDE_DIRS CACHE)
+UNSET(CLANG_LIBS CACHE)
+
 IF(NOT LLVM_INCLUDE_DIRS OR NOT LLVM_LIBRARY_DIRS)
-   MESSAGE(FATAL_ERROR "No LLVM and Clang support requires LLVM")
+  SET(CLANG_FOUND FALSE)
+  MESSAGE(WARNING "No LLVM and Clang support requires LLVM")
+  RETURN()
 ENDIF()
 
 MACRO(findClangStaticLib _libname_)

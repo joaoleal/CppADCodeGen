@@ -79,9 +79,11 @@ ENDIF()
 
 
 IF(LLVM_CONFIG)
-  MESSAGE(STATUS "llvm-config found at: ${LLVM_CONFIG}")
+    MESSAGE(STATUS "llvm-config found at: ${LLVM_CONFIG}")
 ELSE()
-  MESSAGE(FATAL_ERROR "Could NOT find llvm-config")
+    MESSAGE(WARNING "Could NOT find llvm-config")
+    SET(LLVM_FOUND FALSE)
+    return()
 ENDIF()
 
 EXECUTE_PROCESS(COMMAND ${LLVM_CONFIG} --version
