@@ -444,7 +444,10 @@ protected:
             case CGOpCode::Pow: //  pow(a,   b)
                 return thisOps.evalPow(node);
 
+            case CGOpCode::Pri: //  pow(a,   b)
+                return thisOps.evalPrint(node);
                 //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)
+
             case CGOpCode::Sign: // return (x > 0)? 1.0:((x == 0)? 0.0:-1)
                 return thisOps.evalSign(node);
 
@@ -613,7 +616,11 @@ protected:
         const std::vector<ArgIn>& args = node.getArguments();
         CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for pow()");
         return pow(evalArg(args, 0), evalArg(args, 1));
+    }
 
+    inline ActiveOut evalPrint(const NodeIn& node) {
+        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        return thisOps.evalUnsupportedOperation(node);
     }
 
     //case PriOp: //  PrintFor(text, parameter or variable, parameter or variable)

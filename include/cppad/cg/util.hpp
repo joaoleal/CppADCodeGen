@@ -107,7 +107,7 @@ inline void addTransMatrixSparsity(const VectorSet& a,
 /**
  * Computes the resulting sparsity from adding one matrix to another:
  * R += A
- * 
+ *
  * @param a The matrix to be added to the result
  * @param mRows number of rows of A to use
  * @param result the resulting sparsity matrix
@@ -146,7 +146,7 @@ inline void addMatrixSparsity(const VectorSet& a,
 /**
  * Computes the resulting sparsity from the multiplying of two matrices:
  * R += A * B
- * 
+ *
  * @param a The left matrix in the multiplication
  * @param b The right matrix in the multiplication
  * @param result the resulting sparsity matrix
@@ -163,9 +163,9 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 /**
  * Computes the resulting sparsity from the multiplying of two matrices:
  * R += A * B
- * 
+ *
  * Optimized for when the B matrix has less elements than A.
- * 
+ *
  * @param a The left matrix in the multiplication
  * @param b The right matrix in the multiplication
  * @param result the resulting sparsity matrix
@@ -213,9 +213,9 @@ inline void multMatrixMatrixSparsity(const VectorSet& a,
 /**
  * Computes the resulting sparsity from multiplying two matrices:
  * R += A^T * B
- * 
+ *
  * Optimized for when the B matrix has less elements than A.
- * 
+ *
  * @param a The left matrix in the multiplication
  * @param b The right matrix in the multiplication
  * @param result the resulting sparsity matrix
@@ -284,7 +284,7 @@ inline void multMatrixTransMatrixSparsity(const VectorSet& a,
  * Computes the transpose of the resulting sparsity from multiplying two
  * matrices:
  * (R += A * B)^T
- * 
+ *
  * @param a The TRANSPOSE of the left matrix in the multiplication
  * @param b The right matrix in the multiplication
  * @param result the TRANSPOSE of the resulting sparsity matrix
@@ -438,7 +438,7 @@ inline bool intersects(const std::set<size_t>& a,
 
 /**
  * Finds the first non-null code handler
- * 
+ *
  * @param ty The array to search in
  * @return The first code handler found or nullptr if none was found
  */
@@ -505,7 +505,7 @@ inline std::vector<Argument<Base> > asArguments(const CppAD::vector<CG<Base> >& 
 
 /**
  * Gets all the keys present in a map
- * 
+ *
  * @param map the map from which to get the keys from
  * @param keys the map keys will be inserted into this set
  */
@@ -518,7 +518,7 @@ void mapKeys(const std::map<Key, Value>& map, std::set<Key>& keys) {
 
 /**
  * Gets all the keys present in a map
- * 
+ *
  * @param map the map from which to get the keys from
  * @param keys the map keys will be saved in this vector
  */
@@ -535,8 +535,8 @@ void mapKeys(const std::map<Key, Value>& map, std::vector<Key>& keys) {
 
 /**
  * Checks if a map has only a set of keys.
- * 
- * @param map The map 
+ *
+ * @param map The map
  * @param keys The keys
  * @return true if all the keys and only these keys where found in the map
  */
@@ -557,9 +557,9 @@ bool compareMapKeys(const std::map<Key, Value>& map, const std::set<Key>& keys) 
 
 /**
  * Creates a new map with only a given set of keys
- * 
+ *
  * @param m The map to be filtered
- * @param keys the keys (the filter) to be retrieved from the map 
+ * @param keys the keys (the filter) to be retrieved from the map
  * @return a new map only with the keys found in provided filter
  */
 template<class Key, class Value>
@@ -580,7 +580,7 @@ inline std::map<Key, Value> filterBykeys(const std::map<Key, Value>& m,
 
 /**
  * Compares two sets
- * 
+ *
  * @param s1 the first set
  * @param s2 the second set
  * @return -1 if the first set is considered lower than the second,
@@ -670,12 +670,43 @@ inline void print(const std::vector<Base>& v) {
 }
 
 /***************************************************************************
+ * print
+ **************************************************************************/
+/**
+ * It prints the provided value to standard output.
+ * If the provided input is a variable, that is, it has an OperationNode,
+ * it also creates a CG<value> with a print operation which is returned.
+ *
+ * @param before a string to be printed before the value
+ * @param x the input that will be printed
+ * @param after a string to be printed after the value.
+ * @return a value with the print operation if x is a variable, otherwise a
+ *         copy of x
+ */
+template<class Base>
+inline CG<Base> makePrintValue(const std::string& before,
+                               const CG<Base>& x,
+                               const std::string& after = "") {
+    std::cout << before << x << after;
+
+    if (x.getOperationNode() != nullptr) {
+        auto* handler = x.getCodeHandler();
+        CG<Base> out(*handler->makePrintNode(before, *x.getOperationNode(), after));
+        if (x.isValueDefined())
+            out.setValue(x.getValue());
+        return out;
+    } else {
+        return x;
+    }
+}
+
+/***************************************************************************
  * String related utilities
  **************************************************************************/
 
 /**
  * Replaces all occurrence of a string.
- * 
+ *
  * @param text the text where the search and replacement will be performed
  * @param toReplace the text to be replaced
  * @param replacement the replacement text

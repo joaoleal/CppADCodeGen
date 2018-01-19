@@ -17,3 +17,4 @@
 SET(CMAKE_BUILD_TYPE DEBUG)
 
 add_cppadcg_test(evaluator_atomic.cpp)
+add_cppadcg_test(evaluator_print.cpp)

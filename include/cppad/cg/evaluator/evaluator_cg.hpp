@@ -40,14 +40,42 @@ public:
 protected:
     typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType> Super;
 protected:
+    /**
+     * The source code handler used to create the evaluation results
+     */
     CodeHandler<ScalarOut>* outHandler_;
+    /**
+     * Cache for the evaluation of atomic operations
+     */
     std::map<const NodeIn*, std::vector<ScalarOut*>> atomicEvalResults_;
+    /**
+     * Whether or not the nodes with an operation type 'Pri' are printed out
+     * during the evaluation.
+     */
+    bool printOutPriOperations_;
     using EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>::evals_;
 public:
 
     inline EvaluatorCG(CodeHandler<ScalarIn>& handler) :
         Super(handler),
-        outHandler_(nullptr) {
+        outHandler_(nullptr),
+        printOutPriOperations_(true) {
+    }
+
+    /**
+     * Defines whether or not to print out the nodes with an operation type
+     * 'Pri' during the evaluation.
+     */
+    inline void setPrintOutPrintOperations(bool print) {
+        printOutPriOperations_ = print;
+    }
+
+    /**
+     * Whether or not the nodes with an operation type 'Pri' are printed out
+     * during the evaluation.
+     */
+    inline bool isPrintOutPrintOperations() const {
+        return printOutPriOperations_;
     }
 
 protected:
@@ -89,6 +117,31 @@ protected:
                 a.getOperationNode()->setName(*node.getName());
             }
         }
+    }
+
+    /**
+     * @note overrides the default evalPrint() even though this method
+     *        is not virtual (hides a method in EvaluatorOperations)
+     */
+    inline ActiveOut evalPrint(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()");
+        ActiveOut out(this->evalArg(args, 0));
+
+        if (printOutPriOperations_) {
+            const auto& nodePri = static_cast<const PrintOperationNode<ScalarIn>&>(node);
+            std::cout << nodePri.getBeforeString() << out << nodePri.getAfterString();
+        }
+
+        if (out.getOperationNode() != nullptr) {
+            const auto& nodePri = static_cast<const PrintOperationNode<ScalarIn>&>(node);
+            ActiveOut out2(*outHandler_->makePrintNode(nodePri.getBeforeString(), *out.getOperationNode(), nodePri.getAfterString()));
+            if (out.isValueDefined())
+                out2.setValue(out.getValue());
+            return out2;
+        }
+
+        return out;
     }
 
     /**
