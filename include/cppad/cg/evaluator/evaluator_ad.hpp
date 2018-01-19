@@ -32,25 +32,49 @@ class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<Sc
     friend EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
 public:
     typedef CppAD::AD<ScalarOut> ActiveOut;
+    typedef OperationNode<ScalarIn> NodeIn;
+    typedef Argument<ScalarIn> ArgIn;
     typedef EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType> Super;
 protected:
     using Super::handler_;
     using Super::evalArrayCreationOperation;
 protected:
-    std::set<OperationNode<ScalarIn>*> evalsAtomic_;
+    std::set<NodeIn*> evalsAtomic_;
     std::map<size_t, CppAD::atomic_base<ScalarOut>* > atomicFunctions_;
+    /**
+     * Whether or not the nodes with an operation type 'Pri' are printed out
+     * during the evaluation.
+     */
+    bool printOutPriOperations_;
 public:
 
     inline EvaluatorAD(CodeHandler<ScalarIn>& handler) :
-        Super(handler) {
+        Super(handler),
+        printOutPriOperations_(true) {
     }
 
     inline virtual ~EvaluatorAD() {
     }
 
     /**
+     * Defines whether or not to print out the nodes with an operation type
+     * 'Pri' during the evaluation.
+     */
+    inline void setPrintOutPrintOperations(bool print) {
+        printOutPriOperations_ = print;
+    }
+
+    /**
+     * Whether or not the nodes with an operation type 'Pri' are printed out
+     * during the evaluation.
+     */
+    inline bool isPrintOutPrintOperations() const {
+        return printOutPriOperations_;
+    }
+
+    /**
      * Provides an atomic function.
-     * 
+     *
      * @param id The atomic function ID
      * @param atomic The atomic function
      * @return True if an atomic function with the same ID was already
@@ -104,7 +128,7 @@ protected:
      * @note overrides the default evalAtomicOperation() even though this
      *       method is not virtual (hides a method in EvaluatorOperations)
      */
-    inline void evalAtomicOperation(OperationNode<ScalarIn>& node) {
+    inline void evalAtomicOperation(NodeIn& node) {
 
         if (evalsAtomic_.find(&node) != evalsAtomic_.end()) {
             return;
@@ -149,6 +173,26 @@ protected:
 
         evalsAtomic_.insert(&node);
     }
+
+    /**
+     * @note overrides the default evalPrint() even though this method
+     *        is not virtual (hides a method in EvaluatorOperations)
+     */
+    inline ActiveOut evalPrint(const NodeIn& node) {
+        const std::vector<ArgIn>& args = node.getArguments();
+        CPPADCG_ASSERT_KNOWN(args.size() == 1, "Invalid number of arguments for print()");
+        ActiveOut out(this->evalArg(args, 0));
+
+        const auto& nodePri = static_cast<const PrintOperationNode<ScalarIn>&>(node);
+        if (printOutPriOperations_) {
+            std::cout << nodePri.getBeforeString() << out << nodePri.getAfterString();
+        }
+
+        CppAD::PrintFor(ActiveOut(0), nodePri.getBeforeString().c_str(), out, nodePri.getAfterString().c_str());
+
+        return out;
+    }
+
 };
 
 /**
