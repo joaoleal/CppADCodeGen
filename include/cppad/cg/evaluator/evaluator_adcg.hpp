@@ -45,6 +45,10 @@ protected:
      */
     bool printFor_;
     /**
+     * Pos value used in CppAD::PrintFor(pos, ...)
+     */
+    ActiveOut printForPos_;
+    /**
      * Whenever set to true it will copy the name in original operation
      * nodes into new operation nodes created in AD<CG>.
      */
@@ -54,6 +58,7 @@ public:
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
         Super(handler),
         printFor_(false),
+        printForPos_(0),
         adcgName_(true) {
     }
 
@@ -61,7 +66,7 @@ public:
     }
 
     /**
-     * Whenever set to true it will add a CppAD::PrintFor(0, "", var, name)
+     * Whenever set to true it will add a CppAD::PrintFor(pos, "", var, name)
      * to every variable with a name so that names can be recovered using
      * a OperationNodeNameStreambuf.
      */
@@ -70,13 +75,35 @@ public:
     }
 
     /**
-     * true if a CppAD::PrintFor(0, "", var, name) will be added
+     * true if a CppAD::PrintFor(pos, "", var, name) will be added
      * to every variable with a name so that names can be recovered using
      * a OperationNodeNameStreambuf.
      * The default value is false.
      */
     inline bool isPrintFor() const {
         return printFor_;
+    }
+
+    /**
+     * Whenever printFor_ is set to true it will add a
+     *   CppAD::PrintFor(pos, "", var, name)
+     * to every variable with a name so that names can be recovered using
+     * a OperationNodeNameStreambuf.
+     * This method sets the pos value used in CppAD::PrintFor.
+     */
+    inline void setPrintForPos(const ActiveOut& pos) {
+        printForPos_ = pos;
+    }
+
+    /**
+     * Whenever printFor_ is set to true it will add a
+     *   CppAD::PrintFor(pos, "", var, name)
+     * to every variable with a name so that names can be recovered using
+     * a OperationNodeNameStreambuf.
+     * This method provides the pos value used in CppAD::PrintFor.
+     */
+    inline const ActiveOut& getPrintForPos() const {
+        return printForPos_;
     }
 
     /**
@@ -113,7 +140,7 @@ protected:
             }
 
             if (printFor_) {
-                CppAD::PrintFor(ActiveOut(1), "", a, node.getName()->c_str());
+                CppAD::PrintFor(printForPos_, "", a, node.getName()->c_str());
             }
         }
     }
