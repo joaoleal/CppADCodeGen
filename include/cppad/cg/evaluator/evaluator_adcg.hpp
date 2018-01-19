@@ -112,8 +112,8 @@ protected:
                 }
             }
 
-            if(printFor_) {
-                CppAD::PrintFor(ActiveOut(0), "", a, node.getName()->c_str());
+            if (printFor_) {
+                CppAD::PrintFor(ActiveOut(1), "", a, node.getName()->c_str());
             }
         }
     }
