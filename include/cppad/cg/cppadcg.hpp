@@ -30,6 +30,7 @@
 #include <limits>
 #include <list>
 #include <map>
+#include <memory>
 #include <valarray>
 #include <vector>
 #include <deque>

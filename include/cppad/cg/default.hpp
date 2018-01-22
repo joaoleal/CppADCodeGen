@@ -29,8 +29,7 @@ inline CG<Base>::CG() :
 
 template <class Base>
 inline CG<Base>::CG(OperationNode<Base>& node) :
-    node_(&node),
-    value_(nullptr) {
+    node_(&node) {
 }
 
 template <class Base>
@@ -64,26 +63,25 @@ inline CG<Base>::CG(const CG<Base>& orig) :
 template <class Base>
 inline CG<Base>::CG(CG<Base>&& orig):
         node_(orig.node_),
-        value_(orig.value_) {
-    orig.value_ = nullptr;
+        value_(std::move(orig.value_)) {
 }
 
 /**
  * Creates a parameter with the given value
  */
 template <class Base>
-inline CG<Base>& CG<Base>::operator=(const Base &b) {
+inline CG<Base>& CG<Base>::operator=(const Base& b) {
     node_ = nullptr;
     if (value_ != nullptr) {
         *value_ = b;
     } else {
-        value_ = new Base(b);
+        value_.reset(new Base(b)); // to replace with value_ = std::make_unique once c++14 is used
     }
     return *this;
 }
 
 template <class Base>
-inline CG<Base>& CG<Base>::operator=(const CG<Base> &rhs) {
+inline CG<Base>& CG<Base>::operator=(const CG<Base>& rhs) {
     if (&rhs == this) {
         return *this;
     }
@@ -92,11 +90,10 @@ inline CG<Base>& CG<Base>::operator=(const CG<Base> &rhs) {
         if (value_ != nullptr) {
             *value_ = *rhs.value_;
         } else {
-            value_ = new Base(*rhs.value_);
+            value_.reset(new Base(*rhs.value_)); // to replace with value_ = std::make_unique once c++14 is used
         }
     } else {
-        delete value_;
-        value_ = nullptr;
+        value_.reset();
     }
 
     return *this;
@@ -109,17 +106,13 @@ inline CG<Base>& CG<Base>::operator=(CG<Base>&& rhs) {
     node_ = rhs.node_;
 
     // steal the value
-    delete value_;
-    value_ = rhs.value_;
-    rhs.value_ = nullptr;
+    value_ = std::move(rhs.value_);
 
     return *this;
 }
 
 template <class Base>
-CG<Base>::~CG() {
-    delete value_;
-}
+CG<Base>::~CG() = default;
 
 } // END cg namespace
 } // END CppAD namespace

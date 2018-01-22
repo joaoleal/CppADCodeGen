@@ -22,7 +22,7 @@ namespace cg {
  * The base data type used to create models.
  * It can represent either the result of a symbolic operation or a constant
  * parameter value.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
@@ -37,7 +37,7 @@ private:
      * A constant value which must be defined for parameters.
      * Its definition is optional for variables.
      */
-    Base* value_;
+    std::unique_ptr<Base> value_;
 
 public:
     /**
@@ -47,7 +47,7 @@ public:
 
     /**
      * Creates a variable resulting from the evaluation this node
-     * 
+     *
      * @param node The operation node.
      */
     inline CG(OperationNode<Base>& node);
@@ -90,7 +90,7 @@ public:
     virtual ~CG();
 
     /**
-     * @return The code handler that owns the OperationNode when it is a 
+     * @return The code handler that owns the OperationNode when it is a
      *         variable, null when it is a parameter.
      */
     inline CodeHandler<Base>* getCodeHandler() const;
@@ -165,9 +165,9 @@ public:
     inline CG<Base> operator-() const;
 protected:
     /**
-     * Creates a variable/parameter from an existing argument 
-     * 
-     * @param arg An argument that may be a parameter or a variable. 
+     * Creates a variable/parameter from an existing argument
+     *
+     * @param arg An argument that may be a parameter or a variable.
      *            (the node is assumed to already be managed by the handler)
      */
     inline CG(const Argument<Base>& arg);

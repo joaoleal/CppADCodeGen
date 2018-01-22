@@ -16,7 +16,6 @@
  */
 
 #include <typeinfo>
-#include <memory>
 
 namespace CppAD {
 namespace cg {
@@ -260,7 +259,7 @@ std::vector<typename ModelCSourceGen<Base>::Color> ModelCSourceGen<Base>::colorB
 
     /**
      * try not match the columns of each row to a color which did not have
-     * those columns yet 
+     * those columns yet
      */
     size_t c_used = 0;
     for (size_t i = 0; i < sparsity.size(); i++) {
@@ -817,7 +816,7 @@ inline void ModelCSourceGen<Base>::finishedJob() {
 }
 
 /**
- * 
+ *
  * Specializations
  */
 template<>
