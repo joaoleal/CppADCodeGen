@@ -111,7 +111,7 @@ SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_cppad_include_location   "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_library_pkg_location     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
-
+SET(install_python_location          "${CMAKE_INSTALL_PREFIX}/share/cppad/cg/")
 
 # ----------------------------------------------------------------------------
 #                    Define some optional compiler flags
@@ -153,6 +153,7 @@ ADD_SUBDIRECTORY(include)
 ADD_SUBDIRECTORY(example EXCLUDE_FROM_ALL)
 #ADD_SUBDIRECTORY(introduction EXCLUDE_FROM_ALL)
 ADD_SUBDIRECTORY(speed EXCLUDE_FROM_ALL)
+ADD_SUBDIRECTORY(python)
 ADD_SUBDIRECTORY(pkgconfig)
 ADD_SUBDIRECTORY(doc)
 

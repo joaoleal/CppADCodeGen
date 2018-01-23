@@ -1,4 +1,5 @@
-''' --------------------------------------------------------------------------
+'''
+ * --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2018 Ciengis
  *
@@ -13,15 +14,6 @@
  * Author: Joao Leal
 '''
 import gdb
-
-
-def is_container(v):
-    c = v.type.code
-    return c == gdb.TYPE_CODE_STRUCT or c == gdb.TYPE_CODE_UNION
-
-
-def is_pointer(v):
-    return v.type.code == gdb.TYPE_CODE_PTR
 
 
 class CGPrettyPrinter:

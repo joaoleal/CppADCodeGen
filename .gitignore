@@ -36,7 +36,7 @@ config.status
 pkgconfig/*.pc
 makefile
 
-# temporary files 
+# temporary files
 junk
 junk.sh
 *~
@@ -72,3 +72,6 @@ junk.sh
 /example/dynamic_linux
 /example/source_generation
 /example/cppadcg_sources
+
+# python
+*.pyc
