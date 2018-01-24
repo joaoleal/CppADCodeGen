@@ -18,7 +18,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.8)
 
 PROJECT(cppadcg CXX C)
 
-SET(cppadcg_version      "2.2.0" )
+SET(cppadcg_version      "2.3.0" )
 SET(cppadcg_url          "https://github.com/joaoleal/CppADCodeGen" )
 SET(cppadcg_description  "A C++ Algorithmic Differentiation Package with Source Code Generation" )
 
@@ -111,7 +111,7 @@ SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_cppad_include_location   "${CMAKE_INSTALL_PREFIX}/include/cppad")
 SET(install_library_pkg_location     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
 SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
-SET(install_python_location          "${CMAKE_INSTALL_PREFIX}/share/cppad/cg/")
+SET(install_python_location          "${CMAKE_INSTALL_PREFIX}/share/cppadcg/python")
 
 # ----------------------------------------------------------------------------
 #                    Define some optional compiler flags

@@ -1,3 +1,11 @@
+cppadcodegen (2.3.0-1) unstable; urgency=low
+
+   * added support for Clang/LLVM 5.0
+   * use unique_ptr internally in additional locations
+   * pretty printers for GDB
+
+ -- Joao Leal <development@ciengis.com>  Wed, 24 Jan 2018 13:00:00 +0000
+
 cppadcodegen (2.2.0-1) unstable; urgency=low
 
    * initial work for multithreaded evaluation of Jacobians and Hessians

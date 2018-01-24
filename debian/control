@@ -9,7 +9,7 @@ Build-Depends: debhelper (>= 5),
                libattr1 (>= 1 ),
                cmake (>= 2.8),
                doxygen,
-               cppad-dev (>= 20170000.3)|cppad (>= 20170000.3),
+               cppad-dev (>= 20170000.3)|cppad (>= 2017.00.00.3),
                libadolc-dev,
                libclang-dev (>= 3.2) | libclang-3.6-dev | libclang-3.8-dev | libclang-4.0-dev,
                libeigen3-dev,
@@ -20,7 +20,7 @@ Package: cppadcodegen-dev
 Section: libdevel
 Architecture: any
 Depends: ${misc:Depends},
-         cppad-dev (>= 20170000.3)|cppad (>= 20170000.3)
+         cppad-dev (>= 20170000.3)|cppad (>= 2017.00.00.3)
 Suggests: libclang-dev (>= 3.2),
           llvm-4.0-dev,
           libeigen3-dev
@@ -30,4 +30,4 @@ Package: cppadcodegen-doc
 Section: doc
 Architecture: all
 Description: Documentation for CppADCodeGen
- HTML Documentation for CppADCodeGen package. 
+ HTML Documentation for CppADCodeGen package.
