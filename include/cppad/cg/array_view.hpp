@@ -29,17 +29,17 @@ namespace cg {
 template<class Type>
 class ArrayView {
 public:
-    typedef Type value_type;
-    typedef value_type* pointer;
-    typedef const value_type* const_pointer;
-    typedef value_type& reference;
-    typedef const Type& const_reference;
-    typedef value_type* iterator;
-    typedef const value_type* const_iterator;
-    typedef std::reverse_iterator<const_iterator> const_reverse_iterator;
-    typedef std::reverse_iterator<iterator> reverse_iterator;
-    typedef size_t size_type;
-    typedef ptrdiff_t difference_type;
+    using value_type = Type;
+    using pointer = value_type*;
+    using const_pointer = const value_type*;
+    using reference = value_type&;
+    using const_reference = const Type&;
+    using iterator = value_type*;
+    using const_iterator = const value_type*;
+    using const_reverse_iterator = std::reverse_iterator<const_iterator>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
+    using size_type = size_t;
+    using difference_type = ptrdiff_t;
 private:
     /**
      * The externally created array

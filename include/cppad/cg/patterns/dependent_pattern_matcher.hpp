@@ -49,7 +49,7 @@ inline bool operator<(const UniqueEquationPair<Base>& p1, const UniqueEquationPa
 template<class Base>
 class DependentPatternMatcher {
 public:
-    typedef CG<Base> CGBase;
+    using CGBase = CG<Base>;
 private:
 
     enum class INDEXED_OPERATION_TYPE {
@@ -57,12 +57,12 @@ private:
         NONINDEXED,
         BOTH
     };
-    typedef std::pair<INDEXED_OPERATION_TYPE, size_t> Indexed2OpCountType;
-    typedef std::map<size_t, std::map<size_t, std::map<OperationNode<Base>*, Indexed2OpCountType> > > Dep1Dep2SharedType;
-    typedef std::pair<size_t, size_t> DepPairType;
-    typedef std::map<size_t, std::map<DepPairType, const std::map<OperationNode<Base>*, Indexed2OpCountType>* > > TotalOps2validDepsType;
-    typedef std::map<UniqueEquationPair<Base>, TotalOps2validDepsType*> Eq2totalOps2validDepsType;
-    typedef std::map<size_t, Eq2totalOps2validDepsType> MaxOps2eq2totalOps2validDepsType;
+    using Indexed2OpCountType = std::pair<INDEXED_OPERATION_TYPE, size_t>;
+    using Dep1Dep2SharedType = std::map<size_t, std::map<size_t, std::map<OperationNode<Base>*, Indexed2OpCountType> > >;
+    using DepPairType = std::pair<size_t, size_t>;
+    using TotalOps2validDepsType = std::map<size_t, std::map<DepPairType, const std::map<OperationNode<Base>*, Indexed2OpCountType>* > >;
+    using Eq2totalOps2validDepsType = std::map<UniqueEquationPair<Base>, TotalOps2validDepsType*>;
+    using MaxOps2eq2totalOps2validDepsType = std::map<size_t, Eq2totalOps2validDepsType>;
 
 private:
     CodeHandler<Base>* handler_;
@@ -81,7 +81,7 @@ private:
      */
     std::map<EquationPattern<Base>*, std::set<EquationPattern<Base>*> > incompatible_;
     /**
-     * 
+     *
      */
     std::map<UniqueEquationPair<Base>, Dep1Dep2SharedType> equationShared_;
     /**
@@ -92,7 +92,7 @@ private:
     std::vector<std::set<size_t> > id2Deps;
     size_t idCounter_;
     /**
-     * the original shared node ID used to sort shared variables to ensure 
+     * the original shared node ID used to sort shared variables to ensure
      * reproducibility between different runs
      */
     CodeHandlerVector<Base, size_t> origShareNodeId_;
@@ -102,7 +102,7 @@ public:
 
     /**
      * Creates a new DependentPatternMatcher
-     * 
+     *
      * @param relatedDepCandidates Groups of dependent variable indexes that
      *                             are believed to have the same expression
      *                             pattern.
@@ -139,7 +139,7 @@ public:
      * Detects common equation patterns and generates a new tape for the
      * model using loops.
      * This method should only be called once!
-     * 
+     *
      * @param nonLoopTape The new tape without the loops or nullptr if there
      *                    are no non-indexed expressions in the model
      * @param loopTapes The models for each loop (must be deleted by the user)
@@ -173,9 +173,9 @@ public:
 private:
 
     /**
-     * Attempts to detect common patterns in the equations and generate 
+     * Attempts to detect common patterns in the equations and generate
      * loops from these patterns.
-     * 
+     *
      * @return information about the detected loops
      */
     virtual std::vector<Loop<Base>*> findLoops() {
@@ -188,8 +188,8 @@ private:
                 OperationNode<Base>* node = dependents_[iDep].getOperationNode();
                 if (node != nullptr && node->getOperationType() == CGOpCode::Inv) {
                     /**
-                     * indexed/nonindexed independents are marked at the 
-                     * operation that uses them, therefore currently there 
+                     * indexed/nonindexed independents are marked at the
+                     * operation that uses them, therefore currently there
                      * is no way to make a distinction between
                      *     yi = xi and y_(i+1) = x_(i+1)
                      * since both operations which use indexed independents
@@ -325,8 +325,8 @@ private:
                         for (const auto& itShared : sharedTmps) {
                             if (itShared.second.first == INDEXED_OPERATION_TYPE::BOTH) {
                                 /**
-                                 * one equation uses this temporary shared 
-                                 * variable as an indexed variable while the 
+                                 * one equation uses this temporary shared
+                                 * variable as an indexed variable while the
                                  * other equation does not
                                  */
                                 canCombine = false;
@@ -359,7 +359,7 @@ private:
         }
 
         /**
-         * Try to merge loops with shared variables 
+         * Try to merge loops with shared variables
          */
         typename MaxOps2eq2totalOps2validDepsType::const_reverse_iterator itMaxOps;
         for (itMaxOps = maxOps2Eq2totalOps2validDeps.rbegin(); itMaxOps != maxOps2Eq2totalOps2validDeps.rend(); ++itMaxOps) {
@@ -491,9 +491,9 @@ private:
     }
 
     /**
-     * Determines whether or not two loops which shared temporary variables 
+     * Determines whether or not two loops which shared temporary variables
      * can be merged.
-     * 
+     *
      * @param loop1 First loop
      * @param loop2 Second loop
      * @return true if the loops should be merged into a single loop
@@ -512,7 +512,7 @@ private:
         bool compatible = true;
 
         /**
-         * Must order equation pairs property according to the highest 
+         * Must order equation pairs property according to the highest
          * number of shared operations
          */
         map<size_t, map<UniqueEquationPair<Base>, TotalOps2validDepsType*> > totalOp2eq;
@@ -543,7 +543,7 @@ private:
                 TotalOps2validDepsType& totalOps2validDeps = *itEq.second;
 
                 /***************************************************
-                 * attempt to combine dependents which share the 
+                 * attempt to combine dependents which share the
                  * highest number of operations first
                  **************************************************/
                 typename map<size_t, map<DepPairType, const map<OperationNode<Base>*, Indexed2OpCountType>* > >::const_reverse_iterator itOp2Dep2Shared;
@@ -635,11 +635,11 @@ private:
     }
 
     /**
-     * Determines the relations between the dependents of two equation 
+     * Determines the relations between the dependents of two equation
      * patterns using two dependents as reference and the shared variables
      * among the two patterns
-     * 
-     * @return true if these equation patterns are compatible 
+     *
+     * @return true if these equation patterns are compatible
      *         (if they can be in the same loop)
      */
     bool findDepRelations(EquationPattern<Base>* eq1,
@@ -690,7 +690,7 @@ private:
      * Creates a new tape for the model without the equations in the loops
      * and with some extra dependents for the temporary variables used by
      * loops.
-     * 
+     *
      * @return The new tape without loop equations
      */
     virtual LoopFreeModel<Base>* createNewTape() {
@@ -725,7 +725,7 @@ private:
         }
 
         /**
-         * create a new smaller tape 
+         * create a new smaller tape
          */
         assert(m >= eqInLoopCount);
         size_t nonLoopEq = m - eqInLoopCount;
@@ -758,7 +758,7 @@ private:
         }
 
         /**
-         * Generate the new tape by going again through the operations 
+         * Generate the new tape by going again through the operations
          */
         Evaluator<Base, CGBase> evaluator(*handler_);
 
@@ -847,7 +847,7 @@ private:
 
     /**
      * Finds nodes which can be shared with other equation patterns
-     * 
+     *
      * @param value The CG object to visit
      * @param depIndex The index of the dependent variable
      * @return true if this operation is indexed
@@ -865,10 +865,10 @@ private:
 
     /**
      * Finds nodes which can be shared with other equation patterns
-     * 
+     *
      * @param node The node to visit
      * @param depIndex The index of the dependent variable
-     * @param opCount The number of operations which must be performed to 
+     * @param opCount The number of operations which must be performed to
      *                generate this node
      * @return true if this operation is indexed (for the current equation pattern)
      */
@@ -947,7 +947,7 @@ private:
     /**
      * Marks a node (and all other nodes used by it) as being used by a
      * given dependent variable.
-     * 
+     *
      * @param node The node being visited
      * @param dep Dependent variable index
      */
@@ -961,7 +961,7 @@ private:
         std::set<size_t>& deps = id2Deps[id];
 
         if (deps.size() == 0) {
-            deps.insert(dep); // here for the first time 
+            deps.insert(dep); // here for the first time
         } else {
             std::pair < std::set<size_t>::iterator, bool> added = deps.insert(dep);
             if (!added.second) {
@@ -1125,7 +1125,7 @@ private:
                     // indexed independent variable
 
                     // invert eq1Dep2Indep into eq1Indep2Dep
-                    typedef map<const OperationNode<Base>*, size_t, IndependentNodeSorter<Base> > MapIndep2Dep;
+                    using MapIndep2Dep = map<const OperationNode<Base>*, size_t, IndependentNodeSorter<Base> >;
                     MapIndep2Dep eq1Indep2Dep;
                     typename MapIndep2Dep::iterator hint = eq1Indep2Dep.begin();
                     for (const auto& d2i : eq1Dep2Indep) {
@@ -1142,7 +1142,7 @@ private:
                         typename map<const OperationNode<Base>*, size_t>::const_iterator it;
                         if (itHint->first == indep) {
                             /**
-                             * assumes that the both relations 
+                             * assumes that the both relations
                              * (indep<->dep1 and dep2<->indep) are in
                              * ascending order which is commonly true
                              */
@@ -1240,7 +1240,7 @@ private:
                         if (it != dep3 && related1->find(it) != related1->end()) {
                             canMerge = false; // relation with a dependent from a different iteration!
                             break;
-                            //return false; 
+                            //return false;
                         }
                     }
 
@@ -1259,9 +1259,9 @@ private:
                 }
                 /**
                  * when it is not possible to merge due to a dependent
-                 * variable from another iteration already belonging to a 
+                 * variable from another iteration already belonging to a
                  * dependent variable relation (iteration) the new relation
-                 * is not added and as a consequence there will be some 
+                 * is not added and as a consequence there will be some
                  * repeated operations
                  */
 
@@ -1282,9 +1282,9 @@ private:
                     }
                     /**
                      * when it is not possible to merge due to a dependent
-                     * variable from another iteration already belonging to a 
+                     * variable from another iteration already belonging to a
                      * dependent variable relation (iteration) the new relation
-                     * is not added and as a consequence there will be some 
+                     * is not added and as a consequence there will be some
                      * repeated operations
                      */
                 }
@@ -1309,9 +1309,9 @@ private:
             }
             /**
              * when it is not possible to merge due to a dependent
-             * variable from another iteration already belonging to a 
+             * variable from another iteration already belonging to a
              * dependent variable relation (iteration) the new relation
-             * is not added and as a consequence there will be some 
+             * is not added and as a consequence there will be some
              * repeated operations
              */
 

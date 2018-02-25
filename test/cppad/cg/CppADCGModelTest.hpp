@@ -21,8 +21,8 @@ namespace cg {
 
 class CppADCGModelTest : public CppADCGTest {
 public:
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 public:
 
     inline CppADCGModelTest(bool verbose = false,

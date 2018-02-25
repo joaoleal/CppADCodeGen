@@ -616,7 +616,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateReverseTwoGroupOps(Code
     using namespace std;
     using namespace CppAD::cg::loops;
 
-    typedef CG<Base> CGBase;
+    using CGBase = CG<Base>;
 
     IndexOperationNode<Base>& iterationIndexOp = *info.iterationIndexOp;
 

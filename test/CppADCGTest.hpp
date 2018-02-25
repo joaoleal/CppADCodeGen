@@ -29,9 +29,9 @@ namespace cg {
 
 class CppADCGTest : public ::testing::Test {
 protected:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
     bool verbose_;
     bool printValues_;
     bool memory_check_;

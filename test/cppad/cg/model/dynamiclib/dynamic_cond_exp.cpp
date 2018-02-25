@@ -99,8 +99,8 @@ using namespace std;
 #if 0
 TEST_F(CppADCGDynamicTest1, DynamicCondExpCustom) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variables
     std::vector<ADCG> u(7);
@@ -133,8 +133,8 @@ TEST_F(CppADCGDynamicTest1, DynamicCondExpCustom) {
 
 TEST_F(CppADCGDynamicTest1, DynamicCondExpFull) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variables
     std::vector<ADCG> u(7);

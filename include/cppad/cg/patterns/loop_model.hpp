@@ -26,9 +26,9 @@ namespace cg {
 template <class Base>
 class LoopModel {
 public:
-    typedef CppAD::cg::CG<Base> CGB;
-    typedef Argument<Base> Arg;
-    typedef std::pair<size_t, size_t> pairss;
+    using CGB = CppAD::cg::CG<Base>;
+    using Arg = Argument<Base>;
+    using pairss = std::pair<size_t, size_t>;
 public:
     static const std::string ITERATION_INDEX_NAME;
 private:
@@ -69,12 +69,12 @@ private:
      */
     std::vector<LoopPosition> temporaryIndependents_;
     /**
-     * Maps the original dependent variable indexes to their positions in 
+     * Maps the original dependent variable indexes to their positions in
      * the loop
      */
     std::map<size_t, LoopIndexedPosition> depOrigIndexes_;
     /**
-     * 
+     *
      */
     std::vector<IterEquationGroup<Base> > equationGroups_;
     std::vector<std::set<const IterEquationGroup<Base>*> > iteration2eqGroups_;
@@ -113,7 +113,7 @@ public:
     /**
      * Creates a new atomic function that is responsible for defining the
      * dependencies to calls of a user atomic function.
-     * 
+     *
      * @param fun The tape for a single loop iteration (loop model)
      * @param containsAtoms Whether or not fun calls atomic functions
      * @param iterationCount Number of loop iterations
@@ -230,7 +230,7 @@ public:
 
     /**
      * Provides a unique identifier for this loop.
-     * 
+     *
      * @return a unique identifier ID
      */
     inline size_t getLoopId() const {
@@ -248,7 +248,7 @@ public:
 
     /**
      * Provides the number of iterations in the loop
-     * 
+     *
      * @return the number of iterations in the loop
      */
     inline const size_t getIterationCount() const {
@@ -257,7 +257,7 @@ public:
 
     /**
      * Provides the tape that represents the loop model
-     * 
+     *
      * @return the tape of the loop model
      */
     inline ADFun<CGB>& getTape() const {
@@ -265,10 +265,10 @@ public:
     }
 
     /**
-     * Provides the number of dependent variables in the loop tape/model 
+     * Provides the number of dependent variables in the loop tape/model
      * (number of equation patterns).
-     * 
-     * @return the number of dependents in the loop model 
+     *
+     * @return the number of dependents in the loop model
      *         (number of equation patterns)
      */
     inline size_t getTapeDependentCount() const {
@@ -276,9 +276,9 @@ public:
     }
 
     /**
-     * Provides the number of independent variables in the loop tape/model 
+     * Provides the number of independent variables in the loop tape/model
      * (number of indexed + non-indexed + temporary variables).
-     * 
+     *
      * @return the number of independents in the loop model
      */
     inline size_t getTapeIndependentCount() const {
@@ -327,7 +327,7 @@ public:
 
     /**
      * Provides the locations where a dependent variable is used
-     * 
+     *
      * @param origI the dependent variable index in the original model
      * @return the locations where a dependent variable is used
      */
@@ -366,7 +366,7 @@ public:
     /**
      * Finds the local tape variable indexes which use a given model
      * variable at a given iteration
-     * 
+     *
      * @param origJ the index of the variable in the original model
      * @param iteration the iteration
      * @return the indexes of tape variables where the variable is used
@@ -385,7 +385,7 @@ public:
 
     /**
      * Finds the local tape variable indexes which use a given model variable
-     * 
+     *
      * @param origJ the index of the variable in the original model
      * @return all the indexed tape variables for each iteration where the
      *         variable is used

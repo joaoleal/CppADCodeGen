@@ -26,8 +26,8 @@ namespace cg {
 template <class Base>
 class BaseAbstractAtomicFun : public atomic_base<CppAD::cg::CG<Base> > {
 public:
-    typedef CppAD::cg::CG<Base> CGB;
-    typedef Argument<Base> Arg;
+    using CGB = CppAD::cg::CG<Base>;
+    using Arg = Argument<Base>;
 protected:
 
     /**

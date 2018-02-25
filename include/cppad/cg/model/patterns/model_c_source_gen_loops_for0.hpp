@@ -31,7 +31,7 @@ std::vector<CG<Base> > prepareGraphForward0WithLoops(CodeHandler<Base>& handler,
     using namespace std;
     using namespace loops;
 
-    typedef CG<Base> CGBase;
+    using CGBase = CG<Base>;
 
     std::vector<CGBase> y(m);
 

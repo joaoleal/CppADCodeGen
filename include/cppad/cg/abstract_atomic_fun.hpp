@@ -20,14 +20,14 @@ namespace cg {
 
 /**
  * An atomic function for source code generation
- * 
+ *
  * @author Joao Leal
  */
 template <class Base>
 class CGAbstractAtomicFun : public BaseAbstractAtomicFun<Base> {
 public:
-    typedef CppAD::cg::CG<Base> CGB;
-    typedef Argument<Base> Arg;
+    using CGB = CppAD::cg::CG<Base>;
+    using Arg = Argument<Base>;
 protected:
     /**
      * A unique identifier for this atomic function type
@@ -45,12 +45,12 @@ protected:
     /**
      * Creates a new atomic function that is responsible for defining the
      * dependencies to calls of a user atomic function.
-     * 
+     *
      * @param name The atomic function name.
      * @param standAlone Whether or not forward and reverse function calls
-     *                   do not require the Taylor coefficients for the 
+     *                   do not require the Taylor coefficients for the
      *                   dependent variables (ty) and any previous
-     *                   evaluation of other forward/reverse modes. 
+     *                   evaluation of other forward/reverse modes.
      */
     CGAbstractAtomicFun(const std::string& name,
                         bool standAlone = false) :
@@ -74,7 +74,7 @@ public:
 
     /**
      * Provides a unique identifier for this atomic function type.
-     * 
+     *
      * @return a unique identifier ID
      */
     inline size_t getId() const {
@@ -507,14 +507,14 @@ protected:
     /**
      * Used to evaluate function values and forward mode function values and
      * derivatives.
-     * 
+     *
      * @param q Lowest order for this forward mode calculation.
      * @param p Highest order for this forward mode calculation.
      * @param vx If size not zero, which components of \c x are variables
      * @param vy If size not zero, which components of \c y are variables
      * @param tx Taylor coefficients corresponding to \c x for this
      *           calculation
-     * @param ty Taylor coefficient corresponding to \c y for this 
+     * @param ty Taylor coefficient corresponding to \c y for this
      *           calculation
      * @return true on success, false otherwise
      */
@@ -524,11 +524,11 @@ protected:
                                CppAD::vector<Base>& ty) = 0;
     /**
      * Used to evaluate reverse mode function derivatives.
-     * 
+     *
      * @param p Highest order for this forward mode calculation.
      * @param tx Taylor coefficients corresponding to \c x for this
      *           calculation
-     * @param ty Taylor coefficient corresponding to \c y for this 
+     * @param ty Taylor coefficient corresponding to \c y for this
      *           calculation
      * @param px Partials w.r.t. the \c x Taylor coefficients.
      * @param py Partials w.r.t. the \c y Taylor coefficients

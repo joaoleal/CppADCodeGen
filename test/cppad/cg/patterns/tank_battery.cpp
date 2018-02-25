@@ -22,9 +22,9 @@ const size_t nTanks = 6; // number of stages
 
 class CppADCGPatternTankBatTest : public CppADCGPatternModelTest {
 public:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
 public:
 
     inline CppADCGPatternTankBatTest(bool verbose = false, bool printValues = false) :

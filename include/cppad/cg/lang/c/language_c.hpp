@@ -26,14 +26,14 @@ namespace cg {
 
 /**
  * Generates code for the C language
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class LanguageC : public Language<Base> {
 public:
-    typedef OperationNode<Base> Node;
-    typedef Argument<Base> Arg;
+    using Node = OperationNode<Base>;
+    using Arg = Argument<Base>;
 public:
     static const std::string U_INDEX_TYPE;
     static const std::string ATOMICFUN_STRUCT_DEFINITION;
@@ -117,7 +117,7 @@ public:
 
     /**
      * Creates a C language source code generator
-     * 
+     *
      * @param varTypeName variable data type (e.g. double)
      * @param spaces number of spaces for indentations
      */
@@ -203,7 +203,7 @@ public:
     /**
      * Provides the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @return the maximum number of digits
      */
     virtual size_t getParameterPrecision() const {
@@ -213,7 +213,7 @@ public:
     /**
      * Defines the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @param p the maximum number of digits
      */
     virtual void setParameterPrecision(size_t p) {
@@ -244,16 +244,16 @@ public:
 
     /**
      * Declares temporary variables used by a function.
-     * 
+     *
      * @param isWrapperFunction true if the declarations are for a wrapper
      *                               function which calls other functions
      *                               where the actual work is performed
      * @param zeroArrayDependents  whether or not the dependent variables
-     *                             should be set to zero before executing 
+     *                             should be set to zero before executing
      *                             the operation graph
-     * @param maxForwardOrder the maximum order of forward mode calls to 
+     * @param maxForwardOrder the maximum order of forward mode calls to
      *                        atomic functions
-     * @param maxReverseOrder the maximum order of reverse mode calls to 
+     * @param maxReverseOrder the maximum order of reverse mode calls to
      *                        atomic functions
      * @return the string with the declarations for the temporary variables
      */
@@ -545,7 +545,7 @@ public:
     }
 
     /***********************************************************************
-     * 
+     *
      **********************************************************************/
 
     static inline void printStaticIndexArray(std::ostringstream& os,
@@ -845,7 +845,7 @@ protected:
             }
         }
 
-        // constant dependent variables 
+        // constant dependent variables
         bool commentWritten = false;
         for (size_t i = 0; i < dependent.size(); i++) {
             if (dependent[i].isParameter()) {
@@ -1080,9 +1080,9 @@ protected:
     /**
      * Whether or not this operation assign its expression to a variable by
      * itself.
-     * 
+     *
      * @param var the operation node
-     * @return 
+     * @return
      */
     virtual bool directlyAssignsVariable(const Node& var) const {
         CGOpCode op = var.getOperationType();
@@ -1925,7 +1925,7 @@ protected:
 
     virtual void printElseIf(Node& node) {
         /**
-         * the first argument is the condition, the second argument is the 
+         * the first argument is the condition, the second argument is the
          * if start node, the following arguments are assignments in the
          * previous if branch
          */

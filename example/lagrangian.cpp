@@ -21,8 +21,8 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 int main(void) {
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     /***************************************************************************
      *                               the model
@@ -41,7 +41,7 @@ int main(void) {
     for (size_t i = 0; i < nCtr; ++i)
         lam[i] = v[nVar + i];
 
-    // dependent variable vector 
+    // dependent variable vector
     std::vector<ADCG> lag(1);
 
     /**
@@ -61,8 +61,8 @@ int main(void) {
      * Determine Hessian sparsity pattern
      */
     // determine the sparsity pattern
-    typedef std::vector<std::set<size_t> > sparType;
-    sparType sparsity = CppAD::cg::hessianSparsitySet<sparType, CGD>(fun); // this could be improved
+    using SparType = std::vector<std::set<size_t> >;
+    SparType sparsity = CppAD::cg::hessianSparsitySet<SparType, CGD>(fun); // this could be improved
 
     size_t n = fun.Domain();
     assert(sparsity.size() == n);

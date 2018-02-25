@@ -29,7 +29,7 @@ inline CppAD::ADFun<Base>* MattssonLinear(std::vector<DaeVarInfo>& daeVar,
                                           std::vector<double>& x) {
     using namespace CppAD;
     using namespace std;
-    typedef CppAD::AD<Base> ADB;
+    using ADB = CppAD::AD<Base>;
 
     daeVar.resize(19);
     x.resize(19);

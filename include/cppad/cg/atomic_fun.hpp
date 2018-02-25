@@ -20,29 +20,29 @@ namespace cg {
 
 /**
  * An atomic function for source code generation
- * 
+ *
  * @author Joao Leal
  */
 template <class Base>
 class CGAtomicFun : public CGAbstractAtomicFun<Base> {
 protected:
-    typedef CG<Base> CGB;
+    using CGB = CG<Base>;
 protected:
     atomic_base<Base>& atomicFun_;
     const CppAD::vector<Base> xSparsity_; // independent vector used to determine sparsity patterns
 public:
 
     /**
-     * Creates a new atomic function wrapper that is responsible for 
+     * Creates a new atomic function wrapper that is responsible for
      * defining the dependencies to calls of a user atomic function.
-     * 
+     *
      * @param atomicFun The atomic function to the called by the compiled
      *                  source.
      * @param xSparsity Default independent vector used to determine sparsity patterns
      *                  when the provided independent vector using the CG data type does
      *                  not have all values defined.
      * @param standAlone Whether or not forward and reverse function calls
-     *                   do not require the Taylor coefficients for the 
+     *                   do not require the Taylor coefficients for the
      *                   dependent variables (ty) and the previous
      *                   evaluation of other forward/reverse modes.
      */

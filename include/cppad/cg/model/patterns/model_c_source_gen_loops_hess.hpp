@@ -1106,7 +1106,7 @@ inline void generateLoopForJacHes(ADFun<CG<Base> >& fun,
                                   bool individualColoring) {
     using namespace std;
 
-    typedef CG<Base> CGB;
+    using CGB = CG<Base>;
 
     size_t m = fun.Range();
     size_t n = fun.Domain();

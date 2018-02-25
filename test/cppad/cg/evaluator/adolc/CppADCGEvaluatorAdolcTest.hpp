@@ -23,7 +23,7 @@ namespace cg {
 
 class CppADCGEvaluatorAdolcTest : public CppADCGTest {
 public:
-    typedef std::function<std::vector<CGD> (const std::vector<CGD>& x) > ModelType;
+    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x) >;
 
 public:
 

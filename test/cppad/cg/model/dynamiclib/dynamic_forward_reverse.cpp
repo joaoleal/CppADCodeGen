@@ -40,9 +40,9 @@ public:
 
     virtual void SetUp() {
         // use a special object for source code generation
-        typedef double Base;
-        typedef CG<Base> CGD;
-        typedef AD<CGD> ADCG;
+        using Base = double;
+        using CGD = CG<Base>;
+        using ADCG = AD<CGD>;
 
         x[0] = 0.5;
         x[1] = 1.5;
@@ -136,8 +136,8 @@ TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
     using namespace std;
     using std::vector;
 
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
 
     vector<double> w(m);
     for (size_t i = 0; i < m; i++)

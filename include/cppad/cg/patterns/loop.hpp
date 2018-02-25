@@ -36,7 +36,7 @@ public:
 };
 
 /**
- * 
+ *
  */
 template<class Base>
 class LoopCodeHandler : public CodeHandler<Base> {
@@ -51,7 +51,7 @@ public:
 template<class Base>
 class Loop {
 private:
-    typedef std::pair<size_t, CG<Base> > IndexValue;
+    using IndexValue = std::pair<size_t, CG<Base> >;
 public:
     /**
      * The equations inside the loop
@@ -59,7 +59,7 @@ public:
     std::set<EquationPattern<Base>*> equations;
     /**
      * Which argument positions of operations (from the reference dependent)
-     * use indexed independent variables 
+     * use indexed independent variables
      * (operation -> argument index -> iteration -> independent)
      */
     IndexedIndependent<Base> indexedOpIndep;
@@ -106,7 +106,7 @@ private:
      */
     size_t nIndependents_;
     /**
-     * 
+     *
      */
     LoopModel<Base>* loopModel_;
     /**
@@ -226,7 +226,7 @@ public:
 
     /**
      * Combines the provided loop with the current one
-     * 
+     *
      * @param other The other loop
      */
     void merge(Loop<Base>& other,
@@ -510,7 +510,7 @@ public:
                     std::vector<size_t> deps;
                     deps.reserve(itPos2Eq2Dep.second.size());
 
-                    set<size_t> usedIterations; // iterations used by these equations 
+                    set<size_t> usedIterations; // iterations used by these equations
                     // determine used iteration indexes
                     const set<EquationPattern<Base>*>& relations = group.linkedEquationsByNonIndexedRel[posN];
                     for (EquationPattern<Base>* itRel : relations) {
@@ -698,18 +698,18 @@ private:
 
     /**
      * Creates the model for the loop equations
-     * 
+     *
      * @param dependents original model dependent variable vector
      * @param independents original model independent variable vector
      * @param dep2Equation maps an equation/dependent index to an equation pattern
-     * @param origTemp2Index 
+     * @param origTemp2Index
      */
     void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
                               const std::vector<CG<Base> >& independents,
                               const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                               std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
-        typedef CG<Base> CGB;
-        typedef AD<CGB> ADCGB;
+        using CGB = CG<Base>;
+        using ADCGB = AD<CGB>;
         CPPADCG_ASSERT_UNKNOWN(independents.size() > 0);
         CPPADCG_ASSERT_UNKNOWN(independents[0].getCodeHandler() != nullptr);
         CodeHandler<Base>& origHandler = *independents[0].getCodeHandler();
@@ -906,7 +906,7 @@ private:
             OperationNode<Base>* origTmpNode = temporaryClone2Orig_.at(tmpClone);
 
             /**
-             * assign an index (k) to each temporary variable 
+             * assign an index (k) to each temporary variable
              */
             size_t k;
             typename std::map<OperationNode<Base>*, size_t>::const_iterator itz = origTemp2Index.find(origTmpNode);
@@ -1059,7 +1059,7 @@ private:
 
     /**
      * Creates a temporary variable that does NOT depend on the loop indexes
-     * 
+     *
      * @param node The original node
      * @return the clone
      */
@@ -1105,7 +1105,7 @@ private:
         /**
          * Tries to find the best dependent to use for the next iteration.
          * For performance reasons it might not be the optimum.
-         * 
+         *
          * @param dep The dependent index
          * @param eq The equation
          * @return the best dependent index and its equation
@@ -1131,7 +1131,7 @@ private:
 
         /**
          * Tries to find the best dependent to use for the next iteration
-         * 
+         *
          * @param dep The dependent index
          * @param eq The equation
          * @return the best dependent index and its equation
@@ -1146,7 +1146,7 @@ private:
             if (pos >= 0) {
                 size_t depRelPos = findRelativeFreeDependentInEq(eq, dep);
 
-                // this dependent might not be the best dependent if this 
+                // this dependent might not be the best dependent if this
                 // equation is not present in all iterations
                 for (size_t dep2 : group.linkedDependents[pos]) {
                     EquationPattern<Base>* eq2 = dep2Equation.at(dep2);

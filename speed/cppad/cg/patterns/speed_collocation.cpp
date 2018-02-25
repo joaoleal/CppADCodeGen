@@ -20,8 +20,8 @@
 namespace CppAD {
 namespace cg {
 
-typedef double Base;
-typedef CppAD::cg::CG<Base> CGD;
+using Base = double;
+using CGD = CppAD::cg::CG<Base>;
 
 using namespace std;
 

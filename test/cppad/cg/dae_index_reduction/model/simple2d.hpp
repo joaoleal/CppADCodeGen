@@ -22,7 +22,7 @@ template<class Base>
 inline CppAD::ADFun<Base>* Simple2D(std::vector<DaeVarInfo>& daeVar) {
     using namespace CppAD;
     using namespace std;
-    typedef CppAD::AD<Base> ADB;
+    using ADB = CppAD::AD<Base>;
 
     std::vector<ADB> U(5);
     Independent(U);

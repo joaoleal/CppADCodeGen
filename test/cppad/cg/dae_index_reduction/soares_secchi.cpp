@@ -24,7 +24,7 @@ using namespace CppAD::cg;
 using namespace std;
 
 TEST_F(IndexReductionTest, SoaresSecchiSimple2D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
@@ -57,7 +57,7 @@ TEST_F(IndexReductionTest, SoaresSecchiSimple2D) {
 }
 
 TEST_F(IndexReductionTest, SoaresSecchiPendulum2D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
@@ -96,7 +96,7 @@ TEST_F(IndexReductionTest, SoaresSecchiPendulum2D) {
 }
 
 TEST_F(IndexReductionTest, SoaresSecchiPendulum3D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD> ();

@@ -710,7 +710,7 @@ std::vector<std::pair<CG<Base>, IndexPattern*> > generateForwardOneGroupOps(Code
     using namespace std;
     using namespace CppAD::cg::loops;
 
-    typedef CG<Base> CGBase;
+    using CGBase = CG<Base>;
 
     const std::vector<std::vector<LoopPosition> >& indexedIndepIndexes = lModel.getIndexedIndepIndexes();
 

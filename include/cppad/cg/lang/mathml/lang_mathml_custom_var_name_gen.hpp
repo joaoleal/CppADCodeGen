@@ -21,13 +21,13 @@ namespace cg {
 /**
  * Creates variables names for the source code using a list of provided
  * custom names.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class LangMathMLCustomVariableNameGenerator : public LangMathMLDefaultVariableNameGenerator<Base> {
 protected:
-    typedef LangMathMLDefaultVariableNameGenerator<Base> Super;
+    using Super = LangMathMLDefaultVariableNameGenerator<Base>;
     // the custom names for the dependent variables
     const std::vector<std::string> depNames_;
     // the custom names for the independent variables

@@ -53,9 +53,9 @@ public:
 
 class CppADCGPatternCstrTest : public CppADCGPatternTest {
 public:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
 protected:
     static const size_t ns; // number of states in the CSTR model
     static const size_t nm; // number of controls in the CSTR model

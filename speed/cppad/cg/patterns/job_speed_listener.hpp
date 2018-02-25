@@ -22,7 +22,7 @@ namespace cg {
 
 class JobSpeedListener : public JobListener {
 public:
-    typedef JobListener::duration duration;
+    using duration = JobListener::duration;
     // pattern detection
     duration patternDection;
     // pattern detection

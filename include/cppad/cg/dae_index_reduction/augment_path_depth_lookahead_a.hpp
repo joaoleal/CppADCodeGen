@@ -31,8 +31,8 @@ namespace cg {
 template<class Base>
 class AugmentPathDepthLookaheadA : public AugmentPath<Base> {
 protected:
-    typedef CppAD::cg::CG<Base> CGBase;
-    typedef CppAD::AD<CGBase> ADCG;
+    using CGBase = CppAD::cg::CG<Base>;
+    using ADCG = CppAD::AD<CGBase>;
 public:
 
     virtual bool augmentPath(Enode <Base>& i) override final {

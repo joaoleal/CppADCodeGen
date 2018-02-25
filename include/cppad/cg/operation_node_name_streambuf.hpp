@@ -30,9 +30,9 @@ namespace cg {
 template<class Base>
 class OperationNodeNameStreambuf : public std::streambuf {
 private:
-    typedef typename std::streambuf::char_type char_type;
-    typedef typename std::streambuf::int_type int_type;
-    typedef typename std::streambuf::pos_type pos_type;
+    using char_type = typename std::streambuf::char_type;
+    using int_type = typename std::streambuf::int_type;
+    using pos_type = typename std::streambuf::pos_type;
 private:
     thread_local static OperationNodeNameStreambuf<Base>* BUF;
 private:

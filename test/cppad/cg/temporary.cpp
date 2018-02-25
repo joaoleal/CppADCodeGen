@@ -19,8 +19,8 @@ namespace cg {
 
 class CppADCGTempTest : public CppADCGTest {
 protected:
-    typedef CppADCGTest::CGD CGD;
-    typedef CppADCGTest::ADCGD ADCGD;
+    using CGD = CppADCGTest::CGD;
+    using ADCGD = CppADCGTest::ADCGD;
 public:
 
     inline CppADCGTempTest(bool verbose = false,
@@ -63,13 +63,13 @@ TEST_F(CppADCGTempTest, NoTemporary) {
     size_t n = 3;
     size_t m = 2;
 
-    std::vector<ADCGD> u(n); // independent variable vector 
+    std::vector<ADCGD> u(n); // independent variable vector
     u[0] = 1;
     u[0] = 2;
     u[0] = 3;
     Independent(u);
 
-    std::vector<ADCGD> Z(m); // dependent variable vector 
+    std::vector<ADCGD> Z(m); // dependent variable vector
 
     // model
     Z[0] = u[0] + u[1];
@@ -84,13 +84,13 @@ TEST_F(CppADCGTempTest, Temporary1) {
     size_t n = 3;
     size_t m = 2;
 
-    std::vector<ADCGD> u(n); // independent variable vector 
+    std::vector<ADCGD> u(n); // independent variable vector
     u[0] = 1;
     u[0] = 2;
     u[0] = 3;
     Independent(u);
 
-    std::vector<ADCGD> Z(m); // dependent variable vector 
+    std::vector<ADCGD> Z(m); // dependent variable vector
 
     // model
     Z[0] = u[0] + u[1];
@@ -105,13 +105,13 @@ TEST_F(CppADCGTempTest, Temporary2) {
     size_t n = 4;
     size_t m = 3;
 
-    std::vector<ADCGD> u(n); // independent variable vector 
+    std::vector<ADCGD> u(n); // independent variable vector
     u[0] = 1;
     u[0] = 2;
     u[0] = 3;
     Independent(u);
 
-    std::vector<ADCGD> Z(m); // dependent variable vector 
+    std::vector<ADCGD> Z(m); // dependent variable vector
 
     // model
     Z[0] = u[0] + u[1];
@@ -128,13 +128,13 @@ TEST_F(CppADCGTempTest, Temporary3) {
     size_t n = 4;
     size_t m = 3;
 
-    std::vector<ADCGD> ind(n); // independent variable vector 
+    std::vector<ADCGD> ind(n); // independent variable vector
     ind[0] = 1;
     ind[0] = 2;
     ind[0] = 3;
     Independent(ind);
 
-    std::vector<ADCGD> dep(m); // dependent variable vector 
+    std::vector<ADCGD> dep(m); // dependent variable vector
 
     // model
     ADCGD tmpu0 = ind[0] + 1;

@@ -21,14 +21,14 @@ namespace cg {
 
 class CppADCGPatternModelTest : public CppADCGPatternTest, public PatternTestModel<CG<double> > {
 public:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
 protected:
     std::string modelName;
     const size_t ns;
     const size_t nm;
-    const size_t m; // total number of equations in the model 
+    const size_t m; // total number of equations in the model
     const size_t n; // number of independent variables
     std::vector<Base> xb; // values for the model
     bool useCustomSparsity_;

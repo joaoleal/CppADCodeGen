@@ -31,13 +31,13 @@ namespace Eigen {
 template<typename Base>
 struct NumTraits<CppAD::cg::CG<Base> > {
     // the real part of an CG<Base> value
-    typedef CppAD::cg::CG<Base>  Real;
+    using Real = CppAD::cg::CG<Base> ;
     // type for CG<Base> operations producing non-integer values
-    typedef CppAD::cg::CG<Base>  NonInteger;
+    using NonInteger = CppAD::cg::CG<Base> ;
     // type for nested value inside an CG<Base> expression tree
-    typedef CppAD::cg::CG<Base>  Nested;
+    using Nested = CppAD::cg::CG<Base>;
     // type for numeric literals such as "2" or "0.5"
-    typedef CppAD::cg::CG<Base>  Literal;
+    using Literal = CppAD::cg::CG<Base>;
 
     enum {
         // does not support complex Base types
@@ -100,15 +100,15 @@ struct NumTraits<CppAD::cg::CG<Base> > {
  */
 template <typename Base>
 struct NumTraits<CppAD::AD<CppAD::cg::CG<Base> > > {
-    typedef CppAD::cg::CG<Base> CGBase;
+    using CGBase = CppAD::cg::CG<Base>;
     // the real part of an AD<CGBase> value
-    typedef CppAD::AD<CGBase>   Real;
+    using Real = CppAD::AD<CGBase>;
     // type for AD<CGBase> operations producing non-integer values
-    typedef CppAD::AD<CGBase>  NonInteger;
+    using NonInteger = CppAD::AD<CGBase>;
     // type for nested value inside an AD<CGBase> expression tree
-    typedef CppAD::AD<CGBase>  Nested;
+    using Nested = CppAD::AD<CGBase>;
     // type for numeric literals such as "2" or "0.5"
-    typedef CppAD::AD<CGBase>  Literal;
+    using Literal = CppAD::AD<CGBase>;
 
     enum {
         // does not support complex Base types
@@ -170,22 +170,22 @@ struct NumTraits<CppAD::AD<CppAD::cg::CG<Base> > > {
  */
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<CppAD::AD<CppAD::cg::CG<Base> >, Base, BinOp> {
-    typedef CppAD::AD<CppAD::cg::CG<Base> > ReturnType;
+    using ReturnType = CppAD::AD<CppAD::cg::CG<Base> >;
 };
 
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<Base, CppAD::AD<CppAD::cg::CG<Base> >, BinOp> {
-    typedef CppAD::AD<CppAD::cg::CG<Base> > ReturnType;
+    using ReturnType = CppAD::AD<CppAD::cg::CG<Base> >;
 };
 
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<CppAD::AD<CppAD::cg::CG<Base> >, CppAD::cg::CG<Base>, BinOp> {
-    typedef CppAD::AD<CppAD::cg::CG<Base> > ReturnType;
+    using ReturnType = CppAD::AD<CppAD::cg::CG<Base> >;
 };
 
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<CppAD::cg::CG<Base>, CppAD::AD<CppAD::cg::CG<Base> >, BinOp> {
-    typedef CppAD::AD<CppAD::cg::CG<Base> > ReturnType;
+    using ReturnType = CppAD::AD<CppAD::cg::CG<Base> >;
 };
 
 
@@ -195,12 +195,12 @@ struct ScalarBinaryOpTraits<CppAD::cg::CG<Base>, CppAD::AD<CppAD::cg::CG<Base> >
  */
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<CppAD::cg::CG<Base>, Base, BinOp> {
-    typedef CppAD::cg::CG<Base> ReturnType;
+    using ReturnType = CppAD::cg::CG<Base>;
 };
 
 template<typename Base, typename BinOp>
 struct ScalarBinaryOpTraits<Base, CppAD::cg::CG<Base>, BinOp> {
-    typedef CppAD::cg::CG<Base> ReturnType;
+    using ReturnType = CppAD::cg::CG<Base>;
 };
 
 }

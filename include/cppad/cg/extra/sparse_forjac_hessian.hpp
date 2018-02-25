@@ -30,10 +30,10 @@ public:
     std::vector<size_t> user_row;
     /// version of user col array with the extra value n at end
     std::vector<size_t> user_col;
-    /// indices that sort the user arrays by row 
+    /// indices that sort the user arrays by row
     /// with the extra value K at the end
     std::vector<size_t> sort_row;
-    /// indices that sort the user arrays by column 
+    /// indices that sort the user arrays by column
     /// with the extra value K at the end
     std::vector<size_t> sort_col;
     /// number elements in the user sparse Jacobian
@@ -216,7 +216,7 @@ inline void computeNotUsed(SparsityPattern& not_used,
                            const SparsityPattern& r_used,
                            size_t m,
                            size_t n) {
-    typedef typename SparsityPattern::const_iterator SparIter;
+    using SparIter = typename SparsityPattern::const_iterator;
 
     assert(not_used.n_set() == 0);
     not_used.resize(m, n);
@@ -243,9 +243,9 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
 
     size_t i, j1, j11, j2, c, k;
 
-    typedef typename VectorSet::value_type Set_type;
-    typedef typename local::internal_sparsity<Set_type>::pattern_type SparsityPattern;
-    typedef typename SparsityPattern::const_iterator SparIter;
+    using Set_type = typename VectorSet::value_type;
+    using SparsityPattern = typename local::internal_sparsity<Set_type>::pattern_type;
+    using SparIter = typename SparsityPattern::const_iterator;
 
     size_t n = fun.Domain();
     size_t m = fun.Range();
@@ -442,48 +442,48 @@ inline size_t colorForwardJacobianHessian(const ADFun<Base>& fun,
 
 /**
  * Compute user specified subset of a sparse Jacobian and a sparse Hessian.
- * 
+ *
  * The C++ source code corresponding to this operation is
  * @verbatim
  *    SparseForJacHessian(x, w, y, jac_p, jac_row, jac_col, jac, hes_p, hes_row, hes_col, hes, work)
  * @endverbatim
- * 
+ *
  * @tparam Base         is the base type for the recording that is stored in
  *                      this ADFun<Base> object.
  * @tparam VectorBase   is a simple vector class with elements of type @a Base.
  * @tparam VectorSet    is a simple vector class with elements of type @c bool
  *                      or @c std::set<size_t>.
  * @tparam VectorSize   is a simple vector class with elements of type @c size_t.
- * 
+ *
  * @param x  is a vector specifying the point at which to compute the Hessian.
  * @param w  is the weighting vector that defines a scalar valued function
- *           by a weighted sum of the components of the vector valued 
+ *           by a weighted sum of the components of the vector valued
  *           function $latex F(x)$$.
  * @param y  is a vector of the dependent variable values.
  * @param jac_p  is the sparsity pattern for the Jacobian that we are calculating.
  * @param jac_row is the vector of row indices for the returned Jacobian values.
- * @param jac_col is the vector of columns indices for the returned 
+ * @param jac_col is the vector of columns indices for the returned
  *                Jacobian values. It must have the same size are r.
  * @param jac  is the vector of Jacobian values. It must have the same size
- *             are r.  The return value <code>jac[k]</code> is the partial 
- *             of the <code>row[k]</code> component of the function with 
+ *             are r.  The return value <code>jac[k]</code> is the partial
+ *             of the <code>row[k]</code> component of the function with
  *             respect the the <code>col[k]</code> of its argument.
  * @param hes_p is the sparsity pattern for the Hessian that we are calculating.
  * @param hes_row is the vector of row indices for the returned Hessian values.
  * @param hes_col is the vector of columns indices for the returned Hessian values.
  *                It must have the same size are r.
- * @param hes is the vector of Hessian values. It must have the same size 
- *            as r. The return value <code>hes[k]</code> is the second 
+ * @param hes is the vector of Hessian values. It must have the same size
+ *            as r. The return value <code>hes[k]</code> is the second
  *            partial of \f$ w^{\rm T} F(x)\f$ with respect to the
- *            <code>row[k]</code> and <code>col[k]</code> component of 
+ *            <code>row[k]</code> and <code>col[k]</code> component of
  *            \f$ x\f$.
- * @param work contains information that depends on the function object, 
+ * @param work contains information that depends on the function object,
  *             sparsity pattern, @c jac_row, @c jac_col, @c hes_row, and
  *             @c hes_col vector. If these values are the same, @c work does
  *             not need to be recomputed.
  * @return Is the number of first order forward and second order reverse
  *         sweeps used to compute the requested values. The total work, not
- *         counting the zero order forward sweep, or the time to combine 
+ *         counting the zero order forward sweep, or the time to combine
  *         computations, is proportional to this return value.
  */
 template<class Base, class VectorBase, class VectorSet, class VectorSize>

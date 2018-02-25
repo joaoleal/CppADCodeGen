@@ -28,13 +28,13 @@ template<class Base>
 class CodeHandler {
     friend class CodeHandlerVectorSync<Base>;
 public:
-    typedef OperationPathNode<Base> PathNode;
-    typedef std::vector<PathNode> SourceCodePath;
-    typedef std::vector<ScopePathElement<Base> > ScopePath;
-    typedef OperationNode<Base> Node;
-    typedef Argument<Base> Arg;
-    typedef CG<Base> CGB;
-    typedef unsigned short ScopeIDType;
+    using PathNode = OperationPathNode<Base>;
+    using SourceCodePath = std::vector<PathNode>;
+    using ScopePath = std::vector<ScopePathElement<Base> >;
+    using Node = OperationNode<Base>;
+    using Arg = Argument<Base>;
+    using CGB = CG<Base>;
+    using ScopeIDType = unsigned short;
 protected:
     struct LoopData; // forward declaration
 

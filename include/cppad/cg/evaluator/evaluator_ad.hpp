@@ -31,10 +31,10 @@ class EvaluatorAD : public EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<Sc
     friend EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
     friend EvaluatorBase<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
 public:
-    typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef OperationNode<ScalarIn> NodeIn;
-    typedef Argument<ScalarIn> ArgIn;
-    typedef EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType> Super;
+    using ActiveOut = CppAD::AD<ScalarOut>;
+    using NodeIn = OperationNode<ScalarIn>;
+    using ArgIn = Argument<ScalarIn>;
+    using Super = EvaluatorOperations<ScalarIn, ScalarOut, CppAD::AD<ScalarOut>, FinalEvaluatorType>;
 protected:
     using Super::handler_;
     using Super::evalArrayCreationOperation;
@@ -201,8 +201,8 @@ protected:
 template<class ScalarIn, class ScalarOut>
 class Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > : public EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > {
 public:
-    typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > > Super;
+    using ActiveOut = CppAD::AD<ScalarOut>;
+    using Super = EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CppAD::AD<ScalarOut> > >;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :

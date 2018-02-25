@@ -143,7 +143,7 @@ public:
 
         size_t m2 = repeat * K_ * ns_;
 
-        // dependent variable vector 
+        // dependent variable vector
         std::vector<AD<T2> > dep(m2);
 
         std::vector<AD<T2> > dxikdt(ns_);
@@ -223,8 +223,8 @@ public:
     }
 
     void createAtomicLib() {
-        typedef CG<double> CGD;
-        typedef AD<CGD> ADCGD;
+        using CGD = CG<double>;
+        using ADCGD = AD<CGD>;
 
         /**
          * Tape model

@@ -44,7 +44,7 @@ template<class ScalarIn, class ScalarOut, class ActiveOut, class FinalEvaluatorT
 class EvaluatorBase {
     friend FinalEvaluatorType;
 protected:
-    typedef typename CodeHandler<ScalarIn>::SourceCodePath SourceCodePath;
+    using SourceCodePath = typename CodeHandler<ScalarIn>::SourceCodePath;
 protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
@@ -348,9 +348,9 @@ class EvaluatorOperations : public EvaluatorBase<ScalarIn, ScalarOut, ActiveOut,
      */
     friend class EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType>;
 public:
-    typedef EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType> Base;
-    typedef OperationNode<ScalarIn> NodeIn;
-    typedef Argument<ScalarIn> ArgIn;
+    using Base = EvaluatorBase<ScalarIn, ScalarOut, ActiveOut, FinalEvaluatorType>;
+    using NodeIn = OperationNode<ScalarIn>;
+    using ArgIn = Argument<ScalarIn>;
 public:
     inline EvaluatorOperations(CodeHandler<ScalarIn>& handler):
             Base(handler) {
@@ -692,15 +692,14 @@ protected:
 template<class ScalarIn, class ScalarOut, class ActiveOut = CppAD::AD<ScalarOut> >
 class Evaluator : public EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> > {
 public:
-    typedef EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> > Base;
+    using Base = EvaluatorOperations<ScalarIn, ScalarOut, ActiveOut, Evaluator<ScalarIn, ScalarOut, ActiveOut> >;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
             Base(handler) {
     }
 
-    inline virtual ~Evaluator() {
-    }
+    inline virtual ~Evaluator() = default;
 };
 
 } // END cg namespace

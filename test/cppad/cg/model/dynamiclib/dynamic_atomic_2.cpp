@@ -51,10 +51,10 @@ public:
 
     virtual void SetUp() {
         // use a special object for source code generation
-        typedef double Base;
-        typedef CG<Base> CGD;
-        typedef AD<CGD> ADCG;
-        typedef AD<Base> ADD;
+        using Base = double;
+        using CGD = CG<Base>;
+        using ADCG = AD<CGD>;
+        using ADD = AD<Base>;
 
         std::vector<ADD> ax(n);
         std::vector<ADD> ay(m);
@@ -72,7 +72,7 @@ public:
 
         CppAD::Independent(u);
 
-        // dependent variable vector 
+        // dependent variable vector
         std::vector<ADCG> Z(m);
 
         _atomicFun = new checkpoint<double>("func", testModel, ax, ay); // the normal atomic function
@@ -141,8 +141,8 @@ using namespace std;
 TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     using CppAD::vector;
 
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
 
     vector< AD<double> > ax(n);
     for (size_t j = 0; j < n; j++)

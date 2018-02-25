@@ -22,9 +22,9 @@ TEST_F(CppADCGTest, EigenCGD) {
     using Eigen::Dynamic;
     using Eigen::Matrix;
 
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
-    typedef Eigen::NumTraits<CGD> traits;
+    using traits = Eigen::NumTraits<CGD>;
 
     ASSERT_EQ(traits::IsComplex, 0);
     ASSERT_EQ(traits::IsInteger, 0);
@@ -74,10 +74,10 @@ TEST_F(CppADCGTest, EigenADCGD) {
     using Eigen::Dynamic;
     using Eigen::Matrix;
 
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCGD;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
-    typedef Eigen::NumTraits<ADCGD> traits;
+    using traits = Eigen::NumTraits<ADCGD>;
 
     ASSERT_EQ(traits::IsComplex, 0);
     ASSERT_EQ(traits::IsInteger, 0);

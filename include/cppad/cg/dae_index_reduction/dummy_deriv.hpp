@@ -31,11 +31,11 @@ namespace cg {
  */
 template<class Base>
 class DummyDerivatives : public DaeIndexReduction<Base> {
-    typedef CG<Base> CGBase;
-    typedef AD<CGBase> ADCG;
-    typedef Eigen::Matrix<Base, Eigen::Dynamic, 1> VectorB;
-    typedef Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1> VectorCB;
-    typedef Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic> MatrixB;
+    using CGBase = CG<Base>;
+    using ADCG = AD<CGBase>;
+    using VectorB = Eigen::Matrix<Base, Eigen::Dynamic, 1>;
+    using VectorCB = Eigen::Matrix<std::complex<Base>, Eigen::Dynamic, 1>;
+    using MatrixB = Eigen::Matrix<Base, Eigen::Dynamic, Eigen::Dynamic>;
 protected:
     /**
      * Method used to identify the structural index
@@ -57,7 +57,7 @@ protected:
      * new index reduced model
      */
     std::unique_ptr<ADFun<CGBase> > reducedFun_;
-    /** 
+    /**
      * Jacobian sparsity pattern of the reduced system
      * (in the original variable order)
      */
@@ -90,7 +90,7 @@ protected:
      */
     bool reorder_;
     /**
-     * 
+     *
      */
     bool avoidConvertAlg2DifVars_;
     /**
@@ -102,7 +102,7 @@ public:
     /**
      * Creates the DAE index reduction algorithm that implements the dummy
      * derivatives method.
-     * 
+     *
      * @param idxIdentify A structural index reduction method that identifies
      *                    which variables and equations need to be
      *                    differentiated
@@ -160,7 +160,7 @@ public:
     }
 
     /**
-     * Whether or not to attempt to generate a semi-explicit DAE by performing 
+     * Whether or not to attempt to generate a semi-explicit DAE by performing
      * algebraic manipulations.
      */
     inline bool isGenerateSemiExplicitDae() const {
@@ -168,7 +168,7 @@ public:
     }
 
     /**
-     * Whether or not to attempt to generate a semi-explicit DAE by performing 
+     * Whether or not to attempt to generate a semi-explicit DAE by performing
      * algebraic manipulations.
      *
      * @warning: The algebraic manipulations may fail to solve equations relative
@@ -179,7 +179,7 @@ public:
     }
 
     /**
-     * Whether or not the total number of equations is to be reduced  by 
+     * Whether or not the total number of equations is to be reduced  by
      * performing variable substitutions.
      */
     inline bool isReduceEquations() const {
@@ -187,7 +187,7 @@ public:
     }
 
     /**
-     * Whether or not to attempt to reduce the total number of equations by 
+     * Whether or not to attempt to reduce the total number of equations by
      * performing variable substitutions.
      */
     inline void setReduceEquations(bool reduceEquations) {
@@ -416,7 +416,7 @@ protected:
 
     /**
      * Attempts to reduce the number of equations by variable substitution.
-     * 
+     *
      * @param newVarInfo Variable information of the resulting model
      * @return The new DAE reduced model with (possibly) less equations and
      *         variables
@@ -457,7 +457,7 @@ protected:
         }
 
         /**
-         * maps the equations indexes of the reduced model to the new 
+         * maps the equations indexes of the reduced model to the new
          * equation indexes in the model with less equations and variables
          * (removed equations have negative indexes)
          */
@@ -467,7 +467,7 @@ protected:
         }
 
         /**
-         * maps the variables indexes in the tape of the reduced model to 
+         * maps the variables indexes in the tape of the reduced model to
          * the  new tape indexes in the model with less equations and
          * variables (removed variables have negative indexes)
          */
@@ -485,7 +485,7 @@ protected:
 
         if (this->verbosity_ >= Verbosity::High)
             log() << "Reducing total number of equations by symbolic manipulation:" << std::endl;
-        
+
         for (Vnode<Base>* dummy : dummyD_) {
 
             /**
@@ -582,7 +582,7 @@ protected:
         }
 
         /**
-         * Implement the model after after the reduction of equations and 
+         * Implement the model after after the reduction of equations and
          * variables by substitution
          */
         std::unique_ptr<ADFun<CGBase> > shortFun(generateReorderedModel(handler, res0,
@@ -599,10 +599,10 @@ protected:
 
     /**
      * Attempts to generate a semi-explicit DAE.
-     * 
+     *
      * @param reorder place all the differential equations and variables
      *                together
-     * @param differentialEqs 
+     * @param differentialEqs
      * @return The new semi-explicit DAE model with less variables (without
      *         the time derivative variables)
      * @throws CGException on failure
@@ -830,8 +830,8 @@ protected:
                         } while (assigned > 0);
 
                         /**
-                         * assign dummy derivatives that can only be solved by a single 
-                         * equation 
+                         * assign dummy derivatives that can only be solved by a single
+                         * equation
                          */
                         assigned = 0;
                         for (Vnode<Base>* j : dummyVariables) {
@@ -848,7 +848,7 @@ protected:
                     } while (assigned > 0);
 
                     /**
-                     * assign equations that can only be used to solve for 
+                     * assign equations that can only be used to solve for
                      * a single variable
                      */
                     assigned = 0;
@@ -1261,7 +1261,7 @@ protected:
 
         /**
          * the model must be called with the handler order
-         * 
+         *
          * removed variables using substitution are taken out from the list
          * of independent variables in the handler
          */
@@ -1472,8 +1472,8 @@ protected:
                                   "The resulting system is probably singular for the provided data.");
             }
 
-            typedef typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType PermutationMatrix;
-            typedef typename PermutationMatrix::IndicesType Indices;
+            using PermutationMatrix = typename Eigen::ColPivHouseholderQR<MatrixB>::PermutationType;
+            using Indices = typename PermutationMatrix::IndicesType;
 
             const PermutationMatrix& p = qr.colsPermutation();
             const Indices& indices = p.indices();

@@ -119,13 +119,13 @@ public:
 
     static inline std::map<size_t, IndexPattern*> detectLinearSections(const std::map<size_t, size_t>& x2y,
                                                                        size_t maxCount = 0) {
-        typedef std::map<size_t, size_t>::const_iterator c_iter;
+        using c_iter = std::map<size_t, size_t>::const_iterator;
 
         SmartMapValuePointer<size_t, IndexPattern> linearSections;
 
         LinearIndexPattern* prevPattern = nullptr;
         c_iter prevStart = x2y.begin();
-        
+
         c_iter pStart = x2y.begin();
         while (pStart != x2y.end()) {
             c_iter pNextSection = x2y.end();
@@ -177,7 +177,7 @@ public:
                     --prevBack; // the values at the end of the previous section
                     if (prevPattern->evaluate(prevBack->first) != b)
                         break; // no
-                    
+
                     // yes
                     --pStart;
                     xStart = pStart->first;

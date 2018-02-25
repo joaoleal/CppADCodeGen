@@ -29,9 +29,9 @@ class Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > : public Evalua
      */
     friend EvaluatorBase<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> >, Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > >;
 public:
-    typedef CG<BaseOut> ScalarOut;
-    typedef CppAD::AD<ScalarOut> ActiveOut;
-    typedef EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > > Super;
+    using ScalarOut = CG<BaseOut>;
+    using ActiveOut = CppAD::AD<ScalarOut>;
+    using Super = EvaluatorAD<ScalarIn, ScalarOut, Evaluator<ScalarIn, CG<BaseOut>, CppAD::AD<CG<BaseOut> > > >;
 protected:
     using Super::evalsAtomic_;
     using Super::atomicFunctions_;

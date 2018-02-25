@@ -31,14 +31,14 @@ class EvaluatorCG : public EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut
     friend EvaluatorBase<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
     friend EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
 public:
-    typedef CG<ScalarIn> ActiveIn;
-    typedef CG<ScalarOut> ActiveOut;
-    typedef OperationNode<ScalarIn> NodeIn;
-    typedef OperationNode<ScalarOut> NodeOut;
-    typedef Argument<ScalarIn> ArgIn;
-    typedef Argument<ScalarOut> ArgOut;
+    using ActiveIn = CG<ScalarIn>;
+    using ActiveOut = CG<ScalarOut>;
+    using NodeIn = OperationNode<ScalarIn>;
+    using NodeOut = OperationNode<ScalarOut>;
+    using ArgIn = Argument<ScalarIn>;
+    using ArgOut = Argument<ScalarOut>;
 protected:
-    typedef EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType> Super;
+    using Super = EvaluatorOperations<ScalarIn, ScalarOut, CG<ScalarOut>, FinalEvaluatorType>;
 protected:
     /**
      * The source code handler used to create the evaluation results
@@ -370,7 +370,7 @@ protected:
 template<class ScalarIn, class ScalarOut>
 class Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > : public EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > {
 protected:
-    typedef EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > > Super;
+    using Super = EvaluatorCG<ScalarIn, ScalarOut, Evaluator<ScalarIn, ScalarOut, CG<ScalarOut> > >;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :

@@ -14,9 +14,9 @@
  */
 #include "CppADCGPatternTest.hpp"
 
-typedef double Base;
-typedef CppAD::cg::CG<Base> CGD;
-typedef CppAD::AD<CGD> ADCGD;
+using Base = double;
+using CGD = CppAD::cg::CG<Base>;
+using ADCGD = CppAD::AD<CGD>;
 
 using namespace CppAD;
 using namespace CppAD::cg;

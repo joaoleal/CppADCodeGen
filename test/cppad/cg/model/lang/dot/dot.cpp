@@ -26,8 +26,8 @@ using namespace CppAD::cg;
 
 TEST(CppADCGDotTest, dot) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variable vector
     CppAD::vector<ADCG> x(2);
@@ -79,8 +79,8 @@ TEST(CppADCGDotTest, dot) {
 
 TEST(CppADCGDotTest, dot_param) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variable vector
     CppAD::vector<ADCG> x(2);

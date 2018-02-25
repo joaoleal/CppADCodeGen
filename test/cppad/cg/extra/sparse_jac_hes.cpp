@@ -26,8 +26,8 @@ using namespace std;
 
 class SparseJacHes : public CppADCGTest {
 public:
-    typedef std::vector<std::set<size_t> > std_vector_set;
-    typedef CppAD::vector<std::set<size_t> > cppad_vector_set;
+    using std_vector_set = std::vector<std::set<size_t> > ;
+    using cppad_vector_set = CppAD::vector<std::set<size_t> >;
 public:
 
     inline static std::vector<AD<double> > model1(const std::vector<AD<double> >& X) {
@@ -84,7 +84,7 @@ public:
         for (i = 0; i < n; i++)
             x[i] = 3 * double(i + 1);
 
-        // second derivative of y[1] 
+        // second derivative of y[1]
         VectorBase w(m);
         for (size_t i = 0; i < m; i++)
             w[i] = i + 1;

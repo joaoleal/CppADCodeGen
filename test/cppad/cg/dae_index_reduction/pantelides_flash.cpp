@@ -24,7 +24,7 @@ using namespace std;
 
 
 TEST_F(IndexReductionTest, PantelidesFlash) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     std::vector<double> x(15);
     x[0] = 2.5;// nEthanol

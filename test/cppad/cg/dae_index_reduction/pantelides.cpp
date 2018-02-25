@@ -25,7 +25,7 @@ using namespace std;
 
 
 TEST_F(IndexReductionTest, PantelidesSimple2D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
@@ -59,7 +59,7 @@ TEST_F(IndexReductionTest, PantelidesSimple2D) {
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum2D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
@@ -98,7 +98,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum3D) {
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD> ();

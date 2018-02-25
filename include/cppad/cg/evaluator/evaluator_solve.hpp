@@ -29,13 +29,13 @@ class EvaluatorCloneSolve : public EvaluatorCG<Scalar, Scalar, EvaluatorCloneSol
      * must be friends with one of its super classes since there is a cast to
      * this type due to the curiously recurring template pattern (CRTP)
      */
-    typedef EvaluatorCloneSolve<Scalar> FinalEvaluatorType;
+    using FinalEvaluatorType = EvaluatorCloneSolve<Scalar>;
     friend EvaluatorBase<Scalar, Scalar, CG<Scalar>, FinalEvaluatorType>;
 public:
-    typedef CG<Scalar> ActiveOut;
-    typedef typename CodeHandler<Scalar>::SourceCodePath SourceCodePath;
+    using ActiveOut = CG<Scalar>;
+    using SourceCodePath = typename CodeHandler<Scalar>::SourceCodePath;
 protected:
-    typedef EvaluatorCG<Scalar, Scalar, FinalEvaluatorType> Super;
+    using Super = EvaluatorCG<Scalar, Scalar, FinalEvaluatorType>;
 private:
     /**
      * the operation paths which should be cloned or replaced with values in

@@ -26,7 +26,7 @@ void zeroOrderDependency(ADFun<Base>& fun,
     CPPADCG_ASSERT_KNOWN(vx.size() >= fun.Domain(), "Invalid vx size");
     CPPADCG_ASSERT_KNOWN(vy.size() >= m, "Invalid vy size");
 
-    typedef std::vector<std::set<size_t> > VectorSet;
+    using VectorSet = std::vector<std::set<size_t> >;
 
     const VectorSet jacSparsity = jacobianSparsitySet<VectorSet, Base>(fun);
 

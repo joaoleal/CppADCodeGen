@@ -20,16 +20,16 @@ namespace cg {
 
 /**
  * Generates code for the Latex language.
- * It creates a generic implementation using custom latex environments which 
+ * It creates a generic implementation using custom latex environments which
  * must be implemented by the user.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class LanguageLatex : public Language<Base> {
 public:
-    typedef OperationNode<Base> Node;
-    typedef Argument<Base> Arg;
+    using Node = OperationNode<Base>;
+    using Arg = Argument<Base>;
 protected:
     static const std::string _C_STATIC_INDEX_ARRAY;
     static const std::string _C_SPARSE_INDEX_ARRAY;
@@ -202,7 +202,7 @@ public:
 
     /**
      * Defines the Latex environment for each variable.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -228,7 +228,7 @@ public:
 
     /**
      * Defines the Latex environment for each dependent variable.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -254,7 +254,7 @@ public:
 
     /**
      * Defines the Latex environment for each independent variable.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -280,7 +280,7 @@ public:
 
     /**
      * Defines the Latex environment for each equation.
-     * 
+     *
      * @param begin a string creating the environment (e.g. "$", "\\begin{algomathdisplay}", "\\[")
      * @param end a string terminating the environment (e.g. "$\\;", "\\end{algomathdisplay}\\;", "\\]\\;")
      */
@@ -306,7 +306,7 @@ public:
 
     /**
      * Defines the Latex environment for each algorithm line.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -333,7 +333,7 @@ public:
     /**
      * Defines the Latex environment for each equation block which can contain
      * multiple equation lines with the same indentation.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -361,7 +361,7 @@ public:
 
     /**
      * Defines the Latex environment for each algorithm file.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -387,7 +387,7 @@ public:
 
     /**
      * Defines the Latex environment for each for loop.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -413,7 +413,7 @@ public:
 
     /**
      * Defines the Latex environment for each condition.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -439,7 +439,7 @@ public:
 
     /**
      * Defines the Latex environment for each If.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -465,7 +465,7 @@ public:
 
     /**
      * Defines the Latex environment for each else if.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -491,7 +491,7 @@ public:
 
     /**
      * Defines the Latex environment for each else.
-     * 
+     *
      * @param begin a string creating the environment
      * @param end a string terminating the environment
      */
@@ -518,7 +518,7 @@ public:
     /**
      * Provides the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @return the maximum number of digits
      */
     virtual size_t getParameterPrecision() const {
@@ -528,7 +528,7 @@ public:
     /**
      * Defines the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @param p the maximum number of digits
      */
     virtual void setParameterPrecision(size_t p) {
@@ -646,7 +646,7 @@ public:
     }
 
     /***************************************************************************
-     * 
+     *
      **************************************************************************/
 
     inline void printStaticIndexArray(std::ostringstream& os,
@@ -882,7 +882,7 @@ protected:
             }
         }
 
-        // constant dependent variables 
+        // constant dependent variables
         bool commentWritten = false;
         for (size_t i = 0; i < dependent.size(); i++) {
             if (dependent[i].isParameter()) {
@@ -1102,9 +1102,9 @@ protected:
     /**
      * Whether or not this operation assign its expression to a variable by
      * itself.
-     * 
+     *
      * @param var the operation node
-     * @return 
+     * @return
      */
     virtual bool directlyAssignsVariable(const Node& var) const {
         CGOpCode op = var.getOperationType();
@@ -1934,7 +1934,7 @@ protected:
 
     virtual void printElseIf(Node& node) {
         /**
-         * the first argument is the condition, the second argument is the 
+         * the first argument is the condition, the second argument is the
          * if start node, the following arguments are assignments in the
          * previous if branch
          */

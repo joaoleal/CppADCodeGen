@@ -17,9 +17,9 @@
 using namespace CppAD;
 using namespace CppAD::cg;
 
-typedef double Base;
-typedef CppAD::cg::CG<Base> CGD;
-typedef CppAD::AD<CGD> ADCGD;
+using Base = double;
+using CGD = CppAD::cg::CG<Base>;
+using ADCGD = CppAD::AD<CGD>;
 
 namespace CppAD {
 namespace cg {

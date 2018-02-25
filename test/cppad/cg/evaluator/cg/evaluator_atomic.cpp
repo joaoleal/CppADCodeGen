@@ -26,7 +26,7 @@ void testModel(const std::vector<AD<double> >& x,
 }
 
 TEST_F(CppADCGEvaluatorTest, Atomic) {
-    typedef AD<CGD> ADCG;
+    using ADCG = AD<CGD>;
 
     std::vector<AD<double>> ax(2);
     std::vector<AD<double>> ay(3);

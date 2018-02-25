@@ -23,9 +23,9 @@ namespace cg {
 
 class CppADCGDynamicAtomicNestedTest : public CppADCGTest {
 public:
-    typedef CppADCGTest::Base Base;
-    typedef CppADCGTest::CGD CGD;
-    typedef CppADCGTest::ADCGD ADCGD;
+    using Base = CppADCGTest::Base;
+    using CGD = CppADCGTest::CGD;
+    using ADCGD = CppADCGTest::ADCGD;
 protected:
     const std::string _modelName;
     ADFun<CGD>* _fun;
@@ -521,7 +521,7 @@ private:
         _dynamicLib2 = p2.createDynamicLibrary(compiler2);
 
         /**
-         * 
+         *
          */
         tapeOuterModel(xOuter, xInner, xInnerNorm, eqInnerNorm);
     }
@@ -645,7 +645,7 @@ private:
         _dynamicLib = p.createDynamicLibrary(compiler);
 
         /**
-         * 
+         *
          */
         tapeOuterModel(xOuter, xInner, xInnerNorm, eqInnerNorm);
     }

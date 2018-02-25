@@ -174,8 +174,8 @@ namespace CppAD {
 namespace cg {
 
 class PThreadPoolTest : public CppADCGTest {
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 protected:
     struct LangCAtomicFun atomicFun;
     std::vector<double> in0;

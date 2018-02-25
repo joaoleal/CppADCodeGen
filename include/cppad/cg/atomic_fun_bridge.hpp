@@ -23,14 +23,14 @@ namespace cg {
  * type.
  * This class can be useful when a CppAD::ADFun<CppAD::cg::CG> is going to
  * be used to create a compiled model library but has not been compiled yet.
- * 
+ *
  * @author Joao Leal
  */
 template <class Base>
 class CGAtomicFunBridge : public CGAbstractAtomicFun<Base> {
 public:
-    typedef CppAD::cg::CG<Base> CGB;
-    typedef CppAD::AD<CGB> ADCGD;
+    using CGB = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGB>;
 protected:
     ADFun<CGB>& fun_;
     bool cacheSparsities_;
@@ -41,14 +41,14 @@ public:
 
     /**
      * Creates a new atomic function wrapper.
-     * 
+     *
      * @param name The atomic function name
      * @param fun The atomic function to be wrapped
      * @param standAlone Whether or not forward and reverse function calls
-     *                   do not require the Taylor coefficients for the 
+     *                   do not require the Taylor coefficients for the
      *                   dependent variables (ty) and the previous
      *                   evaluation of other forward/reverse modes.
-     * @param cacheSparsities Whether or not to cache information related 
+     * @param cacheSparsities Whether or not to cache information related
      *                        with sparsity evaluation.
      */
     CGAtomicFunBridge(const std::string& name,

@@ -134,7 +134,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D_avoidDummy) {
 TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     using namespace CppAD;
     using namespace std;
-    typedef CG<double> CGD;
+    using CGD = CG<double>;
 
     // create f: U -> Z and vectors used for derivative calculations
     ADFun<CGD>* fun = Pendulum3D<CGD > ();

@@ -23,9 +23,9 @@ namespace cg {
 
 class CppADCGDynamicAtomicTest : public CppADCGTest {
 public:
-    typedef CppADCGTest::Base Base;
-    typedef CppADCGTest::CGD CGD;
-    typedef CppADCGTest::ADCGD ADCGD;
+    using Base = CppADCGTest::Base;
+    using CGD = CppADCGTest::CGD;
+    using ADCGD = CppADCGTest::ADCGD;
 protected:
     const std::string _modelName;
     std::unique_ptr<ADFun<CGD>> _funInner; // inner model tape
@@ -116,7 +116,7 @@ public:
 
         vector<AD<double> > ay(m);
 
-        // call user function and store CGAtomicLibModel(x) in au[0] 
+        // call user function and store CGAtomicLibModel(x) in au[0]
         unique_ptr<GenericModel<Base> > modelLib = _dynamicLib->model(_modelName);
         CGAtomicGenericModel<double>& atomicfun = modelLib->asAtomic();
 

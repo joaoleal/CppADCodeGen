@@ -23,9 +23,9 @@ const size_t nEls = 6; // number of discretization elements
 
 class CppADCGPatternPlugFlowTest : public CppADCGPatternModelTest {
 public:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
 public:
 
     inline CppADCGPatternPlugFlowTest(bool verbose = false, bool printValues = false) :

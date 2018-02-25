@@ -20,14 +20,14 @@ namespace cg {
 
 /**
  * Information required for the generation of source code for a language
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class LanguageGenerationData {
 public:
-    typedef OperationNode<Base> Node;
-    typedef typename CodeHandler<Base>::ScopeIDType ScopeIDType;
+    using Node = OperationNode<Base>;
+    using ScopeIDType = typename CodeHandler<Base>::ScopeIDType;
 public:
     /**
      * The independent variables
@@ -67,7 +67,7 @@ public:
      */
     const std::map<size_t, std::string>& atomicFunctionId2Name;
     /**
-     * the maximum forward mode order each atomic function is called 
+     * the maximum forward mode order each atomic function is called
      * (-1 means forward mode not used)
      */
     const std::vector<int>& atomicFunctionsMaxForward;
@@ -101,7 +101,7 @@ public:
      */
     IndexOperationNode<Base>& auxIterationIndexOp;
     /**
-     * whether or not the dependent variables should be zeroed before 
+     * whether or not the dependent variables should be zeroed before
      * executing the operation graph
      */
     const bool zeroDependents;
@@ -152,21 +152,21 @@ public:
 
 /**
  * Creates the source code for a specific language
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class Language {
     friend class CodeHandler<Base>;
 public:
-    typedef OperationNode<Base> Node;
+    using Node = OperationNode<Base>;
 protected:
     virtual void generateSourceCode(std::ostream& out,
                                     const std::unique_ptr<LanguageGenerationData<Base> >& info) = 0;
 
     /**
      * Whether or not a new variable is created as a result of this operation
-     * 
+     *
      * @param op Operation
      * @return true if a new variable is created
      */

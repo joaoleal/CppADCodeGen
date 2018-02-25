@@ -21,7 +21,7 @@ namespace cg {
 
 class CppADCGEvaluatorTest : public CppADCGTest {
 public:
-    typedef std::function<std::vector<CGD> (const std::vector<CGD>& x) > ModelType;
+    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x) >;
 
 public:
 
@@ -81,7 +81,7 @@ protected:
 
             CppAD::Independent(xNew);
 
-            // 
+            //
             Evaluator<Base, Base, AD<Base> > evaluator(handlerOrig);
             std::vector<AD<Base> > yNew = evaluator.evaluate(xNew, yOrig);
 
@@ -113,7 +113,7 @@ protected:
 
             CppAD::Independent(xNew);
 
-            // 
+            //
             Evaluator<Base, CGD, ADCGD> evaluator(handlerOrig);
             std::vector<ADCGD> yNew = evaluator.evaluate(xNew, yOrig);
 
@@ -126,7 +126,7 @@ protected:
             CppAD::ADFun<CGD> fun;
             fun.Dependent(yNew);
 
-            // evaluate the tape           
+            // evaluate the tape
             CodeHandler<double> handlerNew;
             std::vector<CGD> xNew2(xOrig.size());
             handlerNew.makeVariables(xNew2);

@@ -26,8 +26,8 @@ namespace cg {
 
 class CppADCGDynamicTest : public CppADCGModelTest {
 public:
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 protected:
     const std::string _name;
     bool _denseJacobian;
@@ -86,7 +86,7 @@ public:
         for (size_t i = 0; i < u.size(); i++)
             u[i] *= xNorm[i];
 
-        // dependent variable vector 
+        // dependent variable vector
         std::vector<ADCG> Z = model(u);
 
         if (eqNorm.size() > 0) {
@@ -165,7 +165,7 @@ public:
 
         CppAD::Independent(u);
 
-        // dependent variable vector 
+        // dependent variable vector
         std::vector<ADCG> Z = model(u);
 
         /**

@@ -116,9 +116,9 @@ public:
     std::vector<CppAD::AD<Base> > model(const std::vector<CppAD::AD<Base> >& x,
                                         size_t nEls = 6) {
         using namespace CppAD;
-        typedef AD<Base> ADB;
+        using ADB = AD<Base>;
 
-        // dependent variable vector 
+        // dependent variable vector
         std::vector<ADB> y(N_EL_STATES * nEls);
 
         size_t ns = N_EL_STATES * nEls;
@@ -180,7 +180,7 @@ public:
     std::vector<CppAD::AD<Base> > model2(const std::vector<CppAD::AD<Base> >& x,
                                          size_t nEls = 6) {
         using namespace CppAD;
-        typedef AD<Base> ADB;
+        using ADB = AD<Base>;
 
         // dependent variable vector
         std::vector<ADB> y(N_EL_STATES * nEls);

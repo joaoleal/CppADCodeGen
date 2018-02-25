@@ -24,14 +24,14 @@ namespace cg {
 
 class PatternSpeedTest {
 public:
-    typedef double Base;
-    typedef CppAD::cg::CG<Base> CGD;
-    typedef CppAD::AD<CGD> ADCGD;
-    typedef std::chrono::steady_clock::duration duration;
+    using Base = double;
+    using CGD = CppAD::cg::CG<Base>;
+    using ADCGD = CppAD::AD<CGD>;
+    using duration = std::chrono::steady_clock::duration;
 private:
 
     /**
-     * 
+     *
      */
     template<class T>
     class Model {
@@ -46,7 +46,7 @@ private:
     };
 
     /**
-     * 
+     *
      */
     class ModelCppAD : public Model<Base> {
     public:
@@ -60,7 +60,7 @@ private:
     };
 
     /**
-     * 
+     *
      */
     class ModelCppADCG : public Model<CG<Base> > {
     public:

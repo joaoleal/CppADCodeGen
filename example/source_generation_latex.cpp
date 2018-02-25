@@ -22,8 +22,8 @@ using namespace CppAD::cg;
 
 int main(void) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     /***************************************************************************
      *                               the model

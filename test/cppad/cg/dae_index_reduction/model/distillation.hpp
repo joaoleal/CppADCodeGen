@@ -24,7 +24,7 @@ inline CppAD::ADFun<Base>* Distillation(std::vector<DaeVarInfo>& daeVar,
                                         const std::vector<double>& x) {
     using namespace CppAD;
     using namespace std;
-    typedef CppAD::AD<Base> ADB;
+    using ADB = CppAD::AD<Base>;
 
     std::vector<ADB> U(81);
     assert(U.size() == x.size());
@@ -33,7 +33,7 @@ inline CppAD::ADFun<Base>* Distillation(std::vector<DaeVarInfo>& daeVar,
     }
     Independent(U);
 
-    // dependent variable vector 
+    // dependent variable vector
     std::vector<ADB> res(48);
     std::vector<ADB> v(66);
 

@@ -27,10 +27,10 @@ template<class Base>
 class OperationNode {
     friend class CodeHandler<Base>;
 public:
-    typedef typename std::vector<Argument<Base> >::iterator iterator;
-    typedef typename std::vector<Argument<Base> >::const_iterator const_iterator;
-    typedef typename std::vector<Argument<Base> >::const_reverse_iterator const_reverse_iterator;
-    typedef typename std::vector<Argument<Base> >::reverse_iterator reverse_iterator;
+    using iterator = typename std::vector<Argument<Base> >::iterator;
+    using const_iterator = typename std::vector<Argument<Base> >::const_iterator;
+    using const_reverse_iterator = typename std::vector<Argument<Base> >::const_reverse_iterator;
+    using reverse_iterator = typename std::vector<Argument<Base> >::reverse_iterator;
 public:
     static const std::set<CGOpCode> CUSTOM_NODE_CLASS;
 private:

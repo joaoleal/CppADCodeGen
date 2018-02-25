@@ -44,8 +44,8 @@ using namespace std;
 
 TEST_F(CppADCGDynamicTest1, DynamicFull) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variables
     std::vector<ADCG> u(3);
@@ -63,8 +63,8 @@ TEST_F(CppADCGDynamicTest1, DynamicFull) {
 
 TEST_F(CppADCGDynamicTest1, DynamicCustomElements) {
     // use a special object for source code generation
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 
     // independent variables
     std::vector<ADCG> u(3);

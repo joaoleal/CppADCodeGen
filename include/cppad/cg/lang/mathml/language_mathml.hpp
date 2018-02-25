@@ -20,14 +20,14 @@ namespace cg {
 
 /**
  * Generates presentation markup using the html  and MathML specification.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
 class LanguageMathML : public Language<Base> {
 public:
-    typedef OperationNode<Base> Node;
-    typedef Argument<Base> Arg;
+    using Node = OperationNode<Base>;
+    using Arg = Argument<Base>;
 protected:
     static const std::string _C_STATIC_INDEX_ARRAY;
     static const std::string _C_SPARSE_INDEX_ARRAY;
@@ -235,7 +235,7 @@ public:
 
     /**
      * Defines the CSS style to be added to head section of the html document.
-     * 
+     *
      * @param style the content of the CSS
      */
     void setStyle(const std::string& style) {
@@ -248,7 +248,7 @@ public:
 
     /**
      * Defines Javascript source code to be added to head section of the html document.
-     * 
+     *
      * @param javascript the Javascript source code
      */
     void setJavascript(const std::string& javascript) {
@@ -261,7 +261,7 @@ public:
 
     /**
      * Defines additional markup to be added to head section of the html document.
-     * 
+     *
      * @param headExtra html markup to be added to the head section
      */
     void setHeadExtraMarkup(const std::string& headExtra) {
@@ -274,7 +274,7 @@ public:
 
     /**
      * Defines the surrounding markup for each equation.
-     * 
+     *
      * @param begin the opening html markup
      * @param end the closing html markup
      */
@@ -300,7 +300,7 @@ public:
 
     /**
      * Defines the surrounding markup for each for loop.
-     * 
+     *
      * @param begin the opening html markup
      * @param end the closing html markup
      */
@@ -326,7 +326,7 @@ public:
 
     /**
      * Defines the surrounding markup for each If.
-     * 
+     *
      * @param begin the opening html markup
      * @param end the closing html markup
      */
@@ -352,7 +352,7 @@ public:
 
     /**
      * Defines the surrounding markup for each else if.
-     * 
+     *
      * @param begin the opening html markup
      * @param end the closing html markup
      */
@@ -378,7 +378,7 @@ public:
 
     /**
      * Defines the surrounding markup for each else.
-     * 
+     *
      * @param begin the opening html markup
      * @param end the closing html markup
      */
@@ -405,7 +405,7 @@ public:
     /**
      * Provides the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @return the maximum number of digits
      */
     virtual size_t getParameterPrecision() const {
@@ -415,7 +415,7 @@ public:
     /**
      * Defines the maximum precision used to print constant values in the
      * generated source code
-     * 
+     *
      * @param p the maximum number of digits
      */
     virtual void setParameterPrecision(size_t p) {
@@ -495,7 +495,7 @@ public:
     }
 
     /***************************************************************************
-     * 
+     *
      **************************************************************************/
 
     inline void printStaticIndexArray(std::ostringstream& os,
@@ -735,7 +735,7 @@ protected:
             }
         }
 
-        // constant dependent variables 
+        // constant dependent variables
         bool commentWritten = false;
         for (size_t i = 0; i < dependent.size(); i++) {
             if (dependent[i].isParameter()) {
@@ -1046,9 +1046,9 @@ protected:
     /**
      * Whether or not this operation assign its expression to a variable by
      * itself.
-     * 
+     *
      * @param var the operation node
-     * @return 
+     * @return
      */
     virtual bool directlyAssignsVariable(const Node& var) const {
         CGOpCode op = var.getOperationType();
@@ -1917,7 +1917,7 @@ protected:
 
     virtual void printElseIf(Node& node) {
         /**
-         * the first argument is the condition, the second argument is the 
+         * the first argument is the condition, the second argument is the
          * if start node, the following arguments are assignments in the
          * previous if branch
          */

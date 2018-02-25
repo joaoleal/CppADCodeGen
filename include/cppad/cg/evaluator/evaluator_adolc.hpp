@@ -97,16 +97,15 @@ namespace cg {
 template<class ScalarIn>
 class Evaluator<ScalarIn, double, adouble> : public EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> > {
 public:
-    typedef adouble ActiveOut;
-    typedef EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> > Super;
+    using ActiveOut = adouble;
+    using Super = EvaluatorOperations<ScalarIn, double, adouble, Evaluator<ScalarIn, double, adouble> >;
 public:
 
     inline Evaluator(CodeHandler<ScalarIn>& handler) :
         Super(handler) {
     }
 
-    inline virtual ~Evaluator() {
-    }
+    inline virtual ~Evaluator() = default;
 
 };
 

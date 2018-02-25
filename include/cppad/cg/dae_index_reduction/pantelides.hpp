@@ -27,8 +27,8 @@ namespace cg {
 template<class Base>
 class Pantelides : public DaeStructuralIndexReduction<Base> {
 protected:
-    typedef CppAD::cg::CG<Base> CGBase;
-    typedef CppAD::AD<CGBase> ADCG;
+    using CGBase = CppAD::cg::CG<Base>;
+    using ADCG = CppAD::AD<CGBase>;
 protected:
     // avoids having to type this->graph_
     using DaeStructuralIndexReduction<Base>::graph_;

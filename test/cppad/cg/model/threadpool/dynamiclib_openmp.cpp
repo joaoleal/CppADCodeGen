@@ -18,8 +18,8 @@ namespace CppAD {
 namespace cg {
 
 class CppADCGOpenMPTest : public CppADCGDynamicTest {
-    typedef CG<double> CGD;
-    typedef AD<CGD> ADCG;
+    using CGD = CG<double>;
+    using ADCG = AD<CGD>;
 protected:
     std::vector<ADCG> u;
     std::vector<double> x;

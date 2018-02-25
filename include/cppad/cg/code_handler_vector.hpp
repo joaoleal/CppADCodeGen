@@ -63,18 +63,18 @@ protected:
 
 /**
  * A vector for data associated with operation nodes managed by a code handler.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base, class T>
 class CodeHandlerVector : public CodeHandlerVectorSync<Base> {
 public:
-    typedef typename std::vector<T>::iterator iterator;
-    typedef typename std::vector<T>::const_iterator const_iterator;
-    typedef typename std::vector<T>::const_reverse_iterator const_reverse_iterator;
-    typedef typename std::vector<T>::reverse_iterator reverse_iterator;
-    typedef typename std::vector<T>::reference reference;
-    typedef typename std::vector<T>::const_reference const_reference;
+    using iterator = typename std::vector<T>::iterator;
+    using const_iterator = typename std::vector<T>::const_iterator;
+    using const_reverse_iterator = typename std::vector<T>::const_reverse_iterator;
+    using reverse_iterator = typename std::vector<T>::reverse_iterator;
+    using reference = typename std::vector<T>::reference;
+    using const_reference = typename std::vector<T>::const_reference;
 private:
     /**
      * data vector

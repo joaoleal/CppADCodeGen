@@ -20,8 +20,8 @@ using namespace CppAD;
 using namespace CppAD::cg;
 using namespace std;
 
-typedef double Base;
-typedef CppAD::cg::CG<Base> CGD;
+using Base = double;
+using CGD = CppAD::cg::CG<Base>;
 
 class PlugFlowPatternSpeedTest : public PatternSpeedTest {
 public:
