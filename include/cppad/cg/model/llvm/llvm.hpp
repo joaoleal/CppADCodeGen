@@ -29,6 +29,8 @@
 #include <cppad/cg/model/llvm/v4_0/llvm4_0.hpp>
 #elif LLVM_VERSION_MAJOR==5 && LLVM_VERSION_MINOR==0
 #include <cppad/cg/model/llvm/v5_0/llvm5_0.hpp>
+#elif LLVM_VERSION_MAJOR==6 && LLVM_VERSION_MINOR==0
+#include <cppad/cg/model/llvm/v6_0/llvm6_0.hpp>
 #endif
 
 #endif

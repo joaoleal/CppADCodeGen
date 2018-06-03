@@ -2,7 +2,6 @@
 #define CPPAD_CG_LLVM_MODEL_LIBRARY_PROCESSOR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2017 Ciengis
  *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -22,7 +21,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Useful class for generating a JIT evaluated model library.
+ * Useful class for generating a JIT evaluated model library (LLVM 6.0).
  *
  * @author Joao Leal
  */
@@ -36,7 +35,7 @@ public:
      * @param librarySourceGen
      */
     LlvmModelLibraryProcessor(ModelLibraryCSourceGen<Base>& librarySourceGen) :
-        LlvmBaseModelLibraryProcessorImpl<Base>(librarySourceGen, "5.0") {
+        LlvmBaseModelLibraryProcessorImpl<Base>(librarySourceGen, "6.0") {
     }
 
     virtual ~LlvmModelLibraryProcessor() = default;
@@ -47,7 +46,6 @@ public:
         LlvmModelLibraryProcessor<Base> p(modelLibraryHelper);
         return p.create();
     }
-
 };
 
 } // END cg namespace

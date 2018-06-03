@@ -1,8 +1,7 @@
-#ifndef CPPAD_CG_LLVM5_0_INCLUDED
-#define CPPAD_CG_LLVM5_0_INCLUDED
+#ifndef CPPAD_CG_LLVM6_0_INCLUDED
+#define CPPAD_CG_LLVM6_0_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2017 Ciengis
  *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -87,7 +86,7 @@
 #include <cppad/cg/model/compiler/clang_compiler.hpp>
 #include <cppad/cg/model/llvm/llvm_model_library.hpp>
 #include <cppad/cg/model/llvm/llvm_model.hpp>
-#include <cppad/cg/model/llvm/v5_0/llvm_model_library_impl.hpp>
-#include <cppad/cg/model/llvm/v5_0/llvm_model_library_processor.hpp>
+#include <cppad/cg/model/llvm/v5_0/llvm_model_library_impl.hpp>  // yes, this is from version 5.0
+#include <cppad/cg/model/llvm/v6_0/llvm_model_library_processor.hpp>
 
 #endif

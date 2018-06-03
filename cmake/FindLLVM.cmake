@@ -40,7 +40,7 @@ UNSET(LLVM_MODULE_LIBS CACHE)
 
 MACRO(find_llvm_iteratively)
     IF(NOT LLVM_CONFIG AND NOT LLVM_FIND_VERSION_EXACT)
-        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
+        SET(_LLVM_KNOWN_VERSIONS ${LLVM_ADDITIONAL_VERSIONS} "6.0" "5.0" "4.0" "3.8" "3.7" "3.6" "3.5" "3.4" "3.3" "3.2")
 
         # Select acceptable versions.
         FOREACH(version ${_LLVM_KNOWN_VERSIONS})
