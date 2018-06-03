@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -90,12 +91,12 @@ public:
         return standAlone_;
     }
 
-    virtual bool forward(size_t q,
-                         size_t p,
-                         const CppAD::vector<bool>& vx,
-                         CppAD::vector<bool>& vy,
-                         const CppAD::vector<CGB>& tx,
-                         CppAD::vector<CGB>& ty) override {
+    bool forward(size_t q,
+                 size_t p,
+                 const CppAD::vector<bool>& vx,
+                 CppAD::vector<bool>& vy,
+                 const CppAD::vector<CGB>& tx,
+                 CppAD::vector<CGB>& ty) override {
         using CppAD::vector;
 
         CppAD::vector<CGB> x;
@@ -229,11 +230,11 @@ public:
         return true;
     }
 
-    virtual bool reverse(size_t p,
-                         const CppAD::vector<CGB>& tx,
-                         const CppAD::vector<CGB>& ty,
-                         CppAD::vector<CGB>& px,
-                         const CppAD::vector<CGB>& py) override {
+    bool reverse(size_t p,
+                 const CppAD::vector<CGB>& tx,
+                 const CppAD::vector<CGB>& ty,
+                 CppAD::vector<CGB>& px,
+                 const CppAD::vector<CGB>& py) override {
         using CppAD::vector;
 
         bool allParameters = BaseAbstractAtomicFun<Base>::isParameters(tx);

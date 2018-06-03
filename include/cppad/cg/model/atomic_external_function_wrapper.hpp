@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -28,14 +29,13 @@ public:
         atomic_(&atomic) {
     }
 
-    inline virtual ~AtomicExternalFunctionWrapper() {
-    }
+    inline virtual ~AtomicExternalFunctionWrapper() = default;
 
-    virtual bool forward(FunctorGenericModel<Base>& libModel,
-                         int q,
-                         int p,
-                         const Array tx[],
-                         Array& ty) override {
+    bool forward(FunctorGenericModel<Base>& libModel,
+                 int q,
+                 int p,
+                 const Array tx[],
+                 Array& ty) override {
         size_t m = ty.size;
         size_t n = tx[0].size;
 
@@ -55,11 +55,11 @@ public:
         return ret;
     }
 
-    virtual bool reverse(FunctorGenericModel<Base>& libModel,
-                         int p,
-                         const Array tx[],
-                         Array& px,
-                         const Array py[]) override {
+    bool reverse(FunctorGenericModel<Base>& libModel,
+                 int p,
+                 const Array tx[],
+                 Array& px,
+                 const Array py[]) override {
         size_t m = py[0].size;
         size_t n = tx[0].size;
 
@@ -77,7 +77,7 @@ public:
 
 #ifndef NDEBUG
         if (libModel._evalAtomicForwardOne4CppAD) {
-            // only required in order to avoid an issue with a validation inside CppAD 
+            // only required in order to avoid an issue with a validation inside CppAD
             CppAD::vector<bool> vx, vy;
             if (!atomic_->forward(p, p, vx, vy, libModel._tx, libModel._ty))
                 return false;

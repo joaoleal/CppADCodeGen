@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -211,8 +212,8 @@ public:
     }
 protected:
 
-    virtual void nodesErased(size_t start,
-                             size_t end) override {
+    void nodesErased(size_t start,
+                     size_t end) override {
         if (start < data_.size()) {
             end = std::min(end, data_.size());
             data_.erase(data_.begin() + start, data_.begin() + end);

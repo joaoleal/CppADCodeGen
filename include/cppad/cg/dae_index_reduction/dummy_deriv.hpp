@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -235,8 +236,8 @@ public:
         return avoidAsDummy_;
     }
 
-    virtual inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                                std::vector<DaeEquationInfo>& newEqInfo) override {
+    inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                        std::vector<DaeEquationInfo>& newEqInfo) override {
 
         /**
          * Variable information for the reduced

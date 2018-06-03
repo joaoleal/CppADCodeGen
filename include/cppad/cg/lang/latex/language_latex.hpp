@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -680,8 +681,8 @@ public:
      **************************************************************************/
 protected:
 
-    virtual void generateSourceCode(std::ostream& out,
-                                    const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
+    void generateSourceCode(std::ostream& out,
+                            const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
 
         const bool multiFile = _maxAssignmentsPerFile > 0 && _sources != nullptr;
 
@@ -1057,8 +1058,8 @@ protected:
         _ss.str("");
     }
 
-    virtual bool createsNewVariable(const Node& var,
-                                    size_t totalUseCount) const override {
+    bool createsNewVariable(const Node& var,
+                            size_t totalUseCount) const override {
         CGOpCode op = var.getOperationType();
         if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
@@ -1125,7 +1126,7 @@ protected:
                 op == CGOpCode::IndexDeclaration;
     }
 
-    virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
+    bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
         return op == CGOpCode::CondResult;
     }
 
@@ -1185,7 +1186,7 @@ protected:
         return *var.getName();
     }
 
-    virtual bool requiresVariableDependencies() const override {
+    bool requiresVariableDependencies() const override {
         return false;
     }
 

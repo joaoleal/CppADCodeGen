@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -12,6 +13,9 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
+#ifndef CPPAD_CG_CPPADCGTEST_HPP
+#define CPPAD_CG_CPPADCGTEST_HPP
+
 #include <vector>
 #include <valarray>
 
@@ -20,9 +24,6 @@
 #include <cppad/cg.hpp>
 #include <cppad/utility/memory_leak.hpp>
 #include <cppad/utility/near_equal.hpp>
-
-#ifndef CPPAD_CG_CPPADCGTEST_HPP
-#define	CPPAD_CG_CPPADCGTEST_HPP
 
 namespace CppAD {
 namespace cg {

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -23,7 +24,7 @@ class LlvmModel;
 
 /**
  * Abstract class used to load JIT'ed models by LLVM
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
@@ -47,13 +48,12 @@ public:
         return m;
     }
 
-    virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
+    std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
         return std::unique_ptr<FunctorGenericModel<Base>>(modelLlvm(modelName).release());
     }
 
 protected:
-    inline LlvmModelLibrary() {
-    }
+    inline LlvmModelLibrary() = default;
 
     inline void cleanUp() {
         for (LlvmModel<Base>* model : _models) {

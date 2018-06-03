@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -140,8 +141,7 @@ public:
         _parameterPrecision(std::numeric_limits<Base>::digits10) {
     }
 
-    inline virtual ~LanguageC() {
-    }
+    inline virtual ~LanguageC() = default;
 
     inline const std::string& getArgumentIn() const {
         return _inArgName;
@@ -611,8 +611,8 @@ public:
                                                                size_t starti);
 protected:
 
-    virtual void generateSourceCode(std::ostream& out,
-                                    const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
+    void generateSourceCode(std::ostream& out,
+                            const std::unique_ptr<LanguageGenerationData<Base> >& info) override {
 
         const bool createFunction = !_functionName.empty();
         const bool multiFunction = createFunction && _maxAssigmentsPerFunction > 0 && _sources != nullptr;
@@ -1031,8 +1031,8 @@ protected:
         _ss.str("");
     }
 
-    virtual bool createsNewVariable(const Node& var,
-                                    size_t totalUseCount) const override {
+    bool createsNewVariable(const Node& var,
+                            size_t totalUseCount) const override {
         CGOpCode op = var.getOperationType();
         if (totalUseCount > 1) {
             return op != CGOpCode::ArrayElement && op != CGOpCode::Index && op != CGOpCode::IndexDeclaration && op != CGOpCode::Tmp;
@@ -1104,7 +1104,7 @@ protected:
                 op == CGOpCode::IndexDeclaration;
     }
 
-    virtual bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
+    bool requiresVariableArgument(enum CGOpCode op, size_t argIndex) const override {
         return op == CGOpCode::Sign || op == CGOpCode::CondResult || op == CGOpCode::Pri;
     }
 
@@ -1169,7 +1169,7 @@ protected:
         return *var.getName();
     }
 
-    virtual bool requiresVariableDependencies() const override {
+    bool requiresVariableDependencies() const override {
         return false;
     }
 

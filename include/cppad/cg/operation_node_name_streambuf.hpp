@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -55,8 +56,8 @@ public:
         CGOStreamFunc<Base>::FUNC = nullptr;
     }
 
-    virtual std::streamsize xsputn(const char_type* s,
-                                   std::streamsize n) override {
+    std::streamsize xsputn(const char_type* s,
+                           std::streamsize n) override {
         if (node_ != nullptr && n > 0) {
             node_->setName(std::string(s, n));
             node_ = nullptr;
@@ -64,7 +65,7 @@ public:
         return n;
     }
 
-    //virtual int_type overflow(int_type c) override {
+    //int_type overflow(int_type c) override {
     //    return traits_type::eof();
     //}
 

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -33,7 +34,7 @@ protected:
     using ADCG = CppAD::AD<CGBase>;
 public:
 
-    virtual bool augmentPath(Enode<Base>& i) override final {
+    bool augmentPath(Enode<Base>& i) override final {
         i.color(this->logger_->log(), this->logger_->getVerbosity()); // avoids infinite recursion
 
         const std::vector<Vnode<Base>*>& vars = i.variables();

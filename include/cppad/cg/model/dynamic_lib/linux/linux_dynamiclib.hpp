@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -25,7 +26,7 @@ namespace cg {
 /**
  * Useful class to call the compiled source code in a dynamic library.
  * For the Linux Operating System only.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
@@ -74,11 +75,11 @@ public:
         return m;
     }
 
-    virtual std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
+    std::unique_ptr<FunctorGenericModel<Base>> modelFunctor(const std::string& modelName) override final {
         return std::unique_ptr<FunctorGenericModel<Base>>(modelLinuxDyn(modelName).release());
     }
 
-    virtual void* loadFunction(const std::string& functionName, bool required = true) override {
+    void* loadFunction(const std::string& functionName, bool required = true) override {
         void* functor = dlsym(_dynLibHandle, functionName.c_str());
 
         if (required) {

@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2018 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -114,8 +115,8 @@ public:
      * @return the reduced index model (must be deleted by user)
      * @throws CGException on failure
      */
-    virtual inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
-                                                                std::vector<DaeEquationInfo>& equationInfo) override {
+    inline std::unique_ptr<ADFun<CG<Base>>> reduceIndex(std::vector<DaeVarInfo>& newVarInfo,
+                                                        std::vector<DaeEquationInfo>& equationInfo) override {
         if (reduced_)
             throw CGException("reduceIndex() can only be called once!");
 
