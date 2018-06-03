@@ -37,7 +37,7 @@ addons:
 env:
   global:
     #- CPPAD_HOME=`pwd`/cppadcg_deps/cppad/install/include
-    #- CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.3/install/include
+    #- CPPAD_HOME=`pwd`/cppadcg_deps/CppAD-20170000.8/install/include
     #- EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
 
 before_install:
@@ -50,9 +50,9 @@ install:
 # get CppAD:
 #  - git clone https://github.com/coin-or/CppAD.git cppad
 #  - cd cppad
-  - wget http://github.com/coin-or/CppAD/archive/20170000.3.tar.gz
-  - tar -xzf 20170000.3.tar.gz
-  - cd CppAD-20170000.3
+  - wget http://github.com/coin-or/CppAD/archive/20170000.8.tar.gz  
+  - tar -xzf 20170000.8.tar.gz
+  - cd CppAD-20170000.8
   - mkdir build
   - mkdir install
   - CPPAD_HOME=`pwd`/install/include
