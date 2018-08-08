@@ -15,7 +15,9 @@ IF(DOXYGEN_FOUND)
                       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
                       COMMENT "Generating API documentation with Doxygen" VERBATIM)
 
-    INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html"
-            DESTINATION "${install_doc_location}")
+    IF(${CREATE_DOXYGEN_DOC})
+      INSTALL(DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/html"
+              DESTINATION "${install_doc_location}")
+    ENDIF()
 
 ENDIF()
