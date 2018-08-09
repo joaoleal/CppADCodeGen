@@ -1073,8 +1073,9 @@ private:
 
         return externalFunc->reverse(*libModel, p, tx, *px, py);
     }
-
+#ifdef CPPAD_CG_SYSTEM_LINUX
     friend class LinuxDynamicLib<Base>;
+#endif
     friend class AtomicExternalFunctionWrapper<Base>;
 };
 
