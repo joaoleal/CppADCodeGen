@@ -265,7 +265,8 @@ inline void callExecutable(const std::string& executable,
             std::string error = executable + ": " + strerror_r(errno, buf, 511); // thread safe
 #else
             std::string error = executable + ": ";
-            error += std::string(buf); // thread safe
+            strerror_r(errno, buf, 511); // thread safe
+            error += std::string(buf);
 #endif
             ssize_t size = error.size() + 1;
             if (write(pipeMsg.write.fd, error.c_str(), size) != size) {
