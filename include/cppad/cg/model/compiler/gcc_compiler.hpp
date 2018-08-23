@@ -48,7 +48,12 @@ public:
     void buildDynamic(const std::string& library,
                       JobTimer* timer = nullptr) override {
 
-        std::string linkerFlags = "-Wl,-soname," + system::filenameFromPath(library);
+#if CPPAD_CG_SYSTEM_APPLE
+        std::string linkerName = "-install_name";
+#elif CPPAD_CG_SYSTEM_LINUX
+        std::string linkerName = "-soname";
+#endif
+        std::string linkerFlags = "-Wl," + linkerName + "," + system::filenameFromPath(library);
         for (size_t i = 0; i < this->_linkFlags.size(); i++)
             linkerFlags += "," + this->_linkFlags[i];
 

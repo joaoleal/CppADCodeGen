@@ -94,7 +94,7 @@ public:
         }
     }
 
-    virtual bool isThreadPoolDisabled() const {
+    virtual bool isThreadPoolDisabled() const override {
         if(_isThreadPoolDisabled != nullptr) {
             return bool((*_isThreadPoolDisabled)());
         }
