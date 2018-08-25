@@ -40,9 +40,8 @@ public:
         return std::numeric_limits<float>::quiet_NaN();
     }
 
-    static const int digits10() {
-        return std::numeric_limits<float>::digits10;
-    }
+    static const int digits10 
+        = std::numeric_limits<float>::digits10;
 };
 
 /**

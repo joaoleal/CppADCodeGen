@@ -88,7 +88,7 @@ struct NumTraits<CppAD::cg::CG<Base> > {
      * the number of decimal digits that can be represented without change
      */
     static int digits10() {
-        return CppAD::numeric_limits<CppAD::cg::CG<Base> >::digits10();
+        return CppAD::numeric_limits<CppAD::cg::CG<Base> >::digits10;
     }
 
 };
@@ -159,7 +159,7 @@ struct NumTraits<CppAD::AD<CppAD::cg::CG<Base> > > {
      * the number of decimal digits that can be represented without change
      */
     static int digits10() {
-        return CppAD::numeric_limits<CGBase>::digits10();
+        return CppAD::numeric_limits<CGBase>::digits10;
     }
 
 };
