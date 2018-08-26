@@ -81,8 +81,13 @@ public:
 
 }
 
+#ifdef CPPAD_CG_SYSTEM_APPLE
+template<class T>
+const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".dylib";
+#else
 template<class T>
 const std::string SystemInfo<T>::DYNAMIC_LIB_EXTENSION = ".so";
+#endif
 
 template<class T>
 const std::string SystemInfo<T>::STATIC_LIB_EXTENSION = ".a";
