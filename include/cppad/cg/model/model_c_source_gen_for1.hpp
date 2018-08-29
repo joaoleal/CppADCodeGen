@@ -93,6 +93,16 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesWithAtomics(const std
             }
         }
 
+        // parameters
+        std::vector<CGBase> params(_fun.size_dyn_ind());
+        handler.makeParameters(params);
+        if (_xDynParams.size() > 0) {
+            for (size_t i = 0; i < params.size(); i++) {
+                params[i].setValue(_xDynParams[i]);
+            }
+        }
+        _fun.new_dynamic(params);
+
         CGBase dx;
         handler.makeVariable(dx);
         if (_x.size() > 0) {
@@ -147,6 +157,16 @@ void ModelCSourceGen<Base>::generateSparseForwardOneSourcesNoAtomics(const std::
             x[i].setValue(_x[i]);
         }
     }
+
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
 
     CGBase dx;
     handler.makeVariable(dx);

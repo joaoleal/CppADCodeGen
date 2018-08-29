@@ -57,15 +57,33 @@ public:
 
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
 
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
+                                     const std::vector<ADCGD>& p) {
+        return model(ind);
+    }
+
     void testDynamicFull(std::vector<ADCG>& u,
                          const std::vector<double>& x,
+                         size_t maxAssignPerFunc = 100,
+                         double epsilonR = 1e-14,
+                         double epsilonA = 1e-14) {
+        std::vector<ADCG> p;
+        const std::vector<double> xDynPar;
+
+        testDynamicFull(u, p, x, xDynPar, maxAssignPerFunc, epsilonR, epsilonA);
+    }
+
+    void testDynamicFull(std::vector<ADCG>& u,
+                         std::vector<ADCG>& p,
+                         const std::vector<double>& x,
+                         const std::vector<double>& xDynPar,
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
                          double epsilonA = 1e-14) {
         const std::vector<double> xNorm(x.size(), 1.0);
         const std::vector<double> eqNorm;
 
-        testDynamicFull(u, x, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
+        testDynamicFull(u, p, x, xNorm, xDynPar, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
     }
 
     void testDynamicFull(std::vector<ADCG>& u,
@@ -75,32 +93,49 @@ public:
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
                          double epsilonA = 1e-14) {
-        ASSERT_EQ(u.size(), x.size());
+        std::vector<ADCG> p;
+        const std::vector<double> xDynPar;
+        testDynamicFull(u, p, x, xNorm, xDynPar, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
+    }
+
+    void testDynamicFull(std::vector<ADCG>& ax,
+                         std::vector<ADCG>& ap,
+                         const std::vector<double>& x,
+                         const std::vector<double>& xNorm,
+                         const std::vector<double>& p,
+                         const std::vector<double>& eqNorm,
+                         size_t maxAssignPerFunc = 100,
+                         double epsilonR = 1e-14,
+                         double epsilonA = 1e-14) {
+        ASSERT_EQ(ax.size(), x.size());
         ASSERT_EQ(x.size(), xNorm.size());
 
         using namespace std;
 
         // use a special object for source code generation
-        CppAD::Independent(u);
+        // declare independent variables, dynamic parammeters, starting recording
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
-        for (size_t i = 0; i < u.size(); i++)
-            u[i] *= xNorm[i];
+        for (size_t i = 0; i < ax.size(); i++)
+            ax[i] *= xNorm[i];
 
         // dependent variable vector
-        std::vector<ADCG> Z = model(u);
+        std::vector<ADCG> ay = model(ax, ap);
 
         if (eqNorm.size() > 0) {
-            ASSERT_EQ(Z.size(), eqNorm.size());
-            for (size_t i = 0; i < Z.size(); i++)
-                Z[i] /= eqNorm[i];
+            ASSERT_EQ(ay.size(), eqNorm.size());
+            for (size_t i = 0; i < ay.size(); i++)
+                ay[i] /= eqNorm[i];
         }
 
         /**
          * create the CppAD tape as usual
          */
-        // create f: U -> Z and vectors used for derivative calculations
+        // create f: ax -> ay and vectors used for derivative calculations
         ADFun<CGD> fun;
-        fun.Dependent(Z);
+        fun.Dependent(ay);
 
         /**
          * Create the dynamic library
@@ -124,24 +159,24 @@ public:
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_1");
 
-        DynamicModelLibraryProcessor<double> p(compDynHelp);
+        DynamicModelLibraryProcessor<double> libProc(compDynHelp);
         GccCompiler<double> compiler;
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
-        if(compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
+        if (compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
 
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
-            p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            libProc.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
-        } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
+        } else if (compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 
-        std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
+        std::unique_ptr<DynamicLib<double>> dynamicLib = libProc.createDynamicLibrary(compiler);
         dynamicLib->setThreadPoolVerbose(this->verbose_);
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
@@ -154,7 +189,7 @@ public:
         std::unique_ptr<GenericModel<double>> model = dynamicLib->model(_name + "dynamic");
         ASSERT_TRUE(model != nullptr);
 
-        testModelResults(*dynamicLib, *model, fun, x, epsilonR, epsilonA, _denseJacobian, _denseHessian);
+        testModelResults(*dynamicLib, *model, fun, x, p, epsilonR, epsilonA, _denseJacobian, _denseHessian);
     }
 
     void testDynamicCustomElements(std::vector<ADCG>& u,
@@ -201,16 +236,16 @@ public:
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
-        if(compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
+        if (compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
 
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
-            p.getOptions()["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            p.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
-        } else if(compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
+        } else if (compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 

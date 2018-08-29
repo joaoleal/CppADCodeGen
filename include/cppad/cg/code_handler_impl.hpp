@@ -106,6 +106,31 @@ inline size_t CodeHandler<Base>::getMaximumVariableID() const {
 }
 
 template<class Base>
+inline void CodeHandler<Base>::makeParameters(std::vector<AD<CGB> >& parameters) {
+    for (auto& v : parameters) {
+        makeParameter(v);
+    }
+}
+
+template<class Base>
+inline void CodeHandler<Base>::makeParameter(AD<CGB>& parameter) {
+    CGB v;
+    makeParameter(v); // make it a codegen parameter
+    parameter = v; // variable id now the same as v
+}
+
+template<class Base>
+inline void CodeHandler<Base>::makeParameter(CGB& parameter) {
+    _parameters.push_back(makeNode(CGOpCode::Inv));
+    parameter.makeVariable(*_parameters.back());
+}
+
+template<class Base>
+size_t CodeHandler<Base>::getParameterSize() const {
+    return _parameters.size();
+}
+
+template<class Base>
 inline bool CodeHandler<Base>::isVerbose() const {
     return _verbose;
 }
@@ -146,6 +171,19 @@ size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
     }
 
     return it - _independentVariables.begin();
+}
+
+template<class Base>
+size_t CodeHandler<Base>::getParameterIndex(const Node& var) const {
+    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
+
+    typename std::vector<Node*>::const_iterator it =
+    std::find(_parameters.begin(), _parameters.end(), &var);
+    if (it == _parameters.end()) {
+        throw CGException("Variable not found in the parameters vector");
+    }
+
+    return it - _parameters.begin();
 }
 
 template<class Base>
@@ -320,6 +358,13 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
         _varId[*_independentVariables[j]] = _idCount++;
     }
 
+    size_t minParameterID = _idCount;
+    size_t p = _parameters.size();
+    for (size_t j = 0; j < p; j++) {
+        _varId[*_parameters[j]] = _idCount++;
+    }
+    size_t maxParameterID = _idCount;
+
     size_t m = dependent.size();
     for (size_t i = 0; i < m; i++) {
         Node* node = dependent[i].getOperationNode();
@@ -409,6 +454,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
         findVariableDependencies();
     }
 
+    nameGen.setParameterID(minParameterID, maxParameterID);
     nameGen.setTemporaryVariableID(_minTemporaryVarID, _idCount - 1, _idArrayCount - 1, _idSparseArrayCount - 1);
 
     std::map<std::string, size_t> atomicFunctionName2Id;
@@ -431,7 +477,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
     /**
      * Creates the source code for a specific language
      */
-    _info.reset(new LanguageGenerationData<Base>(_independentVariables, dependent,
+    _info.reset(new LanguageGenerationData<Base>(_independentVariables, _parameters, dependent,
                                                  _minTemporaryVarID, _varId, _variableOrder, _variableDependencies,
                                                  nameGen,
                                                  atomicFunctionId2Index, atomicFunctionId2Name,

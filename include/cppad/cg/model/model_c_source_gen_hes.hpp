@@ -42,6 +42,16 @@ void ModelCSourceGen<Base>::generateHessianSource() {
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     // multipliers
     vector<CGBase> w(m);
     handler.makeVariables(w);
@@ -155,7 +165,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     }
 
     /**
-     * 
+     *
      */
     startingJob("'" + jobName + "'", JobTimer::GRAPH);
 
@@ -171,6 +181,16 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     // multipliers
     vector<CGBase> w(m);
     handler.makeVariables(w);
@@ -183,8 +203,8 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     vector<CGBase> hess(_hessSparsity.rows.size());
     if (_loopTapes.empty()) {
         CppAD::sparse_hessian_work work;
-        // "cppad.symmetric" may have missing values for functions using atomic 
-        // functions which only provide half of the elements 
+        // "cppad.symmetric" may have missing values for functions using atomic
+        // functions which only provide half of the elements
         // (some values could be zeroed)
         work.color_method = "cppad.general";
         vector<CGBase> lowerHess(lowerHessRows.size());
@@ -515,7 +535,7 @@ template<class Base>
 void ModelCSourceGen<Base>::determineSecondOrderElements4Eval(std::vector<size_t>& evalRows,
                                                               std::vector<size_t>& evalCols) {
     /**
-     * Atomic functions migth not have all the elements and thus there may 
+     * Atomic functions migth not have all the elements and thus there may
      * be no symmetry. This will explore symmetry in order to provide the
      * second order elements requested by the user.
      */

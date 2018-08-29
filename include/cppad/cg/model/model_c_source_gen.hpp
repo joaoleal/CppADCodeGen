@@ -165,6 +165,10 @@ protected:
      */
     std::vector<Base> _x;
     /**
+     * Typical values of the dynamic parameter vector
+     */
+    std::vector<Base> _xDynParams;
+    /**
      * Whether or not to enable the generation of multithreaded code for the
      * sparse Jacobian and sparse Hessian if possible and requested by the
      * model library (experimental).
@@ -834,6 +838,7 @@ protected:
 
     virtual VariableNameGenerator<Base>* createVariableNameGenerator(const std::string& depName = "y",
                                                                      const std::string& indepName = "x",
+                                                                     const std::string& paramName = "p",
                                                                      const std::string& tmpName = "v",
                                                                      const std::string& tmpArrayName = "array");
 

@@ -83,9 +83,10 @@ const std::string ModelCSourceGen<Base>::CONST = "const";
 template<class Base>
 VariableNameGenerator<Base>* ModelCSourceGen<Base>::createVariableNameGenerator(const std::string& depName,
                                                                                 const std::string& indepName,
+                                                                                const std::string& paramName,
                                                                                 const std::string& tmpName,
                                                                                 const std::string& tmpArrayName) {
-    return new LangCDefaultVariableNameGenerator<Base> (depName, indepName, tmpName, tmpArrayName);
+    return new LangCDefaultVariableNameGenerator<Base> (depName, indepName, paramName, tmpName, tmpArrayName);
 }
 
 template<class Base>
@@ -176,6 +177,16 @@ void ModelCSourceGen<Base>::generateLoops() {
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     std::vector<CGBase> yy = _fun.Forward(0, xx);
 
     DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx);
@@ -200,12 +211,14 @@ void ModelCSourceGen<Base>::generateInfoSource() {
     LanguageC<Base>::printFunctionDeclaration(_cache, "void", funcName, {"const char** baseName",
                                                                          "unsigned long* m",
                                                                          "unsigned long* n",
+                                                                         "unsigned long* p",
                                                                          "unsigned int* indCount",
                                                                          "unsigned int* depCount"});
     _cache << " {\n"
             "   *baseName = \"" << _baseTypeName << "  " << localBaseName << "\";\n"
-            "   *m = " << _fun.Range() << ";\n"
-            "   *n = " << _fun.Domain() << ";\n"
+            "   *m = " << _fun.Range() << "; // range\n"
+            "   *n = " << _fun.Domain() << "; // domain\n"
+            "   *p = " << _fun.size_dyn_ind() << "; // parameters\n"
             "   *depCount = " << nameGen->getDependent().size() << "; // number of dependent array variables\n"
             "   *indCount = " << nameGen->getIndependent().size() << "; // number of independent array variables\n"
             "}\n\n";

@@ -29,7 +29,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     //printSparsityPattern(_jacSparsity.rows, _jacSparsity.cols, "jacobian", _fun.Range());
 
     size_t n = _fun.Domain();
-    
+
     CodeHandler<Base> handler;
     handler.setJobTimer(_jobTimer);
     handler.setZeroDependents(false);
@@ -97,7 +97,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
      **********************************************************************/
 
     /**
-     * original equations outside the loops 
+     * original equations outside the loops
      */
     // temporaries (zero orders)
     std::vector<CGBase> tmps;
@@ -172,7 +172,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     }
 
     /***********************************************************************
-     * equations in loops 
+     * equations in loops
      **********************************************************************/
     typename map<LoopModel<Base>*, std::vector<JacobianWithLoopsRowInfo> >::iterator itl2Eq;
     for (itl2Eq = loopEqInfo.begin(); itl2Eq != loopEqInfo.end(); ++itl2Eq) {
@@ -235,7 +235,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
 
             /**
              * Model index pattern
-             * 
+             *
              * detect the index pattern for the model iterations
              * based on jcol and the local loop iteration
              */
@@ -324,7 +324,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
                 moveNonIndexedOutsideLoop(handler, *loopStart, *loopEnd);
 
                 /**
-                 * 
+                 *
                  */
                 pxCustom.resize(1);
                 // {0} : must point to itself since there is only one dependent
@@ -402,7 +402,7 @@ void ModelCSourceGen<Base>::prepareSparseForwardOneWithLoops(const std::map<size
     }
 
     /**
-     * 
+     *
      */
     string functionFor1 = _name + "_" + FUNCTION_SPARSE_FORWARD_ONE;
     _sources[functionFor1 + ".c"] = generateGlobalForRevWithLoopsFunctionSource(elements,
@@ -563,7 +563,7 @@ void generateForOneColumnGroups(const LoopModel<Base>& lModel,
 
 /**
  * Create groups with the same contributions at the same Jacobian columns
- * 
+ *
  * @return maps each contribution group to the affected columns in the
  *         Jacobian
  */
@@ -640,8 +640,8 @@ std::map<JacobianTermContrib<Base>, std::set<size_t> > groupForOneByContrib(cons
 }
 
 /**
- * Create subgroups from groups with the same contributions at the 
- * same Jacobian columns. Each subgroup has a sub-set of the group's 
+ * Create subgroups from groups with the same contributions at the
+ * same Jacobian columns. Each subgroup has a sub-set of the group's
  * contributions which have the same relations between Jacobian column
  * index and set of iteration indexes.
  */
@@ -678,7 +678,7 @@ inline void subgroupForOneByContrib(const std::vector<JacobianWithLoopsRowInfo>&
     }
 
     /**
-     * 
+     *
      */
     for (const pair<Forward1Jcol2Iter, JacobianTermContrib<Base> >& itK2C : contribs) {
         const Forward1Jcol2Iter& jcol2Iters = itK2C.first;

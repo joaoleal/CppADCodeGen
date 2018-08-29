@@ -35,6 +35,16 @@ void ModelCSourceGen<Base>::generateZeroSource() {
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     std::vector<CGBase> dep;
 
     if (_loopTapes.empty()) {

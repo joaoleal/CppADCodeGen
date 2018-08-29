@@ -97,6 +97,16 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
             }
         }
 
+        // parameters
+        std::vector<CGBase> params(_fun.size_dyn_ind());
+        handler.makeParameters(params);
+        if (_xDynParams.size() > 0) {
+            for (size_t i = 0; i < params.size(); i++) {
+                params[i].setValue(_xDynParams[i]);
+            }
+        }
+        _fun.new_dynamic(params);
+
         CGBase tx1;
         handler.makeVariable(tx1);
         if (_x.size() > 0) {
@@ -175,6 +185,16 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     CGBase tx1;
     handler.makeVariable(tx1);
     if (_x.size() > 0) {
@@ -192,7 +212,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
     vector<CGBase> hessFlat(evalRows.size());
 
     CppAD::sparse_hessian_work work; // temporary structure for CPPAD
-    // "cppad.symmetric" may have missing values for functions using atomic 
+    // "cppad.symmetric" may have missing values for functions using atomic
     // functions which only provide half of the elements, but there is none here
     work.color_method = "cppad.symmetric";
     _fun.SparseHessian(tx0, py, _hessSparsity.sparsity, evalRows, evalCols, hessFlat, work);

@@ -20,7 +20,7 @@ namespace cg {
 
 /**
  * Abstract class used to execute a generated model
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
@@ -42,7 +42,7 @@ public:
 
     /**
      * Provides the name for this model.
-     * 
+     *
      * @return The model name
      */
     virtual const std::string& getName() const = 0;
@@ -71,9 +71,9 @@ public:
     virtual bool isHessianSparsityAvailable() = 0;
 
     /**
-     * Provides the sparsity of the sum of the hessian for each dependent 
+     * Provides the sparsity of the sum of the hessian for each dependent
      * variable.
-     * 
+     *
      * @return The sparsity
      */
     virtual std::vector<std::set<size_t> > HessianSparsitySet() = 0;
@@ -92,7 +92,7 @@ public:
 
     /**
      * Provides the sparsity of the hessian for a dependent variable
-     * 
+     *
      * @param i The index of the dependent variable
      * @return The sparsity
      */
@@ -104,14 +104,21 @@ public:
 
     /**
      * Provides the number of independent variables.
-     * 
+     *
      * @return The number of independent variables
      */
     virtual size_t Domain() const = 0;
 
     /**
+     * Provides the number of parameters.
+     *
+     * @return The number of parameters
+     */
+    virtual size_t Parameters() const = 0;
+
+    /**
      * Provides the number of dependent variables.
-     * 
+     *
      * @return The number of dependent variables.
      */
     virtual size_t Range() const = 0;
@@ -126,11 +133,11 @@ public:
     virtual const std::vector<std::string>& getAtomicFunctionNames() = 0;
 
     /**
-     * Defines a CppAD atomic function to be used as an external function 
+     * Defines a CppAD atomic function to be used as an external function
      * by the compiled code.
      * It should match an external function name previously provided to
      * create the source.
-     * 
+     *
      * @param atomic The atomic function. This object must only be deleted
      *               after the model.
      * @return true if the atomic function is required by the model, false
@@ -142,9 +149,9 @@ public:
      * Defines a generic model to be used as an external function by the
      * compiled code.
      * It should match an external function name previously provided to
-     * create the source. This form should be preferred over 
+     * create the source. This form should be preferred over
      * ::addAtomicFunction whenever possible.
-     * 
+     *
      * @param atomic The generic model. This object must only be deleted
      *               after the model.
      * @return true if the external function is required by the model, false
@@ -153,11 +160,11 @@ public:
     virtual bool addExternalModel(GenericModel<Base>& atomic) = 0;
 
     /**
-     * Defines whether or not to evaluate a forward mode of an atomic 
+     * Defines whether or not to evaluate a forward mode of an atomic
      * functions during a reverse sweep so that CppAD checks validate OK.
      * If this model is not used within CppAD then it should be set to false.
-     * 
-     * @param evalForwardOne4CppAD true to perform the forward mode, 
+     *
+     * @param evalForwardOne4CppAD true to perform the forward mode,
      *                             false to ignore it
      */
     inline void setAtomicEvalForwardOne4CppAD(bool evalForwardOne4CppAD) {
@@ -185,7 +192,7 @@ public:
      * This method considers that the generic model was prepared
      * with a single array for the independent variables (the default
      * behavior).
-     * 
+     *
      * @param x The independent variable vector
      * @return The dependent variable vector
      */
@@ -193,6 +200,27 @@ public:
     inline VectorBase ForwardZero(const VectorBase& x) {
         VectorBase dep(Range());
         this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
+                          ArrayView<const Base>(),
+                          ArrayView<Base>(&dep[0], dep.size()));
+        return dep;
+    }
+
+    /**
+     * Evaluates the dependent model variables (zero-order).
+     * This method considers that the generic model was prepared
+     * with a single array for the independent variables (the default
+     * behavior).
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @return The dependent variable vector
+     */
+    template<typename VectorBase>
+    inline VectorBase ForwardZero(const VectorBase& x,
+                                  const VectorBase& p) {
+        VectorBase dep(Range());
+        this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
+                          ArrayView<const Base>(&p[0], p.size()),
                           ArrayView<Base>(&dep[0], dep.size()));
         return dep;
     }
@@ -207,28 +235,32 @@ public:
      * This method considers that the generic model was prepared
      * using a single array for the independent variables (the default
      * behavior).
-     * 
+     *
      * @param x The independent variable vector
+     * @param p The parameter vector
      * @param dep The dependent variable vector
      */
     template<typename VectorBase>
     inline void ForwardZero(const VectorBase& x,
+                            const VectorBase& p,
                             VectorBase& dep) {
         dep.resize(Range());
         this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
+                          ArrayView<const Base>(&p[0], p.size()),
                           ArrayView<Base>(&dep[0], dep.size()));
     }
 
     virtual void ForwardZero(ArrayView<const Base> x,
+                             ArrayView<const Base> p,
                              ArrayView<Base> dep) = 0;
 
     /**
-     * Determines the dependent variable values using a variable number of 
+     * Determines the dependent variable values using a variable number of
      * independent variable arrays.
      * This method can be useful if the generic model was prepared
      * considering that the independent variables are provided by several
      * arrays.
-     * 
+     *
      * @param x Contains the several independent variable vectors
      * @param dep The values of the dependent variables
      */
@@ -333,15 +365,15 @@ public:
     virtual bool isForwardOneAvailable() = 0;
 
     /**
-     * Computes results during a forward mode sweep. 
+     * Computes results during a forward mode sweep.
      * Computes the first-order Taylor coefficients for dependent variables
      * relative to a single independent variable.
      * This method can be used during the evaluation of the jacobian when
      * the model is used through a user defined external/atomic AD function.
      * @warning do not used it as a generic forward mode function!
-     * 
-     * @param tx The Taylor coefficients of the independent variables 
-     * @return The Taylor coefficients of the dependent variables 
+     *
+     * @param tx The Taylor coefficients of the independent variables
+     * @return The Taylor coefficients of the dependent variables
      */
     template<typename VectorBase>
     inline VectorBase ForwardOne(const VectorBase& tx) {
@@ -361,15 +393,15 @@ public:
     }
 
     /**
-     * Computes results during a forward mode sweep. 
+     * Computes results during a forward mode sweep.
      * Computes the first-order Taylor coefficients for dependent variables
      * relative to a single independent variable.
      * This method can be used during the evaluation of the jacobian when
      * the model is used through a user defined external/atomic AD function.
      * @warning do not used it as a generic forward mode function!
-     * 
-     * @param tx The Taylor coefficients of the independent variables 
-     * @param ty The Taylor coefficients of the dependent variables 
+     *
+     * @param tx The Taylor coefficients of the independent variables
+     * @param ty The Taylor coefficients of the dependent variables
      */
     virtual void ForwardOne(ArrayView<const Base> tx,
                             ArrayView<Base> ty) = 0;
@@ -391,13 +423,13 @@ public:
      * the model is used through a user defined external/atomic AD function.
      * This method version avoids some data copies and can be more efficient.
      * @warning do not used it as a generic forward mode function!
-     * 
+     *
      * @param x independent variable vector
      * @param tx1Nnz the number of non-zeros of the directional derivatives
      *               of the independent variables (seed directions)
-     * @param idx the locations of the non-zero values the partial 
+     * @param idx the locations of the non-zero values the partial
      *            derivatives of the dependent variables (seeds)
-     * @param tx1 the non-zero values of the partial derivatives of the 
+     * @param tx1 the non-zero values of the partial derivatives of the
      *           dependent variables (seeds)
      * @param ty1
      */
@@ -421,7 +453,7 @@ public:
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
      * derivatives of independent variables) for the evaluation of the
-     * jacobian when the model is used through a user defined 
+     * jacobian when the model is used through a user defined
      * external/atomic AD function.
      * @warning do not used it as a generic reverse mode function!
      */
@@ -438,7 +470,7 @@ public:
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
      * derivatives of independent variables) for the evaluation of the
-     * jacobian when the model is used through a user defined 
+     * jacobian when the model is used through a user defined
      * external/atomic AD function.
      * @warning do not used it as a generic reverse mode function!
      */
@@ -465,7 +497,7 @@ public:
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
      * derivatives of independent variables) for the evaluation of the
-     * jacobian when the model is used through a user defined 
+     * jacobian when the model is used through a user defined
      * external/atomic AD function.
      * @warning do not used it as a generic reverse mode function!
      */
@@ -477,18 +509,18 @@ public:
     /**
      * Computes results during a reverse mode sweep (adjoints or partial
      * derivatives of independent variables) for the evaluation of the
-     * jacobian when the model is used through a user defined 
+     * jacobian when the model is used through a user defined
      * external/atomic AD function.
      * This method version avoids some data copies and can be more efficient.
      * @warning do not used it as a generic reverse mode function!
-     * 
+     *
      * @param x independent variable vector
      * @param px partial derivatives of the independent variables (same size as x)
      * @param pyNnz the number of non-zeros of the partial derivatives of
      *              the dependent variables (weight functionals)
-     * @param idx the locations of the non-zero values the partial 
+     * @param idx the locations of the non-zero values the partial
      *            derivatives of the dependent variables (weight functionals)
-     * @param py the non-zero values of the partial derivatives of the 
+     * @param py the non-zero values of the partial derivatives of the
      *           dependent variables (weight functionals)
      */
     virtual void ReverseOne(ArrayView<const Base> x,
@@ -572,7 +604,7 @@ public:
      * the model is used through a user defined external AD function.
      * This method version avoids some data copies and can be more efficient.
      * @warning do not used it as a generic reverse mode function!
-     * 
+     *
      * @param x independent variable vector
      * @param tx1Nnz the number of non-zeros of the first-order Taylor
      *               coefficients of the independents
@@ -605,9 +637,9 @@ public:
     /**
      * Calculates a Jacobian using sparse methods and saves it into a dense
      * format:
-     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
-     * 
+     *
      * @param x independent variable vector
      * @return a dense jacobian
      */
@@ -622,9 +654,9 @@ public:
     /**
      * Calculates a Jacobian using sparse methods and saves it into a dense
      * format:
-     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
-     * 
+     *
      * @param x independent variable vector
      * @param jac a vector where the dense jacobian will be placed
      */
@@ -639,9 +671,9 @@ public:
     /**
      * Calculates a Jacobian using sparse methods and saves it into a dense
      * format:
-     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]  
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
-     * 
+     *
      * @param x independent variable array (must have n elements)
      * @param jac an array where the dense jacobian will be placed (must be allocated with at least m * n elements)
      */
@@ -659,11 +691,11 @@ public:
                                 size_t const** col) = 0;
 
     /**
-     * Determines the sparse Jacobian using a variable number of independent 
+     * Determines the sparse Jacobian using a variable number of independent
      * variable arrays. This method can be useful if the generic model was
      * prepared considering that the independent variables are provided
      * by several arrays.
-     * 
+     *
      * @param x Contains the several independent variable vectors
      * @param jac The values of the sparse Jacobian in the order provided by
      *            row and col
@@ -725,11 +757,11 @@ public:
                                size_t const** col) = 0;
 
     /**
-     * Determines the sparse Hessian using a variable number of independent 
+     * Determines the sparse Hessian using a variable number of independent
      * variable arrays. This method can be useful if the generic model was
      * prepared considering that the independent variables are provided
      * by several arrays.
-     * 
+     *
      * @param x Contains the several independent variable vectors
      * @param w The equation multipliers
      * @param w_size The number of equations
@@ -748,7 +780,7 @@ public:
      * Provides a wrapper for this compiled model allowing it to be used as
      * an atomic function. The model must not be deleted while the atomic
      * function is in use.
-     * 
+     *
      * @return an atomic function wrapper for this model
      */
     virtual CGAtomicGenericModel<Base>& asAtomic() {

@@ -37,6 +37,16 @@ void ModelCSourceGen<Base>::generateJacobianSource() {
         }
     }
 
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
+
     size_t m = _fun.Range();
     size_t n = _fun.Domain();
 
@@ -117,6 +127,16 @@ void ModelCSourceGen<Base>::generateSparseJacobianSource(bool forward) {
             indVars[i].setValue(_x[i]);
         }
     }
+
+    // parameters
+    std::vector<CGBase> params(_fun.size_dyn_ind());
+    handler.makeParameters(params);
+    if (_xDynParams.size() > 0) {
+        for (size_t i = 0; i < params.size(); i++) {
+            params[i].setValue(_xDynParams[i]);
+        }
+    }
+    _fun.new_dynamic(params);
 
     vector<CGBase> jac(_jacSparsity.rows.size());
     if (_loopTapes.empty()) {
@@ -254,7 +274,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevSingleThreadSourc
                                                                                   const std::string& functionRevFor,
                                                                                   const std::string& revForSuffix,
                                                                                   bool forward) {
-    
+
     LanguageC<Base> langC(_baseTypeName);
     std::string argsDcl = langC.generateDefaultFunctionArgumentsDcl();
     std::vector<std::string> argsDcl2 = langC.generateDefaultFunctionArgumentsDcl2();

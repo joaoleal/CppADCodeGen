@@ -51,6 +51,8 @@ protected:
     size_t _idAtomicCount;
     // the independent variables
     std::vector<Node *> _independentVariables;
+    // the parameters
+    std::vector<Node *> _parameters;
     // the current dependent variables
     ArrayView<CGB>* _dependents;
     /**
@@ -223,16 +225,16 @@ public:
     /**
      * Marks the provided variable as being an independent variable.
      *
-     * @param variables the variable that will become an independent
-     *                  variables.
+     * @param variable the variable that will become an independent
+     *                 variable.
      */
     inline void makeVariable(AD<CGB>& variable);
 
     /**
      * Marks the provided variable as being an independent variable.
      *
-     * @param variables the variable that will become an independent
-     *                  variables.
+     * @param variable the variable that will become an independent
+     *                 variable.
      */
     inline void makeVariable(CGB& variable);
 
@@ -245,6 +247,49 @@ public:
      * @throws CGException if a variable is not found in the independent vector
      */
     size_t getIndependentVariableIndex(const Node& var) const;
+
+    /**
+     * Marks the provided variables as being parameters.
+     *
+     * @param parameters the vector of variables that will become parameters.
+     */
+    template<class VectorCG>
+    inline void makeParameters(VectorCG& parameters) {
+        for (size_t i = 0; i < parameters.size(); i++) {
+            makeParameter(parameters[i]);
+        }
+    }
+
+    /**
+     * Marks the provided variables as being parameters.
+     *
+     * @param parameters the vector of variables that will become parameters.
+     */
+    inline void makeParameters(std::vector<AD<CGB> >& parameters);
+
+    /**
+     * Marks the provided variable as being a parameter.
+     *
+     * @param parameter the variable that will become a parameter.
+     */
+    inline void makeParameter(AD<CGB>& parameter);
+
+    /**
+     * Marks the provided variable as being a parameter.
+     *
+     * @param parameter the variable that will become a parameter.
+     */
+    inline void makeParameter(CGB& parameter);
+
+    /**
+     * The number of parameters defined with makeParameter().
+     */
+    size_t getParameterSize() const;
+
+    /**
+     * @throws CGException if a variable is not found in the parameter vector
+     */
+    size_t getParameterIndex(const Node& var) const;
 
     /**
      * Provides variable IDs that were assigned to operation nodes.

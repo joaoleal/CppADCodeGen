@@ -105,6 +105,11 @@ public:
         return _ss.str();
     }
 
+    inline std::string generateParameter(const OperationNode<Base>& parameter,
+                                         size_t id) override {
+        return _nameGen->generateParameter(parameter, id);
+    }
+
     std::string generateTemporary(const OperationNode<Base>& variable,
                                   size_t id) override {
         return _nameGen->generateTemporary(variable, id);
@@ -201,6 +206,35 @@ public:
         }
 
         return l1 == l2;
+    }
+
+    const std::string& getParameterArrayName(const OperationNode<Base>& param,
+                                             size_t id) override {
+        return _nameGen->getParameterArrayName(param, id);
+    }
+
+    size_t getParameterArrayIndex(const OperationNode<Base>& param,
+                                  size_t id) override {
+        return _nameGen->getParameterArrayIndex(param, id);
+    }
+
+    bool isConsecutiveInParameterArray(const OperationNode<Base>& paramFirst,
+                                       size_t idFirst,
+                                       const OperationNode<Base>& paramSecond,
+                                       size_t idSecond) override {
+        return _nameGen->isConsecutiveInParameterArray(paramFirst, idFirst, paramSecond, idSecond);
+    }
+
+    bool isInSameParameterArray(const OperationNode<Base>& param1,
+                                size_t id1,
+                                const OperationNode<Base>& param2,
+                                size_t id2) override {
+        return _nameGen->isInSameParameterArray(param1, id1, param2, id2);
+    }
+
+    void setParameterID(size_t  minParameterID,
+                        size_t maxParameterID) override {
+        _nameGen->setParameterID(minParameterID, maxParameterID);
     }
 
     void setTemporaryVariableID(size_t minTempID,

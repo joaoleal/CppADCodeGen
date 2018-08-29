@@ -77,6 +77,8 @@ protected:
     //
     size_t _independentSize;
     //
+    size_t _parameterSize;
+    //
     size_t _minTemporaryVarID;
     // maps the variable IDs to the their position in the dependent vector
     // (some IDs may be the same as the independent variables when dep = indep)
@@ -132,6 +134,7 @@ public:
         _atomicArgName("atomicFun"),
         _nameGen(nullptr),
         _independentSize(0), // not really required (but it avoids warnings)
+        _parameterSize(0), // not really required (but it avoids warnings)
         _minTemporaryVarID(0), // not really required (but it avoids warnings)
         _dependent(nullptr),
         _depAssignOperation("="),
@@ -386,9 +389,26 @@ public:
         CPPADCG_ASSERT_KNOWN(indArg.size() > 0,
                              "There must be at least one independent argument");
 
-        _ss << _spaces << "//independent variables\n";
+        _ss << _spaces << "// independent variables\n";
         for (size_t i = 0; i < indArg.size(); i++) {
             _ss << _spaces << "const " << argumentDeclaration(indArg[i]) << " = " << _inArgName << "[" << i << "];\n";
+        }
+
+        std::string code = _ss.str();
+        _ss.str("");
+        return code;
+    }
+
+    virtual std::string generateParameterDeclaration() {
+        const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
+        const std::vector<FuncArgument>& paramArg = _nameGen->getParameter();
+
+        if (paramArg.size() == 0 || _parameterSize == 0)
+            return "";
+
+        _ss << _spaces << "// parameters\n";
+        for (size_t i = 0; i < paramArg.size(); i++) {
+            _ss << _spaces << "const " << argumentDeclaration(paramArg[i]) << " = " << _inArgName << "[" << (indArg.size() + i) << "];\n";
         }
 
         std::string code = _ss.str();
@@ -632,6 +652,7 @@ protected:
         // save some info
         _info = info.get();
         _independentSize = info->independent.size();
+        _parameterSize = info->parameters.size();
         _dependent = &info->dependent;
         _nameGen = &info->nameGen;
         _minTemporaryVarID = info->minTemporaryVarID;
@@ -656,6 +677,14 @@ protected:
             Node& op = *info->independent[j];
             if (op.getName() == nullptr) {
                 op.setName(_nameGen->generateIndependent(op, getVariableID(op)));
+            }
+        }
+
+        //generate names for the parameters
+        for (size_t j = 0; j < _parameterSize; j++) {
+            Node& op = *info->parameters[j];
+            if (op.getName() == nullptr) {
+                op.setName(_nameGen->generateParameter(op, getVariableID(op)));
             }
         }
 
@@ -823,6 +852,7 @@ protected:
             _code  << " {\n";
             _nameGen->customFunctionVariableDeclarations(_code);
             _code << generateIndependentVariableDeclaration() << "\n";
+            _code << generateParameterDeclaration() << "\n";
             _code << generateDependentVariableDeclaration() << "\n";
             _code << generateTemporaryVariableDeclaration(true, false,
                                                           info->atomicFunctionsMaxForward,
@@ -882,6 +912,7 @@ protected:
                 _ss << " {\n";
                 _nameGen->customFunctionVariableDeclarations(_ss);
                 _ss << generateIndependentVariableDeclaration() << "\n";
+                _ss << generateParameterDeclaration() << "\n";
                 _ss << generateDependentVariableDeclaration() << "\n";
                 _ss << generateTemporaryVariableDeclaration(false, info->zeroDependents,
                                                             info->atomicFunctionsMaxForward,
@@ -1001,6 +1032,7 @@ protected:
         _ss << " {\n";
         _nameGen->customFunctionVariableDeclarations(_ss);
         _ss << generateIndependentVariableDeclaration() << "\n";
+        _ss << generateParameterDeclaration() << "\n";
         _ss << generateDependentVariableDeclaration() << "\n";
         size_t arraySize = _nameGen->getMaxTemporaryArrayVariableID();
         size_t sArraySize = _nameGen->getMaxTemporarySparseArrayVariableID();
@@ -1139,6 +1171,10 @@ protected:
             } else if (getVariableID(var) <= _independentSize) {
                 // independent variable
                 var.setName(_nameGen->generateIndependent(var, getVariableID(var)));
+
+            } else if (getVariableID(var) <= _independentSize + _parameterSize) {
+                // parameters
+                var.setName(_nameGen->generateParameter(var, getVariableID(var) - _independentSize));
 
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable

@@ -39,12 +39,14 @@ public:
         CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense");
         ArrayView<const Base> x(static_cast<const Base*> (tx[0].data), tx[0].size);
 
+        ArrayView<const Base> par; // TODO
+
         CPPADCG_ASSERT_KNOWN(!ty.sparse, "dependent array must be dense");
         ArrayView<Base> y(static_cast<Base*> (ty.data), ty.size);
 
 
         if (p == 0) {
-            model_->ForwardZero(x, y);
+            model_->ForwardZero(x, par, y);
             return true;
 
         } else if (p == 1) {

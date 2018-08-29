@@ -18,6 +18,7 @@ INCLUDE_DIRECTORIES(${CMAKE_CURRENT_SOURCE_DIR})
 
 IF( UNIX )
     add_cppadcg_test(dynamic.cpp)
+    add_cppadcg_test(dynamic_with_params.cpp)
     add_cppadcg_test(dynamic_atomic.cpp)
     add_cppadcg_test(dynamic_atomic_2.cpp)
     add_cppadcg_test(dynamic_atomic_3.cpp)

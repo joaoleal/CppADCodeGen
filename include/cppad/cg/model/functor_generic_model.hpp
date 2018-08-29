@@ -38,6 +38,7 @@ protected:
     const std::string _name;
     size_t _m;
     size_t _n;
+    size_t _p;
     std::vector<const Base*> _in;
     std::vector<const Base*> _inHess;
     std::vector<Base*> _out;
@@ -276,13 +277,13 @@ public:
         std::copy(col, col + nnz, cols.begin());
     }
 
-    /// number of independent variables
-
     size_t Domain() const override {
         return _n;
     }
 
-    /// number of dependent variables
+    size_t Parameters() const override {
+        return _p;
+    }
 
     size_t Range() const override {
         return _m;
@@ -294,16 +295,19 @@ public:
 
     /// calculate the dependent values (zero order)
     void ForwardZero(ArrayView<const Base> x,
+                     ArrayView<const Base> p,
                      ArrayView<Base> dep) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(dep.size() == _m, "Invalid dependent array size");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
+        CPPADCG_ASSERT_KNOWN(p.size() == _p, "Invalid parameter array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
         _in[0] = x.data();
+        _in[1] = p.data();
         _out[0] = dep.data();
 
         (*_zero)(&_in[0], &_out[0], _atomicFuncArg);
@@ -314,6 +318,7 @@ public:
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(_in.size() == x.size(), "The number of independent variable arrays is invalid");
+        CPPADCG_ASSERT_KNOWN(0 == _p, "Invalid parameter array size");
         CPPADCG_ASSERT_KNOWN(dep.size() == _m, "Invalid dependent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
@@ -328,7 +333,7 @@ public:
                      ArrayView<Base> ty) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_zero != nullptr, "No zero order forward function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(tx.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(ty.size() == _m, "Invalid dependent array size");
@@ -363,7 +368,7 @@ public:
                   ArrayView<Base> jac) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_jacobian != nullptr, "No Jacobian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(jac.size() == _m * _n, "Invalid Jacobian array size");
@@ -386,7 +391,7 @@ public:
                  ArrayView<Base> hess) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_hessian != nullptr, "No Hessian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
@@ -540,7 +545,7 @@ public:
 
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_reverseTwo != nullptr, "No sparse reverse two function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1");
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2");
         CPPADCG_ASSERT_KNOWN(tx.size() >= k1 * _n, "Invalid tx size");
         CPPADCG_ASSERT_KNOWN(ty.size() >= k1 * _m, "Invalid ty size");
         CPPADCG_ASSERT_KNOWN(px.size() >= k1 * _n, "Invalid px size");
@@ -609,7 +614,7 @@ public:
                         ArrayView<Base> jac) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse jacobian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(jac.size() == _m * _n, "Invalid Jacobian size");
@@ -642,7 +647,7 @@ public:
                         std::vector<size_t>& col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
@@ -671,7 +676,7 @@ public:
                         size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseJacobian != nullptr, "No sparse Jacobian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
@@ -730,7 +735,7 @@ public:
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
         // CPPADCG_ASSERT_KNOWN(hess.size() == _n * _n, "Invalid Hessian size");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
@@ -763,7 +768,7 @@ public:
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
@@ -794,7 +799,7 @@ public:
                        size_t const** col) override {
         CPPADCG_ASSERT_KNOWN(_isLibraryReady, "Model library is not ready (possibly closed)");
         CPPADCG_ASSERT_KNOWN(_sparseHessian != nullptr, "No sparse Hessian function defined in the dynamic library");
-        CPPADCG_ASSERT_KNOWN(_in.size() == 1, "The number of independent variable arrays is higher than 1,"
+        CPPADCG_ASSERT_KNOWN(_in.size() == 2, "The number of input/independent variable arrays is higher than 2,"
                              " please use the variable size methods");
         CPPADCG_ASSERT_KNOWN(x.size() == _n, "Invalid independent array size");
         CPPADCG_ASSERT_KNOWN(w.size() == _m, "Invalid multiplier array size");
@@ -855,6 +860,7 @@ protected:
         _name(name),
         _m(0),
         _n(0),
+        _p(0),
         _atomicFuncArg{nullptr}, // not really required
         _missingAtomicFunctions(0),
         _zero(nullptr),
@@ -892,7 +898,7 @@ protected:
         /**
          * Check the data type
          */
-        void (*infoFunc)(const char** baseName, unsigned long*, unsigned long*, unsigned int*, unsigned int*);
+        void (*infoFunc)(const char** baseName, unsigned long*, unsigned long*, unsigned long*, unsigned int*, unsigned int*);
         infoFunc = reinterpret_cast<decltype(infoFunc)>(loadFunction(_name + "_" + ModelCSourceGen<Base>::FUNCTION_INFO));
 
         // local
@@ -903,11 +909,7 @@ protected:
         const char* dynamicLibBaseName = nullptr;
         unsigned int inSize = 0;
         unsigned int outSize = 0;
-        (*infoFunc)(&dynamicLibBaseName, &_m, &_n, &inSize, &outSize);
-
-        _in.resize(inSize);
-        _inHess.resize(inSize + 1);
-        _out.resize(outSize);
+        (*infoFunc)(&dynamicLibBaseName, &_m, &_n, &_p, &inSize, &outSize);
 
         CPPADCG_ASSERT_KNOWN(local == std::string(dynamicLibBaseName),
                              (std::string("Invalid data type in dynamic library. Expected '") + local
@@ -916,6 +918,10 @@ protected:
                              "Invalid dimension received from the dynamic library.");
         CPPADCG_ASSERT_KNOWN(outSize > 0,
                              "Invalid dimension received from the dynamic library.");
+
+        _in.resize(inSize + 1);
+        _inHess.resize(inSize + 2);
+        _out.resize(outSize);
 
         _isLibraryReady = true;
     }

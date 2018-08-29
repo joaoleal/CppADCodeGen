@@ -34,6 +34,10 @@ public:
      */
     const std::vector<Node *>& independent;
     /**
+     * The parameters
+     */
+    const std::vector<Node *>& parameters;
+    /**
      * The dependent variables
      */
     const ArrayView<CG<Base> >& dependent;
@@ -108,6 +112,7 @@ public:
 public:
 
     LanguageGenerationData(const std::vector<Node *>& ind,
+                           const std::vector<Node *>& params,
                            const ArrayView<CG<Base> >& dep,
                            size_t minTempVID,
                            const CodeHandlerVector<Base, size_t>& varIds,
@@ -128,6 +133,7 @@ public:
                            IndexOperationNode<Base>& auxIterationIndexOp,
                            bool zero) :
         independent(ind),
+        parameters(params),
         dependent(dep),
         minTemporaryVarID(minTempVID),
         varId(varIds),

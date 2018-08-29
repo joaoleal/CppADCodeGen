@@ -37,7 +37,7 @@ typedef struct FuncArgument {
 
 /**
  * Creates variables names for the source code.
- * 
+ *
  * @author Joao Leal
  */
 template<class Base>
@@ -45,12 +45,15 @@ class VariableNameGenerator {
 protected:
     std::vector<FuncArgument> _dependent;
     std::vector<FuncArgument> _independent;
+    std::vector<FuncArgument> _parameter;
     std::vector<FuncArgument> _temporary;
 public:
 
+    inline virtual ~VariableNameGenerator() = default;
+
     /**
      * Provides the dependent variable arguments used by a function.
-     * 
+     *
      * @return the dependent variable arguments
      */
     virtual const std::vector<FuncArgument>& getDependent() const {
@@ -59,7 +62,7 @@ public:
 
     /**
      * Provides the independent variable arguments used by a function.
-     * 
+     *
      * @return the independent variable arguments
      */
     virtual const std::vector<FuncArgument>& getIndependent() const {
@@ -67,8 +70,17 @@ public:
     }
 
     /**
+     * Provides the parameter arguments used by a function.
+     *
+     * @return the parameter arguments
+     */
+    virtual const std::vector<FuncArgument>& getParameter() const {
+        return _parameter;
+    }
+
+    /**
      * Provides the temporary variable arguments used by a function.
-     * 
+     *
      * @return the temporary variable arguments
      */
     virtual const std::vector<FuncArgument>& getTemporary() const {
@@ -97,15 +109,15 @@ public:
 
     /**
      * Creates a name for a dependent variable.
-     * 
+     *
      * @param index the dependent variable index
      * @return the generated name
      */
     virtual std::string generateDependent(size_t index) = 0;
 
     /**
-     * Creates a name for a dependent variable.
-     * 
+     * Creates a name for an independent variable.
+     *
      * @param variable the node representing the independent variable
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (unique for independent variables)
@@ -115,8 +127,19 @@ public:
                                             size_t id) = 0;
 
     /**
+     * Creates a name for a parameter.
+     *
+     * @param variable the node representing the parameter
+     * @param id an ID assigned by the CodeHandler to the operation node
+     *           (unique for independent variables)
+     * @return the generated name
+     */
+    virtual std::string generateParameter(const OperationNode<Base>& variable,
+                                          size_t id) = 0;
+
+    /**
      * Creates a name for a temporary variable.
-     * 
+     *
      * @param variable the node representing the temporary variable
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -127,7 +150,7 @@ public:
 
     /**
      * Creates a name for a temporary dense array variable.
-     * 
+     *
      * @param variable the node representing the dense array variable creation
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -138,7 +161,7 @@ public:
 
     /**
      * Creates a name for a temporary sparse array variable.
-     * 
+     *
      * @param variable the node representing the sparse array variable creation
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -150,7 +173,7 @@ public:
     /**
      * Creates a name for a reference to an indexed dependent variable
      * expression.
-     * 
+     *
      * @param var the node representing an indexed dependent variable
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -162,9 +185,9 @@ public:
                                                  const IndexPattern& ip) = 0;
 
     /**
-     * Creates a name for a reference to an indexed independent variable 
+     * Creates a name for a reference to an indexed independent variable
      * expression.
-     * 
+     *
      * @param var the node representing an indexed independent variable
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (unique for indexed independent variables)
@@ -176,8 +199,17 @@ public:
                                                    const IndexPattern& ip) = 0;
 
     /**
+     * Defines the ID ranges used by parameters.
+     *
+     * @param minParameterID the lowest ID of parameters
+     * @param maxParameterID the highest used ID of parameters
+     */
+    virtual void setParameterID(size_t minParameterID,
+                                size_t maxParameterID) = 0;
+
+    /**
      * Defines the ID ranges used by each variable type.
-     * 
+     *
      * @param minTempID the lowest ID of temporary variables
      * @param maxTempID the highest used ID of temporary variables
      * @param maxTempArrayID the highest used ID of temporary dense array
@@ -191,10 +223,10 @@ public:
                                         size_t maxTempSparseArrayID) = 0;
 
     /**
-     * Provides the array name where independent variables are provided to the 
+     * Provides the array name where independent variables are provided to the
      * function.
      * It should only be called if independents are saved in an array.
-     * 
+     *
      * @param indep the independent variable node (CGInvOp)
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (unique for independent variable arrays)
@@ -204,10 +236,10 @@ public:
                                                        size_t id) = 0;
 
     /**
-     * Provides the index in the associated independent array of an 
+     * Provides the index in the associated independent array of an
      * independent variable.
      * It should only be called if independents are saved in an array.
-     * 
+     *
      * @param indep the independent variable node (CGInvOp)
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (unique for independent variable arrays)
@@ -219,7 +251,7 @@ public:
     /**
      * Whether or not two independent variables are considered to be part of
      * the same independent variable array at consecutive locations.
-     * 
+     *
      * @param indepFirst the independent node (CGInvOp) with the lower index
      * @param idFirst an ID assigned by the CodeHandler to the first node
      *                (unique for independent variables)
@@ -236,7 +268,7 @@ public:
     /**
      * Determines whether or not two independents are part of the same
      * independent variable array.
-     * 
+     *
      * @param indep1 the first independent node (CGInvOp or CGLoopIndexedIndepOp)
      * @param id1 an ID assigned by the CodeHandler to indep1
      *            (unique for independent variables)
@@ -251,9 +283,69 @@ public:
                                           size_t id2) = 0;
 
     /**
+     * Provides the array name where parameter variables are provided to the
+     * function.
+     * It should only be called if parameter are saved in an array.
+     *
+     * @param indep the parameter node (CGInvOp)
+     * @param id an ID assigned by the CodeHandler to the operation node
+     *           (unique for parameter arrays)
+     * @return the array name
+     */
+    virtual const std::string& getParameterArrayName(const OperationNode<Base>& param,
+                                                     size_t id) = 0;
+
+    /**
+     * Provides the index in the associated parameter array of a
+     * parameter.
+     * It should only be called if independents are saved in an array.
+     *
+     * @param indep the parameter variable node (CGInvOp)
+     * @param id an ID assigned by the CodeHandler to the operation node
+     *           (unique for parameter arrays)
+     * @return the index
+     */
+    virtual size_t getParameterArrayIndex(const OperationNode<Base>& indep,
+                                          size_t id) = 0;
+
+    /**
+     * Whether or not two parameters are considered to be part of
+     * the same parameter array at consecutive locations.
+     *
+     * @param indepFirst the parameter node (CGInvOp) with the lower index
+     * @param idFirst an ID assigned by the CodeHandler to the first node
+     *                (unique for independent variables)
+     * @param indepSecond the parameter node (CGInvOp) with the higher index
+     * @param idSecond an ID assigned by the CodeHandler to the second node
+     *                 (unique for independent variables)
+     * @return true if the parameters are consecutive
+     */
+    virtual bool isConsecutiveInParameterArray(const OperationNode<Base>& paramFirst,
+                                               size_t idFirst,
+                                               const OperationNode<Base>& paramSecond,
+                                               size_t idSecond) = 0;
+
+    /**
+     * Determines whether or not two parameters are part of the same
+     * parameter array.
+     *
+     * @param indep1 the first parameter node (CGInvOp or CGLoopIndexedIndepOp)
+     * @param id1 an ID assigned by the CodeHandler to indep1
+     *            (unique for parameters)
+     * @param indep2 the second parameter node (CGInvOp or CGLoopIndexedIndepOp)
+     * @param id2 an ID assigned by the CodeHandler to indep2
+     *            (unique for parameters)
+     * @return true if the parameters are part of the same array
+     */
+    virtual bool isInSameParameterArray(const OperationNode<Base>& param1,
+                                        size_t id1,
+                                        const OperationNode<Base>& param2,
+                                        size_t id2) = 0;
+
+    /**
      * Provides the array name for the temporary variables.
      * It should only be called if temporary variables are saved in an array.
-     * 
+     *
      * @param var the temporary variable node
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -263,10 +355,10 @@ public:
                                                         size_t id) = 0;
 
     /**
-     * Provides the index in the associated temporary array of a temporary 
+     * Provides the index in the associated temporary array of a temporary
      * variable.
      * It should only be called if temporary variables are saved in an array.
-     * 
+     *
      * @param var the temporary variable node
      * @param id an ID assigned by the CodeHandler to the operation node
      *           (potentially not unique)
@@ -278,7 +370,7 @@ public:
     /**
      * Whether or not two temporary variables are considered to be part of
      * the same temporary variable array at consecutive locations.
-     * 
+     *
      * @param varFirst the temporary variable node with the lower index
      * @param idFirst an ID assigned by the CodeHandler to the first node
      *                (potentially not unique)
@@ -295,7 +387,7 @@ public:
     /**
      * Determines whether or not two temporary variables are part of the same
      * temporary variable array.
-     * 
+     *
      * @param var1 the temporary variable node
      * @param id1 an ID assigned by the CodeHandler to var1
      *            (potentially not unique)
@@ -318,11 +410,10 @@ public:
     virtual void finalizeCustomFunctionVariables(std::ostream& out) {
     }
 
-    inline virtual ~VariableNameGenerator() {
-    }
 };
 
 } // END cg namespace
 } // END CppAD namespace
 
 #endif
+
