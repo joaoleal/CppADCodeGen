@@ -2,6 +2,7 @@
 #define CPPAD_CG_LANGUAGE_C_ARRAYS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,10 +21,13 @@ namespace cg {
 
 template<class Base>
 void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    //CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation"); // parameter array can be empty
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
+
+    if (argSize == 0)
+        return; // empty array
 
     size_t startPos = id - 1;
 
@@ -133,7 +137,7 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
 
     const Argument<Base>& ref = args[starti];
     if (ref.getOperation() != nullptr) {
-        // 
+        //
         const OperationNode<Base>& refOp = *ref.getOperation();
         CGOpCode op = refOp.getOperationType();
         if (op == CGOpCode::Inv) {

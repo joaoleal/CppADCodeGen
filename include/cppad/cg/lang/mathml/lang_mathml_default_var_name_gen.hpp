@@ -2,8 +2,8 @@
 #define CPPAD_CG_LANG_MATHML_DEFAULT_VAR_NAME_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2015 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *

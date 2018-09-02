@@ -2,8 +2,8 @@
 #define CPPAD_CG_ABSTRACT_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2013 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -63,8 +63,7 @@ protected:
     }
 
 public:
-    virtual ~CGAbstractAtomicFun() {
-    }
+    virtual ~CGAbstractAtomicFun() = default;
 
     template <class ADVector>
     void operator()(const ADVector& ax,
@@ -202,12 +201,14 @@ public:
                 txArray[k] = BaseAbstractAtomicFun<Base>::makeSparseArray(*handler, tx, p, k);
             tyArray[k] = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, m);
         }
+        OperationNode<Base>* parArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, 0); // TODO!!! par
 
-        std::vector<Argument<Base> > args(2 * p1);
+        std::vector<Argument<Base> > args(2 * p1 + 1);
         for (size_t k = 0; k < p1; k++) {
             args[0 * p1 + k] = *txArray[k];
             args[1 * p1 + k] = *tyArray[k];
         }
+        args[2 * p1] = *parArray;
 
         OperationNode<Base>* atomicOp = handler->makeNode(CGOpCode::AtomicForward,{id_, q, p}, args);
         handler->registerAtomicFunction(*this);
@@ -386,13 +387,16 @@ public:
                 pyArray[k] = BaseAbstractAtomicFun<Base>::makeArray(*handler, py, p, k);
         }
 
-        std::vector<Argument<Base> > args(4 * p1);
+        OperationNode<Base>* parArray = BaseAbstractAtomicFun<Base>::makeZeroArray(*handler, 0); // TODO!!! par
+
+        std::vector<Argument<Base> > args(4 * p1 + 1);
         for (size_t k = 0; k <= p; k++) {
             args[0 * p1 + k] = *txArray[k];
             args[1 * p1 + k] = *tyArray[k];
             args[2 * p1 + k] = *pxArray[k];
             args[3 * p1 + k] = *pyArray[k];
         }
+        args[4 * p1] = *parArray;
 
         OperationNode<Base>* atomicOp = handler->makeNode(CGOpCode::AtomicReverse,{id_, p}, args);
         handler->registerAtomicFunction(*this);

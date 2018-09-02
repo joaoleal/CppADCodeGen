@@ -2,8 +2,8 @@
 #define CPPAD_CG_LANGUAGE_C_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2012 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -51,6 +51,7 @@ protected:
     static const std::string _ATOMIC_TY;
     static const std::string _ATOMIC_PX;
     static const std::string _ATOMIC_PY;
+    static const std::string _ATOMIC_PAR;
 private:
     class AtomicFuncArray; //forward declaration
 protected:
@@ -366,6 +367,7 @@ public:
                 ss << _spaces << "Array " << _ATOMIC_PX << ";\n";
                 ss << _spaces << "Array " << _ATOMIC_PY << "[" << (maxReverseOrder + 1) << "];\n";
             }
+            ss << _spaces << "Array " << _ATOMIC_PAR << ";\n";
         }
     }
 
@@ -374,7 +376,7 @@ public:
         CPPADCG_ASSERT_KNOWN(depArg.size() > 0,
                              "There must be at least one dependent argument");
 
-        _ss << _spaces << "//dependent variables\n";
+        _ss << _spaces << "// dependent variables\n";
         for (size_t i = 0; i < depArg.size(); i++) {
             _ss << _spaces << argumentDeclaration(depArg[i]) << " = " << _outArgName << "[" << i << "];\n";
         }
@@ -1741,7 +1743,7 @@ protected:
         int p = atomicFor.getInfo()[2];
         size_t p1 = p + 1;
         const std::vector<Arg>& opArgs = atomicFor.getArguments();
-        CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2, "Invalid number of arguments for atomic forward operation");
+        CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2 + 1, "Invalid number of arguments for atomic forward operation");
 
         size_t id = atomicFor.getInfo()[0];
         size_t atomicIndex = _info->atomicFunctionId2Index.at(id);
@@ -1752,8 +1754,12 @@ protected:
             ty[k] = opArgs[1 * p1 + k].getOperation();
         }
 
+        Node* par = opArgs[2 * p1].getOperation();
+
         CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
         CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
+
+        CPPADCG_ASSERT_KNOWN(par->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
         CPPADCG_ASSERT_KNOWN(ty[p]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
@@ -1761,13 +1767,15 @@ protected:
         for (size_t k = 0; k < p1; k++) {
             printArrayStructInit(_ATOMIC_TX, k, tx, k); // also does indentation
         }
+        // parameters
+        printArrayStructInit(_ATOMIC_PAR, *par); // also does indentation
         // ty
         printArrayStructInit(_ATOMIC_TY, *ty[p]); // also does indentation
         _ss.str("");
 
         _code << _indentation << "atomicFun.forward(atomicFun.libModel, "
                 << atomicIndex << ", " << q << ", " << p << ", "
-                << _ATOMIC_TX << ", &" << _ATOMIC_TY << "); // "
+                << _ATOMIC_TX << ", &" << _ATOMIC_PAR << ", &" << _ATOMIC_TY << "); // "
                 << _info->atomicFunctionId2Name.at(id)
                 << "\n";
 
@@ -1782,7 +1790,7 @@ protected:
         int p = atomicRev.getInfo()[1];
         size_t p1 = p + 1;
         const std::vector<Arg>& opArgs = atomicRev.getArguments();
-        CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4, "Invalid number of arguments for atomic reverse operation");
+        CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4 + 1, "Invalid number of arguments for atomic reverse operation");
 
         size_t id = atomicRev.getInfo()[0];
         size_t atomicIndex = _info->atomicFunctionId2Index.at(id);
@@ -1793,8 +1801,12 @@ protected:
             py[k] = opArgs[3 * p1 + k].getOperation();
         }
 
+        Node* par = opArgs[4 * p1].getOperation();
+
         CPPADCG_ASSERT_KNOWN(tx[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
         CPPADCG_ASSERT_KNOWN(p == 0 || tx[1]->getOperationType() == CGOpCode::SparseArrayCreation, "Invalid array type");
+
+        CPPADCG_ASSERT_KNOWN(par->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
         CPPADCG_ASSERT_KNOWN(px[0]->getOperationType() == CGOpCode::ArrayCreation, "Invalid array type");
 
@@ -1805,6 +1817,8 @@ protected:
         for (size_t k = 0; k < p1; k++) {
             printArrayStructInit(_ATOMIC_TX, k, tx, k); // also does indentation
         }
+        // parameters
+        printArrayStructInit(_ATOMIC_PAR, *par); // also does indentation
         // py
         for (size_t k = 0; k < p1; k++) {
             printArrayStructInit(_ATOMIC_PY, k, py, k); // also does indentation
@@ -1815,7 +1829,7 @@ protected:
 
         _code << _indentation << "atomicFun.reverse(atomicFun.libModel, "
                 << atomicIndex << ", " << p << ", "
-                << _ATOMIC_TX << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
+                << _ATOMIC_TX << ", &" << _ATOMIC_PAR << ", &" << _ATOMIC_PX << ", " << _ATOMIC_PY << "); // "
                 << _info->atomicFunctionId2Name.at(id)
                 << "\n";
 
@@ -2168,6 +2182,9 @@ template<class Base>
 const std::string LanguageC<Base>::_ATOMIC_PY = "apy";
 
 template<class Base>
+const std::string LanguageC<Base>::_ATOMIC_PAR = "apar";
+
+template<class Base>
 const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION =
 "typedef struct Array {\n"
 "    void* data;\n"
@@ -2184,11 +2201,13 @@ const std::string LanguageC<Base>::ATOMICFUN_STRUCT_DEFINITION =
 "                   int q,\n"
 "                   int p,\n"
 "                   const Array tx[],\n"
+"                   const Array* params,\n"
 "                   Array* ty);\n"
 "    int (*reverse)(void* libModel,\n"
 "                   int atomicIndex,\n"
 "                   int p,\n"
 "                   const Array tx[],\n"
+"                   const Array* params,\n"
 "                   Array* px,\n"
 "                   const Array py[]);\n"
 "};";

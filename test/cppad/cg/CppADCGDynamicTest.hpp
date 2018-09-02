@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_CPPADCGDYNAMICTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -192,22 +193,36 @@ public:
         testModelResults(*dynamicLib, *model, fun, x, p, epsilonR, epsilonA, _denseJacobian, _denseHessian);
     }
 
-    void testDynamicCustomElements(std::vector<ADCG>& u,
+    void testDynamicCustomElements(std::vector<ADCG>& ax,
                                    const std::vector<double>& x,
+                                   const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
+                                   const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
+        std::vector<ADCG> ap;
+        std::vector<double> p;
+
+        testDynamicCustomElements(ax, ap, x, p, jacRow, jacCol, hessRow, hessCol);
+    }
+
+    void testDynamicCustomElements(std::vector<ADCG>& ax,
+                                   std::vector<ADCG>& ap,
+                                   const std::vector<double>& x,
+                                   const std::vector<double>& p,
                                    const std::vector<size_t>& jacRow, const std::vector<size_t>& jacCol,
                                    const std::vector<size_t>& hessRow, const std::vector<size_t>& hessCol) {
         using namespace std;
 
-        CppAD::Independent(u);
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
         // dependent variable vector
-        std::vector<ADCG> Z = model(u);
+        std::vector<ADCG> ay = model(ax);
 
         /**
          * create the CppAD tape as usual
          */
-        // create f: U -> Z and vectors used for derivative calculations
-        ADFun<CGD> fun(u, Z);
+        // create f: ax -> ay and vectors used for derivative calculations
+        ADFun<CGD> fun(ax, ay);
 
         /**
          * Create the dynamic library
@@ -232,7 +247,7 @@ public:
 
         SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_2");
 
-        DynamicModelLibraryProcessor<double> p(compDynHelp, "cppad_cg_model_2");
+        DynamicModelLibraryProcessor<double> dmlp(compDynHelp, "cppad_cg_model_2");
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
@@ -243,13 +258,13 @@ public:
 
 #ifdef CPPAD_CG_SYSTEM_LINUX
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
-            p.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
+            dmlp.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
         } else if (compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 
-        std::unique_ptr<DynamicLib<double>> dynamicLib = p.createDynamicLibrary(compiler);
+        std::unique_ptr<DynamicLib<double>> dynamicLib = dmlp.createDynamicLibrary(compiler);
         dynamicLib->setThreadPoolVerbose(this->verbose_);
         dynamicLib->setThreadNumber(2);
         dynamicLib->setThreadPoolDisabled(_multithreadDisabled);
@@ -277,7 +292,7 @@ public:
 
         // sparse Jacobian
         std::vector<double> jacCGen;
-        model->SparseJacobian(x, jacCGen, row, col);
+        model->SparseJacobian(x, p, jacCGen, row, col);
         std::vector<CG<double> > jacSparse(row.size());
 
         std::vector<CGD> jac = fun.Jacobian(x2);
@@ -288,12 +303,12 @@ public:
         ASSERT_TRUE(compareValues(jacCGen, jacSparse));
 
         // sparse Hessian
-        std::vector<double> w(Z.size(), 1.0);
+        std::vector<double> w(ay.size(), 1.0);
         std::vector<double> hessCGen;
-        model->SparseHessian(x, w, hessCGen, row, col);
+        model->SparseHessian(x, p, w, hessCGen, row, col);
         std::vector<CG<double> > hessSparse(row.size());
 
-        std::vector<CGD> w2(Z.size(), 1.0);
+        std::vector<CGD> w2(ay.size(), 1.0);
         std::vector<CGD> hess = fun.Hessian(x2, w2);
         for (size_t i = 0; i < row.size(); i++) {
             hessSparse[i] = hess[row[i] * x.size() + col[i]];

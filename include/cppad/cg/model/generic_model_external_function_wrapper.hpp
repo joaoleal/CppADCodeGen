@@ -2,6 +2,7 @@
 #define CPPAD_CG_GENERIC_MODEL_EXTERNAL_FUNCTION_WRAPPER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -28,25 +29,25 @@ public:
         model_(&model) {
     }
 
-    inline virtual ~GenericModelExternalFunctionWrapper() {
-    }
+    inline virtual ~GenericModelExternalFunctionWrapper() = default;
 
     virtual bool forward(FunctorGenericModel<Base>& libModel,
                          int q,
                          int p,
                          const Array tx[],
+                         const Array& params,
                          Array& ty) {
         CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense");
         ArrayView<const Base> x(static_cast<const Base*> (tx[0].data), tx[0].size);
 
-        ArrayView<const Base> par; // TODO
+        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense");
+        ArrayView<Base> pars(static_cast<Base*> (params.data), params.size);
 
         CPPADCG_ASSERT_KNOWN(!ty.sparse, "dependent array must be dense");
         ArrayView<Base> y(static_cast<Base*> (ty.data), ty.size);
 
-
         if (p == 0) {
-            model_->ForwardZero(x, par, y);
+            model_->ForwardZero(x, pars, y);
             return true;
 
         } else if (p == 1) {
@@ -54,6 +55,7 @@ public:
             Base* tx1 = static_cast<Base*> (tx[1].data);
 
             model_->ForwardOne(x,
+                               pars,
                                tx[1].nnz, tx[1].idx, tx1,
                                y);
             return true;
@@ -65,10 +67,14 @@ public:
     virtual bool reverse(FunctorGenericModel<Base>& libModel,
                          int p,
                          const Array tx[],
+                         const Array& params,
                          Array& px,
                          const Array py[]) {
         CPPADCG_ASSERT_KNOWN(!tx[0].sparse, "independent array must be dense");
         ArrayView<const Base> x(static_cast<const Base*> (tx[0].data), tx[0].size);
+
+        CPPADCG_ASSERT_KNOWN(!params.sparse, "parameter array must be dense");
+        ArrayView<Base> pars(static_cast<Base*> (params.data), params.size);
 
         CPPADCG_ASSERT_KNOWN(!px.sparse, "independent partials array must be dense");
         ArrayView<Base> pxb(static_cast<Base*> (px.data), px.size);
@@ -78,6 +84,7 @@ public:
             Base* pyb = static_cast<Base*> (py[0].data);
 
             model_->ReverseOne(x,
+                               pars,
                                pxb,
                                py[0].nnz, py[0].idx, pyb);
             return true;
@@ -91,6 +98,7 @@ public:
             ArrayView<const Base> py2(static_cast<Base*> (py[1].data), py[1].size);
 
             model_->ReverseTwo(x,
+                               pars,
                                tx[1].nnz, tx[1].idx, tx1,
                                pxb,
                                py2);

@@ -2,8 +2,8 @@
 #define CPPAD_CG_LLVM_BASE_MODEL_LIBRARY_PROCESSOR_IMPL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2017 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2017 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *

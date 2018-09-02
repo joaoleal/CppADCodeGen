@@ -2,8 +2,8 @@
 #define CPPAD_CG_ATOMIC_EXTERNAL_FUNCTION_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2014 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -35,6 +35,7 @@ public:
                  int q,
                  int p,
                  const Array tx[],
+                 const Array& params,
                  Array& ty) override {
         size_t m = ty.size;
         size_t n = tx[0].size;
@@ -58,6 +59,7 @@ public:
     bool reverse(FunctorGenericModel<Base>& libModel,
                  int p,
                  const Array tx[],
+                 const Array& params,
                  Array& px,
                  const Array py[]) override {
         size_t m = py[0].size;

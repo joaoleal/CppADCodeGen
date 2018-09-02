@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_CPPADCGMODELTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -94,14 +95,14 @@ public:
 
         // forward zero
         std::vector<CGD> dep = fun.Forward(0, x2);
-        std::vector<Base> depCGen = model.ForwardZero(x);
+        std::vector<Base> depCGen = model.ForwardZero(x, p);
         ASSERT_TRUE(compareValues(depCGen, dep, epsilonR, epsilonA));
 
         std::vector<CGD> jac = fun.Jacobian(x2);
         // Jacobian
         if (denseJacobian) {
             if (verbose_) std::cout << "Jacobian" << std::endl;
-            depCGen = model.Jacobian(x);
+            depCGen = model.Jacobian(x, p);
             ASSERT_TRUE(compareValues(depCGen, jac, epsilonR, epsilonA));
         }
 
@@ -112,7 +113,7 @@ public:
         std::vector<CGD> hess = fun.Hessian(x2, w2);
         if (denseHessian) {
             if (verbose_) std::cout << "Hessian" << std::endl;
-            depCGen = model.Hessian(x, w);
+            depCGen = model.Hessian(x, p, w);
             ASSERT_TRUE(compareValues(depCGen, hess, epsilonR, epsilonA));
         }
 
@@ -120,7 +121,7 @@ public:
         if (verbose_) std::cout << "sparse Jacobian" << std::endl;
         std::vector<Base> jacCGen;
         std::vector<size_t> row, col;
-        model.SparseJacobian(x, jacCGen, row, col);
+        model.SparseJacobian(x, p, jacCGen, row, col);
         std::vector<Base> jacCGenDense(jac.size());
         for (size_t i = 0; i < jacCGen.size(); i++) {
             jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
@@ -131,7 +132,7 @@ public:
         if (lib.getThreadNumber() > 1) {
             if (verbose_) std::cout << "sparse Jacobian" << std::endl;
             // sparse Jacobian again (make sure the second run is also OK)
-            model.SparseJacobian(x, jacCGen, row, col);
+            model.SparseJacobian(x, p, jacCGen, row, col);
             for (size_t i = 0; i < jacCGen.size(); i++) {
                 jacCGenDense[row[i] * x.size() + col[i]] = jacCGen[i];
             }
@@ -141,7 +142,7 @@ public:
         // sparse Hessian
         if (verbose_) std::cout << "sparse Hessian" << std::endl;
         std::vector<Base> hessCGen;
-        model.SparseHessian(x, w, hessCGen, row, col);
+        model.SparseHessian(x, p, w, hessCGen, row, col);
         std::vector<Base> hessCGenDense(hess.size());
         for (size_t i = 0; i < hessCGen.size(); i++) {
             hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
@@ -152,7 +153,7 @@ public:
         if (lib.getThreadNumber() > 1) {
             if (verbose_) std::cout << "sparse Hessian" << std::endl;
             // sparse Hessian again (make sure the second run is also OK)
-            model.SparseHessian(x, w, hessCGen, row, col);
+            model.SparseHessian(x, p, w, hessCGen, row, col);
             for (size_t i = 0; i < hessCGen.size(); i++) {
                 hessCGenDense[row[i] * x.size() + col[i]] = hessCGen[i];
             }

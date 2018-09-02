@@ -2,8 +2,8 @@
 #define CPPAD_CG_ATOMIC_GENERIC_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2013 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -28,6 +28,7 @@ template <class Base>
 class CGAtomicGenericModel : public atomic_base<Base> {
 protected:
     GenericModel<Base>& model_;
+    std::vector<Base> params_;
 public:
 
     /**
@@ -44,6 +45,10 @@ public:
 
     virtual ~CGAtomicGenericModel() = default;
 
+    inline void setParameters(const CppAD::vector<Base>& params) {
+        params_ = params;
+    }
+
     template <class ADVector>
     void operator()(const ADVector& ax, ADVector& ay, size_t id = 0) {
         this->atomic_base<Base>::operator()(ax, ay, id);
@@ -56,10 +61,10 @@ public:
                  const CppAD::vector<Base>& tx,
                  CppAD::vector<Base>& ty) override {
         if (p == 0) {
-            model_.ForwardZero(vx, vy, tx, ty);
+            model_.ForwardZero(vx, vy, tx, params_, ty);
             return true;
         } else if (p == 1) {
-            model_.ForwardOne(tx, ty);
+            model_.ForwardOne(tx, params_, ty);
             return true;
         }
 
@@ -72,10 +77,10 @@ public:
                  CppAD::vector<Base>& px,
                  const CppAD::vector<Base>& py) override {
         if (p == 0) {
-            model_.ReverseOne(tx, ty, px, py);
+            model_.ReverseOne(tx, params_, ty, px, py);
             return true;
         } else if (p == 1) {
-            model_.ReverseTwo(tx, ty, px, py);
+            model_.ReverseTwo(tx, params_, ty, px, py);
             return true;
         }
 

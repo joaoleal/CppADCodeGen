@@ -2,6 +2,7 @@
 #define CPPAD_CG_LANG_C_ATOMIC_FUN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -60,12 +61,14 @@ struct LangCAtomicFun {
                    int q,
                    int p,
                    const Array tx[],
+                   const Array* params,
                    Array* ty);
 
     int (*reverse)(void* libModel,
                    int atomicIndex,
                    int p,
                    const Array tx[],
+                   const Array* params,
                    Array* px,
                    const Array py[]);
 };

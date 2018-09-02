@@ -2,6 +2,7 @@
 #define CPPAD_CG_EXTERNAL_FUNCTION_WRAPPER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -22,29 +23,32 @@ template<class Base>
 class ExternalFunctionWrapper {
 public:
     /**
-     * Computes results during a forward mode sweep, the Taylor coefficients 
+     * Computes results during a forward mode sweep, the Taylor coefficients
      * for dependent variables relative to independent variables.
-     * 
+     *
      * @param libModel The model calling where this is being called from.
      * @param q Lowest order for this forward mode calculation.
      * @param p Highest order for this forward mode calculation.
      * @param tx Independent variable Taylor coefficients.
+     * @param params Parameters.
      * @param ty Dependent variable Taylor coefficients.
-     * @return <code>true</code> if evaluation succeeded, <code>false</code> otherwise. 
+     * @return <code>true</code> if evaluation succeeded, <code>false</code> otherwise.
      */
     virtual bool forward(FunctorGenericModel<Base>& libModel,
                          int q,
                          int p,
                          const Array tx[],
+                         const Array& params,
                          Array& ty) = 0;
 
     /**
      * Computes results during a reverse mode sweep, the adjoints or partial
      * derivatives of independent variables.
-     * 
+     *
      * @param libModel The model calling where this is being called from.
      * @param p Order for this reverse mode calculation.
      * @param tx Independent variable Taylor coefficients.
+     * @param params Parameters.
      * @param px Independent variable partial derivatives.
      * @param py Dependent variable partial derivatives.
      * @return <code>true</code> if evaluation succeeded, <code>false</code> otherwise.
@@ -52,11 +56,11 @@ public:
     virtual bool reverse(FunctorGenericModel<Base>& libModel,
                          int p,
                          const Array tx[],
+                         const Array& params,
                          Array& px,
                          const Array py[]) = 0;
 
-    inline virtual ~ExternalFunctionWrapper() {
-    }
+    inline virtual ~ExternalFunctionWrapper() = default;
 };
 
 } // END cg namespace

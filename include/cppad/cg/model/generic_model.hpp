@@ -2,6 +2,7 @@
 #define CPPAD_CG_GENERIC_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -26,19 +27,16 @@ namespace cg {
 template<class Base>
 class GenericModel {
 protected:
-    CGAtomicGenericModel<Base>* _atomic;
+    std::unique_ptr<CGAtomicGenericModel<Base>> _atomic;
     // whether or not to evaluate forward mode of atomics during a reverse sweep
     bool _evalAtomicForwardOne4CppAD;
 public:
 
     GenericModel() :
-        _atomic(nullptr),
         _evalAtomicForwardOne4CppAD(true) {
     }
 
-    inline virtual ~GenericModel() {
-        delete _atomic;
-    }
+    inline virtual ~GenericModel() = default;
 
     /**
      * Provides the name for this model.
@@ -199,9 +197,9 @@ public:
     template<typename VectorBase>
     inline VectorBase ForwardZero(const VectorBase& x) {
         VectorBase dep(Range());
-        this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
+        this->ForwardZero(ArrayView<const Base>(x.data(), x.size()),
                           ArrayView<const Base>(),
-                          ArrayView<Base>(&dep[0], dep.size()));
+                          ArrayView<Base>(dep.data(), dep.size()));
         return dep;
     }
 
@@ -219,15 +217,16 @@ public:
     inline VectorBase ForwardZero(const VectorBase& x,
                                   const VectorBase& p) {
         VectorBase dep(Range());
-        this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
-                          ArrayView<const Base>(&p[0], p.size()),
-                          ArrayView<Base>(&dep[0], dep.size()));
+        this->ForwardZero(ArrayView<const Base>(x.data(), x.size()),
+                          ArrayView<const Base>(p.data(), p.size()),
+                          ArrayView<Base>(dep.data(), dep.size()));
         return dep;
     }
 
     virtual void ForwardZero(const CppAD::vector<bool>& vx,
                              CppAD::vector<bool>& vy,
                              ArrayView<const Base> tx,
+                             ArrayView<const Base> p,
                              ArrayView<Base> ty) = 0;
 
     /**
@@ -245,26 +244,23 @@ public:
                             const VectorBase& p,
                             VectorBase& dep) {
         dep.resize(Range());
-        this->ForwardZero(ArrayView<const Base>(&x[0], x.size()),
-                          ArrayView<const Base>(&p[0], p.size()),
-                          ArrayView<Base>(&dep[0], dep.size()));
+        this->ForwardZero(ArrayView<const Base>(x.data(), x.size()),
+                          ArrayView<const Base>(p.data(), p.size()),
+                          ArrayView<Base>(dep.data(), dep.size()));
     }
 
+    /**
+     * Evaluates the dependent model variables (zero-order).
+     * This method considers that the generic model was prepared
+     * using a single array for the independent variables (the default
+     * behavior).
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @param dep The dependent variable vector
+     */
     virtual void ForwardZero(ArrayView<const Base> x,
                              ArrayView<const Base> p,
-                             ArrayView<Base> dep) = 0;
-
-    /**
-     * Determines the dependent variable values using a variable number of
-     * independent variable arrays.
-     * This method can be useful if the generic model was prepared
-     * considering that the independent variables are provided by several
-     * arrays.
-     *
-     * @param x Contains the several independent variable vectors
-     * @param dep The values of the dependent variables
-     */
-    virtual void ForwardZero(const std::vector<const Base*> &x,
                              ArrayView<Base> dep) = 0;
 
     /***********************************************************************
@@ -279,23 +275,64 @@ public:
      */
     virtual bool isJacobianAvailable() = 0;
 
+    /**
+     * Computes a dense Jacobian marix.
+     *
+     * @param x The independent variable vector
+     * @return The Jacobian matrix
+     */
     template<typename VectorBase>
     inline VectorBase Jacobian(const VectorBase& x) {
         VectorBase jac(Range() * Domain());
-        Jacobian(ArrayView<const Base>(&x[0], x.size()),
-                 ArrayView<Base>(&jac[0], jac.size()));
+        Jacobian(ArrayView<const Base>(x.data(), x.size()),
+                 ArrayView<const Base>(),
+                 ArrayView<Base>(jac.data(), jac.size()));
         return jac;
     }
 
+    /**
+     * Computes a dense Jacobian marix.
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @return The Jacobian matrix
+     */
     template<typename VectorBase>
-    inline void Jacobian(const VectorBase& x,
-                         VectorBase& jac) {
-        jac.resize(Range() * Domain());
-        Jacobian(ArrayView<const Base>(&x[0], x.size()),
-                 ArrayView<Base>(&jac[0], jac.size()));
+    inline VectorBase Jacobian(const VectorBase& x,
+                               const VectorBase& p) {
+        VectorBase jac(Range() * Domain());
+        Jacobian(ArrayView<const Base>(x.data(), x.size()),
+                 ArrayView<const Base>(p.data(), p.size()),
+                 ArrayView<Base>(jac.data(), jac.size()));
+        return jac;
     }
 
+    /**
+     * Computes a dense Jacobian marix.
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @param jac The Jacobian matrix
+     */
+    template<typename VectorBase>
+    inline void Jacobian(const VectorBase& x,
+                         const VectorBase& p,
+                         VectorBase& jac) {
+        jac.resize(Range() * Domain());
+        Jacobian(ArrayView<const Base>(x.data(), x.size()),
+                 ArrayView<const Base>(p.data(), p.size()),
+                 ArrayView<Base>(jac.data(), jac.size()));
+    }
+
+    /**
+     * Computes a dense Jacobian marix.
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @param jac The Jacobian matrix
+     */
     virtual void Jacobian(ArrayView<const Base> x,
+                          ArrayView<const Base> p,
                           ArrayView<Base> jac) = 0;
 
     /***********************************************************************
@@ -315,39 +352,57 @@ public:
     inline VectorBase Hessian(const VectorBase& x,
                               const VectorBase& w) {
         VectorBase hess(Domain() * Domain());
-        this->Hessian(ArrayView<const Base>(&x[0], x.size()),
-                      ArrayView<const Base>(&w[0], w.size()),
-                      ArrayView<Base>(&hess[0], hess.size()));
+        this->Hessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
+        return hess;
+    }
+
+    template<typename VectorBase>
+    inline VectorBase Hessian(const VectorBase& x,
+                              const VectorBase& p,
+                              const VectorBase& w) {
+        VectorBase hess(Domain() * Domain());
+        this->Hessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(p.data(), p.size()),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
         return hess;
     }
 
     template<typename VectorBase>
     inline void Hessian(const VectorBase& x,
+                        const VectorBase& p,
                         const VectorBase& w,
                         VectorBase& hess) {
         hess.resize(Domain() * Domain());
-        this->Hessian(ArrayView<const Base>(&x[0], x.size()),
-                      ArrayView<const Base>(&w[0], w.size()),
-                      ArrayView<Base>(&hess[0], hess.size()));
+        this->Hessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(p.data(), p.size()),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
     }
 
     /// calculate Hessian for one component of f
 
     template<typename VectorBase>
     inline VectorBase Hessian(const VectorBase& x,
+                              const VectorBase& p,
                               size_t i) {
         CPPADCG_ASSERT_KNOWN(i < Range(), "Invalid equation index");
 
         VectorBase w(Range());
         w[i] = 1.0;
         VectorBase hess(Domain() * Domain());
-        this->Hessian(ArrayView<const Base>(&x[0], x.size()),
-                      ArrayView<const Base>(&w[0], w.size()),
-                      ArrayView<Base>(&hess[0], hess.size()));
+        this->Hessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(p.data(), p.size()),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
         return hess;
     }
 
     virtual void Hessian(ArrayView<const Base> x,
+                         ArrayView<const Base> p,
                          ArrayView<const Base> w,
                          ArrayView<Base> hess) = 0;
 
@@ -373,15 +428,18 @@ public:
      * @warning do not used it as a generic forward mode function!
      *
      * @param tx The Taylor coefficients of the independent variables
+     * @param p The parameter vector
      * @return The Taylor coefficients of the dependent variables
      */
     template<typename VectorBase>
-    inline VectorBase ForwardOne(const VectorBase& tx) {
+    inline VectorBase ForwardOne(const VectorBase& tx,
+                                 const VectorBase& p) {
         size_t m = Range();
         const size_t k = 1;
         VectorBase ty((k + 1) * m);
 
         this->ForwardOne(ArrayView<const Base>(&tx[0], tx.size()),
+                         ArrayView<const Base>(p.data(), p.size()),
                          ArrayView<Base>(&ty[0], ty.size()));
 
         VectorBase dy(m);
@@ -401,9 +459,11 @@ public:
      * @warning do not used it as a generic forward mode function!
      *
      * @param tx The Taylor coefficients of the independent variables
+     * @param p The parameter vector
      * @param ty The Taylor coefficients of the dependent variables
      */
     virtual void ForwardOne(ArrayView<const Base> tx,
+                            ArrayView<const Base> p,
                             ArrayView<Base> ty) = 0;
 
     /**
@@ -425,6 +485,7 @@ public:
      * @warning do not used it as a generic forward mode function!
      *
      * @param x independent variable vector
+     * @param p The parameter vector
      * @param tx1Nnz the number of non-zeros of the directional derivatives
      *               of the independent variables (seed directions)
      * @param idx the locations of the non-zero values the partial
@@ -434,6 +495,7 @@ public:
      * @param ty1
      */
     virtual void ForwardOne(ArrayView<const Base> x,
+                            ArrayView<const Base> p,
                             size_t tx1Nnz, const size_t idx[], const Base tx1[],
                             ArrayView<Base> ty1) = 0;
 
@@ -459,11 +521,12 @@ public:
      */
     template<typename VectorBase>
     inline VectorBase ReverseOne(const VectorBase& tx,
+                                 const VectorBase& p,
                                  const VectorBase& ty,
                                  const VectorBase& py) {
         const size_t k = 0;
         VectorBase px((k + 1) * Domain());
-        this->ReverseOne(tx, ty, px, py);
+        this->ReverseOne(tx, p, ty, px, py);
         return px;
     }
 
@@ -476,13 +539,15 @@ public:
      */
     template<typename VectorBase>
     inline void ReverseOne(const VectorBase& tx,
+                           const VectorBase& p,
                            const VectorBase& ty,
                            VectorBase& px,
                            const VectorBase& py) {
-        this->ReverseOne(ArrayView<const Base>(&tx[0], tx.size()),
-                         ArrayView<const Base>(&ty[0], ty.size()),
-                         ArrayView<Base>(&px[0], px.size()),
-                         ArrayView<const Base>(&py[0], py.size()));
+        this->ReverseOne(ArrayView<const Base>(tx.data(), tx.size()),
+                         ArrayView<const Base>(p.data(), p.size()),
+                         ArrayView<const Base>(ty.data(), ty.size()),
+                         ArrayView<Base>(px.data(), px.size()),
+                         ArrayView<const Base>(py.data(), py.size()));
     }
 
     /**
@@ -502,6 +567,7 @@ public:
      * @warning do not used it as a generic reverse mode function!
      */
     virtual void ReverseOne(ArrayView<const Base> tx,
+                            ArrayView<const Base> p,
                             ArrayView<const Base> ty,
                             ArrayView<Base> px,
                             ArrayView<const Base> py) = 0;
@@ -515,6 +581,7 @@ public:
      * @warning do not used it as a generic reverse mode function!
      *
      * @param x independent variable vector
+     * @param p The parameter vector
      * @param px partial derivatives of the independent variables (same size as x)
      * @param pyNnz the number of non-zeros of the partial derivatives of
      *              the dependent variables (weight functionals)
@@ -524,6 +591,7 @@ public:
      *           dependent variables (weight functionals)
      */
     virtual void ReverseOne(ArrayView<const Base> x,
+                            ArrayView<const Base> p,
                             ArrayView<Base> px,
                             size_t pyNnz, const size_t idx[], const Base py[]) = 0;
 
@@ -550,11 +618,12 @@ public:
      */
     template<typename VectorBase>
     inline VectorBase ReverseTwo(const VectorBase& tx,
+                                 const VectorBase& p,
                                  const VectorBase& ty,
                                  const VectorBase& py) {
         const size_t k = 1;
         VectorBase px((k + 1) * Domain());
-        this->ReverseTwo(tx, ty, px, py);
+        this->ReverseTwo(tx, p, ty, px, py);
         return px;
     }
 
@@ -568,13 +637,15 @@ public:
      */
     template<typename VectorBase>
     inline void ReverseTwo(const VectorBase& tx,
+                           const VectorBase& p,
                            const VectorBase& ty,
                            VectorBase& px,
                            const VectorBase& py) {
-        this->ReverseTwo(ArrayView<const Base>(&tx[0], tx.size()),
-                         ArrayView<const Base>(&ty[0], ty.size()),
-                         ArrayView<Base>(&px[0], px.size()),
-                         ArrayView<const Base>(&py[0], py.size()));
+        this->ReverseTwo(ArrayView<const Base>(tx.data(), tx.size()),
+                         ArrayView<const Base>(p.data(), p.size()),
+                         ArrayView<const Base>(ty.data(), ty.size()),
+                         ArrayView<Base>(px.data(), px.size()),
+                         ArrayView<const Base>(py.data(), py.size()));
     }
 
     /**
@@ -595,6 +666,7 @@ public:
      *          px[j * (k+1) + 1] is not used during the hessian evaluation.
      */
     virtual void ReverseTwo(ArrayView<const Base> tx,
+                            ArrayView<const Base> p,
                             ArrayView<const Base> ty,
                             ArrayView<Base> px,
                             ArrayView<const Base> py) = 0;
@@ -606,6 +678,7 @@ public:
      * @warning do not used it as a generic reverse mode function!
      *
      * @param x independent variable vector
+     * @param p The parameter vector
      * @param tx1Nnz the number of non-zeros of the first-order Taylor
      *               coefficients of the independents
      * @param idx the locations of the non-zero values of the first-order
@@ -618,6 +691,7 @@ public:
      *            (should have the size of the dependent variables)
      */
     virtual void ReverseTwo(ArrayView<const Base> x,
+                            ArrayView<const Base> p,
                             size_t tx1Nnz, const size_t idx[], const Base tx1[],
                             ArrayView<Base> px2,
                             ArrayView<const Base> py2) = 0;
@@ -640,14 +714,15 @@ public:
      *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
-     * @param x independent variable vector
+     * @param x The independent variable vector
      * @return a dense jacobian
      */
     template<typename VectorBase>
     inline VectorBase SparseJacobian(const VectorBase& x) {
         VectorBase jac(Range() * Domain());
-        SparseJacobian(ArrayView<const Base>(&x[0], x.size()),
-                       ArrayView<Base>(&jac[0], jac.size()));
+        SparseJacobian(ArrayView<const Base>(x.data(), x.size()),
+                       ArrayView<const Base>(),
+                       ArrayView<Base>(jac.data(), jac.size()));
         return jac;
     }
 
@@ -657,15 +732,38 @@ public:
      *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
      * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
      *
-     * @param x independent variable vector
+     * @param x The independent variable vector
+     * @param p The parameter vector
+     * @return a dense jacobian
+     */
+    template<typename VectorBase>
+    inline VectorBase SparseJacobian(const VectorBase& x,
+                                     const VectorBase& p) {
+        VectorBase jac(Range() * Domain());
+        SparseJacobian(ArrayView<const Base>(x.data(), x.size()),
+                       ArrayView<const Base>(p.data(), p.size()),
+                       ArrayView<Base>(jac.data(), jac.size()));
+        return jac;
+    }
+
+    /**
+     * Calculates a Jacobian using sparse methods and saves it into a dense
+     * format:
+     *  \f[ jac[ i n + j ] = \frac{\partial F_i( x ) }{\partial x_j } \f]
+     * \f$ i = 0 , \ldots , m - 1 \f$ and \f$j = 0 , \ldots , n - 1 \f$.
+     *
+     * @param x The independent variable vector
+     * @param p The parameter vector
      * @param jac a vector where the dense jacobian will be placed
      */
     template<typename VectorBase>
     inline void SparseJacobian(const VectorBase& x,
+                               const VectorBase& p,
                                VectorBase& jac) {
         jac.resize(Range() * Domain());
-        SparseJacobian(ArrayView<const Base>(&x[0], x.size()),
-                       ArrayView<Base>(&jac[0], jac.size()));
+        SparseJacobian(ArrayView<const Base>(x.data(), x.size()),
+                       ArrayView<const Base>(p.data(), p.size()),
+                       ArrayView<Base>(jac.data(), jac.size()));
     }
 
     /**
@@ -678,31 +776,17 @@ public:
      * @param jac an array where the dense jacobian will be placed (must be allocated with at least m * n elements)
      */
     virtual void SparseJacobian(ArrayView<const Base> x,
+                                ArrayView<const Base> p,
                                 ArrayView<Base> jac) = 0;
 
-    virtual void SparseJacobian(const std::vector<Base> &x,
+    virtual void SparseJacobian(const std::vector<Base>& x,
+                                const std::vector<Base>& p,
                                 std::vector<Base>& jac,
                                 std::vector<size_t>& row,
                                 std::vector<size_t>& col) = 0;
 
     virtual void SparseJacobian(ArrayView<const Base> x,
-                                ArrayView<Base> jac,
-                                size_t const** row,
-                                size_t const** col) = 0;
-
-    /**
-     * Determines the sparse Jacobian using a variable number of independent
-     * variable arrays. This method can be useful if the generic model was
-     * prepared considering that the independent variables are provided
-     * by several arrays.
-     *
-     * @param x Contains the several independent variable vectors
-     * @param jac The values of the sparse Jacobian in the order provided by
-     *            row and col
-     * @param row The row indices of the Jacobian values
-     * @param col The column indices of the Jacobian values
-     */
-    virtual void SparseJacobian(const std::vector<const Base*>& x,
+                                ArrayView<const Base> p,
                                 ArrayView<Base> jac,
                                 size_t const** row,
                                 size_t const** col) = 0;
@@ -724,53 +808,51 @@ public:
     inline VectorBase SparseHessian(const VectorBase& x,
                                     const VectorBase& w) {
         VectorBase hess(Domain() * Domain());
-        SparseHessian(ArrayView<const Base>(&x[0], x.size()),
-                      ArrayView<const Base>(&w[0], w.size()),
-                      ArrayView<Base>(&hess[0], hess.size()));
+        SparseHessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
+        return hess;
+    }
+
+    template<typename VectorBase>
+    inline VectorBase SparseHessian(const VectorBase& x,
+                                    const VectorBase& p,
+                                    const VectorBase& w) {
+        VectorBase hess(Domain() * Domain());
+        SparseHessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(p.data(), p.size()),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
         return hess;
     }
 
     template<typename VectorBase>
     inline void SparseHessian(const VectorBase& x,
+                              const VectorBase& p,
                               const VectorBase& w,
                               VectorBase& hess) {
         hess.resize(Domain() * Domain());
-        SparseHessian(ArrayView<const Base>(&x[0], x.size()),
-                      ArrayView<const Base>(&w[0], w.size()),
-                      ArrayView<Base>(&hess[0], hess.size()));
+        SparseHessian(ArrayView<const Base>(x.data(), x.size()),
+                      ArrayView<const Base>(p.data(), p.size()),
+                      ArrayView<const Base>(w.data(), w.size()),
+                      ArrayView<Base>(hess.data(), hess.size()));
     }
 
     virtual void SparseHessian(ArrayView<const Base> x,
+                               ArrayView<const Base> p,
                                ArrayView<const Base> w,
                                ArrayView<Base> hess) = 0;
 
-    virtual void SparseHessian(const std::vector<Base> &x,
-                               const std::vector<Base> &w,
+    virtual void SparseHessian(const std::vector<Base>& x,
+                               const std::vector<Base>& p,
+                               const std::vector<Base>& w,
                                std::vector<Base>& hess,
                                std::vector<size_t>& row,
                                std::vector<size_t>& col) = 0;
 
     virtual void SparseHessian(ArrayView<const Base> x,
-                               ArrayView<const Base> w,
-                               ArrayView<Base> hess,
-                               size_t const** row,
-                               size_t const** col) = 0;
-
-    /**
-     * Determines the sparse Hessian using a variable number of independent
-     * variable arrays. This method can be useful if the generic model was
-     * prepared considering that the independent variables are provided
-     * by several arrays.
-     *
-     * @param x Contains the several independent variable vectors
-     * @param w The equation multipliers
-     * @param w_size The number of equations
-     * @param hess The values of the sparse hessian in the order provided by
-     *             row and col
-     * @param row The row indices of the hessian values
-     * @param col The column indices of the hessian values
-     */
-    virtual void SparseHessian(const std::vector<const Base*>& x,
+                               ArrayView<const Base> p,
                                ArrayView<const Base> w,
                                ArrayView<Base> hess,
                                size_t const** row,
@@ -785,7 +867,8 @@ public:
      */
     virtual CGAtomicGenericModel<Base>& asAtomic() {
         if (_atomic == nullptr) {
-            _atomic = new CGAtomicGenericModel<Base>(*this);
+            //_atomic = std::make_unique<CGAtomicGenericModel<Base>>(*this); // c++14
+            _atomic.reset(new CGAtomicGenericModel<Base>(*this));
         }
         return *_atomic;
     }

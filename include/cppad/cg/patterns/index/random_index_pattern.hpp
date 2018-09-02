@@ -2,8 +2,8 @@
 #define CPPAD_CG_RANDOM_INDEX_PATTERN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
- *    Copyright (C) 2013 Ciengis
  *    Copyright (C) 2018 Joao Leal
+ *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
