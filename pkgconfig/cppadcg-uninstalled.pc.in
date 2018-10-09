@@ -12,7 +12,7 @@
 # -----------------------------------------------------------------------------
 # This file is used with pkg-config to include CppADCodeGen before it is installed.
 Name:         @PROJECT_NAME@
-Description:  @cppadcg_descriptio@
-Version:      @cppadcg_versioN@
+Description:  @cppadcg_description@
+Version:      @cppadcg_version@
 URL:          @cppadcg_url@
 Cflags:       -I@install_cppadcg_include_pkg_location@ -I@install_cppad_include_pkg_location@
