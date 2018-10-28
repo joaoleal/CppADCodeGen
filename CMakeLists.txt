@@ -1,5 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2018 Joao Leal
 #    Copyright (C) 2012 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
@@ -107,11 +108,13 @@ IF(UNIX)
     SET(CMAKE_INSTALL_PREFIX "/usr" CACHE PATH "Default install path prefix")
 ENDIF()
 
-SET(install_cppadcg_include_location "${CMAKE_INSTALL_PREFIX}/include/cppad")
-SET(install_cppad_include_location   "${CMAKE_INSTALL_PREFIX}/include/cppad")
-SET(install_library_pkg_location     "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
-SET(install_doc_location             "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
-SET(install_python_location          "${CMAKE_INSTALL_PREFIX}/share/cppadcg/python")
+SET(install_cppadcg_include_location     "${CMAKE_INSTALL_PREFIX}/include/cppad")
+SET(install_cppadcg_include_pkg_location "${CMAKE_INSTALL_PREFIX}/include")
+SET(install_cppad_include_location       "${CMAKE_INSTALL_PREFIX}/include/cppad")
+SET(install_cppad_include_pkg_location   "${CMAKE_INSTALL_PREFIX}/include")
+SET(install_library_pkg_location         "${CMAKE_INSTALL_PREFIX}/share/pkgconfig")
+SET(install_doc_location                 "${CMAKE_INSTALL_PREFIX}/share/doc/cppadcg")
+SET(install_python_location              "${CMAKE_INSTALL_PREFIX}/share/cppadcg/python")
 
 # ----------------------------------------------------------------------------
 #                    Define some optional compiler flags

@@ -1,10 +1,11 @@
 cppadcodegen (2.3.0-1) unstable; urgency=low
 
-   * added support for Clang/LLVM 5.0
-   * use unique_ptr internally in additional locations
+   * add support for Clang/LLVM 5.0 and 6.0
+   * add support for Apple
+   * source-code modernization
    * pretty printers for GDB
 
- -- Joao Leal <development@ciengis.com>  Wed, 24 Jan 2018 13:00:00 +0000
+ -- Joao Leal <joaoruileal@gmail.com>  Sat, 27 Oct 2018 18:00:00 +0000
 
 cppadcodegen (2.2.0-1) unstable; urgency=low
 
