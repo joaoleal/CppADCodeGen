@@ -40,6 +40,10 @@ public:
         size_t m = ty.size;
         size_t n = tx[0].size;
 
+        if (params.size != 0) {
+            throw CGException("Support for parameters in AtomicExternalFunctionWrapper not implemented yet");
+        }
+
         CppAD::vector<bool> vx, vy;
 
         convert(tx, libModel._tx, n, p, p + 1);
@@ -64,6 +68,10 @@ public:
                  const Array py[]) override {
         size_t m = py[0].size;
         size_t n = tx[0].size;
+
+        if (params.size != 0) {
+            throw CGException("Support for parameters in AtomicExternalFunctionWrapper not implemented yet");
+        }
 
         convert(tx, libModel._tx, n, p, p + 1);
 

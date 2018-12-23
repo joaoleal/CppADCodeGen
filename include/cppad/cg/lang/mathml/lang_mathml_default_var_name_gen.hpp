@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Creates variables names for MathML source code.
+ * Creates variables names for the MathML source code.
  *
  * @author Joao Leal
  */
@@ -33,12 +33,18 @@ protected:
     std::string _depName;
     // array name of the independent variables
     std::string _indepName;
+    // array name of the parameter variables
+    std::string _paramName;
     // array name of the temporary variables
     std::string _tmpName;
     // array name of the temporary array variables
     std::string _tmpArrayName;
     // sparse array name of the temporary array variables
     std::string _tmpSparseArrayName;
+    // the lowest variable ID used for the parameters
+    size_t _minParameterID;
+    // the highest variable ID used for the temporary variables
+    size_t _maxParameterID;
     // the lowest variable ID used for the temporary variables
     size_t _minTemporaryID;
     // the highest variable ID used for the temporary variables
@@ -49,22 +55,27 @@ protected:
     size_t _maxTemporarySparseArrayID;
 public:
 
-    inline LangMathMLDefaultVariableNameGenerator(const std::string& depName = "y",
-                                                  const std::string& indepName = "x",
-                                                  const std::string& tmpName = "v",
-                                                  const std::string& tmpArrayName = "a",
-                                                  const std::string& tmpSparseArrayName = "s") :
-        _depName(depName),
-        _indepName(indepName),
-        _tmpName(tmpName),
-        _tmpArrayName(tmpArrayName),
-        _tmpSparseArrayName(tmpSparseArrayName),
+    inline LangMathMLDefaultVariableNameGenerator(std::string depName = "y",
+                                                  std::string indepName = "x",
+                                                  std::string paramName = "p",
+                                                  std::string tmpName = "v",
+                                                  std::string tmpArrayName = "a",
+                                                  std::string tmpSparseArrayName = "s") :
+        _depName(std::move(depName)),
+        _indepName(std::move(indepName)),
+        _paramName(std::move(paramName)),
+        _tmpName(std::move(tmpName)),
+        _tmpArrayName(std::move(tmpArrayName)),
+        _tmpSparseArrayName(std::move(tmpSparseArrayName)),
+        _minParameterID(0), // not really required (but it avoids warnings)
+        _maxParameterID(0), // not really required (but it avoids warnings)
         _minTemporaryID(0), // not really required (but it avoids warnings)
         _maxTemporaryID(0), // not really required (but it avoids warnings)
         _maxTemporaryArrayID(0), // not really required (but it avoids warnings)
         _maxTemporarySparseArrayID(0) { // not really required (but it avoids warnings)
 
         this->_independent.push_back(FuncArgument(_indepName));
+        this->_parameter.push_back(FuncArgument(_paramName));
         this->_dependent.push_back(FuncArgument(_depName));
         this->_temporary.push_back(FuncArgument(_tmpName));
         this->_temporary.push_back(FuncArgument(_tmpArrayName));
@@ -110,6 +121,19 @@ public:
                 "<mi>" << _indepName << "</mi>"
                 "<mn>" << (id - 1) << "</mn>"
                 "</msub>";
+
+        return _ss.str();
+    }
+
+    inline std::string generateParameter(const OperationNode<Base>& parameter,
+                                         size_t id) override {
+        _ss.clear();
+        _ss.str("");
+
+        _ss << "<msub>"
+               "<mi>" << _paramName << "</mi>"
+                                       "<mn>" << (id - _minParameterID) << "</mn>"
+                                                                           "</msub>";
 
         return _ss.str();
     }
@@ -224,6 +248,12 @@ public:
         CPPADCG_ASSERT_UNKNOWN(_minTemporaryID <= _maxTemporaryID + 1);
     }
 
+    inline void setParameterID(size_t minParameterID,
+                               size_t maxParameterID) override {
+        _minParameterID = minParameterID;
+        _maxParameterID = maxParameterID;
+    }
+
     const std::string& getIndependentArrayName(const OperationNode<Base>& indep,
                                                size_t id) override {
         return _indepName;
@@ -245,6 +275,30 @@ public:
                                   size_t id1,
                                   const OperationNode<Base>& indep2,
                                   size_t id2) override {
+        return true;
+    }
+
+    const std::string& getParameterArrayName(const OperationNode<Base>& param,
+                                             size_t id) override {
+        return _paramName;
+    }
+
+    size_t getParameterArrayIndex(const OperationNode<Base>& param,
+                                  size_t id) override {
+        return id - 1;
+    }
+
+    bool isConsecutiveInParameterArray(const OperationNode<Base>& paramFirst,
+                                       size_t idFirst,
+                                       const OperationNode<Base>& paramSecond,
+                                       size_t idSecond) override {
+        return idFirst + 1 == idSecond;
+    }
+
+    bool isInSameParameterArray(const OperationNode<Base>& param1,
+                                size_t id1,
+                                const OperationNode<Base>& param2,
+                                size_t id2) override {
         return true;
     }
 

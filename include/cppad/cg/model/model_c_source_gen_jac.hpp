@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_JAC_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -287,14 +288,15 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevSingleThreadSourc
     _cache << "\n";
     LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionName, argsDcl2);
     _cache << " {\n"
-              "   " << _baseTypeName << " const * inLocal[2];\n"
+              "   " << _baseTypeName << " const * inLocal[3];\n"
               "   " << _baseTypeName << " inLocal1 = 1;\n"
               "   " << _baseTypeName << " * outLocal[1];\n"
               "   " << _baseTypeName << " compressed[" << maxCompressedSize << "];\n"
               "   " << _baseTypeName << " * jac = out[0];\n"
               "\n"
-              "   inLocal[0] = in[0];\n"
-              "   inLocal[1] = &inLocal1;\n"
+              "   inLocal[0] = in[0];\n" // independents
+              "   inLocal[1] = &inLocal1;\n" // seed
+              "   inLocal[2] = in[1];\n" // parameters
               "   outLocal[0] = compressed;\n";
 
     langC.setArgumentIn("inLocal");
@@ -373,14 +375,15 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
         std::string functionNameWrap = functionRevFor + "_" + revForSuffix + std::to_string(index) + "_wrap";
         LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionNameWrap, argsDcl2);
         _cache << " {\n"
-                "   " << _baseTypeName << " const * inLocal[2];\n"
+                "   " << _baseTypeName << " const * inLocal[3];\n"
                         "   " << _baseTypeName << " inLocal1 = 1;\n"
                         "   " << _baseTypeName << " * outLocal[1];\n"
                         "   " << _baseTypeName << " compressed[" << it.second.indexes.size() << "];\n"
                         "   " << _baseTypeName << " * jac = out[0];\n"
                         "\n"
-                        "   inLocal[0] = in[0];\n"
-                        "   inLocal[1] = &inLocal1;\n"
+                        "   inLocal[0] = in[0];\n" // independents
+                        "   inLocal[1] = &inLocal1;\n" // seed
+                        "   inLocal[2] = in[1];\n" // parameters
                         "   outLocal[0] = compressed;\n";
 
         _cache << "   " << functionRevFor << "_" << revForSuffix << index << "(" << argsLocal << ");\n";
@@ -438,7 +441,7 @@ std::string ModelCSourceGen<Base>::generateSparseJacobianForRevMultiThreadSource
     }
     _cache << "};\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
-            "   " << _baseTypeName << " const * inLocal[2] = {in[0], &inLocal1};\n"
+            "   " << _baseTypeName << " const * inLocal[3] = {in[0], &inLocal1, in[1]};\n"
             "   " << _baseTypeName << " * outLocal[1];\n"
             "   " << _baseTypeName << " * jac = out[0];\n"
             "   long i;\n"

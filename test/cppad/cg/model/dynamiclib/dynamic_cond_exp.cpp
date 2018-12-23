@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,11 +21,12 @@ namespace cg {
 class CppADCGDynamicTest1 : public CppADCGDynamicTest {
 public:
 
-    inline CppADCGDynamicTest1(bool verbose = false, bool printValues = false) :
+    explicit CppADCGDynamicTest1(bool verbose = false,
+                                 bool printValues = false) :
         CppADCGDynamicTest("dynamic_cond_exp", verbose, printValues) {
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
         std::vector<ADCGD> y(2);
 
         ADCGD zero = CGD(0);

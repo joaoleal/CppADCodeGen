@@ -41,11 +41,11 @@ protected:
     ThreadPoolScheduleStrategy _multithreadScheduler;
 public:
 
-    inline CppADCGDynamicTest(const std::string& testName,
-                              bool verbose = false,
-                              bool printValues = false) :
+    explicit CppADCGDynamicTest(std::string testName,
+                                bool verbose = false,
+                                bool printValues = false) :
         CppADCGModelTest(verbose, printValues),
-        _name(testName),
+        _name(std::move(testName)),
         _denseJacobian(true),
         _denseHessian(true),
         _forwardOne(true),
@@ -114,7 +114,7 @@ public:
         using namespace std;
 
         // use a special object for source code generation
-        // declare independent variables, dynamic parammeters, starting recording
+        // declare independent variables, dynamic parameters, starting recording
         size_t abort_op_index = 0;
         bool record_compare = true;
         CppAD::Independent(ax, abort_op_index, record_compare, ap);
@@ -125,7 +125,7 @@ public:
         // dependent variable vector
         std::vector<ADCG> ay = model(ax, ap);
 
-        if (eqNorm.size() > 0) {
+        if (!eqNorm.empty()) {
             ASSERT_EQ(ay.size(), eqNorm.size());
             for (size_t i = 0; i < ay.size(); i++)
                 ay[i] /= eqNorm[i];

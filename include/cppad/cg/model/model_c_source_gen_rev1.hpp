@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_REV1_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -261,6 +262,7 @@ void ModelCSourceGen<Base>::generateReverseOneSources() {
             "void " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
             "\n";
     LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const x[]",
+                                                                              _baseTypeName + " const par[]",
                                                                               _baseTypeName + " const ty[]",
                                                                               _baseTypeName + " px[]",
                                                                               _baseTypeName + " const py[]",
@@ -271,10 +273,13 @@ void ModelCSourceGen<Base>::generateReverseOneSources() {
             "   unsigned long* pyPos;\n"
             "   unsigned long* pyPosTmp;\n"
             "   unsigned long nnzPy;\n"
-            "   " << _baseTypeName << " const * in[2];\n"
+            "   " << _baseTypeName << " const * in[3];\n"
             "   " << _baseTypeName << "* out[1];\n"
             "   " << _baseTypeName << "* compressed;\n"
             "   int ret;\n"
+            "\n"
+            "   in[0] = x;\n"
+            "   in[2] = par;\n"
             "\n"
             "   pyPos = 0;\n"
             "   nnzPy = 0;\n"
@@ -312,7 +317,6 @@ void ModelCSourceGen<Base>::generateReverseOneSources() {
             "      i = pyPos[ei];\n"
             "      " << _name << "_" << FUNCTION_REVERSE_ONE_SPARSITY << "(i, &pos, &nnz);\n"
             "\n"
-            "      in[0] = x;\n"
             "      in[1] = &py[i];\n"
             "      out[0] = compressed;\n";
     if (!_loopTapes.empty()) {

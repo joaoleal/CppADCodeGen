@@ -125,9 +125,9 @@ public:
      * @param varTypeName variable data type (e.g. double)
      * @param spaces number of spaces for indentations
      */
-    LanguageC(const std::string& varTypeName,
-              size_t spaces = 3) :
-        _baseTypeName(varTypeName),
+    explicit LanguageC(std::string varTypeName,
+                       size_t spaces = 3) :
+        _baseTypeName(std::move(varTypeName)),
         _spaces(spaces, ' '),
         _info(nullptr),
         _inArgName("in"),
@@ -373,7 +373,7 @@ public:
 
     virtual std::string generateDependentVariableDeclaration() {
         const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
-        CPPADCG_ASSERT_KNOWN(depArg.size() > 0,
+        CPPADCG_ASSERT_KNOWN(!depArg.empty(),
                              "There must be at least one dependent argument");
 
         _ss << _spaces << "// dependent variables\n";
@@ -388,7 +388,7 @@ public:
 
     virtual std::string generateIndependentVariableDeclaration() {
         const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
-        CPPADCG_ASSERT_KNOWN(indArg.size() > 0,
+        CPPADCG_ASSERT_KNOWN(!indArg.empty(),
                              "There must be at least one independent argument");
 
         _ss << _spaces << "// independent variables\n";

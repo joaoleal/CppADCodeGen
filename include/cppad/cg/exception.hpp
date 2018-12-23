@@ -2,6 +2,7 @@
 #define CPPAD_CG_EXCEPTION_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -29,36 +30,43 @@ protected:
 
 public:
 
-    inline CGException(const std::string& message) throw () :
-        _message(message) {
+    inline CGException(std::string message) noexcept :
+        _message(std::move(message)) {
+    }
+
+    inline CGException(const CGException& a) noexcept :
+            _message(a._message) {
+    }
+
+    inline CGException(CGException&& a) noexcept :
+            _message(std::move(a._message)) {
     }
 
     template<typename... Ts>
-    explicit CGException(const Ts&... ts) throw () {
+    explicit CGException(const Ts&... ts) noexcept {
         std::ostringstream s;
         createMessage(s, ts...);
         _message = s.str();
     }
 
-    CGException() throw () = delete;
+    CGException() noexcept = delete;
 
-    const char* what() const throw () {
+    const char* what() const noexcept {
         return _message.c_str();
     }
 
-    virtual ~CGException() throw () {
-    }
+    virtual ~CGException() noexcept = default;
 
 private:
 
     template <typename T, typename... Ts>
-    inline void createMessage(std::ostringstream& s, const T& t, const Ts&... ts) throw () {
+    inline void createMessage(std::ostringstream& s, const T& t, const Ts&... ts) noexcept {
         s << t;
         createMessage(s, ts...);
     }
 
     template <typename T>
-    inline void createMessage(std::ostringstream& s, const T& t) throw () {
+    inline void createMessage(std::ostringstream& s, const T& t) noexcept {
         s << t;
     }
 

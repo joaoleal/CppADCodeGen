@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -28,7 +29,8 @@ public:
     using ADCGD = CppAD::AD<CGD>;
 public:
 
-    inline CppADCGPatternPlugFlowTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGPatternPlugFlowTest(bool verbose = false,
+                                        bool printValues = false) :
         CppADCGPatternModelTest("PlugFlow",
                                 4 * nEls, // ns
                                 1, // nm
@@ -44,18 +46,20 @@ public:
         this->xb = PlugFlowModel2<CGD>::getTypicalValues(nEls);
     }
 
-    virtual std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x, size_t repeat) {
+    std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x,
+                                     const std::vector<ADCGD>& par,
+                                     size_t repeat) override {
         PlugFlowModel2<CGD> m;
 
         assert(repeat == nEls);
         return m.model(x);
     }
 
-    virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t nEls) {
+    std::vector<std::set<size_t> > getRelatedCandidates(size_t nEls) override {
         return PlugFlowModel2<CGD>::getRelatedCandidates(nEls);
     }
 
-    inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+    inline void defineCustomSparsity(ADFun<CGD>& fun) override {
         CppADCGPatternModelTest::defineCustomSparsity(fun);
 
         //std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);

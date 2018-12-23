@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -289,10 +290,10 @@ public:
      * @param model The model name (must be a valid C function name)
      */
     ModelCSourceGen(ADFun<CppAD::cg::CG<Base> >& fun,
-                    const std::string& model) :
+                    std::string model) :
         _fun(fun),
         _funNoLoops(nullptr),
-        _name(model),
+        _name(std::move(model)),
         _baseTypeName(ModelCSourceGen<Base>::baseTypeName()),
         _parameterPrecision(std::numeric_limits<Base>::digits10),
         _multiThreading(true),

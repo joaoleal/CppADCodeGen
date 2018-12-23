@@ -291,7 +291,7 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian marix.
+     * Computes a dense Jacobian matrix.
      *
      * @param x The independent variable vector
      * @param p The parameter vector
@@ -308,7 +308,7 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian marix.
+     * Computes a dense Jacobian matrix.
      *
      * @param x The independent variable vector
      * @param p The parameter vector
@@ -325,7 +325,7 @@ public:
     }
 
     /**
-     * Computes a dense Jacobian marix.
+     * Computes a dense Jacobian matrix.
      *
      * @param x The independent variable vector
      * @param p The parameter vector
@@ -340,24 +340,13 @@ public:
      **********************************************************************/
 
     /**
-     * Determines whether or not the dense evaluation of the weigthed sum of
+     * Determines whether or not the dense evaluation of the weighted sum of
      * the Hessians can be requested.
      *
-     * @return true if it is possible to evaluate the dense weigthed sum of
+     * @return true if it is possible to evaluate the dense weighted sum of
      *         the Hessians
      */
     virtual bool isHessianAvailable() = 0;
-
-    template<typename VectorBase>
-    inline VectorBase Hessian(const VectorBase& x,
-                              const VectorBase& w) {
-        VectorBase hess(Domain() * Domain());
-        this->Hessian(ArrayView<const Base>(x.data(), x.size()),
-                      ArrayView<const Base>(),
-                      ArrayView<const Base>(w.data(), w.size()),
-                      ArrayView<Base>(hess.data(), hess.size()));
-        return hess;
-    }
 
     template<typename VectorBase>
     inline VectorBase Hessian(const VectorBase& x,
@@ -803,17 +792,6 @@ public:
      *         the Hessians
      */
     virtual bool isSparseHessianAvailable() = 0;
-
-    template<typename VectorBase>
-    inline VectorBase SparseHessian(const VectorBase& x,
-                                    const VectorBase& w) {
-        VectorBase hess(Domain() * Domain());
-        SparseHessian(ArrayView<const Base>(x.data(), x.size()),
-                      ArrayView<const Base>(),
-                      ArrayView<const Base>(w.data(), w.size()),
-                      ArrayView<Base>(hess.data(), hess.size()));
-        return hess;
-    }
 
     template<typename VectorBase>
     inline VectorBase SparseHessian(const VectorBase& x,

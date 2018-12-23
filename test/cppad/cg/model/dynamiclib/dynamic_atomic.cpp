@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -27,13 +28,14 @@ protected:
     static const size_t m = 1;
 public:
 
-    inline CppADCGDynamicAtomicModel1Test(bool verbose = false,
-                                          bool printValues = false) :
+    explicit CppADCGDynamicAtomicModel1Test(bool verbose = false,
+                                            bool printValues = false) :
             CppADCGDynamicAtomicTest("dynamicAtomic1", verbose, printValues) {
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                             const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> y(m);
 
         y[0] = 1.0 / x[0];
@@ -41,7 +43,8 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y,
+                                  const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> z(1);
 
         z[0] = y[0];
@@ -61,13 +64,14 @@ protected:
     static const size_t m = 4;
 public:
 
-    inline CppADCGDynamicAtomicModel2Test(bool verbose = false,
-                                          bool printValues = false) :
+    explicit CppADCGDynamicAtomicModel2Test(bool verbose = false,
+                                            bool printValues = false) :
         CppADCGDynamicAtomicTest("dynamicAtomic2", verbose, printValues) {
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                             const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> y(m);
 
         y[0] = cos(x[0]);
@@ -91,13 +95,14 @@ protected:
     static const size_t m = 1;
 public:
 
-    inline CppADCGDynamicAtomicModel3Test(bool verbose = false,
-                                          bool printValues = false) :
+    explicit CppADCGDynamicAtomicModel3Test(bool verbose = false,
+                                            bool printValues = false) :
             CppADCGDynamicAtomicTest("dynamicAtomic3", verbose, printValues) {
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                             const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> y(m);
 
         y[0] = x[0] * 2 + x[1] * 3;
@@ -105,7 +110,8 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y,
+                                  const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> z(m);
 
         z[0] = 2 * y[0] * y[0];
@@ -125,13 +131,14 @@ protected:
     static const size_t m = 4;
 public:
 
-    inline CppADCGDynamicAtomicModel4Test(bool verbose = false,
-                                          bool printValues = false) :
+    explicit CppADCGDynamicAtomicModel4Test(bool verbose = false,
+                                            bool printValues = false) :
         CppADCGDynamicAtomicTest("dynamicAtomic4", verbose, printValues) {
         this->verbose_ = false;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                             const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> y(m);
 
         y[0] = cos(x[0]);
@@ -142,7 +149,8 @@ public:
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& y,
+                                  const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> z(m - 1);
 
         z[0] = 2 * y[0];

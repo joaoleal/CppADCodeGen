@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -154,11 +155,11 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     /**
      * Test zero order
      */
-    vector<CGD> xOrig(n);
+    std::vector<CGD> xOrig(n);
     for (size_t j = 0; j < n; j++)
         xOrig[j] = x[j];
 
-    vector<CGD> yOrig = _fun->Forward(0, xOrig);
+    std::vector<CGD> yOrig = _fun->Forward(0, xOrig);
     std::vector<double> yInner = _model->ForwardZero(x);
 
     ASSERT_TRUE(compareValues(yInner, yOrig));
@@ -169,12 +170,13 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     size_t k = 1;
     size_t k1 = k + 1;
 
-    vector<double> x_p(n);
+    std::vector<double> x_p(n);
     for (size_t j = 0; j < n; j++)
         x_p[j] = 0;
 
-    vector<CGD> x_pOrig(n);
-    vector<double> tx(k1 * n);
+    std::vector<CGD> x_pOrig(n);
+    std::vector<double> tx(k1 * n);
+    std::vector<double> par;
     for (size_t j = 0; j < n; j++)
         tx[j * k1] = x[j]; // zero order
     for (size_t j = 0; j < n; j++)
@@ -185,8 +187,8 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         x_pOrig[j] = 1;
         tx[j * k1 + 1] = 1;
 
-        vector<CGD> y_pOrig = _fun->Forward(1, x_pOrig);
-        vector<double> y_pInner = _model->ForwardOne(tx);
+        std::vector<CGD> y_pOrig = _fun->Forward(1, x_pOrig);
+        std::vector<double> y_pInner = _model->ForwardOne(tx, par);
 
         x_p[j] = 0;
         x_pOrig[j] = 0;
@@ -201,15 +203,15 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     k = 0;
     k1 = k + 1;
 
-    CppAD::vector<double> w(m);
+    std::vector<double> w(m);
     std::vector<double> stdw(m);
     for (size_t i = 0; i < m; i++)
         w[i] = 0;
-    vector<CGD> wOrig(m);
+    std::vector<CGD> wOrig(m);
     tx.resize(k1 * n);
     for (size_t j = 0; j < n; j++)
         tx[j * k1] = x[j]; // zero order
-    vector<double> ty(k1 * m);
+    std::vector<double> ty(k1 * m);
     for (size_t i = 0; i < m; i++)
         ty[i * k1] = yInner[i]; // zero order
 
@@ -217,8 +219,8 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         w[i] = 1;
         wOrig[i] = 1;
 
-        vector<CGD> dwOrig = _fun->Reverse(1, wOrig);
-        vector<double> dwInner = _model->ReverseOne(tx, ty, w);
+        std::vector<CGD> dwOrig = _fun->Reverse(1, wOrig);
+        std::vector<double> dwInner = _model->ReverseOne(tx, par, ty, w);
 
         w[i] = 0;
         wOrig[i] = 0;
@@ -233,8 +235,8 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     k1 = k + 1;
     tx.resize(k1 * n);
     ty.resize(k1 * m);
-    vector<double> py(k1 * m);
-    vector<CGD> pyOrig(k1 * m);
+    std::vector<double> py(k1 * m);
+    std::vector<CGD> pyOrig(k1 * m);
     //wOrig.resize(k1 * m);
     for (size_t j = 0; j < n; j++) {
         tx[j * k1] = x[j]; // zero order
@@ -255,8 +257,8 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         tx[j * k1 + 1] = 1;
 
         _fun->Forward(1, x_pOrig);
-        vector<CGD> pxOrig = _fun->Reverse(2, pyOrig);
-        vector<double> pxInner = _model->ReverseTwo(tx, ty, py);
+        std::vector<CGD> pxOrig = _fun->Reverse(2, pyOrig);
+        std::vector<double> pxInner = _model->ReverseTwo(tx, par, ty, py);
 
         x_p[j] = 0;
         x_pOrig[j] = 0;
@@ -274,7 +276,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     /**
      * Jacobian
      */
-    vector<CGD> jacOrig = _fun->Jacobian(xOrig);
+    std::vector<CGD> jacOrig = _fun->Jacobian(xOrig);
     std::vector<double> jacOutter = _model->Jacobian(x);
     ASSERT_TRUE(compareValues(jacOutter, jacOrig));
 
@@ -298,7 +300,7 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
     generateSparsityIndexes(jacSparsityOutter, m, n, row, col);
 
     jacOutter.resize(row.size());
-    _model->SparseJacobian(x, jacOutter, row, col);
+    _model->SparseJacobian(x, par, jacOutter, row, col);
 
     sparse_jacobian_work workOrig;
     jacOrig.resize(row.size());
@@ -313,14 +315,14 @@ TEST_F(CppADCGDynamicAtomic2Test, DynamicForRev) {
         stdw[i] = 1;
         wOrig[i] = 1;
     }
-    vector<CGD> hessOrig = _fun->Hessian(xOrig, wOrig);
-    std::vector<double> hessOutter = _model->Hessian(x, stdw);
+    std::vector<CGD> hessOrig = _fun->Hessian(xOrig, wOrig);
+    std::vector<double> hessOutter = _model->Hessian(x, par, stdw);
     ASSERT_TRUE(compareValues(hessOutter, hessOrig));
 
     /**
      * Sparse Hessian
      */
     hessOrig = _fun->SparseHessian(xOrig, wOrig);
-    hessOutter = _model->SparseHessian(x, stdw);
+    hessOutter = _model->SparseHessian(x, par, stdw);
     ASSERT_TRUE(compareValues(hessOutter, hessOrig));
 }

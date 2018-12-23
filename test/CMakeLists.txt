@@ -1,5 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2018 Joao Leal
 #    Copyright (C) 2012 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
@@ -159,6 +160,7 @@ FUNCTION(add_cppadcg_test source_file)
                          --leak-check=full
                          --track-origins=yes
                          --leak-resolution=high
+                         --vgdb=no
                          --quiet
                          --error-exitcode=1
                          --log-file=${CMAKE_CURRENT_BINARY_DIR}/valgrind.log.${test_target_name}

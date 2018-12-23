@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -26,7 +27,9 @@ using CppAD::vector;
 /**
  * @test All variables are indexed, no temporaries
  */
-std::vector<ADCGD> modelEmpty(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelEmpty(const std::vector<ADCGD>& x,
+                              const std::vector<ADCGD>& par,
+                              size_t repeat) {
     size_t m = 2;
     size_t m2 = repeat * m;
 
@@ -46,14 +49,16 @@ TEST_F(CppADCGPatternTest, modelEmpty) {
     size_t n = 2;
 
     setModel(modelEmpty);
-    testPatternDetection(m, n, 6);
-    testLibCreation("modelEmpty", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("modelEmpty", m, n, 0, 6);
 }
 
 /**
  * @test All variables are indexed, no temporaries
  */
-std::vector<ADCGD> model0(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model0(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -74,14 +79,16 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcherDetached) {
     size_t n = 2;
 
     setModel(model0);
-    testPatternDetection(m, n, 6);
-    testLibCreation("model0", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("model0", m, n, 0, 6);
 }
 
 /**
  * @test All variables have a random index, no temporaries
  */
-std::vector<ADCGD> modelRandom(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelRandom(const std::vector<ADCGD>& x,
+                               const std::vector<ADCGD>& par,
+                               size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -113,14 +120,16 @@ TEST_F(CppADCGPatternTest, random) {
     size_t n = 2;
 
     setModel(modelRandom);
-    testPatternDetection(m, n, 10);
-    testLibCreation("modelRandom", m, n, 10);
+    testPatternDetection(m, n, 0, 10);
+    testLibCreation("modelRandom", m, n, 0, 10);
 }
 
 /**
  * @test Some variables not indexed -> one constant temporary
  */
-std::vector<ADCGD> model1(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model1(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -141,15 +150,17 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher) {
     size_t n = 2;
 
     setModel(model1);
-    testPatternDetection(m, n, 6);
-    testLibCreation("model1", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("model1", m, n, 0, 6);
 }
 
 /**
  * @test Some variables not indexed -> one constant temporary (defined outside 
  *       loop)
  */
-std::vector<ADCGD> modelCommonTmp(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCommonTmp(const std::vector<ADCGD>& x,
+                                  const std::vector<ADCGD>& par,
+                                  size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -175,8 +186,8 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
     size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
 
     std::vector<std::vector<std::set<size_t> > > loops(1);
-    testPatternDetection(m, n, 6, loops, nonIndexed);
-    testLibCreation("modelCommonTmp", m, n, 6);
+    testPatternDetection(m, n, 0, 6, loops, nonIndexed);
+    testLibCreation("modelCommonTmp", m, n, 0, 6);
 }
 
 /**
@@ -184,7 +195,9 @@ TEST_F(CppADCGPatternTest, CommonTmp) {
  *       loop) independents used by temporaries are not the same as the ones in
  *       the equation inside the loop
  */
-std::vector<ADCGD> modelCommonTmp2(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCommonTmp2(const std::vector<ADCGD>& x,
+                                   const std::vector<ADCGD>& par,
+                                   size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -211,15 +224,17 @@ TEST_F(CppADCGPatternTest, CommonTmp2) {
     setModel(modelCommonTmp2);
 
     std::vector<std::vector<std::set<size_t> > > loops(1);
-    testPatternDetection(m, n, 6, loops, nonIndexed);
-    testLibCreation("modelCommonTmp2", m, n, 6);
+    testPatternDetection(m, n, 0, 6, loops, nonIndexed);
+    testLibCreation("modelCommonTmp2", m, n, 0, 6);
 }
 
 /**
  * @test All variables are indexed -> 3 temporaries (defined inside and outside
  *       the loop)
  */
-std::vector<ADCGD> modelCommonTmp3(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCommonTmp3(const std::vector<ADCGD>& x,
+                                   const std::vector<ADCGD>& par,
+                                   size_t repeat) {
     size_t m = 3;
     size_t n = 3;
     size_t m2 = repeat * m;
@@ -249,15 +264,17 @@ TEST_F(CppADCGPatternTest, CommonTmp3) {
     size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
 
     std::vector<std::vector<std::set<size_t> > > loops(1);
-    testPatternDetection(m, n, 6, loops, nonIndexed);
-    testLibCreation("modelCommonTmp3", m, n, 6);
+    testPatternDetection(m, n, 0, 6, loops, nonIndexed);
+    testLibCreation("modelCommonTmp3", m, n, 0, 6);
 }
 
 /**
  * @test All variables are indexed but keep the same index after a given
  *       iteration
  */
-std::vector<ADCGD> model2(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model2(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 1;
     size_t n = 2;
 
@@ -282,15 +299,17 @@ TEST_F(CppADCGPatternTest, model2) {
     size_t n = 2;
 
     setModel(model2);
-    testPatternDetection(m, n, 6);
-    testLibCreation("model2", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("model2", m, n, 0, 6);
 }
 
 /**
  * @test Some variables are not indexed, some indexed variables keep the same
  *       index after a given iteration
  */
-std::vector<ADCGD> model3(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model3(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 1;
     size_t n = 2;
 
@@ -313,14 +332,16 @@ TEST_F(CppADCGPatternTest, model3) {
     size_t n = 2;
 
     setModel(model3);
-    testPatternDetection(m, n, 6);
-    testLibCreation("model3", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("model3", m, n, 0, 6);
 }
 
 /**
  * @test 4 equations; 1 constant temporary; 1 equation with a constant value
  */
-std::vector<ADCGD> model4Eq(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model4Eq(const std::vector<ADCGD>& x,
+                            const std::vector<ADCGD>& par,
+                            size_t repeat) {
     size_t m = 4;
     size_t n = 4;
     size_t m2 = repeat * m;
@@ -349,14 +370,16 @@ TEST_F(CppADCGPatternTest, Matcher4Eq) {
     size_t nonIndexed = 1; // expected non-indexed variables (outside the loop)
 
     std::vector<std::vector<std::set<size_t> > > loops(1);
-    testPatternDetection(m, n, 6, loops, nonIndexed);
-    testLibCreation("model4Eq", m, n, 6);
+    testPatternDetection(m, n, 0, 6, loops, nonIndexed);
+    testLibCreation("model4Eq", m, n, 0, 6);
 }
 
 /**
  * @test 
  */
-std::vector<ADCGD> model4(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model4(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -378,14 +401,16 @@ TEST_F(CppADCGPatternTest, IndexedTmp) {
     size_t n = 2;
 
     setModel(model4);
-    testPatternDetection(m, n, 6);
-    testLibCreation("indexedTmp", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("indexedTmp", m, n, 0, 6);
 }
 
 /**
  * @test 2 loops required
  */
-std::vector<ADCGD> model5(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> model5(const std::vector<ADCGD>& x,
+                          const std::vector<ADCGD>& par,
+                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -412,14 +437,17 @@ TEST_F(CppADCGPatternTest, DependentPatternMatcher5) {
     size_t n = 2;
 
     setModel(model5);
-    testPatternDetection(m, n, 6, 2);
-    testLibCreation("model5", m, n, 6);
+    testPatternDetection(m, n, 0, 6, 2);
+    testLibCreation("model5", m, n, 0, 6);
 }
 
 /**
  * @test using atomic functions
  */
-std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x, size_t repeat, atomic_base<CGD>& atomic) {
+std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x,
+                               const std::vector<ADCGD>& par,
+                               size_t repeat,
+                               atomic_base<CGD>& atomic) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -458,15 +486,18 @@ TEST_F(CppADCGPatternTest, Atomic) {
     setModel(model);
     this->atoms_.push_back(&atomicfun);
 
-    testPatternDetection(m, n, 6);
-    testLibCreation("modelAtomic", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("modelAtomic", m, n, 0, 6);
 }
 
 /**
  * @using atomic functions; some indexed variables keep the same index after a
  *        given iteration
  */
-std::vector<ADCGD> modelAtomic2(const std::vector<ADCGD>& x, size_t repeat, atomic_base<CGD>& atomic) {
+std::vector<ADCGD> modelAtomic2(const std::vector<ADCGD>& x,
+                                const std::vector<ADCGD>& par,
+                                size_t repeat,
+                                atomic_base<CGD>& atomic) {
     size_t m = 1;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -500,14 +531,16 @@ TEST_F(CppADCGPatternTest, Atomic2) {
     setModel(model);
     this->atoms_.push_back(&atomicfun);
 
-    testPatternDetection(m, n, 6);
-    testLibCreation("modelAtomic2", m, n, 6);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("modelAtomic2", m, n, 0, 6);
 }
 
 /**
  * @test with an additional equation that does not belong to a loop
  */
-std::vector<ADCGD> modelExtraFunc(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelExtraFunc(const std::vector<ADCGD>& x,
+                                  const std::vector<ADCGD>& par,
+                                  size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -531,14 +564,16 @@ TEST_F(CppADCGPatternTest, modelExtraFunc) {
     size_t mExtra = 1; // equations not in loops
 
     setModel(modelExtraFunc);
-    testPatternDetection(m, n, 6);
-    testLibCreation("modelExtraFunc", m, n, 6, mExtra);
+    testPatternDetection(m, n, 0, 6);
+    testLibCreation("modelExtraFunc", m, n, 0, 6, mExtra);
 }
 
 /**
  * @test with an additional equation that does not belong to a loop
  */
-std::vector<ADCGD> modelWrongEqs(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelWrongEqs(const std::vector<ADCGD>& x,
+                                 const std::vector<ADCGD>& par,
+                                 size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -577,6 +612,6 @@ TEST_F(CppADCGPatternTest, modelWrongEqs) {
     }
 
     setModel(modelWrongEqs);
-    testPatternDetection(m, n, repeat, loops);
-    testLibCreation("modelWrongEqs", m, n, repeat);
+    testPatternDetection(m, n, 0, repeat, loops);
+    testLibCreation("modelWrongEqs", m, n, 0, repeat);
 }

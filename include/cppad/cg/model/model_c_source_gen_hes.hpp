@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_HES_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -117,7 +118,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceDirectly() {
     for (size_t e = 0; e < evalRows.size(); e++) {
         size_t j1 = evalRows[e];
         size_t j2 = evalCols[e];
-        std::map<size_t, std::map<size_t, size_t> >::iterator itJ1 = locations.find(j1);
+        auto itJ1 = locations.find(j1);
         if (itJ1 == locations.end()) {
             locations[j1][j2] = e;
         } else {
@@ -272,7 +273,7 @@ void ModelCSourceGen<Base>::generateSparseHessianSourceFromRev2(MultiThreadingTy
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(!els.empty());
 
         bool passed = true;
         size_t hessRowStart = *location[0].begin();
@@ -336,7 +337,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
     _cache << "\n";
     LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionName, argsDcl2);
     _cache << " {\n"
-            "   " << _baseTypeName << " const * inLocal[3];\n"
+            "   " << _baseTypeName << " const * inLocal[4];\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
             "   " << _baseTypeName << " * outLocal[1];\n";
     if (maxCompressedSize > 0) {
@@ -344,9 +345,10 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
     }
     _cache << "   " << _baseTypeName << " * hess = out[0];\n"
             "\n"
-            "   inLocal[0] = in[0];\n"
-            "   inLocal[1] = &inLocal1;\n"
-            "   inLocal[2] = in[1];\n";
+            "   inLocal[0] = in[0];\n" // tx
+            "   inLocal[1] = &inLocal1;\n" // seed/tx1
+            "   inLocal[2] = in[1];\n" // py
+            "   inLocal[3] = in[2];\n"; // parameters
     if (maxCompressedSize > 0) {
         _cache << "   outLocal[0] = compressed;";
     }
@@ -360,7 +362,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2SingleThreadSource(c
         const std::vector<size_t>& els = it.second.indexes;
         const std::vector<std::set<size_t> >& location = it.second.locations;
         CPPADCG_ASSERT_UNKNOWN(els.size() == location.size());
-        CPPADCG_ASSERT_UNKNOWN(els.size() > 0);
+        CPPADCG_ASSERT_UNKNOWN(!els.empty());
 
         _cache << "\n";
         bool compressed = !it.second.ordered;
@@ -429,15 +431,16 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
         std::string functionNameWrap = functionRev2 + "_" + rev2Suffix + std::to_string(index) + "_wrap";
         LanguageC<Base>::printFunctionDeclaration(_cache, "void", functionNameWrap, argsDcl2);
         _cache << " {\n"
-                "   " << _baseTypeName << " const * inLocal[3];\n"
+                "   " << _baseTypeName << " const * inLocal[4];\n"
                 "   " << _baseTypeName << " inLocal1 = 1;\n"
                 "   " << _baseTypeName << " * outLocal[1];\n"
                 "   " << _baseTypeName << " compressed[" << it.second.indexes.size() << "];\n"
                 "   " << _baseTypeName << " * hess = out[0];\n"
                 "\n"
-                "   inLocal[0] = in[0];\n"
-                "   inLocal[1] = &inLocal1;\n"
-                "   inLocal[2] = in[1];\n"
+                "   inLocal[0] = in[0];\n" // tx
+                "   inLocal[1] = &inLocal1;\n" // seed/tx1
+                "   inLocal[2] = in[1];\n" // py
+                "   inLocal[3] = in[2];\n" // parameters
                 "   outLocal[0] = compressed;\n";
         _cache << "   " << functionRev2 << "_" << rev2Suffix << index << "(" << argsLocal << ");\n";
         for (size_t e = 0; e < els.size(); e++) {
@@ -495,7 +498,7 @@ std::string ModelCSourceGen<Base>::generateSparseHessianRev2MultiThreadSource(co
     }
     _cache << "};\n"
             "   " << _baseTypeName << " inLocal1 = 1;\n"
-            "   " << _baseTypeName << " const * inLocal[3] = {in[0], &inLocal1, in[1]};\n"
+            "   " << _baseTypeName << " const * inLocal[4] = {in[0], &inLocal1, in[1], in[2]};\n"
             "   " << _baseTypeName << " * outLocal[1];\n";
     _cache << "   " << _baseTypeName << " * hess = out[0];\n"
             "   long i;\n"
@@ -535,7 +538,7 @@ template<class Base>
 void ModelCSourceGen<Base>::determineSecondOrderElements4Eval(std::vector<size_t>& evalRows,
                                                               std::vector<size_t>& evalCols) {
     /**
-     * Atomic functions migth not have all the elements and thus there may
+     * Atomic functions might not have all the elements and thus there may
      * be no symmetry. This will explore symmetry in order to provide the
      * second order elements requested by the user.
      */
@@ -636,7 +639,7 @@ void ModelCSourceGen<Base>::determineHessianSparsity() {
              */
             const std::map<size_t, size_t>& var2Eq = color.column2Row;
             for (size_t j : color.forbiddenRows) { //used variables
-                if (sparsityc[j].size() > 0) {
+                if (!sparsityc[j].empty()) {
                     size_t i = var2Eq.at(j);
                     _hessSparsities[i].sparsity[j].insert(sparsityc[j].begin(),
                                                           sparsityc[j].end());

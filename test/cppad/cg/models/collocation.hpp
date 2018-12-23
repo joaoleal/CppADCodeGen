@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_COLLOCATION_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -131,13 +132,15 @@ public:
     }
 
     std::vector<AD<T> > evaluateModel(const std::vector<AD<T> >& x,
+                                      const std::vector<AD<T> >& par,
                                       size_t repeat) {
         atomic_base<T>& atomModel = createAtomic();
-        return evaluateModel<T>(x, repeat, atomModel);
+        return evaluateModel<T>(x, par, repeat, atomModel);
     }
 
     template<class T2>
     std::vector<AD<T2> > evaluateModel(const std::vector<AD<T2> >& x,
+                                       const std::vector<AD<T2> >& par,
                                        size_t repeat,
                                        atomic_base<T2>& atomModel) {
 
@@ -257,7 +260,7 @@ public:
             std::vector<std::set<size_t> > jacSpar(jacSparAll.size());
             for (size_t i = 0; i < jacSparAll.size(); i++) {
                 // only differential information for states and controls
-                std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns_ + nm_ - 1);
+                auto itEnd = jacSparAll[i].upper_bound(ns_ + nm_ - 1);
                 if (itEnd != jacSparAll[i].begin())
                     jacSpar[i].insert(jacSparAll[i].begin(), itEnd);
             }
@@ -266,7 +269,7 @@ public:
             std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
             std::vector<std::set<size_t> > hessSpar(hessSparAll.size());
             for (size_t i = 0; i < ns_ + nm_; i++) {
-                std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
+                auto it = hessSparAll[i].upper_bound(i); // only the lower left side
                 if (it != hessSparAll[i].begin())
                     hessSpar[i].insert(hessSparAll[i].begin(), it);
             }

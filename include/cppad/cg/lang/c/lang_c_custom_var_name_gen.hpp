@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Creates variables names for the source code using a list of provided
+ * Creates variables names for C generated source code using a list of provided
  * custom names.
  *
  * @author Joao Leal
@@ -28,20 +28,22 @@ namespace cg {
 template<class Base>
 class LangCCustomVariableNameGenerator : public LangCDefaultVariableNameGenerator<Base> {
 protected:
+    using Super = LangCDefaultVariableNameGenerator<Base>;
     //
     const std::vector<std::string> depNames_;
     const std::vector<std::string> indepNames_;
 public:
 
-    LangCCustomVariableNameGenerator(const std::vector<std::string>& depNames,
-                                     const std::vector<std::string>& indepNames,
-                                     const std::string& depName = "y",
-                                     const std::string& indepName = "x",
-                                     const std::string& tmpName = "v",
-                                     const std::string& tmpArrayName = "array") :
-        LangCDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
-        depNames_(depNames),
-        indepNames_(indepNames) {
+    LangCCustomVariableNameGenerator(std::vector<std::string> depNames,
+                                     std::vector<std::string> indepNames,
+                                     std::string depName = "y",
+                                     std::string indepName = "x",
+                                     std::string paramName = "p",
+                                     std::string tmpName = "v",
+                                     std::string tmpArrayName = "array") :
+        LangCDefaultVariableNameGenerator<Base>(std::move(depName), std::move(indepName), std::move(paramName), std::move(tmpName), std::move(tmpArrayName)),
+        depNames_(std::move(depNames)),
+        indepNames_(std::move(indepNames)) {
     }
 
     inline virtual ~LangCCustomVariableNameGenerator() = default;
@@ -50,7 +52,7 @@ public:
         if (index < depNames_.size() && !depNames_[index].empty()) {
             return depNames_[index];
         } else {
-            return LangCDefaultVariableNameGenerator<Base>::generateDependent(index);
+            return Super::generateDependent(index);
         }
     }
 
@@ -60,7 +62,7 @@ public:
         if (index < indepNames_.size() && !indepNames_[index].empty()) {
             return indepNames_[index];
         } else {
-            return LangCDefaultVariableNameGenerator<Base>::generateIndependent(independent, id);
+            return Super::generateIndependent(independent, id);
         }
     }
 

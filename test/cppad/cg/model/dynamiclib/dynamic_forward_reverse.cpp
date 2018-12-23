@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -26,19 +27,20 @@ protected:
     const static size_t n;
     const static size_t m;
     std::vector<double> x;
+    std::vector<double> par;
     ADFun<CGD>* _fun;
     std::unique_ptr<DynamicLib<double>> _dynamicLib;
     std::unique_ptr<GenericModel<double>> _model;
 public:
 
-    inline CppADCGDynamicForRevTest2(bool verbose = false, bool printValues = false) :
+    explicit CppADCGDynamicForRevTest2(bool verbose = false, bool printValues = false) :
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),
         _fun(nullptr) {
     }
 
-    virtual void SetUp() {
+    void SetUp() override {
         // use a special object for source code generation
         using Base = double;
         using CGD = CG<Base>;
@@ -94,7 +96,7 @@ public:
         ASSERT_EQ(_model->Range(), _fun->Range());
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         _dynamicLib.reset(nullptr);
         _model.reset(nullptr);
         delete _fun;
@@ -117,7 +119,6 @@ using namespace CppAD::cg;
 using namespace std;
 
 TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
-    using namespace std;
     using std::vector;
 
     vector<CGD> xOrig(n);
@@ -127,13 +128,12 @@ TEST_F(CppADCGDynamicForRevTest2, SparseJacobian) {
     const std::vector<bool> p = jacobianSparsity<std::vector<bool>, CGD> (*_fun);
 
     vector<CGD> jacOrig = _fun->SparseJacobian(xOrig, p);
-    vector<double> jacCG = CppADCGDynamicForRevTest2::_model->SparseJacobian(x);
+    vector<double> jacCG = _model->SparseJacobian(x, par);
 
     ASSERT_TRUE(compareValues(jacCG, jacOrig));
 }
 
 TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
-    using namespace std;
     using std::vector;
 
     using Base = double;
@@ -152,7 +152,7 @@ TEST_F(CppADCGDynamicForRevTest2, SparseHessian) {
         xOrig[i] = x[i];
 
     vector<CGD> hessOrig = _fun->SparseHessian(xOrig, wOrig);
-    vector<double> hessCG = CppADCGDynamicForRevTest2::_model->SparseHessian(x, w);
+    vector<double> hessCG = _model->SparseHessian(x, par, w);
 
     ASSERT_TRUE(compareValues(hessCG, hessOrig));
 }

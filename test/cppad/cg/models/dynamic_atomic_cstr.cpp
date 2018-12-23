@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -24,12 +25,14 @@ protected:
     static const size_t m;
     CppAD::vector<Base> x;
     CppAD::vector<Base> xNorm;
+    CppAD::vector<Base> par;
     CppAD::vector<Base> eqNorm;
     std::vector<std::set<size_t> > jacInner, hessInner;
     std::vector<std::set<size_t> > jacOuter, hessOuter;
 public:
 
-    inline CppADCGDynamicAtomicCstrTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGDynamicAtomicCstrTest(bool verbose = false,
+                                          bool printValues = false) :
         CppADCGDynamicAtomicTest("cstr_atomic", verbose, printValues),
         x(n),
         xNorm(n),
@@ -52,7 +55,7 @@ public:
         xNorm[4] = 2.3333e-04; // u1
         xNorm[5] = 6.6667e-05; // u2
 
-        xNorm[6] = 6.2e14; // 
+        xNorm[6] = 6.2e14; //
         xNorm[7] = 10080; //
         xNorm[8] = 2e3; //
         xNorm[9] = 10e3; //
@@ -127,7 +130,8 @@ public:
         hessOuter[3].insert(4);
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& u) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& u,
+                             const std::vector<ADCGD>& par) override {
         return CstrFunc<CGD>(u);
     }
 
@@ -137,21 +141,23 @@ const size_t CppADCGDynamicAtomicCstrTest::n = 28;
 const size_t CppADCGDynamicAtomicCstrTest::m = 4;
 
 TEST_F(CppADCGDynamicAtomicCstrTest, ADFunAtomicLib) {
-    this->testADFunAtomicLibSimple(x, xNorm, eqNorm, 1e-14, 1e-13);
+    this->testADFunAtomicLibSimple(x, par, xNorm, eqNorm, 1e-14, 1e-13);
 
     this->testAtomicSparsities(x);
 }
 
 TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibAtomicLib) {
-    this->testAtomicLibAtomicLib(x, xNorm, eqNorm, 1e-14, 1e-13);
+    this->testAtomicLibAtomicLib(x, par, xNorm, eqNorm, 1e-14, 1e-13);
 }
 
 TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridge) {
-    this->testAtomicLibModelBridge(x, xNorm, eqNorm, 1e-14, 1e-13);
+    this->testAtomicLibModelBridge(x, par, xNorm, eqNorm, 1e-14, 1e-13);
 }
 
 TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridgeCustomRev2) {
-    this->testAtomicLibModelBridgeCustom(x, xNorm, eqNorm,
+    this->testAtomicLibModelBridgeCustom(x, par,
+                                         xNorm,
+                                         eqNorm,
                                          jacInner, hessInner,
                                          jacOuter, hessOuter,
                                          true,
@@ -159,7 +165,9 @@ TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridgeCustomRev2) {
 }
 
 TEST_F(CppADCGDynamicAtomicCstrTest, AtomicLibModelBridgeCustomDirect) {
-    this->testAtomicLibModelBridgeCustom(x, xNorm, eqNorm,
+    this->testAtomicLibModelBridgeCustom(x, par,
+                                         xNorm,
+                                         eqNorm,
                                          jacInner, hessInner,
                                          jacOuter, hessOuter,
                                          false,

@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -25,7 +26,9 @@ using namespace CppAD::cg;
  * @test Model with 2 equations which share indexed temporary variables, but 
  *       also across iterations
  */
-std::vector<ADCGD> modelCrossIteration1(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCrossIteration1(const std::vector<ADCGD>& x,
+                                        const std::vector<ADCGD>& par,
+                                        size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -67,16 +70,18 @@ TEST_F(CppADCGPatternTest, modelCrossIteration1) {
 
     setModel(modelCrossIteration1);
 
-    testPatternDetection(m, n, repeat, loops);
+    testPatternDetection(m, n, 0, repeat, loops);
 
-    testLibCreation("modelCrossIteration1", m, n, repeat);
+    testLibCreation("modelCrossIteration1", m, n, 0, repeat);
 }
 
 /**
  * @test Model with 2 equations which share indexed temporary variables, but 
  *       also across iterations
  */
-std::vector<ADCGD> modelCrossIteration2(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelCrossIteration2(const std::vector<ADCGD>& x,
+                                        const std::vector<ADCGD>& par,
+                                        size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -121,7 +126,7 @@ TEST_F(CppADCGPatternTest, modelCrossIteration2) {
     //customHessSparsity_[0].insert(0);
     setModel(modelCrossIteration2);
 
-    testPatternDetection(m, n, repeat, loops);
+    testPatternDetection(m, n, 0, repeat, loops);
 
-    testLibCreation("modelCrossIteration2", m, n, repeat);
+    testLibCreation("modelCrossIteration2", m, n, 0, repeat);
 }

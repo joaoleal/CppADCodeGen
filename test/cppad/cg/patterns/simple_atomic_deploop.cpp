@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -27,14 +28,14 @@ namespace cg {
 class CppADCGPatternTestLoopDep : public CppADCGPatternTest {
 protected:
 
-    inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+    inline void defineCustomSparsity(ADFun<CGD>& fun) override {
         /**
          * only the lower left side (not currently required since the hessian is diagonal!)
          */
         std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         customHessSparsity_.resize(hessSparAll.size());
         for (size_t i = 0; i < hessSparAll.size(); i++) {
-            std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
+            auto it = hessSparAll[i].upper_bound(i); // only the lower left side
             if (it != hessSparAll[i].begin())
                 customHessSparsity_[i].insert(hessSparAll[i].begin(), it);
         }
@@ -48,6 +49,7 @@ protected:
  * outer function
  */
 std::vector<ADCGD> outerModel(const std::vector<ADCGD>& x,
+                              const std::vector<ADCGD>& par,
                               size_t repeat,
                               atomic_base<CGD>& atomic) {
     size_t m = 8;
@@ -109,6 +111,6 @@ TEST_F(CppADCGPatternTestLoopDep, SimpleAtomic) {
     setModel(model);
     this->atoms_.push_back(&atomicfun);
 
-    testPatternDetection(m, n, repeat);
-    testLibCreation("modelSimpleAtomicDepLoop", m, n, repeat);
+    testPatternDetection(m, n, 0, repeat);
+    testLibCreation("modelSimpleAtomicDepLoop", m, n, 0, repeat);
 }

@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -26,7 +27,9 @@ protected:
     static const size_t m;
     static const size_t n;
     CppAD::vector<Base> xOuter;
+    CppAD::vector<Base> pOuter;
     CppAD::vector<Base> xInner;
+    CppAD::vector<Base> pInner;
     CppAD::vector<Base> xNorm;
     CppAD::vector<Base> eqNorm;
     std::vector<std::set<size_t> > jacInner, hessInner;
@@ -61,16 +64,19 @@ public:
         hessOuter[0].insert(0);
     }
 
-    virtual std::vector<ADCGD> modelInner(const std::vector<ADCGD>& u) {
+    std::vector<ADCGD> modelInner(const std::vector<ADCGD>& x,
+                                  const std::vector<ADCGD>& p) override {
         std::vector<ADCGD> y(m);
-        y[0] = u[0] * u[1];
+        y[0] = x[0] * x[1];
         return y;
     }
 
-    virtual std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& xOuter,
-                                          atomic_base<CGD>& atomicInnerModel,
-                                          size_t xInnerSize,
-                                          size_t yInnerSize) {
+    std::vector<ADCGD> modelOuter(const std::vector<ADCGD>& xOuter,
+                                  const std::vector<ADCGD>& pOuter,
+                                  atomic_base<CGD>& atomicInnerModel,
+                                  size_t xInnerSize,
+                                  size_t pInnerSize,
+                                  size_t yInnerSize) override {
         assert(xInnerSize == 2 * n);
         assert(yInnerSize == m);
 
@@ -92,15 +98,15 @@ const size_t CppADCGDynamicAtomicSmallerNestedTest::n = 1;
 const size_t CppADCGDynamicAtomicSmallerNestedTest::m = 1;
 
 TEST_F(CppADCGDynamicAtomicSmallerNestedTest, AtomicLibAtomicLib) {
-    this->testAtomicLibAtomicLib(xOuter, xInner, xNorm, eqNorm, 1e-14, 1e-13);
+    this->testAtomicLibAtomicLib(xOuter, pOuter, xInner, pInner, xNorm, eqNorm, 1e-14, 1e-13);
 }
 
 TEST_F(CppADCGDynamicAtomicSmallerNestedTest, AtomicLibModelBridge) {
-    this->testAtomicLibModelBridge(xOuter, xInner, xNorm, eqNorm, 1e-14, 1e-13);
+    this->testAtomicLibModelBridge(xOuter, pOuter, xInner, pInner, xNorm, eqNorm, 1e-14, 1e-13);
 }
 
 TEST_F(CppADCGDynamicAtomicSmallerNestedTest, AtomicLibModelBridgeCustomRev2) {
-    this->testAtomicLibModelBridgeCustom(xOuter, xInner, xNorm, eqNorm,
+    this->testAtomicLibModelBridgeCustom(xOuter, pOuter, xInner, pInner, xNorm, eqNorm,
                                          jacInner, hessInner,
                                          jacOuter, hessOuter,
                                          true,
@@ -108,7 +114,7 @@ TEST_F(CppADCGDynamicAtomicSmallerNestedTest, AtomicLibModelBridgeCustomRev2) {
 }
 
 TEST_F(CppADCGDynamicAtomicSmallerNestedTest, AtomicLibModelBridgeCustomDirect) {
-    this->testAtomicLibModelBridgeCustom(xOuter, xInner, xNorm, eqNorm,
+    this->testAtomicLibModelBridgeCustom(xOuter, pOuter, xInner, pInner, xNorm, eqNorm,
                                          jacInner, hessInner,
                                          jacOuter, hessOuter,
                                          false,

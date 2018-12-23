@@ -2,6 +2,7 @@
 #define	CPPAD_CG_TEST_CPPADCGPATTERNMODELTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -30,23 +31,24 @@ protected:
     const size_t nm;
     const size_t m; // total number of equations in the model
     const size_t n; // number of independent variables
-    std::vector<Base> xb; // values for the model
+    std::vector<Base> xb; // independent values for the model
+    std::vector<Base> par; // parameters values for the model
     bool useCustomSparsity_;
 public:
 
-    inline CppADCGPatternModelTest(const std::string& modelName_,
-                                   const size_t ns_,
-                                   const size_t nm_,
-                                   const size_t npar_,
-                                   const size_t m_,
+    inline CppADCGPatternModelTest(std::string modelName_,
+                                   size_t ns,
+                                   size_t nm,
+                                   size_t npar,
+                                   size_t m,
                                    bool verbose = false,
                                    bool printValues = false) :
         CppADCGPatternTest(verbose, printValues),
-        modelName(modelName_),
-        ns(ns_),
-        nm(nm_),
-        m(m_),
-        n(ns_ + nm_ + npar_),
+        modelName(std::move(modelName_)),
+        ns(ns),
+        nm(nm),
+        m(m),
+        n(ns + nm + npar),
         xb(n),
         useCustomSparsity_(true) {
         for (size_t j = 0; j < n; j++)
@@ -61,19 +63,19 @@ public:
 
         std::vector<std::set<size_t> > relatedDepCandidates = getRelatedCandidates(repeat);
 
-        testLibCreation("model" + modelName, relatedDepCandidates, repeat, xb);
+        testLibCreation("model" + modelName, relatedDepCandidates, repeat, xb, par);
     }
 
     void testPatterns(size_t repeat, const std::vector<std::vector<std::set<size_t> > >& loops) {
         std::vector<std::set<size_t> > relatedDepCandidates = getRelatedCandidates(repeat);
 
-        this->testPatternDetection(xb, repeat, relatedDepCandidates, loops);
+        this->testPatternDetection(xb, par, repeat, relatedDepCandidates, loops);
     }
 
 
 protected:
 
-    inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+    inline void defineCustomSparsity(ADFun<CGD>& fun) override {
         if (!useCustomSparsity_)
             return;
 
@@ -84,7 +86,7 @@ protected:
         customJacSparsity_.resize(jacSparAll.size());
         for (size_t i = 0; i < jacSparAll.size(); i++) {
             // only differential information for states and controls
-            std::set<size_t>::const_iterator itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
+            auto itEnd = jacSparAll[i].upper_bound(ns + nm - 1);
             if (itEnd != jacSparAll[i].begin())
                 customJacSparsity_[i].insert(jacSparAll[i].begin(), itEnd);
         }
@@ -92,7 +94,7 @@ protected:
         std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         customHessSparsity_.resize(hessSparAll.size());
         for (size_t i = 0; i < ns + nm; i++) {
-            std::set<size_t>::const_iterator it = hessSparAll[i].upper_bound(i); // only the lower left side
+            auto it = hessSparAll[i].upper_bound(i); // only the lower left side
             if (it != hessSparAll[i].begin())
                 customHessSparsity_[i].insert(hessSparAll[i].begin(), it);
         }

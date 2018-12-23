@@ -2,6 +2,7 @@
 #define CPPAD_CG_DECLARE_CG_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -24,7 +25,7 @@ class vector;
 template<class Base>
 class AD;
 
-template<class Base>
+template<class Base, typename RecBase>
 class ADFun;
 
 namespace cg {

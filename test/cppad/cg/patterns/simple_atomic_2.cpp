@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -24,7 +25,10 @@ using ADCGD = CppAD::AD<CGD>;
 /**
  * atomic function
  */
-std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x, size_t repeat, atomic_base<CGD>& atomic) {
+std::vector<ADCGD> modelAtomic(const std::vector<ADCGD>& x,
+                               const std::vector<ADCGD>& par,
+                               size_t repeat,
+                               atomic_base<CGD>& atomic) {
     size_t m = 3;
     size_t n = 4;
     size_t m2 = repeat * m;
@@ -72,6 +76,6 @@ TEST_F(CppADCGPatternTest, SimpleAtomic2) {
     setModel(model);
     this->atoms_.push_back(&atomicfun);
 
-    testPatternDetection(m, n, repeat);
-    testLibCreation("modelSimpleAtomic2", m, n, repeat);
+    testPatternDetection(m, n, 0, repeat);
+    testLibCreation("modelSimpleAtomic2", m, n, 0, repeat);
 }

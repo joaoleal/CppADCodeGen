@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_REV2_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -284,6 +285,7 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
             "void " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
             "\n";
     LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const tx[]",
+                                                                              _baseTypeName + " const par[]",
                                                                               _baseTypeName + " const ty[]",
                                                                               _baseTypeName + " px[]",
                                                                               _baseTypeName + " const py[]",
@@ -294,13 +296,17 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
             "    unsigned long* txPos;\n"
             "    unsigned long* txPosTmp;\n"
             "    unsigned long nnzTx;\n"
-            "    " << _baseTypeName << " const * in[3];\n"
+            "    " << _baseTypeName << " const * in[4];\n"
             "    " << _baseTypeName << "* out[1];\n"
             "    " << _baseTypeName << " x[" << n << "];\n"
             "    " << _baseTypeName << " w[" << m << "];\n"
             "    " << _baseTypeName << "* compressed;\n"
             "    int nonZeroW;\n"
             "    int ret;\n"
+            "\n"
+            "    in[0] = x;\n"
+            "    in[2] = w;\n"
+            "    in[3] = par;\n"
             "\n"
             "    nonZeroW = 0;\n"
             "    for (i = 0; i < " << m << "; i++) {\n"
@@ -354,9 +360,7 @@ void ModelCSourceGen<Base>::generateReverseTwoSources() {
             "      j = txPos[ej];\n"
             "      " << _name << "_" << FUNCTION_REVERSE_TWO_SPARSITY << "(j, &pos, &nnz);\n"
             "\n"
-            "      in[0] = x;\n"
             "      in[1] = &tx[j * 2 + 1];\n"
-            "      in[2] = w;\n"
             "      out[0] = compressed;\n";
     if (!_loopTapes.empty()) {
         _cache << "      for (ePos = 0; ePos < nnz; ePos++)\n"

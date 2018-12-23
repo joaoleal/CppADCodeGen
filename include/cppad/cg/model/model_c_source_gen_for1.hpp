@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_FOR1_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -256,6 +257,7 @@ void ModelCSourceGen<Base>::generateForwardOneSources() {
             "void " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(unsigned long pos, unsigned long const** elements, unsigned long* nnz);\n"
             "\n";
     LanguageC<Base>::printFunctionDeclaration(_cache, "int", model_function, {_baseTypeName + " const tx[]",
+                                                                              _baseTypeName + " par[]",
                                                                               _baseTypeName + " ty[]",
                                                                               langC.generateArgumentAtomicDcl()});
     _cache << " {\n"
@@ -264,11 +266,14 @@ void ModelCSourceGen<Base>::generateForwardOneSources() {
             "   unsigned long* txPos;\n"
             "   unsigned long* txPosTmp;\n"
             "   unsigned long nnzTx;\n"
-            "   " << _baseTypeName << " const * in[2];\n"
+            "   " << _baseTypeName << " const * in[3];\n"
             "   " << _baseTypeName << "* out[1];\n"
             "   " << _baseTypeName << " x[" << n << "];\n"
             "   " << _baseTypeName << "* compressed;\n"
             "   int ret;\n"
+            "\n"
+            "   in[0] = x;\n"
+            "   in[2] = par;\n"
             "\n"
             "   txPos = 0;\n"
             "   nnzTx = 0;\n"
@@ -309,7 +314,6 @@ void ModelCSourceGen<Base>::generateForwardOneSources() {
             "      j = txPos[ej];\n"
             "      " << _name << "_" << FUNCTION_FORWARD_ONE_SPARSITY << "(j, &pos, &nnz);\n"
             "\n"
-            "      in[0] = x;\n"
             "      in[1] = &tx[j * 2 + 1];\n"
             "      out[0] = compressed;\n";
     if (!_loopTapes.empty()) {

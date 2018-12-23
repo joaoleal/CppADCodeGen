@@ -26,7 +26,7 @@ namespace cg {
  * This class is not thread-safe and it should not be used simultaneously in
  * different threads.
  * Multiple instances of this class for the same model from the same model
- * library object can be used simulataneously in different threads.
+ * library object can be used simultaneously in different threads.
  *
  * @author Joao Leal
  */
@@ -50,11 +50,11 @@ protected:
     // original model function
     void (*_zero)(Base const*const*, Base * const*, LangCAtomicFun);
     // first order forward mode
-    int (*_forwardOne)(Base const tx[], Base ty[], LangCAtomicFun);
+    int (*_forwardOne)(Base const tx[], Base const par[], Base ty[], LangCAtomicFun);
     // first order reverse mode
-    int (*_reverseOne)(Base const tx[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
+    int (*_reverseOne)(Base const tx[], Base const par[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
     // second order reverse mode
-    int (*_reverseTwo)(Base const tx[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
+    int (*_reverseTwo)(Base const tx[], Base const par[], Base const ty[], Base px[], Base const py[], LangCAtomicFun);
     // jacobian function in the dynamic library
     void (*_jacobian)(Base const*const*, Base * const*, LangCAtomicFun);
     // hessian function in the dynamic library
@@ -416,7 +416,7 @@ public:
         CPPADCG_ASSERT_KNOWN(ty.size() >= (k + 1) * _m, "Invalid ty size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_forwardOne)(tx.data(), ty.data(), _atomicFuncArg);
+        int ret = (*_forwardOne)(tx.data(), p.data(), ty.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order forward mode failed."); // generic failure
     }
@@ -487,7 +487,7 @@ public:
         CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_reverseOne)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
+        int ret = (*_reverseOne)(tx.data(), p.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
     }
@@ -527,7 +527,7 @@ public:
             (*_reverseOneSparsity)(i, &pos, &nnz);
 
             _inHess[1] = &py[ei];
-            int ret = (*_sparseReverseOne)(i, &_inHess[0], &_out[0], _atomicFuncArg);
+            int ret = (*_sparseReverseOne)(i, _inHess.data(), _out.data(), _atomicFuncArg);
 
             CPPADCG_ASSERT_KNOWN(ret == 0, "First-order reverse mode failed.");
 
@@ -559,7 +559,7 @@ public:
         CPPADCG_ASSERT_KNOWN(py.size() >= k1 * _m, "Invalid py size");
         CPPADCG_ASSERT_KNOWN(_missingAtomicFunctions == 0, "Some atomic functions used by the compiled model have not been specified yet");
 
-        int ret = (*_reverseTwo)(tx.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
+        int ret = (*_reverseTwo)(tx.data(), p.data(), ty.data(), px.data(), py.data(), _atomicFuncArg);
 
         CPPADCG_ASSERT_KNOWN(ret != 1, "Second-order reverse mode failed: py[2*i] (i=0...m) must be zero.");
         CPPADCG_ASSERT_KNOWN(ret == 0, "Second-order reverse mode failed.");
@@ -593,7 +593,7 @@ public:
         _px.resize(_n);
         Base* compressed = &_px[0];
 
-        const Base * in[3];
+        const Base * in[4];
         in[0] = x.data();
         in[2] = py2.data();
         in[3] = p.data();

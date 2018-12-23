@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -25,7 +26,9 @@ using namespace CppAD::cg;
  * @test Model with 2 equations (1 is not defined for one of the iterations)
  *        which share only a non-indexed temporary variable
  */
-std::vector<ADCGD> modelMissingEq1(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelMissingEq1(const std::vector<ADCGD>& x,
+                                   const std::vector<ADCGD>& par,
+                                   size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -62,16 +65,18 @@ TEST_F(CppADCGPatternTest, modelMissingEq1) {
 
     setModel(modelMissingEq1);
 
-    testPatternDetection(m, n, repeat, loops);
+    testPatternDetection(m, n, 0, repeat, loops);
 
-    testLibCreation("modelMissingEq1", m, n, repeat);
+    testLibCreation("modelMissingEq1", m, n, 0, repeat);
 }
 
 /**
  * @test Model with 2 equations (1 is not defined for one of the iterations)
  *        which share an indexed and a non-indexed temporary variables
  */
-std::vector<ADCGD> modelMissingEq2(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelMissingEq2(const std::vector<ADCGD>& x,
+                                   const std::vector<ADCGD>& par,
+                                   size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -110,7 +115,7 @@ TEST_F(CppADCGPatternTest, modelMissingEq2) {
 
     setModel(modelMissingEq2);
 
-    testPatternDetection(m, n, repeat, loops);
+    testPatternDetection(m, n, 0, repeat, loops);
 
-    testLibCreation("modelMissingEq2", m, n, repeat);
+    testLibCreation("modelMissingEq2", m, n, 0, repeat);
 }

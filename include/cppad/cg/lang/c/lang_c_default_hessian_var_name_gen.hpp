@@ -51,11 +51,11 @@ public:
     }
 
     LangCDefaultHessianVarNameGenerator(VariableNameGenerator<Base>* nameGen,
-                                        const std::string& multName,
+                                        std::string multName,
                                         size_t n) :
         _nameGen(nameGen),
         _minMultiplierID(n + 1),
-        _multName(multName) {
+        _multName(std::move(multName)) {
 
         CPPADCG_ASSERT_KNOWN(_nameGen != nullptr, "The name generator must not be null");
         CPPADCG_ASSERT_KNOWN(_multName.size() > 0, "The name for the multipliers must not be empty");

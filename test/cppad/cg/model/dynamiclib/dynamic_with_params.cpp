@@ -67,6 +67,7 @@ TEST_F(CppADCGDynamicTest1, DynamicCustomElements) {
     x[1] = 2;
     x[2] = 1;
 
+    // parameters
     std::vector<double> p(ap.size());
     p[0] = 3;
     p[1] = 4;

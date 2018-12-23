@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -36,17 +37,17 @@ public:
 
 public:
 
-    virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
-                                std::vector<AD<CG<double> > >& y) override {
+    void atomicFunction(const std::vector<AD<CG<double> > >& x,
+                        std::vector<AD<CG<double> > >& y) override {
         y = CstrFunc(x);
     }
 
-    virtual void atomicFunction(const std::vector<AD<double> >& x,
-                                std::vector<AD<double> >& y) override {
+    void atomicFunction(const std::vector<AD<double> >& x,
+                        std::vector<AD<double> >& y) override {
         y = CstrFunc(x);
     }
 
-    virtual std::string getAtomicLibName() override {
+    std::string getAtomicLibName() override {
         return "cstrAtom";
     }
 };
@@ -68,11 +69,13 @@ protected:
     std::unique_ptr<CstrCollocationModel<CGD> > colModel_;
     std::vector<Base> xx; // default CSTR model values
     std::vector<Base> x; // values for the collocation model
+    std::vector<Base> par; // parameters
     std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
     std::unique_ptr<GenericModel<double> > atomicModel_;
 public:
 
-    inline CppADCGPatternCstrTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGPatternCstrTest(bool verbose = false,
+                                    bool printValues = false) :
         CppADCGPatternTest(verbose, printValues),
         colModel_(new CstrCollocationModel<CGD>()),
         xx(na) {
@@ -141,10 +144,10 @@ public:
         }
 #endif
 
-        this->setModel(*colModel_.get());
+        this->setModel(*colModel_);
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         atomicDynamicLib_.reset(nullptr);
         atomicModel_.reset(nullptr);
         colModel_.reset(nullptr);
@@ -152,7 +155,7 @@ public:
         CppADCGPatternTest::TearDown();
     }
 
-    inline virtual void defineCustomSparsity(ADFun<CGD>& fun) {
+    inline void defineCustomSparsity(ADFun<CGD>& fun) override {
         CppADCGPatternTest::defineCustomSparsity(fun);
         //std::vector<std::set<size_t> > hessSparAll = hessianSparsitySet<std::vector<std::set<size_t> > >(fun);
         //printSparsityPattern(hessSparAll, "Full Hessian");
@@ -209,15 +212,25 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVarsCppAD) {
                               ay,
                               atomic_base<double>::set_sparsity_enum);
 
+    // independent variables
     std::vector<double> xTypical = colModel_->getTypicalValues(repeat);
     size_t n = xTypical.size();
     std::vector<AD<double>> u(n);
     for (size_t j = 0; j < n; j++)
         u[j] = xTypical[j];
 
-    CppAD::Independent(u);
+    // parameters
+    std::vector<AD<double>> ap(par.size());
+    for (size_t j = 0; j < ap.size(); j++)
+        ap[j] = par[j];
 
-    std::vector<AD<double>> v = colModel_->evaluateModel(u, repeat, atomic);
+    // use a special object for source code generation
+    // declare independent variables, dynamic parameters, starting recording
+    size_t abort_op_index = 0;
+    bool record_compare = true;
+    CppAD::Independent(u, abort_op_index, record_compare, ap);
+
+    std::vector<AD<double>> v = colModel_->evaluateModel(u, ap, repeat, atomic);
 
     ADFun<double> fun;
     fun.Dependent(v);
@@ -247,8 +260,8 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVars) {
     colModel_->createAtomicLib();
     atoms_.push_back(&colModel_->getDoubleAtomic());
 
-    testPatternDetection(m, x, repeat);
-    testLibCreation("modelCstrAtomicAllVars", m, repeat, x);
+    testPatternDetection(m, x, par, repeat);
+    testLibCreation("modelCstrAtomicAllVars", m, repeat, x, par);
 }
 
 /**
@@ -267,7 +280,7 @@ TEST_F(CppADCGPatternCstrTest, Atomic) {
     colModel_->createAtomicLib();
     atoms_.push_back(&colModel_->getDoubleAtomic());
 
-    testPatternDetection(m, x, repeat);
-    testLibCreation("modelCstrAtomic", m, repeat, x);
+    testPatternDetection(m, x, par, repeat);
+    testLibCreation("modelCstrAtomic", m, repeat, x, par);
 
 }

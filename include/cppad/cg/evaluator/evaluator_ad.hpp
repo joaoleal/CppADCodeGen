@@ -140,7 +140,7 @@ protected:
 
         const std::vector<size_t>& info = node.getInfo();
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        CPPADCG_ASSERT_KNOWN(args.size() == 2, "Invalid number of arguments for atomic forward mode");
+        CPPADCG_ASSERT_KNOWN(args.size() == 3, "Invalid number of arguments for atomic forward mode");
         CPPADCG_ASSERT_KNOWN(info.size() == 3, "Invalid number of information data for atomic forward mode");
 
         // find the atomic function
@@ -168,6 +168,11 @@ protected:
         }
         const std::vector<ActiveOut>& ax = evalArrayCreationOperation(*args[0].getOperation());
         std::vector<ActiveOut>& ay = evalArrayCreationOperation(*args[1].getOperation());
+        const std::vector<ActiveOut>& ap = evalArrayCreationOperation(*args[2].getOperation());
+
+        if (ap.size() != 0) {
+            throw CGException("Support for parameters in atomic functions not implemented yet!");
+        }
 
         (*atomicFunction)(ax, ay);
 

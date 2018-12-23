@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -27,7 +28,8 @@ public:
     using ADCGD = CppAD::AD<CGD>;
 public:
 
-    inline CppADCGPatternTankBatTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGPatternTankBatTest(bool verbose = false,
+                                       bool printValues = false) :
         CppADCGPatternModelTest("TankBattery",
                                 nTanks, // ns
                                 1, // nm
@@ -37,12 +39,14 @@ public:
         this->verbose_ = true;
     }
 
-    virtual std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x, size_t repeat) {
+    std::vector<ADCGD> evaluateModel(const std::vector<ADCGD>& x,
+                                     const std::vector<ADCGD>& par,
+                                     size_t repeat) override {
         assert(repeat == nTanks);
         return tankBatteryFunc(x);
     }
 
-    virtual std::vector<std::set<size_t> > getRelatedCandidates(size_t repeat) {
+    std::vector<std::set<size_t> > getRelatedCandidates(size_t repeat) override {
         std::vector<std::set<size_t> > relatedDepCandidates(1);
         for (size_t i = 0; i < repeat; i++) relatedDepCandidates[0].insert(i);
         return relatedDepCandidates;

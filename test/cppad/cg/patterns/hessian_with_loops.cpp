@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -43,7 +44,9 @@ using namespace CppAD::cg;
 /**
  * @test Linear model (no Hessian)
  */
-std::vector<ADCGD> modelLinear(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelLinear(const std::vector<ADCGD>& x,
+                               const std::vector<ADCGD>& par,
+                               size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -64,13 +67,15 @@ TEST_F(CppADCGHessLoopTest, modelLinear) {
     size_t n = 2;
 
     setModel(modelLinear);
-    testLibCreation("modelLinear", m, n, 6);
+    testLibCreation("modelLinear", m, n, 0, 6);
 }
 
 /**
  * @test Bi-linear model of indexed variables
  */
-std::vector<ADCGD> modelBiLinearIndexed(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelBiLinearIndexed(const std::vector<ADCGD>& x,
+                                        const std::vector<ADCGD>& par,
+                                        size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -91,13 +96,15 @@ TEST_F(CppADCGHessLoopTest, modelBiLinearIndexed) {
     size_t n = 2;
 
     setModel(modelBiLinearIndexed);
-    testLibCreation("modelBiLinearIndexed", m, n, 6);
+    testLibCreation("modelBiLinearIndexed", m, n, 0, 6);
 }
 
 /**
  * @test Bi-linear model of indexed-nonIndexed variables
  */
-std::vector<ADCGD> modelBiLinearIndexedNonIndexed(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelBiLinearIndexedNonIndexed(const std::vector<ADCGD>& x,
+                                                  const std::vector<ADCGD>& par,
+                                                  size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -118,14 +125,16 @@ TEST_F(CppADCGHessLoopTest, modelBiLinearIndexedNonIndexed) {
     size_t n = 2;
 
     setModel(modelBiLinearIndexedNonIndexed);
-    testLibCreation("modelBiLinearIndexedNonIndexed", m, n, 6);
+    testLibCreation("modelBiLinearIndexedNonIndexed", m, n, 0, 6);
 }
 
 /**
  * @test Model with a bilinear term with a temporary (which depends linearly
  *       on a non-indexed) and an indexed variable
  */
-std::vector<ADCGD> modelIndexedTemporary(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelIndexedTemporary(const std::vector<ADCGD>& x,
+                                         const std::vector<ADCGD>& par,
+                                         size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -147,13 +156,15 @@ TEST_F(CppADCGHessLoopTest, modelIndexedTemporary) {
     size_t n = 2;
 
     setModel(modelIndexedTemporary);
-    testLibCreation("modelIndexedTemporary", m, n, 6);
+    testLibCreation("modelIndexedTemporary", m, n, 0, 6);
 }
 
 /**
  * @test Model with two temporary variables (which depend linearly on non-indexed)
  */
-std::vector<ADCGD> modelTemporaryTemporary(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryTemporary(const std::vector<ADCGD>& x,
+                                           const std::vector<ADCGD>& par,
+                                           size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -176,14 +187,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryTemporary) {
     size_t n = 2;
 
     setModel(modelTemporaryTemporary);
-    testLibCreation("modelTemporaryTemporary", m, n, 6);
+    testLibCreation("modelTemporaryTemporary", m, n, 0, 6);
 }
 
 /**
  * @test Model with a non-indexed and a temporary variable (which depends
  *       linearly on a non-indexed)
  */
-std::vector<ADCGD> modelTemporaryNonIndexed(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryNonIndexed(const std::vector<ADCGD>& x,
+                                            const std::vector<ADCGD>& par,
+                                            size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -205,14 +218,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryNonIndexed) {
     size_t n = 2;
 
     setModel(modelTemporaryNonIndexed);
-    testLibCreation("modelTemporaryNonIndexed", m, n, 6);
+    testLibCreation("modelTemporaryNonIndexed", m, n, 0, 6);
 }
 
 /**
  * @test Model with a temporary variable (which depends non-linearly on a
  *       non-indexed)
  */
-std::vector<ADCGD> modelTemporary(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporary(const std::vector<ADCGD>& x,
+                                  const std::vector<ADCGD>& par,
+                                  size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -234,14 +249,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporary) {
     size_t n = 2;
 
     setModel(modelTemporary);
-    testLibCreation("modelTemporary", m, n, 6);
+    testLibCreation("modelTemporary", m, n, 0, 6);
 }
 
 /**
  * @test Model with bilinear term with a temporary variable (which depends 
  *       non-linearly on a non-indexed) and an indexed variable
  */
-std::vector<ADCGD> modelTemporaryIndexed(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryIndexed(const std::vector<ADCGD>& x,
+                                         const std::vector<ADCGD>& par,
+                                         size_t repeat) {
     size_t m = 1;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -262,14 +279,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed) {
     size_t n = 2;
 
     setModel(modelTemporaryIndexed);
-    testLibCreation("modelTemporaryIndexed", m, n, 6);
+    testLibCreation("modelTemporaryIndexed", m, n, 0, 6);
 }
 
 /**
  * @test Model with 2 bilinear term with a temporary variable (which depends 
  *       non-linearly on a non-indexed) and an indexed variable
  */
-std::vector<ADCGD> modelTemporaryIndexed2(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryIndexed2(const std::vector<ADCGD>& x,
+                                          const std::vector<ADCGD>& par,
+                                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -292,14 +311,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed2) {
     size_t n = 2;
 
     setModel(modelTemporaryIndexed2);
-    testLibCreation("modelTemporaryIndexed2", m, n, 6);
+    testLibCreation("modelTemporaryIndexed2", m, n, 0, 6);
 }
 
 /**
  * @test Model with a temporary variable (which depends non-linearly on a 
  *       non-indexed) and a non-linear term with an indexed variable
  */
-std::vector<ADCGD> modelTemporaryIndexed3(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryIndexed3(const std::vector<ADCGD>& x,
+                                          const std::vector<ADCGD>& par,
+                                          size_t repeat) {
     size_t m = 1;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -320,14 +341,16 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed3) {
     size_t n = 2;
 
     setModel(modelTemporaryIndexed3);
-    testLibCreation("modelTemporaryIndexed3", m, n, 6);
+    testLibCreation("modelTemporaryIndexed3", m, n, 0, 6);
 }
 
 /**
  * @test Model with two temporary variables (which depends non-linearly on the
  *       same non-indexed variable) and an indexed variable
  */
-std::vector<ADCGD> modelTemporaryIndexed4(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryIndexed4(const std::vector<ADCGD>& x,
+                                          const std::vector<ADCGD>& par,
+                                          size_t repeat) {
     size_t m = 1;
     size_t n = 1;
     size_t m2 = repeat * m;
@@ -350,7 +373,7 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed4) {
     size_t n = 1;
 
     setModel(modelTemporaryIndexed4);
-    testLibCreation("modelTemporaryIndexed4", m, n, 6);
+    testLibCreation("modelTemporaryIndexed4", m, n, 0, 6);
 }
 
 /**
@@ -358,7 +381,9 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed4) {
  *       variable (which depends non-linearly on a non-indexed) and an indexed
  *       variable. Tests the grouping of expressions in the same if-else branch
  */
-std::vector<ADCGD> modelTemporaryIndexed5(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelTemporaryIndexed5(const std::vector<ADCGD>& x,
+                                          const std::vector<ADCGD>& par,
+                                          size_t repeat) {
     size_t m = 2;
     size_t n = 2;
     size_t m2 = repeat * m;
@@ -381,13 +406,15 @@ TEST_F(CppADCGHessLoopTest, modelTemporaryIndexed5) {
     size_t n = 2;
 
     setModel(modelTemporaryIndexed5);
-    testLibCreation("modelTemporaryIndexed5", m, n, 6);
+    testLibCreation("modelTemporaryIndexed5", m, n, 0, 6);
 }
 
 /**
  * @test example model
  */
-std::vector<ADCGD> modelExample(const std::vector<ADCGD>& x, size_t repeat) {
+std::vector<ADCGD> modelExample(const std::vector<ADCGD>& x,
+                                const std::vector<ADCGD>& par,
+                                size_t repeat) {
     assert(repeat == 3);
 
     // dependent variable vector 
@@ -430,7 +457,8 @@ TEST_F(CppADCGHessLoopTest, modelExample) {
     setModel(modelExample);
 
     std::vector<Base> xb(5, 0.5);
-    testPatternDetection(xb, repeat, relatedDeps, loops);
+    std::vector<Base> par;
+    testPatternDetection(xb, par, repeat, relatedDeps, loops);
 
-    testLibCreation("modelExample", relatedDeps, repeat, xb);
+    testLibCreation("modelExample", relatedDeps, repeat, xb, par);
 }

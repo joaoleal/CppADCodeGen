@@ -165,7 +165,7 @@ protected:
         size_t p = info[2];
         size_t p1 = p + 1;
 
-        CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1, "Invalid number of information data for atomic operation");
+        CPPADCG_ASSERT_KNOWN(inArgs.size() == 2 * p1 + 1, "Invalid number of information data for atomic operation");
 
         if (outHandler_ == nullptr) {
             throw CGException("Evaluator is unable to determine the new CodeHandler for an atomic operation");
@@ -201,11 +201,17 @@ protected:
                 auto& atomic = *itAFun->second;
 
                 CppAD::vector<bool> vx, vy;
-                CppAD::vector<ActiveOut> tx(outVals[0].size()), ty(outVals[1].size());
+                CppAD::vector<ActiveOut> tx(outVals[0].size()), ty(outVals[1].size()), par(outVals[2].size());
                 for (size_t i = 0; i < tx.size(); ++i)
                     tx[i] = ActiveIn(outVals[0][i]);
                 for (size_t i = 0; i < ty.size(); ++i)
                     ty[i] = ActiveIn(outVals[1][i]);
+                for (size_t i = 0; i < par.size(); ++i)
+                    par[i] = ActiveIn(outVals[2][i]);
+
+                if (par.size() != 0) {
+                    throw CGException("Support for parameters in atomic functions not implemented yet!");
+                }
 
                 atomic.forward(q, p, vx, vy, tx, ty);
 
@@ -241,7 +247,7 @@ protected:
 
         ArgOut arrayArg = asArgument(makeArray(*args[0].getOperation()));
 
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
         const NodeIn& atomicNode = *args[1].getOperation();
         thisOps.evalAtomicOperation(atomicNode); // atomic operation
         ArgOut atomicArg = *evals_[atomicNode]->getOperationNode();

@@ -2,6 +2,7 @@
 #define	CPPAD_CG_TEST_CPPADCGPATTERNTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -44,7 +45,8 @@ private:
     std::unique_ptr<DefaultPatternTestModel<CG<Base> > > modelMem_;
 public:
 
-    inline CppADCGPatternTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGPatternTest(bool verbose = false,
+                                bool printValues = false) :
         CppADCGTest(verbose, printValues),
         model_(nullptr),
         testZeroOrder_(true),
@@ -57,7 +59,7 @@ public:
         //this->verbose_ = true;
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         modelMem_.reset(nullptr);
 
         CppADCGTest::TearDown();
@@ -67,28 +69,31 @@ public:
         model_ = &model;
     }
 
-    void setModel(std::vector<ADCGD> (*model)(const std::vector<ADCGD>& x, size_t repeat)) {
+    void setModel(std::vector<ADCGD> (*model)(const std::vector<ADCGD>& x, const std::vector<ADCGD>& par, size_t repeat)) {
         modelMem_.reset(new DefaultPatternTestModel<CG<Base> >(model));
-        setModel(*modelMem_.get());
+        setModel(*modelMem_);
     }
 
     void testPatternDetection(size_t m,
                               size_t n,
+                              size_t p,
                               size_t repeat) {
-        testPatternDetection(m, n, repeat, 1);
+        testPatternDetection(m, n, p, repeat, 1);
     }
 
     void testPatternDetection(size_t m,
                               size_t n,
+                              size_t p,
                               size_t repeat,
                               size_t n_loops,
                               long commonVars = -1) {
         std::vector<std::vector<std::set<size_t> > > loops(n_loops);
-        testPatternDetection(m, n, repeat, loops, commonVars);
+        testPatternDetection(m, n, p, repeat, loops, commonVars);
     }
 
     void testPatternDetection(size_t m,
                               size_t n,
+                              size_t p,
                               size_t repeat,
                               const std::vector<std::vector<std::set<size_t> > >& loops,
                               long commonVars = -1) {
@@ -102,20 +107,26 @@ public:
         for (size_t j = 0; j < n2; j++)
             xb[j] = 0.5;
 
-        testPatternDetection(m, xb, repeat, loops, commonVars);
+        std::vector<Base> par(p);
+        for (size_t j = 0; j < p; j++)
+            par[j] = 1.5;
+
+        testPatternDetection(m, xb, par, repeat, loops, commonVars);
     }
 
     void testPatternDetection(size_t m,
                               const std::vector<Base>& xb,
+                              const std::vector<Base>& par,
                               size_t repeat,
                               const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1),
                               long commonVars = -1) {
         std::vector<std::set<size_t> > depCandidates = createRelatedDepCandidates(m, repeat);
 
-        testPatternDetection(xb, repeat, depCandidates, loops, commonVars);
+        testPatternDetection(xb, par, repeat, depCandidates, loops, commonVars);
     }
 
     void testPatternDetection(const std::vector<Base>& xb,
+                              const std::vector<Base>& par,
                               size_t repeat,
                               const std::vector<std::set<size_t> >& relatedDepCandidates,
                               const std::vector<std::vector<std::set<size_t> > >& loops = std::vector<std::vector<std::set<size_t> > >(1),
@@ -127,7 +138,7 @@ public:
         /**
          * Tape model
          */
-        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb));
+        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb, par));
 
         testPatternDetectionResults(*fun, repeat, relatedDepCandidates, loops, commonVars);
     }
@@ -135,30 +146,39 @@ public:
     void testLibCreation(const std::string& libName,
                          size_t m,
                          size_t n,
+                         size_t p,
                          size_t repeat,
                          size_t mExtra = 0) {
+        // independent
         size_t n2 = repeat * n;
         std::vector<Base> x(n2);
         for (size_t j = 0; j < n2; j++)
             x[j] = 0.5 * (j + 1);
 
-        testLibCreation(libName, m, repeat, x);
+        // parameters
+        std::vector<Base> par(p);
+        for (size_t j = 0; j < p; j++)
+            par[j] = 1.5 * (j + 1);
+
+        testLibCreation(libName, m, repeat, x, par);
     }
 
     void testLibCreation(const std::string& libName,
                          size_t m,
                          size_t repeat,
-                         const std::vector<Base>& xb) {
+                         const std::vector<Base>& xb,
+                         const std::vector<Base>& par) {
 
         std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-        testLibCreation(libName, relatedDepCandidates, repeat, xb);
+        testLibCreation(libName, relatedDepCandidates, repeat, xb, par);
     }
 
     void testLibCreation(const std::string& libName,
                          const std::vector<std::set<size_t> >& relatedDepCandidates,
                          size_t repeat,
-                         const std::vector<Base>& xb) {
+                         const std::vector<Base>& xb,
+                         const std::vector<Base>& par) {
         using namespace CppAD;
 
         assert(!relatedDepCandidates.empty());
@@ -167,40 +187,51 @@ public:
         /**
          * Tape model
          */
-        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb));
+        std::unique_ptr<ADFun<CGD> > fun(tapeModel(repeat, xb, par));
 
         defineCustomSparsity(*fun);
 
-        testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, testJacobian_, testHessian_);
+        testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, par, JacobianADMode::Forward, testJacobian_, testHessian_);
         if (testJacobian_) {
-            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, true, false, true);
-            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false);
-            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Reverse, true, false, true);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, par, JacobianADMode::Forward, true, false, true);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, par, JacobianADMode::Reverse, true, false);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, par, JacobianADMode::Reverse, true, false, true);
         }
 
         if (testHessian_) {
-            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, JacobianADMode::Forward, false, true, false, true);
+            testSourceCodeGen(*fun, relatedDepCandidates, libName, xb, par, JacobianADMode::Forward, false, true, false, true);
         }
 
     }
 
     ADFun<CGD>* tapeModel(size_t repeat,
-                          const std::vector<Base>& xb) {
+                          const std::vector<Base>& xb,
+                          const std::vector<Base>& par) {
         /**
          * Tape model
          */
+        // independent
         std::vector<ADCGD> x(xb.size());
-        for (size_t j = 0; j < xb.size(); j++)
+        for (size_t j = 0; j < x.size(); j++)
             x[j] = xb[j];
-        CppAD::Independent(x);
-        if (xNorm_.size() > 0) {
+
+        // parameters
+        std::vector<ADCGD> ap(par.size());
+        for (size_t j = 0; j < ap.size(); j++)
+            ap[j] = par[j];
+
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(x, abort_op_index, record_compare, ap);
+
+        if (!xNorm_.empty()) {
             assert(x.size() == xNorm_.size());
             for (size_t j = 0; j < x.size(); j++)
                 x[j] *= xNorm_[j];
         }
 
-        std::vector<ADCGD> y = model_->evaluateModel(x, repeat);
-        if (eqNorm_.size() > 0) {
+        std::vector<ADCGD> y = model_->evaluateModel(x, ap, repeat);
+        if (!eqNorm_.empty()) {
             assert(y.size() == eqNorm_.size());
             for (size_t i = 0; i < y.size(); i++)
                 y[i] /= eqNorm_[i];
@@ -347,6 +378,7 @@ public:
                            size_t mExtra,
                            const std::string& name,
                            const std::vector<Base>& xTypical,
+                           const std::vector<Base>& par,
                            JacobianADMode jacMode,
                            bool jacobian = true,
                            bool hessian = true,
@@ -355,7 +387,7 @@ public:
 
         std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-        testSourceCodeGen(fun, relatedDepCandidates, name, xTypical,
+        testSourceCodeGen(fun, relatedDepCandidates, name, xTypical, par,
                           jacMode, jacobian, hessian, forReverseOne, reverseTwo);
     }
 
@@ -363,6 +395,7 @@ public:
                            const std::vector<std::set<size_t> >& relatedDepCandidates,
                            const std::string& name,
                            const std::vector<Base>& xTypical,
+                           const std::vector<Base>& par,
                            JacobianADMode jacMode,
                            bool jacobian = true,
                            bool hessian = true,
@@ -422,7 +455,7 @@ public:
         std::unique_ptr<GenericModel<double> > modelL;
         if (loadModels) {
             modelL = dynamicLibL->model(libBaseName + "Loops");
-            ASSERT_TRUE(modelL.get() != nullptr);
+            ASSERT_TRUE(modelL != nullptr);
             for (size_t i = 0; i < atoms_.size(); i++)
                 modelL->addAtomicFunction(*atoms_[i]);
         }
@@ -492,8 +525,8 @@ public:
 
             std::vector<double> jacl, jac;
             std::vector<size_t> rowsl, colsl, rows, cols;
-            modelL->SparseJacobian(x, jacl, rowsl, colsl);
-            model->SparseJacobian(x, jac, rows, cols);
+            modelL->SparseJacobian(x, par, jacl, rowsl, colsl);
+            model->SparseJacobian(x, par, jac, rows, cols);
 
             ASSERT_TRUE(compareValues(jacl, jac, epsilonR_, epsilonA_));
         }
@@ -509,8 +542,8 @@ public:
             }
             std::vector<double> hessl, hess;
             std::vector<size_t> rowsl, colsl, rows, cols;
-            modelL->SparseHessian(x, w, hessl, rowsl, colsl);
-            model->SparseHessian(x, w, hess, rows, cols);
+            modelL->SparseHessian(x, par, w, hessl, rowsl, colsl);
+            model->SparseHessian(x, par, w, hess, rows, cols);
 
             ASSERT_TRUE(compareValues(hessl, hess, hessianEpsilonR_, hessianEpsilonA_));
         }

@@ -20,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Creates variables names for the source code using a list of provided
+ * Creates variables names for Latex generated source code using a list of provided
  * custom names.
  *
  * @author Joao Leal
@@ -35,16 +35,17 @@ protected:
     const std::vector<std::string> indepNames_;
 public:
 
-    LangLatexCustomVariableNameGenerator(const std::vector<std::string>& depNames,
-                                         const std::vector<std::string>& indepNames,
-                                         const std::string& depName = "y",
-                                         const std::string& indepName = "x",
-                                         const std::string& tmpName = "v",
-                                         const std::string& tmpArrayName = "\\mathbf{a}",
-                                         const std::string& tmpSparseArrayName = "\\mathbf{s}") :
-        LangLatexDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName, tmpSparseArrayName),
-        depNames_(depNames),
-        indepNames_(indepNames) {
+    LangLatexCustomVariableNameGenerator(std::vector<std::string> depNames,
+                                         std::vector<std::string> indepNames,
+                                         std::string depName = "y",
+                                         std::string indepName = "x",
+                                         std::string paramName = "p",
+                                         std::string tmpName = "v",
+                                         std::string tmpArrayName = "\\mathbf{a}",
+                                         std::string tmpSparseArrayName = "\\mathbf{s}") :
+        LangLatexDefaultVariableNameGenerator<Base>(std::move(depName), std::move(indepName), std::move(paramName), std::move(tmpName), std::move(tmpArrayName), std::move(tmpSparseArrayName)),
+        depNames_(std::move(depNames)),
+        indepNames_(std::move(indepNames)) {
     }
 
     inline virtual ~LangLatexCustomVariableNameGenerator() = default;
