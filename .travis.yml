@@ -48,11 +48,11 @@ install:
   - mkdir cppadcg_deps
   - cd cppadcg_deps
 # get CppAD:
-#  - git clone https://github.com/coin-or/CppAD.git cppad
-#  - cd cppad
-  - wget http://github.com/coin-or/CppAD/archive/20170000.8.tar.gz  
-  - tar -xzf 20170000.8.tar.gz
-  - cd CppAD-20170000.8
+  - git clone https://github.com/coin-or/CppAD.git cppad
+  - cd cppad
+#  - wget http://github.com/coin-or/CppAD/archive/20170000.8.tar.gz
+#  - tar -xzf 20170000.8.tar.gz
+#  - cd CppAD-20170000.8
   - mkdir build
   - mkdir install
   - CPPAD_HOME=`pwd`/install/include
