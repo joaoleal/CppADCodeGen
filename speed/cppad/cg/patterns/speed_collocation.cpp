@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -34,7 +35,7 @@ protected:
     size_t nEls_; // number of plugflow discretization elements
 public:
 
-    PlugFlowCollocationModel(size_t nEls) :
+    explicit PlugFlowCollocationModel(size_t nEls) :
         CollocationModel<T>(PlugFlowModel<AD<double>>::N_EL_STATES * nEls, // ns
                             PlugFlowModel<AD<double>>::N_CONTROLS, // nm
                             PlugFlowModel<AD<double>>::N_PAR), // npar
@@ -43,19 +44,21 @@ public:
 
 protected:
 
-    virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
-                                std::vector<AD<CG<double> > >& y) override {
+    void atomicFunction(const std::vector<AD<CG<double> > >& x,
+                        const std::vector<AD<CG<double> > >& p,
+                        std::vector<AD<CG<double> > >& y) override {
         PlugFlowModel<CG<double> > m;
         y = m.model2(x, nEls_);
     }
 
-    virtual void atomicFunction(const std::vector<AD<double> >& x,
-                                std::vector<AD<double> >& y) override {
+    void atomicFunction(const std::vector<AD<double> >& x,
+                        const std::vector<AD<double> >& p,
+                        std::vector<AD<double> >& y) override {
         PlugFlowModel<double> m;
         y = m.model2(x, nEls_);
     }
 
-    virtual std::string getAtomicLibName() override {
+    std::string getAtomicLibName() override {
         return "plugflow";
     }
 };
@@ -70,7 +73,8 @@ protected:
     PlugFlowCollocationModel<CG<double> > modelCppADCG_;
 public:
 
-    inline CollocationPatternSpeedTest(size_t nEls, bool verbose = false) :
+    explicit CollocationPatternSpeedTest(size_t nEls,
+                                         bool verbose = false) :
         PatternSpeedTest("collocation", verbose),
         nEls_(nEls),
         modelCppAD_(nEls),
@@ -79,9 +83,9 @@ public:
         /**
          * Prepare the atomic model
          */
-        PlugFlowModel<CG<double> > m;
-        modelCppAD_.setTypicalAtomModelValues(m.getTypicalValues(nEls_));
-        modelCppADCG_.setTypicalAtomModelValues(m.getTypicalValues(nEls_));
+        PlugFlowModel<CG<double> > model;
+        modelCppAD_.setTypicalAtomModelValues(model.getTypicalValues(nEls_));
+        modelCppADCG_.setTypicalAtomModelValues(model.getTypicalValues(nEls_));
 
         modelCppAD_.createAtomicLib();
         modelCppADCG_.createAtomicLib();
@@ -96,12 +100,20 @@ public:
         return modelCppAD_.getTypicalValues(repeat);
     }
 
-    virtual std::vector<AD<CGD> > modelCppADCG(const std::vector<AD<CGD> >& x, size_t repeat) {
-        return modelCppADCG_.evaluateModel(x, repeat);
+    inline std::vector<double> getTypicalParameters(size_t repeat) {
+        return modelCppAD_.getTypicalParameters();
     }
 
-    virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x, size_t repeat) {
-        return modelCppAD_.evaluateModel(x, repeat);
+    std::vector<AD<CGD> > modelCppADCG(const std::vector<AD<CGD> >& x,
+                                       const std::vector<AD<CGD> >& p,
+                                       size_t repeat) override {
+        return modelCppADCG_.evaluateModel(x, p, repeat);
+    }
+
+    std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x,
+                                      const std::vector<AD<Base> >& p,
+                                      size_t repeat) override {
+        return modelCppAD_.evaluateModel(x, p, repeat);
     }
 };
 
@@ -134,5 +146,5 @@ int main(int argc, char **argv) {
     compileFlags[2] = "-ggdb";
     speed.setCompileFlags(compileFlags);
 #endif
-    speed.measureSpeed(K * ns * nEls, repeat, speed.getTypicalValues(repeat));
+    speed.measureSpeed(K * ns * nEls, repeat, speed.getTypicalValues(repeat), speed.getTypicalParameters(repeat));
 }

@@ -33,6 +33,7 @@ protected:
     const size_t na_; // number of independent variables of the atomic function
 
     std::vector<double> xa_; // default atomic model values
+    std::vector<double> pa_; // default atomic model parameters
 
     std::unique_ptr<DynamicLib<double> > atomicDynamicLib_;
     std::unique_ptr<GenericModel<double> > atomicModel_;
@@ -68,12 +69,21 @@ public:
         xa_ = xxx;
     }
 
+    inline void setTypicalParameters(const std::vector<double>& par) {
+        //assert(par.size() == npar_); // par.size() != npar
+        pa_ = par;
+    }
+
     inline void setIgnoreParameters(bool ignoreParameters) {
         ignoreParameters_ = ignoreParameters;
     }
 
     inline std::vector<double> getTypicalAtomicValues() {
         return xa_;
+    }
+
+    inline std::vector<double> getTypicalParameters() {
+        return pa_;
     }
 
     inline std::vector<double> getTypicalValues(size_t repeat) {
@@ -232,17 +242,26 @@ public:
         /**
          * Tape model
          */
-        std::vector<ADCGD> xa(na_);
+        std::vector<ADCGD> ax(na_);
         for (size_t j = 0; j < na_; j++)
-            xa[j] = xa_[j];
-        CppAD::Independent(xa);
+            ax[j] = xa_[j];
 
-        std::vector<ADCGD> ya(ns_);
+        std::vector<ADCGD> ap(pa_.size());
+        for (size_t j = 0; j < pa_.size(); j++)
+            ap[j] = pa_[j];
 
-        atomicFunction(xa, ya);
+        // use a special object for source code generation
+        // declare independent variables, dynamic parameters, starting recording
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+
+        std::vector<ADCGD> ay(ns_);
+
+        atomicFunction(ax, ap, ay);
 
         ADFun<CGD> fun;
-        fun.Dependent(ya);
+        fun.Dependent(ay);
 
         /**
          * Compile
@@ -305,9 +324,11 @@ public:
 
 protected:
     virtual void atomicFunction(const std::vector<AD<CG<double> > >& x,
+                                const std::vector<AD<CG<double> > >& p,
                                 std::vector<AD<CG<double> > >& y) = 0;
 
     virtual void atomicFunction(const std::vector<AD<double> >& x,
+                                const std::vector<AD<double> >& p,
                                 std::vector<AD<double> >& y) = 0;
 
     virtual std::string getAtomicLibName() = 0;
@@ -319,7 +340,7 @@ template<>
 atomic_base<CG<double> >& CollocationModel<CG<double> >::createAtomic() {
     size_t n = atomicModel_->Domain();
     atomModel_.reset(new CGAtomicFun<double>(atomicModel_->asAtomic(), std::vector<double>(n), true));
-    return *atomModel_.get();
+    return *atomModel_;
 }
 
 template<>

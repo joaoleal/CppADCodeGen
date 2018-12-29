@@ -2,6 +2,7 @@
 #define	CPPAD_CG_PATTERNSPEEDTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -39,10 +40,12 @@ private:
         PatternSpeedTest& self_;
     public:
 
-        Model(PatternSpeedTest& s) : self_(s) {
+        explicit Model(PatternSpeedTest& s) : self_(s) {
         }
 
-        virtual std::vector<AD<T> > evaluate(const std::vector<AD<T> >& x, size_t repeat) = 0;
+        virtual std::vector<AD<T> > evaluate(const std::vector<AD<T> >& x,
+                                             const std::vector<AD<T> >& p,
+                                             size_t repeat) = 0;
     };
 
     /**
@@ -51,11 +54,13 @@ private:
     class ModelCppAD : public Model<Base> {
     public:
 
-        ModelCppAD(PatternSpeedTest& s) : Model(s) {
+        explicit ModelCppAD(PatternSpeedTest& s) : Model(s) {
         }
 
-        virtual std::vector<AD<Base> > evaluate(const std::vector<AD<Base> >& x, size_t repeat) {
-            return self_.modelCppAD(x, repeat);
+        std::vector<AD<Base> > evaluate(const std::vector<AD<Base> >& x,
+                                        const std::vector<AD<Base> >& p,
+                                        size_t repeat) override {
+            return self_.modelCppAD(x, p, repeat);
         }
     };
 
@@ -65,11 +70,13 @@ private:
     class ModelCppADCG : public Model<CG<Base> > {
     public:
 
-        ModelCppADCG(PatternSpeedTest& s) : Model(s) {
+        explicit ModelCppADCG(PatternSpeedTest& s) : Model(s) {
         }
 
-        virtual std::vector<AD<CG<Base> > > evaluate(const std::vector<AD<CG<Base> > >& x, size_t repeat) {
-            return self_.modelCppADCG(x, repeat);
+        std::vector<AD<CG<Base> > > evaluate(const std::vector<AD<CG<Base> > >& x,
+                                             const std::vector<AD<CG<Base> > >& p,
+                                             size_t repeat) override {
+            return self_.modelCppADCG(x, p, repeat);
         }
     };
 public:
@@ -109,8 +116,8 @@ private:
     std::vector<duration> total_; /// total time
 public:
 
-    inline PatternSpeedTest(const std::string& libName,
-                            bool verbose = false) :
+    explicit PatternSpeedTest(std::string libName,
+                              bool verbose = false) :
         preparation(true),
         zeroOrder(true),
         sparseJacobian(true),
@@ -119,7 +126,7 @@ public:
         cppADCG(true),
         cppADCGLoops(true),
         cppADCGLoopsLlvm(true),
-        libName_(libName),
+        libName_(std::move(libName)),
         testJacobian_(true),
         testHessian_(true),
         verbose_(verbose),
@@ -135,9 +142,13 @@ public:
         compileFlags_ = compileFlags;
     }
 
-    virtual std::vector<ADCGD> modelCppADCG(const std::vector<ADCGD>& x, size_t repeat) = 0;
+    virtual std::vector<ADCGD> modelCppADCG(const std::vector<ADCGD>& x,
+                                            const std::vector<ADCGD>& p,
+                                            size_t repeat) = 0;
 
-    virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x, size_t repeat) = 0;
+    virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x,
+                                              const std::vector<AD<Base> >& p,
+                                              size_t repeat) = 0;
 
     inline void setExternalModels(const std::vector<GenericModel<Base>*>& atoms) {
         externalModels_ = atoms;
@@ -145,29 +156,36 @@ public:
 
     inline void measureSpeed(size_t m,
                              size_t n,
+                             size_t p,
                              size_t repeat) {
         size_t n2 = repeat * n;
         std::vector<Base> x(n2);
         for (size_t j = 0; j < n2; j++)
             x[j] = 0.5 * (j + 1);
 
+        std::vector<Base> par(p);
+        for (size_t j = 0; j < p; j++)
+            par[j] = 1 + 0.5 * (j + 1);
+
         std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-        measureSpeed(relatedDepCandidates, repeat, x);
+        measureSpeed(relatedDepCandidates, repeat, x, par);
     }
 
     inline void measureSpeed(size_t m,
                              size_t repeat,
-                             const std::vector<Base>& xb) {
+                             const std::vector<Base>& xb,
+                             const std::vector<Base>& pb) {
 
         std::vector<std::set<size_t> > relatedDepCandidates = createRelatedDepCandidates(m, repeat);
 
-        measureSpeed(relatedDepCandidates, repeat, xb);
+        measureSpeed(relatedDepCandidates, repeat, xb, pb);
     }
 
     inline void measureSpeed(const std::vector<std::set<size_t> >& relatedDepCandidates,
                              size_t repeat,
-                             const std::vector<Base>& xb) {
+                             const std::vector<Base>& xb,
+                             const std::vector<Base>& pb) {
         using namespace CppAD;
 
         std::cout << libName_ << "\n";
@@ -178,19 +196,19 @@ public:
         /*******************************************************************
          * CppADCG (without Loops)
          ******************************************************************/
-        measureSpeedCppADCG(repeat, xb);
+        measureSpeedCppADCG(repeat, xb, pb);
 
         /*******************************************************************
          * CppADCG (Loops)
          ******************************************************************/
-        measureSpeedCppADCGWithLoops(relatedDepCandidates, repeat, xb);
+        measureSpeedCppADCGWithLoops(relatedDepCandidates, repeat, xb, pb);
 
-        measureSpeedCppADCGWithLoopsLlvm(relatedDepCandidates, repeat, xb);
+        measureSpeedCppADCGWithLoopsLlvm(relatedDepCandidates, repeat, xb, pb);
 
         /*******************************************************************
          * CppAD
          ******************************************************************/
-        measureSpeedCppAD(repeat, xb);
+        measureSpeedCppAD(repeat, xb, pb);
     }
 
     inline static size_t parseProgramArguments(int pos, int argc, char **argv, size_t defaultRepeat) {
@@ -206,7 +224,8 @@ public:
 protected:
 
     inline void measureSpeedCppADCG(size_t repeat,
-                                    const std::vector<Base>& xb) {
+                                    const std::vector<Base>& xb,
+                                    const std::vector<Base>& pb) {
         using namespace std::chrono;
         using namespace CppAD;
 
@@ -233,11 +252,11 @@ protected:
         for (size_t i = 0; i < dt.size(); i++) {
             // tape
             auto t0 = steady_clock::now();
-            fun.reset(tapeModel(model, xb, repeat));
+            fun.reset(tapeModel(model, xb, pb, repeat));
             dt[i] = steady_clock::now() - t0;
 
             // create dynamic lib
-            createDynamicLib(*fun.get(), std::vector<std::set<size_t> >(), xb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
+            createDynamicLib(*fun, std::vector<std::set<size_t> >(), xb, pb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
         }
         printStat("model tape", dt);
         printCGResults();
@@ -246,12 +265,13 @@ protected:
          * execution
          */
         // evaluation speed
-        executionSpeedCppADCG(xb, cppADCG);
+        executionSpeedCppADCG(xb, pb, cppADCG);
     }
 
     inline void measureSpeedCppADCGWithLoops(const std::vector<std::set<size_t> >& relatedDepCandidates,
                                              size_t repeat,
-                                             const std::vector<Base>& xb) {
+                                             const std::vector<Base>& xb,
+                                             const std::vector<Base>& pb) {
         using namespace CppAD;
         using namespace std::chrono;
 
@@ -275,11 +295,11 @@ protected:
         for (size_t i = 0; i < dt.size(); i++) {
             // tape
             auto t0 = steady_clock::now();
-            fun.reset(tapeModel(model, xb, repeat));
+            fun.reset(tapeModel(model, xb, pb, repeat));
             dt[i] = steady_clock::now() - t0;
 
             // create dynamic lib
-            createDynamicLib(*fun.get(), relatedDepCandidates, xb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
+            createDynamicLib(*fun, relatedDepCandidates, xb, pb, i == dt.size() - 1, JacobianADMode::Reverse, testJacobian_, testHessian_);
         }
         printStat("model tape", dt);
 
@@ -289,12 +309,13 @@ protected:
          * execution
          */
         // evaluation speed
-        executionSpeedCppADCG(xb, cppADCGLoops);
+        executionSpeedCppADCG(xb, pb, cppADCGLoops);
     }
 
     inline void measureSpeedCppADCGWithLoopsLlvm(const std::vector<std::set<size_t> >& relatedDepCandidates,
                                                  size_t repeat,
-                                                 const std::vector<Base>& xb) {
+                                                 const std::vector<Base>& xb,
+                                                 const std::vector<Base>& pb) {
         using namespace CppAD;
 
         std::string head = "\n"
@@ -317,14 +338,14 @@ protected:
          * preparation
          */
         //create source code
-        if (modelSourceGen_.get() == nullptr) {
+        if (modelSourceGen_ == nullptr) {
             listener_.reset();
             // tape
             ModelCppADCG model(*this);
             std::unique_ptr<ADFun<CGD> > fun;
-            fun.reset(tapeModel(model, xb, repeat));
+            fun.reset(tapeModel(model, xb, pb, repeat));
 
-            createSource(libBaseName, *fun.get(), relatedDepCandidates, xb, jacMode, testJacobian_, testHessian_, forReverseOne, reverseTwo);
+            createSource(libBaseName, *fun, relatedDepCandidates, xb, jacMode, testJacobian_, testHessian_, forReverseOne, reverseTwo);
         }
 
         size_t nTimes = cppADCGLoopsLlvm ? (preparation ? nTimes_ : 1) : 0;
@@ -338,7 +359,7 @@ protected:
          * execution
          */
         // evaluation speed
-        executionSpeedCppADCG(xb, cppADCGLoopsLlvm);
+        executionSpeedCppADCG(xb, pb, cppADCGLoopsLlvm);
     }
 
     inline void printCGResults() {
@@ -373,8 +394,8 @@ protected:
         std::cout << std::endl;
 
         std::cerr << std::setw(30) << title << ": ";
-        for (size_t i = 0; i < times.size(); i++)
-            std::cerr << std::setw(12) << std::chrono::duration<double>(times[i]).count() << " ";
+        for (auto time : times)
+            std::cerr << std::setw(12) << std::chrono::duration<double>(time).count() << " ";
         std::cerr << std::endl;
     }
 
@@ -441,7 +462,8 @@ protected:
     }
 
     inline void measureSpeedCppAD(size_t repeat,
-                                  const std::vector<Base>& xb) {
+                                  const std::vector<Base>& xb,
+                                  const std::vector<Base>& pb) {
         using namespace std::chrono;
 
         std::string head = "\n"
@@ -465,7 +487,7 @@ protected:
         for (size_t i = 0; i < nTimes; i++) {
             // tape
             auto t0 = steady_clock::now();
-            fun.reset(tapeModel(model, xb, repeat));
+            fun.reset(tapeModel(model, xb, pb, repeat));
             dt1[i] = steady_clock::now() - t0;
 
             // optimize tape
@@ -480,28 +502,37 @@ protected:
          * execution
          */
         // evaluation speed
-        executionSpeedCppAD(*fun.get(), xb);
+        executionSpeedCppAD(*fun, xb);
     }
 
     template<class T>
     ADFun<T>* tapeModel(Model<T>& model,
                         const std::vector<Base>& xb,
+                        const std::vector<Base>& pb,
                         size_t repeat) {
         /**
          * Tape model
          */
-        std::vector<AD<T> > x(xb.size());
+        std::vector<AD<T> > ax(xb.size());
         for (size_t j = 0; j < xb.size(); j++)
-            x[j] = xb[j];
-        CppAD::Independent(x);
-        if (xNorm_.size() > 0) {
-            assert(x.size() == xNorm_.size());
-            for (size_t j = 0; j < x.size(); j++)
-                x[j] *= xNorm_[j];
+            ax[j] = xb[j];
+
+        std::vector<AD<T> > ap(pb.size());
+        for (size_t j = 0; j < pb.size(); j++)
+            ap[j] = pb[j];
+
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+
+        if (!xNorm_.empty()) {
+            assert(ax.size() == xNorm_.size());
+            for (size_t j = 0; j < ax.size(); j++)
+                ax[j] *= xNorm_[j];
         }
 
-        std::vector<AD<T> > y = model.evaluate(x, repeat);
-        if (eqNorm_.size() > 0) {
+        std::vector<AD<T> > y = model.evaluate(ax, ap, repeat);
+        if (!eqNorm_.empty()) {
             assert(y.size() == eqNorm_.size());
             for (size_t i = 0; i < y.size(); i++)
                 y[i] /= eqNorm_[i];
@@ -573,11 +604,11 @@ protected:
         if (!customHessSparsity_.empty())
             modelSourceGen_->setCustomSparseHessianElements(customHessSparsity_);
 
-        libSourceGen_.reset(new ModelLibraryCSourceGen<double>(*modelSourceGen_.get()));
+        libSourceGen_.reset(new ModelLibraryCSourceGen<double>(*modelSourceGen_));
         libSourceGen_->setVerbose(this->verbose_);
         libSourceGen_->addListener(listener_);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(*libSourceGen_.get(), "sources_" + libBaseName);
+        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(*libSourceGen_, "sources_" + libBaseName);
 
         if (!relatedDepCandidates.empty())
             patternDection_.push_back(listener_.patternDection);
@@ -587,13 +618,14 @@ protected:
 
     inline void createDynamicLib(const std::string& libBaseName,
                                  const std::vector<Base>& xTypical,
+                                 const std::vector<Base>& pTypical,
                                  bool loadLib,
                                  bool withLoops) {
         /**
          * Create the dynamic library
          * (compile source code)
          */
-        DynamicModelLibraryProcessor<double> p(*libSourceGen_.get(), std::string("modelLib") + (withLoops ? "Loops" : "NoLoops"));
+        DynamicModelLibraryProcessor<double> p(*libSourceGen_, std::string("modelLib") + (withLoops ? "Loops" : "NoLoops"));
         GccCompiler<double> compiler;
         if (!compileFlags_.empty())
             compiler.setCompileFlags(compileFlags_);
@@ -604,9 +636,9 @@ protected:
         dynamicLib_ = p.createDynamicLibrary(compiler, loadLib);
         if (loadLib) {
             model_ = dynamicLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops"));
-            assert(model_.get() != nullptr);
-            for (size_t i = 0; i < externalModels_.size(); i++)
-                model_->addExternalModel(*externalModels_[i]);
+            assert(model_ != nullptr);
+            for (auto &externalModel : externalModels_)
+                model_->addExternalModel(*externalModel);
         }
 
         srcCodeComp_.push_back(listener_.srcCodeComp);
@@ -617,6 +649,7 @@ protected:
     inline void createDynamicLib(ADFun<CGD>& fun,
                                  const std::vector<std::set<size_t> >& relatedDepCandidates,
                                  const std::vector<Base>& xTypical,
+                                 const std::vector<Base>& pTypical,
                                  bool loadLib,
                                  JacobianADMode jacMode,
                                  bool jacobian = true,
@@ -629,7 +662,7 @@ protected:
         createSource(libBaseName, fun, relatedDepCandidates, xTypical, jacMode, jacobian, hessian, forReverseOne, reverseTwo);
 
         bool withLoops = !relatedDepCandidates.empty();
-        createDynamicLib(libBaseName, xTypical, loadLib, withLoops);
+        createDynamicLib(libBaseName, xTypical, pTypical, loadLib, withLoops);
     }
 
     inline void createJitModelLib(const std::string& libBaseName,
@@ -642,15 +675,16 @@ protected:
          */
         llvmLib_ = LlvmModelLibraryProcessor<Base>::create(*libSourceGen_);
         model_ = llvmLib_->model(libBaseName + (withLoops ? "Loops" : "NoLoops")); //must request model
-        assert(model_.get() != nullptr);
-        for (size_t i = 0; i < externalModels_.size(); i++)
-            model_->addExternalModel(*externalModels_[i]);
+        assert(model_ != nullptr);
+        for (auto &externalModel : externalModels_)
+            model_->addExternalModel(*externalModel);
 
         jit_.push_back(listener_.jit);
         total_.push_back(listener_.totalLibrary);
     }
 
     inline void executionSpeedCppADCG(const std::vector<double>& x,
+                                      const std::vector<double>& par,
                                       bool eval,
                                       bool zero = true,
                                       bool jacobian = true,
@@ -665,7 +699,7 @@ protected:
                 std::vector<double> y(model_->Range());
                 for (size_t i = 0; i < nTimes_; i++) {
                     auto t0 = steady_clock::now();
-                    model_->ForwardZero(x, y);
+                    model_->ForwardZero(x, par, y);
                     dt[i] = steady_clock::now() - t0;
                 }
             }
@@ -683,7 +717,7 @@ protected:
 
                 for (size_t i = 0; i < nTimes_; i++) {
                     auto t0 = steady_clock::now();
-                    model_->SparseJacobian(x, jac, rows, cols);
+                    model_->SparseJacobian(x, par, jac, rows, cols);
                     dt[i] = steady_clock::now() - t0;
                 }
             }
@@ -702,7 +736,7 @@ protected:
 
                 for (size_t i = 0; i < nTimes_; i++) {
                     auto t0 = steady_clock::now();
-                    model_->SparseHessian(x, w, hess, rows, cols);
+                    model_->SparseHessian(x, par, w, hess, rows, cols);
                     dt[i] = steady_clock::now() - t0;
                 }
             }
@@ -741,10 +775,10 @@ protected:
             std::vector<duration> dtp(nTimes);
 
             std::vector<std::set<size_t> > sparsity;
-            for (size_t i = 0; i < dtp.size(); i++) {
+            for (auto &i : dtp) {
                 auto t0 = steady_clock::now();
                 sparsity = CppAD::cg::jacobianForwardSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                dtp[i] = steady_clock::now() - t0;
+                i = steady_clock::now() - t0;
             }
             printStat("jacobian sparsity", dtp);
 
@@ -772,10 +806,10 @@ protected:
             std::vector<duration> dtp(nTimes);
 
             std::vector<std::set<size_t> > sparsity;
-            for (size_t i = 0; i < dtp.size(); i++) {
+            for (auto &i : dtp) {
                 auto t0 = steady_clock::now();
                 sparsity = CppAD::cg::hessianSparsitySet<std::vector<std::set<size_t> >, Base>(fun);
-                dtp[i] = steady_clock::now() - t0;
+                i = steady_clock::now() - t0;
             }
             printStat("hessian sparsity", dtp);
 
@@ -804,8 +838,8 @@ protected:
 
     inline static double mean(std::vector<double> v) {
         double avg = 0;
-        for (size_t i = 0; i < v.size(); i++)
-            avg += v[i];
+        for (double i : v)
+            avg += i;
         avg /= v.size();
         return avg;
     }
@@ -813,8 +847,8 @@ protected:
     inline static double stdDev(std::vector<double> v) {
         double avg = mean(v);
         double sum = 0;
-        for (size_t i = 0; i < v.size(); i++)
-            sum += (v[i] - avg) * (v[i] - avg);
+        for (double i : v)
+            sum += (i - avg) * (i - avg);
         sum /= v.size();
         return sqrt(sum);
     }

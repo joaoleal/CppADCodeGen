@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -26,16 +27,20 @@ using CGD = CppAD::cg::CG<Base>;
 class PlugFlowPatternSpeedTest : public PatternSpeedTest {
 public:
 
-    inline PlugFlowPatternSpeedTest(bool verbose = false) :
+    explicit PlugFlowPatternSpeedTest(bool verbose = false) :
         PatternSpeedTest("plugflow", verbose) {
     }
 
-    virtual std::vector<AD<CGD> > modelCppADCG(const std::vector<AD<CGD> >& x, size_t repeat) {
+    std::vector<AD<CGD> > modelCppADCG(const std::vector<AD<CGD> >& x,
+                                       const std::vector<AD<CGD> >& p,
+                                       size_t repeat) override {
         PlugFlowModel<CGD> m;
         return m.model2(x, repeat);
     }
 
-    virtual std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x, size_t repeat) {
+    std::vector<AD<Base> > modelCppAD(const std::vector<AD<Base> >& x,
+                                      const std::vector<AD<Base> >& p,
+                                      size_t repeat) override {
         PlugFlowModel<Base> m;
         return m.model2(x, repeat);
     }
@@ -45,6 +50,7 @@ int main(int argc, char **argv) {
     size_t nEles = PatternSpeedTest::parseProgramArguments(1, argc, argv, 10);
 
     std::vector<Base> x = PlugFlowModel<Base>::getTypicalValues(nEles);
+    std::vector<Base> p;
     std::vector<std::set<size_t> > relations = PlugFlowModel<Base>::getRelatedCandidates(nEles);
 
     std::vector<std::string> flags;
@@ -60,5 +66,5 @@ int main(int argc, char **argv) {
     //speed.sparseHessian = false;
     speed.setNumberOfExecutions(30);
     speed.setCompileFlags(flags);
-    speed.measureSpeed(relations, nEles, x);
+    speed.measureSpeed(relations, nEles, x, p);
 }

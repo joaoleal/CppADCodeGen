@@ -38,11 +38,13 @@ public:
 public:
 
     void atomicFunction(const std::vector<AD<CG<double> > >& x,
+                        const std::vector<AD<CG<double> > >& p,
                         std::vector<AD<CG<double> > >& y) override {
         y = CstrFunc(x);
     }
 
     void atomicFunction(const std::vector<AD<double> >& x,
+                        const std::vector<AD<double> >& p,
                         std::vector<AD<double> >& y) override {
         y = CstrFunc(x);
     }
@@ -129,8 +131,8 @@ public:
         x = xNorm_;
         xNorm_.clear();
 #else
-        for (size_t j = 0; j < xNorm_.size(); j++) {
-            xNorm_[j] = xNorm_[j] != 0.0 ? xNorm_[j] : 1.0;
+        for (double &j : xNorm_) {
+            j = j != 0.0 ? j : 1.0;
         }
 
         eqNorm_.resize(repeat * m);
@@ -194,7 +196,8 @@ TEST_F(CppADCGPatternCstrTest, AtomicAllVarsCppAD) {
 
     auto atomicFunction = [this](const std::vector<AD<double> >& x,
                                  std::vector<AD<double> >& y) {
-        colModel_->atomicFunction(x, y);
+        const std::vector<AD<double> > p;
+        colModel_->atomicFunction(x, p, y);
     };
 
     // create atomic function
