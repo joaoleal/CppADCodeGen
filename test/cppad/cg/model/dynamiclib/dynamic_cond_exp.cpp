@@ -26,7 +26,8 @@ public:
         CppADCGDynamicTest("dynamic_cond_exp", verbose, printValues) {
     }
 
-    std::vector<ADCGD> model(const std::vector<ADCGD>& x) override {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                             const std::vector<ADCGD>& p) override {
         std::vector<ADCGD> y(2);
 
         ADCGD zero = CGD(0);

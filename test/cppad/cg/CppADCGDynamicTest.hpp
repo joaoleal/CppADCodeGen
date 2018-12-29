@@ -56,54 +56,50 @@ public:
         _multithreadScheduler(ThreadPoolScheduleStrategy::DYNAMIC) {
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) = 0;
-
     virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
-                                     const std::vector<ADCGD>& p) {
-        return model(ind);
-    }
+                                     const std::vector<ADCGD>& p) = 0;
 
-    void testDynamicFull(std::vector<ADCG>& u,
+    void testDynamicFull(std::vector<ADCG>& ax,
                          const std::vector<double>& x,
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
                          double epsilonA = 1e-14) {
-        std::vector<ADCG> p;
-        const std::vector<double> xDynPar;
+        std::vector<ADCG> ap;
+        const std::vector<double> p;
 
-        testDynamicFull(u, p, x, xDynPar, maxAssignPerFunc, epsilonR, epsilonA);
+        testDynamicFull(ax, ap, x, p, maxAssignPerFunc, epsilonR, epsilonA);
     }
 
-    void testDynamicFull(std::vector<ADCG>& u,
-                         std::vector<ADCG>& p,
+    void testDynamicFull(std::vector<ADCG>& ax,
+                         std::vector<ADCG>& ap,
                          const std::vector<double>& x,
-                         const std::vector<double>& xDynPar,
+                         const std::vector<double>& p,
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
                          double epsilonA = 1e-14) {
         const std::vector<double> xNorm(x.size(), 1.0);
         const std::vector<double> eqNorm;
 
-        testDynamicFull(u, p, x, xNorm, xDynPar, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
+        testDynamicFull(ax, ap, x, p, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
     }
 
-    void testDynamicFull(std::vector<ADCG>& u,
+    void testDynamicFull(std::vector<ADCG>& ax,
                          const std::vector<double>& x,
                          const std::vector<double>& xNorm,
                          const std::vector<double>& eqNorm,
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
                          double epsilonA = 1e-14) {
-        std::vector<ADCG> p;
-        const std::vector<double> xDynPar;
-        testDynamicFull(u, p, x, xNorm, xDynPar, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
+        std::vector<ADCG> ap;
+        const std::vector<double> p;
+        testDynamicFull(ax, ap, x, p, xNorm, eqNorm, maxAssignPerFunc, epsilonR, epsilonA);
     }
 
     void testDynamicFull(std::vector<ADCG>& ax,
                          std::vector<ADCG>& ap,
                          const std::vector<double>& x,
-                         const std::vector<double>& xNorm,
                          const std::vector<double>& p,
+                         const std::vector<double>& xNorm,
                          const std::vector<double>& eqNorm,
                          size_t maxAssignPerFunc = 100,
                          double epsilonR = 1e-14,
@@ -142,29 +138,29 @@ public:
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelCSourceGen<double> compHelp(fun, _name + "dynamic");
+        ModelCSourceGen<double> modelSrcGen(fun, _name + "dynamic");
 
-        compHelp.setCreateForwardZero(true);
-        compHelp.setCreateJacobian(_denseJacobian);
-        compHelp.setCreateHessian(_denseHessian);
-        compHelp.setCreateSparseJacobian(true);
-        compHelp.setCreateSparseHessian(true);
-        compHelp.setCreateForwardOne(_forwardOne);
-        compHelp.setCreateReverseOne(_reverseOne);
-        compHelp.setCreateReverseTwo(_reverseTwo);
-        compHelp.setMaxAssignmentsPerFunc(maxAssignPerFunc);
-        compHelp.setMultiThreading(true);
+        modelSrcGen.setCreateForwardZero(true);
+        modelSrcGen.setCreateJacobian(_denseJacobian);
+        modelSrcGen.setCreateHessian(_denseHessian);
+        modelSrcGen.setCreateSparseJacobian(true);
+        modelSrcGen.setCreateSparseHessian(true);
+        modelSrcGen.setCreateForwardOne(_forwardOne);
+        modelSrcGen.setCreateReverseOne(_reverseOne);
+        modelSrcGen.setCreateReverseTwo(_reverseTwo);
+        modelSrcGen.setMaxAssignmentsPerFunc(maxAssignPerFunc);
+        modelSrcGen.setMultiThreading(true);
 
-        ModelLibraryCSourceGen<double> compDynHelp(compHelp);
-        compDynHelp.setMultiThreading(_multithread);
+        ModelLibraryCSourceGen<double> libSrcGen(modelSrcGen);
+        libSrcGen.setMultiThreading(_multithread);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_1");
+        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSrcGen, "sources_" + _name + "_1");
 
-        DynamicModelLibraryProcessor<double> libProc(compDynHelp);
+        DynamicModelLibraryProcessor<double> libProc(libSrcGen);
         GccCompiler<double> compiler;
         //compiler.setSaveToDiskFirst(true); // useful to detect problem
         prepareTestCompilerFlags(compiler);
-        if (compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
+        if (libSrcGen.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
@@ -173,7 +169,7 @@ public:
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
             libProc.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
-        } else if (compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
+        } else if (libSrcGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 
@@ -216,7 +212,7 @@ public:
         CppAD::Independent(ax, abort_op_index, record_compare, ap);
 
         // dependent variable vector
-        std::vector<ADCG> ay = model(ax);
+        std::vector<ADCG> ay = model(ax, ap);
 
         /**
          * create the CppAD tape as usual
@@ -228,30 +224,30 @@ public:
          * Create the dynamic library
          * (generate and compile source code)
          */
-        ModelCSourceGen<double> compHelp(fun, _name + "dynamic2");
+        ModelCSourceGen<double> modelSrcGen(fun, _name + "dynamic2");
 
-        compHelp.setCreateForwardOne(_forwardOne);
-        compHelp.setCreateReverseOne(_reverseOne);
-        compHelp.setCreateReverseTwo(_reverseTwo);
+        modelSrcGen.setCreateForwardOne(_forwardOne);
+        modelSrcGen.setCreateReverseOne(_reverseOne);
+        modelSrcGen.setCreateReverseTwo(_reverseTwo);
 
-        compHelp.setCreateSparseJacobian(true);
-        compHelp.setCustomSparseJacobianElements(jacRow, jacCol);
+        modelSrcGen.setCreateSparseJacobian(true);
+        modelSrcGen.setCustomSparseJacobianElements(jacRow, jacCol);
 
-        compHelp.setCreateSparseHessian(true);
-        compHelp.setCustomSparseHessianElements(hessRow, hessCol);
+        modelSrcGen.setCreateSparseHessian(true);
+        modelSrcGen.setCustomSparseHessianElements(hessRow, hessCol);
 
-        compHelp.setMultiThreading(true);
+        modelSrcGen.setMultiThreading(true);
 
-        ModelLibraryCSourceGen<double> compDynHelp(compHelp);
-        compDynHelp.setMultiThreading(_multithread);
+        ModelLibraryCSourceGen<double> libSrcGen(modelSrcGen);
+        libSrcGen.setMultiThreading(_multithread);
 
-        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(compDynHelp, "sources_" + _name + "_2");
+        SaveFilesModelLibraryProcessor<double>::saveLibrarySourcesTo(libSrcGen, "sources_" + _name + "_2");
 
-        DynamicModelLibraryProcessor<double> dmlp(compDynHelp, "cppad_cg_model_2");
+        DynamicModelLibraryProcessor<double> dmlp(libSrcGen, "cppad_cg_model_2");
 
         GccCompiler<double> compiler;
         prepareTestCompilerFlags(compiler);
-        if (compDynHelp.getMultiThreading() == MultiThreadingType::OPENMP) {
+        if (libSrcGen.getMultiThreading() == MultiThreadingType::OPENMP) {
             compiler.addCompileFlag("-fopenmp");
             compiler.addCompileFlag("-pthread");
             compiler.addCompileLibFlag("-fopenmp");
@@ -260,7 +256,7 @@ public:
             // this is required because the OpenMP implementation in GCC causes a segmentation fault on dlclose
             dmlp.getOptions() ["dlOpenMode"] = std::to_string(RTLD_NOW | RTLD_NODELETE);
 #endif
-        } else if (compDynHelp.getMultiThreading() == MultiThreadingType::PTHREADS) {
+        } else if (libSrcGen.getMultiThreading() == MultiThreadingType::PTHREADS) {
             compiler.addCompileFlag("-pthread");
         }
 

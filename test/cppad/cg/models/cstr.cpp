@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -23,12 +24,31 @@ namespace cg {
 class CstrDynamicTest : public CppADCGDynamicTest {
 public:
 
-    inline CstrDynamicTest(bool verbose = false, bool printValues = false) :
+    inline CstrDynamicTest(bool verbose = false,
+                           bool printValues = false) :
         CppADCGDynamicTest("cstr", verbose, printValues) {
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
+                             const std::vector<ADCGD>& par) override {
+        assert(par.empty());
         return CstrFunc<CG<double> >(ind);
+    }
+
+};
+
+class CstrDynamicWithParamsTest : public CppADCGDynamicTest {
+public:
+
+    inline CstrDynamicWithParamsTest(bool verbose = false,
+                                     bool printValues = false) :
+            CppADCGDynamicTest("cstr_params", verbose, printValues) {
+    }
+
+    std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
+                             const std::vector<ADCGD>& par) override {
+        assert(!par.empty());
+        return CstrFunc<CG<double> >(ind, par);
     }
 
 };
@@ -85,5 +105,59 @@ TEST_F(CstrDynamicTest, cstr) {
     eqNorm[3] = 301.15;
 
     this->testDynamicFull(u, x, xNorm, eqNorm, 1000);
+
+}
+
+TEST_F(CstrDynamicWithParamsTest, cstr_params) {
+    // independent variable vector
+    std::vector<double> x(6, 1.0);
+    std::vector<double> xNorm(6);
+    xNorm[0] = 0.3; // h
+    xNorm[1] = 7.82e3; // Ca
+    xNorm[2] = 304.65; // Tr
+    xNorm[3] = 301.15; // Tj
+
+    xNorm[4] = 2.3333e-04; // u1
+    xNorm[5] = 6.6667e-05; // u2
+
+    std::vector<double> par(22, 1.0);
+    par[0] = 6.2e14; //
+    par[1] = 10080; //
+    par[2] = 2e3; //
+    par[3] = 10e3; //
+    par[4] = 1e-11; //
+    par[5] = 6.6667e-05; //
+    par[6] = 294.15; //
+    par[7] = 294.15; //
+    par[8] = 1000; //
+    par[9] = 4184; //Cp
+    par[10] = -33488; //deltaH
+    par[11] = 299.15; // Tj0
+    par[12] = 302.65; //   Tj2
+    par[13] = 7e5; // cwallj
+    par[14] = 1203; // csteam
+    par[15] = 3.22; //dsteam
+    par[16] = 950.0; //Ug
+    par[17] = 0.48649427192323; //vc6in
+    par[18] = 1000; //rhoj
+    par[19] = 4184; //Cpj
+    par[20] = 0.014; //Vj
+    par[21] = 1e-7; //cwallr
+
+    std::vector<AD<CG<double> > > ax(x.size());
+    for (size_t i = 0; i < x.size(); i++)
+        ax[i] = x[i];
+
+    std::vector<AD<CG<double> > > ap(par.size());
+    for (size_t i = 0; i < par.size(); i++)
+        ap[i] = par[i];
+
+    std::vector<Base> eqNorm(4);
+    eqNorm[0] = 0.3;
+    eqNorm[1] = 7.82e3;
+    eqNorm[2] = 304.65;
+    eqNorm[3] = 301.15;
+
+    this->testDynamicFull(ax, ap, x, par, xNorm, eqNorm, 1000);
 
 }

@@ -20,12 +20,9 @@ namespace cg {
 class CppADCGDynamicTest1 : public CppADCGDynamicTest {
 public:
 
-    inline CppADCGDynamicTest1(bool verbose = false, bool printValues = false) :
+    inline CppADCGDynamicTest1(bool verbose = false,
+                               bool printValues = false) :
         CppADCGDynamicTest("dynamic_with_params", verbose, printValues) {
-    }
-
-    std::vector<ADCGD> model(const std::vector<ADCGD>& ax) override {
-        return std::vector<ADCGD>(); // not used
     }
 
     std::vector<ADCGD> model(const std::vector<ADCGD>& ax,

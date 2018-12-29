@@ -405,7 +405,13 @@ public:
         const std::vector<FuncArgument>& indArg = _nameGen->getIndependent();
         const std::vector<FuncArgument>& paramArg = _nameGen->getParameter();
 
-        if (paramArg.size() == 0 || _parameterSize == 0)
+        if (paramArg.empty()) {
+            CPPADCG_ASSERT_KNOWN(_parameterSize == 0,
+                                 "No parameter arguments provided but there are parameters defined");
+            return "";
+        }
+
+        if (_parameterSize == 0)
             return "";
 
         _ss << _spaces << "// parameters\n";
@@ -515,7 +521,7 @@ public:
                                                 const std::vector<std::string>& arguments2 = {}) {
         out << returnType << " " << functionName << "(";
         size_t i = 0;
-        size_t offset = returnType.size() + 1 + functionName.size() + 1;
+        int offset(returnType.size() + 1 + functionName.size() + 1);
         for (const std::string& a : arguments) {
             if (i > 0) {
                 out << ",\n" << std::setw(offset) << " ";
@@ -748,7 +754,7 @@ protected:
                 if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
                     size_t varID = getVariableID(*node);
                     if (varID > 0) {
-                        std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
+                        auto it2 = _dependentIDs.find(varID);
                         if (it2 == _dependentIDs.end()) {
                             _dependentIDs[getVariableID(*node)] = i;
                         } else {
@@ -1180,7 +1186,7 @@ protected:
 
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
-                std::map<size_t, size_t>::const_iterator it = _dependentIDs.find(getVariableID(var));
+                auto it = _dependentIDs.find(getVariableID(var));
                 CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
 
                 size_t index = it->second;
@@ -1646,7 +1652,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::Pri, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for print operation");
 
-        const PrintOperationNode<Base>& pnode = static_cast<const PrintOperationNode<Base>&> (node);
+        const auto& pnode = static_cast<const PrintOperationNode<Base>&> (node);
         std::string before = pnode.getBeforeString();
         replaceString(before, "\n", "\\n");
         replaceString(before, "\"", "\\\"");
@@ -1741,7 +1747,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(atomicFor.getInfo().size() == 3, "Invalid number of information elements for atomic forward operation");
         int q = atomicFor.getInfo()[1];
         int p = atomicFor.getInfo()[2];
-        size_t p1 = p + 1;
+        size_t p1 = p + 1u;
         const std::vector<Arg>& opArgs = atomicFor.getArguments();
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 2 + 1, "Invalid number of arguments for atomic forward operation");
 
@@ -1788,7 +1794,7 @@ protected:
     virtual void printAtomicReverseOp(Node& atomicRev) {
         CPPADCG_ASSERT_KNOWN(atomicRev.getInfo().size() == 2, "Invalid number of information elements for atomic reverse operation");
         int p = atomicRev.getInfo()[1];
-        size_t p1 = p + 1;
+        size_t p1 = p + 1u;
         const std::vector<Arg>& opArgs = atomicRev.getArguments();
         CPPADCG_ASSERT_KNOWN(opArgs.size() == p1 * 4 + 1, "Invalid number of arguments for atomic reverse operation");
 
@@ -1865,7 +1871,7 @@ protected:
     virtual void printLoopStart(Node& node) {
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::LoopStart, "Invalid node type");
 
-        LoopStartOperationNode<Base>& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
+        auto& lnode = static_cast<LoopStartOperationNode<Base>&> (node);
         _currentLoops.push_back(&lnode);
 
         const std::string& jj = *lnode.getIndex().getName();
@@ -1936,7 +1942,7 @@ protected:
         CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::IndexAssign, "Invalid node type");
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() > 0, "Invalid number of arguments for an index assignment operation");
 
-        IndexAssignOperationNode<Base>& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
+        auto& inode = static_cast<IndexAssignOperationNode<Base>&> (node);
 
         const IndexPattern& ip = inode.getIndexPattern();
         _code << _indentation << (*inode.getIndex().getName())
@@ -1951,7 +1957,7 @@ protected:
 
         const std::vector<size_t>& info = node.getInfo();
 
-        IndexOperationNode<Base>& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
+        auto& iterationIndexOp = static_cast<IndexOperationNode<Base>&> (*node.getArguments()[0].getOperation());
         const std::string& index = *iterationIndexOp.getIndex().getName();
 
         printIndexCondExpr(_code, info, index);

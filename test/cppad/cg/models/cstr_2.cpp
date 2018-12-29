@@ -25,7 +25,8 @@ public:
         CppADCGDynamicTest("cstr2", verbose, printValues) {
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& ind) {
+    std::vector<ADCGD> model(const std::vector<ADCGD>& ind,
+                             const std::vector<ADCGD>& par) override {
         std::vector<ADCGD> eqs(8);
         std::vector<ADCGD> ind1(28);
         std::copy(ind.begin(), ind.begin() + 28, ind1.begin());

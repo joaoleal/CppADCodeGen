@@ -39,7 +39,8 @@ public:
             xi = 1.5;
     }
 
-    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x) {
+    virtual std::vector<ADCGD> model(const std::vector<ADCGD>& x,
+                                     const std::vector<ADCGD>& p) {
         std::vector<ADCGD> y(6);
 
         for (size_t i = 0; i < 3; ++i) {

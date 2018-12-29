@@ -213,8 +213,7 @@ inline void CodeHandler<Base>::markVisited(const Node& node) {
 
 template<class Base>
 inline const std::string* CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
-    typename std::map<size_t, CGAbstractAtomicFun<Base>*>::const_iterator it;
-    it = _atomicFunctions.find(id);
+    auto it = _atomicFunctions.find(id);
     if (it != _atomicFunctions.end())
         return &(it->second->afun_name());
     else
@@ -1840,7 +1839,7 @@ inline void CodeHandler<Base>::determineLastTempVarUsage(Node& node) {
     CGOpCode op = node.getOperationType();
 
     if (op == CGOpCode::LoopEnd) {
-        LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+        auto& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
         _loops.depth++;
         _loops.outerVars.resize(_loops.depth + 1);
         _loops.startEvalOrder.push_back(getEvaluationOrder(loopEnd.getLoopStart()));
