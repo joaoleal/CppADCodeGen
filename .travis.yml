@@ -68,18 +68,15 @@ install:
   - make install
   - cd ../..
 # get Eigen:
-  - wget http://bitbucket.org/eigen/eigen/get/3.3.4.tar.bz2
-  - tar -jxf 3.3.4.tar.bz2
-  - cd eigen-eigen-5a0156e40feb
-  - mkdir build
-  - mkdir install_eigen
+  - wget http://bitbucket.org/eigen/eigen/get/3.3.7.tar.bz2
+  - tar -jxf 3.3.7.tar.bz2
+  - cd eigen-eigen-323c052e1731
+  - mkdir -p install_eigen/include/eigen3
+  - cp -r Eigen ./install_eigen/include/eigen3/
   - EIGEN_HOME=`pwd`/install_eigen/include/eigen3
   - echo $EIGEN_HOME
-  - cd build
-  - cmake -DCMAKE_INSTALL_PREFIX=../install_eigen ..
-  - make install
 #
-  - cd ../../..
+  - cd ../..
 
 script:
   - mkdir build
