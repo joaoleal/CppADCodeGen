@@ -32,7 +32,7 @@ addons:
     - gcc-6
     - g++-6
     - cmake
-    - libgtest-dev
+#    - libgtest-dev
     - gdb
     - texlive-extra-utils
     - texlive-fonts-extra
@@ -81,7 +81,7 @@ install:
 script:
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=3.6 -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
+  - cmake -DCMAKE_BUILD_TYPE=DEBUG -DGOOGLETEST_GIT=ON -DUSE_VALGRIND=OFF -DGOOGLETEST_SVN=OFF -DENABLE_THREAD_POOL_TESTS=OFF -DLLVM_VERSION=3.6 -DCPPAD_HOME=$CPPAD_HOME -DEIGEN3_INCLUDE_DIR=$EIGEN_HOME ..
   - cd test
   - make -j2
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test

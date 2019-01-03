@@ -26,12 +26,13 @@ INCLUDE(ExternalProject)
 SET_DIRECTORY_PROPERTIES(PROPERTIES EP_PREFIX ${CMAKE_BINARY_DIR}/test/googletest)
 
 # Add gtest
-OPTION(GOOGLETEST_SVN "Download GoogleTest from the SVN repositoty" OFF)
-IF(GOOGLETEST_SVN)
+OPTION(GOOGLETEST_GIT "Download GoogleTest from the GIT repositoty" OFF)
+IF(GOOGLETEST_GIT)
   # Download from SVN repository
     ExternalProject_Add(
         googletest
-        SVN_REPOSITORY http://googletest.googlecode.com/svn/trunk/
+        GIT_REPOSITORY https://github.com/google/googletest.git
+        GIT_TAG release-1.8.1
         TIMEOUT 10
         # Force separate output paths for debug and release builds to allow easy
         # identification of correct lib in subsequent TARGET_LINK_LIBRARIES commands
