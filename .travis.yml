@@ -72,11 +72,11 @@ install:
   - tar -jxf 3.3.4.tar.bz2
   - cd eigen-eigen-5a0156e40feb
   - mkdir build
-  - mkdir install
+  - mkdir install_eigen
   - EIGEN_HOME=`pwd`/install/include/eigen3
   - echo $EIGEN_HOME
   - cd build
-  - cmake -DCMAKE_INSTALL_PREFIX=../install ..
+  - cmake -DCMAKE_INSTALL_PREFIX=../install_eigen ..
   - make install
 #
   - cd ../../..
