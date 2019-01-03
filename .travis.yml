@@ -1,13 +1,20 @@
-dist: trusty
-
 language: cpp
 
-compiler:
-# Clang compiler is disabled until it is compatible with GCC ABI for C++11.
-# It would require ifdef in sources otherwise
-# (e.g. in c++11 we have vector.erase(const_iterator) but in GCC4.8 it was still vector.erase(iterator) and GCC5 is ABI incompatible with clang)
-#  - clang
-  - gcc
+matrix:
+  include:
+    - os: linux
+      dist: trusty
+      compiler:
+        # Clang compiler is disabled until it is compatible with GCC ABI for C++11.
+        # It would require ifdef in sources otherwise
+        # (e.g. in c++11 we have vector.erase(const_iterator) but in GCC4.8 it was still vector.erase(iterator) and GCC5 is ABI incompatible with clang)
+        #  - clang
+        - gcc
+    - os: osx
+      osx_image: xcode10.1
+      compiler: clang
+
+
 
 # use travis-ci docker based infrastructure
 sudo: false
@@ -19,12 +26,11 @@ addons:
     - ubuntu-toolchain-r-test
     - llvm-toolchain-precise-3.6
     packages:
-    #- libeigen3-dev # <<< too old
     - libclang-3.6-dev
     - llvm-3.6-dev
     - clang-3.6
-    - gcc-5
-    - g++-5
+    - gcc-6
+    - g++-6
     - cmake
     - libgtest-dev
     - gdb
@@ -41,7 +47,7 @@ env:
     #- EIGEN_HOME=`pwd`/cppadcg_deps/eigen-eigen-5a0156e40feb/install/include
 
 before_install:
-  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-5)" CXX="$(which g++-5)"; fi
+  - if [ "$CXX" == "g++" ]; then export CC="$(which gcc-6)" CXX="$(which g++-6)"; fi
 #  - if [ "$CXX" == "clang++" ]; then export CC="$(which clang-3.8)" CXX="$(which clang++-3.8)"; fi
 
 install:
@@ -82,6 +88,3 @@ script:
   - cd test
   - make -j2
   - CTEST_OUTPUT_ON_FAILURE=TRUE make test
-
-os:
-  - linux
