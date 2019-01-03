@@ -2,6 +2,7 @@
 #define CPPAD_CG_OPERATION_PATH_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -183,7 +184,7 @@ inline void CodeHandler<Base>::findPaths(SourceCodePath& currPath,
 }
 
 template<class Base>
-inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
+inline std::vector<std::vector<OperationPathNode<Base> > > CodeHandler<Base>::findPathsFromNode(const std::vector<SourceCodePath>& nodePaths,
                                                                                                 OperationNode<Base>& node) {
 
     std::vector<SourceCodePath> foundPaths;

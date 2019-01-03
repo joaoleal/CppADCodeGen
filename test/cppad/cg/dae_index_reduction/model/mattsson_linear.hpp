@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_MATTSSON_LINEAR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -25,8 +26,8 @@ namespace cg {
  * equations using dummy derivatives, SIAM J. Sci. Comput. 14, 677–692 (1993).
  */
 template<class Base>
-inline CppAD::ADFun<Base>* MattssonLinear(std::vector<DaeVarInfo>& daeVar,
-                                          std::vector<double>& x) {
+inline CppAD::ADFun<Base> MattssonLinear(std::vector<DaeVarInfo>& daeVar,
+                                         std::vector<double>& x) {
     using namespace CppAD;
     using namespace std;
     using ADB = CppAD::AD<Base>;
@@ -124,7 +125,7 @@ inline CppAD::ADFun<Base>* MattssonLinear(std::vector<DaeVarInfo>& daeVar,
     res[6] = 2 * dx5dt + dx6dt + dx7dt + dx4dt + u4;
 
     // create f: U -> res and vectors used for derivative calculations
-    return new ADFun<Base> (U, res);
+    return ADFun<Base> (U, res);
 }
 
 } // END cg namespace

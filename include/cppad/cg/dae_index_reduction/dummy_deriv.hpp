@@ -43,9 +43,13 @@ protected:
      */
     DaeStructuralIndexReduction<Base>* const idxIdentify_;
     /**
-     * typical values used to determine the Jacobian
+     * typical independent variable values used to determine the Jacobian
      */
     std::vector<Base> x_;
+    /**
+     * typical parameter values used to determine the Jacobian
+     */
+    std::vector<Base> p_;
     /**
      * normalization constants for the variables (in the original order)
      */
@@ -107,17 +111,20 @@ public:
      * @param idxIdentify A structural index reduction method that identifies
      *                    which variables and equations need to be
      *                    differentiated
-     * @param x typical variable values (used to determine Jacobian values)
+     * @param x typical independent variable values (used to determine Jacobian values)
+     * @param p typical parameter values (used to determine Jacobian values)
      * @param normVar variable normalization values
      * @param normEq equation normalization values
      */
     DummyDerivatives(DaeStructuralIndexReduction<Base>& idxIdentify,
                      const std::vector<Base>& x,
+                     const std::vector<Base>& p,
                      const std::vector<Base>& normVar,
                      const std::vector<Base>& normEq) :
             DaeIndexReduction<Base>(idxIdentify.getOriginalModel()),
             idxIdentify_(&idxIdentify),
             x_(x),
+            p_(p),
             normVar_(normVar),
             normEq_(normEq),
             diffVarStart_(0),
@@ -1258,7 +1265,19 @@ protected:
             }
         }
 
-        Independent(indepNewOrder);
+        // parameters
+        vector<ADCG> parNew(p_.size());
+
+        // initialize with the user provided values
+        for (size_t j = 0; j < p_.size(); j++) {
+            parNew[j] = p_[j];
+        }
+
+        // use a special object for source code generation
+        // declare independent variables, dynamic parameters, starting recording
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(indepNewOrder, abort_op_index, record_compare, parNew);
 
         /**
          * the model must be called with the handler order
@@ -1301,7 +1320,7 @@ protected:
         // evaluate the model
         Evaluator<Base, CGBase> evaluator0(handler);
         evaluator0.setPrintFor(idxIdentify_->getGraph().isPreserveNames()); // variable names saved with CppAD::PrintFor
-        vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, resNewOrder);
+        vector<ADCG> depNewOrder = evaluator0.evaluate(indepHandlerOrder, parNew, resNewOrder);
 
         return new ADFun<CGBase>(indepNewOrder, depNewOrder);
     }

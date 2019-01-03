@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -112,9 +113,9 @@ TEST_F(IndexReductionTest, SoaresSecchiDistillation) {
     std::vector<std::string> eqName; // empty
 
     // create f: U -> Z and vectors used for derivative calculations
-    std::unique_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
+    ADFun<CGD> fun = Distillation<CGD> (daeVar, x);
 
-    SoaresSecchi<double> soaresSecchi(*fun, daeVar, eqName, x);
+    SoaresSecchi<double> soaresSecchi(fun, daeVar, eqName, x);
     soaresSecchi.setVerbosity(Verbosity::Low);
 
     std::vector<DaeVarInfo> newDaeVar;

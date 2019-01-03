@@ -2,6 +2,7 @@
 #define CPPAD_CG_LOOP_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -24,8 +25,8 @@ public:
     // provides an independent variable for each loop iteration
     const std::vector<const OperationNode<Base>*> order;
 
-    inline IndependentOrder(const std::vector<const OperationNode<Base>*>& myOrder) :
-        order(myOrder) {
+    inline IndependentOrder(std::vector<const OperationNode<Base>*> myOrder) :
+        order(std::move(myOrder)) {
     }
 };
 
@@ -87,7 +88,7 @@ private:
     /**
      * Groups of equations which share common temporary variables
      */
-    std::vector<EquationGroup<Base> > eqGroups_;
+    std::vector<EquationGroup<Base>> eqGroups_;
     /**
      * The order of equation patterns in the loop's tape
      */
@@ -96,7 +97,7 @@ private:
      * The evaluated dependents in each loop iteration
      * ([iteration 1]{dep1, dep3, ...}; [iteration 2]{dep5, dep6, ...}; ...)
      */
-    std::vector<std::set<size_t> > iterationDependents_;
+    std::vector<std::set<size_t>> iterationDependents_;
     /**
      * Map each dependent to its corresponding iteration
      */
@@ -108,7 +109,7 @@ private:
     /**
      *
      */
-    LoopModel<Base>* loopModel_;
+    std::unique_ptr<LoopModel<Base> > loopModel_;
     /**
      * indexed independent variables for the loop (clones)
      */
@@ -142,12 +143,12 @@ private:
      * variable order
      * (first independent in the order -> all possible orders)
      */
-    std::map<const OperationNode<Base>*, std::vector<IndependentOrder<Base>*> > firstIndep2orders_;
+    std::map<const OperationNode<Base>*, std::vector<IndependentOrder<Base>*>> firstIndep2orders_;
     /**
      * Maps an operations to their arguments and the corresponding
      * independent variable order
      */
-    std::map<const OperationNode<Base>*, OperationArgumentsIndepOrder<Base>* > op2Arg2IndepOrder_;
+    std::map<const OperationNode<Base>*, OperationArgumentsIndepOrder<Base>*> op2Arg2IndepOrder_;
     /**
      * used just to keep pointers so that the objects can be deleted later
      */
@@ -165,14 +166,12 @@ public:
         iterationCount_(0), // not known yet (only after all equations have been added)
         eqGroups_(1),
         nIndependents_(0),
-        loopModel_(nullptr),
         idCounter_(0) { // not really required (but it avoids warnings)
         //indexedOpIndep(eq.indexedOpIndep), // must be determined later for a different reference
-        //constOperationIndependents(eq.constOperationIndependents) {
         equations.insert(&eq);
         eqGroups_[0].equations.insert(&eq);
 
-        if(varId_ != nullptr)
+        if (varId_ != nullptr)
             varId_->adjustSize();
     }
 
@@ -215,13 +214,11 @@ public:
     }
 
     inline LoopModel<Base>* getModel() const {
-        return loopModel_;
+        return loopModel_.get();
     }
 
     inline LoopModel<Base>* releaseLoopModel() {
-        LoopModel<Base>* loopAtomic = loopModel_;
-        loopModel_ = nullptr;
-        return loopAtomic;
+        return loopModel_.release();
     }
 
     /**
@@ -282,6 +279,7 @@ public:
 
     void createLoopModel(const std::vector<CG<Base> >& dependents,
                          const std::vector<CG<Base> >& independents,
+                         const std::vector<CG<Base> >& parameters,
                          const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                          std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
 
@@ -370,7 +368,7 @@ public:
         if(varId_ != nullptr)
             varId_->fill(0);
 
-        createLoopTapeNModel(dependents, independents, dep2Equation, origTemp2Index);
+        createLoopTapeNModel(dependents, independents, parameters, dep2Equation, origTemp2Index);
 
         /**
          * Clean-up
@@ -428,7 +426,7 @@ public:
 
             DependentIndexSorter depSorter(group, freeDependents, dep2Equation);
 
-            set<size_t>::const_iterator itDep = dependents.begin();
+            auto itDep = dependents.begin();
             size_t i = 0; // iteration counter
             while (itDep != dependents.end()) {
                 size_t dep = *itDep;
@@ -596,8 +594,6 @@ public:
         for (EquationPattern<Base>* eq : equations) {
             delete eq;
         }
-
-        delete loopModel_;
     }
 
     /***********************************************************************
@@ -634,7 +630,7 @@ private:
             const OperationNode<Base>* operation = it.first;
             const OperationIndexedIndependents<Base>& opInd = it.second;
 
-            OperationArgumentsIndepOrder<Base>* arg2orderPos = new OperationArgumentsIndepOrder<Base>();
+            auto* arg2orderPos = new OperationArgumentsIndepOrder<Base>();
             op2Arg2IndepOrder_[operation] = arg2orderPos;
 
             arg2IndepOrder_.push_front(arg2orderPos);
@@ -686,7 +682,7 @@ private:
                     arg2orderPos->arg2Order[argumentIndex] = match;
                 } else {
                     // brand new independent variable order
-                    IndependentOrder<Base>* iOrder = new IndependentOrder<Base>(order);
+                    auto* iOrder = new IndependentOrder<Base>(order);
                     availableOrders.push_back(iOrder);
                     arg2orderPos->arg2Order[argumentIndex] = iOrder;
                 }
@@ -701,11 +697,13 @@ private:
      *
      * @param dependents original model dependent variable vector
      * @param independents original model independent variable vector
+     * @param parameters original model parameter vector
      * @param dep2Equation maps an equation/dependent index to an equation pattern
      * @param origTemp2Index
      */
     void createLoopTapeNModel(const std::vector<CG<Base> >& dependents,
                               const std::vector<CG<Base> >& independents,
+                              const std::vector<CG<Base> >& parameters,
                               const std::map<size_t, EquationPattern<Base>*>& dep2Equation,
                               std::map<OperationNode<Base>*, size_t>& origTemp2Index) {
         using CGB = CG<Base>;
@@ -724,8 +722,7 @@ private:
 
         std::vector<CGB> deps(equations.size());
 
-        for (size_t g = 0; g < eqGroups_.size(); g++) {
-            const EquationGroup<Base>& group = eqGroups_[g];
+        for (const EquationGroup<Base>& group : eqGroups_) {
             const std::set<size_t>& iterationDependents = group.iterationDependents[group.refIteration];
 
             for (size_t depIndex : iterationDependents) {
@@ -788,8 +785,8 @@ private:
 
         // tape independent array
         size_t nIndep = independentsIndexed_.size() +
-                independentsNonIndexed_.size() +
-                independentsTemp_.size();
+                        independentsNonIndexed_.size() +
+                        independentsTemp_.size();
         std::vector<ADCGB> loopIndeps(nIndep);
 
         typename std::map<const OperationNode<Base>*, IndexValue>::const_iterator itt;
@@ -822,10 +819,15 @@ private:
             }
         }
 
+        std::vector<ADCGB> loopParams; // TODO: add support for parameters
+
         /**
          * register the independent variables
          */
-        CppAD::Independent(loopIndeps);
+        // declare independent variables, dynamic parameters, starting recording
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(loopIndeps, abort_op_index, record_compare, loopParams);
 
         /**
          * Reorder independent variables for the new tape (reference iteration only)
@@ -851,6 +853,8 @@ private:
             }
         }
 
+        std::vector<ADCGB> localParams; // TODO: add support for parameters
+
         /**
          * create the tape
          */
@@ -862,7 +866,7 @@ private:
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator1stIt.addAtomicFunctions(atomics);
 
-        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps, deps);
+        std::vector<ADCGB> newDeps = evaluator1stIt.evaluate(localIndeps, localParams, deps);
 
         bool containsAtoms = evaluator1stIt.getNumberOfEvaluatedAtomics() > 0;
 
@@ -926,13 +930,13 @@ private:
             nonIndexedIndependents[s] = origJ2CloneIt->first;
         }
 
-        loopModel_ = new LoopModel<Base>(funIndexed.release(),
-                                         containsAtoms,
-                                         iterationCount_,
-                                         dependentOrigIndexes,
-                                         indexedIndependents,
-                                         nonIndexedIndependents,
-                                         temporaryIndependents);
+        loopModel_.reset(new LoopModel<Base>(funIndexed.release(),
+                                             containsAtoms,
+                                             iterationCount_,
+                                             dependentOrigIndexes,
+                                             indexedIndependents,
+                                             nonIndexedIndependents,
+                                             temporaryIndependents));
 
         loopModel_->detectIndexPatterns();
     }
@@ -999,7 +1003,7 @@ private:
                                                        OperationNode<Base>& independent) {
 
         // is it an indexed independent?
-        typename std::map<const OperationNode<Base>*, OperationIndexedIndependents<Base> >::const_iterator it = indexedOpIndep.op2Arguments.find(operation);
+        const auto it = indexedOpIndep.op2Arguments.find(operation);
         if (it != indexedOpIndep.op2Arguments.end()) {
             const OperationIndexedIndependents<Base>& yyy = it->second;
 
@@ -1041,8 +1045,7 @@ private:
     OperationNode<Base>& getNonIndexedIndependentClone(const OperationNode<Base>& node) {
         CPPADCG_ASSERT_UNKNOWN(node.getOperationType() == CGOpCode::Inv);
 
-        typename std::map<const OperationNode<Base>*, OperationNode<Base>*>::iterator it;
-        it = orig2ConstIndepClone_.find(&node);
+        auto it = orig2ConstIndepClone_.find(&node);
         if (it != orig2ConstIndepClone_.end()) {
             return *it->second;
         }
@@ -1179,12 +1182,12 @@ private:
     struct IndexedIndepSorter {
         const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep;
 
-        IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep_) :
-            clone2indexedIndep(clone2indexedIndep_) {
+        IndexedIndepSorter(const std::map<const OperationNode<Base>*, const IndependentOrder<Base>*>& clone2indexedIndep) :
+            clone2indexedIndep(clone2indexedIndep) {
         }
 
         bool operator()(const OperationNode<Base>* node1,
-                const OperationNode<Base>* node2) {
+                        const OperationNode<Base>* node2) {
             const IndependentOrder<Base>* indepOrder1 = clone2indexedIndep.at(node1);
             const IndependentOrder<Base>* indepOrder2 = clone2indexedIndep.at(node2);
             CPPADCG_ASSERT_UNKNOWN(indepOrder1->order.size() == indepOrder2->order.size());

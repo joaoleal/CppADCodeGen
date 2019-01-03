@@ -2,6 +2,7 @@
 #define CPPAD_CG_EVALUATOR_CG_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -85,9 +86,16 @@ protected:
      *        is not virtual (hides a method in EvaluatorBase)
      */
     inline void analyzeOutIndeps(const ActiveOut* indep,
-                                 size_t n) {
+                                 size_t n,
+                                 const ActiveOut* par,
+                                 size_t p) {
         CPPAD_ASSERT_KNOWN(indep != nullptr || n == 0, "null array with a non-zero size");
         outHandler_ = findHandler(ArrayView<const ActiveOut>(indep, n));
+
+        if (par != nullptr && p > 0) {
+            auto* outHandler = findHandler(ArrayView<const ActiveOut>(par, p));
+            assert(outHandler == outHandler_);
+        }
     }
 
     /**

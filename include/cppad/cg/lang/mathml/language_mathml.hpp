@@ -619,7 +619,7 @@ protected:
             Node* node = dependent[i].getOperationNode();
             if (node != nullptr) {
                 CGOpCode type = node->getOperationType();
-                if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
+                if (type != CGOpCode::Inv && type != CGOpCode::InvPar && type != CGOpCode::LoopEnd) {
                     size_t varID = getVariableID(*node);
                     if (varID > 0) {
                         std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
@@ -757,7 +757,8 @@ protected:
                     printParameter(dependent[i].getValue());
                     printAssignmentEnd();
                 }
-            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv) {
+            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv ||
+                       dependent[i].getOperationNode()->getOperationType() == CGOpCode::InvPar) {
                 if (!commentWritten) {
                     _code << "<!-- dependent variables without operations -->" << _endline;
                     commentWritten = true;
@@ -1167,6 +1168,11 @@ protected:
         _code << "<mrow id='" << createHtmlID(op) << "' class='indep'>" << _nameGen->generateIndependent(op, getVariableID(op)) << "</mrow>";
     }
 
+    virtual void printIndependentParameterName(Node& op) {
+        CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent parameter");
+        _code << "<mrow id='" << createHtmlID(op) << "' class='indep'>" << _nameGen->generateParameter(op, getVariableID(op)) << "</mrow>";
+    }
+
     virtual unsigned print(const Arg& arg) {
         if (arg.getOperation() != nullptr) {
             // expression
@@ -1260,6 +1266,9 @@ protected:
                 break;
             case CGOpCode::Inv:
                 printIndependentVariableName(node);
+                break;
+            case CGOpCode::InvPar:
+                printIndependentParameterName(node);
                 break;
             case CGOpCode::Mul:
                 printOperationMul(node);

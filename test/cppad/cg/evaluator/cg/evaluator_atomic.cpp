@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2017 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -37,7 +38,8 @@ TEST_F(CppADCGEvaluatorTest, Atomic) {
     checkpoint<double> atomicFun("func", testModel, ax, ay); // the normal atomic function
     CGAtomicFun<double> atomic(atomicFun, ax); // a wrapper used to tape with CG<Base>
 
-    ModelType model = [&](const std::vector<CGD>& x) {
+    ModelType model = [&](const std::vector<CGD>& x,
+                          const std::vector<CGD>& p) {
         // independent variables
         std::vector<ADCG> ax(x.size());
         for (size_t j = 0; j < ax.size(); j++) {

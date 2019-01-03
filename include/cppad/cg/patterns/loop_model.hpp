@@ -2,6 +2,7 @@
 #define CPPAD_CG_LOOP_MODEL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -117,8 +118,10 @@ public:
      * @param fun The tape for a single loop iteration (loop model)
      * @param containsAtoms Whether or not fun calls atomic functions
      * @param iterationCount Number of loop iterations
-     * @param dependentOrigIndexes
-     * @param indexedIndepOrigIndexes
+     * @param dependentOrigIndexes The indices in each iteration for each indexed dependent variable
+     *                             (dependentOrigIndexes[indexed indep][iteration] = index;)
+     * @param indexedIndepOrigIndexes The indices in each iteration for each indexed independent variable
+     *                                (indexedIndepOrigIndexes[indexed indep][iteration] = index;)
      * @param nonIndexedIndepOrigIndexes
      * @param temporaryIndependents
      */

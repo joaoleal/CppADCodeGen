@@ -2,6 +2,7 @@
 #define CPPAD_CG_CODE_HANDLER_IMPL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -121,7 +122,7 @@ inline void CodeHandler<Base>::makeParameter(AD<CGB>& parameter) {
 
 template<class Base>
 inline void CodeHandler<Base>::makeParameter(CGB& parameter) {
-    _parameters.push_back(makeNode(CGOpCode::Inv));
+    _parameters.push_back(makeNode(CGOpCode::InvPar));
     parameter.makeVariable(*_parameters.back());
 }
 
@@ -164,8 +165,12 @@ template<class Base>
 size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
     CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
 
-    typename std::vector<Node*>::const_iterator it =
-            std::find(_independentVariables.begin(), _independentVariables.end(), &var);
+    auto pos = var.getHandlerPosition();
+    if (pos < _independentVariables.size() && &var == _independentVariables[pos]) {
+        return pos;
+    }
+
+    auto it = std::find(_independentVariables.begin(), _independentVariables.end(), &var);
     if (it == _independentVariables.end()) {
         throw CGException("Variable not found in the independent variable vector");
     }
@@ -174,11 +179,16 @@ size_t CodeHandler<Base>::getIndependentVariableIndex(const Node& var) const {
 }
 
 template<class Base>
-size_t CodeHandler<Base>::getParameterIndex(const Node& var) const {
-    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::Inv);
+size_t CodeHandler<Base>::getIndependentParameterIndex(const Node& var) const {
+    CPPADCG_ASSERT_UNKNOWN(var.getOperationType() == CGOpCode::InvPar);
 
-    typename std::vector<Node*>::const_iterator it =
-    std::find(_parameters.begin(), _parameters.end(), &var);
+    auto pos = var.getHandlerPosition();
+    auto n = _independentVariables.size();
+    if (pos > n && pos - n < _parameters.size() && &var == _parameters[pos - n]) {
+        return pos;
+    }
+
+    auto it = std::find(_parameters.begin(), _parameters.end(), &var);
     if (it == _parameters.end()) {
         throw CGException("Variable not found in the parameters vector");
     }
@@ -402,7 +412,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
                 // make sure new temporary variables are NOT created for
                 // the independent variables and that a dependency did
                 // not use it first
-                if ((_varId[code] == 0 || !isIndependent(code)) && !isVisited(code)) {
+                if ((_varId[code] == 0 || !(isIndependent(code) || isIndependentParameter(code))) && !isVisited(code)) {
                     addToEvaluationQueue(code);
                 }
             }
@@ -780,7 +790,7 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
     increaseTotalUsageCount(code);
 
     CGOpCode op = code.getOperationType();
-    if (isIndependent(code)) {
+    if (isIndependent(code) || isIndependentParameter(code)) {
         return; // nothing to do
     } else if (op == CGOpCode::Alias) {
         /**
@@ -847,7 +857,7 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
         }
 
         if (op == CGOpCode::Index) {
-            const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
+            const auto& inode = static_cast<const IndexOperationNode<Base>&> (code);
             // indexes that don't depend on a loop start or an index assignment are declared elsewhere
             if (inode.isDefinedLocally()) {
                 _loops.indexes.insert(&inode.getIndex());
@@ -872,7 +882,9 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
 
             CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
             Node* depNode = (*_dependents)[depIndex].getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
+            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr &&
+                                   depNode->getOperationType() != CGOpCode::Inv &&
+                                   depNode->getOperationType() != CGOpCode::InvPar);
 
             _varId[code] = _varId[*depNode];
         }
@@ -1514,7 +1526,7 @@ void CodeHandler<Base>::checkVariableCreation(Node& code) {
              * the independent variables and that a dependency did
              * not use it first
              */
-            if (_varId[arg] == 0 || !isIndependent(arg)) {
+            if (_varId[arg] == 0 || !(isIndependent(arg) || isIndependentParameter(arg))) {
                 if (aType == CGOpCode::LoopIndexedIndep) {
                     // ID value not really used but must be non-zero
                     _varId[arg] = std::numeric_limits<size_t>::max();
@@ -1971,6 +1983,11 @@ inline void CodeHandler<Base>::findVariableDependencies(size_t i,
 template<class Base>
 inline bool CodeHandler<Base>::isIndependent(const Node& arg) const {
     return arg.getOperationType() == CGOpCode::Inv;
+}
+
+template<class Base>
+inline bool CodeHandler<Base>::isIndependentParameter(const Node& arg) const {
+    return arg.getOperationType() == CGOpCode::InvPar;
 }
 
 template<class Base>

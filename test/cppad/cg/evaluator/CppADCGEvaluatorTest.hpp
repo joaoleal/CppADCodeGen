@@ -2,6 +2,7 @@
 #define	CPPAD_CG_TEST_CPPADCGEVALUATORTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -21,30 +22,34 @@ namespace cg {
 
 class CppADCGEvaluatorTest : public CppADCGTest {
 public:
-    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x) >;
+    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x,
+                                                      const std::vector<CGD>& p) >;
 
 public:
 
-    inline CppADCGEvaluatorTest(bool verbose = false,
-                                bool printValues = false) :
+    explicit CppADCGEvaluatorTest(bool verbose = false,
+                                  bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
 protected:
 
     inline void test(ModelType& model,
-                     const std::vector<double>& testValues) {
+                     const std::vector<double>& testValues,
+                     const std::vector<double>& testParameters = {}) {
         using std::vector;
 
         CodeHandler<double> handlerOrig;
 
         // independent variable vector
         std::vector<CGD> xOrig(testValues.size());
-        handlerOrig.makeVariables(xOrig);
-        for (size_t j = 0; j < xOrig.size(); j++)
-            xOrig[j].setValue(testValues[j]);
 
-        const std::vector<CGD> yOrig = model(xOrig);
+        // parameters
+        std::vector<CGD> pOrig(testParameters.size());
+
+        prepareInputs(handlerOrig, testValues, testParameters, xOrig, pOrig);
+
+        const std::vector<CGD> yOrig = model(xOrig, pOrig);
 
         /**
          * Test with scalars only
@@ -56,7 +61,11 @@ protected:
             for (size_t j = 0; j < xOrig.size(); j++)
                 xNew[j] = testValues[j];
 
-            std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
+            std::vector<CGD> pNew(pOrig.size());
+            for (size_t j = 0; j < pOrig.size(); j++)
+                pNew[j] = testParameters[j];
+
+            std::vector<CGD> yNew = evaluator.evaluate(xNew, pNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -68,22 +77,25 @@ protected:
          * Test with active variables from CG
          */
         {
-            testCG(testValues, yOrig);
+            testCG(testValues, testParameters, yOrig);
         }
 
         /**
          * Test with active variables from CppAD
          */
         {
-            std::vector<AD<Base> > xNew(xOrig.size());
-            for (size_t j = 0; j < xOrig.size(); j++)
-                xNew[j] = testValues[j];
+            std::vector<AD<Base>> xNew, pNew;
+            prepareInputs(testValues, testParameters, xNew, pNew);
 
-            CppAD::Independent(xNew);
+            // use a special object for source code generation
+            // declare independent variables, dynamic parameters, starting recording
+            size_t abort_op_index = 0;
+            bool record_compare = true;
+            CppAD::Independent(xNew, abort_op_index, record_compare, pNew);
 
             //
             Evaluator<Base, Base, AD<Base> > evaluator(handlerOrig);
-            std::vector<AD<Base> > yNew = evaluator.evaluate(xNew, yOrig);
+            std::vector<AD<Base> > yNew = evaluator.evaluate(xNew, pNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -107,15 +119,19 @@ protected:
          * Test with active variables from CppAD<CG>
          */
         {
-            std::vector<ADCGD> xNew(xOrig.size());
-            for (size_t j = 0; j < xOrig.size(); j++)
-                xNew[j] = testValues[j];
 
-            CppAD::Independent(xNew);
+            std::vector<ADCGD> xNew, pNew;
+            prepareInputs(testValues, testParameters, xNew, pNew);
+
+            // use a special object for source code generation
+            // declare independent variables, dynamic parameters, starting recording
+            size_t abort_op_index = 0;
+            bool record_compare = true;
+            CppAD::Independent(xNew, abort_op_index, record_compare, pNew);
 
             //
             Evaluator<Base, CGD, ADCGD> evaluator(handlerOrig);
-            std::vector<ADCGD> yNew = evaluator.evaluate(xNew, yOrig);
+            std::vector<ADCGD> yNew = evaluator.evaluate(xNew, pNew, yOrig);
 
             ASSERT_EQ(yNew.size(), yOrig.size());
             for (size_t i = 0; i < yOrig.size(); i++) {
@@ -143,41 +159,39 @@ protected:
     }
 
     inline void testCG(ModelType& model,
-                       const std::vector<double>& testValues) {
+                       const std::vector<double>& testValues,
+                       const std::vector<double>& testParameters = {}) {
         using std::vector;
 
         CodeHandler<double> handlerOrig;
 
-        // independent variable vector
-        std::vector<CGD> xOrig(testValues.size());
-        handlerOrig.makeVariables(xOrig);
-        for (size_t j = 0; j < xOrig.size(); j++)
-            xOrig[j].setValue(testValues[j]);
+        std::vector<CGD> xOrig;
+        std::vector<CGD> pOrig;
+        prepareInputs(handlerOrig, testValues, testParameters, xOrig, pOrig);
 
-        const std::vector<CGD> yOrig = model(xOrig);
+        const std::vector<CGD> yOrig = model(xOrig, pOrig);
 
-        testCG(testValues, yOrig);
+        testCG(testValues, testParameters, yOrig);
     }
 
 
     inline void testCG(const std::vector<double>& testValues,
+                       const std::vector<double>& testParameters,
                        const std::vector<CGD>& yOrig) {
         using std::vector;
 
-        assert(yOrig.size() > 0);
+        assert(!yOrig.empty());
         assert(yOrig[0].getOperationNode() != nullptr);
         assert(yOrig[0].getOperationNode()->getCodeHandler() != nullptr);
         CodeHandler<double>& handlerOrig = *yOrig[0].getOperationNode()->getCodeHandler();
 
         CodeHandler<double> handlerNew;
 
-        std::vector<CGD> xNew(testValues.size());
-        handlerNew.makeVariables(xNew);
-        for (size_t j = 0; j < testValues.size(); j++)
-            xNew[j].setValue(testValues[j]);
+        std::vector<CGD> xNew, pNew;
+        prepareInputs(handlerNew, testValues, testParameters, xNew, pNew);
 
         Evaluator<Base, Base, CGD> evaluator(handlerOrig);
-        std::vector<CGD> yNew = evaluator.evaluate(xNew, yOrig);
+        std::vector<CGD> yNew = evaluator.evaluate(xNew, pNew, yOrig);
 
         ASSERT_EQ(yNew.size(), yOrig.size());
         for (size_t i = 0; i < yOrig.size(); i++) {
@@ -197,6 +211,40 @@ protected:
         std::ostringstream code;
         handler.generateCode(code, langC, depv, nameGen);
         std::cout << code.str();
+    }
+
+    template<class T>
+    inline static void prepareInputs(CodeHandler<T> &handler,
+                                     const std::vector<double>& testValues,
+                                     const std::vector<double>& testParameters,
+                                     std::vector<CG<T>>& x,
+                                     std::vector<CG<T>>& p) {
+
+        // independent variable vector
+        x.resize(testValues.size());
+        handler.makeVariables(x);
+        for (size_t j = 0; j < x.size(); j++)
+            x[j].setValue(testValues[j]);
+
+        // parameters
+        p.resize(testParameters.size());
+        handler.makeParameters(p);
+        for (size_t j = 0; j < p.size(); j++)
+            p[j].setValue(testParameters[j]);
+    }
+
+    template<class T>
+    inline static void prepareInputs(const std::vector<double>& testValues,
+                                     const std::vector<double>& testParameters,
+                                     std::vector<AD<T>>& x,
+                                     std::vector<AD<T>>& p) {
+        x.resize(testValues.size());
+        for (size_t j = 0; j < testValues.size(); j++)
+            x[j] = testValues[j];
+
+        p.resize(testValues.size());
+        for (size_t j = 0; j < testParameters.size(); j++)
+            p[j] = testParameters[j];
     }
 
 };

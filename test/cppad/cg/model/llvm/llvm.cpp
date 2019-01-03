@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -35,7 +36,7 @@ public:
 };
 
 template<class T>
-CppAD::ADFun<T>* modelFunc(std::vector<CppAD::AD<T> >& x) {
+CppAD::ADFun<T> modelFunc(std::vector<CppAD::AD<T> >& x) {
     using namespace CppAD;
     using namespace std;
 
@@ -48,7 +49,7 @@ CppAD::ADFun<T>* modelFunc(std::vector<CppAD::AD<T> >& x) {
     y[1] = CppAD::cos(x[2]);
 
     // f(v) = |w|
-    return new CppAD::ADFun<T>(x, y);
+    return CppAD::ADFun<T>(x, y);
 }
 
 TEST_F(LlvmModelTest, llvm) {
@@ -60,13 +61,13 @@ TEST_F(LlvmModelTest, llvm) {
     std::vector<AD<CG<double> > > u(3);
     //u[0] = x[0];
 
-    std::unique_ptr<CppAD::ADFun<CG<Base> > > fun(modelFunc<CG<Base> >(u));
+    CppAD::ADFun<CG<Base> > fun = modelFunc<CG<Base> >(u);
 
     /**
      * Create the dynamic library
      * (generate and compile source code)
      */
-    ModelCSourceGen<double> compHelp(*fun.get(), "mySmallModel");
+    ModelCSourceGen<double> compHelp(fun, "mySmallModel");
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
     compHelp.setCreateHessian(true);
@@ -83,9 +84,9 @@ TEST_F(LlvmModelTest, llvm) {
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create();
     std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
-    ASSERT_TRUE(model.get() != nullptr);
+    ASSERT_TRUE(model != nullptr);
 
-    this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
+    this->testModelResults(*llvmModelLib, *model, fun, x);
 
     model.reset(nullptr); // must be freed before llvm_shutdown()
     llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()
@@ -100,13 +101,13 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
     std::vector<AD<CG<double> > > u(3);
     //u[0] = x[0];
 
-    std::unique_ptr<CppAD::ADFun<CG<Base> > > fun(modelFunc<CG<Base> >(u));
+    CppAD::ADFun<CG<Base> > fun(modelFunc<CG<Base> >(u));
 
     /**
      * Create the dynamic library
      * (generate and compile source code)
      */
-    ModelCSourceGen<double> compHelp(*fun.get(), "mySmallModel");
+    ModelCSourceGen<double> compHelp(fun, "mySmallModel");
     compHelp.setCreateForwardZero(true);
     compHelp.setCreateJacobian(true);
     compHelp.setCreateHessian(true);
@@ -125,9 +126,9 @@ TEST_F(LlvmModelTest, llvm_externalCompiler) {
 
     std::unique_ptr<LlvmModelLibrary<Base> > llvmModelLib = p.create(clang);
     std::unique_ptr<GenericModel<Base> > model = llvmModelLib->model("mySmallModel");
-    ASSERT_TRUE(model.get() != nullptr);
+    ASSERT_TRUE(model != nullptr);
 
-    this->testModelResults(*llvmModelLib, *model, *fun.get(), x);
+    this->testModelResults(*llvmModelLib, *model, fun, x);
 
     model.reset(nullptr); // must be freed before llvm_shutdown()
     llvmModelLib.reset(nullptr); // must be freed before llvm_shutdown()

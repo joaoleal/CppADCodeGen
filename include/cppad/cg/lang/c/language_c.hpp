@@ -751,7 +751,7 @@ protected:
             Node* node = dependent[i].getOperationNode();
             if (node != nullptr) {
                 CGOpCode type = node->getOperationType();
-                if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
+                if (type != CGOpCode::Inv && type != CGOpCode::InvPar && type != CGOpCode::LoopEnd) {
                     size_t varID = getVariableID(*node);
                     if (varID > 0) {
                         auto it2 = _dependentIDs.find(varID);
@@ -897,14 +897,15 @@ protected:
                     printParameter(dependent[i].getValue());
                     _code << ";\n";
                 }
-            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv) {
+            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv ||
+                       dependent[i].getOperationNode()->getOperationType() == CGOpCode::InvPar) {
                 if (!commentWritten) {
                     _code << _spaces << "// dependent variables without operations\n";
                     commentWritten = true;
                 }
                 std::string varName = _nameGen->generateDependent(i);
-                const std::string& indepName = *dependent[i].getOperationNode()->getName();
-                _code << _spaces << varName << " " << _depAssignOperation << " " << indepName << ";\n";
+                const std::string& indepOrParName = *dependent[i].getOperationNode()->getName();
+                _code << _spaces << varName << " " << _depAssignOperation << " " << indepOrParName << ";\n";
             }
         }
 
@@ -1223,6 +1224,12 @@ protected:
         _code << _nameGen->generateIndependent(op, getVariableID(op));
     }
 
+    virtual void printIndependentParameterName(Node& op) {
+        CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 0, "Invalid number of arguments for independent parameter");
+
+        _code << _nameGen->generateParameter(op, getVariableID(op));
+    }
+
     virtual unsigned print(const Arg& arg) {
         if (arg.getOperation() != nullptr) {
             // expression
@@ -1308,6 +1315,9 @@ protected:
                 break;
             case CGOpCode::Inv:
                 printIndependentVariableName(node);
+                break;
+            case CGOpCode::InvPar:
+                printIndependentParameterName(node);
                 break;
             case CGOpCode::Mul:
                 printOperationMul(node);

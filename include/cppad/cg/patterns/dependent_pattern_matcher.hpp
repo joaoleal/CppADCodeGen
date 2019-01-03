@@ -2,6 +2,7 @@
 #define CPPAD_CG_DEPENDENT_PATTERN_MATCHER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2013 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -71,6 +72,7 @@ private:
     const std::vector<std::set<size_t> >& relatedDepCandidates_;
     std::vector<CGBase> dependents_; // a copy
     const std::vector<CGBase>& independents_;
+    const std::vector<CGBase>& parameters_;
     std::vector<EquationPattern<Base>*> equations_;
     EquationPattern<Base>* eqCurr_;
     std::map<size_t, EquationPattern<Base>*> dep2Equation_;
@@ -111,13 +113,15 @@ public:
      */
     DependentPatternMatcher(const std::vector<std::set<size_t> >& relatedDepCandidates,
                             const std::vector<CGBase>& dependents,
-                            const std::vector<CGBase>& independents) :
+                            const std::vector<CGBase>& independents,
+                            const std::vector<CGBase>& parameters) :
         handler_(independents[0].getCodeHandler()),
         varId_(*handler_),
         varIndexed_(*handler_),
         relatedDepCandidates_(relatedDepCandidates),
         dependents_(dependents),
         independents_(independents),
+        parameters_(parameters),
         idCounter_(0),
         origShareNodeId_(*handler_),
         color_(0) {
@@ -125,6 +129,10 @@ public:
         CPPADCG_ASSERT_UNKNOWN(independents_[0].getCodeHandler() != nullptr);
         equations_.reserve(relatedDepCandidates_.size());
         origShareNodeId_.adjustSize();
+
+        if (!parameters_.empty()) {
+            throw CGException("Loop detection with parameters not implemented yet!");
+        }
     }
 
     const std::vector<EquationPattern<Base>*>& getEquationPatterns() const {
@@ -266,7 +274,7 @@ private:
             }
 
             // create a loop for this equation
-            Loop<Base>* loop = new Loop<Base>(*eq);
+            auto* loop = new Loop<Base>(*eq);
             loops_.push_back(loop);
             equation2Loop_[eq] = loop;
         }
@@ -303,7 +311,7 @@ private:
                 /**
                  * There are shared variables among the two equation patterns
                  */
-                TotalOps2validDepsType* totalOps2validDeps = new TotalOps2validDepsType();
+                auto* totalOps2validDeps = new TotalOps2validDepsType();
                 totalOps2validDepsMem.push_back(totalOps2validDeps);
                 size_t maxOps = 0; // the maximum number of shared operations between two dependents
 
@@ -479,7 +487,7 @@ private:
             Loop<Base>* loop = loops_[l];
 
             //Generate a local model for the loop
-            loop->createLoopModel(dependents_, independents_, dep2Equation_, origTemp2Index_);
+            loop->createLoopModel(dependents_, independents_, parameters_, dep2Equation_, origTemp2Index_);
         }
 
         /**
@@ -712,10 +720,8 @@ private:
             /**
              * determine which equations belong to loops
              */
-            const std::vector<std::vector<LoopPosition> >& ldeps = loopModel->getDependentIndexes();
-            for (size_t eq = 0; eq < ldeps.size(); eq++) {
-                for (size_t it = 0; it < ldeps[eq].size(); it++) {
-                    const LoopPosition& pos = ldeps[eq][it];
+            for (const auto& ldep : loopModel->getDependentIndexes()) {
+                for (auto pos : ldep) {
                     if (pos.original != std::numeric_limits<size_t>::max()) {// some equations are not present in all iteration
                         inLoop[pos.original] = true;
                         eqInLoopCount++;
@@ -768,14 +774,25 @@ private:
         atomics.insert(atomicsOrig.begin(), atomicsOrig.end());
         evaluator.addAtomicFunctions(atomics);
 
-        std::vector<AD<CGBase> > x(independents_.size());
-        for (size_t j = 0; j < x.size(); j++) {
+        std::vector<AD<CGBase> > ax(independents_.size());
+        for (size_t j = 0; j < ax.size(); j++) {
             if (independents_[j].isValueDefined())
-                x[j] = independents_[j].getValue();
+                ax[j] = independents_[j].getValue();
         }
 
-        CppAD::Independent(x);
-        std::vector<AD<CGBase> > y = evaluator.evaluate(x, nonLoopDeps);
+        std::vector<AD<CGBase> > ap(parameters_.size());
+        for (size_t j = 0; j < ap.size(); j++) {
+            if (independents_[j].isValueDefined())
+                ap[j] = independents_[j].getValue();
+        }
+
+        // use a special object for source code generation
+        // declare independent variables, dynamic parameters, starting recording
+        size_t abort_op_index = 0;
+        bool record_compare = true;
+        CppAD::Independent(ax, abort_op_index, record_compare, ap);
+
+        std::vector<AD<CGBase> > y = evaluator.evaluate(ax, ap, nonLoopDeps);
 
         std::unique_ptr<ADFun<CGBase> > tapeNoLoops(new ADFun<CGBase>());
         tapeNoLoops->Dependent(y);
@@ -798,8 +815,7 @@ private:
 
             eqCurr_ = nullptr;
 
-            std::set<size_t>::const_iterator itRef;
-            for (itRef = candidates.begin(); itRef != candidates.end(); ++itRef) {
+            for (auto itRef = candidates.begin(); itRef != candidates.end(); ++itRef) {
                 size_t iDepRef = *itRef;
 
                 // check if it has already been used
@@ -807,12 +823,12 @@ private:
                     continue;
                 }
 
-                if (eqCurr_ == nullptr || used.size() > 0) {
+                if (eqCurr_ == nullptr || !used.empty()) {
                     eqCurr_ = new EquationPattern<Base>(dependents_[iDepRef], iDepRef);
                     equations_.push_back(eqCurr_);
                 }
 
-                std::set<size_t>::const_iterator it = itRef;
+                auto it = itRef;
                 for (++it; it != candidates.end(); ++it) {
                     size_t iDep = *it;
                     // check if it has already been used
@@ -960,7 +976,7 @@ private:
 
         std::set<size_t>& deps = id2Deps[id];
 
-        if (deps.size() == 0) {
+        if (deps.empty()) {
             deps.insert(dep); // here for the first time
         } else {
             std::pair < std::set<size_t>::iterator, bool> added = deps.insert(dep);
@@ -1318,7 +1334,7 @@ private:
 
         } else {
             // dependent 1 and dependent 2 not in any relation set
-            set<size_t>* related = new std::set<size_t>();
+            auto* related = new std::set<size_t>();
             dependentRelations.insert(related);
             related->insert(dep1);
             related->insert(dep2);

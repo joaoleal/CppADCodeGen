@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -28,17 +29,17 @@ TEST_F(IndexReductionTest, DummyDerivMattsson) {
     std::vector<double> x;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = MattssonLinear<CGD> (daeVar, x);
+    ADFun<CGD> fun = MattssonLinear<CGD> (daeVar, x);
 
     std::vector<double> normVar(daeVar.size(), 1.0);
     std::vector<double> normEq(7, 1.0);
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::Low);
 
-    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    DummyDerivatives<double> dummyD(pantelides, x, {}, normVar, normEq);
     dummyD.setVerbosity(Verbosity::High);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(true);
@@ -52,6 +53,4 @@ TEST_F(IndexReductionTest, DummyDerivMattsson) {
 
     ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
     //ASSERT_EQ(10, reducedFun->Range());
-
-    delete fun;
 }

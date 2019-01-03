@@ -2,6 +2,7 @@
 #define CPPAD_CG_COLLECT_VARIABLE_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -64,10 +65,15 @@ inline CG<Base> CodeHandler<Base>::collectVariable(OperationNode<Base>& expressi
     //std::map<OperationNode<Base>*, CG<Base> > replacementNodes;
     //replacementNodes[path1[lastCommon].node] = subExpression; // it might be used in more places within the model
 
-    // use same independent variables
+    // use the same independent variables
     std::vector<CG<Base>> indep(this->_independentVariables.size());
     for (size_t i = 0; i < indep.size(); ++i)
         indep[i] = CG<Base>(*this->_independentVariables[i]);
+
+    // use the same parameters
+    std::vector<CG<Base>> params(this->_parameters.size());
+    for (size_t i = 0; i < params.size(); ++i)
+        params[i] = CG<Base>(*this->_parameters[i]);
 
     CG<Base> expressionOrig(expression);
     CG<Base> expression2;
@@ -79,6 +85,7 @@ inline CG<Base> CodeHandler<Base>::collectVariable(OperationNode<Base>& expressi
 
     EvaluatorCloneSolve<Base> e(*this, graphToCommon, replacementNodes);
     e.evaluate(indep.data(), indep.size(),
+               params.data(), params.size(),
                &expression2, &expressionOrig, 1);
 
 
@@ -219,13 +226,20 @@ inline CG<Base> CodeHandler<Base>::collectVariableAddSub(const SourceCodePath& p
         std::vector<const std::vector<CG<Base>*>*> replaceOnPath{&replaceLeft, &replaceRight};
         EvaluatorCloneSolve<Base> e(*this, paths, replaceOnPath);
 
+        // use the same independent variables
         std::vector<CG<Base>> indep(this->_independentVariables.size());
         for (size_t i = 0; i < indep.size(); ++i)
             indep[i] = CG<Base>(*this->_independentVariables[i]);
 
+        // use the same parameters
+        std::vector<CG<Base>> params(this->_parameters.size());
+        for (size_t i = 0; i < params.size(); ++i)
+            params[i] = CG<Base>(*this->_parameters[i]);
+
         CG<Base> expressionOrig(expression);
 
         e.evaluate(indep.data(), indep.size(),
+                   params.data(), params.size(),
                    &expression2, &expressionOrig, 1);
     }
 

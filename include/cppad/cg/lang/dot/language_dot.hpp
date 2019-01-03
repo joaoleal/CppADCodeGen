@@ -2,6 +2,7 @@
 #define CPPAD_CG_LANGUAGE_DOT_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -339,10 +340,10 @@ protected:
             OperationNode<Base>* node = dependent[i].getOperationNode();
             if (node != nullptr) {
                 CGOpCode type = node->getOperationType();
-                if (type != CGOpCode::Inv && type != CGOpCode::LoopEnd) {
+                if (type != CGOpCode::Inv && type != CGOpCode::InvPar && type != CGOpCode::LoopEnd) {
                     size_t varID = getVariableID(*node);
                     if (varID > 0) {
-                        std::map<size_t, size_t>::const_iterator it2 = _dependentIDs.find(varID);
+                        auto it2 = _dependentIDs.find(varID);
                         if (it2 == _dependentIDs.end()) {
                             _dependentIDs[getVariableID(*node)] = i;
                         } else {
@@ -407,10 +408,13 @@ protected:
         }
 
         for (size_t i = 0; i < dependent.size(); i++) {
-            if (!dependent[i].isParameter() && dependent[i].getOperationNode()->getOperationType() != CGOpCode::Inv) {
-                _code << makeNodeName(*dependent[i].getOperationNode());
-                _code << " -> y" << i;
-                _code << _endline;
+            if (!dependent[i].isParameter()) {
+                auto type = dependent[i].getOperationNode()->getOperationType();
+                if (type != CGOpCode::Inv && type != CGOpCode::InvPar) {
+                    _code << makeNodeName(*dependent[i].getOperationNode());
+                    _code << " -> y" << i;
+                    _code << _endline;
+                }
             }
         }
 
@@ -428,7 +432,8 @@ protected:
                     _code << " -> y" << i;
                     _code << _endline;
                 }
-            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv) {
+            } else if (dependent[i].getOperationNode()->getOperationType() == CGOpCode::Inv ||
+                       dependent[i].getOperationNode()->getOperationType() == CGOpCode::InvPar) {
                 if (!commentWritten) {
                     _code << "// dependent variables without operations" << _endline;
                     commentWritten = true;
@@ -795,6 +800,7 @@ protected:
             case CGOpCode::Div:
                 return printOperationDiv(node);
             case CGOpCode::Inv:
+            case CGOpCode::InvPar:
                 // do nothing
                 return makeNodeName(node);
             case CGOpCode::Mul:

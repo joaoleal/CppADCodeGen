@@ -33,8 +33,10 @@ protected:
 protected:
     // avoids having to type this->graph_
     using DaeStructuralIndexReduction<Base>::graph_;
-    // typical values used to avoid NaNs in the tape validation by CppAD
+    // typical values for the independent variables used to avoid NaNs in the tape validation by CppAD
     std::vector<Base> x_;
+    // typical values for the parameters used to avoid NaNs in the tape validation by CppAD
+    std::vector<Base> p_;
     // whether or not reduceIndex() has been called
     bool reduced_;
     AugmentPathDepthLookahead<Base> defaultAugmentPath_;
@@ -49,14 +51,17 @@ public:
      * @param varInfo The DAE system variable information (in the same order
      *                as in the tape)
      * @param eqName Equation names (it can be an empty vector)
-     * @param x Typical variable values (used to avoid NaNs in CppAD checks)
+     * @param x Typical independent variable values (used to avoid NaNs in CppAD checks)
+     * @param p Typical parameter values (used to avoid NaNs in CppAD checks)
      */
     Pantelides(ADFun<CG<Base> >& fun,
                const std::vector<DaeVarInfo>& varInfo,
                const std::vector<std::string>& eqName,
-               const std::vector<Base>& x) :
+               const std::vector<Base>& x,
+               const std::vector<Base>& p = {}) :
             DaeStructuralIndexReduction<Base>(fun, varInfo, eqName),
             x_(x),
+            p_(p),
             reduced_(false),
             augmentPath_(&defaultAugmentPath_) {
 
@@ -96,7 +101,7 @@ public:
             log() << "Structural index: " << graph_.getStructuralIndex() << std::endl;
         }
 
-        std::unique_ptr<ADFun<CGBase>> reducedFun(graph_.generateNewModel(newVarInfo, equationInfo, x_));
+        std::unique_ptr<ADFun<CGBase>> reducedFun(graph_.generateNewModel(newVarInfo, equationInfo, x_, p_));
 
         return reducedFun;
     }

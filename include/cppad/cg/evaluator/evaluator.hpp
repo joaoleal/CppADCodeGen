@@ -2,6 +2,7 @@
 #define CPPAD_CG_EVALUATOR_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2018 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -48,6 +49,7 @@ protected:
 protected:
     CodeHandler<ScalarIn>& handler_;
     const ActiveOut* indep_;
+    const ActiveOut* parameters_;
     CodeHandlerVector<ScalarIn, std::unique_ptr<ActiveOut>> evals_;
     std::map<size_t, std::vector<ActiveOut>* > evalsArrays_;
     std::map<size_t, std::vector<ActiveOut>* > evalsSparseArrays_;
@@ -62,6 +64,7 @@ public:
     inline EvaluatorBase(CodeHandler<ScalarIn>& handler) :
         handler_(handler),
         indep_(nullptr),
+        parameters_(nullptr),
         evals_(handler),
         underEval_(false),
         depth_(0) { // not really required (but it avoids warnings)
@@ -90,10 +93,14 @@ public:
      * @throws CGException on error (such as an unhandled operation type)
      */
     inline std::vector<ActiveOut> evaluate(ArrayView<const ActiveOut> indepNew,
+                                           ArrayView<const ActiveOut> paramNew,
                                            ArrayView<const CG<ScalarIn> > depOld) {
         std::vector<ActiveOut> depNew(depOld.size());
 
-        evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
+        evaluate(indepNew.data(), indepNew.size(),
+                paramNew.data(), paramNew.size(),
+                depNew.data(), depOld.data(),
+                depNew.size());
 
         return depNew;
     }
@@ -103,6 +110,7 @@ public:
      * variables with a (potentially) new data type
      *
      * @param indepNew The new independent variables.
+     * @param paramNew The new parameters.
      * @param depNew The new dependent variable vector to be computed.
      * @param depOld Dependent variable vector representing the operations that
      *               are going to be executed to determine the new variables
@@ -111,13 +119,17 @@ public:
      *         depOld or an unhandled operation type)
      */
     inline void evaluate(ArrayView<const ActiveOut> indepNew,
+                         ArrayView<const ActiveOut> paramNew,
                          ArrayView<ActiveOut> depNew,
                          ArrayView<const CG<ScalarIn> > depOld) {
         if (depNew.size() != depOld.size()) {
             throw CGException("Dependent array sizes are different.");
         }
 
-        evaluate(indepNew.data(), indepNew.size(), depNew.data(), depOld.data(), depNew.size());
+        evaluate(indepNew.data(), indepNew.size(),
+                paramNew.data(), paramNew.size(),
+                depNew.data(), depOld.data(),
+                depNew.size());
     }
 
     /**
@@ -126,6 +138,8 @@ public:
      *
      * @param indepNew The new independent variables.
      * @param indepSize The size of the array of independent variables.
+     * @param paramNew The new parameters.
+     * @param paramSize The size of the array of parameters.
      * @param depNew The new dependent variable vector that will be created.
      * @param depOld Dependent variable vector representing the operations that
      *               are going to be executed to determine the new variables
@@ -135,6 +149,8 @@ public:
      */
     inline void evaluate(const ActiveOut* indepNew,
                          size_t indepSize,
+                         const ActiveOut* paramNew,
+                         size_t paramSize,
                          ActiveOut* depNew,
                          const CG<ScalarIn>* depOld,
                          size_t depSize) {
@@ -161,13 +177,15 @@ public:
             path_.reserve(30);
         }
 
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
 
         try {
             thisOps.prepareNewEvaluation();
 
             indep_ = indepNew;
-            thisOps.analyzeOutIndeps(indep_, indepSize);
+            parameters_ = paramNew;
+
+            thisOps.analyzeOutIndeps(indep_, indepSize, parameters_, paramSize);
 
             for (size_t i = 0; i < depSize; i++) {
                 CPPADCG_ASSERT_UNKNOWN(depth_ == 0);
@@ -208,7 +226,9 @@ protected:
     }
 
     inline void analyzeOutIndeps(const ActiveOut* indep,
-                                 size_t n) {
+                                 size_t n,
+                                 const ActiveOut* par,
+                                 size_t p) {
         // empty
     }
 
@@ -247,7 +267,7 @@ protected:
         }
 
         // first evaluation of this node
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
 
         path_.push_back(OperationPathNode<ScalarIn>(&node, -1));
         depth_++;
@@ -271,7 +291,7 @@ protected:
 
         ActiveOut* resultPtr2 = resultPtr.get(); // do not use a reference (just in case evals_ is resized)
 
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
         thisOps.processActiveOut(node, *resultPtr2);
 
         return resultPtr2;
@@ -289,7 +309,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new std::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsArrays_[node.getHandlerPosition()] = resultArray;
@@ -314,7 +334,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new std::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsSparseArrays_[node.getHandlerPosition()] = resultArray;
@@ -356,7 +376,7 @@ public:
             Base(handler) {
     }
 
-    virtual ~EvaluatorOperations() { }
+    virtual ~EvaluatorOperations() = default;
 
 protected:
 
@@ -371,7 +391,7 @@ protected:
      * @return the clone of the original node
      */
     inline ActiveOut evalOperation(OperationNode<ScalarIn>& node) {
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
 
         const CGOpCode code = node.getOperationType();
         switch (code) {
@@ -434,6 +454,9 @@ protected:
 
             case CGOpCode::Inv: //                             independent variable
                 return thisOps.evalIndependent(node);
+
+            case CGOpCode::InvPar: //                          independent parameter
+                return thisOps.evalIndependentParameter(node);
 
             case CGOpCode::Log: //  log(variable)
                 return thisOps.evalLog(node);
@@ -517,7 +540,7 @@ protected:
         size_t index = info[0];
         std::vector<ActiveOut>& array = this->evalArrayCreationOperation(*args[0].getOperation()); // array creation
 
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
         thisOps.evalAtomicOperation(*args[1].getOperation()); // atomic operation
 
         return array[index];
@@ -598,6 +621,11 @@ protected:
     inline ActiveOut evalIndependent(const NodeIn& node) {
         size_t index = this->handler_.getIndependentVariableIndex(node);
         return this->indep_[index];
+    }
+
+    inline ActiveOut evalIndependentParameter(const NodeIn& node) {
+        size_t index = this->handler_.getIndependentParameterIndex(node);
+        return this->parameters_[index];
     }
 
     inline ActiveOut evalLog(const NodeIn& node) {

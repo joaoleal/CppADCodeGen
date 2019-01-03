@@ -42,7 +42,8 @@ protected:
     std::unique_ptr<GenericModel<double>> _model;
 public:
 
-    inline CppADCGDynamicAtomic2Test(bool verbose = false, bool printValues = false) :
+    inline CppADCGDynamicAtomic2Test(bool verbose = false,
+                                     bool printValues = false) :
         CppADCGTest(verbose, printValues),
         x(n),
         _atomicFun(nullptr),
@@ -50,7 +51,7 @@ public:
         _fun(nullptr) {
     }
 
-    virtual void SetUp() {
+    void SetUp() override {
         // use a special object for source code generation
         using Base = double;
         using CGD = CG<Base>;
@@ -112,7 +113,7 @@ public:
         _model->addAtomicFunction(*_atomicFun);
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         delete _cgAtomicFun;
         _cgAtomicFun = nullptr;
         delete _atomicFun;

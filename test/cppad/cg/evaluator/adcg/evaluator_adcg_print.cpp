@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2018 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -37,7 +38,7 @@ TEST_F(CppADCGEvaluatorTest, Print) {
     std::vector<CppAD::AD<double>> yNew(y.size());
 
     std::cout << "Evaluating..."<<std::endl;
-    evaluator.evaluate(xNew, yNew, y);
+    evaluator.evaluate(xNew, {}, yNew, y);
 
     std::cout << "Using tape..."<<std::endl;
     CppAD::ADFun<double> fun(xNew, yNew);

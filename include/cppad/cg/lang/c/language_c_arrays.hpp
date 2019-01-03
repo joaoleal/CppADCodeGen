@@ -44,6 +44,7 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
             // try to use a loop for element assignment
             size_t newI = printArrayCreationUsingLoop(startPos, array, i, _tmpArrayValues);
 
+            // print elements not assign in a loop
             if (newI == i) {
                 // individual element assignment
                 _code << _indentation << auxArrayName_ << "[" << i << "] = ";
@@ -62,7 +63,7 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation");
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -140,19 +141,34 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
         //
         const OperationNode<Base>& refOp = *ref.getOperation();
         CGOpCode op = refOp.getOperationType();
-        if (op == CGOpCode::Inv) {
+        if (op == CGOpCode::Inv || op == CGOpCode::InvPar) {
             /**
-             * from independents array
+             * from independents/parameters array
              */
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
-                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
-                                                             *args[i].getOperation(), getVariableID(*args[i].getOperation()))) {
+                    args[i].getOperation()->getOperationType() != op) {
                     break;
+                }
+
+                if (op == CGOpCode::Inv) {
+                    if (!_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(),
+                                                             getVariableID(*args[i - 1].getOperation()),
+                                                             *args[i].getOperation(),
+                                                             getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
+                } else {
+                    assert(op == CGOpCode::InvPar);
+                    if (!_nameGen->isConsecutiveInParameterArray(*args[i - 1].getOperation(),
+                                                                 getVariableID(*args[i - 1].getOperation()),
+                                                                 *args[i].getOperation(),
+                                                                 getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
                 }
             }
 
@@ -160,8 +176,12 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& indep = _nameGen->getIndependentArrayName(refOp, getVariableID(refOp));
-            size_t start = _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp));
+            const std::string& indep = (op == CGOpCode::Inv) ?
+                                       _nameGen->getIndependentArrayName(refOp, getVariableID(refOp)) :
+                                       _nameGen->getParameterArrayName(refOp, getVariableID(refOp));
+            size_t start = (op == CGOpCode::Inv) ?
+                           _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp)) :
+                           _nameGen->getParameterArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << indep << "[i]";
@@ -179,9 +199,9 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             SectionedIndexPattern* refSecp = nullptr;
 
             if (refIp->getType() == IndexPatternType::Linear) {
-                refLIp = static_cast<LinearIndexPattern*> (refIp);
+                refLIp = dynamic_cast<LinearIndexPattern*> (refIp);
             } else if (refIp->getType() == IndexPatternType::Sectioned) {
-                refSecp = static_cast<SectionedIndexPattern*> (refIp);
+                refSecp = dynamic_cast<SectionedIndexPattern*> (refIp);
             } else {
                 return starti; // cannot determine consecutive elements
             }
@@ -191,12 +211,13 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGOpCode::LoopIndexedIndep) {
+                    args[i].getOperation()->getOperationType() != CGOpCode::LoopIndexedIndep) {
                     break; // not an independent index pattern
                 }
 
                 if (!_nameGen->isInSameIndependentArray(refOp, getVariableID(refOp),
-                                                        *args[i].getOperation(), getVariableID(*args[i].getOperation())))
+                                                        *args[i].getOperation(),
+                                                        getVariableID(*args[i].getOperation())))
                     break;
 
                 pos = args[i].getOperation()->getInfo()[1];

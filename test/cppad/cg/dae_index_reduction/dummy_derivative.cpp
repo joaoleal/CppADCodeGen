@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -27,7 +28,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
     std::vector<DaeVarInfo> daeVar;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD> (daeVar);
+    ADFun<CGD> fun = Pendulum2D<CGD> (daeVar);
 
     std::vector<double> x(daeVar.size());
     std::vector<double> normVar(daeVar.size(), 1.0);
@@ -49,8 +50,8 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
-    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, {}, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(false);
     //dummyD.setVerbosity(Verbosity::High);
@@ -70,8 +71,6 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D) {
         }
         ASSERT_TRUE(v.getName() != "dydt");
     }
-
-    delete fun;
 }
 
 /**
@@ -83,7 +82,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D_avoidDummy) {
     std::vector<DaeVarInfo> daeVar;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD> (daeVar);
+    ADFun<CGD> fun = Pendulum2D<CGD> (daeVar);
 
     std::vector<double> x(daeVar.size());
     std::vector<double> normVar(daeVar.size(), 1.0);
@@ -105,8 +104,8 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D_avoidDummy) {
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
-    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, {}, normVar, normEq);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(false);
     //dummyD.setVerbosity(Verbosity::High);
@@ -127,8 +126,6 @@ TEST_F(IndexReductionTest, DummyDerivPendulum2D_avoidDummy) {
         }
         ASSERT_TRUE(v.getName() != "dxdt");
     }
-
-    delete fun;
 }
 
 TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
@@ -137,7 +134,7 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     using CGD = CG<double>;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum3D<CGD > ();
+    ADFun<CGD> fun = Pendulum3D<CGD > ();
 
     std::vector<double> x(13);
     std::vector<double> normVar(13, 1.0);
@@ -169,8 +166,8 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
-    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, {}, normVar, normEq);
 
     std::vector<DaeVarInfo> newDaeVar;
     std::vector<DaeEquationInfo> newEqInfo;
@@ -180,6 +177,4 @@ TEST_F(IndexReductionTest, DummyDerivPendulum3D) {
     ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
-
-    delete fun;
 }

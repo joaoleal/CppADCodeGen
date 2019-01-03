@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_FLASH_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -19,8 +20,8 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-inline CppAD::ADFun<Base>* Flash(std::vector<DaeVarInfo>& daeVar,
-                                 const std::vector<double>& x) {
+inline CppAD::ADFun<Base> Flash(std::vector<DaeVarInfo>& daeVar,
+                                const std::vector<double>& x) {
     using namespace CppAD;
     using namespace std;
     using ADB = CppAD::AD<Base>;
@@ -124,7 +125,7 @@ inline CppAD::ADFun<Base>* Flash(std::vector<DaeVarInfo>& daeVar,
     res[5] = yWater + yEthanol - 1;
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<Base> (U, res);
+    return ADFun<Base> (U, res);
 }
 
 } // END cg namespace

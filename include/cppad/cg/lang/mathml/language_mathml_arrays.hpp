@@ -2,6 +2,7 @@
 #define CPPAD_CG_LANGUAGE_MATHML_ARRAYS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2015 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,7 +21,7 @@ namespace cg {
 
 template<class Base>
 void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    //CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation"); // parameter array can be empty
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -63,7 +64,7 @@ void LanguageMathML<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageMathML<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation");
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -148,21 +149,37 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
 
     const Argument<Base>& ref = args[starti];
     if (ref.getOperation() != nullptr) {
-        // 
+        //
         const OperationNode<Base>& refOp = *ref.getOperation();
-        if (refOp.getOperationType() == CGOpCode::Inv) {
+        CGOpCode op = refOp.getOperationType();
+        if (op == CGOpCode::Inv || op == CGOpCode::InvPar) {
             /**
-             * from independents array
+             * from independents/parameters array
              */
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
-                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
-                                                             *args[i].getOperation(), getVariableID(*args[i].getOperation()))) {
+                    args[i].getOperation()->getOperationType() != op) {
                     break;
+                }
+
+                if (op == CGOpCode::Inv) {
+                    if (!_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(),
+                                                             getVariableID(*args[i - 1].getOperation()),
+                                                             *args[i].getOperation(),
+                                                             getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
+                } else {
+                    assert(op == CGOpCode::InvPar);
+                    if (!_nameGen->isConsecutiveInParameterArray(*args[i - 1].getOperation(),
+                                                                 getVariableID(*args[i - 1].getOperation()),
+                                                                 *args[i].getOperation(),
+                                                                 getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
                 }
             }
 
@@ -170,15 +187,19 @@ inline size_t LanguageMathML<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& indep = _nameGen->getIndependentArrayName(refOp, getVariableID(refOp));
-            size_t start = _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp));
+            const std::string& indep = (op == CGOpCode::Inv) ?
+                                       _nameGen->getIndependentArrayName(refOp, getVariableID(refOp)) :
+                                       _nameGen->getParameterArrayName(refOp, getVariableID(refOp));
+            size_t start = (op == CGOpCode::Inv) ?
+                           _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp)) :
+                           _nameGen->getParameterArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << "<mrow class='indep'>" << indep << "</mrow>" << "<mfenced open='[' close=']'><mi>i</mi></mfenced>";
             else
                 arrayAssign << "<mrow class='indep'>" << indep << "</mrow>" << "<mfenced open='[' close=']'><mrow><mn>" << offset << "</mn> <mo>+</mo> <mi>i</mi></mrow></mfenced>";
 
-        } else if (refOp.getOperationType() == CGOpCode::LoopIndexedIndep) {
+        } else if (op == CGOpCode::LoopIndexedIndep) {
             /**
              * from independents array in a loop
              */

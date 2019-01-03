@@ -33,7 +33,8 @@ protected:
     std::unique_ptr<GenericModel<double>> _model;
 public:
 
-    explicit CppADCGDynamicForRevTest(bool verbose = false, bool printValues = false) :
+    explicit CppADCGDynamicForRevTest(bool verbose = false,
+                                      bool printValues = false) :
         CppADCGTest(verbose, printValues),
         _modelName("model"),
         x(n),

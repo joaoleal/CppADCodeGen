@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -29,7 +30,7 @@ TEST_F(IndexReductionTest, PantelidesSimple2D) {
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Simple2D<CGD> (daeVar);
+    ADFun<CGD> fun = Simple2D<CGD> (daeVar);
 
     std::vector<double> x(daeVar.size());
     x[0] = -1.0; // x1
@@ -42,7 +43,7 @@ TEST_F(IndexReductionTest, PantelidesSimple2D) {
 
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
@@ -54,8 +55,40 @@ TEST_F(IndexReductionTest, PantelidesSimple2D) {
 
     // WARNING: the actual index is 1 but the Pantelides returns 2 (as expected from the method)
     ASSERT_EQ(size_t(2), pantelides.getStructuralIndex());
+}
 
-    delete fun;
+TEST_F(IndexReductionTest, PantelidesSimple2DParams) {
+    using CGD = CG<double>;
+
+    std::vector<DaeVarInfo> daeVar;
+    // create f: U -> Z and vectors used for derivative calculations
+    ADFun<CGD> fun = Simple2DParam<CGD> (daeVar, {5});
+
+    std::vector<double> x(daeVar.size());
+    x[0] = -1.0; // x1
+    x[1] = 1.0; // x2
+
+    x[2] = 0.0; // time
+
+    x[3] = 0.0; // dx1dt
+    x[4] = 0.0; // dx2dt
+
+    std::vector<double> p{5.0};
+
+    std::vector<std::string> eqName; // empty
+
+    Pantelides<double> pantelides(fun, daeVar, eqName, x, p);
+    pantelides.setVerbosity(Verbosity::High);
+
+    std::vector<DaeVarInfo> newDaeVar;
+    std::vector<DaeEquationInfo> equationInfo;
+    std::unique_ptr<ADFun<CGD>> reducedFun;
+    ASSERT_NO_THROW(reducedFun = pantelides.reduceIndex(newDaeVar, equationInfo));
+
+    ASSERT_TRUE(reducedFun != nullptr);
+
+    // WARNING: the actual index is 1 but the Pantelides returns 2 (as expected from the method)
+    ASSERT_EQ(size_t(2), pantelides.getStructuralIndex());
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum2D) {
@@ -63,7 +96,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
 
     std::vector<DaeVarInfo> daeVar;
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum2D<CGD> (daeVar);
+    ADFun<CGD> fun = Pendulum2D<CGD> (daeVar);
 
     std::vector<double> x(daeVar.size());
     x[0] = -1.0; // x
@@ -82,7 +115,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     
     std::vector<std::string> eqName; // empty
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
@@ -93,15 +126,13 @@ TEST_F(IndexReductionTest, PantelidesPendulum2D) {
     ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
-
-    delete fun;
 }
 
 TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     using CGD = CG<double>;
 
     // create f: U -> Z and vectors used for derivative calculations
-    ADFun<CGD>* fun = Pendulum3D<CGD> ();
+    ADFun<CGD> fun = Pendulum3D<CGD> ();
 
     std::vector<DaeVarInfo> daeVar(13);
     daeVar[7] = 0;
@@ -129,7 +160,7 @@ TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     
     std::vector<std::string> eqName; // empty
     
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
     pantelides.setVerbosity(Verbosity::High);
 
     std::vector<DaeVarInfo> newDaeVar;
@@ -140,6 +171,4 @@ TEST_F(IndexReductionTest, PantelidesPendulum3D) {
     ASSERT_TRUE(reducedFun != nullptr);
 
     ASSERT_EQ(size_t(3), pantelides.getStructuralIndex());
-
-    delete fun;
 }

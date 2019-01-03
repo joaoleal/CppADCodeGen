@@ -2,6 +2,7 @@
 #define CPPAD_CG_MODEL_C_SOURCE_GEN_IMPL_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -189,7 +190,7 @@ void ModelCSourceGen<Base>::generateLoops() {
 
     std::vector<CGBase> yy = _fun.Forward(0, xx);
 
-    DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx);
+    DependentPatternMatcher<Base> matcher(_relatedDepCandidates, yy, xx, params);
     matcher.generateTapes(_funNoLoops, _loopTapes);
 
     finishedJob();

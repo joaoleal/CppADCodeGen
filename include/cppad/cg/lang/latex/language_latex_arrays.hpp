@@ -2,6 +2,7 @@
 #define CPPAD_CG_LANGUAGE_LATEX_ARRAYS_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,10 +21,13 @@ namespace cg {
 
 template<class Base>
 void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    //CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation"); // parameter array can be empty
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
+
+    if (argSize == 0)
+        return; // empty array
 
     size_t startPos = id - 1;
 
@@ -63,7 +67,7 @@ void LanguageLatex<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageLatex<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation");
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -148,21 +152,37 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
 
     const Argument<Base>& ref = args[starti];
     if (ref.getOperation() != nullptr) {
-        // 
+        //
         const OperationNode<Base>& refOp = *ref.getOperation();
-        if (refOp.getOperationType() == CGOpCode::Inv) {
+        CGOpCode op = refOp.getOperationType();
+        if (op == CGOpCode::Inv || op == CGOpCode::InvPar) {
             /**
-             * from independents array
+             * from independents/parameters array
              */
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
                     break; // no assignment needed
 
                 if (args[i].getOperation() == nullptr ||
-                        args[i].getOperation()->getOperationType() != CGOpCode::Inv ||
-                        !_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(), getVariableID(*args[i - 1].getOperation()),
-                                                             *args[i].getOperation(), getVariableID(*args[i].getOperation()))) {
+                    args[i].getOperation()->getOperationType() != op) {
                     break;
+                }
+
+                if (op == CGOpCode::Inv) {
+                    if (!_nameGen->isConsecutiveInIndepArray(*args[i - 1].getOperation(),
+                                                             getVariableID(*args[i - 1].getOperation()),
+                                                             *args[i].getOperation(),
+                                                             getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
+                } else {
+                    assert(op == CGOpCode::InvPar);
+                    if (!_nameGen->isConsecutiveInParameterArray(*args[i - 1].getOperation(),
+                                                                 getVariableID(*args[i - 1].getOperation()),
+                                                                 *args[i].getOperation(),
+                                                                 getVariableID(*args[i].getOperation()))) {
+                        break;
+                    }
                 }
             }
 
@@ -170,15 +190,19 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti;
 
             // use loop
-            const std::string& indep = _nameGen->getIndependentArrayName(refOp, getVariableID(refOp));
-            size_t start = _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp));
+            const std::string& indep = (op == CGOpCode::Inv) ?
+                                       _nameGen->getIndependentArrayName(refOp, getVariableID(refOp)) :
+                                       _nameGen->getParameterArrayName(refOp, getVariableID(refOp));
+            size_t start = (op == CGOpCode::Inv) ?
+                           _nameGen->getIndependentArrayIndex(refOp, getVariableID(refOp)) :
+                           _nameGen->getParameterArrayIndex(refOp, getVariableID(refOp));
             long offset = long(start) - starti;
             if (offset == 0)
                 arrayAssign << indep << "[i]";
             else
                 arrayAssign << indep << "[" << offset << " + i]";
 
-        } else if (refOp.getOperationType() == CGOpCode::LoopIndexedIndep) {
+        } else if (op == CGOpCode::LoopIndexedIndep) {
             /**
              * from independents array in a loop
              */
@@ -188,7 +212,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 return starti; // cannot determine consecutive elements
             }
 
-            LinearIndexPattern* refLIp = static_cast<LinearIndexPattern*> (refIp);
+            auto* refLIp = dynamic_cast<LinearIndexPattern*> (refIp);
 
             for (; i < argSize; i++) {
                 if (isSameArgument(args[i], tmpArrayValues[startPos + i]))
@@ -208,11 +232,11 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
                 if (ip->getType() != IndexPatternType::Linear) {
                     break; // different pattern type
                 }
-                const LinearIndexPattern* lIp = static_cast<const LinearIndexPattern*> (ip);
+                const auto* lIp = dynamic_cast<const LinearIndexPattern*> (ip);
                 if (refLIp->getLinearSlopeDx() != lIp->getLinearSlopeDx() ||
-                        refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
-                        refLIp->getXOffset() != lIp->getXOffset() ||
-                        refLIp->getLinearConstantTerm() - long(starti) != lIp->getLinearConstantTerm() - long(i)) {
+                    refLIp->getLinearSlopeDy() != lIp->getLinearSlopeDy() ||
+                    refLIp->getXOffset() != lIp->getXOffset() ||
+                    refLIp->getLinearConstantTerm() - long(starti) != lIp->getLinearConstantTerm() - long(i)) {
                     break;
                 }
             }
@@ -220,7 +244,7 @@ inline size_t LanguageLatex<Base>::printArrayCreationUsingLoop(size_t startPos,
             if (i - starti < 3)
                 return starti;
 
-            LinearIndexPattern* lip2 = new LinearIndexPattern(*refLIp);
+            auto* lip2 = new LinearIndexPattern(*refLIp);
             lip2->setLinearConstantTerm(lip2->getLinearConstantTerm() - starti);
             Plane2DIndexPattern p2dip(lip2,
                                       new LinearIndexPattern(0, 1, 1, 0));

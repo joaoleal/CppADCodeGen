@@ -2,6 +2,7 @@
 #define CPPAD_CG_TEST_PENDULUM_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -19,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-inline CppAD::ADFun<Base>* Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
+inline CppAD::ADFun<Base> Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
     using namespace CppAD;
     using namespace std;
     using ADB = CppAD::AD<Base>;
@@ -66,11 +67,11 @@ inline CppAD::ADFun<Base>* Pendulum2D(std::vector<DaeVarInfo>& daeVar) {
     Z[4] = x * x + y * y - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<Base> (U, Z);
+    return ADFun<Base> (U, Z);
 }
 
 template<class Base>
-inline CppAD::ADFun<Base>* Pendulum3D() {
+inline CppAD::ADFun<Base> Pendulum3D() {
     using namespace CppAD;
     using namespace std;
     using ADB = CppAD::AD<Base>;
@@ -106,7 +107,7 @@ inline CppAD::ADFun<Base>* Pendulum3D() {
     Z[6] = x * x + y * y + z * z - L * L;
 
     // create f: U -> Z and vectors used for derivative calculations
-    return new ADFun<Base> (U, Z);
+    return ADFun<Base> (U, Z);
 }
 
 } // END cg namespace

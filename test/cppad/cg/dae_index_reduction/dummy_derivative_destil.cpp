@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -112,13 +113,13 @@ TEST_F(IndexReductionTest, DummyDerivDistillation) {
     std::vector<std::string> eqName; // empty
 
     // create f: U -> Z and vectors used for derivative calculations
-    std::unique_ptr<ADFun<CGD> > fun(Distillation<CGD > (daeVar, x));
+    ADFun<CGD> fun = Distillation<CGD> (daeVar, x);
 
     std::vector<double> normVar(daeVar.size(), 1.0);
-    std::vector<double> normEq(fun->Range(), 1.0);
+    std::vector<double> normEq(fun.Range(), 1.0);
 
-    Pantelides<double> pantelides(*fun, daeVar, eqName, x);
-    DummyDerivatives<double> dummyD(pantelides, x, normVar, normEq);
+    Pantelides<double> pantelides(fun, daeVar, eqName, x);
+    DummyDerivatives<double> dummyD(pantelides, x, {}, normVar, normEq);
     dummyD.setAvoidConvertAlg2DifVars(false);
     dummyD.setGenerateSemiExplicitDae(true);
     dummyD.setReduceEquations(true);

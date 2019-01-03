@@ -2,6 +2,7 @@
 #define CPPAD_CG_CODE_HANDLER_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -19,7 +20,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * Helper class to analyze the operation graph and generate source code
+ * Manages and analyzes the operation graph used to generate source code
  * for several languages
  *
  * @author Joao Leal
@@ -178,7 +179,7 @@ protected:
     IndexOperationNode<Base>* _auxIterationIndexOp;
 public:
 
-    CodeHandler(size_t varCount = 50);
+    explicit CodeHandler(size_t varCount = 50);
 
     CodeHandler(const CodeHandler&) = delete;
 
@@ -289,7 +290,7 @@ public:
     /**
      * @throws CGException if a variable is not found in the parameter vector
      */
-    size_t getParameterIndex(const Node& var) const;
+    size_t getIndependentParameterIndex(const Node& var) const;
 
     /**
      * Provides variable IDs that were assigned to operation nodes.
@@ -793,6 +794,8 @@ protected:
 
     inline bool isIndependent(const Node& arg) const;
 
+    inline bool isIndependentParameter(const Node& arg) const;
+
     inline bool isTemporary(const Node& arg) const;
 
     inline static bool isTemporaryArray(const Node& arg);
@@ -834,7 +837,7 @@ protected:
                           std::vector<SourceCodePath>& found,
                           size_t max);
 
-    static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath> nodePaths,
+    static inline std::vector<SourceCodePath> findPathsFromNode(const std::vector<SourceCodePath>& nodePaths,
                                                                 Node& node);
 
     /**************************************************************************

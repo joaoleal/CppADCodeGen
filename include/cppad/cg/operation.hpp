@@ -2,6 +2,7 @@
 #define CPPAD_CG_OPERATION_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -52,6 +53,7 @@ enum class CGOpCode {
     Exp,                  // exp(variable)
     Expm1,                // expm1(variable)
     Inv,                  //                             independent variable
+    InvPar,               //                             independent parameter
     Log,                  // log(variable)
     Log1p,                // log1p(variable)
     Mul,                  // a * b
@@ -117,6 +119,7 @@ inline std::ostream& operator<<(std::ostream& os, const CGOpCode& op) {
             "exp($1)",                // Exp
             "expm1($1)",              // Expm1
             "independent()",          // Inv
+            "parameter()",            // InvPar
             "log($1)",                // Log
             "log1p($1)",              // Log1p
             "$1 * $2",                // Mul

@@ -1,7 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2019 Joao Leal
- *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -13,23 +12,22 @@
  * ----------------------------------------------------------------------------
  * Author: Joao Leal
  */
-#include <cmath>
-
 #include "CppADCGEvaluatorTest.hpp"
 
 using namespace CppAD;
 using namespace CppAD::cg;
 
-TEST_F(CppADCGEvaluatorTest, Sqrt) {
+TEST_F(CppADCGEvaluatorTest, Params) {
     ModelType model = [](const std::vector<CGD>& x, const std::vector<CGD>& p) {
-        std::vector<CGD> y(2);
+        // dependent variable vector
+        std::vector<CGD> y(3);
 
-        // dependent variables
-        y[0] = sqrt(x[0]);
-        y[1] = sqrt(y[0]) - x[1] * 3;
+        // model
+        y[0] = p[0] * x[0] + x[1]; // CGD + CGD
+        y[1] = y[0] + p[1]; // CGD + double
+        y[2] = 1. + y[1]; // double + CGD
         return y;
     };
 
-    this->test(model, std::vector<double>{81.0, 1.0});
+    this->test(model, std::vector<double>{0.5, 1.5}, std::vector<double>{2.5, 3.0});
 }
-

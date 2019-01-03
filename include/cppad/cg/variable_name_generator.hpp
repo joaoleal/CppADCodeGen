@@ -131,7 +131,7 @@ public:
      *
      * @param variable the node representing the parameter
      * @param id an ID assigned by the CodeHandler to the operation node
-     *           (unique for independent variables)
+     *           (unique for independent parameters)
      * @return the generated name
      */
     virtual std::string generateParameter(const OperationNode<Base>& variable,

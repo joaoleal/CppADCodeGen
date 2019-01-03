@@ -2,6 +2,7 @@
 #define CPPAD_CG_BIPARTITE_GRAPH_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2016 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -516,7 +517,8 @@ public:
      */
     inline std::unique_ptr<ADFun<CGBase>> generateNewModel(std::vector<DaeVarInfo>& newVarInfo,
                                                            std::vector<DaeEquationInfo>& equationInfo,
-                                                           const std::vector<Base>& x) {
+                                                           const std::vector<Base>& x,
+                                                           const std::vector<Base>& par) {
         using std::vector;
 
         std::unique_ptr<ADFun<CGBase> > reducedFun;
@@ -621,7 +623,20 @@ public:
             for (size_t j = 0; j < x.size(); j++) {
                 indepNew[j] = x[j];
             }
-            Independent(indepNew);
+
+            // parameters
+            vector<ADCG> parNew(fun_->size_dyn_ind());
+
+            // initialize with the user provided values
+            for (size_t j = 0; j < par.size(); j++) {
+                parNew[j] = par[j];
+            }
+
+            // use a special object for source code generation
+            // declare independent variables, dynamic parameters, starting recording
+            size_t abort_op_index = 0;
+            bool record_compare = true;
+            CppAD::Independent(indepNew, abort_op_index, record_compare, parNew);
 
             // variables with the relationship between x dxdt and t
             vector<ADCG> indep2 = prepareTimeDependentVariables(indepNew, newVarInfo, timeTapeIndex);
@@ -629,7 +644,7 @@ public:
 
             Evaluator<Base, CGBase> evaluator0(handler);
             evaluator0.setPrintFor(preserveNames_); // variable names saved with CppAD::PrintFor
-            vector<ADCG> depNew = evaluator0.evaluate(indep2, dep0);
+            vector<ADCG> depNew = evaluator0.evaluate(indep2, parNew, dep0);
             depNew.resize(enodes_.size());
 
             try {
@@ -677,6 +692,7 @@ public:
             vector<ADCG> indep2;
             vector<ADCG> indepNew;
 
+            // independents
             if (d < newEquations.size() - 1) {
                 indepNew.resize(m);
             } else if (timeOrigVarIndex_ < 0) {
@@ -690,7 +706,20 @@ public:
             for (size_t j = 0; j < x.size(); j++) {
                 indepNew[j] = x[j];
             }
-            Independent(indepNew);
+
+            // parameters
+            vector<ADCG> parNew(fun_->size_dyn_ind());
+
+            // initialize with the user provided values
+            for (size_t j = 0; j < par.size(); j++) {
+                parNew[j] = par[j];
+            }
+
+            // use a special object for source code generation
+            // declare independent variables, dynamic parameters, starting recording
+            size_t abort_op_index = 0;
+            bool record_compare = true;
+            CppAD::Independent(indepNew, abort_op_index, record_compare, parNew);
 
             if (d < newEquations.size() - 1) {
                 // variables with the relationship between x, dxdt and t
@@ -702,7 +731,7 @@ public:
 
             Evaluator<Base, CGBase> evaluator(handler0);
             evaluator.setPrintFor(preserveNames_); // variable names saved with CppAD::PrintFor
-            vector<ADCG> depNew = evaluator.evaluate(indep2, dep);
+            vector<ADCG> depNew = evaluator.evaluate(indep2, parNew, dep);
 
             try {
                 reducedFun.reset(new ADFun<CGBase>(indepNew, depNew));

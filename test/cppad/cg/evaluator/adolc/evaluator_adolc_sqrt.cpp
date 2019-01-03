@@ -1,5 +1,6 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -20,7 +21,7 @@ using namespace CppAD;
 using namespace CppAD::cg;
 
 TEST_F(CppADCGEvaluatorAdolcTest, SolveSqrt) {
-    ModelType model = [](const std::vector<CGD>& x) {
+    ModelType model = [](const std::vector<CGD>& x, const std::vector<CGD>& p) {
         std::vector<CGD> y(2);
 
         // dependent variables

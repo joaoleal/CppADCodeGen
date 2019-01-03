@@ -2,6 +2,7 @@
 #define	TEST_SOLVE_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -22,8 +23,8 @@ namespace cg {
 class CppADCGSolveTest : public CppADCGTest {
 public:
 
-    inline CppADCGSolveTest(bool verbose = false,
-                            bool printValues = false) :
+    explicit CppADCGSolveTest(bool verbose = false,
+                              bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
@@ -32,20 +33,27 @@ protected:
     inline void test_solve(CppAD::ADFun<CGD>& fun,
                            size_t expressionIndex,
                            size_t indIndex,
-                           const std::vector<ADCGD>& testValues) {
+                           const std::vector<ADCGD>& testValues,
+                           const std::vector<ADCGD>& testParameters = {}) {
 
         std::vector<double> testValuesD(testValues.size());
         for (size_t i = 0; i < testValues.size(); i++) {
             testValuesD[i] = CppAD::Value(CppAD::Var2Par(testValues[i])).getValue();
         }
 
-        test_solve(fun, expressionIndex, indIndex, testValuesD);
+        std::vector<double> testParametersD(testParameters.size());
+        for (size_t i = 0; i < testParameters.size(); i++) {
+            testParametersD[i] = CppAD::Value(CppAD::Var2Par(testParameters[i])).getValue();
+        }
+
+        test_solve(fun, expressionIndex, indIndex, testValuesD, testParametersD);
     }
 
     inline void test_solve(CppAD::ADFun<CGD>& fun,
                            size_t expressionIndex,
                            size_t indIndex,
-                           const std::vector<double>& testValues) {
+                           const std::vector<double>& testValues,
+                           const std::vector<double>& testParameters = {}) {
 
         using std::vector;
 
@@ -56,8 +64,10 @@ protected:
         assert(indIndex < n);
         ASSERT_EQ(testValues.size(), n);
 
+        ASSERT_EQ(testParameters.size(), fun.size_dyn_ind());
+
         // evaluate the dependent values (equation residuals)
-        const vector<double> depValues = calculateDependentForward0(fun, testValues);
+        const vector<double> depValues = calculateDependentForward0(fun, testValues, testParameters);
 
         ASSERT_TRUE(nearEqual(depValues[expressionIndex], 0.0, 1e-4, 1e-8));
 
@@ -65,6 +75,11 @@ protected:
         CodeHandler<double> handler;
         vector<CGD> indVars(n);
         handler.makeVariables(indVars);
+
+        vector<CGD> pars(fun.size_dyn_ind());
+        handler.makeParameters(pars);
+
+        fun.new_dynamic(pars);
 
         vector<CGD> dep = fun.Forward(0, indVars);
 
@@ -83,28 +98,25 @@ protected:
         vector<CGD> newDep(1);
         newDep[0] = solution;
 
-        // new independent vector (without one variable)
-        vector<AD<double> > newIndep(n - 1);
+        // new independent vector
+        vector<AD<double> > newIndep(n);
         for (size_t i = 0; i < indIndex; i++) {
             newIndep[i] = testValues[i];
         }
+        newIndep[indIndex] = std::numeric_limits<double>::quiet_NaN();
         for (size_t i = indIndex + 1; i < n; i++) {
-            newIndep[i - 1] = testValues[i];
+            newIndep[i] = testValues[i];
         }
 
-        // create a longer independent vector to use in the evaluator
-        vector<AD<double> > newIndepLong(n);
-        for (size_t i = 0; i < indIndex; i++) {
-            newIndepLong[i] = newIndep[i];
-        }
-        newIndepLong[indIndex] = std::numeric_limits<double>::quiet_NaN();
-        for (size_t i = indIndex + 1; i < n; i++) {
-            newIndepLong[i] = newIndep[i - 1];
+        // new parameters
+        vector<AD<double> > newPars(fun.size_dyn_ind());
+        for (size_t i = 0; i < newPars.size(); i++) {
+            newPars[i] = testParameters[i];
         }
 
         // determine the result
         Evaluator<double, double> evaluator(handler);
-        vector<AD<double> > result = evaluator.evaluate(newIndepLong, newDep);
+        vector<AD<double> > result = evaluator.evaluate(newIndep, newPars, newDep);
 
         double resultVal = CppAD::Value(CppAD::Var2Par(result[0]));
 
@@ -112,7 +124,8 @@ protected:
     }
 
     inline std::vector<double> calculateDependentForward0(CppAD::ADFun<CGD>& fun,
-                                                          const std::vector<double>& testValues) {
+                                                          const std::vector<double>& testValues,
+                                                          const std::vector<double>& testParameters) {
         using std::vector;
 
         size_t m = fun.Range();
@@ -122,6 +135,13 @@ protected:
         for (size_t i = 0; i < n; ++i) {
             indVars[i] = testValues[i];
         }
+
+        vector<CGD> pars(fun.size_dyn_ind());
+        for (size_t i = 0; i < pars.size(); ++i) {
+            pars[i] = testParameters[i];
+        }
+
+        fun.new_dynamic(pars);
 
         vector<CGD> dep = fun.Forward(0, indVars);
 

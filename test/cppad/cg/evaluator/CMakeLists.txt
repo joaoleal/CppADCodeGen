@@ -1,5 +1,6 @@
 # --------------------------------------------------------------------------
 #  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+#    Copyright (C) 2019 Joao Leal
 #    Copyright (C) 2014 Ciengis
 #
 #  CppADCodeGen is distributed under multiple licenses:
@@ -29,6 +30,7 @@ add_cppadcg_test(evaluator_sqrt.cpp)
 add_cppadcg_test(evaluator_sub.cpp)
 add_cppadcg_test(evaluator_tanh.cpp)
 add_cppadcg_test(evaluator_unary.cpp)
+add_cppadcg_test(evaluator_params.cpp)
 
 IF(ADOLC_FOUND)
     ADD_SUBDIRECTORY(adolc)

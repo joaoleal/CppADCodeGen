@@ -2,6 +2,7 @@
 #define	CPPAD_CG_TEST_CPPADCGEVALUATORADOLCTEST_INCLUDED
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2014 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -23,19 +24,21 @@ namespace cg {
 
 class CppADCGEvaluatorAdolcTest : public CppADCGTest {
 public:
-    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x) >;
+    using ModelType = std::function<std::vector<CGD> (const std::vector<CGD>& x,
+                                                      const std::vector<CGD>& p) >;
 
 public:
 
-    inline CppADCGEvaluatorAdolcTest(bool verbose = false,
-                                     bool printValues = false) :
+    explicit CppADCGEvaluatorAdolcTest(bool verbose = false,
+                                       bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
 protected:
 
     inline void test(ModelType& model,
-                     const std::vector<double>& testValues) {
+                     const std::vector<double>& testValues,
+                     const std::vector<double>& testParameters = {}) {
         using std::vector;
 
         int tape = 0;
@@ -48,7 +51,12 @@ protected:
         for (size_t j = 0; j < xOrig.size(); j++)
             xOrig[j].setValue(testValues[j]);
 
-        const std::vector<CGD> yOrig = model(xOrig);
+        std::vector<CGD> pOrig(testParameters.size());
+        handlerOrig.makeParameters(pOrig);
+        for (size_t j = 0; j < pOrig.size(); j++)
+            pOrig[j].setValue(testParameters[j]);
+
+        const std::vector<CGD> yOrig = model(xOrig, pOrig);
 
         /**
          * Test with adolc
@@ -60,9 +68,14 @@ protected:
         for (size_t i = 0; i < xOrig.size(); i++)
             xNew[i] <<= testValues[i];
 
+        std::vector<adouble> pNew(pOrig.size());
+        for (size_t i = 0; i < pNew.size(); i++)
+            pNew[i] = mkparam(testParameters[i]);
+
+
         // model
         Evaluator<Base, Base, adouble> evaluator(handlerOrig);
-        std::vector<adouble> yNew = evaluator.evaluate(xNew, yOrig);
+        std::vector<adouble> yNew = evaluator.evaluate(xNew, pNew, yOrig);
 
         // dependents
         std::vector<double> rhsOut(yNew.size());

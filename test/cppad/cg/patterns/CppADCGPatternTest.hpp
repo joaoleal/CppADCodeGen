@@ -275,6 +275,7 @@ public:
          */
         CodeHandler<double> h;
         size_t n2 = fun.Domain();
+        size_t np = fun.size_dyn_par();
 
         std::vector<CGD> xx(n2);
         h.makeVariables(xx);
@@ -282,9 +283,15 @@ public:
             xx[j].setValue(j);
         }
 
+        std::vector<CGD> pp(np);
+        h.makeParameters(pp);
+        for (size_t j = 0; j < np; j++) {
+            pp[j].setValue(1 + j);
+        }
+
         std::vector<CGD> yy = fun.Forward(0, xx);
 
-        DependentPatternMatcher<double> matcher(depCandidates, yy, xx);
+        DependentPatternMatcher<double> matcher(depCandidates, yy, xx, pp);
 
         LoopFreeModel<Base>* nonLoopTape;
         SmartSetPointer<LoopModel<Base> > loopTapes;
@@ -308,8 +315,7 @@ public:
         map<size_t, map<size_t, set<size_t> > > orderedCalcLoops;
 
         const std::vector<Loop<Base>*>& calcLoops = matcher.getLoops();
-        for (size_t l = 0; l < calcLoops.size(); l++) {
-            Loop<Base>* loop = calcLoops[l];
+        for (auto* loop : calcLoops) {
             size_t minDep = std::numeric_limits<size_t>::max();
 
             map<size_t, set<size_t> > dependents;
@@ -329,9 +335,7 @@ public:
         //  - expected
         bool defined = false;
         map<size_t, map<size_t, set<size_t> > > orderedExpectedLoops;
-        for (size_t l = 0; l < loops.size(); l++) {
-            const std::vector<set<size_t> >& eqPatterns = loops[l];
-
+        for (const auto &eqPatterns : loops) {
             if (!eqPatterns.empty()) {
                 defined = true;
                 /**
@@ -340,10 +344,10 @@ public:
                 size_t minDep = std::numeric_limits<size_t>::max();
 
                 map<size_t, set<size_t> > dependents;
-                for (size_t eq = 0; eq < eqPatterns.size(); eq++) {
-                    size_t minEqDep = *eqPatterns[eq].begin();
-                    minDep = std::min(minDep, *eqPatterns[eq].begin());
-                    dependents[minEqDep] = eqPatterns[eq];
+                for (const auto& eqPattern : eqPatterns) {
+                    size_t minEqDep = *eqPattern.begin();
+                    minDep = std::min(minDep, *eqPattern.begin());
+                    dependents[minEqDep] = eqPattern;
                 }
                 orderedExpectedLoops[minDep] = dependents;
             }
@@ -366,8 +370,7 @@ public:
 
         } else {
             ASSERT_EQ(matcher.getEquationPatterns().size(), depCandidates.size());
-            for (size_t eq = 0; eq < matcher.getEquationPatterns().size(); eq++) {
-                EquationPattern<Base>* eqp = matcher.getEquationPatterns()[eq];
+            for (auto* eqp : matcher.getEquationPatterns()) {
                 ASSERT_EQ(eqp->dependents.size(), repeat);
             }
         }
@@ -456,8 +459,8 @@ public:
         if (loadModels) {
             modelL = dynamicLibL->model(libBaseName + "Loops");
             ASSERT_TRUE(modelL != nullptr);
-            for (size_t i = 0; i < atoms_.size(); i++)
-                modelL->addAtomicFunction(*atoms_[i]);
+            for (auto* atom : atoms_)
+                modelL->addAtomicFunction(*atom);
         }
         /**
          * Without the loops
@@ -496,8 +499,8 @@ public:
         std::unique_ptr<GenericModel<double> > model;
         if (loadModels) {
             model = dynamicLib->model(libBaseName + "NoLoops");
-            for (size_t i = 0; i < atoms_.size(); i++)
-                model->addAtomicFunction(*atoms_[i]);
+            for (auto* atom : atoms_)
+                model->addAtomicFunction(*atom);
         }
 
         if (!loadModels)
