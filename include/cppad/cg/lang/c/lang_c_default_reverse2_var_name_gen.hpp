@@ -81,7 +81,7 @@ public:
         return _nameGen->getDependent();
     }
 
-    virtual const std::vector<FuncArgument>& getParameter() const {
+    const std::vector<FuncArgument>& getParameter() const override {
         return _nameGen->getParameter();
     }
 

@@ -647,7 +647,7 @@ protected:
     }
 
     inline ActiveOut evalPrint(const NodeIn& node) {
-        FinalEvaluatorType& thisOps = static_cast<FinalEvaluatorType&>(*this);
+        auto& thisOps = static_cast<FinalEvaluatorType&>(*this);
         return thisOps.evalUnsupportedOperation(node);
     }
 
