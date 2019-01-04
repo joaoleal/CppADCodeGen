@@ -76,18 +76,35 @@ SET(gtest_source_dir ${source_dir})
 
 # Specify MainTest's link libraries
 ExternalProject_Get_Property(googletest binary_dir)
-SET(GTEST_LIBS_DIR ${binary_dir})
+SET(GTEST_LIBS_DIR ${binary_dir}/googlemock/gtest)
 
-INCLUDE_DIRECTORIES("${gtest_source_dir}/include")
+INCLUDE_DIRECTORIES("${gtest_source_dir}/googletest/include")
+
+SET(GTEST_LIBRARY_PATH ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest.a)
+SET(GTEST_MAIN_PATH    ${GTEST_LIBS_DIR}/${CMAKE_FIND_LIBRARY_PREFIXES}gtest_main.a)
+
+ADD_LIBRARY(gtest UNKNOWN IMPORTED)
+SET_TARGET_PROPERTIES(gtest PROPERTIES
+                      "IMPORTED_LOCATION" "${GTEST_LIBRARY_PATH}"
+                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
+ADD_DEPENDENCIES(gtest googletest)
+
+ADD_LIBRARY(gtestmain UNKNOWN IMPORTED)
+SET_TARGET_PROPERTIES(gtestmain PROPERTIES
+                      "IMPORTED_LOCATION" "${GTEST_MAIN_PATH}"
+                      "IMPORTED_LINK_INTERFACE_LIBRARIES" "${CMAKE_THREAD_LIBS_INIT}"
+                      "INTERFACE_INCLUDE_DIRECTORIES" "${GTEST_INCLUDE_DIRS}")
+ADD_DEPENDENCIES(gtestmain googletest)
 
 ################################################################################
 # add gtest dependency
 ################################################################################
 FUNCTION(add_gest_link_libraries test_target_name use_main)
     IF(CMAKE_COMPILER_IS_GNUCXX OR "${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
-        TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest.a)
+        TARGET_LINK_LIBRARIES(${test_target_name} gtest)
         IF(${use_main})
-            TARGET_LINK_LIBRARIES(${test_target_name} ${GTEST_LIBS_DIR}/libgtest_main.a)
+            TARGET_LINK_LIBRARIES(${test_target_name} gtestmain)
         ENDIF()
         TARGET_LINK_LIBRARIES(${test_target_name} pthread)
     ELSE()
