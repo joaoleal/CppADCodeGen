@@ -55,7 +55,7 @@
 #   endif
 #endif
 #ifndef CPPAD_CG_SYSTEM_APPLE
-#   if defined(__APPLE__)
+#   if (defined(__APPLE__) && defined(__MACH__)) || defined(__apple_build_version__)
 #       define CPPAD_CG_SYSTEM_APPLE 1
 #       define CPPAD_CG_SYSTEM_LINUX 1
 #   endif
