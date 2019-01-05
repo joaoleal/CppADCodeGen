@@ -154,7 +154,7 @@ protected:
         if (atomicFunction == nullptr) {
             std::stringstream ss;
             ss << "No atomic function defined in the evaluator for ";
-            const std::string* atomName = handler_.getAtomicFunctionName(id);
+            std::unique_ptr<std::string> atomName = handler_.getAtomicFunctionName(id);
             if (atomName != nullptr) {
                 ss << "'" << *atomName << "'";
             } else

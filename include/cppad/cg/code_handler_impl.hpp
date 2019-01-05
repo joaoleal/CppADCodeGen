@@ -222,10 +222,10 @@ inline void CodeHandler<Base>::markVisited(const Node& node) {
 }
 
 template<class Base>
-inline const std::string* CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
+inline std::unique_ptr<std::string> CodeHandler<Base>::getAtomicFunctionName(size_t id) const {
     auto it = _atomicFunctions.find(id);
     if (it != _atomicFunctions.end())
-        return &(it->second->afun_name());
+        return std::unique_ptr<std::string>(new std::string(std::move(it->second->afun_name())));
     else
         return nullptr;
 }
