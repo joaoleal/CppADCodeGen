@@ -2,6 +2,7 @@
 #define	CPPAD_CG_CPPADCGOPERATIONTESTIMPL_HPP
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
+ *    Copyright (C) 2019 Joao Leal
  *    Copyright (C) 2012 Ciengis
  *
  *  CppADCodeGen is distributed under multiple licenses:
@@ -23,6 +24,8 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <vector>
+
+#include "gccCompilerFlags.hpp"
 
 namespace CppAD {
 namespace cg {
@@ -50,55 +53,18 @@ void* CppADCGOperationTest::getFunction(void * libHandle, const std::string& fun
     return functor;
 }
 
-void CppADCGOperationTest::compile(const std::string& source, const std::string& library) {
-    int fd[2];
-    //Create pipe for piping source to gcc
-    if (pipe(fd) < 0) {
-        throw TestException("Failed to create pipe");
-    }
+void CppADCGOperationTest::compile(const std::string& source,
+                                   const std::string& library) {
 
-    //Fork a gcc, pipe source to it, wait for gcc to exit
-    pid_t pid = fork();
-    if (pid < 0) {
-        throw TestException("Failed to fork program");
-    }
+    GccCompiler<double> compiler;
+    prepareTestCompilerFlags(compiler);
 
-    if (pid == 0) {
-        //  Child process
-        // close write end of pipe
-        close(fd[1]);
-        // Send pipe input to stdin
-        close(STDIN_FILENO);
-        dup2(fd[0], STDIN_FILENO);
-        /**
-         * Call gcc
-         *
-         * Arguments:
-         *   -O0                   Optimization level
-         *   -x c                  C source
-         *   -pipe                 Use pipes between gcc stages
-         *   -fPIC -shared         Make shared object
-         *   -Wl,-soname, library  Pass suitable options to linker
-         *
-         */
-        std::string linker = "-Wl,-soname," + library;
-        execl("/usr/bin/gcc", "gcc", "-x", "c", "-O0", "-pipe", "-", "-fPIC", "-shared",
-              linker.c_str(), "-o", library.c_str(), (char *) nullptr);
-
-        exit(0);
-    }
-
-    // Parent process
-    // close read end of pipe
-    close(fd[0]);
-    //Pipe source to gcc
-    write(fd[1], source.c_str(), source.size());
-    close(fd[1]);
-
-    //Wait for gcc to exit
-    int status;
-    if (wait(&status) < 0) {
-        throw TestException("Failed while waiting for gcc");
+    try {
+        compiler.compileSources({{"test.c", source}}, true);
+        compiler.buildDynamic(library);
+    } catch (...) {
+        compiler.cleanup();
+        throw;
     }
 }
 
@@ -382,13 +348,13 @@ void CppADCGOperationTest::test0nJac(const std::string& test,
 
     std::string library = "./tmp/test_" + test + ".so";
     std::string function = "test_" + test;
-    vector<vector<double> > depsCG = run0(*f2.get(), library, function, indV);
+    vector<vector<double> > depsCG = run0(*f2, library, function, indV);
 
-    vector<vector<double> > depCGTape = run0TapeWithValues(*f2.get(), indV);
+    vector<vector<double> > depCGTape = run0TapeWithValues(*f2, indV);
 
     library = "./tmp/test_" + test + "_jac.so";
     std::string functionJac = "test_" + test + "_jac";
-    vector<vector<double> > jacCG = runSparseJac(*f2.get(), library, functionJac, indV);
+    vector<vector<double> > jacCG = runSparseJac(*f2, library, functionJac, indV);
 
     /**
      * compare results
@@ -445,7 +411,7 @@ void CppADCGOperationTest::test0(const std::string& test,
 
     std::string library = "./tmp/test_" + test + ".so";
     std::string function = "test_" + test;
-    depsCG = run0(*f2.get(), library, function, indV, comparisons);
+    depsCG = run0(*f2, library, function, indV, comparisons);
 
     /**
      * compare results

@@ -19,21 +19,21 @@ namespace CppAD {
 namespace cg {
 
 template<class Base>
-void prepareTestCompilerFlags(GccCompiler<Base>& compiler) {
+void prepareTestCompilerFlags(AbstractCCompiler<Base>& compiler) {
     std::vector<std::string> cFlags = compiler.getCompileFlags(); // copy
-    cFlags.push_back("-O0");
-    cFlags.push_back("-g");
-    cFlags.push_back("-ggdb");
-    cFlags.push_back("-D_FORTIFY_SOURCE=2");
+    cFlags.emplace_back("-O0");
+    cFlags.emplace_back("-g");
+    cFlags.emplace_back("-ggdb");
+    cFlags.emplace_back("-D_FORTIFY_SOURCE=2");
 #ifdef CPPADCG_TEST_SANITIZE
-    cFlags.push_back("-fsanitize=address");
-    cFlags.push_back("-fno-omit-frame-pointer");
+    cFlags.emplace_back("-fsanitize=address");
+    cFlags.emplace_back("-fno-omit-frame-pointer");
 #endif
     compiler.setCompileFlags(cFlags);
 
 #ifdef CPPADCG_TEST_SANITIZE
     cFlags = compiler.getCompileLibFlags(); // copy
-    cFlags.push_back("-fsanitize=address");
+    cFlags.emplace_back("-fsanitize=address");
     compiler.setCompileLibFlags(cFlags);
 #endif
 }
