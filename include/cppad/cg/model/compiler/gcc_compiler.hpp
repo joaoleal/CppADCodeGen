@@ -28,13 +28,13 @@ template<class Base>
 class GccCompiler : public AbstractCCompiler<Base> {
 public:
 
-    GccCompiler(const std::string& gccPath = "/usr/bin/gcc") :
-        AbstractCCompiler<Base>(gccPath) {
+    explicit GccCompiler(std::string gccPath = "/usr/bin/gcc") :
+        AbstractCCompiler<Base>(std::move(gccPath)) {
 
-        this->_compileFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-O2"); // Optimization level
-        this->_compileLibFlags.push_back("-shared"); // Make shared object
-        this->_compileLibFlags.push_back("-rdynamic"); // add all symbols to the dynamic symbol table
+        this->_compileFlags.emplace_back("-O2"); // Optimization level
+        this->_compileLibFlags.emplace_back("-O2"); // Optimization level
+        this->_compileLibFlags.emplace_back("-shared"); // Make shared object
+        this->_compileLibFlags.emplace_back("-rdynamic"); // add all symbols to the dynamic symbol table
     }
 
     GccCompiler(const GccCompiler& orig) = delete;
@@ -60,7 +60,7 @@ public:
         std::vector<std::string> args;
         args.insert(args.end(), this->_compileLibFlags.begin(), this->_compileLibFlags.end());
         args.push_back(linkerFlags); // Pass suitable options to linker
-        args.push_back("-o"); // Output file name
+        args.emplace_back("-o"); // Output file name
         args.push_back(library); // Output file name
         for (const std::string& it : this->_ofiles) {
             args.push_back(it);
@@ -93,15 +93,15 @@ protected:
                        const std::string& output,
                        bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
-        args.push_back("-c");
-        args.push_back("-");
+        args.emplace_back("-c");
+        args.emplace_back("-");
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args, nullptr, &source);
@@ -111,15 +111,15 @@ protected:
                      const std::string& output,
                      bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-c");
+        args.emplace_back("-c");
         args.push_back(path);
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args);

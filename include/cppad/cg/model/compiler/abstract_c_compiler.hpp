@@ -40,8 +40,8 @@ protected:
     bool _saveToDiskFirst;
 public:
 
-    AbstractCCompiler(const std::string& compilerPath) :
-        _path(compilerPath),
+    explicit AbstractCCompiler(std::string compilerPath) :
+        _path(std::move(compilerPath)),
         _tmpFolder("cppadcg_tmp"),
         _sourcesFolder("cppadcg_sources"),
         _verbose(false),

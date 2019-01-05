@@ -31,8 +31,8 @@ protected:
     std::string _version;
 public:
 
-    ClangCompiler(const std::string& clangPath = "/usr/bin/clang") :
-        AbstractCCompiler<Base>(clangPath) {
+    explicit ClangCompiler(std::string clangPath = "/usr/bin/clang") :
+        AbstractCCompiler<Base>(std::move(clangPath)) {
 
         this->_compileFlags.push_back("-O2"); // Optimization level
         this->_compileLibFlags.push_back("-O2"); // Optimization level
@@ -101,7 +101,7 @@ public:
         std::vector<std::string> args;
         args.insert(args.end(), this->_compileLibFlags.begin(), this->_compileLibFlags.end());
         args.push_back(linkerFlags); // Pass suitable options to linker
-        args.push_back("-o"); // Output file name
+        args.emplace_back("-o"); // Output file name
         args.push_back(library); // Output file name
 
         for (const std::string& it : this->_ofiles) {
@@ -162,15 +162,15 @@ protected:
                        const std::string& output,
                        bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
-        args.push_back("-c");
-        args.push_back("-");
+        args.emplace_back("-c");
+        args.emplace_back("-");
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args, nullptr, &source);
@@ -180,15 +180,15 @@ protected:
                      const std::string& output,
                      bool posIndepCode) override {
         std::vector<std::string> args;
-        args.push_back("-x");
-        args.push_back("c"); // C source files
+        args.emplace_back("-x");
+        args.emplace_back("c"); // C source files
         args.insert(args.end(), this->_compileFlags.begin(), this->_compileFlags.end());
         if (posIndepCode) {
-            args.push_back("-fPIC"); // position-independent code for dynamic linking
+            args.emplace_back("-fPIC"); // position-independent code for dynamic linking
         }
-        args.push_back("-c");
+        args.emplace_back("-c");
         args.push_back(path);
-        args.push_back("-o");
+        args.emplace_back("-o");
         args.push_back(output);
 
         system::callExecutable(this->_path, args);
