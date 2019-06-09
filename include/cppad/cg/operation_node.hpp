@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -309,12 +310,12 @@ public:
     }
 
 protected:
-    static inline std::set<CGOpCode> makeCustomNodeClassesSet();
+    static inline std::set<CGOpCode> makeCustomNodeClassesSet() noexcept;
 
 };
 
 template<class Base>
-inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() {
+inline std::set<CGOpCode> OperationNode<Base>::makeCustomNodeClassesSet() noexcept {
     std::set<CGOpCode> s;
     s.insert(CGOpCode::IndexAssign);
     s.insert(CGOpCode::Index);

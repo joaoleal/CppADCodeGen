@@ -89,7 +89,7 @@ public:
         // dependent variable vector
         std::vector<ADCG> Z = model(u);
 
-        if (eqNorm.size() > 0) {
+        if (!eqNorm.empty()) {
             ASSERT_EQ(Z.size(), eqNorm.size());
             for (size_t i = 0; i < Z.size(); i++)
                 Z[i] /= eqNorm[i];
