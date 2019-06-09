@@ -19,7 +19,7 @@ namespace CppAD {
 namespace cg {
 
 /**
- * The steps for a node during the navigation through the graph of operation nodes
+ * The steps for a node during the navigation through the graph of operation nodes.
  */
 enum class StackNavigationStep {
     Analyze, // analyze the current node (before visiting children)
@@ -28,26 +28,21 @@ enum class StackNavigationStep {
 };
 
 /**
- * A stack element in the Operation Node stack.
+ * A simple stack element in the Operation Node stack.
  *
  * @tparam Base
  */
 template<class Base>
-class OperationStackData {
+class SimpleOperationStackData {
 private:
     OperationNode<Base>* const _parent;
     const size_t _node;
 public:
-    size_t parentNodeScope;
-    StackNavigationStep nextStep;
 
-    inline OperationStackData(OperationNode<Base>& parent,
-                              size_t nodeIndex,
-                              size_t parentNodeScope) noexcept :
+    inline SimpleOperationStackData(OperationNode<Base>& parent,
+                                    size_t nodeIndex) noexcept :
             _parent(&parent),
-            _node(nodeIndex),
-            parentNodeScope(parentNodeScope),
-            nextStep(StackNavigationStep::Analyze) {
+            _node(nodeIndex) {
     }
 
     inline OperationNode<Base>& parent() {
@@ -64,16 +59,37 @@ public:
 };
 
 /**
- * A Stack of Operation Nodes.
+ * A stack element in the Operation Node stack.
  *
  * @tparam Base
  */
 template<class Base>
-class OperationStack {
-private:
-    std::vector<OperationStackData<Base>> _stack;
+class OperationStackData :public SimpleOperationStackData<Base> {
 public:
-    inline OperationStack() {
+    size_t parentNodeScope;
+    StackNavigationStep nextStep;
+
+    inline OperationStackData(OperationNode<Base>& parent,
+                              size_t nodeIndex,
+                              size_t parentNodeScope) noexcept :
+            SimpleOperationStackData<Base>(parent, nodeIndex),
+            parentNodeScope(parentNodeScope),
+            nextStep(StackNavigationStep::Analyze) {
+    }
+
+};
+
+/**
+ * A Stack of Operation Nodes.
+ *
+ * @tparam Base
+ */
+template<class Element>
+class BaseOperationStack {
+private:
+    std::vector<Element> _stack;
+public:
+    inline BaseOperationStack() {
         _stack.reserve(100);
     }
 
@@ -89,19 +105,26 @@ public:
         _stack.pop_back();
     }
 
-    inline OperationStackData<Base>& back() {
+    inline Element& back() {
         return _stack.back();
     }
 
-    inline void emplace_back(OperationNode<Base>& parent,
-                             size_t nodeIndex,
-                             size_t parentNodeScope) {
+    template<class... Args>
+    inline void emplace_back(Args&&... args) {
         if (_stack.size() == _stack.capacity()) {
             _stack.reserve((_stack.size() * 3) / 2 + 1);
         }
-        _stack.emplace_back(parent, nodeIndex, parentNodeScope);
+        _stack.emplace_back(std::forward<Args>(args)...);
     }
 
+    inline Element& operator[](size_t i) {
+        return _stack[i];
+    }
+};
+
+template<class Base>
+class OperationStack : public BaseOperationStack<OperationStackData<Base> > {
+public:
     inline void pushNodeArguments(OperationNode<Base>& node,
                                   size_t parentNodeScope) {
         auto& args = node.getArguments();
@@ -110,18 +133,31 @@ public:
         for (auto itArg = args.rbegin(); itArg != args.rend(); ++itArg) {
             if (itArg->getOperation() != nullptr) {
                 size_t index = std::distance(begin(args), itArg.base()) - 1;
-                emplace_back(node, index, parentNodeScope);
+                this->emplace_back(node, index, parentNodeScope);
             }
         }
     }
+};
 
-    inline OperationStackData<Base>& operator[](size_t i) {
-        return _stack[i];
+template<class Base>
+class SimpleOperationStack : public BaseOperationStack<SimpleOperationStackData<Base> > {
+public:
+    inline void pushNodeArguments(OperationNode<Base>& node) {
+        auto& args = node.getArguments();
+
+        // append in reverse order so that they are visited in correct forward order
+        for (auto itArg = args.rbegin(); itArg != args.rend(); ++itArg) {
+            if (itArg->getOperation() != nullptr) {
+                size_t index = std::distance(begin(args), itArg.base()) - 1;
+                this->emplace_back(node, index);
+            }
+        }
     }
 };
 
 /**
  * Transverse an operation graph using a depth first algorithm.
+ * It allows to execute a function before and after the children of a node have been visited.
  *
  * @tparam Base
  * @tparam FunctionAnalysis
@@ -141,8 +177,8 @@ public:
 template<class Base, typename FunctionAnalysis, typename FunctionPostProcess>
 inline void depthFirstGraphNavigation(OperationNode<Base>& root,
                                       size_t currentScopeColor,
-                                      FunctionAnalysis&& nodeAnalysis,
-                                      FunctionPostProcess&& nodePostProcessAnalysis,
+                                      FunctionAnalysis& nodeAnalysis,
+                                      FunctionPostProcess& nodePostProcessAnalysis,
                                       bool processRoot) {
     OperationStack<Base> stack;
 
@@ -175,6 +211,32 @@ inline void depthFirstGraphNavigation(OperationNode<Base>& root,
             stack.pop_back();
         }
 
+    }
+}
+
+/**
+ * Transverse an operation graph using a depth first algorithm.
+ * It allows to execute a function before the children of a node have been visited.
+ *
+ * @tparam Base
+ * @tparam FunctionAnalysis
+ *
+ * @param root The root operation node (it will NOT be visited by nodeAnalysis, only its children).
+ * @param nodeAnalysis A function that will be called when the node is visited.
+ *                     This function should append to the stack the children which should be visited.
+ */
+template<class Base, typename FunctionAnalysis>
+inline void depthFirstGraphNavigation(OperationNode<Base>& root,
+                                      FunctionAnalysis& nodeAnalysis) {
+    SimpleOperationStack<Base> stack;
+
+    stack.pushNodeArguments(root);
+
+    while (!stack.empty()) {
+        auto nodeEl = stack.back(); // copy
+        stack.pop_back();
+
+        nodeAnalysis(nodeEl, stack);
     }
 }
 

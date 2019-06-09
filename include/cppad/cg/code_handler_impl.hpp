@@ -1838,7 +1838,7 @@ inline void CodeHandler<Base>::determineLastTempVarUsage(Node& node) {
     CGOpCode op = node.getOperationType();
 
     if (op == CGOpCode::LoopEnd) {
-        LoopEndOperationNode<Base>& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+        auto& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
         _loops.depth++;
         _loops.outerVars.resize(_loops.depth + 1);
         _loops.startEvalOrder.push_back(getEvaluationOrder(loopEnd.getLoopStart()));
@@ -1903,16 +1903,22 @@ inline void CodeHandler<Base>::determineLastTempVarUsage(Node& node) {
 }
 
 template<class Base>
-inline void CodeHandler<Base>::dependentAdded2EvaluationQueue(Node& node) {
-    for (const Arg& a : node.getArguments()) {
-        if (a.getOperation() != nullptr) {
-            Node& arg = *a.getOperation();
-            if (getEvaluationOrder(arg) == 0) {
-                setEvaluationOrder(arg, getEvaluationOrder(node));
-                dependentAdded2EvaluationQueue(arg);
-            }
+inline void CodeHandler<Base>::dependentAdded2EvaluationQueue(Node& root) {
+
+    auto analyse = [this](SimpleOperationStackData<Base>& stackEl,
+                          SimpleOperationStack<Base>& stack) {
+        auto& node = stackEl.parent();
+        auto& arg = stackEl.node();
+
+        if (getEvaluationOrder(arg) == 0) {
+            setEvaluationOrder(arg, getEvaluationOrder(node));
+
+            stack.pushNodeArguments(arg);
         }
-    }
+    };
+
+    depthFirstGraphNavigation(root, analyse);
+
 }
 
 template<class Base>
