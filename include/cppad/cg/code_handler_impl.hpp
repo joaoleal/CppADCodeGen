@@ -733,215 +733,191 @@ inline void CodeHandler<Base>::removeVector(CodeHandlerVectorSync<Base>* v) {
 
 template<class Base>
 void CodeHandler<Base>::markCodeBlockUsed(Node& root) {
-    OperationStack<Base> stack;
 
-    stack.emplace_back(root, _currentScopeColor);
+    auto startAnalysis = [this](OperationStackData<Base>& stackEl,
+                                OperationStack<Base>& stack) {
 
-    while (!stack.empty()) {
+        auto& code = stackEl.node();
 
-        if (stack.back().nextStep == StackNavigationStep::Analyze) {
-            size_t i = stack.size() - 1; // do not a reference because the stack may be resized
+        increaseTotalUsageCount(code);
 
-            bool complete = markCodeBlockUsedStartAnalysis(*stack[i].node, stack);
+        CGOpCode op = code.getOperationType();
+        if (isIndependent(code)) {
+            return false; // nothing to do (go up)
 
-            if (complete)
-                stack[i].nextStep = StackNavigationStep::ChildrenVisited;
-            else
-                stack[i].nextStep = StackNavigationStep::Exit;
+        } else if (op == CGOpCode::Alias) {
+            /**
+             * Alias operations are always followed so that there is a
+             * correct usage count at the operation that it points to
+             */
+            CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
+            stack.emplace_back(code, 0, _currentScopeColor);
 
-        } else if (stack.back().nextStep == StackNavigationStep::ChildrenVisited) {
-            markCodeBlockUsedEndAnalysis(*stack.back().node, stack.back().parentNodeScope);
-            stack.back().nextStep = StackNavigationStep::Exit;
-            stack.pop_back();
+            return false;
+
+        } else if (getTotalUsageCount(code) == 1) {
+            // first time this operation is visited
+
+            size_t previousScope = _currentScopeColor;
+
+            _scope[code] = _currentScopeColor;
+
+            // check if there is a scope change
+            if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf ||
+                op == CGOpCode::Else) {
+                // leaving a scope
+                ScopePath& sPath = _scopes[_currentScopeColor];
+                CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
+                if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf) {
+                    sPath.back().beginning = &code; // save the initial node
+                } else {
+                    CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
+                                           code.getArguments()[0].getOperation() != nullptr &&
+                                           code.getArguments()[0].getOperation()->getOperationType() ==
+                                           CGOpCode::StartIf);
+                    sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
+                }
+                _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
+            }
+
+            if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
+                // entering a new scope
+                _currentScopeColor = ++_scopeColorCount;
+
+                _scopes.resize(_currentScopeColor + 1);
+                _scopes[_currentScopeColor] = _scopes[previousScope];
+
+                // change current scope
+                if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf) {
+                    // one more scope level
+                    _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor, &code));
+                } else {
+                    // same level but different scope
+                    _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor, &code);
+                }
+
+                if (op == CGOpCode::LoopEnd) {
+                    _loops.addLoopEndNode(code);
+                }
+            }
+
+            /**
+             * Iterate over all arguments with operation nodes
+             */
+            stack.pushNodeArguments(code, _currentScopeColor);
+
+            return true;
 
         } else {
-            stack.pop_back();
-        }
+            // been to this node before
 
-    }
-}
-
-template<class Base>
-bool CodeHandler<Base>::markCodeBlockUsedStartAnalysis(Node& code,
-                                                       OperationStack<Base>& stack) {
-    increaseTotalUsageCount(code);
-
-    CGOpCode op = code.getOperationType();
-    if (isIndependent(code)) {
-        return false; // nothing to do (go up)
-
-    } else if (op == CGOpCode::Alias) {
-        /**
-         * Alias operations are always followed so that there is a
-         * correct usage count at the operation that it points to
-         */
-        CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
-        Node* arg = code.getArguments()[0].getOperation();
-        stack.emplace_back(*arg, _currentScopeColor);
-
-        return false;
-
-    } else if (getTotalUsageCount(code) == 1) {
-        // first time this operation is visited
-
-        size_t previousScope = _currentScopeColor;
-
-        _scope[code] = _currentScopeColor;
-
-        // check if there is a scope change
-        if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf ||
-            op == CGOpCode::Else) {
-            // leaving a scope
-            ScopePath& sPath = _scopes[_currentScopeColor];
-            CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
-            if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf) {
-                sPath.back().beginning = &code; // save the initial node
-            } else {
-                CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
-                                       code.getArguments()[0].getOperation() != nullptr &&
-                                       code.getArguments()[0].getOperation()->getOperationType() ==
-                                       CGOpCode::StartIf);
-                sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
-            }
-            _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
-        }
-
-        if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
-            // entering a new scope
-            _currentScopeColor = ++_scopeColorCount;
-
-            _scopes.resize(_currentScopeColor + 1);
-            _scopes[_currentScopeColor] = _scopes[previousScope];
-
-            // change current scope
-            if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf) {
-                // one more scope level
-                _scopes[_currentScopeColor].push_back(ScopePathElement<Base>(_currentScopeColor, &code));
-            } else {
-                // same level but different scope
-                _scopes[_currentScopeColor].back() = ScopePathElement<Base>(_currentScopeColor, &code);
-            }
-
-            if (op == CGOpCode::LoopEnd) {
-                _loops.addLoopEndNode(code);
-            }
-        }
-
-        /**
-         * iterate over all arguments
-         */
-        auto& args = code.getArguments();
-        // append in reverse order so that they are visited in correct forward order
-        for (auto it = args.rbegin(); it != args.rend(); ++it) {
-            auto& arg = *it;
-            if (arg.getOperation() != nullptr) {
-                stack.emplace_back(*arg.getOperation(), _currentScopeColor);
-            }
-        }
-
-        return true;
-
-    } else {
-        // been to this node before
-
-        if (op == CGOpCode::Tmp && !code.getInfo().empty()) {
-            /**
-             * this node was previously altered to ensure that the
-             * evaluation of the expression is only performed for the
-             * required iterations
-             */
-            if (_scope[code] == _currentScopeColor) {
-                // outside an if (defined for all iterations)
-                restoreTemporaryVar(code);
-            } else {
-                updateTemporaryVarInDiffScopes(code);
-            }
-
-        } else if (_scope[code] != _currentScopeColor && op != CGOpCode::LoopIndexedIndep) {
-            ScopeIDType oldScope = _scope[code];
-            /**
-             * node previously used in a different scope
-             * must make sure it is defined before being used in both
-             * scopes
-             */
-            size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
-
-            // update the scope where it should be defined
-            ScopeIDType newScope;
-            if (depth == 0)
-                newScope = 0;
-            else
-                newScope = _scopes[_currentScopeColor][depth - 1].color;
-
-            if (oldScope != newScope) {
+            if (op == CGOpCode::Tmp && !code.getInfo().empty()) {
                 /**
-                 * does this variable require a condition based on indexes?
+                 * this node was previously altered to ensure that the
+                 * evaluation of the expression is only performed for the
+                 * required iterations
                  */
-                bool addedIf = handleTemporaryVarInDiffScopes(code, oldScope, newScope);
+                if (_scope[code] == _currentScopeColor) {
+                    // outside an if (defined for all iterations)
+                    restoreTemporaryVar(code);
+                } else {
+                    updateTemporaryVarInDiffScopes(code);
+                }
 
-                if (!addedIf) {
-                    _scope[code] = newScope;
+            } else if (_scope[code] != _currentScopeColor && op != CGOpCode::LoopIndexedIndep) {
+                ScopeIDType oldScope = _scope[code];
+                /**
+                 * node previously used in a different scope
+                 * must make sure it is defined before being used in both
+                 * scopes
+                 */
+                size_t depth = findFirstDifferentScope(oldScope, _currentScopeColor);
 
+                // update the scope where it should be defined
+                ScopeIDType newScope;
+                if (depth == 0)
+                    newScope = 0;
+                else
+                    newScope = _scopes[_currentScopeColor][depth - 1].color;
+
+                if (oldScope != newScope) {
                     /**
-                     * Must also update the scope of the arguments used by this operation
+                     * does this variable require a condition based on indexes?
                      */
-                    const std::vector<Arg>& args = code.getArguments();
-                    size_t aSize = args.size();
-                    for (size_t a = 0; a < aSize; a++) {
-                        updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
+                    bool addedIf = handleTemporaryVarInDiffScopes(code, oldScope, newScope);
+
+                    if (!addedIf) {
+                        _scope[code] = newScope;
+
+                        /**
+                         * Must also update the scope of the arguments used by this operation
+                         */
+                        const std::vector<Arg>& args = code.getArguments();
+                        size_t aSize = args.size();
+                        for (size_t a = 0; a < aSize; a++) {
+                            updateVarScopeUsage(args[a].getOperation(), newScope, oldScope);
+                        }
                     }
                 }
             }
+
+            return false;
+        }
+    };
+
+
+    auto endAnalysis = [this](OperationStackData<Base>& stackEl) {
+        // executed after all children have been visited
+
+        Node& code = stackEl.node();
+        size_t previousScope = stackEl.parentNodeScope;
+
+        CGOpCode op = code.getOperationType();
+
+        if (op == CGOpCode::Index) {
+            const auto& inode = static_cast<const IndexOperationNode <Base>&> (code);
+            // indexes that don't depend on a loop start or an index assignment are declared elsewhere
+            if (inode.isDefinedLocally()) {
+                _loops.indexes.insert(&inode.getIndex());
+            }
+        } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep ||
+                   op == CGOpCode::IndexAssign) {
+            IndexPattern* ip;
+            if (op == CGOpCode::LoopIndexedDep) {
+                size_t pos = code.getInfo()[0];
+                ip = _loops.dependentIndexPatterns[pos];
+            } else if (op == CGOpCode::LoopIndexedIndep) {
+                size_t pos = code.getInfo()[1];
+                ip = _loops.independentIndexPatterns[pos];
+            } else {
+                ip = &static_cast<IndexAssignOperationNode <Base>&> (code).getIndexPattern();
+            }
+
+            findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
+
+        } else if (op == CGOpCode::DependentRefRhs) {
+            CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
+            size_t depIndex = code.getInfo()[0];
+
+            CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
+            Node * depNode = (*_dependents)[depIndex].getOperationNode();
+            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
+
+            _varId[code] = _varId[*depNode];
         }
 
-        return false;
-    }
-}
+        /**
+         * reset scope
+         */
+        _currentScopeColor = previousScope;
 
-template<class Base>
-void CodeHandler<Base>::markCodeBlockUsedEndAnalysis(Node& code,
-                                                     size_t previousScope) {
-    // executed after all children have been visited
+    };
 
-    CGOpCode op = code.getOperationType();
-
-    if (op == CGOpCode::Index) {
-        const auto& inode = static_cast<const IndexOperationNode <Base>&> (code);
-        // indexes that don't depend on a loop start or an index assignment are declared elsewhere
-        if (inode.isDefinedLocally()) {
-            _loops.indexes.insert(&inode.getIndex());
-        }
-    } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep ||
-               op == CGOpCode::IndexAssign) {
-        IndexPattern* ip;
-        if (op == CGOpCode::LoopIndexedDep) {
-            size_t pos = code.getInfo()[0];
-            ip = _loops.dependentIndexPatterns[pos];
-        } else if (op == CGOpCode::LoopIndexedIndep) {
-            size_t pos = code.getInfo()[1];
-            ip = _loops.independentIndexPatterns[pos];
-        } else {
-            ip = &static_cast<IndexAssignOperationNode <Base>&> (code).getIndexPattern();
-        }
-
-        findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
-
-    } else if (op == CGOpCode::DependentRefRhs) {
-        CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
-        size_t depIndex = code.getInfo()[0];
-
-        CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
-        Node * depNode = (*_dependents)[depIndex].getOperationNode();
-        CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
-
-        _varId[code] = _varId[*depNode];
-    }
-
-    /**
-     * reset scope
-     */
-    _currentScopeColor = previousScope;
-
+    depthFirstGraphNavigation(root,
+                              _currentScopeColor,
+                              startAnalysis,
+                              endAnalysis,
+                              true);
 }
 
 template<class Base>
@@ -1461,136 +1437,154 @@ void CodeHandler<Base>::registerAtomicFunction(CGAbstractAtomicFun<Base>& atomic
 }
 
 template<class Base>
-void CodeHandler<Base>::checkVariableCreation(Node& code) {
-    const std::vector<Arg>& args = code.getArguments();
+void CodeHandler<Base>::checkVariableCreation(Node& root) {
 
-    size_t aSize = args.size();
-    for (size_t argIndex = 0; argIndex < aSize; argIndex++) {
-        if (args[argIndex].getOperation() == nullptr) {
-            continue;
+    auto startAnalysis = [this](OperationStackData<Base>& stackEl,
+                                OperationStack<Base>& stack) {
+        auto& arg = stackEl.node();
+
+        if (isVisited(arg)) {
+            return false;
+        } else {
+            stack.pushNodeArguments(stackEl.node(), 0);
+            return true;
+        }
+    };
+
+    auto completeAnalysis = [this](OperationStackData<Base>& stackEl) {
+        auto& arg = stackEl.node();
+
+        if (isVisited(arg)) {
+            return;
         }
 
-        Node& arg = *args[argIndex].getOperation();
         CGOpCode aType = arg.getOperationType();
 
-        if (!isVisited(arg)) {
-            // dependencies not visited yet
-            checkVariableCreation(arg);
+        if (aType == CGOpCode::LoopEnd || aType == CGOpCode::ElseIf ||
+            aType == CGOpCode::Else || aType == CGOpCode::EndIf) {
+            if (_varId[arg] == 0) {
+                // ID value is not really used but must be non-zero
+                _varId[arg] = std::numeric_limits<size_t>::max();
+            }
+        } else if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
+            /**
+             * Save atomic function related information
+             */
+            CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1);
+            CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1);
+            size_t id = arg.getInfo()[0];
 
-            if (aType == CGOpCode::LoopEnd || aType == CGOpCode::ElseIf || aType == CGOpCode::Else || aType == CGOpCode::EndIf) {
+            size_t pos;
+            const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
+            std::map<std::string, size_t>::const_iterator itName2Idx;
+            itName2Idx = _atomicFunctionName2Index.find(atomicName);
+
+            if (itName2Idx == _atomicFunctionName2Index.end()) {
+                pos = _atomicFunctionsOrder->size();
+                _atomicFunctionsOrder->push_back(atomicName);
+                _atomicFunctionName2Index[atomicName] = pos;
+                _atomicFunctionsMaxForward.push_back(-1);
+                _atomicFunctionsMaxReverse.push_back(-1);
+            } else {
+                pos = itName2Idx->second;
+            }
+
+            if (aType == CGOpCode::AtomicForward) {
+                int p = arg.getInfo()[2];
+                _atomicFunctionsMaxForward[pos] = std::max(_atomicFunctionsMaxForward[pos],
+                                                           p);
+            } else {
+                int p = arg.getInfo()[1];
+                _atomicFunctionsMaxReverse[pos] = std::max(_atomicFunctionsMaxReverse[pos],
+                                                           p);
+            }
+        }
+
+        /**
+         * make sure new temporary variables are NOT created for
+         * the independent variables and that a dependency did
+         * not use it first
+         */
+        if (_varId[arg] == 0 || !isIndependent(arg)) {
+            auto& code = stackEl.parent();
+            size_t argIndex = stackEl.argumentIndex();
+
+            if (aType == CGOpCode::LoopIndexedIndep) {
+                // ID value not really used but must be non-zero
+                _varId[arg] = std::numeric_limits<size_t>::max();
+            } else if (aType == CGOpCode::Alias) {
+                return; // should never be added to the evaluation queue
+            } else if (aType == CGOpCode::Tmp) {
+                _varId[arg] = std::numeric_limits<size_t>::max();
+            } else if (aType == CGOpCode::LoopStart ||
+                       aType == CGOpCode::LoopEnd ||
+                       aType == CGOpCode::StartIf ||
+                       aType == CGOpCode::ElseIf ||
+                       aType == CGOpCode::Else ||
+                       aType == CGOpCode::EndIf) {
+                /**
+                 * Operation that mark a change in variable scope
+                 * are always added
+                 */
+                addToEvaluationQueue(arg);
                 if (_varId[arg] == 0) {
                     // ID value is not really used but must be non-zero
                     _varId[arg] = std::numeric_limits<size_t>::max();
                 }
-            } else if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
-                /**
-                 * Save atomic function related information
-                 */
-                CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1);
-                CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1);
-                size_t id = arg.getInfo()[0];
-
-                size_t pos;
-                const std::string& atomicName = _atomicFunctions.at(id)->afun_name();
-                std::map<std::string, size_t>::const_iterator itName2Idx;
-                itName2Idx = _atomicFunctionName2Index.find(atomicName);
-
-                if (itName2Idx == _atomicFunctionName2Index.end()) {
-                    pos = _atomicFunctionsOrder->size();
-                    _atomicFunctionsOrder->push_back(atomicName);
-                    _atomicFunctionName2Index[atomicName] = pos;
-                    _atomicFunctionsMaxForward.push_back(-1);
-                    _atomicFunctionsMaxReverse.push_back(-1);
-                } else {
-                    pos = itName2Idx->second;
+            } else if (aType == CGOpCode::Pri) {
+                addToEvaluationQueue(arg);
+                if (_varId[arg] == 0) {
+                    // ID value is not really used but must be non-zero
+                    _varId[arg] = std::numeric_limits<size_t>::max();
                 }
+            } else if (aType == CGOpCode::TmpDcl) {
+                addToEvaluationQueue(arg);
 
-                if (aType == CGOpCode::AtomicForward) {
-                    int p = arg.getInfo()[2];
-                    _atomicFunctionsMaxForward[pos] = std::max(_atomicFunctionsMaxForward[pos], p);
-                } else {
-                    int p = arg.getInfo()[1];
-                    _atomicFunctionsMaxReverse[pos] = std::max(_atomicFunctionsMaxReverse[pos], p);
+                _varId[arg] = _idCount;
+                _idCount++;
+
+            } else if (_lang->createsNewVariable(arg, getTotalUsageCount(arg)) ||
+                       _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
+
+                addToEvaluationQueue(arg);
+
+                if (_varId[arg] == 0) {
+                    if (aType == CGOpCode::AtomicForward ||
+                        aType == CGOpCode::AtomicReverse) {
+                        _varId[arg] = _idAtomicCount;
+                        _idAtomicCount++;
+                    } else if (aType == CGOpCode::LoopIndexedDep ||
+                               aType == CGOpCode::LoopIndexedTmp) {
+                        // ID value not really used but must be non-zero
+                        _varId[arg] = std::numeric_limits<size_t>::max();
+                    } else if (aType == CGOpCode::ArrayCreation) {
+                        // a temporary array
+                        size_t arraySize = arg.getArguments().size();
+                        _varId[arg] = _idArrayCount;
+                        _idArrayCount += arraySize;
+                    } else if (aType == CGOpCode::SparseArrayCreation) {
+                        // a temporary array
+                        size_t nnz = arg.getArguments().size();
+                        _varId[arg] = _idSparseArrayCount;
+                        _idSparseArrayCount += nnz;
+                    } else {
+                        // a single temporary variable
+                        _varId[arg] = _idCount;
+                        _idCount++;
+                    }
                 }
             }
 
-            /**
-             * make sure new temporary variables are NOT created for
-             * the independent variables and that a dependency did
-             * not use it first
-             */
-            if (_varId[arg] == 0 || !isIndependent(arg)) {
-                if (aType == CGOpCode::LoopIndexedIndep) {
-                    // ID value not really used but must be non-zero
-                    _varId[arg] = std::numeric_limits<size_t>::max();
-                } else if (aType == CGOpCode::Alias) {
-                    continue; // should never be added to the evaluation queue
-                } else if (aType == CGOpCode::Tmp) {
-                    _varId[arg] = std::numeric_limits<size_t>::max();
-                } else if (aType == CGOpCode::LoopStart ||
-                           aType == CGOpCode::LoopEnd ||
-                           aType == CGOpCode::StartIf ||
-                           aType == CGOpCode::ElseIf ||
-                           aType == CGOpCode::Else ||
-                           aType == CGOpCode::EndIf) {
-                    /**
-                     * Operation that mark a change in variable scope
-                     * are always added
-                     */
-                    addToEvaluationQueue(arg);
-                    if (_varId[arg] == 0) {
-                        // ID value is not really used but must be non-zero
-                        _varId[arg] = std::numeric_limits<size_t>::max();
-                    }
-                } else if (aType == CGOpCode::Pri) {
-                    addToEvaluationQueue(arg);
-                    if (_varId[arg] == 0) {
-                        // ID value is not really used but must be non-zero
-                        _varId[arg] = std::numeric_limits<size_t>::max();
-                    }
-                } else if (aType == CGOpCode::TmpDcl) {
-                    addToEvaluationQueue(arg);
-
-                    _varId[arg] = _idCount;
-                    _idCount++;
-
-                } else if (_lang->createsNewVariable(arg, getTotalUsageCount(arg)) ||
-                           _lang->requiresVariableArgument(code.getOperationType(), argIndex)) {
-
-                    addToEvaluationQueue(arg);
-
-                    if (_varId[arg] == 0) {
-                        if (aType == CGOpCode::AtomicForward || aType == CGOpCode::AtomicReverse) {
-                            _varId[arg] = _idAtomicCount;
-                            _idAtomicCount++;
-                        } else if (aType == CGOpCode::LoopIndexedDep || aType == CGOpCode::LoopIndexedTmp) {
-                            // ID value not really used but must be non-zero
-                            _varId[arg] = std::numeric_limits<size_t>::max();
-                        } else if (aType == CGOpCode::ArrayCreation) {
-                            // a temporary array
-                            size_t arraySize = arg.getArguments().size();
-                            _varId[arg] = _idArrayCount;
-                            _idArrayCount += arraySize;
-                        } else if (aType == CGOpCode::SparseArrayCreation) {
-                            // a temporary array
-                            size_t nnz = arg.getArguments().size();
-                            _varId[arg] = _idSparseArrayCount;
-                            _idSparseArrayCount += nnz;
-                        } else {
-                            // a single temporary variable
-                            _varId[arg] = _idCount;
-                            _idCount++;
-                        }
-                    }
-                }
-
-            }
         }
 
         markVisited(arg);
+    };
 
-    }
-
+    depthFirstGraphNavigation(root,
+                              _currentScopeColor,
+                              startAnalysis,
+                              completeAnalysis,
+                              false);
 }
 
 template<class Base>

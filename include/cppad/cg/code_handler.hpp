@@ -626,12 +626,6 @@ protected:
 
     virtual void markCodeBlockUsed(Node& code);
 
-    bool markCodeBlockUsedStartAnalysis(Node& code,
-                                        OperationStack<Base>& stack);
-
-    void markCodeBlockUsedEndAnalysis(Node& code,
-                                      size_t previousScope);
-
     inline bool handleTemporaryVarInDiffScopes(Node& code,
                                                size_t oldScope, size_t newScope);
 

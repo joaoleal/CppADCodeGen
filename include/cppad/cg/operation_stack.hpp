@@ -34,16 +34,32 @@ enum class StackNavigationStep {
  */
 template<class Base>
 class OperationStackData {
+private:
+    OperationNode<Base>* const _parent;
+    const size_t _node;
 public:
-    OperationNode<Base>* const node;
     size_t parentNodeScope;
     StackNavigationStep nextStep;
 
-    inline OperationStackData(OperationNode<Base>& node,
-                              size_t parentNodeScope) :
-            node(&node),
+    inline OperationStackData(OperationNode<Base>& parent,
+                              size_t nodeIndex,
+                              size_t parentNodeScope) noexcept :
+            _parent(&parent),
+            _node(nodeIndex),
             parentNodeScope(parentNodeScope),
             nextStep(StackNavigationStep::Analyze) {
+    }
+
+    inline OperationNode<Base>& parent() {
+        return *_parent;
+    }
+
+    inline OperationNode<Base>& node() {
+        return *_parent->getArguments()[_node].getOperation();
+    }
+
+    inline size_t argumentIndex() const {
+        return _node;
     }
 };
 
@@ -77,12 +93,26 @@ public:
         return _stack.back();
     }
 
-    inline void emplace_back(OperationNode<Base>& node,
+    inline void emplace_back(OperationNode<Base>& parent,
+                             size_t nodeIndex,
                              size_t parentNodeScope) {
         if (_stack.size() == _stack.capacity()) {
             _stack.reserve((_stack.size() * 3) / 2 + 1);
         }
-        _stack.emplace_back(node, parentNodeScope);
+        _stack.emplace_back(parent, nodeIndex, parentNodeScope);
+    }
+
+    inline void pushNodeArguments(OperationNode<Base>& node,
+                                  size_t parentNodeScope) {
+        auto& args = node.getArguments();
+
+        // append in reverse order so that they are visited in correct forward order
+        for (auto itArg = args.rbegin(); itArg != args.rend(); ++itArg) {
+            if (itArg->getOperation() != nullptr) {
+                size_t index = std::distance(begin(args), itArg.base()) - 1;
+                emplace_back(node, index, parentNodeScope);
+            }
+        }
     }
 
     inline OperationStackData<Base>& operator[](size_t i) {
@@ -90,6 +120,63 @@ public:
     }
 };
 
+/**
+ * Transverse an operation graph using a depth first algorithm.
+ *
+ * @tparam Base
+ * @tparam FunctionAnalysis
+ * @tparam FunctionPostProcess
+ *
+ * @param root The root operation node.
+ * @param currentScopeColor
+ * @param nodeAnalysis A function that will be called when the node is visited.
+ *                     This function should append to the stack the children which should be visited.
+ *                     If there is additional processing after the children have been visited, then it should
+ *                     return true (the function nodePostProcessAnalysis will be called).
+ * @param nodePostProcessAnalysis A function which may be called (see nodeAnalysis) after all children have been
+ *                                visited.
+ * @param processRoot Whether or not to include the root in the transversal process
+ *                    (call nodeAnalysis/nodePostProcessAnalysis for this node).
+ */
+template<class Base, typename FunctionAnalysis, typename FunctionPostProcess>
+inline void depthFirstGraphNavigation(OperationNode<Base>& root,
+                                      size_t currentScopeColor,
+                                      FunctionAnalysis&& nodeAnalysis,
+                                      FunctionPostProcess&& nodePostProcessAnalysis,
+                                      bool processRoot) {
+    OperationStack<Base> stack;
+
+    std::unique_ptr<OperationNode<Base>> fakeSuperRoot;
+    if (processRoot) {
+        fakeSuperRoot = OperationNode<Base>::makeTemporaryNode(CGOpCode::Alias, {}, {root});
+        stack.emplace_back(*fakeSuperRoot, 0, currentScopeColor);
+    } else {
+        stack.pushNodeArguments(root, currentScopeColor);
+    }
+
+    while (!stack.empty()) {
+
+        if (stack.back().nextStep == StackNavigationStep::Analyze) {
+            size_t i = stack.size() - 1; // do not use a reference because the stack may be resized
+
+            bool complete = nodeAnalysis(stack[i], stack);
+
+            if (complete)
+                stack[i].nextStep = StackNavigationStep::ChildrenVisited;
+            else
+                stack[i].nextStep = StackNavigationStep::Exit;
+
+        } else if (stack.back().nextStep == StackNavigationStep::ChildrenVisited) {
+            nodePostProcessAnalysis(stack.back());
+            stack.back().nextStep = StackNavigationStep::Exit;
+            stack.pop_back();
+
+        } else {
+            stack.pop_back();
+        }
+
+    }
+}
 
 } // END cg namespace
 } // END CppAD namespace
