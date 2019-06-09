@@ -1785,35 +1785,50 @@ inline void CodeHandler<Base>::reorderOperation(Node& node) {
 }
 
 template<class Base>
-inline size_t CodeHandler<Base>::findLastTemporaryLocation(Node& node) {
-    size_t depOrder = getEvaluationOrder(node);
-    size_t maxTmpOrder = 0; // lowest possible value is 1
-    for (const Arg& it : node) {
-        if (it.getOperation() != nullptr) {
-            Node& arg = *it.getOperation();
+inline size_t CodeHandler<Base>::findLastTemporaryLocation(Node& root) {
+
+    size_t depOrder = getEvaluationOrder(root);
+    size_t maxTmpOrder = depOrder; // lowest possible value is 1
+
+    auto nodeAnalysis = [&](SimpleOperationStackData<Base>& stackEl,
+                            SimpleOperationStack<Base>& stack) {
+        auto& node = stackEl.node();
+
+        const auto& args = node.getArguments();
+
+        for (size_t i = 0; i < args.size(); ++i) {
+            if (args[i].getOperation() == nullptr) {
+                continue;
+            }
+
+            Node& arg = *args[i].getOperation();
             CGOpCode aOp = arg.getOperationType();
+
             if (aOp == CGOpCode::LoopEnd || aOp == CGOpCode::EndIf || aOp == CGOpCode::ElseIf || aOp == CGOpCode::Else) {
                 continue; //should not move variables to a different scope
             }
 
             if (aOp == CGOpCode::Index) {
-                size_t iorder = getEvaluationOrder(static_cast<IndexOperationNode<Base>&> (arg).getIndexCreationNode());
+                size_t iorder = getEvaluationOrder(static_cast<IndexOperationNode <Base>&> (arg).getIndexCreationNode());
                 if (iorder > maxTmpOrder)
                     maxTmpOrder = iorder;
+
             } else if (getEvaluationOrder(arg) == depOrder) {
                 // dependencies not visited yet
-                size_t orderNew = findLastTemporaryLocation(arg);
-                if (orderNew > maxTmpOrder)
-                    maxTmpOrder = orderNew;
+                stack.emplace_back(node, i);
+
             } else {
                 // no need to visit dependencies
                 if (getEvaluationOrder(arg) > maxTmpOrder)
                     maxTmpOrder = getEvaluationOrder(arg);
             }
-        }
-    }
 
-    return maxTmpOrder == 0 ? depOrder : maxTmpOrder;
+        }
+    };
+
+    depthFirstGraphNavigation(root, nodeAnalysis, true);
+
+    return maxTmpOrder;
 }
 
 template<class Base>
@@ -1917,7 +1932,7 @@ inline void CodeHandler<Base>::dependentAdded2EvaluationQueue(Node& root) {
         }
     };
 
-    depthFirstGraphNavigation(root, analyse);
+    depthFirstGraphNavigation(root, analyse, false);
 
 }
 

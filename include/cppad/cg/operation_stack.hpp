@@ -223,14 +223,23 @@ inline void depthFirstGraphNavigation(OperationNode<Base>& root,
  *
  * @param root The root operation node (it will NOT be visited by nodeAnalysis, only its children).
  * @param nodeAnalysis A function that will be called when the node is visited.
- *                     This function should append to the stack the children which should be visited.
+ *                     This function must append to the stack the children to be visited.
+ * @param processRoot Whether or not to include the root in the transversal process
+ *                    (call nodeAnalysis/nodePostProcessAnalysis for this node).
  */
 template<class Base, typename FunctionAnalysis>
 inline void depthFirstGraphNavigation(OperationNode<Base>& root,
-                                      FunctionAnalysis& nodeAnalysis) {
+                                      FunctionAnalysis& nodeAnalysis,
+                                      bool processRoot) {
     SimpleOperationStack<Base> stack;
 
-    stack.pushNodeArguments(root);
+    std::unique_ptr<OperationNode<Base>> fakeSuperRoot;
+    if (processRoot) {
+        fakeSuperRoot = OperationNode<Base>::makeTemporaryNode(CGOpCode::Alias, {}, {root});
+        stack.emplace_back(*fakeSuperRoot, 0);
+    } else {
+        stack.pushNodeArguments(root);
+    }
 
     while (!stack.empty()) {
         auto nodeEl = stack.back(); // copy
