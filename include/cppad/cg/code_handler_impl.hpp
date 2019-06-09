@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2016 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -731,12 +732,44 @@ inline void CodeHandler<Base>::removeVector(CodeHandlerVectorSync<Base>* v) {
 }
 
 template<class Base>
-void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
+void CodeHandler<Base>::markCodeBlockUsed(Node& root) {
+    OperationStack<Base> stack;
+
+    stack.emplace_back(root, _currentScopeColor);
+
+    while (!stack.empty()) {
+
+        if (stack.back().nextStep == StackNavigationStep::Analyze) {
+            size_t i = stack.size() - 1; // do not a reference because the stack may be resized
+
+            bool complete = markCodeBlockUsedStartAnalysis(*stack[i].node, stack);
+
+            if (complete)
+                stack[i].nextStep = StackNavigationStep::ChildrenVisited;
+            else
+                stack[i].nextStep = StackNavigationStep::Exit;
+
+        } else if (stack.back().nextStep == StackNavigationStep::ChildrenVisited) {
+            markCodeBlockUsedEndAnalysis(*stack.back().node, stack.back().parentNodeScope);
+            stack.back().nextStep = StackNavigationStep::Exit;
+            stack.pop_back();
+
+        } else {
+            stack.pop_back();
+        }
+
+    }
+}
+
+template<class Base>
+bool CodeHandler<Base>::markCodeBlockUsedStartAnalysis(Node& code,
+                                                       OperationStack<Base>& stack) {
     increaseTotalUsageCount(code);
 
     CGOpCode op = code.getOperationType();
     if (isIndependent(code)) {
-        return; // nothing to do
+        return false; // nothing to do (go up)
+
     } else if (op == CGOpCode::Alias) {
         /**
          * Alias operations are always followed so that there is a
@@ -744,9 +777,9 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
          */
         CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
         Node* arg = code.getArguments()[0].getOperation();
-        if (arg != nullptr) {
-            markCodeBlockUsed(*arg);
-        }
+        stack.emplace_back(*arg, _currentScopeColor);
+
+        return false;
 
     } else if (getTotalUsageCount(code) == 1) {
         // first time this operation is visited
@@ -756,7 +789,8 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
         _scope[code] = _currentScopeColor;
 
         // check if there is a scope change
-        if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
+        if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf || op == CGOpCode::ElseIf ||
+            op == CGOpCode::Else) {
             // leaving a scope
             ScopePath& sPath = _scopes[_currentScopeColor];
             CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
@@ -765,7 +799,8 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
             } else {
                 CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
                                        code.getArguments()[0].getOperation() != nullptr &&
-                                       code.getArguments()[0].getOperation()->getOperationType() == CGOpCode::StartIf);
+                                       code.getArguments()[0].getOperation()->getOperationType() ==
+                                       CGOpCode::StartIf);
                 sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
             }
             _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
@@ -795,49 +830,16 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
         /**
          * iterate over all arguments
          */
-        for (const Arg& it : code.getArguments()) {
-            if (it.getOperation() != nullptr) {
-                markCodeBlockUsed(*it.getOperation());
+        auto& args = code.getArguments();
+        // append in reverse order so that they are visited in correct forward order
+        for (auto it = args.rbegin(); it != args.rend(); ++it) {
+            auto& arg = *it;
+            if (arg.getOperation() != nullptr) {
+                stack.emplace_back(*arg.getOperation(), _currentScopeColor);
             }
         }
 
-        if (op == CGOpCode::Index) {
-            const IndexOperationNode<Base>& inode = static_cast<const IndexOperationNode<Base>&> (code);
-            // indexes that don't depend on a loop start or an index assignment are declared elsewhere
-            if (inode.isDefinedLocally()) {
-                _loops.indexes.insert(&inode.getIndex());
-            }
-        } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep || op == CGOpCode::IndexAssign) {
-            IndexPattern* ip;
-            if (op == CGOpCode::LoopIndexedDep) {
-                size_t pos = code.getInfo()[0];
-                ip = _loops.dependentIndexPatterns[pos];
-            } else if (op == CGOpCode::LoopIndexedIndep) {
-                size_t pos = code.getInfo()[1];
-                ip = _loops.independentIndexPatterns[pos];
-            } else {
-                ip = &static_cast<IndexAssignOperationNode<Base>&> (code).getIndexPattern();
-            }
-
-            findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
-
-        } else if (op == CGOpCode::DependentRefRhs) {
-            CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
-            size_t depIndex = code.getInfo()[0];
-
-            CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
-            Node* depNode = (*_dependents)[depIndex].getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
-
-            _varId[code] = _varId[*depNode];
-        }
-
-        /**
-         * reset scope
-         */
-        if (previousScope != _currentScopeColor) {
-            _currentScopeColor = previousScope;
-        }
+        return true;
 
     } else {
         // been to this node before
@@ -891,7 +893,55 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& code) {
                 }
             }
         }
+
+        return false;
     }
+}
+
+template<class Base>
+void CodeHandler<Base>::markCodeBlockUsedEndAnalysis(Node& code,
+                                                     size_t previousScope) {
+    // executed after all children have been visited
+
+    CGOpCode op = code.getOperationType();
+
+    if (op == CGOpCode::Index) {
+        const auto& inode = static_cast<const IndexOperationNode <Base>&> (code);
+        // indexes that don't depend on a loop start or an index assignment are declared elsewhere
+        if (inode.isDefinedLocally()) {
+            _loops.indexes.insert(&inode.getIndex());
+        }
+    } else if (op == CGOpCode::LoopIndexedIndep || op == CGOpCode::LoopIndexedDep ||
+               op == CGOpCode::IndexAssign) {
+        IndexPattern* ip;
+        if (op == CGOpCode::LoopIndexedDep) {
+            size_t pos = code.getInfo()[0];
+            ip = _loops.dependentIndexPatterns[pos];
+        } else if (op == CGOpCode::LoopIndexedIndep) {
+            size_t pos = code.getInfo()[1];
+            ip = _loops.independentIndexPatterns[pos];
+        } else {
+            ip = &static_cast<IndexAssignOperationNode <Base>&> (code).getIndexPattern();
+        }
+
+        findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
+
+    } else if (op == CGOpCode::DependentRefRhs) {
+        CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
+        size_t depIndex = code.getInfo()[0];
+
+        CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
+        Node * depNode = (*_dependents)[depIndex].getOperationNode();
+        CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
+
+        _varId[code] = _varId[*depNode];
+    }
+
+    /**
+     * reset scope
+     */
+    _currentScopeColor = previousScope;
+
 }
 
 template<class Base>

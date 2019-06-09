@@ -289,7 +289,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new std::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsArrays_[node.getHandlerPosition()] = resultArray;
@@ -314,7 +314,7 @@ protected:
         }
 
         const std::vector<Argument<ScalarIn> >& args = node.getArguments();
-        std::vector<ActiveOut>* resultArray = new std::vector<ActiveOut>(args.size());
+        auto* resultArray = new std::vector<ActiveOut>(args.size());
 
         // save it for reuse
         evalsSparseArrays_[node.getHandlerPosition()] = resultArray;
