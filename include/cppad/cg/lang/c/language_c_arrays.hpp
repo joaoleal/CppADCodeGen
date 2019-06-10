@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2014 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +21,7 @@ namespace cg {
 
 template<class Base>
 void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
-    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation");
+    CPPADCG_ASSERT_KNOWN(array.getArguments().size() > 0, "Invalid number of arguments for array creation operation")
     const size_t id = getVariableID(array);
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
@@ -58,12 +59,12 @@ void LanguageC<Base>::printArrayCreationOp(OperationNode<Base>& array) {
 template<class Base>
 void LanguageC<Base>::printSparseArrayCreationOp(OperationNode<Base>& array) {
     const std::vector<size_t>& info = array.getInfo();
-    CPPADCG_ASSERT_KNOWN(info.size() > 0, "Invalid number of information elements for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(!info.empty(), "Invalid number of information elements for sparse array creation operation")
 
     const std::vector<Argument<Base> >& args = array.getArguments();
     const size_t argSize = args.size();
 
-    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation");
+    CPPADCG_ASSERT_KNOWN(info.size() == argSize + 1, "Invalid number of arguments for sparse array creation operation")
 
     if (argSize == 0)
         return; // empty array
@@ -175,9 +176,9 @@ inline size_t LanguageC<Base>::printArrayCreationUsingLoop(size_t startPos,
             SectionedIndexPattern* refSecp = nullptr;
 
             if (refIp->getType() == IndexPatternType::Linear) {
-                refLIp = static_cast<LinearIndexPattern*> (refIp);
+                refLIp = dynamic_cast<LinearIndexPattern*> (refIp);
             } else if (refIp->getType() == IndexPatternType::Sectioned) {
-                refSecp = static_cast<SectionedIndexPattern*> (refIp);
+                refSecp = dynamic_cast<SectionedIndexPattern*> (refIp);
             } else {
                 return starti; // cannot determine consecutive elements
             }
@@ -306,9 +307,9 @@ inline std::string LanguageC<Base>::getTempArrayName(const OperationNode<Base>& 
 
 template<class Base>
 void LanguageC<Base>::printArrayElementOp(OperationNode<Base>& op) {
-    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation");
-    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation");
+    CPPADCG_ASSERT_KNOWN(op.getArguments().size() == 2, "Invalid number of arguments for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getArguments()[0].getOperation() != nullptr, "Invalid argument for array element operation")
+    CPPADCG_ASSERT_KNOWN(op.getInfo().size() == 1, "Invalid number of information indexes for array element operation")
 
     OperationNode<Base>& arrayOp = *op.getArguments()[0].getOperation();
     std::string arrayName;
@@ -355,7 +356,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
             }
         } else {
             if (firstTime || "NULL" != lastArray.data) {
-                if (!changed) _code << _indentation;
+                _code << _indentation;
                 _code << dataArrayName << ".data = NULL; ";
                 lastArray.data = "NULL";
                 changed = true;
@@ -376,7 +377,7 @@ inline void LanguageC<Base>::printArrayStructInit(const std::string& dataArrayNa
         }
 
     } else {
-        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(array.getOperationType() == CGOpCode::SparseArrayCreation, "Invalid node type")
         size_t nnz = array.getArguments().size();
         size_t size = array.getInfo()[0];
 

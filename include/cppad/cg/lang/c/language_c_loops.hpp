@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2015 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -20,7 +21,7 @@ namespace cg {
 
 template<class Base>
 void LanguageC<Base>::printLoopIndexedDep(OperationNode<Base>& node) {
-    CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation");
+    CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 1, "Invalid number of arguments for loop indexed dependent operation")
 
     // LoopIndexedDep
     print(node.getArguments()[0]);
@@ -29,8 +30,8 @@ void LanguageC<Base>::printLoopIndexedDep(OperationNode<Base>& node) {
 template<class Base>
 size_t LanguageC<Base>::printLoopIndexDeps(const std::vector<OperationNode<Base>*>& variableOrder,
                                            size_t pos) {
-    CPPADCG_ASSERT_KNOWN(pos < variableOrder.size(), "Invalid number of arguments for array creation operation");
-    CPPADCG_ASSERT_KNOWN(variableOrder[pos]->getOperationType() == CGOpCode::LoopIndexedDep, "Invalid operation type");
+    CPPADCG_ASSERT_KNOWN(pos < variableOrder.size(), "Invalid number of arguments for array creation operation")
+    CPPADCG_ASSERT_KNOWN(variableOrder[pos]->getOperationType() == CGOpCode::LoopIndexedDep, "Invalid operation type")
 
     const size_t vSize = variableOrder.size();
 
@@ -56,8 +57,8 @@ size_t LanguageC<Base>::printLoopIndexDeps(const std::vector<OperationNode<Base>
 template<class Base>
 inline size_t LanguageC<Base>::printLoopIndexedDepsUsingLoop(const std::vector<OperationNode<Base>*>& variableOrder,
                                                              size_t starti) {
-    CPPADCG_ASSERT_KNOWN(variableOrder[starti] != nullptr, "Invalid node");
-    CPPADCG_ASSERT_KNOWN(variableOrder[starti]->getOperationType() == CGOpCode::LoopIndexedDep, "Invalid operation type");
+    CPPADCG_ASSERT_KNOWN(variableOrder[starti] != nullptr, "Invalid node")
+    CPPADCG_ASSERT_KNOWN(variableOrder[starti]->getOperationType() == CGOpCode::LoopIndexedDep, "Invalid operation type")
 
     const size_t vSize = variableOrder.size();
 

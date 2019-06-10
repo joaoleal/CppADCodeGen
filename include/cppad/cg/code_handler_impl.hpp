@@ -386,7 +386,7 @@ void CodeHandler<Base>::generateCode(std::ostream& out,
 
         // if e > vosize then some nodes (marking the beginning of scopes)
         // must have been added more than once
-        CPPADCG_ASSERT_UNKNOWN(_variableOrder.size() == e);
+        CPPADCG_ASSERT_UNKNOWN(_variableOrder.size() == e)
     }
 
     for (size_t p = 0; p < _variableOrder.size(); p++) {
@@ -628,7 +628,7 @@ inline IndexAssignOperationNode<Base>* CodeHandler<Base>::makeIndexAssignNode(No
 
 template<class Base>
 inline OperationNode<Base>* CodeHandler<Base>::makeIndexDclrNode(const std::string& name) {
-    CPPADCG_ASSERT_KNOWN(!name.empty(), "index name cannot be empty");
+    CPPADCG_ASSERT_KNOWN(!name.empty(), "index name cannot be empty")
     auto* n = manageOperationNode(new Node(this, CGOpCode::IndexDeclaration));
     n->setName(name);
     return n;
@@ -750,7 +750,7 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& root) {
              * Alias operations are always followed so that there is a
              * correct usage count at the operation that it points to
              */
-            CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(code.getArguments().size() == 1)
             stack.emplace_back(code, 0, _currentScopeColor);
 
             return false;
@@ -767,14 +767,14 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& root) {
                 op == CGOpCode::Else) {
                 // leaving a scope
                 ScopePath& sPath = _scopes[_currentScopeColor];
-                CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr);
+                CPPADCG_ASSERT_UNKNOWN(sPath.back().beginning == nullptr)
                 if (op == CGOpCode::LoopStart || op == CGOpCode::StartIf) {
                     sPath.back().beginning = &code; // save the initial node
                 } else {
                     CPPADCG_ASSERT_UNKNOWN(!code.getArguments().empty() &&
                                            code.getArguments()[0].getOperation() != nullptr &&
                                            code.getArguments()[0].getOperation()->getOperationType() ==
-                                           CGOpCode::StartIf);
+                                           CGOpCode::StartIf)
                     sPath.back().beginning = code.getArguments()[0].getOperation(); // save the initial node
                 }
                 _currentScopeColor = sPath.size() > 1 ? sPath[sPath.size() - 2].color : 0;
@@ -896,12 +896,12 @@ void CodeHandler<Base>::markCodeBlockUsed(Node& root) {
             findRandomIndexPatterns(ip, _loops.indexRandomPatterns);
 
         } else if (op == CGOpCode::DependentRefRhs) {
-            CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(code.getInfo().size() == 1)
             size_t depIndex = code.getInfo()[0];
 
-            CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex);
+            CPPADCG_ASSERT_UNKNOWN(_dependents->size() > depIndex)
             Node * depNode = (*_dependents)[depIndex].getOperationNode();
-            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv);
+            CPPADCG_ASSERT_UNKNOWN(depNode != nullptr && depNode->getOperationType() != CGOpCode::Inv)
 
             _varId[code] = _varId[*depNode];
         }
@@ -930,8 +930,8 @@ inline bool CodeHandler<Base>::handleTemporaryVarInDiffScopes(Node& code,
     /**
      * @TODO allow Array elements to use a CGTmp instead of a CGArrayCreationOp
      */
-    CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::ArrayCreation, "Not supported yet");
-    CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::SparseArrayCreation, "Not supported yet");
+    CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::ArrayCreation, "Not supported yet")
+    CPPADCG_ASSERT_KNOWN(code.getOperationType() != CGOpCode::SparseArrayCreation, "Not supported yet")
 
     /**
      * does this variable require a condition based on indexes?
@@ -955,13 +955,13 @@ inline bool CodeHandler<Base>::handleTemporaryVarInDiffScopes(Node& code,
 
         IndexOperationNode<Base>* newIterIndexOp = nullptr;
         iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
-        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
+        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2)
 
         IndexOperationNode<Base>* oldIterIndexOp = nullptr;
         std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
         combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
-        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
-        CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp);
+        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2)
+        CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp)
 
         if (iterationRegions.size() > 2 ||
             iterationRegions[0] != 0 ||
@@ -1090,7 +1090,7 @@ inline void CodeHandler<Base>::updateTemporaryVarInDiffScopes(Node& code) {
     std::vector<size_t> iterationRegions;
     Node* bScopeNewEnd = _scopes[_currentScopeColor].back().end;
     Node* endif = code.getArguments()[0].getOperation();
-    CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGOpCode::EndIf);
+    CPPADCG_ASSERT_UNKNOWN(endif->getOperationType() == CGOpCode::EndIf)
     Node* bScopeOldEnd = _scopes[_scope[*endif]].back().end;
 
     CGOpCode bNewOp = bScopeNewEnd->getOperationType();
@@ -1106,13 +1106,13 @@ inline void CodeHandler<Base>::updateTemporaryVarInDiffScopes(Node& code) {
 
         IndexOperationNode<Base>* newIterIndexOp = nullptr;
         iterationRegions = ifBranchIterationRanges(bScopeNew, newIterIndexOp);
-        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
+        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2)
 
         IndexOperationNode<Base>* oldIterIndexOp = nullptr;
         const std::vector<size_t> oldIterRegions = ifBranchIterationRanges(bScopeOld, oldIterIndexOp);
         combineOverlapingIterationRanges(iterationRegions, oldIterRegions);
-        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2);
-        CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp);
+        CPPADCG_ASSERT_UNKNOWN(iterationRegions.size() >= 2)
+        CPPADCG_ASSERT_UNKNOWN(newIterIndexOp != nullptr && newIterIndexOp == oldIterIndexOp)
 
         if (iterationRegions.size() == 2 &&
             (iterationRegions[0] == 0 ||
@@ -1123,7 +1123,7 @@ inline void CodeHandler<Base>::updateTemporaryVarInDiffScopes(Node& code) {
 
         } else if (oldIterRegions != iterationRegions) {
             Node* cond = bScopeOld->getArguments()[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr);
+            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr)
             cond->getInfo() = iterationRegions;
         }
 
@@ -1145,7 +1145,7 @@ inline void CodeHandler<Base>::updateTemporaryVarInDiffScopes(Node& code) {
 
 template<class Base>
 inline void CodeHandler<Base>::restoreTemporaryVar(Node& tmp) {
-    CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGOpCode::Tmp && !tmp.getInfo().empty());
+    CPPADCG_ASSERT_UNKNOWN(tmp.getOperationType() == CGOpCode::Tmp && !tmp.getInfo().empty())
 
     Node* endIf = tmp.getArguments()[1].getOperation();
     Node* ifAssign = endIf->getArguments()[1].getOperation();
@@ -1169,7 +1169,7 @@ inline void CodeHandler<Base>::restoreTemporaryVar(Node& tmp) {
 template<class Base>
 inline void CodeHandler<Base>::restoreTemporaryVar(Node* tmp,
                                                    Node* opClone) {
-    CPPADCG_ASSERT_UNKNOWN(tmp->getOperationType() == CGOpCode::Tmp && !tmp->getInfo().empty());
+    CPPADCG_ASSERT_UNKNOWN(tmp->getOperationType() == CGOpCode::Tmp && !tmp->getInfo().empty())
 
     tmp->setOperation(opClone->getOperationType(), opClone->getArguments());
     tmp->getInfo() = opClone->getInfo();
@@ -1228,10 +1228,10 @@ inline void CodeHandler<Base>::addScopeToVarOrder(size_t scope,
         CGOpCode op = node->getOperationType();
 
         if (op == CGOpCode::LoopEnd || op == CGOpCode::EndIf || op == CGOpCode::ElseIf || op == CGOpCode::Else) {
-            CPPADCG_ASSERT_UNKNOWN(!node->getArguments().empty());
+            CPPADCG_ASSERT_UNKNOWN(!node->getArguments().empty())
 
             Node* beginScopeNode = node->getArguments()[0].getOperation();
-            CPPADCG_ASSERT_UNKNOWN(beginScopeNode != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(beginScopeNode != nullptr)
 
             addScopeToVarOrder(_scope[*beginScopeNode], e);
         }
@@ -1244,8 +1244,8 @@ inline void CodeHandler<Base>::addScopeToVarOrder(size_t scope,
 template<class Base>
 inline size_t CodeHandler<Base>::findFirstDifferentScope(size_t color1,
                                                          size_t color2) {
-    CPPADCG_ASSERT_UNKNOWN(color1 < _scopes.size());
-    CPPADCG_ASSERT_UNKNOWN(color2 < _scopes.size());
+    CPPADCG_ASSERT_UNKNOWN(color1 < _scopes.size())
+    CPPADCG_ASSERT_UNKNOWN(color2 < _scopes.size())
 
     ScopePath& scopePath1 = _scopes[color1];
     ScopePath& scopePath2 = _scopes[color2];
@@ -1296,7 +1296,7 @@ inline void CodeHandler<Base>::optimizeIfs() {
             Node* cond = startIf->getArguments()[0].getOperation();
             Node* cond1 = startIf1->getArguments()[0].getOperation();
 
-            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr || cond1->getOperationType() == CGOpCode::IndexCondExpr);
+            CPPADCG_ASSERT_UNKNOWN(cond->getOperationType() == CGOpCode::IndexCondExpr || cond1->getOperationType() == CGOpCode::IndexCondExpr)
             if (cond->getInfo() == cond1->getInfo()) {
                 /**
                  * same condition -> combine the contents into a single if
@@ -1313,7 +1313,7 @@ inline void CodeHandler<Base>::optimizeIfs() {
 
                 // break cycles caused by dependencies on the previous if
                 for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                    CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult);
+                    CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult)
                     breakCyclicDependency(eArgs[a].getOperation(), ifScope, endIf1);
                     replaceScope(eArgs[a].getOperation(), ifScope, ifScope1); // update scope
                 }
@@ -1324,7 +1324,7 @@ inline void CodeHandler<Base>::optimizeIfs() {
 
                 // update startIf
                 for (size_t a = 1; a < eArgs.size(); a++) { // exclude the initial startIf
-                    CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult);
+                    CPPADCG_ASSERT_UNKNOWN(eArgs[a].getOperation() != nullptr && eArgs[a].getOperation()->getOperationType() == CGOpCode::CondResult)
                     eArgs[a].getOperation()->getArguments()[0] = Arg(*startIf1);
                 }
 
@@ -1470,8 +1470,8 @@ void CodeHandler<Base>::checkVariableCreation(Node& root) {
             /**
              * Save atomic function related information
              */
-            CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1);
-            CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1);
+            CPPADCG_ASSERT_UNKNOWN(arg.getArguments().size() > 1)
+            CPPADCG_ASSERT_UNKNOWN(arg.getInfo().size() > 1)
             size_t id = arg.getInfo()[0];
 
             size_t pos;
@@ -1708,7 +1708,7 @@ inline void CodeHandler<Base>::reorderOperations(ArrayView<CGB>& dependent) {
     for (const LoopEndOperationNode<Base>* endNode : _loops.endNodes) {
         const std::vector<Arg>& args = endNode->getArguments();
         for (size_t i = 1; i < args.size(); ++i) {
-            CPPADCG_ASSERT_UNKNOWN(args[i].getOperation() != nullptr);
+            CPPADCG_ASSERT_UNKNOWN(args[i].getOperation() != nullptr)
             // TODO: also consider CGOpCode::LoopIndexedDep inside a CGOpCode::endIf
             if (args[i].getOperation()->getOperationType() == CGOpCode::LoopIndexedDep) {
                 reorderOperation(*args[i].getOperation());
@@ -1835,7 +1835,7 @@ template<class Base>
 inline void CodeHandler<Base>::repositionEvaluationQueue(size_t fromPos, size_t toPos) {
     // Warning: there is an offset of 1 between the evaluation order saved
     // in the node and the actual location in the _variableOrder
-    CPPADCG_ASSERT_UNKNOWN(fromPos > toPos);
+    CPPADCG_ASSERT_UNKNOWN(fromPos > toPos)
     Node* node = _variableOrder[fromPos - 1]; // node to be moved
 
     // move variables in between the order change
@@ -2071,7 +2071,7 @@ inline OperationNode<Base>* CodeHandler<Base>::getOperationFromAlias(Node& alias
     } else {
         Node* aa = &alias;
         do {
-            CPPADCG_ASSERT_UNKNOWN(aa->getArguments().size() == 1);
+            CPPADCG_ASSERT_UNKNOWN(aa->getArguments().size() == 1)
             aa = aa->getArguments()[0].getOperation();
         } while (aa != nullptr && aa->getOperationType() == CGOpCode::Alias);
         return aa;
@@ -2086,7 +2086,7 @@ inline size_t CodeHandler<Base>::getEvaluationOrder(const Node& node) const {
 template<class Base>
 inline void CodeHandler<Base>::setEvaluationOrder(Node& node,
                                                   size_t order) {
-    CPPADCG_ASSERT_UNKNOWN(order <= _variableOrder.size());
+    CPPADCG_ASSERT_UNKNOWN(order <= _variableOrder.size())
     _evaluationOrder[node] = order;
 }
 
@@ -2098,19 +2098,19 @@ inline size_t CodeHandler<Base>::getLastUsageEvaluationOrder(const Node& node) c
 template<class Base>
 inline void CodeHandler<Base>::setLastUsageEvaluationOrder(const Node& node,
                                                            size_t last) {
-    CPPADCG_ASSERT_UNKNOWN(last <= _variableOrder.size()); // _lastUsageOrder[node] = 0  means that it was never used
+    CPPADCG_ASSERT_UNKNOWN(last <= _variableOrder.size()) // _lastUsageOrder[node] = 0  means that it was never used
     _lastUsageOrder[node] = last;
 
     CGOpCode op = node.getOperationType();
     if (op == CGOpCode::ArrayElement) {
         Node* array = node.getArguments()[0].getOperation();
-        CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGOpCode::ArrayCreation);
+        CPPADCG_ASSERT_UNKNOWN(array->getOperationType() == CGOpCode::ArrayCreation)
         if (getLastUsageEvaluationOrder(*array) < last) {
             setLastUsageEvaluationOrder(*array, last);
         }
     } else if (op == CGOpCode::Tmp) {
         Node* declr = node.getArguments()[0].getOperation();
-        CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGOpCode::TmpDcl);
+        CPPADCG_ASSERT_UNKNOWN(declr->getOperationType() == CGOpCode::TmpDcl)
         if (getLastUsageEvaluationOrder(*declr) < last) {
             setLastUsageEvaluationOrder(*declr, last);
         }

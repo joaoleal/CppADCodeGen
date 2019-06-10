@@ -33,15 +33,15 @@ protected:
     const std::vector<std::string> indepNames_;
 public:
 
-    LangCCustomVariableNameGenerator(const std::vector<std::string>& depNames,
-                                     const std::vector<std::string>& indepNames,
+    LangCCustomVariableNameGenerator(std::vector<std::string> depNames,
+                                     std::vector<std::string> indepNames,
                                      const std::string& depName = "y",
                                      const std::string& indepName = "x",
                                      const std::string& tmpName = "v",
                                      const std::string& tmpArrayName = "array") :
         LangCDefaultVariableNameGenerator<Base>(depName, indepName, tmpName, tmpArrayName),
-        depNames_(depNames),
-        indepNames_(indepNames) {
+        depNames_(std::move(depNames)),
+        indepNames_(std::move(indepNames)) {
     }
 
     inline virtual ~LangCCustomVariableNameGenerator() = default;

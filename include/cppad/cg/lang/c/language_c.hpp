@@ -759,7 +759,6 @@ protected:
              */
             if (info->zeroDependents) {
                 // zero initial values
-                const std::vector<FuncArgument>& depArg = _nameGen->getDependent();
                 for (size_t i = 0; i < depArg.size(); i++) {
                     const FuncArgument& a = depArg[i];
                     if (a.array) {
@@ -1110,14 +1109,14 @@ protected:
 
     inline const std::string& createVariableName(Node& var) {
         CGOpCode op = var.getOperationType();
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign);
-        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(var) > 0)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicForward)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::AtomicReverse)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopStart)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::LoopEnd)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::Index)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexAssign)
+        CPPADCG_ASSERT_UNKNOWN(op != CGOpCode::IndexDeclaration)
 
         if (var.getName() == nullptr) {
             if (op == CGOpCode::ArrayCreation) {
@@ -1143,7 +1142,7 @@ protected:
             } else if (getVariableID(var) < _minTemporaryVarID) {
                 // dependent variable
                 auto it = _dependentIDs.find(getVariableID(var));
-                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end());
+                CPPADCG_ASSERT_UNKNOWN(it != _dependentIDs.end())
 
                 size_t index = it->second;
                 var.setName(_nameGen->generateDependent(index));
@@ -1626,7 +1625,7 @@ protected:
     }
 
     virtual void printConditionalAssignment(Node& node) {
-        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0);
+        CPPADCG_ASSERT_UNKNOWN(getVariableID(node) > 0)
 
         const std::vector<Arg>& args = node.getArguments();
         const Arg &left = args[0];
@@ -1795,7 +1794,7 @@ protected:
 
         const std::vector<Arg>& args = node.getArguments();
         for (size_t a = 0; a < args.size(); a++) {
-            bool useArg = false;
+            bool useArg;
             const Arg& arg = args[a];
             if (arg.getParameter() != nullptr) {
                 useArg = true;
@@ -1929,7 +1928,7 @@ protected:
          * if start node, the following arguments are assignments in the
          * previous if branch
          */
-        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ElseIf, "Invalid node type");
+        CPPADCG_ASSERT_KNOWN(node.getOperationType() == CGOpCode::ElseIf, "Invalid node type")
         CPPADCG_ASSERT_KNOWN(node.getArguments().size() >= 2, "Invalid number of arguments for an 'else if' operation")
         CPPADCG_ASSERT_KNOWN(node.getArguments()[0].getOperation() != nullptr, "Invalid argument for an 'else if' operation")
         CPPADCG_ASSERT_KNOWN(node.getArguments()[1].getOperation() != nullptr, "Invalid argument for an 'else if' operation")
@@ -2029,7 +2028,7 @@ protected:
                 return _C_COMP_OP_NE;
 
             default:
-                CPPAD_ASSERT_UNKNOWN(0);
+                CPPAD_ASSERT_UNKNOWN(0)
         }
         throw CGException("Invalid comparison operator code"); // should never get here
     }
