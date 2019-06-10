@@ -2007,20 +2007,24 @@ inline void CodeHandler<Base>::findVariableDependencies() {
 
 template<class Base>
 inline void CodeHandler<Base>::findVariableDependencies(size_t i,
-                                                        Node& node) {
-    if (!isVisited(node)) {
-        markVisited(node);
+                                                        Node& root) {
 
-        if(_varId[node] != 0) {
-            _variableDependencies[i].insert(&node);
-        } else {
-            for (const auto& a : node) {
-                if (a.getOperation() != nullptr) {
-                    findVariableDependencies(i, *a.getOperation());
-                }
+    auto analyse = [&](SimpleOperationStackData<Base>& stackEl,
+                       SimpleOperationStack<Base>& stack) {
+        auto& node = stackEl.node();
+
+        if (!isVisited(node)) {
+            markVisited(node);
+
+            if(_varId[node] != 0) {
+                _variableDependencies[i].insert(&node);
+            } else {
+                stack.pushNodeArguments(node);
             }
         }
-    }
+    };
+
+    depthFirstGraphNavigation(root, analyse, true);
 }
 
 template<class Base>
