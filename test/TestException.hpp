@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -27,18 +28,21 @@ protected:
 
 public:
 
-    inline TestException(const std::string& message) throw () :
-        _message(message) {
+    TestException() noexcept = delete;
+
+    inline explicit TestException(std::string message) noexcept :
+        _message(std::move(message)) {
     }
 
-    TestException() throw () = delete;
+    inline TestException(TestException&&) noexcept = default;
 
-    inline const char* what() const throw () {
+    inline TestException(const TestException&) = default;
+
+    inline const char* what() const noexcept override {
         return _message.c_str();
     }
 
-    inline virtual ~TestException() throw () {
-    }
+    inline ~TestException() noexcept override = default;
 
 };
 

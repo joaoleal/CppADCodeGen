@@ -1,6 +1,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2013 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -28,8 +29,8 @@ namespace cg {
 class CppADCGOperationTest : public CppADCGTest {
 public:
 
-    inline CppADCGOperationTest(bool verbose = false,
-                                bool printValues = false) :
+    inline explicit CppADCGOperationTest(bool verbose = false,
+                                         bool printValues = false) :
         CppADCGTest(verbose, printValues) {
     }
 
@@ -104,11 +105,6 @@ protected:
                    const std::vector<std::vector<double> >& indV,
                    double epsilonR = 1e-14, double epsilonA = 1e-14);
 
-    void prepareADFun(const std::vector<double>& indep,
-                      CppAD::ADFun<double>* (*func1)(const std::vector<CppAD::AD<double> >&),
-                      CppAD::ADFun<CppAD::cg::CG<double> >* (*func2)(const std::vector<CppAD::AD<CppAD::cg::CG<double> > >&),
-                      CppAD::ADFun<double>*& f1,
-                      CppAD::ADFun<CppAD::cg::CG<double> >*& f2);
 };
 
 } // END cg namespace

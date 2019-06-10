@@ -3,6 +3,7 @@
 /* --------------------------------------------------------------------------
  *  CppADCodeGen: C++ Algorithmic Differentiation with Source Code Generation:
  *    Copyright (C) 2012 Ciengis
+ *    Copyright (C) 2019 Joao Leal
  *
  *  CppADCodeGen is distributed under multiple licenses:
  *
@@ -382,13 +383,13 @@ void CppADCGOperationTest::test0nJac(const std::string& test,
 
     std::string library = "./tmp/test_" + test + ".so";
     std::string function = "test_" + test;
-    vector<vector<double> > depsCG = run0(*f2.get(), library, function, indV);
+    vector<vector<double> > depsCG = run0(*f2, library, function, indV);
 
-    vector<vector<double> > depCGTape = run0TapeWithValues(*f2.get(), indV);
+    vector<vector<double> > depCGTape = run0TapeWithValues(*f2, indV);
 
     library = "./tmp/test_" + test + "_jac.so";
     std::string functionJac = "test_" + test + "_jac";
-    vector<vector<double> > jacCG = runSparseJac(*f2.get(), library, functionJac, indV);
+    vector<vector<double> > jacCG = runSparseJac(*f2, library, functionJac, indV);
 
     /**
      * compare results
@@ -445,7 +446,7 @@ void CppADCGOperationTest::test0(const std::string& test,
 
     std::string library = "./tmp/test_" + test + ".so";
     std::string function = "test_" + test;
-    depsCG = run0(*f2.get(), library, function, indV, comparisons);
+    depsCG = run0(*f2, library, function, indV, comparisons);
 
     /**
      * compare results
