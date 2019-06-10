@@ -33,7 +33,7 @@ public:
         CppADCGTest(verbose, printValues) {
     }
 
-    virtual void TearDown() {
+    void TearDown() override {
         ASSERT_FALSE(CppAD::memory_leak());
     }
 

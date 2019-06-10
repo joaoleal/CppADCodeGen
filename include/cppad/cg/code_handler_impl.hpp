@@ -1849,71 +1849,99 @@ inline void CodeHandler<Base>::repositionEvaluationQueue(size_t fromPos, size_t 
 }
 
 template<class Base>
-inline void CodeHandler<Base>::determineLastTempVarUsage(Node& node) {
-    CGOpCode op = node.getOperationType();
+inline void CodeHandler<Base>::determineLastTempVarUsage(Node& root) {
 
-    if (op == CGOpCode::LoopEnd) {
-        auto& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
-        _loops.depth++;
-        _loops.outerVars.resize(_loops.depth + 1);
-        _loops.startEvalOrder.push_back(getEvaluationOrder(loopEnd.getLoopStart()));
+    auto startAnalysis = [this](OperationStackData<Base>& stackEl,
+                                OperationStack<Base>& stack) {
+        auto& node = stackEl.node();
+        CGOpCode op = node.getOperationType();
 
-    } else if (op == CGOpCode::LoopStart) {
-        _loops.depth--; // leaving the current loop
-    }
+        markVisited(node);
 
-    /**
-     * count variable usage
-     */
-    for (const Arg& it : node.getArguments()) {
-        if (it.getOperation() != nullptr) {
-            Node& arg = *it.getOperation();
+        if (op == CGOpCode::LoopEnd) {
+            auto& loopEnd = static_cast<LoopEndOperationNode<Base>&> (node);
+            _loops.depth++;
+            _loops.outerVars.resize(_loops.depth + 1);
+            _loops.startEvalOrder.push_back(getEvaluationOrder(loopEnd.getLoopStart()));
 
-            if (!isVisited(arg)) {
-                // dependencies not visited yet
-                determineLastTempVarUsage(arg);
-            }
-
-            markVisited(arg);
-
-            size_t order = getEvaluationOrder(node);
-            Node* aa = getOperationFromAlias(arg); // follow alias!
-            if (aa != nullptr) {
-                if (getLastUsageEvaluationOrder(*aa) < order) {
-                    setLastUsageEvaluationOrder(*aa, order);
-                }
-
-                if (_loops.depth >= 0 &&
-                    getEvaluationOrder(*aa) < _loops.startEvalOrder[_loops.depth] &&
-                    isTemporary(*aa)) {
-                    // outer variable used inside the loop
-                    _loops.outerVars[_loops.depth].insert(aa);
-                }
-            }
+        } else if (op == CGOpCode::LoopStart) {
+            _loops.depth--; // leaving the current loop
         }
-    }
 
-    if (op == CGOpCode::LoopEnd) {
         /**
-         * temporary variables from outside the loop which are used
-         * within the loop cannot be overwritten inside that loop
+         * count variable usage
          */
-        size_t order = getEvaluationOrder(node);
+        auto& args = node.getArguments();
+        for (size_t i = 0; i < args.size(); ++i) {
+            if (args[i].getOperation() != nullptr) {
+                Node& arg = *args[i].getOperation();
 
-        const std::set<Node*>& outerLoopUsages = _loops.outerVars.back();
-        for (Node* outerVar : outerLoopUsages) {
-            Node* aa = getOperationFromAlias(*outerVar); // follow alias!
-            if (aa != nullptr && getLastUsageEvaluationOrder(*aa) < order)
-                setLastUsageEvaluationOrder(*aa, order);
+                if (!isVisited(arg)) {
+                    // dependencies not visited yet
+                    stack.emplace_back(node, i, 0);
+                }
+            }
         }
 
-        _loops.depth--;
-        _loops.outerVars.pop_back();
-        _loops.startEvalOrder.pop_back();
+        return true;
+    };
 
-    } else if (op == CGOpCode::LoopStart) {
-        _loops.depth++; // coming back to the loop
-    }
+    auto endAnalysis = [this](OperationStackData<Base>& stackEl) {
+        // executed after all children have been visited
+
+        auto& node = stackEl.node();
+        CGOpCode op = node.getOperationType();
+
+        for (const Arg& it : node.getArguments()) {
+            if (it.getOperation() != nullptr) {
+                Node& arg = *it.getOperation();
+
+                size_t order = getEvaluationOrder(node);
+                Node* aa = getOperationFromAlias(arg); // follow alias!
+                if (aa != nullptr) {
+                    if (getLastUsageEvaluationOrder(*aa) < order) {
+                        setLastUsageEvaluationOrder(*aa, order);
+                    }
+
+                    if (_loops.depth >= 0 &&
+                        getEvaluationOrder(*aa) < _loops.startEvalOrder[_loops.depth] &&
+                        isTemporary(*aa)) {
+                        // outer variable used inside the loop
+                        _loops.outerVars[_loops.depth].insert(aa);
+                    }
+                }
+            }
+        }
+
+        if (op == CGOpCode::LoopEnd) {
+            /**
+             * temporary variables from outside the loop which are used
+             * within the loop cannot be overwritten inside that loop
+             */
+            size_t order = getEvaluationOrder(node);
+
+            const std::set<Node*>& outerLoopUsages = _loops.outerVars.back();
+            for (Node* outerVar : outerLoopUsages) {
+                Node* aa = getOperationFromAlias(*outerVar); // follow alias!
+                if (aa != nullptr && getLastUsageEvaluationOrder(*aa) < order)
+                    setLastUsageEvaluationOrder(*aa, order);
+            }
+
+            _loops.depth--;
+            _loops.outerVars.pop_back();
+            _loops.startEvalOrder.pop_back();
+
+        } else if (op == CGOpCode::LoopStart) {
+            _loops.depth++; // coming back to the loop
+        }
+
+    };
+
+    depthFirstGraphNavigation(root,
+                              0,
+                              startAnalysis,
+                              endAnalysis,
+                              true);
 
 }
 
