@@ -1965,19 +1965,26 @@ inline void CodeHandler<Base>::dependentAdded2EvaluationQueue(Node& root) {
 }
 
 template<class Base>
-inline void CodeHandler<Base>::updateEvaluationQueueOrder(Node& node,
+inline void CodeHandler<Base>::updateEvaluationQueueOrder(Node& root,
                                                           size_t newEvalOrder) {
-    size_t oldEvalOrder = getEvaluationOrder(node);
 
-    setEvaluationOrder(node, newEvalOrder);
+    auto analyse = [&](SimpleOperationStackData<Base>& stackEl,
+                       SimpleOperationStack<Base>& stack) {
+        auto& node = stackEl.node();
+        size_t oldEvalOrder = getEvaluationOrder(node);
 
-    for (const Arg& a : node.getArguments()) {
-        if (a.getOperation() != nullptr) {
-            Node& arg = *a.getOperation();
-            if (getEvaluationOrder(arg) == oldEvalOrder)
-                updateEvaluationQueueOrder(arg, newEvalOrder);
+        setEvaluationOrder(node, newEvalOrder);
+
+        for (const Arg& a : node.getArguments()) {
+            if (a.getOperation() != nullptr) {
+                Node& arg = *a.getOperation();
+                if (getEvaluationOrder(arg) == oldEvalOrder)
+                    stack.pushNodeArguments(arg);
+            }
         }
-    }
+    };
+
+    depthFirstGraphNavigation(root, analyse, true);
 }
 
 template<class Base>
