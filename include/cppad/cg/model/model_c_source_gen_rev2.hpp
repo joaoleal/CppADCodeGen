@@ -127,7 +127,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesWithAtomics(const std
         finishedJob();
 
         LanguageC<Base> langC(_baseTypeName);
-        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_indep" << j;
@@ -229,7 +229,7 @@ void ModelCSourceGen<Base>::generateSparseReverseTwoSourcesNoAtomics(const std::
         }
 
         LanguageC<Base> langC(_baseTypeName);
-        langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+        langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
         langC.setParameterPrecision(_parameterPrecision);
         _cache.str("");
         _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_TWO << "_indep" << j;

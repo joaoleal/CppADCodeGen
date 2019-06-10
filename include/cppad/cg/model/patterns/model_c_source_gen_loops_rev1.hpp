@@ -364,7 +364,7 @@ void ModelCSourceGen<Base>::createReverseOneWithLoopsNL(CodeHandler<Base>& handl
     const std::string jobName = _cache.str();
 
     LanguageC<Base> langC(_baseTypeName);
-    langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     _cache.str("");
     _cache << _name << "_" << FUNCTION_SPARSE_REVERSE_ONE << "_noloop_dep" << i;

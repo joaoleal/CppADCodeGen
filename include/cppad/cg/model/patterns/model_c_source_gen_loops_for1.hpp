@@ -429,7 +429,7 @@ void ModelCSourceGen<Base>::createForwardOneWithLoopsNL(CodeHandler<Base>& handl
     const std::string jobName = _cache.str();
 
     LanguageC<Base> langC(_baseTypeName);
-    langC.setMaxAssigmentsPerFunction(_maxAssignPerFunc, &_sources);
+    langC.setMaxAssignmentsPerFunction(_maxAssignPerFunc, &_sources);
     langC.setParameterPrecision(_parameterPrecision);
     _cache.str("");
     _cache << _name << "_" << FUNCTION_SPARSE_FORWARD_ONE << "_noloop_indep" << j;
